@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const serviceBillController = require("../controllers/serviceBillController");
-const { protect } = require("../middleware/auth");
+const { protect ,admin} = require("../middleware/auth");
 
 router
   .route("/")
@@ -14,8 +14,8 @@ router
 router
   .route("/:id")
   .get(protect, serviceBillController.getServiceBill)
-  .put(protect, serviceBillController.updateServiceBill)
-  .delete(protect, serviceBillController.deleteServiceBill);
+  .put(admin, serviceBillController.updateServiceBill)
+  .delete(admin, serviceBillController.deleteServiceBill);
 
 router
   .route("/:id/pdf")

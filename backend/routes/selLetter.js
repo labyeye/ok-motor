@@ -1,7 +1,7 @@
 // routes/sellLetter.js
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protect ,admin} = require('../middleware/auth');
 const {
   createSellLetter,
   getSellLetters,
@@ -27,7 +27,7 @@ router.route('/')
 // Parameterized routes last
 router.route('/:id')
   .get(getSellLetterById)
-  .put(updateSellLetter)
-  .delete(deleteSellLetter);
+  .put(admin,updateSellLetter)
+  .delete(admin,deleteSellLetter);
 
 module.exports = router;

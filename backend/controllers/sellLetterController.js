@@ -80,6 +80,9 @@ exports.getSellLetterById = async (req, res) => {
 // Update a sell letter
 exports.updateSellLetter = async (req, res) => {
   try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Not authorized to update sell letters" });
+    }
     let sellLetter = await SellLetter.findOne({
       _id: req.params.id,
       user: req.user.id
@@ -105,6 +108,9 @@ exports.updateSellLetter = async (req, res) => {
 // Delete a sell letter
 exports.deleteSellLetter = async (req, res) => {
   try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Not authorized to update sell letters" });
+    }
     const sellLetter = await SellLetter.findOne({
       _id: req.params.id,
       user: req.user.id

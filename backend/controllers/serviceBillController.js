@@ -145,6 +145,9 @@ exports.getServiceBill = async (req, res) => {
 // Update service bill
 exports.updateServiceBill = async (req, res) => {
   try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Not authorized to update service bills" });
+    }
     let serviceBill = await ServiceBill.findOne({
       _id: req.params.id,
       user: req.user._id,
@@ -210,6 +213,9 @@ exports.updateServiceBill = async (req, res) => {
 // Delete service bill
 exports.deleteServiceBill = async (req, res) => {
   try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Not authorized to update service bills" });
+    }
     const serviceBill = await ServiceBill.findOneAndDelete({
       _id: req.params.id,
       user: req.user._id,

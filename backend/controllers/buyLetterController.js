@@ -89,6 +89,9 @@ exports.getBuyLetterById = async (req, res) => {
 
 exports.updateBuyLetter = async (req, res) => {
   try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Not authorized to update buy letters" });
+    }
     let buyLetter = await BuyLetter.findOne({
       _id: req.params.id,
       user: req.user.id,
@@ -113,6 +116,9 @@ exports.updateBuyLetter = async (req, res) => {
 
 exports.deleteBuyLetter = async (req, res) => {
   try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Not authorized to update buy letters" });
+    }
     const buyLetter = await BuyLetter.findOne({
       _id: req.params.id,
       user: req.user.id,
