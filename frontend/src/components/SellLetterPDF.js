@@ -425,6 +425,7 @@ const SellLetterForm = () => {
                     onChange={handleChange}
                     style={styles.formInput}
                     required
+                    maxLength={11}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -439,6 +440,7 @@ const SellLetterForm = () => {
                     onChange={handleChange}
                     style={styles.formInput}
                     required
+                    maxLength={18}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -453,6 +455,7 @@ const SellLetterForm = () => {
                     onChange={handleChange}
                     style={styles.formInput}
                     required
+                    maxLength={15}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -461,12 +464,13 @@ const SellLetterForm = () => {
                     Vehicle KM
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     name="vehiclekm"
                     value={formData.vehiclekm}
                     onChange={handleChange}
                     style={styles.formInput}
                     required
+                    maxLength={6}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -542,12 +546,13 @@ const SellLetterForm = () => {
                     Buyer Phone
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     name="buyerPhone"
                     value={formData.buyerPhone}
                     onChange={handleChange}
                     style={styles.formInput}
                     required
+                    maxLength={10}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -556,12 +561,13 @@ const SellLetterForm = () => {
                     Buyer Aadhar
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     name="buyerAadhar"
                     value={formData.buyerAadhar}
                     onChange={handleChange}
                     style={styles.formInput}
                     required
+                    maxLength={12}
                   />
                 </div>
               </div>
@@ -661,11 +667,12 @@ const SellLetterForm = () => {
                     Seller Phone
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     name="sellerphone"
                     value={formData.sellerphone}
                     onChange={handleChange}
                     style={styles.formInput}
+                    maxLength={10}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -674,11 +681,12 @@ const SellLetterForm = () => {
                     Seller Aadhar
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     name="selleraadhar"
                     value={formData.selleraadhar}
                     onChange={handleChange}
                     style={styles.formInput}
+                    maxLength={12}
                   />
                 </div>
               </div>
