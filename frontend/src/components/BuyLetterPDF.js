@@ -133,15 +133,7 @@ const BuyLetterForm = () => {
         newData.buyerCurrentAddress1 = value;
       }
       if (name === "todayDate") {
-        
-        const formattedDate = formatDate(value);
-        console.log(
-          "Updating todayDate:",
-          value,
-          "-> todayDate1:",
-          formattedDate
-        );
-        newData.todayDate1 = formattedDate;
+        newData.todayDate1 =  formatDate(value);
       }
       if (name === "todayTime") {
         newData.todayTime1 = value;
@@ -448,11 +440,12 @@ const BuyLetterForm = () => {
                     Seller Aadhar Number
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     name="selleraadhar"
                     value={formData.selleraadhar}
                     onChange={handleChange}
                     style={styles.formInput}
+                    maxLength={12}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -466,6 +459,7 @@ const BuyLetterForm = () => {
                     value={formData.sellerpan}
                     onChange={handleChange}
                     style={styles.formInput}
+                    maxLength={10}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -474,11 +468,12 @@ const BuyLetterForm = () => {
                     Seller Aadhar Linked Phone
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     name="selleraadharphone"
                     value={formData.selleraadharphone}
                     onChange={handleChange}
                     style={styles.formInput}
+                    maxLength={10}
                   />
                 </div>
               </div>
@@ -544,6 +539,7 @@ const BuyLetterForm = () => {
                     onChange={handleChange}
                     style={styles.formInput}
                     required
+                    maxLength={11}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -558,6 +554,7 @@ const BuyLetterForm = () => {
                     onChange={handleChange}
                     style={styles.formInput}
                     required
+                    maxLength={18}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -572,6 +569,7 @@ const BuyLetterForm = () => {
                     onChange={handleChange}
                     style={styles.formInput}
                     required
+                    maxLength={15}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -580,11 +578,12 @@ const BuyLetterForm = () => {
                     Vehicle Kilometers
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     name="vehiclekm"
                     value={formData.vehiclekm}
                     onChange={handleChange}
                     style={styles.formInput}
+                    maxLength={6}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -675,12 +674,13 @@ const BuyLetterForm = () => {
                     Buyer Phone
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     name="buyerphone"
                     value={formData.buyerphone}
                     onChange={handleChange}
                     style={styles.formInput}
                     readOnly
+                    maxLength={10}
                   />
                 </div>
               </div>

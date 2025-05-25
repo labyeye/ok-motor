@@ -107,7 +107,7 @@ const AdminPage = () => {
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: "dashboard",
+      path: "admin",
     },
     {
       name: "Buy",
