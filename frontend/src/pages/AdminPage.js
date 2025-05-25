@@ -21,7 +21,7 @@ const AuthContext = {
 };
 
 const AdminPage = () => {
-  const { user, logout } = AuthContext;
+  const { user} = AuthContext;
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [dashboardData, setDashboardData] = useState({
@@ -46,8 +46,8 @@ const AdminPage = () => {
     try {
       setLoading(true);
       const endpoint = isOwnerView
-        ? `http://localhost:2500/api/dashboard/owner`
-        : `http://localhost:2500/api/dashboard`;
+        ? `https://ok-motor.onrender.com/api/dashboard/owner`
+        : `https://ok-motor.onrender.com/api/dashboard`;
 
       const response = await fetch(endpoint, {
         headers: {

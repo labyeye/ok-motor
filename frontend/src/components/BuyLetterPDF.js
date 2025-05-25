@@ -30,7 +30,7 @@ const AuthContext = {
 };
 
 const BuyLetterForm = () => {
-  const { user, logout } = AuthContext;
+  const { user } = AuthContext;
   const [activeMenu, setActiveMenu] = useState("Create Buy Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
@@ -87,7 +87,7 @@ const BuyLetterForm = () => {
     try {
       setIsSaving(true);
       const response = await axios.post(
-        "http://localhost:2500/api/buy-letter",
+        "https://ok-motor.onrender.com/api/buy-letter",
         formData
       );
       alert("Buy letter saved successfully!");

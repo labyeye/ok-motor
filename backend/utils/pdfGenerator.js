@@ -5,27 +5,54 @@ const path = require("path");
 
 exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
   try {
-    // Create a new PDF document
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([600, 800]);
 
-    // Set up fonts
     const font = await pdfDoc.embedFont("Helvetica");
     const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
 
-    // Draw header
-    page.drawText("SERVICE BILL", {
+    page.drawText("OK MOTORS", {
       x: 50,
       y: 750,
       size: 24,
       font: fontBold,
       color: rgb(0, 0, 0.8),
     });
-
-    // Draw bill info
+    page.drawText("UDAYAM-BR-26-0028550", {
+      x: 52,
+      y: 730, 
+      size: 14,
+      font: fontBold,
+    });
+    if (serviceBill.taxEnabled) {
+      page.drawText("Business Information:", {
+        x: 350,
+        y: 670, 
+        size: 14,
+        font: fontBold,
+      });
+      page.drawText(`Name: ${serviceBill.businessName || "N/A"}`, {
+        x: 350,
+        y: 650,
+        size: 12,
+        font,
+      });
+      page.drawText(`GSTIN: ${serviceBill.businessGSTIN || "N/A"}`, {
+        x: 350,
+        y: 630,
+        size: 12,
+        font,
+      });
+      page.drawText(`Address: ${serviceBill.businessAddress || "N/A"}`, {
+        x: 350,
+        y: 610,
+        size: 12,
+        font,
+      });
+    }
     page.drawText(`Bill No: ${serviceBill.billNumber}`, {
-      x: 50,
-      y: 720,
+      x: 52,
+      y: 710,
       size: 12,
       font,
     });
@@ -39,87 +66,82 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       }
     );
 
-    // Customer Information
     page.drawText("Customer Information:", {
       x: 50,
-      y: 690,
+      y: 670,
       size: 14,
       font: fontBold,
     });
     page.drawText(`Name: ${serviceBill.customerName}`, {
       x: 50,
-      y: 670,
+      y: 650,
       size: 12,
       font,
     });
     page.drawText(`Phone: ${serviceBill.customerPhone}`, {
       x: 50,
-      y: 650,
+      y: 630,
       size: 12,
       font,
     });
     page.drawText(`Address: ${serviceBill.customerAddress}`, {
       x: 50,
-      y: 630,
+      y: 610,
       size: 12,
       font,
     });
 
-    // Vehicle Information
     page.drawText("Vehicle Information:", {
       x: 50,
-      y: 600,
+      y: 580,
       size: 14,
       font: fontBold,
     });
     page.drawText(`Type: ${serviceBill.vehicleType.toUpperCase()}`, {
       x: 50,
-      y: 580,
+      y: 560,
       size: 12,
       font,
     });
     page.drawText(`Brand: ${serviceBill.vehicleBrand}`, {
       x: 200,
-      y: 580,
+      y: 560,
       size: 12,
       font,
     });
     page.drawText(`Model: ${serviceBill.vehicleModel}`, {
       x: 350,
-      y: 580,
+      y: 560,
       size: 12,
       font,
     });
     page.drawText(`Reg No: ${serviceBill.registrationNumber}`, {
       x: 50,
-      y: 560,
+      y: 540,
       size: 12,
       font,
     });
     page.drawText(`KM Reading: ${serviceBill.kmReading}`, {
       x: 200,
-      y: 560,
+      y: 540,
       size: 12,
       font,
     });
 
-    // Service Items Table Header
     page.drawText("Service Items:", {
       x: 50,
-      y: 530,
+      y: 470,
       size: 14,
       font: fontBold,
     });
 
-    // Table Header
-    page.drawText("SN", { x: 50, y: 510, size: 12, font: fontBold });
-    page.drawText("Description", { x: 80, y: 510, size: 12, font: fontBold });
-    page.drawText("Qty", { x: 300, y: 510, size: 12, font: fontBold });
-    page.drawText("Rate (Rs.)", { x: 350, y: 510, size: 12, font: fontBold });
-    page.drawText("Amount (Rs.)", { x: 450, y: 510, size: 12, font: fontBold });
+    page.drawText("SN", { x: 50, y: 450, size: 12, font: fontBold });
+    page.drawText("Description", { x: 80, y: 450, size: 12, font: fontBold });
+    page.drawText("Qty", { x: 300, y: 450, size: 12, font: fontBold });
+    page.drawText("Rate (Rs.)", { x: 350, y: 450, size: 12, font: fontBold });
+    page.drawText("Amount (Rs.)", { x: 450, y: 450, size: 12, font: fontBold });
 
-    // Service Items
-    let yPos = 490;
+    let yPos = 430;
     serviceBill.serviceItems.forEach((item, index) => {
       page.drawText((index + 1).toString(), { x: 50, y: yPos, size: 10, font });
       page.drawText(item.description, { x: 80, y: yPos, size: 10, font });
@@ -139,7 +161,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       yPos -= 20;
     });
 
-    // Totals
     page.drawText("Subtotal:", {
       x: 350,
       y: yPos - 30,
@@ -218,7 +239,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    // Payment Info
     page.drawText("Payment Method:", {
       x: 50,
       y: yPos - 160,
@@ -245,7 +265,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font,
     });
 
-    // Footer
     page.drawText("Thank you for your business!", {
       x: 200,
       y: 50,
@@ -254,22 +273,18 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0, 0, 0.8),
     });
 
-    // Save PDF to file or return buffer
     const pdfBytes = await pdfDoc.save();
 
     if (returnBuffer) {
       return pdfBytes;
     } else {
-      // Save to file
       const uploadDir = path.join(__dirname, "../uploads/service-bills");
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
-
       const filename = `service-bill-${serviceBill._id}.pdf`;
       const filePath = path.join(uploadDir, filename);
       fs.writeFileSync(filePath, pdfBytes);
-
       return `/uploads/service-bills/${filename}`;
     }
   } catch (error) {

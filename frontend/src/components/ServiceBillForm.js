@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from "react";
-import { PDFDocument, rgb } from "pdf-lib";
+import React, { useState } from "react";
+import { PDFDocument } from "pdf-lib";
 import { saveAs } from "file-saver";
 import {
   FileText,
@@ -20,7 +20,7 @@ import {
   ChevronRight,
   Plus,
   Trash,
-  Bike
+  Bike,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -31,12 +31,16 @@ const AuthContext = {
 };
 
 const ServiceBillForm = () => {
-  const { user, logout } = AuthContext;
+  const { user } = AuthContext;
   const [activeMenu, setActiveMenu] = useState("Create Service Bill");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
+    taxEnabled: false,
+    businessName: "",
+    businessGSTIN: "",
+    businessAddress: "",
     totalAmount: 0,
     taxAmount: 0,
     grandTotal: 0,
@@ -67,13 +71,16 @@ const ServiceBillForm = () => {
   });
 
   const [previewMode, setPreviewMode] = useState(false);
-const API_BASE_URL = 'http://localhost:2500/api';
+  const API_BASE_URL = "https://ok-motor.onrender.com/api";
   const calculateAmounts = (data) => {
     const totalAmount = (data.serviceItems || []).reduce(
       (sum, item) => sum + (item.quantity || 0) * (item.rate || 0),
       0
     );
-    const taxAmount = ((data.taxRate || 0) / 100) * totalAmount;
+    const taxAmount = data.taxEnabled
+      ? ((data.taxRate || 0) / 100) * totalAmount
+      : 0;
+
     const grandTotal = totalAmount + taxAmount - (data.discount || 0);
     const balanceDue = grandTotal - (data.advancePaid || 0);
 
@@ -98,7 +105,7 @@ const API_BASE_URL = 'http://localhost:2500/api';
     setFormData({
       ...formData,
       serviceItems: items,
-      ...calculateAmounts({ ...formData, serviceItems: items })
+      ...calculateAmounts({ ...formData, serviceItems: items }),
     });
   };
 
@@ -140,18 +147,26 @@ const API_BASE_URL = 'http://localhost:2500/api';
   const saveServiceBill = async () => {
     try {
       setIsSaving(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API_BASE_URL}/service-bills`, formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${API_BASE_URL}/service-bills`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
       alert("Service bill saved successfully!");
       return response.data;
     } catch (error) {
       console.error("Error saving service bill:", error);
-      alert(`Failed to save service bill: ${error.response?.data?.message || error.message}`);
+      alert(
+        `Failed to save service bill: ${
+          error.response?.data?.message || error.message
+        }`
+      );
       throw error;
     } finally {
       setIsSaving(false);
@@ -161,43 +176,46 @@ const API_BASE_URL = 'http://localhost:2500/api';
   const handleSaveAndDownload = async () => {
     try {
       setIsSaving(true);
-      
-      const token = localStorage.getItem('token');
-      const saveResponse = await axios.post('http://localhost:2500/api/service-bills', formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+
+      const token = localStorage.getItem("token");
+      const saveResponse = await axios.post(
+        "https://ok-motor.onrender.com/api/service-bills",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
-      
-      console.log('Save response:', saveResponse.data); 
-      
-      const billId = saveResponse.data.data._id; 
+      );
+
+      console.log("Save response:", saveResponse.data);
+
+      const billId = saveResponse.data.data._id;
       if (!billId) {
-        throw new Error('No bill ID returned from server');
+        throw new Error("No bill ID returned from server");
       }
-      
-      const pdfResponse = await axios.get(`http://localhost:2500/api/service-bills/${billId}/download`, {
-        responseType: 'blob',
-        headers: {
-          'Authorization': `Bearer ${token}`
+
+      const pdfResponse = await axios.get(
+        `https://ok-motor.onrender.com/api/service-bills/${billId}/download`,
+        {
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
-      
-      // Create download link
+      );
       const url = window.URL.createObjectURL(new Blob([pdfResponse.data]));
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.setAttribute('download', `service-bill-${billId}.pdf`);
+      link.setAttribute("download", `service-bill-${billId}.pdf`);
       document.body.appendChild(link);
       link.click();
-      
-      // Clean up
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
-      alert('Service bill saved and downloaded successfully!');
+
+      alert("Service bill saved and downloaded successfully!");
     } catch (error) {
-      console.error('Error in save and download:', error);
+      console.error("Error in save and download:", error);
       alert(`Failed to save and download: ${error.message}`);
     } finally {
       setIsSaving(false);
@@ -212,13 +230,37 @@ const API_BASE_URL = 'http://localhost:2500/api';
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const page = pdfDoc.getPages()[0];
-
-      // Customer Information
+      const font = await pdfDoc.embedFont(PDFDocument.Font.Helvetica);
+      const fontBold = await pdfDoc.embedFont(PDFDocument.Font.HelveticaBold);
       page.drawText(billData.customerName, { x: 50, y: 650, size: 11 });
       page.drawText(billData.customerPhone, { x: 300, y: 650, size: 11 });
       page.drawText(billData.customerAddress, { x: 50, y: 630, size: 11 });
-
-      // Vehicle Information
+      if (billData.taxEnabled) {
+        page.drawText("Business Information:", {
+          x: 50,
+          y: 610, 
+          size: 14,
+          font: fontBold,
+        });
+        page.drawText(`Name: ${billData.businessName || "N/A"}`, {
+          x: 350,
+          y: 650,
+          size: 12,
+          font,
+        });
+        page.drawText(`GSTIN: ${billData.businessGSTIN || "N/A"}`, {
+          x: 50,
+          y: 650,
+          size: 12,
+          font,
+        });
+        page.drawText(`Address: ${billData.businessAddress || "N/A"}`, {
+          x: 50,
+          y: 550,
+          size: 12,
+          font,
+        });
+      }
       page.drawText(billData.vehicleType.toUpperCase(), {
         x: 50,
         y: 600,
@@ -242,8 +284,6 @@ const API_BASE_URL = 'http://localhost:2500/api';
         y: 580,
         size: 11,
       });
-
-      // Service Details
       page.drawText(billData.serviceDate, { x: 50, y: 550, size: 11 });
       page.drawText(billData.deliveryDate, { x: 200, y: 550, size: 11 });
       page.drawText(billData.serviceType.toUpperCase(), {
@@ -251,8 +291,6 @@ const API_BASE_URL = 'http://localhost:2500/api';
         y: 550,
         size: 11,
       });
-
-      // Service Items
       let yPos = 500;
       billData.serviceItems.forEach((item, index) => {
         page.drawText((index + 1).toString(), { x: 50, y: yPos, size: 10 });
@@ -262,8 +300,6 @@ const API_BASE_URL = 'http://localhost:2500/api';
         page.drawText(item.amount.toFixed(2), { x: 450, y: yPos, size: 10 });
         yPos -= 20;
       });
-
-      // Totals
       page.drawText(billData.totalAmount.toFixed(2), {
         x: 450,
         y: 350,
@@ -291,8 +327,6 @@ const API_BASE_URL = 'http://localhost:2500/api';
         y: 250,
         size: 11,
       });
-
-      // Payment Information
       page.drawText(billData.paymentMethod.toUpperCase(), {
         x: 150,
         y: 220,
@@ -303,8 +337,6 @@ const API_BASE_URL = 'http://localhost:2500/api';
         y: 220,
         size: 11,
       });
-
-      // Additional Info
       page.drawText(billData.issuesReported || "N/A", {
         x: 50,
         y: 180,
@@ -320,6 +352,36 @@ const API_BASE_URL = 'http://localhost:2500/api';
         y: 120,
         size: 10,
       });
+
+      if (billData.taxEnabled) {
+        page.drawText("Business Information:", {
+          x: 50,
+          y: 610, 
+          size: 14,
+          font: fontBold,
+        });
+        page.drawText(`Name: ${billData.businessName || "N/A"}`, {
+          x: 50,
+          y: 590,
+          size: 12,
+          font,
+        });
+        page.drawText(`GSTIN: ${billData.businessGSTIN || "N/A"}`, {
+          x: 50,
+          y: 570,
+          size: 12,
+          font,
+        });
+        page.drawText(`Address: ${billData.businessAddress || "N/A"}`, {
+          x: 50,
+          y: 550,
+          size: 12,
+          font,
+        });
+
+        // Adjust the Y positions of subsequent elements to make space
+        // You'll need to adjust all Y positions below this section accordingly
+      }
 
       const pdfBytes = await pdfDoc.save();
       saveAs(
@@ -805,6 +867,70 @@ const API_BASE_URL = 'http://localhost:2500/api';
                 <IndianRupee style={styles.sectionIcon} /> Payment Information
               </h2>
               <div style={styles.formGrid}>
+                {/* Add this toggle switch at the top of the payment section */}
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <IndianRupee style={styles.formIcon} />
+                    Enable Tax
+                  </label>
+                  <div style={styles.toggleContainer}>
+                    <label style={styles.toggleSwitch}>
+                      <input
+                        type="checkbox"
+                        checked={formData.taxEnabled}
+                        onChange={() => {
+                          const newData = {
+                            ...formData,
+                            taxEnabled: !formData.taxEnabled,
+                            // Reset tax rate to 18 when enabling
+                            taxRate: !formData.taxEnabled ? 18 : 0,
+                          };
+                          setFormData({
+                            ...newData,
+                            ...calculateAmounts(newData),
+                          });
+                        }}
+                      />
+                      <span style={styles.toggleSlider}></span>
+                    </label>
+                  </div>
+                </div>
+                {formData.taxEnabled && (
+                  <>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>Business Name</label>
+                      <input
+                        type="text"
+                        name="businessName"
+                        value={formData.businessName}
+                        onChange={handleChange}
+                        style={styles.formInput}
+                      />
+                    </div>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>Business GSTIN</label>
+                      <input
+                        type="text"
+                        name="businessGSTIN"
+                        value={formData.businessGSTIN}
+                        onChange={handleChange}
+                        style={styles.formInput}
+                      />
+                    </div>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>Business Address</label>
+                      <textarea
+                        name="businessAddress"
+                        value={formData.businessAddress}
+                        onChange={handleChange}
+                        rows={3}
+                        style={styles.formTextarea}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+              <div style={styles.formGrid}>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
@@ -825,12 +951,13 @@ const API_BASE_URL = 'http://localhost:2500/api';
                   <input
                     type="number"
                     name="taxRate"
-                    value={formData.taxRate}
+                    value={formData.taxEnabled ? formData.taxRate : 0}
                     onChange={handleChange}
                     style={styles.formInput}
                     min="0"
                     max="100"
                     step="0.01"
+                    disabled={!formData.taxEnabled}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -840,7 +967,11 @@ const API_BASE_URL = 'http://localhost:2500/api';
                   </label>
                   <input
                     type="number"
-                    value={formData.taxAmount.toFixed(2)}
+                    value={
+                      formData.taxEnabled
+                        ? formData.taxAmount.toFixed(2)
+                        : "0.00"
+                    }
                     style={styles.formInput}
                     readOnly
                   />
@@ -1062,6 +1193,7 @@ const styles = {
       backgroundColor: "#334155",
     },
   },
+
   menuItemActive: {
     backgroundColor: "#334155",
     borderRight: "3px solid #3b82f6",

@@ -12,12 +12,7 @@ import {
   ChevronRight,
   FileText,
   Search,
-  Download,
-  Edit,
-  Trash2,
-  X,
   Bike,
-  Check,
   ArrowUpRight,
   ArrowDownLeft,
 } from "lucide-react";
@@ -29,7 +24,7 @@ const AuthContext = {
 };
 
 const BikeHistory = () => {
-  const { user, logout } = AuthContext;
+  const { user } = AuthContext;
   const [activeMenu, setActiveMenu] = useState("Bike History");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,7 +39,7 @@ const BikeHistory = () => {
       setLoading(true);
       const [buyLetters, sellLetters, serviceBills] = await Promise.all([
         axios.get(
-          `http://localhost:2500/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
+          `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -52,7 +47,7 @@ const BikeHistory = () => {
           }
         ),
         axios.get(
-          `http://localhost:2500/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
+          `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -60,7 +55,7 @@ const BikeHistory = () => {
           }
         ),
         axios.get(
-          `http://localhost:2500/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
+          `https://ok-motor.onrender.com/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -68,8 +63,6 @@ const BikeHistory = () => {
           }
         ),
       ]);
-
-      // Ensure we're working with arrays
       const buyData = Array.isArray(buyLetters.data) ? buyLetters.data : [];
       const sellData = Array.isArray(sellLetters.data) ? sellLetters.data : [];
       const serviceData = Array.isArray(serviceBills.data?.data)
@@ -231,7 +224,7 @@ const BikeHistory = () => {
 
   return (
     <div style={styles.container}>
-      {/* Sidebar */}
+
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
           <h2 style={styles.sidebarTitle}>Admin Panel</h2>
@@ -296,7 +289,7 @@ const BikeHistory = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>

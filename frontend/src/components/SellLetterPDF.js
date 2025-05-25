@@ -24,15 +24,13 @@ import {
   Bike
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-// Mock AuthContext for demo
 const AuthContext = {
   user: { name: "John Admin" },
   logout: () => console.log("Logged out"),
 };
 
 const SellLetterForm = () => {
-  const { user, logout } = AuthContext;
+  const { user } = AuthContext;
   const [activeMenu, setActiveMenu] = useState("Create Sell Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
@@ -151,8 +149,6 @@ const SellLetterForm = () => {
   const saveToDatabase = async () => {
     try {
       setIsSaving(true);
-
-      // Check if required fields are empty
       const requiredFields = [
         "vehicleName",
         "vehicleModel",
@@ -182,7 +178,7 @@ const SellLetterForm = () => {
       }
 
       const response = await axios.post(
-        "http://localhost:2500/api/sell-letters",
+        "https://ok-motor.onrender.com/api/sell-letters",
         formData,
         {
           headers: {

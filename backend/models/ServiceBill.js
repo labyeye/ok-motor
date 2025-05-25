@@ -39,6 +39,10 @@ const ServiceBillSchema = new mongoose.Schema({
   ],
   totalAmount: { type: Number, required: true },
   discount: { type: Number, default: 0 },
+  taxEnabled: { type: Boolean, default: false }, // New field for tax toggle
+  businessName: { type: String }, // New field
+  businessGSTIN: { type: String }, // New field
+  businessAddress: { type: String }, // New field
   taxRate: { type: Number, default: 18 }, // Default GST rate
   taxAmount: { type: Number, required: true },
   grandTotal: { type: Number, required: true },
