@@ -86,7 +86,7 @@ const BuyLetterForm = () => {
     try {
       setIsSaving(true);
       const response = await axios.post(
-        "http://localhost:2500/api/buy-letter",
+        "https://ok-motor.onrender.com/api/buy-letter",
         formData
       );
       alert("Buy letter saved successfully!");

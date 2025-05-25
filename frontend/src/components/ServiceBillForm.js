@@ -66,7 +66,7 @@ const ServiceBillForm = () => {
   });
 
   const [previewMode, setPreviewMode] = useState(false);
-const API_BASE_URL = 'http://localhost:2500/api';
+const API_BASE_URL = 'https://ok-motor.onrender.com/api';
   const calculateAmounts = (data) => {
     const totalAmount = (data.serviceItems || []).reduce(
       (sum, item) => sum + (item.quantity || 0) * (item.rate || 0),
@@ -162,7 +162,7 @@ const API_BASE_URL = 'http://localhost:2500/api';
       setIsSaving(true);
       
       const token = localStorage.getItem('token');
-      const saveResponse = await axios.post('http://localhost:2500/api/service-bills', formData, {
+      const saveResponse = await axios.post('https://ok-motor.onrender.com/api/service-bills', formData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -175,7 +175,7 @@ const API_BASE_URL = 'http://localhost:2500/api';
         throw new Error('No bill ID returned from server');
       }
       
-      const pdfResponse = await axios.get(`http://localhost:2500/api/service-bills/${billId}/download`, {
+      const pdfResponse = await axios.get(`https://ok-motor.onrender.com/api/service-bills/${billId}/download`, {
         responseType: 'blob',
         headers: {
           'Authorization': `Bearer ${token}`

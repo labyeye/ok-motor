@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
-axios.defaults.baseURL = "http://localhost:2500/";
+axios.defaults.baseURL = "https://ok-motor.onrender.com/";
 axios.defaults.withCredentials = true;
 
 const AuthContext = createContext();
