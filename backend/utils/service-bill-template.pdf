@@ -1,0 +1,37 @@
+# SERVICE BILL
+
+Customer Details:  
+**{customerName}**  
+{customerAddress}  
+Phone: {customerPhone}  
+Email: {customerEmail}  
+
+Service Bill Date: {serviceDate}  
+Delivery Date: {deliveryDate}  
+
+Vehicle Details:  
+Type: {vehicleType} | Brand: {vehicleBrand} | Model: {vehicleModel}  
+Reg No: {registrationNumber} | Chassis: {chassisNumber} | Engine: {engineNumber}  
+KM Reading: {kmReading}  
+
+| SN | SERVICE ITEM DESCRIPTION | RATE | QTY | AMOUNT |
+|---|---|---|---|---|
+{serviceItems}
+
+Subtotal: ₹{totalAmount}/-  
+Tax ({taxRate}%): ₹{taxAmount}/-  
+Discount: ₹{discount}/-  
+Grand Total: ₹{grandTotal}/-  
+Advance Paid: ₹{advancePaid}/-  
+Balance Due: ₹{balanceDue}/-  
+
+Payment Method: {paymentMethod}  
+Payment Status: {paymentStatus}  
+
+Additional Notes:  
+Issues Reported: {issuesReported}  
+Technician Notes: {technicianNotes}  
+Warranty Info: {warrantyInfo}  
+
+Thank you for your business!  
+{yourBusinessName}

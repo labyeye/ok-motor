@@ -1,0 +1,105 @@
+const SellLetter = require('../models/SellLetter');
+
+// Create a new sell letter
+exports.createSellLetter = async (req, res) => {
+  try {
+    const sellLetter = new SellLetter({
+      ...req.body,
+      user: req.user.id
+    });
+
+    const savedSellLetter = await sellLetter.save();
+    res.status(201).json(savedSellLetter);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+// Get all sell letters (with optional filtering)
+exports.getSellLetters = async (req, res) => {
+  try {
+    // You might want to add filtering options here
+    const sellLetters = await SellLetter.find()
+      .sort({ createdAt: -1 })
+      .select('-__v');
+    res.json(sellLetters);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+exports.getMySellLetters = async (req, res) => {
+  try {
+    const sellLetters = await SellLetter.find({ user: req.user.id })
+      .sort({ createdAt: -1 })
+      .select('-__v');
+    res.json(sellLetters);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+exports.getSellLetterById = async (req, res) => {
+  try {
+    const sellLetter = await SellLetter.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    });
+
+    if (!sellLetter) {
+      return res.status(404).json({ message: 'Sell letter not found' });
+    }
+
+    res.json(sellLetter);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// Update a sell letter
+exports.updateSellLetter = async (req, res) => {
+  try {
+    let sellLetter = await SellLetter.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    });
+
+    if (!sellLetter) {
+      return res.status(404).json({ message: 'Sell letter not found' });
+    }
+
+    sellLetter = await SellLetter.findByIdAndUpdate(
+      req.params.id, 
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+
+    res.json(sellLetter);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// Delete a sell letter
+exports.deleteSellLetter = async (req, res) => {
+  try {
+    const sellLetter = await SellLetter.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    });
+
+    if (!sellLetter) {
+      return res.status(404).json({ message: 'Sell letter not found' });
+    }
+
+    await sellLetter.deleteOne();
+    res.json({ message: 'Sell letter removed' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
