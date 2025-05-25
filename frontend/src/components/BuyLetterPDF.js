@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useContext } from "react";
 import { PDFDocument, rgb } from "pdf-lib";
 import { saveAs } from "file-saver";
 import {
@@ -24,13 +24,9 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-const AuthContext = {
-  user: { name: "John Admin" },
-  logout: () => console.log("Logged out"),
-};
-
+import AuthContext from "../context/AuthContext";
 const BuyLetterForm = () => {
-  const { user } = AuthContext;
+  const { user } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Create Buy Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
@@ -51,11 +47,19 @@ const BuyLetterForm = () => {
     buyerFatherName: "",
     buyerCurrentAddress: "",
     saleDate: new Date().toISOString().split("T")[0],
-    saleTime: new Date().toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+    saleTime: new Date().toLocaleTimeString("en-GB", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     saleAmount: "",
     paymentMethod: "cash",
     todayDate: new Date().toISOString().split("T")[0],
-    todayTime: new Date().toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+    todayTime: new Date().toLocaleTimeString("en-GB", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     todayDate1: "",
     todayTime1: "",
     sellerName1: "",
@@ -76,10 +80,23 @@ const BuyLetterForm = () => {
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+  const formatTime = (timeString) => {
+    if (!timeString) return "";
+    // If the time is already in HH:mm format (from the time input), just return it
+    if (/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeString)) {
+      return timeString;
+    }
+    // Otherwise, try to parse it as a Date object
+    const time = new Date(`1970-01-01T${timeString}`);
+    return time.toLocaleTimeString("en-IN", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
   const [previewMode, setPreviewMode] = useState(false);
@@ -87,14 +104,25 @@ const BuyLetterForm = () => {
     try {
       setIsSaving(true);
       const response = await axios.post(
-        "https://ok-motor.onrender.com/api/buy-letter",
+        "http://localhost:2500/api/buy-letter",
         formData
       );
       alert("Buy letter saved successfully!");
       return response.data;
     } catch (error) {
       console.error("Error saving buy letter:", error);
-      alert("Failed to save buy letter. Please try again.");
+      let errorMessage = "Failed to save buy letter. Please try again.";
+
+      if (error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+        if (error.response.data.error) {
+          errorMessage += ` (${error.response.data.error})`;
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your connection.";
+      }
+      alert(errorMessage);
+      throw error;
     } finally {
       setIsSaving(false);
     }
@@ -134,7 +162,7 @@ const BuyLetterForm = () => {
         newData.buyerCurrentAddress1 = value;
       }
       if (name === "todayDate") {
-        newData.todayDate1 =  formatDate(value);
+        newData.todayDate1 = formatDate(value);
       }
       if (name === "todayTime") {
         newData.todayTime1 = value;
@@ -144,11 +172,12 @@ const BuyLetterForm = () => {
     });
   }, []);
 
+  // In the menuItems array (around line 250 in BuyLetterPDF.js)
   const menuItems = [
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: "/admin",
+      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
       name: "Buy",
@@ -174,14 +203,19 @@ const BuyLetterForm = () => {
         { name: "Service History", path: "/service/history" },
       ],
     },
-    {
-      name: "Staff",
-      icon: Users,
-      submenu: [
-        { name: "Create Staff ID", path: "/staff/create" },
-        { name: "Staff List", path: "/staff/list" },
-      ],
-    },
+    // Add the conditional check here
+    ...(user?.role !== "staff"
+      ? [
+          {
+            name: "Staff",
+            icon: Users,
+            submenu: [
+              { name: "Create Staff ID", path: "/staff/create" },
+              { name: "Staff List", path: "/staff/list" },
+            ],
+          },
+        ]
+      : []),
     {
       name: "Bike History",
       icon: Bike,
@@ -204,10 +238,11 @@ const BuyLetterForm = () => {
   };
 
   const handleMenuClick = (menuName, path) => {
-    setActiveMenu(menuName);
-    navigate(path);
-    console.log("Navigate to:", path);
-  };
+  setActiveMenu(menuName);
+  // Handle both string paths and function paths
+  const actualPath = typeof path === 'function' ? path(user?.role) : path;
+  navigate(actualPath);
+};
   const fieldPositions = {
     sellerName: { x: 45, y: 630, size: 11 },
     sellerFatherName: { x: 330, y: 630, size: 11 },
@@ -277,10 +312,16 @@ const BuyLetterForm = () => {
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const page = pdfDoc.getPages()[0];
+      const formattedData = {
+        ...formData,
+        todayDate1: formatDate(formData.todayDate),
+        todayTime1: formatTime(formData.todayTime),
 
+      };
+  
       for (const [fieldName, position] of Object.entries(fieldPositions)) {
-        if (formData[fieldName]) {
-          page.drawText(String(formData[fieldName]), {
+        if (formattedData[fieldName]) {
+          page.drawText(String(formattedData[fieldName]), {
             x: position.x,
             y: position.y,
             size: position.size,
@@ -325,26 +366,27 @@ const BuyLetterForm = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>Admin Panel</h2>
+          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 
         <nav style={styles.nav}>
           {menuItems.map((item) => (
             <div key={item.name}>
-              <div
-                style={{
-                  ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                }}
-                onClick={() => {
-                  if (item.submenu) {
-                    toggleMenu(item.name);
-                  } else {
-                    handleMenuClick(item.name, item.path);
-                  }
-                }}
-              >
+    <div
+      style={{
+        ...styles.menuItem,
+        ...(activeMenu === item.name ? styles.menuItemActive : {}),
+      }}
+      onClick={() => {
+        if (item.submenu) {
+          toggleMenu(item.name);
+        } else {
+          // Pass the path as-is (could be string or function)
+          handleMenuClick(item.name, item.path);
+        }
+      }}
+    >
                 <div style={styles.menuItemContent}>
                   <item.icon size={20} style={styles.menuIcon} />
                   <span style={styles.menuText}>{item.name}</span>

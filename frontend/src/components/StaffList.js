@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -15,9 +16,11 @@ import {
   Trash2,
   UserPlus,
 } from "lucide-react";
-
+import AuthContext from "../context/AuthContext";
 const StaffList = () => {
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,11 +30,12 @@ const StaffList = () => {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const response = await axios.get("https://ok-motor.onrender.com/api/users");
+        const response = await axios.get("http://localhost:2500/api/users");
         setStaff(response.data);
       } catch (err) {
         setError(
-          err.response?.data?.message || "Failed to fetch staff. Please try again."
+          err.response?.data?.message ||
+            "Failed to fetch staff. Please try again."
         );
       } finally {
         setLoading(false);
@@ -44,11 +48,12 @@ const StaffList = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this staff member?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/users/${id}`);
+        await axios.delete(`http://localhost:2500/api/users/${id}`);
         setStaff(staff.filter((user) => user._id !== id));
       } catch (err) {
         setError(
-          err.response?.data?.message || "Failed to delete staff. Please try again."
+          err.response?.data?.message ||
+            "Failed to delete staff. Please try again."
         );
       }
     }
@@ -61,18 +66,19 @@ const StaffList = () => {
     }));
   };
 
+  // Handle menu clicks
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    if (path) {
-      navigate(path);
-    }
+    const actualPath = typeof path === 'function' ? path(user?.role) : path;
+    navigate(actualPath);
   };
 
+  // In the menuItems array (around line 250 in BuyLetterPDF.js)
   const menuItems = [
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: "/admin",
+      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
       name: "Buy",
@@ -98,14 +104,19 @@ const StaffList = () => {
         { name: "Service History", path: "/service/history" },
       ],
     },
-    {
-      name: "Staff",
-      icon: Users,
-      submenu: [
-        { name: "Create Staff ID", path: "/staff/create" },
-        { name: "Staff List", path: "/staff/list" },
-      ],
-    },
+    // Add the conditional check here
+    ...(user?.role !== "staff"
+      ? [
+          {
+            name: "Staff",
+            icon: Users,
+            submenu: [
+              { name: "Create Staff ID", path: "/staff/create" },
+              { name: "Staff List", path: "/staff/list" },
+            ],
+          },
+        ]
+      : []),
     {
       name: "Bike History",
       icon: Bike,
@@ -125,26 +136,27 @@ const StaffList = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>Admin Panel</h2>
+          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
           <p style={styles.sidebarSubtitle}>Welcome, Admin</p>
         </div>
 
         <nav style={styles.nav}>
           {menuItems.map((item) => (
             <div key={item.name}>
-              <div
-                style={{
-                  ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                }}
-                onClick={() => {
-                  if (item.submenu) {
-                    toggleMenu(item.name);
-                  } else {
-                    handleMenuClick(item.name, item.path);
-                  }
-                }}
-              >
+    <div
+      style={{
+        ...styles.menuItem,
+        ...(activeMenu === item.name ? styles.menuItemActive : {}),
+      }}
+      onClick={() => {
+        if (item.submenu) {
+          toggleMenu(item.name);
+        } else {
+          // Pass the path as-is (could be string or function)
+          handleMenuClick(item.name, item.path);
+        }
+      }}
+    >
                 <div style={styles.menuItemContent}>
                   <item.icon size={20} style={styles.menuIcon} />
                   <span style={styles.menuText}>{item.name}</span>
@@ -164,9 +176,13 @@ const StaffList = () => {
                       key={subItem.name}
                       style={{
                         ...styles.submenuItem,
-                        ...(activeMenu === subItem.name ? styles.submenuItemActive : {}),
+                        ...(activeMenu === subItem.name
+                          ? styles.submenuItemActive
+                          : {}),
                       }}
-                      onClick={() => handleMenuClick(subItem.name, subItem.path)}
+                      onClick={() =>
+                        handleMenuClick(subItem.name, subItem.path)
+                      }
                     >
                       {subItem.name}
                     </div>

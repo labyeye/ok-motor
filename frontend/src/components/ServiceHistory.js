@@ -1,4 +1,4 @@
-// BikeHistory.js
+// ServiceHistory.js
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import {
@@ -12,170 +12,105 @@ import {
   ChevronRight,
   FileText,
   Search,
+  Download,
+  Edit,
+  Trash2,
+  X,
   Bike,
-  ArrowUpRight,
-  ArrowDownLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
-const BikeHistory = () => {
+
+const ServiceHistory = () => {
   const { user } = useContext(AuthContext);
-  const [activeMenu, setActiveMenu] = useState("Bike History");
+  const [activeMenu, setActiveMenu] = useState("Service History");
   const [expandedMenus, setExpandedMenus] = useState({});
+  const [serviceBills, setServiceBills] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [bikeHistory, setBikeHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
 
-  const fetchBikeHistory = async () => {
-    if (!searchTerm.trim()) return;
-
-    try {
-      setLoading(true);
-      const [buyLetters, sellLetters, serviceBills] = await Promise.all([
-        axios.get(
-          `http://localhost:2500/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        ),
-        axios.get(
-          `http://localhost:2500/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        ),
-        axios.get(
-          `http://localhost:2500/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        ),
-      ]);
-
-      // Handle potential errors in individual requests
-      const buyData =
-        buyLetters.status === 200
-          ? Array.isArray(buyLetters.data)
-            ? buyLetters.data
-            : []
-          : [];
-      const sellData =
-        sellLetters.status === 200
-          ? Array.isArray(sellLetters.data)
-            ? sellLetters.data
-            : []
-          : [];
-      const serviceData =
-        serviceBills.status === 200
-          ? Array.isArray(serviceBills.data?.data)
-            ? serviceBills.data.data
-            : Array.isArray(serviceBills.data)
-            ? serviceBills.data
-            : []
-          : [];
-
-      if (
-        buyData.length === 0 &&
-        sellData.length === 0 &&
-        serviceData.length === 0
-      ) {
-        setBikeHistory([]);
-        return;
-      }
-
-      const combinedData = [
-        ...buyData.map((item) => ({
-          ...item,
-          type: "buy",
-          date: item.saleDate || item.createdAt,
-        })),
-        ...sellData.map((item) => ({
-          ...item,
-          type: "sell",
-          date: item.saleDate || item.createdAt,
-        })),
-        ...serviceData.map((item) => ({
-          ...item,
-          type: "service",
-          date: item.serviceDate || item.createdAt,
-        })),
-      ];
-
-      combinedData.sort((a, b) => new Date(b.date) - new Date(a.date));
-      setBikeHistory(combinedData);
-    } catch (error) {
-      console.error("Error fetching bike history:", error);
-      setBikeHistory([]);
-    } finally {
-      setLoading(false);
-    }
-  };
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchTerm.trim().length > 0) {
-        fetchBikeHistory();
-      } else {
-        setBikeHistory([]);
+    const fetchServiceBills = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `http://localhost:2500/api/service-bills?page=${currentPage}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        setServiceBills(response.data.data || response.data);
+        setTotalPages(response.data.totalPages || 1);
+      } catch (error) {
+        console.error("Error fetching service bills:", error);
+      } finally {
+        setLoading(false);
       }
-    }, 500);
+    };
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
+    fetchServiceBills();
+  }, [currentPage]);
 
-  const getActionIcon = (type) => {
-    switch (type) {
-      case "buy":
-        return <ArrowDownLeft size={16} color="#3b82f6" />;
-      case "sell":
-        return <ArrowUpRight size={16} color="#ef4444" />;
-      case "service":
-        return <Wrench size={16} color="#10b981" />;
-      default:
-        return <FileText size={16} />;
+  const filteredBills = serviceBills.filter(
+    (bill) =>
+      bill.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bill.registrationNumber
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      bill.vehicleModel.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleDownload = async (billId) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:2500/api/service-bills/${billId}/download`,
+        {
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `service-bill-${billId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      alert("Failed to download PDF. Please try again.");
     }
   };
 
-  const getActionLabel = (type) => {
-    switch (type) {
-      case "buy":
-        return "Purchased";
-      case "sell":
-        return "Sold";
-      case "service":
-        return "Serviced";
-      default:
-        return "Activity";
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this service bill?")) {
+      try {
+        await axios.delete(`http://localhost:2500/api/service-bills/${id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        setServiceBills(serviceBills.filter((bill) => bill._id !== id));
+      } catch (error) {
+        console.error("Error deleting service bill:", error);
+      }
     }
   };
 
-  const getAmount = (item) => {
-    if (item.type === "buy" || item.type === "sell") {
-      return `₹${item.saleAmount}`;
-    }
-    if (item.type === "service") {
-      return `₹${item.grandTotal}`;
-    }
-    return "";
-  };
-
-  const getDetails = (item) => {
-    if (item.type === "buy") {
-      return `Purchased from ${item.sellerName}`;
-    }
-    if (item.type === "sell") {
-      return `Sold to ${item.buyerName}`;
-    }
-    if (item.type === "service") {
-      return `Service: ${item.serviceType} (${item.serviceItems.length} items)`;
-    }
-    return "";
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    sessionStorage.clear();
+    navigate("/login");
   };
 
   const menuItems = [
@@ -227,13 +162,6 @@ const BikeHistory = () => {
     },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
-    navigate("/login");
-  };
   const toggleMenu = (menuName) => {
     setExpandedMenus((prev) => ({
       ...prev,
@@ -243,13 +171,13 @@ const BikeHistory = () => {
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    // Handle both string paths and function paths
     const actualPath = typeof path === "function" ? path(user?.role) : path;
     navigate(actualPath);
   };
 
   return (
     <div style={styles.container}>
+      {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
           <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
@@ -315,12 +243,13 @@ const BikeHistory = () => {
         </nav>
       </div>
 
+      {/* Main Content */}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
-            <h1 style={styles.pageTitle}>Bike History</h1>
+            <h1 style={styles.pageTitle}>Service History</h1>
             <p style={styles.pageSubtitle}>
-              Track all activities for a specific bike
+              View and manage all your service bills
             </p>
           </div>
 
@@ -329,94 +258,133 @@ const BikeHistory = () => {
               <Search size={18} style={styles.searchIcon} />
               <input
                 type="text"
-                placeholder="Enter bike registration number..."
+                placeholder="Search service bills..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={styles.searchInput}
               />
             </div>
+            <button
+              style={styles.newBillButton}
+              onClick={() => navigate("/service/create")}
+            >
+              <FileText size={16} style={styles.buttonIcon} />
+              New Service Bill
+            </button>
           </div>
 
           {loading ? (
             <div style={styles.loadingContainer}>
-              <p>Loading bike history...</p>
+              <p>Loading service bills...</p>
             </div>
-          ) : bikeHistory.length === 0 ? (
+          ) : filteredBills.length === 0 ? (
             <div style={styles.emptyState}>
-              {searchTerm ? (
-                <div>
-                  <p>No history found for bike: {searchTerm}</p>
-                  {user?.role === "staff" && (
-                    <p style={{ color: "#64748b", marginTop: "8px" }}>
-                      Note: You may only see records marked as visible to staff
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p>Enter a bike registration number to search</p>
-              )}
+              <FileText size={48} style={styles.emptyIcon} />
+              <p style={styles.emptyText}>
+                {searchTerm
+                  ? "No matching service bills found"
+                  : "No service bills created yet"}
+              </p>
+              <button
+                style={styles.newBillButton}
+                onClick={() => navigate("/service/create")}
+              >
+                Create Your First Service Bill
+              </button>
             </div>
           ) : (
-            <div style={styles.tableContainer}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={styles.tableHeader}>Date & Time</th>
-                    <th style={styles.tableHeader}>Action</th>
-                    <th style={styles.tableHeader}>Amount</th>
-                    <th style={styles.tableHeader}>Details</th>
-                    <th style={styles.tableHeader}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bikeHistory.map((item) => (
-                    <tr
-                      key={`${item.type}-${item._id}`}
-                      style={styles.tableRow}
-                    >
-                      <td style={styles.tableCell}>
-                        {new Date(item.date).toLocaleString("en-IN", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                        })}
-                      </td>
-                      <td style={styles.tableCell}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
-                        >
-                          {getActionIcon(item.type)}
-                          {getActionLabel(item.type)}
-                        </div>
-                      </td>
-                      <td style={styles.tableCell}>{getAmount(item)}</td>
-                      <td style={styles.tableCell}>{getDetails(item)}</td>
-
-                      <td style={styles.tableCell}>
-                        <button
-                          onClick={() => {
-                            if (item.type === "buy") {
-                              navigate(`/buy/history/${item._id}`);
-                            } else if (item.type === "sell") {
-                              navigate(`/sell/history/${item._id}`);
-                            } else if (item.type === "service") {
-                              navigate(`/service/history/${item._id}`);
-                            }
-                          }}
-                          style={styles.viewButton}
-                        >
-                          View
-                        </button>
-                      </td>
+            <>
+              <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.tableHeader}>Customer</th>
+                      <th style={styles.tableHeader}>Vehicle</th>
+                      <th style={styles.tableHeader}>Reg No.</th>
+                      <th style={styles.tableHeader}>Amount</th>
+                      <th style={styles.tableHeader}>Date</th>
+                      <th style={styles.tableHeader}>Status</th>
+                      <th style={styles.tableHeader}>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredBills.map((bill) => (
+                      <tr key={bill._id} style={styles.tableRow}>
+                        <td style={styles.tableCell}>{bill.customerName}</td>
+                        <td style={styles.tableCell}>
+                          {bill.vehicleBrand} {bill.vehicleModel}
+                        </td>
+                        <td style={styles.tableCell}>
+                          {bill.registrationNumber}
+                        </td>
+                        <td style={styles.tableCell}>
+                          ₹{bill.grandTotal?.toFixed(2) || 0}
+                        </td>
+                        <td style={styles.tableCell}>
+                          {new Date(bill.createdAt).toLocaleDateString()}
+                        </td>
+                        <td style={styles.tableCell}>
+                          <span
+                            style={{
+                              ...styles.statusBadge,
+                              ...(bill.paymentStatus === "paid"
+                                ? styles.statusPaid
+                                : bill.paymentStatus === "partial"
+                                ? styles.statusPartial
+                                : styles.statusPending),
+                            }}
+                          >
+                            {bill.paymentStatus}
+                          </span>
+                        </td>
+                        <td style={styles.tableCell}>
+                          <button
+                            onClick={() => handleDownload(bill._id)}
+                            style={styles.iconButton}
+                            title="Download"
+                          >
+                            <Download size={16} />
+                          </button>
+                          {user?.role === "admin" && (
+                            <button
+                              onClick={() => handleDelete(bill._id)}
+                              style={styles.iconButton}
+                              title="Delete"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={styles.pagination}>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                  style={styles.paginationButton}
+                >
+                  Previous
+                </button>
+                <span style={styles.pageInfo}>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages}
+                  style={styles.paginationButton}
+                >
+                  Next
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -548,8 +516,7 @@ const styles = {
   },
   searchInputContainer: {
     position: "relative",
-    width: "100%",
-    maxWidth: "500px",
+    width: "300px",
   },
   searchIcon: {
     position: "absolute",
@@ -565,12 +532,27 @@ const styles = {
     borderRadius: "8px",
     fontSize: "0.875rem",
     transition: "all 0.2s ease",
-    backgroundColor: "#f8fafc",
     ":focus": {
       outline: "none",
       borderColor: "#3b82f6",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
-      backgroundColor: "#ffffff",
+    },
+  },
+  newBillButton: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "10px 16px",
+    backgroundColor: "#3b82f6",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    fontSize: "0.875rem",
+    fontWeight: "500",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    ":hover": {
+      backgroundColor: "#2563eb",
     },
   },
   tableContainer: {
@@ -604,6 +586,69 @@ const styles = {
     fontSize: "0.875rem",
     color: "#334155",
   },
+  statusBadge: {
+    display: "inline-block",
+    padding: "4px 8px",
+    borderRadius: "12px",
+    fontSize: "0.75rem",
+    fontWeight: "500",
+    textTransform: "capitalize",
+  },
+  statusPaid: {
+    backgroundColor: "#dcfce7",
+    color: "#166534",
+  },
+  statusPartial: {
+    backgroundColor: "#fef9c3",
+    color: "#854d0e",
+  },
+  statusPending: {
+    backgroundColor: "#fee2e2",
+    color: "#991b1b",
+  },
+  iconButton: {
+    background: "none",
+    border: "none",
+    color: "#64748b",
+    cursor: "pointer",
+    padding: "8px",
+    margin: "0 4px",
+    borderRadius: "4px",
+    ":hover": {
+      backgroundColor: "#f1f5f9",
+      color: "#3b82f6",
+    },
+  },
+  pagination: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: "16px",
+    marginTop: "24px",
+  },
+  paginationButton: {
+    padding: "8px 16px",
+    backgroundColor: "#e2e8f0",
+    color: "#334155",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    ":hover": {
+      backgroundColor: "#cbd5e1",
+    },
+    ":disabled": {
+      opacity: "0.5",
+      cursor: "not-allowed",
+    },
+  },
+  pageInfo: {
+    fontSize: "0.875rem",
+    color: "#64748b",
+  },
+  buttonIcon: {
+    width: "16px",
+    height: "16px",
+  },
   loadingContainer: {
     display: "flex",
     justifyContent: "center",
@@ -621,38 +666,15 @@ const styles = {
     borderRadius: "8px",
     backgroundColor: "#f8fafc",
   },
-  verifiedBadge: {
-    display: "inline-block",
-    padding: "4px 8px",
-    backgroundColor: "#dcfce7",
-    color: "#166534",
-    borderRadius: "12px",
-    fontSize: "0.75rem",
-    fontWeight: "500",
+  emptyIcon: {
+    color: "#cbd5e1",
+    marginBottom: "16px",
   },
-  unverifiedBadge: {
-    display: "inline-block",
-    padding: "4px 8px",
-    backgroundColor: "#fee2e2",
-    color: "#991b1b",
-    borderRadius: "12px",
-    fontSize: "0.75rem",
-    fontWeight: "500",
-  },
-  viewButton: {
-    padding: "6px 12px",
-    backgroundColor: "#3b82f6",
-    color: "white",
-    border: "none",
-    borderRadius: "4px",
-    fontSize: "0.75rem",
-    fontWeight: "500",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-    ":hover": {
-      backgroundColor: "#2563eb",
-    },
+  emptyText: {
+    color: "#64748b",
+    fontSize: "1rem",
+    margin: 0,
   },
 };
 
-export default BikeHistory;
+export default ServiceHistory;

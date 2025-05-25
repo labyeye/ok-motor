@@ -12,6 +12,7 @@ import ServiceBillForm from "./components/ServiceBillForm";
 import BikeHistory from "./components/BikeHistory";
 import CreateStaff from "./components/CreateStaff";
 import StaffList from "./components/StaffList";
+import ServiceHistory from "./components/ServiceHistory";
 
 function App() {
   return (
@@ -98,6 +99,14 @@ function App() {
             element={
               <PrivateRoute roles={["admin", "staff"]}>
                 <StaffList />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/service/history"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <ServiceHistory />
               </PrivateRoute>
             }
           />

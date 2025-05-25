@@ -25,7 +25,12 @@ exports.createServiceBill = async (req, res) => {
       taxAmount,
       grandTotal,
       balanceDue,
-      user: req.user._id,
+      $or: [
+        { user: req.user.id }, // Records created by the current user
+        { visibility: 'staff' }, // Or records marked as visible to staff
+        // Or if staff should see all records for the registration number:
+        ...(req.user.role === 'staff' ? [{}] : []) // Staff can see all matching registration numbers
+      ],
     };
 
     const serviceBill = new ServiceBill(serviceBillData);
@@ -51,7 +56,12 @@ exports.createServiceBill = async (req, res) => {
 // Get all service bills
 exports.getServiceBills = async (req, res) => {
   try {
-    const serviceBills = await ServiceBill.find({ user: req.user._id }).sort({
+    const serviceBills = await ServiceBill.find({ $or: [
+      { user: req.user.id }, // Records created by the current user
+      { visibility: 'staff' }, // Or records marked as visible to staff
+      // Or if staff should see all records for the registration number:
+      ...(req.user.role === 'staff' ? [{}] : []) // Staff can see all matching registration numbers
+    ] }).sort({
       createdAt: -1,
     });
 
@@ -77,7 +87,12 @@ exports.getServiceBillsByRegistration = async (req, res) => {
 
     const serviceBills = await ServiceBill.find({ 
       registrationNumber: new RegExp(registrationNumber, 'i'),
-      user: req.user._id 
+      $or: [
+        { user: req.user.id }, // Records created by the current user
+        { visibility: 'staff' }, // Or records marked as visible to staff
+        // Or if staff should see all records for the registration number:
+        ...(req.user.role === 'staff' ? [{}] : []) // Staff can see all matching registration numbers
+      ]
     }).sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -120,7 +135,12 @@ exports.getServiceBill = async (req, res) => {
   try {
     const serviceBill = await ServiceBill.findOne({
       _id: req.params.id,
-      user: req.user._id,
+      $or: [
+        { user: req.user.id }, // Records created by the current user
+        { visibility: 'staff' }, // Or records marked as visible to staff
+        // Or if staff should see all records for the registration number:
+        ...(req.user.role === 'staff' ? [{}] : []) // Staff can see all matching registration numbers
+      ]
     });
 
     if (!serviceBill) {
@@ -253,7 +273,12 @@ exports.generateServiceBillPDF = async (req, res) => {
   try {
     const serviceBill = await ServiceBill.findOne({
       _id: req.params.id,
-      user: req.user._id,
+      $or: [
+        { user: req.user.id }, // Records created by the current user
+        { visibility: 'staff' }, // Or records marked as visible to staff
+        // Or if staff should see all records for the registration number:
+        ...(req.user.role === 'staff' ? [{}] : []) // Staff can see all matching registration numbers
+      ]
     });
 
     if (!serviceBill) {

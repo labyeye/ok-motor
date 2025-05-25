@@ -1,11 +1,12 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useContext } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import {
   User,
   Mail,
   Lock,
   ChevronDown,
+  ChevronRight,
   LayoutDashboard,
   ShoppingCart,
   TrendingUp,
@@ -14,9 +15,13 @@ import {
   Bike,
   LogOut,
 } from "lucide-react";
+import AuthContext from "../context/AuthContext";
 
 const CreateStaff = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useContext(AuthContext);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,6 +31,10 @@ const CreateStaff = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+
+  // Menu state management
+  const [activeMenu, setActiveMenu] = useState("Create Staff ID");
+  const [expandedMenus, setExpandedMenus] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,7 +51,7 @@ const CreateStaff = () => {
 
     try {
       const response = await axios.post(
-        "https://ok-motor.onrender.com/api/users",
+        "http://localhost:2500/api/users",
         formData
       );
       setSuccess(true);
@@ -58,6 +67,7 @@ const CreateStaff = () => {
       setIsSubmitting(false);
     }
   };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -66,11 +76,26 @@ const CreateStaff = () => {
     navigate("/login");
   };
 
+  // Toggle menu expansion
+  const toggleMenu = (menuName) => {
+    setExpandedMenus((prev) => ({
+      ...prev,
+      [menuName]: !prev[menuName],
+    }));
+  };
+
+  // Handle menu clicks
+  const handleMenuClick = (menuName, path) => {
+    setActiveMenu(menuName);
+    const actualPath = typeof path === 'function' ? path(user?.role) : path;
+    navigate(actualPath);
+  };
+
   const menuItems = [
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: "/admin",
+      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
       name: "Buy",
@@ -96,14 +121,18 @@ const CreateStaff = () => {
         { name: "Service History", path: "/service/history" },
       ],
     },
-    {
-      name: "Staff",
-      icon: Users,
-      submenu: [
-        { name: "Create Staff ID", path: "/staff/create" },
-        { name: "Staff List", path: "/staff/list" },
-      ],
-    },
+    ...(user?.role !== "staff"
+      ? [
+          {
+            name: "Staff",
+            icon: Users,
+            submenu: [
+              { name: "Create Staff ID", path: "/staff/create" },
+              { name: "Staff List", path: "/staff/list" },
+            ],
+          },
+        ]
+      : []),
     {
       name: "Bike History",
       icon: Bike,
@@ -116,18 +145,25 @@ const CreateStaff = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>Admin Panel</h2>
-          <p style={styles.sidebarSubtitle}>Welcome, Admin</p>
+          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
+          <p style={styles.sidebarSubtitle}>Welcome, {user?.role === 'admin' ? 'Admin' : 'Staff'}</p>
         </div>
 
         <nav style={styles.nav}>
           {menuItems.map((item) => (
             <div key={item.name}>
               <div
-                style={styles.menuItem}
+                style={{
+                  ...styles.menuItem,
+                  ...(activeMenu === item.name || 
+                      (item.submenu && item.submenu.some(subItem => activeMenu === subItem.name)) 
+                      ? styles.menuItemActive : {}),
+                }}
                 onClick={() => {
-                  if (item.path) {
-                    navigate(item.path);
+                  if (item.submenu) {
+                    toggleMenu(item.name);
+                  } else {
+                    handleMenuClick(item.name, item.path);
                   }
                 }}
               >
@@ -135,15 +171,35 @@ const CreateStaff = () => {
                   <item.icon size={20} style={styles.menuIcon} />
                   <span style={styles.menuText}>{item.name}</span>
                 </div>
-                {item.submenu && <ChevronDown size={16} />}
+                {item.submenu && (
+                  expandedMenus[item.name] ? (
+                    <ChevronDown size={16} />
+                  ) : (
+                    <ChevronRight size={16} />
+                  )
+                )}
               </div>
+
+              {item.submenu && expandedMenus[item.name] && (
+                <div style={styles.submenu}>
+                  {item.submenu.map((subItem) => (
+                    <div
+                      key={subItem.name}
+                      style={{
+                        ...styles.submenuItem,
+                        ...(activeMenu === subItem.name ? styles.submenuItemActive : {}),
+                      }}
+                      onClick={() => handleMenuClick(subItem.name, subItem.path)}
+                    >
+                      {subItem.name}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
 
-          <div
-            style={styles.logoutButton}
-            onClick={handleLogout}
-          >
+          <div style={styles.logoutButton} onClick={handleLogout}>
             <LogOut size={20} style={styles.menuIcon} />
             <span style={styles.menuText}>Logout</span>
           </div>
@@ -297,6 +353,11 @@ const styles = {
       backgroundColor: "#334155",
     },
   },
+  menuItemActive: {
+    backgroundColor: "#334155",
+    borderRight: "3px solid #3b82f6",
+    color: "#ffffff",
+  },
   menuItemContent: {
     display: "flex",
     alignItems: "center",
@@ -308,6 +369,23 @@ const styles = {
   menuText: {
     fontSize: "0.9375rem",
     fontWeight: "500",
+  },
+  submenu: {
+    backgroundColor: "#1a2536",
+  },
+  submenuItem: {
+    padding: "10px 24px 10px 64px",
+    cursor: "pointer",
+    color: "#cbd5e1",
+    fontSize: "0.875rem",
+    transition: "all 0.2s ease",
+    ":hover": {
+      backgroundColor: "#2d3748",
+    },
+  },
+  submenuItemActive: {
+    backgroundColor: "#2d3748",
+    color: "#ffffff",
   },
   logoutButton: {
     display: "flex",

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { PDFDocument } from "pdf-lib";
 import { saveAs } from "file-saver";
 import {
@@ -25,13 +25,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const AuthContext = {
-  user: { name: "John Admin" },
-  logout: () => console.log("Logged out"),
-};
+import AuthContext from "../context/AuthContext";
 
 const ServiceBillForm = () => {
-  const { user } = AuthContext;
+  const { user } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Create Service Bill");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
@@ -71,7 +68,7 @@ const ServiceBillForm = () => {
   });
 
   const [previewMode, setPreviewMode] = useState(false);
-  const API_BASE_URL = "https://ok-motor.onrender.com/api";
+  const API_BASE_URL = "http://localhost:2500/api";
   const calculateAmounts = (data) => {
     const totalAmount = (data.serviceItems || []).reduce(
       (sum, item) => sum + (item.quantity || 0) * (item.rate || 0),
@@ -176,47 +173,90 @@ const ServiceBillForm = () => {
   const handleSaveAndDownload = async () => {
     try {
       setIsSaving(true);
-
       const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
+
+      // Include user ID in the form data
+      const formDataWithUser = {
+        ...formData,
+        user: user._id, // Assuming your AuthContext provides the user object with _id
+      };
+
+      // First save the bill
       const saveResponse = await axios.post(
-        "https://ok-motor.onrender.com/api/service-bills",
-        formData,
+        `${API_BASE_URL}/service-bills`,
+        formDataWithUser, // Use the updated form data
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
+      // Rest of your download logic remains the same...
       console.log("Save response:", saveResponse.data);
 
-      const billId = saveResponse.data.data._id;
-      if (!billId) {
-        throw new Error("No bill ID returned from server");
+      if (
+        !saveResponse.data ||
+        !saveResponse.data.data ||
+        !saveResponse.data.data._id
+      ) {
+        throw new Error("Invalid response format from server");
       }
 
+      const billId = saveResponse.data.data._id;
+
+      // Then download the PDF
       const pdfResponse = await axios.get(
-        `https://ok-motor.onrender.com/api/service-bills/${billId}/download`,
+        `${API_BASE_URL}/service-bills/${billId}/download`,
         {
           responseType: "blob",
           headers: {
             Authorization: `Bearer ${token}`,
+            Accept: "application/pdf",
           },
         }
       );
-      const url = window.URL.createObjectURL(new Blob([pdfResponse.data]));
+
+      if (!pdfResponse.data) {
+        throw new Error("No PDF data received from server");
+      }
+
+      // Create download link
+      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute("download", `service-bill-${billId}.pdf`);
       document.body.appendChild(link);
       link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
 
       alert("Service bill saved and downloaded successfully!");
     } catch (error) {
       console.error("Error in save and download:", error);
-      alert(`Failed to save and download: ${error.message}`);
+
+      let errorMessage = "Failed to save and download";
+      if (error.response) {
+        errorMessage += `: ${error.response.status} - ${
+          error.response.data?.message || "No error details"
+        }`;
+      } else if (error.request) {
+        errorMessage += ": No response from server";
+      } else {
+        errorMessage += `: ${error.message}`;
+      }
+
+      alert(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -238,7 +278,7 @@ const ServiceBillForm = () => {
       if (billData.taxEnabled) {
         page.drawText("Business Information:", {
           x: 50,
-          y: 610, 
+          y: 610,
           size: 14,
           font: fontBold,
         });
@@ -356,7 +396,7 @@ const ServiceBillForm = () => {
       if (billData.taxEnabled) {
         page.drawText("Business Information:", {
           x: 50,
-          y: 610, 
+          y: 610,
           size: 14,
           font: fontBold,
         });
@@ -401,11 +441,12 @@ const ServiceBillForm = () => {
     navigate("/login");
   };
 
+  // In the menuItems array (around line 250 in BuyLetterPDF.js)
   const menuItems = [
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: "/admin",
+      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
       name: "Buy",
@@ -431,14 +472,19 @@ const ServiceBillForm = () => {
         { name: "Service History", path: "/service/history" },
       ],
     },
-    {
-      name: "Staff",
-      icon: Users,
-      submenu: [
-        { name: "Create Staff ID", path: "/staff/create" },
-        { name: "Staff List", path: "/staff/list" },
-      ],
-    },
+    // Add the conditional check here
+    ...(user?.role !== "staff"
+      ? [
+          {
+            name: "Staff",
+            icon: Users,
+            submenu: [
+              { name: "Create Staff ID", path: "/staff/create" },
+              { name: "Staff List", path: "/staff/list" },
+            ],
+          },
+        ]
+      : []),
     {
       name: "Bike History",
       icon: Bike,
@@ -454,9 +500,10 @@ const ServiceBillForm = () => {
   };
 
   const handleMenuClick = (menuName, path) => {
-    setActiveMenu(menuName);
-    navigate(path);
-  };
+  setActiveMenu(menuName);
+  const actualPath = typeof path === 'function' ? path(user?.role) : path;
+  navigate(actualPath);
+};
 
   if (previewMode) {
     return (
@@ -489,7 +536,7 @@ const ServiceBillForm = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>Admin Panel</h2>
+          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 
@@ -505,6 +552,7 @@ const ServiceBillForm = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
+                    // Pass the path as-is (could be string or function)
                     handleMenuClick(item.name, item.path);
                   }
                 }}

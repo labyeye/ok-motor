@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useContext } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -15,13 +15,9 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const AuthContext = {
-  user: { name: "John Admin", id: "owner123" },
-  logout: () => console.log("Logged out"),
-};
-
+import AuthContext from "../context/AuthContext";
 const AdminPage = () => {
-  const { user} = AuthContext;
+  const { user} = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [dashboardData, setDashboardData] = useState({
@@ -46,8 +42,8 @@ const AdminPage = () => {
     try {
       setLoading(true);
       const endpoint = isOwnerView
-        ? `https://ok-motor.onrender.com/api/dashboard/owner`
-        : `https://ok-motor.onrender.com/api/dashboard`;
+        ? `http://localhost:2500/api/dashboard/owner`
+        : `http://localhost:2500/api/dashboard`;
 
       const response = await fetch(endpoint, {
         headers: {
@@ -100,9 +96,11 @@ const AdminPage = () => {
   };
 
   const handleMenuClick = (menuName, path) => {
-    setActiveMenu(menuName);
-    navigate(path);
-  };
+  setActiveMenu(menuName);
+  // Handle both string paths and function paths
+  const actualPath = typeof path === 'function' ? path(user?.role) : path;
+  navigate(actualPath);
+};
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -114,7 +112,7 @@ const AdminPage = () => {
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: "/admin",
+      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
       name: "Buy",
@@ -370,26 +368,27 @@ const AdminPage = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>Admin Panel</h2>
+          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 
         <nav style={styles.nav}>
           {menuItems.map((item) => (
             <div key={item.name}>
-              <div
-                style={{
-                  ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                }}
-                onClick={() => {
-                  if (item.submenu) {
-                    toggleMenu(item.name);
-                  } else {
-                    handleMenuClick(item.name, item.path);
-                  }
-                }}
-              >
+    <div
+      style={{
+        ...styles.menuItem,
+        ...(activeMenu === item.name ? styles.menuItemActive : {}),
+      }}
+      onClick={() => {
+        if (item.submenu) {
+          toggleMenu(item.name);
+        } else {
+          // Pass the path as-is (could be string or function)
+          handleMenuClick(item.name, item.path);
+        }
+      }}
+    >
                 <div style={styles.menuItemContent}>
                   <item.icon size={20} style={styles.menuIcon} />
                   <span style={styles.menuText}>{item.name}</span>

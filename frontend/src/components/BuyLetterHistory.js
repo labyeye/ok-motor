@@ -1,5 +1,6 @@
 // BuyLetterHistory.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -21,11 +22,7 @@ import {
 } from "lucide-react";
 import { PDFDocument, rgb } from "pdf-lib";
 
-// Mock AuthContext for demo
-const AuthContext = {
-  user: { name: "John Admin" },
-  logout: () => console.log("Logged out"),
-};
+import AuthContext from "../context/AuthContext";
 
 const EditBuyLetterModal = ({ letter, onClose, onSave }) => {
   const [formData, setFormData] = useState(letter);
@@ -185,7 +182,7 @@ const EditBuyLetterModal = ({ letter, onClose, onSave }) => {
 };
 
 const BuyLetterHistory = () => {
-  const { user } = AuthContext;
+  const { user } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Buy Letter History");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
@@ -201,25 +198,32 @@ const BuyLetterHistory = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `https://ok-motor.onrender.com/api/buy-letter?page=${currentPage}`
+          `http://localhost:2500/api/buy-letter?page=${currentPage}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
         );
+        console.log("API Response:", response.data); // Add this line
         setBuyLetters(response.data.buyLetters);
         setTotalPages(response.data.pages);
       } catch (error) {
-        console.error("Error fetching buy letters:", error);
+        console.error("Error details:", error.response?.data || error.message); // Enhanced error logging
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchBuyLetters();
   }, [currentPage]);
 
+  // In the menuItems array (around line 250 in BuyLetterPDF.js)
   const menuItems = [
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: "/admin",
+      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
       name: "Buy",
@@ -245,14 +249,19 @@ const BuyLetterHistory = () => {
         { name: "Service History", path: "/service/history" },
       ],
     },
-    {
-      name: "Staff",
-      icon: Users,
-      submenu: [
-        { name: "Create Staff ID", path: "/staff/create" },
-        { name: "Staff List", path: "/staff/list" },
-      ],
-    },
+    // Add the conditional check here
+    ...(user?.role !== "staff"
+      ? [
+          {
+            name: "Staff",
+            icon: Users,
+            submenu: [
+              { name: "Create Staff ID", path: "/staff/create" },
+              { name: "Staff List", path: "/staff/list" },
+            ],
+          },
+        ]
+      : []),
     {
       name: "Bike History",
       icon: Bike,
@@ -276,7 +285,9 @@ const BuyLetterHistory = () => {
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    navigate(path);
+    // Handle both string paths and function paths
+    const actualPath = typeof path === "function" ? path(user?.role) : path;
+    navigate(actualPath);
   };
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -321,7 +332,6 @@ const BuyLetterHistory = () => {
       }
 
       const fieldPositions = {
-
         sellerName: { x: 45, y: 630, size: 11 },
         sellerFatherName: { x: 330, y: 630, size: 11 },
         sellerCurrentAddress: { x: 54, y: 608, size: 11 },
@@ -384,7 +394,7 @@ const BuyLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/buy-letter/${id}`);
+        await axios.delete(`http://localhost:2500/api/buy-letter/${id}`);
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting buy letter:", error);
@@ -399,7 +409,7 @@ const BuyLetterHistory = () => {
   const handleSaveEdit = async (updatedLetter) => {
     try {
       const response = await axios.put(
-        `https://ok-motor.onrender.com/api/buy-letter/${updatedLetter._id}`,
+        `http://localhost:2500/api/buy-letter/${updatedLetter._id}`,
         updatedLetter
       );
       setBuyLetters(
@@ -418,7 +428,7 @@ const BuyLetterHistory = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>Admin Panel</h2>
+          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 
@@ -434,6 +444,7 @@ const BuyLetterHistory = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
+                    // Pass the path as-is (could be string or function)
                     handleMenuClick(item.name, item.path);
                   }
                 }}
@@ -544,6 +555,7 @@ const BuyLetterHistory = () => {
                         <td style={styles.tableCell}>
                           {new Date(letter.createdAt).toLocaleDateString()}
                         </td>
+
                         <td style={styles.tableCell}>
                           <button
                             onClick={() => handleDownload(letter)}
@@ -552,20 +564,25 @@ const BuyLetterHistory = () => {
                           >
                             <Download size={16} />
                           </button>
-                          <button
-                            onClick={() => handleEdit(letter)}
-                            style={styles.iconButton}
-                            title="Edit"
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(letter._id)}
-                            style={styles.iconButton}
-                            title="Delete"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          {/* Only show Edit and Delete buttons if user is not staff */}
+                          {user?.role !== "staff" && (
+                            <>
+                              <button
+                                onClick={() => handleEdit(letter)}
+                                style={styles.iconButton}
+                                title="Edit"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(letter._id)}
+                                style={styles.iconButton}
+                                title="Delete"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}

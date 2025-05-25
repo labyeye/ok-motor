@@ -7,6 +7,8 @@ const LoginPage = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  console.log('User in LoginPage:', user); // Add this for debugging
+
   if (user) {
     navigate(user.role === 'admin' ? '/admin' : '/staff', { replace: true });
     return null;

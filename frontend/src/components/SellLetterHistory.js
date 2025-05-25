@@ -1,5 +1,6 @@
 // SellLetterHistory.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+
 import axios from "axios";
 import {
   LayoutDashboard,
@@ -16,15 +17,12 @@ import {
   Edit,
   Trash2,
   X,
-  Bike
+  Bike,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PDFDocument, rgb } from "pdf-lib";
 
-const AuthContext = {
-  user: { name: "John Admin" },
-  logout: () => console.log("Logged out"),
-};
+import AuthContext from "../context/AuthContext";
 
 const EditSellLetterModal = ({ letter, onClose, onSave }) => {
   const [formData, setFormData] = useState(letter);
@@ -162,7 +160,7 @@ const EditSellLetterModal = ({ letter, onClose, onSave }) => {
 };
 
 const SellLetterHistory = () => {
-  const { user } = AuthContext;
+  const { user } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Sell Letter History");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [sellLetters, setSellLetters] = useState([]);
@@ -178,7 +176,7 @@ const SellLetterHistory = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `https://ok-motor.onrender.com/api/sell-letters/my-letters?page=${currentPage}`,
+          `http://localhost:2500/api/sell-letters/my-letters?page=${currentPage}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -304,7 +302,7 @@ const SellLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this sell letter?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/sell-letters/${id}`, {
+        await axios.delete(`http://localhost:2500/api/sell-letters/${id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -329,7 +327,7 @@ const SellLetterHistory = () => {
   const handleSaveEdit = async (updatedLetter) => {
     try {
       const response = await axios.put(
-        `https://ok-motor.onrender.com/api/sell-letters/${updatedLetter._id}`,
+        `http://localhost:2500/api/sell-letters/${updatedLetter._id}`,
         updatedLetter,
         {
           headers: {
@@ -351,7 +349,7 @@ const SellLetterHistory = () => {
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: "/admin",
+      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
       name: "Buy",
@@ -377,14 +375,18 @@ const SellLetterHistory = () => {
         { name: "Service History", path: "/service/history" },
       ],
     },
-    {
-      name: "Staff",
-      icon: Users,
-      submenu: [
-        { name: "Create Staff ID", path: "/staff/create" },
-        { name: "Staff List", path: "/staff/list" },
-      ],
-    },
+    ...(user?.role !== "staff"
+      ? [
+          {
+            name: "Staff",
+            icon: Users,
+            submenu: [
+              { name: "Create Staff ID", path: "/staff/create" },
+              { name: "Staff List", path: "/staff/list" },
+            ],
+          },
+        ]
+      : []),
     {
       name: "Bike History",
       icon: Bike,
@@ -400,35 +402,38 @@ const SellLetterHistory = () => {
   };
 
   const handleMenuClick = (menuName, path) => {
-    setActiveMenu(menuName);
-    navigate(path);
-  };
+  setActiveMenu(menuName);
+  // Handle both string paths and function paths
+  const actualPath = typeof path === 'function' ? path(user?.role) : path;
+  navigate(actualPath);
+};
 
   return (
     <div style={styles.container}>
       {/* Sidebar - same as SellLetterForm */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>Admin Panel</h2>
+          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 
         <nav style={styles.nav}>
           {menuItems.map((item) => (
             <div key={item.name}>
-              <div
-                style={{
-                  ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                }}
-                onClick={() => {
-                  if (item.submenu) {
-                    toggleMenu(item.name);
-                  } else {
-                    handleMenuClick(item.name, item.path);
-                  }
-                }}
-              >
+    <div
+      style={{
+        ...styles.menuItem,
+        ...(activeMenu === item.name ? styles.menuItemActive : {}),
+      }}
+      onClick={() => {
+        if (item.submenu) {
+          toggleMenu(item.name);
+        } else {
+          // Pass the path as-is (could be string or function)
+          handleMenuClick(item.name, item.path);
+        }
+      }}
+    >
                 <div style={styles.menuItemContent}>
                   <item.icon size={20} style={styles.menuIcon} />
                   <span style={styles.menuText}>{item.name}</span>
@@ -503,11 +508,23 @@ const SellLetterHistory = () => {
 
           {loading ? (
             <div style={styles.loadingContainer}>
-              <p>Loading...</p>
+              <p>Loading sell letters...</p>
+              {/* You can add a spinner here */}
             </div>
           ) : filteredLetters.length === 0 ? (
             <div style={styles.emptyState}>
-              <p>No sell letters found</p>
+              <FileText size={48} style={styles.emptyIcon} />
+              <p style={styles.emptyText}>
+                {searchTerm
+                  ? "No matching sell letters found"
+                  : "No sell letters created yet"}
+              </p>
+              <button
+                style={styles.newLetterButton}
+                onClick={() => navigate("/sell/create")}
+              >
+                Create Your First Sell Letter
+              </button>
             </div>
           ) : (
             <>
@@ -537,6 +554,7 @@ const SellLetterHistory = () => {
                         <td style={styles.tableCell}>
                           {new Date(letter.createdAt).toLocaleDateString()}
                         </td>
+
                         <td style={styles.tableCell}>
                           <button
                             onClick={() => handleDownload(letter)}
@@ -545,20 +563,24 @@ const SellLetterHistory = () => {
                           >
                             <Download size={16} />
                           </button>
-                          <button
-                            onClick={() => handleEdit(letter)}
-                            style={styles.iconButton}
-                            title="Edit"
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(letter._id)}
-                            style={styles.iconButton}
-                            title="Delete"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          {user?.role === "admin" && (
+                            <>
+                              <button
+                                onClick={() => handleEdit(letter)}
+                                style={styles.iconButton}
+                                title="Edit"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(letter._id)}
+                                style={styles.iconButton}
+                                title="Delete"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -841,7 +863,8 @@ const styles = {
     fontSize: "1rem",
     color: "#64748b",
     margin: "8px 0 0 0",
-  },searchContainer: {
+  },
+  searchContainer: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",

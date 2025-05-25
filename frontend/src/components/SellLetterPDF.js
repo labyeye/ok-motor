@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useContext } from "react";
 import { PDFDocument, rgb } from "pdf-lib";
 import { saveAs } from "file-saver";
 import axios from "axios";
@@ -21,16 +21,14 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
-  Bike
+  Bike,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-const AuthContext = {
-  user: { name: "John Admin" },
-  logout: () => console.log("Logged out"),
-};
+
+import AuthContext from "../context/AuthContext";
 
 const SellLetterForm = () => {
-  const { user } = AuthContext;
+  const { user } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Create Sell Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
@@ -52,12 +50,24 @@ const SellLetterForm = () => {
     buyerName2: "",
     vehicleCondition: "running",
     saleDate: new Date().toISOString().split("T")[0],
-    saleTime: new Date().toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+    saleTime: new Date().toLocaleTimeString("en-GB", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     saleAmount: "",
     todayDate: new Date().toISOString().split("T")[0],
-    todayTime: new Date().toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+    todayTime: new Date().toLocaleTimeString("en-GB", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     previousDate: new Date().toISOString().split("T")[0],
-    previousTime: "",
+    previousTime: new Date().toLocaleTimeString("en-GB", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     paymentMethod: "cash",
     sellerphone: "9876543210",
     selleraadhar: "764465626571",
@@ -93,7 +103,7 @@ const SellLetterForm = () => {
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: "/admin",
+      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
       name: "Buy",
@@ -142,10 +152,11 @@ const SellLetterForm = () => {
   };
 
   const handleMenuClick = (menuName, path) => {
-    setActiveMenu(menuName);
-    navigate(path);
-    console.log("Navigate to:", path);
-  };
+  setActiveMenu(menuName);
+  // Handle both string paths and function paths
+  const actualPath = typeof path === 'function' ? path(user?.role) : path;
+  navigate(actualPath);
+};
   const saveToDatabase = async () => {
     try {
       setIsSaving(true);
@@ -178,7 +189,7 @@ const SellLetterForm = () => {
       }
 
       const response = await axios.post(
-        "https://ok-motor.onrender.com/api/sell-letters",
+        "http://localhost:2500/api/sell-letters",
         formData,
         {
           headers: {
@@ -314,26 +325,27 @@ const SellLetterForm = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>Admin Panel</h2>
+          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 
         <nav style={styles.nav}>
           {menuItems.map((item) => (
             <div key={item.name}>
-              <div
-                style={{
-                  ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                }}
-                onClick={() => {
-                  if (item.submenu) {
-                    toggleMenu(item.name);
-                  } else {
-                    handleMenuClick(item.name, item.path);
-                  }
-                }}
-              >
+    <div
+      style={{
+        ...styles.menuItem,
+        ...(activeMenu === item.name ? styles.menuItemActive : {}),
+      }}
+      onClick={() => {
+        if (item.submenu) {
+          toggleMenu(item.name);
+        } else {
+          // Pass the path as-is (could be string or function)
+          handleMenuClick(item.name, item.path);
+        }
+      }}
+    >
                 <div style={styles.menuItemContent}>
                   <item.icon size={20} style={styles.menuIcon} />
                   <span style={styles.menuText}>{item.name}</span>
@@ -682,7 +694,6 @@ const SellLetterForm = () => {
                     style={styles.formInput}
                   />
                 </div>
-                
               </div>
             </div>
 

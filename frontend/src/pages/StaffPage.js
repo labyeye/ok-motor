@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useContext } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -15,13 +15,10 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const AuthContext = {
-  user: { name: "John Admin", id: "owner123" },
-  logout: () => console.log("Logged out"),
-};
+import AuthContext from "../context/AuthContext";
 
 const StaffPage = () => {
-  const { user} = AuthContext;
+  const { user} = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [dashboardData, setDashboardData] = useState({
@@ -46,8 +43,8 @@ const StaffPage = () => {
     try {
       setLoading(true);
       const endpoint = isOwnerView
-        ? `https://ok-motor.onrender.com/api/dashboard/owner`
-        : `https://ok-motor.onrender.com/api/dashboard`;
+        ? `http://localhost:2500/api/dashboard/owner`
+        : `http://localhost:2500/api/dashboard`;
 
       const response = await fetch(endpoint, {
         headers: {
@@ -100,9 +97,11 @@ const StaffPage = () => {
   };
 
   const handleMenuClick = (menuName, path) => {
-    setActiveMenu(menuName);
-    navigate(path);
-  };
+  setActiveMenu(menuName);
+  // Handle both string paths and function paths
+  const actualPath = typeof path === 'function' ? path(user?.role) : path;
+  navigate(actualPath);
+};
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -110,42 +109,56 @@ const StaffPage = () => {
     sessionStorage.clear();
     navigate("/login");
   };
-  const menuItems = [
-    {
-      name: "Dashboard",
-      icon: LayoutDashboard,
-      path: "/admin",
-    },
-    {
-      name: "Buy",
-      icon: ShoppingCart,
-      submenu: [
-        { name: "Create Buy Letter", path: "/buy/create" },
-        { name: "Buy Letter History", path: "/buy/history" },
-      ],
-    },
-    {
-      name: "Sell",
-      icon: TrendingUp,
-      submenu: [
-        { name: "Create Sell Letter", path: "/sell/create" },
-        { name: "Sell Letter History", path: "/sell/history" },
-      ],
-    },
-    {
-      name: "Service",
-      icon: Wrench,
-      submenu: [
-        { name: "Create Service Bill", path: "/service/create" },
-        { name: "Service History", path: "/service/history" },
-      ],
-    },
-    {
-      name: "Bike History",
-      icon: Bike,
-      path: "/bike-history",
-    },
-  ];
+  // In the menuItems array (around line 250 in BuyLetterPDF.js)
+const menuItems = [
+  {
+    name: "Dashboard",
+    icon: LayoutDashboard,
+    path: "/admin",
+  },
+  {
+    name: "Buy",
+    icon: ShoppingCart,
+    submenu: [
+      { name: "Create Buy Letter", path: "/buy/create" },
+      { name: "Buy Letter History", path: "/buy/history" },
+    ],
+  },
+  {
+    name: "Sell",
+    icon: TrendingUp,
+    submenu: [
+      { name: "Create Sell Letter", path: "/sell/create" },
+      { name: "Sell Letter History", path: "/sell/history" },
+    ],
+  },
+  {
+    name: "Service",
+    icon: Wrench,
+    submenu: [
+      { name: "Create Service Bill", path: "/service/create" },
+      { name: "Service History", path: "/service/history" },
+    ],
+  },
+  // Add the conditional check here
+  ...(user?.role !== "staff"
+    ? [
+        {
+          name: "Staff",
+          icon: Users,
+          submenu: [
+            { name: "Create Staff ID", path: "/staff/create" },
+            { name: "Staff List", path: "/staff/list" },
+          ],
+        },
+      ]
+    : []),
+  {
+    name: "Bike History",
+    icon: Bike,
+    path: "/bike-history",
+  },
+];
 
   const DashboardCards = () => (
     <div style={styles.cardsGrid}>
@@ -362,26 +375,27 @@ const StaffPage = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>Staff Panel</h2>
+          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 
         <nav style={styles.nav}>
           {menuItems.map((item) => (
             <div key={item.name}>
-              <div
-                style={{
-                  ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                }}
-                onClick={() => {
-                  if (item.submenu) {
-                    toggleMenu(item.name);
-                  } else {
-                    handleMenuClick(item.name, item.path);
-                  }
-                }}
-              >
+    <div
+      style={{
+        ...styles.menuItem,
+        ...(activeMenu === item.name ? styles.menuItemActive : {}),
+      }}
+      onClick={() => {
+        if (item.submenu) {
+          toggleMenu(item.name);
+        } else {
+          // Pass the path as-is (could be string or function)
+          handleMenuClick(item.name, item.path);
+        }
+      }}
+    >
                 <div style={styles.menuItemContent}>
                   <item.icon size={20} style={styles.menuIcon} />
                   <span style={styles.menuText}>{item.name}</span>
