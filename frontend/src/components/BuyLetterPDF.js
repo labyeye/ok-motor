@@ -445,7 +445,7 @@ const BuyLetterForm = () => {
                     value={formData.selleraadhar}
                     onChange={handleChange}
                     style={styles.formInput}
-                    maxLength={12}
+                    max={12}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -459,7 +459,7 @@ const BuyLetterForm = () => {
                     value={formData.sellerpan}
                     onChange={handleChange}
                     style={styles.formInput}
-                    maxLength={10}
+                    max={10}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -473,7 +473,7 @@ const BuyLetterForm = () => {
                     value={formData.selleraadharphone}
                     onChange={handleChange}
                     style={styles.formInput}
-                    maxLength={10}
+                    max={10}
                   />
                 </div>
               </div>
@@ -539,7 +539,7 @@ const BuyLetterForm = () => {
                     onChange={handleChange}
                     style={styles.formInput}
                     required
-                    maxLength={11}
+                    max={11}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -554,7 +554,7 @@ const BuyLetterForm = () => {
                     onChange={handleChange}
                     style={styles.formInput}
                     required
-                    maxLength={18}
+                    max={18}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -569,7 +569,7 @@ const BuyLetterForm = () => {
                     onChange={handleChange}
                     style={styles.formInput}
                     required
-                    maxLength={15}
+                    max={15}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -583,7 +583,7 @@ const BuyLetterForm = () => {
                     value={formData.vehiclekm}
                     onChange={handleChange}
                     style={styles.formInput}
-                    maxLength={6}
+                    max={6}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -680,7 +680,7 @@ const BuyLetterForm = () => {
                     onChange={handleChange}
                     style={styles.formInput}
                     readOnly
-                    maxLength={10}
+                    max={10}
                   />
                 </div>
               </div>
