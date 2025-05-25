@@ -1,7 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
-axios.defaults.baseURL = "https://ok-motor.onrender.com/";
 axios.defaults.withCredentials = true;
 
 const AuthContext = createContext();
@@ -19,7 +18,7 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (token) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        const res = await axios.get('/api/auth/me');
+        const res = await axios.get('https://ok-motor.onrender.com/api/auth/me');
         setUser(res.data);
       }
     } catch (err) {
@@ -31,7 +30,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post('/api/auth/login', { email, password });
+      const res = await axios.post('https://ok-motor.onrender.com/api/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
       setUser(res.data);
