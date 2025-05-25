@@ -11,6 +11,7 @@ import {
   FileText,
   Target,
   RefreshCw,
+  Bike
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -44,21 +45,21 @@ const AdminPage = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const endpoint = isOwnerView 
-        ? `https://ok-motor.onrender.com/api/dashboard/owner` 
-        : `https://ok-motor.onrender.com/api/dashboard`;
-      
+      const endpoint = isOwnerView
+        ? `http://localhost:2500/api/dashboard/owner`
+        : `http://localhost:2500/api/dashboard`;
+
       const response = await fetch(endpoint, {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-        }
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+        },
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch dashboard data');
+        throw new Error("Failed to fetch dashboard data");
       }
-      
+
       const data = await response.json();
       setDashboardData(data.data);
     } catch (error) {
@@ -78,7 +79,7 @@ const AdminPage = () => {
   };
 
   const formatCurrency = (amount) => {
-    if (isNaN(amount)) return '₹0';
+    if (isNaN(amount)) return "₹0";
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
@@ -107,7 +108,7 @@ const AdminPage = () => {
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: "admin",
+      path: "/admin",
     },
     {
       name: "Buy",
@@ -137,45 +138,68 @@ const AdminPage = () => {
       name: "Staff",
       icon: Users,
       submenu: [
-        { name: "Create Staff ID", path: "staff/create" },
-        { name: "Staff List", path: "staff/list" },
+        { name: "Create Staff ID", path: "/staff/create" },
+        { name: "Staff List", path: "/staff/list" },
       ],
+    },
+    {
+      name: "Bike History",
+      icon: Bike,
+      path: "/bike-history",
     },
   ];
 
   const DashboardCards = () => (
     <div style={styles.cardsGrid}>
       {loading ? (
-        Array(4).fill().map((_, index) => (
-          <div key={index} style={{ 
-            ...styles.card, 
-            borderLeft: `4px solid ${['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b'][index]}`,
-            opacity: 0.7
-          }}>
-            <div style={styles.cardContent}>
-              <div>
-                <p style={styles.cardLabel}>Loading...</p>
-                <p style={styles.cardValue}>-</p>
-              </div>
-              <div style={{ 
-                ...styles.cardIcon, 
-                backgroundColor: ['#dbeafe', '#d1fae5', '#ede9fe', '#fef3c7'][index] 
-              }}>
-                {[<FileText size={32} color="#2563eb" />, 
-                  <TrendingUp size={32} color="#059669" />, 
-                  <ShoppingCart size={32} color="#7c3aed" />, 
-                  <Target size={32} color="#d97706" />][index]}
+        Array(4)
+          .fill()
+          .map((_, index) => (
+            <div
+              key={index}
+              style={{
+                ...styles.card,
+                borderLeft: `4px solid ${
+                  ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b"][index]
+                }`,
+                opacity: 0.7,
+              }}
+            >
+              <div style={styles.cardContent}>
+                <div>
+                  <p style={styles.cardLabel}>Loading...</p>
+                  <p style={styles.cardValue}>-</p>
+                </div>
+                <div
+                  style={{
+                    ...styles.cardIcon,
+                    backgroundColor: [
+                      "#dbeafe",
+                      "#d1fae5",
+                      "#ede9fe",
+                      "#fef3c7",
+                    ][index],
+                  }}
+                >
+                  {
+                    [
+                      <FileText size={32} color="#2563eb" />,
+                      <TrendingUp size={32} color="#059669" />,
+                      <ShoppingCart size={32} color="#7c3aed" />,
+                      <Target size={32} color="#d97706" />,
+                    ][index]
+                  }
+                </div>
               </div>
             </div>
-          </div>
-        ))
+          ))
       ) : (
         <>
           <div style={{ ...styles.card, borderLeft: "4px solid #3b82f6" }}>
             <div style={styles.cardContent}>
               <div>
                 <p style={styles.cardLabel}>
-                  {isOwnerView ? 'My Purchases' : 'Total Buy Letters'}
+                  {isOwnerView ? "My Purchases" : "Total Buy Letters"}
                 </p>
                 <p style={styles.cardValue}>{dashboardData.totalBuyLetters}</p>
               </div>
@@ -189,7 +213,7 @@ const AdminPage = () => {
             <div style={styles.cardContent}>
               <div>
                 <p style={styles.cardLabel}>
-                  {isOwnerView ? 'My Sales' : 'Total Sell Letters'}
+                  {isOwnerView ? "My Sales" : "Total Sell Letters"}
                 </p>
                 <p style={styles.cardValue}>{dashboardData.totalSellLetters}</p>
               </div>
@@ -203,7 +227,7 @@ const AdminPage = () => {
             <div style={styles.cardContent}>
               <div>
                 <p style={styles.cardLabel}>
-                  {isOwnerView ? 'My Purchase Value' : 'Total Purchase Value'}
+                  {isOwnerView ? "My Purchase Value" : "Total Purchase Value"}
                 </p>
                 <p style={{ ...styles.cardValue, fontSize: "1.5rem" }}>
                   {formatCurrency(dashboardData.totalBuyValue)}
@@ -219,13 +243,15 @@ const AdminPage = () => {
             <div style={styles.cardContent}>
               <div>
                 <p style={styles.cardLabel}>
-                  {isOwnerView ? 'My Net Profit' : 'Total Profit'}
+                  {isOwnerView ? "My Net Profit" : "Total Profit"}
                 </p>
-                <p style={{ 
-                  ...styles.cardValue, 
-                  fontSize: "1.5rem",
-                  color: dashboardData.profit >= 0 ? '#059669' : '#dc2626'
-                }}>
+                <p
+                  style={{
+                    ...styles.cardValue,
+                    fontSize: "1.5rem",
+                    color: dashboardData.profit >= 0 ? "#059669" : "#dc2626",
+                  }}
+                >
                   {formatCurrency(dashboardData.profit)}
                 </p>
               </div>
@@ -242,29 +268,42 @@ const AdminPage = () => {
   const RevenueCard = () => (
     <div style={styles.revenueCard}>
       <h3 style={styles.revenueTitle}>
-        {isOwnerView ? 'My Financial Summary' : 'Business Revenue Overview'}
+        {isOwnerView ? "My Financial Summary" : "Business Revenue Overview"}
       </h3>
       {loading ? (
         <div style={styles.revenueGrid}>
-          {Array(3).fill().map((_, index) => (
-            <div key={index} style={styles.revenueItem}>
-              <p style={styles.revenueLabel}>Loading...</p>
-              <p style={{ ...styles.revenueValue, color: ['#dc2626', '#059669', '#2563eb'][index] }}>
-                -
-              </p>
-            </div>
-          ))}
+          {Array(3)
+            .fill()
+            .map((_, index) => (
+              <div key={index} style={styles.revenueItem}>
+                <p style={styles.revenueLabel}>Loading...</p>
+                <p
+                  style={{
+                    ...styles.revenueValue,
+                    color: ["#dc2626", "#059669", "#2563eb"][index],
+                  }}
+                >
+                  -
+                </p>
+              </div>
+            ))}
         </div>
       ) : (
         <div style={styles.revenueGrid}>
           <div style={styles.revenueItem}>
             <p style={styles.revenueLabel}>
-              {isOwnerView ? 'My Total Purchases' : 'Total Business Purchases'}
+              {isOwnerView ? "My Total Purchases" : "Total Business Purchases"}
             </p>
             <p style={{ ...styles.revenueValue, color: "#dc2626" }}>
               {formatCurrency(dashboardData.totalBuyValue)}
               {isOwnerView && (
-                <span style={{ fontSize: '0.875rem', color: '#6b7280', display: 'block' }}>
+                <span
+                  style={{
+                    fontSize: "0.875rem",
+                    color: "#6b7280",
+                    display: "block",
+                  }}
+                >
                   ({dashboardData.totalBuyLetters} transactions)
                 </span>
               )}
@@ -272,12 +311,18 @@ const AdminPage = () => {
           </div>
           <div style={styles.revenueItem}>
             <p style={styles.revenueLabel}>
-              {isOwnerView ? 'My Total Sales' : 'Total Business Sales'}
+              {isOwnerView ? "My Total Sales" : "Total Business Sales"}
             </p>
             <p style={{ ...styles.revenueValue, color: "#059669" }}>
               {formatCurrency(dashboardData.totalSellValue)}
               {isOwnerView && (
-                <span style={{ fontSize: '0.875rem', color: '#6b7280', display: 'block' }}>
+                <span
+                  style={{
+                    fontSize: "0.875rem",
+                    color: "#6b7280",
+                    display: "block",
+                  }}
+                >
                   ({dashboardData.totalSellLetters} transactions)
                 </span>
               )}
@@ -285,18 +330,26 @@ const AdminPage = () => {
           </div>
           <div style={styles.revenueItem}>
             <p style={styles.revenueLabel}>Net Profit/Loss</p>
-            <p style={{ 
-              ...styles.revenueValue, 
-              color: dashboardData.profit >= 0 ? "#2563eb" : "#dc2626"
-            }}>
+            <p
+              style={{
+                ...styles.revenueValue,
+                color: dashboardData.profit >= 0 ? "#2563eb" : "#dc2626",
+              }}
+            >
               {formatCurrency(dashboardData.profit)}
               {dashboardData.totalBuyValue > 0 && (
-                <span style={{ 
-                  fontSize: '0.875rem', 
-                  color: dashboardData.profit >= 0 ? '#059669' : '#dc2626',
-                  display: 'block'
-                }}>
-                  {dashboardData.profit >= 0 ? 'Profit' : 'Loss'}: {Math.abs((dashboardData.profit / dashboardData.totalBuyValue) * 100).toFixed(2)}%
+                <span
+                  style={{
+                    fontSize: "0.875rem",
+                    color: dashboardData.profit >= 0 ? "#059669" : "#dc2626",
+                    display: "block",
+                  }}
+                >
+                  {dashboardData.profit >= 0 ? "Profit" : "Loss"}:{" "}
+                  {Math.abs(
+                    (dashboardData.profit / dashboardData.totalBuyValue) * 100
+                  ).toFixed(2)}
+                  %
                 </span>
               )}
             </p>
@@ -372,53 +425,62 @@ const AdminPage = () => {
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <div>
                 <h1 style={styles.pageTitle}>Dashboard</h1>
                 <p style={styles.pageSubtitle}>
                   {isOwnerView ? (
                     <>
-                      Personal financial overview for <strong>{dashboardData.ownerName || user?.name}</strong>
+                      Personal financial overview for{" "}
+                      <strong>{dashboardData.ownerName || user?.name}</strong>
                     </>
                   ) : (
                     "Monitor your business performance and manage operations"
                   )}
                 </p>
               </div>
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                <button 
+              <div
+                style={{ display: "flex", gap: "16px", alignItems: "center" }}
+              >
+                <button
                   onClick={toggleOwnerView}
                   style={{
-                    backgroundColor: isOwnerView ? '#10b981' : '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '8px 16px',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s',
-                    ':hover': {
-                      backgroundColor: isOwnerView ? '#059669' : '#2563eb'
-                    }
+                    backgroundColor: isOwnerView ? "#10b981" : "#3b82f6",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    padding: "8px 16px",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s",
+                    ":hover": {
+                      backgroundColor: isOwnerView ? "#059669" : "#2563eb",
+                    },
                   }}
                 >
-                  {isOwnerView ? 'Business View' : 'Owner View'}
+                  {isOwnerView ? "Business View" : "Owner View"}
                 </button>
-                <button 
+                <button
                   onClick={fetchDashboardData}
                   style={{
-                    backgroundColor: '#f59e0b',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '8px 16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s',
-                    ':hover': {
-                      backgroundColor: '#d97706'
-                    }
+                    backgroundColor: "#f59e0b",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    padding: "8px 16px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s",
+                    ":hover": {
+                      backgroundColor: "#d97706",
+                    },
                   }}
                 >
                   <RefreshCw size={16} />

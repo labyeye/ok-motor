@@ -67,7 +67,30 @@ exports.getServiceBills = async (req, res) => {
     });
   }
 };
+// Add to serviceBillController.js
+exports.getServiceBillsByRegistration = async (req, res) => {
+  try {
+    const { registrationNumber } = req.query;
+    if (!registrationNumber) {
+      return res.status(400).json({ message: "Registration number is required" });
+    }
 
+    const serviceBills = await ServiceBill.find({ 
+      registrationNumber: new RegExp(registrationNumber, 'i'),
+      user: req.user._id 
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: serviceBills,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
 // Add this to your serviceBillController.js
 exports.downloadServiceBillPDF = async (req, res) => {
   try {

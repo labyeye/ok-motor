@@ -28,7 +28,25 @@ exports.getSellLetters = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
+// Add to sellLetterController.js
+exports.getSellLettersByRegistration = async (req, res) => {
+  try {
+    const { registrationNumber } = req.query;
+    if (!registrationNumber) {
+      return res.status(400).json({ message: "Registration number is required" });
+    }
 
+    const sellLetters = await SellLetter.find({ 
+      registrationNumber: new RegExp(registrationNumber, 'i'),
+      user: req.user.id 
+    }).sort({ createdAt: -1 });
+
+    res.json(sellLetters);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 exports.getMySellLetters = async (req, res) => {
   try {
     const sellLetters = await SellLetter.find({ user: req.user.id })

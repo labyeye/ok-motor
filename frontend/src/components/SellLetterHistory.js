@@ -16,6 +16,7 @@ import {
   Edit,
   Trash2,
   X,
+  Bike
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PDFDocument, rgb } from "pdf-lib";
@@ -177,7 +178,7 @@ const SellLetterHistory = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `https://ok-motor.onrender.com/api/sell-letters/my-letters?page=${currentPage}`,
+          `http://localhost:2500/api/sell-letters/my-letters?page=${currentPage}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -257,23 +258,21 @@ const SellLetterHistory = () => {
         registrationNumber: { x: 436, y: 682, size: 11 },
         chassisNumber: { x: 151, y: 662, size: 11 },
         engineNumber: { x: 362, y: 662, size: 11 },
-        vehiclekm: { x: 75, y: 642, size: 11 },
-        buyerName: { x: 333, y: 642, size: 11 },
-        buyerFatherName: { x: 98, y: 624, size: 11 },
+        vehiclekm: { x: 160, y: 642, size: 11 },
+        buyerName: { x: 75, y: 624, size: 11 },
+        buyerFatherName: { x: 275, y: 624, size: 11 },
         buyerAddress: { x: 100, y: 604, size: 11 },
-        buyerName1: { x: 141, y: 489, size: 11 },
-        buyerName2: { x: 210, y: 430, size: 11 },
+        buyerName1: { x: 252, y: 509, size: 11 },
+        buyerName2: { x: 364, y: 470, size: 11 },
         saleDate: { x: 235, y: 584, size: 11 },
         saleTime: { x: 370, y: 584, size: 11 },
         saleAmount: { x: 460, y: 584, size: 11 },
         todayDate: { x: 260, y: 564, size: 11 },
         todayTime: { x: 420, y: 564, size: 11 },
-        previousDate: { x: 118, y: 506, size: 11 },
-        previousTime: { x: 240, y: 506, size: 11 },
-        buyerPhone: { x: 110, y: 205, size: 11 },
-        buyerAadhar: { x: 150, y: 185, size: 11 },
-        sellerphone: { x: 356, y: 205, size: 11 },
-        selleraadhar: { x: 383, y: 185, size: 11 },
+        previousDate: { x: 373, y: 526, size: 11 },
+        previousTime: { x: 482, y: 526, size: 11 },
+        buyerPhone: { x: 110, y: 208, size: 11 },
+        buyerAadhar: { x: 145, y: 190, size: 11 },
       };
 
       for (const [fieldName, position] of Object.entries(fieldPositions)) {
@@ -305,7 +304,7 @@ const SellLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this sell letter?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/sell-letters/${id}`, {
+        await axios.delete(`http://localhost:2500/api/sell-letters/${id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -320,11 +319,17 @@ const SellLetterHistory = () => {
   const handleEdit = (letter) => {
     setEditingLetter(letter);
   };
-
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    sessionStorage.clear();
+    navigate("/login");
+  };
   const handleSaveEdit = async (updatedLetter) => {
     try {
       const response = await axios.put(
-        `https://ok-motor.onrender.com/api/sell-letters/${updatedLetter._id}`,
+        `http://localhost:2500/api/sell-letters/${updatedLetter._id}`,
         updatedLetter,
         {
           headers: {
@@ -379,6 +384,11 @@ const SellLetterHistory = () => {
         { name: "Create Staff ID", path: "/staff/create" },
         { name: "Staff List", path: "/staff/list" },
       ],
+    },
+    {
+      name: "Bike History",
+      icon: Bike,
+      path: "/bike-history",
     },
   ];
 
@@ -454,7 +464,7 @@ const SellLetterHistory = () => {
             </div>
           ))}
 
-          <div style={styles.logoutButton} onClick={logout}>
+          <div style={styles.logoutButton} onClick={handleLogout}>
             <LogOut size={20} style={styles.menuIcon} />
             <span style={styles.menuText}>Logout</span>
           </div>

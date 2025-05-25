@@ -21,6 +21,7 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
+  Bike
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -53,10 +54,10 @@ const SellLetterForm = () => {
     buyerName2: "",
     vehicleCondition: "running",
     saleDate: new Date().toISOString().split("T")[0],
-    saleTime: "",
+    saleTime: new Date().toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit' }),
     saleAmount: "",
     todayDate: new Date().toISOString().split("T")[0],
-    todayTime: "",
+    todayTime: new Date().toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit' }),
     previousDate: new Date().toISOString().split("T")[0],
     previousTime: "",
     paymentMethod: "cash",
@@ -128,6 +129,11 @@ const SellLetterForm = () => {
         { name: "Staff List", path: "/staff/list" },
       ],
     },
+    {
+      name: "Bike History",
+      icon: Bike,
+      path: "/bike-history",
+    },
   ];
 
   const toggleMenu = (menuName) => {
@@ -145,24 +151,38 @@ const SellLetterForm = () => {
   const saveToDatabase = async () => {
     try {
       setIsSaving(true);
-      
+
       // Check if required fields are empty
       const requiredFields = [
-        'vehicleName', 'vehicleModel', 'vehicleColor', 'registrationNumber',
-        'chassisNumber', 'engineNumber', 'vehiclekm', 'buyerName',
-        'buyerFatherName', 'buyerAddress', 'buyerPhone', 'buyerAadhar', 'saleAmount','selleraadhar','sellerphone'
+        "vehicleName",
+        "vehicleModel",
+        "vehicleColor",
+        "registrationNumber",
+        "chassisNumber",
+        "engineNumber",
+        "vehiclekm",
+        "buyerName",
+        "buyerFatherName",
+        "buyerAddress",
+        "buyerPhone",
+        "buyerAadhar",
+        "saleAmount",
+        "selleraadhar",
+        "sellerphone",
       ];
-      
-      const missingFields = requiredFields.filter(field => !formData[field]);
-      
+
+      const missingFields = requiredFields.filter((field) => !formData[field]);
+
       if (missingFields.length > 0) {
-        alert(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        alert(
+          `Please fill in all required fields: ${missingFields.join(", ")}`
+        );
         setIsSaving(false);
         return false;
       }
-  
+
       const response = await axios.post(
-        "https://ok-motor.onrender.com/api/sell-letters",
+        "http://localhost:2500/api/sell-letters",
         formData,
         {
           headers: {
@@ -171,7 +191,7 @@ const SellLetterForm = () => {
           },
         }
       );
-  
+
       if (response.data) {
         alert("Sell letter saved successfully!");
         return true;
@@ -182,8 +202,8 @@ const SellLetterForm = () => {
         // Handle server validation errors
         if (error.response.data.errors) {
           const errorMessages = Object.values(error.response.data.errors)
-            .map(err => err.message)
-            .join('\n');
+            .map((err) => err.message)
+            .join("\n");
           alert(`Validation errors:\n${errorMessages}`);
         } else {
           alert(error.response.data.message || "Failed to save sell letter.");
@@ -201,33 +221,31 @@ const SellLetterForm = () => {
     if (savedSuccessfully) {
       await fillAndDownloadPdf();
     }
-  };const fieldPositions = {
+  };
+  const fieldPositions = {
     vehicleName: { x: 339, y: 702, size: 11 },
     vehicleModel: { x: 207, y: 682, size: 11 },
     vehicleColor: { x: 97, y: 682, size: 11 },
     registrationNumber: { x: 436, y: 682, size: 11 },
     chassisNumber: { x: 151, y: 662, size: 11 },
     engineNumber: { x: 362, y: 662, size: 11 },
-    vehiclekm: { x: 75, y: 642, size: 11 },
-    buyerName: { x: 333, y: 642, size: 11 },
-    buyerFatherName: { x: 98, y: 624, size: 11 },
+    vehiclekm: { x: 160, y: 642, size: 11 },
+    buyerName: { x: 75, y: 624, size: 11 },
+    buyerFatherName: { x: 275, y: 624, size: 11 },
     buyerAddress: { x: 100, y: 604, size: 11 },
-    buyerName1: { x: 141, y: 489, size: 11 },
-    buyerName2: { x: 210, y: 430, size: 11 },
+    buyerName1: { x: 252, y: 509, size: 11 },
+    buyerName2: { x: 364, y: 470, size: 11 },
     saleDate: { x: 235, y: 584, size: 11 },
     saleTime: { x: 370, y: 584, size: 11 },
     saleAmount: { x: 460, y: 584, size: 11 },
     todayDate: { x: 260, y: 564, size: 11 },
     todayTime: { x: 420, y: 564, size: 11 },
-    previousDate: { x: 118, y: 506, size: 11 },
-    previousTime: { x: 240, y: 506, size: 11 },
-    buyerPhone: { x: 110, y: 205, size: 11 },
-    buyerAadhar: { x: 150, y: 185, size: 11 },
-    sellerphone: { x: 356, y: 205, size: 11 },
-    selleraadhar: { x: 383, y: 185, size: 11 },
+    previousDate: { x: 373, y: 526, size: 11 },
+    previousTime: { x: 482, y: 526, size: 11 },
+    buyerPhone: { x: 110, y: 208, size: 11 },
+    buyerAadhar: { x: 145, y: 190, size: 11 },
   };
 
-  // In the fillAndDownloadPdf function, update the field drawing logic:
   const fillAndDownloadPdf = async () => {
     try {
       const templateUrl = "/templates/sellletter.pdf";
@@ -287,6 +305,13 @@ const SellLetterForm = () => {
       </div>
     );
   }
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    sessionStorage.clear();
+    navigate("/login");
+  };
 
   return (
     <div style={styles.container}>
@@ -348,7 +373,7 @@ const SellLetterForm = () => {
             </div>
           ))}
 
-          <div style={styles.logoutButton} onClick={logout}>
+          <div style={styles.logoutButton} onClick={handleLogout}>
             <LogOut size={20} style={styles.menuIcon} />
             <span style={styles.menuText}>Logout</span>
           </div>
@@ -661,34 +686,7 @@ const SellLetterForm = () => {
                     style={styles.formInput}
                   />
                 </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <User style={styles.formIcon} />
-                    Seller Phone
-                  </label>
-                  <input
-                    type="number"
-                    name="sellerphone"
-                    value={formData.sellerphone}
-                    onChange={handleChange}
-                    style={styles.formInput}
-                    maxLength={10}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <User style={styles.formIcon} />
-                    Seller Aadhar
-                  </label>
-                  <input
-                    type="number"
-                    name="selleraadhar"
-                    value={formData.selleraadhar}
-                    onChange={handleChange}
-                    style={styles.formInput}
-                    maxLength={12}
-                  />
-                </div>
+                
               </div>
             </div>
 

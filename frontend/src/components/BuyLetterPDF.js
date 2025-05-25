@@ -17,6 +17,7 @@ import {
   TrendingUp,
   Wrench,
   Users,
+  Bike,
   LogOut,
   ChevronDown,
   ChevronRight,
@@ -50,11 +51,11 @@ const BuyLetterForm = () => {
     buyerFatherName: "",
     buyerCurrentAddress: "",
     saleDate: new Date().toISOString().split("T")[0],
-    saleTime: "",
+    saleTime: new Date().toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit' }),
     saleAmount: "",
     paymentMethod: "cash",
     todayDate: new Date().toISOString().split("T")[0],
-    todayTime: "",
+    todayTime: new Date().toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit' }),
     todayDate1: "",
     todayTime1: "",
     sellerName1: "",
@@ -86,7 +87,7 @@ const BuyLetterForm = () => {
     try {
       setIsSaving(true);
       const response = await axios.post(
-        "https://ok-motor.onrender.com/api/buy-letter",
+        "http://localhost:2500/api/buy-letter",
         formData
       );
       alert("Buy letter saved successfully!");
@@ -181,6 +182,11 @@ const BuyLetterForm = () => {
         { name: "Staff List", path: "/staff/list" },
       ],
     },
+    {
+      name: "Bike History",
+      icon: Bike,
+      path: "/bike-history",
+    },
   ];
 
   const toggleMenu = (menuName) => {
@@ -188,6 +194,13 @@ const BuyLetterForm = () => {
       ...prev,
       [menuName]: !prev[menuName],
     }));
+  };
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    sessionStorage.clear();
+    navigate("/login");
   };
 
   const handleMenuClick = (menuName, path) => {
@@ -367,7 +380,7 @@ const BuyLetterForm = () => {
             </div>
           ))}
 
-          <div style={styles.logoutButton} onClick={logout}>
+          <div style={styles.logoutButton} onClick={handleLogout}>
             <LogOut size={20} style={styles.menuIcon} />
             <span style={styles.menuText}>Logout</span>
           </div>

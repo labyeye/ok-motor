@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Plus,
   Trash,
+  Bike
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -66,7 +67,7 @@ const ServiceBillForm = () => {
   });
 
   const [previewMode, setPreviewMode] = useState(false);
-const API_BASE_URL = 'https://ok-motor.onrender.com/api';
+const API_BASE_URL = 'http://localhost:2500/api';
   const calculateAmounts = (data) => {
     const totalAmount = (data.serviceItems || []).reduce(
       (sum, item) => sum + (item.quantity || 0) * (item.rate || 0),
@@ -162,7 +163,7 @@ const API_BASE_URL = 'https://ok-motor.onrender.com/api';
       setIsSaving(true);
       
       const token = localStorage.getItem('token');
-      const saveResponse = await axios.post('https://ok-motor.onrender.com/api/service-bills', formData, {
+      const saveResponse = await axios.post('http://localhost:2500/api/service-bills', formData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -175,7 +176,7 @@ const API_BASE_URL = 'https://ok-motor.onrender.com/api';
         throw new Error('No bill ID returned from server');
       }
       
-      const pdfResponse = await axios.get(`https://ok-motor.onrender.com/api/service-bills/${billId}/download`, {
+      const pdfResponse = await axios.get(`http://localhost:2500/api/service-bills/${billId}/download`, {
         responseType: 'blob',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -330,6 +331,13 @@ const API_BASE_URL = 'https://ok-motor.onrender.com/api';
       alert("Failed to generate PDF. Please try again.");
     }
   };
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    sessionStorage.clear();
+    navigate("/login");
+  };
 
   const menuItems = [
     {
@@ -368,6 +376,11 @@ const API_BASE_URL = 'https://ok-motor.onrender.com/api';
         { name: "Create Staff ID", path: "/staff/create" },
         { name: "Staff List", path: "/staff/list" },
       ],
+    },
+    {
+      name: "Bike History",
+      icon: Bike,
+      path: "/bike-history",
     },
   ];
 
@@ -469,7 +482,7 @@ const API_BASE_URL = 'https://ok-motor.onrender.com/api';
             </div>
           ))}
 
-          <div style={styles.logoutButton} onClick={logout}>
+          <div style={styles.logoutButton} onClick={handleLogout}>
             <LogOut size={20} style={styles.menuIcon} />
             <span style={styles.menuText}>Logout</span>
           </div>

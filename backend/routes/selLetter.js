@@ -8,19 +8,23 @@ const {
   getSellLetterById,
   updateSellLetter,
   deleteSellLetter,
-  getMySellLetters // Add this new controller
+  getMySellLetters,
+  getSellLettersByRegistration
 } = require('../controllers/sellLetterController');
 
 // Protect all routes
 router.use(protect);
 
+// Specific routes first
+router.route('/by-registration').get(getSellLettersByRegistration); // Changed from /get-sell
+router.route('/my-letters').get(getMySellLetters); // Changed from /my-letters
+
+// General routes
 router.route('/')
   .post(createSellLetter)
   .get(getSellLetters);
 
-router.route('/my-letters')
-  .get(getMySellLetters); // Add this new route
-
+// Parameterized routes last
 router.route('/:id')
   .get(getSellLetterById)
   .put(updateSellLetter)

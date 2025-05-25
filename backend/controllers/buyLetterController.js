@@ -51,7 +51,24 @@ exports.getBuyLetters = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+exports.getBuyLettersByRegistration = async (req, res) => {
+  try {
+    const { registrationNumber } = req.query;
+    if (!registrationNumber) {
+      return res.status(400).json({ message: "Registration number is required" });
+    }
 
+    const buyLetters = await BuyLetter.find({ 
+      registrationNumber: new RegExp(registrationNumber, 'i'),
+      user: req.user.id 
+    }).sort({ createdAt: -1 });
+
+    res.json(buyLetters);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 exports.getBuyLetterById = async (req, res) => {
   try {
     const buyLetter = await BuyLetter.findOne({

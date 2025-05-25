@@ -9,13 +9,16 @@ import SellLetterForm from "./components/SellLetterPDF";
 import BuyLetterHistory from "./components/BuyLetterHistory";
 import SellLetterHistory from "./components/SellLetterHistory";
 import ServiceBillForm from "./components/ServiceBillForm";
+import BikeHistory from "./components/BikeHistory";
+import CreateStaff from "./components/CreateStaff";
+import StaffList from "./components/StaffList";
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-        <Route path="/" element={<LoginPage />} />
+          <Route path="/" element={<LoginPage />} />
 
           <Route path="/login" element={<LoginPage />} />
           <Route
@@ -74,6 +77,31 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route
+            path="/bike-history"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <BikeHistory />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/staff/create"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <CreateStaff />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/staff/list"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <StaffList />
+              </PrivateRoute>
+            }
+          />
+          
         </Routes>
       </Router>
     </AuthProvider>

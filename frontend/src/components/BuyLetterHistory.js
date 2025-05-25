@@ -15,6 +15,7 @@ import {
   Search,
   Download,
   Edit,
+  Bike,
   Trash2,
   X,
 } from "lucide-react";
@@ -200,7 +201,7 @@ const BuyLetterHistory = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `https://ok-motor.onrender.com/api/buy-letter?page=${currentPage}`
+          `http://localhost:2500/api/buy-letter?page=${currentPage}`
         );
         setBuyLetters(response.data.buyLetters);
         setTotalPages(response.data.pages);
@@ -252,6 +253,11 @@ const BuyLetterHistory = () => {
         { name: "Staff List", path: "/staff/list" },
       ],
     },
+    {
+      name: "Bike History",
+      icon: Bike,
+      path: "/bike-history",
+    },
   ];
 
   const filteredLetters = buyLetters.filter(
@@ -272,7 +278,13 @@ const BuyLetterHistory = () => {
     setActiveMenu(menuName);
     navigate(path);
   };
-
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    sessionStorage.clear();
+    navigate("/login");
+  };
   const handleDownload = async (letter) => {
     try {
       const templateUrl = "/templates/buyletter.pdf";
@@ -307,7 +319,13 @@ const BuyLetterHistory = () => {
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
       }
-
+      const handleLogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("authToken");
+        sessionStorage.clear();
+        navigate("/login");
+      };
       const fieldPositions = {
 
         sellerName: { x: 45, y: 630, size: 11 },
@@ -372,7 +390,7 @@ const BuyLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/buy-letter/${id}`);
+        await axios.delete(`http://localhost:2500/api/buy-letter/${id}`);
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting buy letter:", error);
@@ -387,7 +405,7 @@ const BuyLetterHistory = () => {
   const handleSaveEdit = async (updatedLetter) => {
     try {
       const response = await axios.put(
-        `https://ok-motor.onrender.com/api/buy-letter/${updatedLetter._id}`,
+        `http://localhost:2500/api/buy-letter/${updatedLetter._id}`,
         updatedLetter
       );
       setBuyLetters(
@@ -461,7 +479,7 @@ const BuyLetterHistory = () => {
             </div>
           ))}
 
-          <div style={styles.logoutButton} onClick={logout}>
+          <div style={styles.logoutButton} onClick={handleLogout}>
             <LogOut size={20} style={styles.menuIcon} />
             <span style={styles.menuText}>Logout</span>
           </div>
