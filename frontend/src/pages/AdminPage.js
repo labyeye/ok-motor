@@ -103,7 +103,13 @@ const AdminPage = () => {
     setActiveMenu(menuName);
     navigate(path);
   };
-
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    sessionStorage.clear();
+    navigate("/login");
+  };
   const menuItems = [
     {
       name: "Dashboard",
@@ -414,7 +420,7 @@ const AdminPage = () => {
             </div>
           ))}
 
-          <div style={styles.logoutButton} onClick={logout}>
+          <div style={styles.logoutButton} onClick={handleLogout}>
             <LogOut size={20} style={styles.menuIcon} />
             <span style={styles.menuText}>Logout</span>
           </div>
