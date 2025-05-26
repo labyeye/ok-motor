@@ -1,4 +1,4 @@
-import { useState, useEffect,useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -14,10 +14,24 @@ import {
   Bike
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Bar, Pie } from "react-chartjs-2";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 
 import AuthContext from "../context/AuthContext";
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
+
 const AdminPage = () => {
-  const { user} = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [dashboardData, setDashboardData] = useState({
@@ -27,6 +41,12 @@ const AdminPage = () => {
     totalSellValue: 0,
     profit: 0,
     ownerName: user.name,
+    recentTransactions: {
+      buy: [],
+      sell: [],
+      service: []
+    },
+    monthlyData: []
   });
   const [loading, setLoading] = useState(true);
   const [isOwnerView, setIsOwnerView] = useState(false);
@@ -61,14 +81,38 @@ const AdminPage = () => {
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       // Fallback data if API fails
-      // setDashboardData({
-      //   totalBuyLetters: 145,
-      //   totalSellLetters: 128,
-      //   totalBuyValue: 2450000,
-      //   totalSellValue: 2890000,
-      //   profit: 440000,
-      //   ownerName: user.name,
-      // });
+      setDashboardData({
+        totalBuyLetters: 145,
+        totalSellLetters: 128,
+        totalBuyValue: 2450000,
+        totalSellValue: 2890000,
+        profit: 440000,
+        ownerName: user.name,
+        recentTransactions: {
+          buy: [
+            { id: 1, bikeNumber: "KA01AB1234", customerName: "Rahul Sharma", date: "2023-05-15", amount: 85000 },
+            { id: 2, bikeNumber: "KA02CD5678", customerName: "Priya Patel", date: "2023-05-14", amount: 92000 },
+            { id: 3, bikeNumber: "KA03EF9012", customerName: "Vikram Singh", date: "2023-05-12", amount: 78000 }
+          ],
+          sell: [
+            { id: 1, bikeNumber: "KA01AB1234", customerName: "Amit Verma", date: "2023-05-14", amount: 95000 },
+            { id: 2, bikeNumber: "KA04GH3456", customerName: "Neha Gupta", date: "2023-05-13", amount: 110000 },
+            { id: 3, bikeNumber: "KA05IJ7890", customerName: "Sanjay Kumar", date: "2023-05-10", amount: 105000 }
+          ],
+          service: [
+            { id: 1, bikeNumber: "KA06KL1234", customerName: "Anjali Mehta", date: "2023-05-13", serviceType: "Full Service", amount: 3500 },
+            { id: 2, bikeNumber: "KA07MN5678", customerName: "Rajesh Iyer", date: "2023-05-11", serviceType: "Engine Repair", amount: 5200 },
+            { id: 3, bikeNumber: "KA08OP9012", customerName: "Divya Nair", date: "2023-05-09", serviceType: "Oil Change", amount: 1200 }
+          ]
+        },
+        monthlyData: [
+          { month: "Jan", buy: 12, sell: 8, profit: 120000 },
+          { month: "Feb", buy: 15, sell: 10, profit: 150000 },
+          { month: "Mar", buy: 18, sell: 15, profit: 210000 },
+          { month: "Apr", buy: 20, sell: 18, profit: 250000 },
+          { month: "May", buy: 25, sell: 22, profit: 300000 }
+        ]
+      });
     } finally {
       setLoading(false);
     }
@@ -84,6 +128,11 @@ const AdminPage = () => {
     }).format(amount);
   };
 
+  const formatDate = (dateString) => {
+    const options = { day: 'numeric', month: 'short', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-IN', options);
+  };
+
   const toggleOwnerView = () => {
     setIsOwnerView(!isOwnerView);
   };
@@ -96,11 +145,11 @@ const AdminPage = () => {
   };
 
   const handleMenuClick = (menuName, path) => {
-  setActiveMenu(menuName);
-  // Handle both string paths and function paths
-  const actualPath = typeof path === 'function' ? path(user?.role) : path;
-  navigate(actualPath);
-};
+    setActiveMenu(menuName);
+    const actualPath = typeof path === 'function' ? path(user?.role) : path;
+    navigate(actualPath);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -108,6 +157,86 @@ const AdminPage = () => {
     sessionStorage.clear();
     navigate("/login");
   };
+
+  // Chart data configuration
+  const monthlyChartData = {
+    labels: dashboardData.monthlyData.map(item => item.month),
+    datasets: [
+      {
+        label: 'Buy Letters',
+        data: dashboardData.monthlyData.map(item => item.buy),
+        backgroundColor: '#3b82f6',
+      },
+      {
+        label: 'Sell Letters',
+        data: dashboardData.monthlyData.map(item => item.sell),
+        backgroundColor: '#10b981',
+      }
+    ],
+  };
+
+  const profitChartData = {
+    labels: dashboardData.monthlyData.map(item => item.month),
+    datasets: [
+      {
+        label: 'Profit',
+        data: dashboardData.monthlyData.map(item => item.profit),
+        backgroundColor: dashboardData.monthlyData.map(item => 
+          item.profit >= 0 ? '#10b981' : '#ef4444'
+        ),
+      }
+    ],
+  };
+
+  const transactionTypeData = {
+    labels: ['Buy', 'Sell', 'Service'],
+    datasets: [
+      {
+        data: [
+          dashboardData.totalBuyLetters,
+          dashboardData.totalSellLetters,
+          dashboardData.recentTransactions.service.length
+        ],
+        backgroundColor: [
+          '#3b82f6',
+          '#10b981',
+          '#f59e0b'
+        ],
+        borderColor: [
+          '#2563eb',
+          '#059669',
+          '#d97706'
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    },
+    maintainAspectRatio: false
+  };
+
+  const pieOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'right',
+      },
+    },
+    maintainAspectRatio: false
+  };
+
   const menuItems = [
     {
       name: "Dashboard",
@@ -363,6 +492,99 @@ const AdminPage = () => {
     </div>
   );
 
+  const ChartsSection = () => (
+    <div style={styles.chartsContainer}>
+      <div style={styles.chartCard}>
+        <h3 style={styles.chartTitle}>Monthly Transactions</h3>
+        <div style={styles.chartWrapper}>
+          <Bar data={monthlyChartData} options={chartOptions} />
+        </div>
+      </div>
+      
+      <div style={styles.chartCard}>
+        <h3 style={styles.chartTitle}>Monthly Profit</h3>
+        <div style={styles.chartWrapper}>
+          <Bar data={profitChartData} options={chartOptions} />
+        </div>
+      </div>
+      
+      <div style={styles.chartCard}>
+        <h3 style={styles.chartTitle}>Transaction Types</h3>
+        <div style={styles.chartWrapper}>
+          <Pie data={transactionTypeData} options={pieOptions} />
+        </div>
+      </div>
+    </div>
+  );
+
+  const RecentTransactions = () => (
+    <div style={styles.transactionsContainer}>
+      <div style={styles.transactionCard}>
+        <h3 style={styles.transactionTitle}>
+          <ShoppingCart size={18} style={{ marginRight: 8 }} />
+          Recent Buy Letters
+        </h3>
+        <div style={styles.transactionList}>
+          {dashboardData.recentTransactions.buy.map((transaction) => (
+            <div key={transaction.id} style={styles.transactionItem}>
+              <div style={styles.transactionInfo}>
+                <p style={styles.transactionBike}>{transaction.bikeNumber}</p>
+                <p style={styles.transactionCustomer}>{transaction.customerName}</p>
+              </div>
+              <div style={styles.transactionDetails}>
+                <p style={styles.transactionDate}>{formatDate(transaction.date)}</p>
+                <p style={styles.transactionAmount}>{formatCurrency(transaction.amount)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div style={styles.transactionCard}>
+        <h3 style={styles.transactionTitle}>
+          <TrendingUp size={18} style={{ marginRight: 8 }} />
+          Recent Sell Letters
+        </h3>
+        <div style={styles.transactionList}>
+          {dashboardData.recentTransactions.sell.map((transaction) => (
+            <div key={transaction.id} style={styles.transactionItem}>
+              <div style={styles.transactionInfo}>
+                <p style={styles.transactionBike}>{transaction.bikeNumber}</p>
+                <p style={styles.transactionCustomer}>{transaction.customerName}</p>
+              </div>
+              <div style={styles.transactionDetails}>
+                <p style={styles.transactionDate}>{formatDate(transaction.date)}</p>
+                <p style={styles.transactionAmount}>{formatCurrency(transaction.amount)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div style={styles.transactionCard}>
+        <h3 style={styles.transactionTitle}>
+          <Wrench size={18} style={{ marginRight: 8 }} />
+          Recent Service Bills
+        </h3>
+        <div style={styles.transactionList}>
+          {dashboardData.recentTransactions.service.map((transaction) => (
+            <div key={transaction.id} style={styles.transactionItem}>
+              <div style={styles.transactionInfo}>
+                <p style={styles.transactionBike}>{transaction.bikeNumber}</p>
+                <p style={styles.transactionCustomer}>{transaction.customerName}</p>
+                <p style={styles.transactionService}>{transaction.serviceType}</p>
+              </div>
+              <div style={styles.transactionDetails}>
+                <p style={styles.transactionDate}>{formatDate(transaction.date)}</p>
+                <p style={styles.transactionAmount}>{formatCurrency(transaction.amount)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div style={styles.container}>
       {/* Sidebar */}
@@ -375,20 +597,19 @@ const AdminPage = () => {
         <nav style={styles.nav}>
           {menuItems.map((item) => (
             <div key={item.name}>
-    <div
-      style={{
-        ...styles.menuItem,
-        ...(activeMenu === item.name ? styles.menuItemActive : {}),
-      }}
-      onClick={() => {
-        if (item.submenu) {
-          toggleMenu(item.name);
-        } else {
-          // Pass the path as-is (could be string or function)
-          handleMenuClick(item.name, item.path);
-        }
-      }}
-    >
+              <div
+                style={{
+                  ...styles.menuItem,
+                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
+                }}
+                onClick={() => {
+                  if (item.submenu) {
+                    toggleMenu(item.name);
+                  } else {
+                    handleMenuClick(item.name, item.path);
+                  }
+                }}
+              >
                 <div style={styles.menuItemContent}>
                   <item.icon size={20} style={styles.menuIcon} />
                   <span style={styles.menuText}>{item.name}</span>
@@ -499,6 +720,12 @@ const AdminPage = () => {
             <>
               <DashboardCards />
               <RevenueCard />
+              
+              {/* Charts Section */}
+              <ChartsSection />
+              
+              {/* Recent Transactions */}
+              <RecentTransactions />
 
               {/* Quick Actions */}
               <div style={styles.quickActionsCard}>
@@ -779,6 +1006,106 @@ const styles = {
     fontSize: "1.25rem",
     fontWeight: "bold",
     margin: "4px 0 0 0",
+  },
+  // Charts Styles
+  chartsContainer: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
+    gap: "24px",
+    marginBottom: "32px",
+  },
+  chartCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: "12px",
+    boxShadow:
+      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+    padding: "24px",
+  },
+  chartTitle: {
+    fontSize: "1.125rem",
+    fontWeight: "600",
+    color: "#1f2937",
+    margin: "0 0 16px 0",
+  },
+  chartWrapper: {
+    height: "300px",
+    width: "100%",
+  },
+  // Transactions Styles
+  transactionsContainer: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+    gap: "24px",
+    marginBottom: "32px",
+  },
+  transactionCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: "12px",
+    boxShadow:
+      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+    padding: "24px",
+  },
+  transactionTitle: {
+    fontSize: "1.125rem",
+    fontWeight: "600",
+    color: "#1f2937",
+    margin: "0 0 16px 0",
+    display: "flex",
+    alignItems: "center",
+  },
+  transactionList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+  transactionItem: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "12px",
+    backgroundColor: "#f9fafb",
+    borderRadius: "8px",
+    transition: "all 0.2s",
+    ":hover": {
+      backgroundColor: "#f3f4f6",
+    },
+  },
+  transactionInfo: {
+    display: "flex",
+    flexDirection: "column",
+  },
+  transactionBike: {
+    fontSize: "0.875rem",
+    fontWeight: "500",
+    color: "#1f2937",
+    margin: 0,
+  },
+  transactionCustomer: {
+    fontSize: "0.75rem",
+    color: "#6b7280",
+    margin: "2px 0 0 0",
+  },
+  transactionService: {
+    fontSize: "0.75rem",
+    color: "#6b7280",
+    fontStyle: "italic",
+    margin: "2px 0 0 0",
+  },
+  transactionDetails: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-end",
+  },
+  transactionDate: {
+    fontSize: "0.75rem",
+    color: "#6b7280",
+    margin: 0,
+  },
+  transactionAmount: {
+    fontSize: "0.875rem",
+    fontWeight: "500",
+    color: "#1f2937",
+    margin: "2px 0 0 0",
   },
   quickActionsCard: {
     backgroundColor: "#ffffff",

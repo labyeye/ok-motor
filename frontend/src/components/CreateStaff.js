@@ -51,7 +51,7 @@ const CreateStaff = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:2500/api/users",
+        "https://ok-motor.onrender.com/api/users",
         formData
       );
       setSuccess(true);

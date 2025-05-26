@@ -34,7 +34,7 @@ const BikeHistory = () => {
       setLoading(true);
       const [buyLetters, sellLetters, serviceBills] = await Promise.all([
         axios.get(
-          `http://localhost:2500/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
+          `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -42,7 +42,7 @@ const BikeHistory = () => {
           }
         ),
         axios.get(
-          `http://localhost:2500/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
+          `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -50,7 +50,7 @@ const BikeHistory = () => {
           }
         ),
         axios.get(
-          `http://localhost:2500/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
+          `https://ok-motor.onrender.com/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
