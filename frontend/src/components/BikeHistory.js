@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
+import logo from '../images/company.png';
+
 const BikeHistory = () => {
   const { user } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Bike History");
@@ -34,7 +36,7 @@ const BikeHistory = () => {
       setLoading(true);
       const [buyLetters, sellLetters, serviceBills] = await Promise.all([
         axios.get(
-          `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
+          `http://localhost:2500/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -42,7 +44,7 @@ const BikeHistory = () => {
           }
         ),
         axios.get(
-          `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
+          `http://localhost:2500/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -50,7 +52,7 @@ const BikeHistory = () => {
           }
         ),
         axios.get(
-          `https://ok-motor.onrender.com/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
+          `http://localhost:2500/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -252,7 +254,7 @@ const BikeHistory = () => {
     <div style={styles.container}>
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
+           <img src={logo} alt="logo" style={{width: '12.5rem', height: '7.5rem', color: '#7c3aed'}} />
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 

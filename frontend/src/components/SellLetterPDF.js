@@ -1,9 +1,8 @@
 import React, { useState, useCallback, useContext } from "react";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
 import axios from "axios";
 import {
-  FileText,
   ArrowLeft,
   User,
   FileSignature,
@@ -24,6 +23,7 @@ import {
   Bike,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import logo from '../images/company.png';
 
 import AuthContext from "../context/AuthContext";
 
@@ -73,8 +73,6 @@ const SellLetterForm = () => {
     selleraadhar: "764465626571",
     documentsVerified: true,
   });
-
-  const [previewMode, setPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
@@ -152,11 +150,11 @@ const SellLetterForm = () => {
   };
 
   const handleMenuClick = (menuName, path) => {
-  setActiveMenu(menuName);
-  // Handle both string paths and function paths
-  const actualPath = typeof path === 'function' ? path(user?.role) : path;
-  navigate(actualPath);
-};
+    setActiveMenu(menuName);
+    // Handle both string paths and function paths
+    const actualPath = typeof path === "function" ? path(user?.role) : path;
+    navigate(actualPath);
+  };
   const saveToDatabase = async () => {
     try {
       setIsSaving(true);
@@ -189,7 +187,7 @@ const SellLetterForm = () => {
       }
 
       const response = await axios.post(
-        "https://ok-motor.onrender.com/api/sell-letters",
+        "http://localhost:2500/api/sell-letters",
         formData,
         {
           headers: {
@@ -253,6 +251,363 @@ const SellLetterForm = () => {
     buyerAadhar: { x: 145, y: 190, size: 11 },
   };
 
+  const drawVehicleInvoice = async (page, pdfDoc) => {
+    // Embed fonts first
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    // Header background
+    page.drawRectangle({
+      x: 0,
+      y: 780,
+      width: 595,
+      height: 80,
+      color: rgb(0.047, 0.098, 0.196), // Dark blue
+    });
+
+    // Draw dealership header
+    page.drawText("OK MOTORS", {
+      x: 50,
+      y: 810,
+      size: 24,
+      color: rgb(1, 1, 1), // White
+      font: boldFont,
+    });
+
+    // Draw tagline
+    page.drawText("UDAYAM-BR-26-0028550", {
+      x: 50,
+      y: 790,
+      size: 10,
+      color: rgb(1, 1, 1),
+      font: font,
+    });
+
+    // Draw address and contact info
+    page.drawText(
+      "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+      {
+        x: 50,
+        y: 770,
+        size: 8,
+        color: rgb(0.8, 0.8, 0.8),
+        font: font,
+      }
+    );
+
+    // Invoice header with accent color
+    page.drawRectangle({
+      x: 0,
+      y: 750,
+      width: 595,
+      height: 30,
+      color: rgb(0.9, 0.9, 0.9),
+    });
+
+    page.drawText("VEHICLE SALE INVOICE", {
+      x: 200,
+      y: 758,
+      size: 18,
+      color: rgb(0.047, 0.098, 0.196), // Dark blue
+      font: boldFont,
+    });
+
+    // Invoice details section
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(
+      Math.random() * 10000
+    )
+      .toString()
+      .padStart(4, "0")}`;
+
+    page.drawText(`Invoice Number: ${invoiceNumber}`, {
+      x: 50,
+      y: 720,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    page.drawText(`Date: ${new Date().toLocaleDateString("en-IN")}`, {
+      x: 400,
+      y: 720,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    // Divider line
+    page.drawLine({
+      start: { x: 50, y: 710 },
+      end: { x: 545, y: 710 },
+      thickness: 1,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+
+    // Customer Information section
+    page.drawText("CUSTOMER DETAILS", {
+      x: 50,
+      y: 690,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+
+    page.drawText(`Name: ${formData.buyerName || "N/A"}`, {
+      x: 60,
+      y: 665,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    page.drawText(`Address: ${formData.buyerAddress || "N/A"}`, {
+      x: 60,
+      y: 650,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    page.drawText(`Phone: ${formData.buyerPhone || "N/A"}`, {
+      x: 350,
+      y: 665,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    page.drawText(`Aadhar: ${formData.buyerAadhar || "N/A"}`, {
+      x: 350,
+      y: 650,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    // Vehicle Information section
+    page.drawText("VEHICLE DETAILS", {
+      x: 50,
+      y: 620,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+
+    // Vehicle details table header
+    page.drawRectangle({
+      x: 50,
+      y: 590,
+      width: 495,
+      height: 20,
+      color: rgb(0.9, 0.9, 0.9),
+    });
+
+    const vehicleHeaders = [
+      "Make",
+      "Model",
+      "Color",
+      "Reg No",
+      "Chassis",
+      "Engine",
+      "KM",
+    ];
+    const vehicleHeaderPositions = [60, 120, 180, 240, 300, 380, 460];
+
+    vehicleHeaders.forEach((header, index) => {
+      page.drawText(header, {
+        x: vehicleHeaderPositions[index],
+        y: 596,
+        size: 9,
+        color: rgb(0.2, 0.2, 0.2),
+        font: boldFont,
+      });
+    });
+
+    // Vehicle details row
+    const vehicleValues = [
+      formData.vehicleName || "N/A",
+      formData.vehicleModel || "N/A",
+      formData.vehicleColor || "N/A",
+      formData.registrationNumber || "N/A",
+      formData.chassisNumber || "N/A",
+      formData.engineNumber || "N/A",
+      formData.vehiclekm ? `${formData.vehiclekm} km` : "N/A",
+    ];
+
+    vehicleValues.forEach((value, index) => {
+      const truncatedValue =
+        value.length > 12 ? value.substring(0, 12) + "..." : value;
+      page.drawText(truncatedValue, {
+        x: vehicleHeaderPositions[index],
+        y: 575,
+        size: 8,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+    });
+
+    // Sale Information section
+    page.drawText("SALE INFORMATION", {
+      x: 50,
+      y: 550,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+
+    page.drawText(`Sale Date: ${formatDate(formData.saleDate)}`, {
+      x: 60,
+      y: 530,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    page.drawText(`Sale Amount: Rs. ${formData.saleAmount || "0"}`, {
+      x: 200,
+      y: 530,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    page.drawText(
+      `Payment: ${
+        formData.paymentMethod ? formData.paymentMethod.toUpperCase() : "CASH"
+      }`,
+      {
+        x: 350,
+        y: 530,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      }
+    );
+
+    page.drawText(
+      `Condition: ${
+        formData.vehicleCondition === "running" ? "RUNNING" : "NOT RUNNING"
+      }`,
+      {
+        x: 60,
+        y: 510,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      }
+    );
+
+    // Terms and Conditions section
+    page.drawText("TERMS & CONDITIONS", {
+      x: 50,
+      y: 470,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+
+    const terms = [
+      "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
+      "2. A 3-month guarantee is provided on the entire engine",
+      "3. Engine warranty extends from 6 months to 1 year for performance defects",
+      "4. Clutch plate is not covered under any guarantee or warranty",
+      "5. Monthly servicing during the 3-month guarantee is mandatory",
+      "6. First 3 services are free, with minimal charges for oil and parts (excluding engine)",
+      "7. Buyer must submit photocopies of the sell letter and transfer challan",
+      "8. Defects must be reported within 24 hours of purchase to avoid repair charges",
+      "9. Delay in transfer beyond 15 days incurs Rs. 7.5/day penalty",
+      "10. Customer signature confirms acceptance of all terms",
+    ];
+
+    terms.forEach((term, index) => {
+      page.drawText(term, {
+        x: 60,
+        y: 450 - index * 15,
+        size: 8,
+        color: rgb(0.3, 0.3, 0.3),
+        font: font,
+      });
+    });
+
+    page.drawLine({
+      start: { x: 50, y: 295 },
+      end: { x: 545, y: 295 },
+      thickness: 0.5,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+  
+    // Seller Signature
+    page.drawText("Seller Signature", {
+      x: 100,
+      y: 275,
+      size: 10,
+      color: rgb(0.4, 0.4, 0.4),
+      font: font,
+    });
+  
+    page.drawLine({
+      start: { x: 100, y: 270 },
+      end: { x: 250, y: 270 },
+      thickness: 1,
+      color: rgb(0.6, 0.6, 0.6),
+    });
+  
+    // Buyer Signature (OK Motors)
+    page.drawText("Authorized Signatory", {
+      x: 350,
+      y: 275,
+      size: 10,
+      color: rgb(0.4, 0.4, 0.4),
+      font: font,
+    });
+  
+    
+  
+    page.drawLine({
+      start: { x: 350, y: 270 },
+      end: { x: 500, y: 270 },
+      thickness: 1,
+      color: rgb(0.6, 0.6, 0.6),
+    });
+  
+    // Footer
+    page.drawLine({
+      start: { x: 50, y: 100 },
+      end: { x: 545, y: 100 },
+      thickness: 0.5,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+  
+    page.drawText("Thank you for your business!", {
+      x: 220,
+      y: 80,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+  
+    page.drawText("OK MOTORS | 123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210", {
+      x: 180,
+      y: 60,
+      size: 8,
+      color: rgb(0.5, 0.5, 0.5),
+      font: font,
+    });
+  };
+  const handleInput = (e) => {
+    const { name, value } = e.target;
+    e.target.value = value.toUpperCase();
+    handleChange(e);
+  };
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const fillAndDownloadPdf = async () => {
     try {
       const templateUrl = "/templates/sellletter.pdf";
@@ -260,20 +615,40 @@ const SellLetterForm = () => {
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const page = pdfDoc.getPages()[0];
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc);
+      function formatDate(dateString) {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+      function formatTime(timeString) {
+        if (!timeString) return "";
+        return timeString.slice(0, 5);
+      }
+      const formattedLetter = {
+        ...formData,
+        buyerName1: formData.buyerName,
+        buyerName2: formData.buyerName, 
+        saleDate: formatDate(formData.saleDate),
+        saleTime: formatTime(formData.saleTime),
+        todayDate: formatDate(formData.todayDate || new Date()),
+        todayTime: formatTime(formData.todayTime || "12:00"),
+        previousDate: formatDate(
+          formData.previousDate || formData.todayDate || new Date()
+        ),
+        previousTime: formatTime(
+          formData.previousTime || formData.todayTime || "12:00"
+        ),
+      };
 
-      // Draw all fields
+      // Fill sell letter fields
       for (const [fieldName, position] of Object.entries(fieldPositions)) {
-        if (formData[fieldName] !== undefined && formData[fieldName] !== null) {
-          // Handle boolean fields (like documentsVerified) differently
-          const valueToDraw =
-            typeof formData[fieldName] === "boolean"
-              ? formData[fieldName]
-                ? "Yes"
-                : "No"
-              : String(formData[fieldName]);
-
-          page.drawText(valueToDraw, {
+        if (formattedLetter[fieldName]) {
+          pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
             x: position.x,
             y: position.y,
             size: position.size,
@@ -285,7 +660,7 @@ const SellLetterForm = () => {
       const pdfBytes = await pdfDoc.save();
       saveAs(
         new Blob([pdfBytes], { type: "application/pdf" }),
-        "filled_sell_letter.pdf"
+        `vehicle_sale_invoice_${formData.registrationNumber || "document"}.pdf`
       );
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -293,25 +668,6 @@ const SellLetterForm = () => {
     }
   };
 
-  if (previewMode) {
-    return (
-      <div className="form-preview-container">
-        <div className="form-preview-header">
-          <button onClick={() => setPreviewMode(false)} className="back-button">
-            <ArrowLeft className="button-icon" /> Back to Edit
-          </button>
-          <div className="preview-actions">
-            <button onClick={fillAndDownloadPdf} className="download-button">
-              <Download className="button-icon" /> Download PDF
-            </button>
-          </div>
-        </div>
-        <div className="pdf-preview">
-          <p>PDF Preview would show here</p>
-        </div>
-      </div>
-    );
-  }
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -325,27 +681,27 @@ const SellLetterForm = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
+           <img src={logo} alt="logo" style={{width: '12.5rem', height: '7.5rem', color: '#7c3aed'}} />
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 
         <nav style={styles.nav}>
           {menuItems.map((item) => (
             <div key={item.name}>
-    <div
-      style={{
-        ...styles.menuItem,
-        ...(activeMenu === item.name ? styles.menuItemActive : {}),
-      }}
-      onClick={() => {
-        if (item.submenu) {
-          toggleMenu(item.name);
-        } else {
-          // Pass the path as-is (could be string or function)
-          handleMenuClick(item.name, item.path);
-        }
-      }}
-    >
+              <div
+                style={{
+                  ...styles.menuItem,
+                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
+                }}
+                onClick={() => {
+                  if (item.submenu) {
+                    toggleMenu(item.name);
+                  } else {
+                    // Pass the path as-is (could be string or function)
+                    handleMenuClick(item.name, item.path);
+                  }
+                }}
+              >
                 <div style={styles.menuItemContent}>
                   <item.icon size={20} style={styles.menuIcon} />
                   <span style={styles.menuText}>{item.name}</span>
@@ -407,55 +763,62 @@ const SellLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Name
+                    Vehicle Name || वाहन का नाम
                   </label>
                   <input
                     type="text"
                     name="vehicleName"
                     value={formData.vehicleName}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Model
+                    Vehicle Model || वाहन का मॉडल
                   </label>
                   <input
                     type="text"
                     name="vehicleModel"
                     value={formData.vehicleModel}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Color
+                    Vehicle Color || वाहन का रंग
                   </label>
                   <input
                     type="text"
                     name="vehicleColor"
                     value={formData.vehicleColor}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Registration Number
+                    Registration Number || रजिस्ट्रेशन नंबर
                   </label>
                   <input
                     type="text"
                     name="registrationNumber"
                     value={formData.registrationNumber}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
                     maxLength={11}
@@ -464,13 +827,14 @@ const SellLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Chassis Number
+                    Chassis Number || चासिस नंबर
                   </label>
                   <input
                     type="text"
                     name="chassisNumber"
                     value={formData.chassisNumber}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
                     maxLength={18}
@@ -479,7 +843,7 @@ const SellLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Engine Number
+                    Engine Number || इंजन नंबर
                   </label>
                   <input
                     type="text"
@@ -494,13 +858,14 @@ const SellLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle KM
+                    Vehicle KM || वाहन किलोमीटर
                   </label>
                   <input
                     type="number"
                     name="vehiclekm"
                     value={formData.vehiclekm}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
                     maxLength={6}
@@ -509,7 +874,7 @@ const SellLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Condition
+                    Vehicle Condition || वाहन की स्थिति
                   </label>
                   <select
                     name="vehicleCondition"
@@ -534,55 +899,62 @@ const SellLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Buyer Name
+                    Buyer Name || खरीददार का नाम
                   </label>
                   <input
                     type="text"
                     name="buyerName"
                     value={formData.buyerName}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Buyer Father's Name
+                    Buyer Father's Name || खरीददार के पिता का नाम
                   </label>
                   <input
                     type="text"
                     name="buyerFatherName"
                     value={formData.buyerFatherName}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Buyer Address
+                    Buyer Address || खरीददार का पता
                   </label>
                   <input
                     type="text"
                     name="buyerAddress"
                     value={formData.buyerAddress}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={100}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Buyer Phone
+                    Buyer Phone || खरीददार का फोन नंबर
                   </label>
                   <input
                     type="number"
                     name="buyerPhone"
                     value={formData.buyerPhone}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
                     maxLength={10}
@@ -591,16 +963,17 @@ const SellLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Buyer Aadhar
+                    Buyer Aadhar || खरीददार का आधार नंबर
                   </label>
                   <input
                     type="number"
                     name="buyerAadhar"
                     value={formData.buyerAadhar}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
-                    maxLength={12}
+                    maxLength={11}
                   />
                 </div>
               </div>
@@ -615,51 +988,57 @@ const SellLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Calendar style={styles.formIcon} />
-                    Sale Date
+                    Sale Date || बिक्री की तिथि
                   </label>
                   <input
                     type="date"
                     name="saleDate"
                     value={formData.saleDate}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
+
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Clock style={styles.formIcon} />
-                    Sale Time
+                    Sale Time || बिक्री का समय
                   </label>
                   <input
                     type="time"
                     name="saleTime"
                     value={formData.saleTime}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Sale Amount (₹)
+                    Sale Amount (₹) || बिक्री की राशि (₹)
                   </label>
                   <input
                     type="number"
                     name="saleAmount"
                     value={formData.saleAmount}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
+                    maxLength={10}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Payment Method
+                    Payment Method || भुगतान की विधि 
                   </label>
                   <select
                     name="paymentMethod"
                     value={formData.paymentMethod}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formSelect}
                   >
                     <option value="cash">Cash</option>
@@ -671,7 +1050,7 @@ const SellLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Calendar style={styles.formIcon} />
-                    Today's Date
+                    Today's Date || आज की तिथि
                   </label>
                   <input
                     type="date"
@@ -684,7 +1063,7 @@ const SellLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Clock style={styles.formIcon} />
-                    Today's Time
+                    Today's Time || आज का समय
                   </label>
                   <input
                     type="time"
@@ -713,20 +1092,13 @@ const SellLetterForm = () => {
                   />
                   <label style={styles.formCheckboxLabel}>
                     <CheckCircle style={styles.formIcon} />
-                    All documents verified and satisfactory
+                    All documents verified and satisfactory || सभी दस्तावेज सत्यापित और संतोषजनक
                   </label>
                 </div>
               </div>
             </div>
 
             <div style={styles.formActions}>
-              <button
-                type="button"
-                onClick={() => setPreviewMode(true)}
-                style={styles.previewButton}
-              >
-                <FileText style={styles.buttonIcon} /> Preview
-              </button>
               <button
                 type="button"
                 onClick={saveToDatabase}

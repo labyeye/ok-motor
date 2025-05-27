@@ -16,7 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
-
+import logo from '../images/company.png';
 import AuthContext from "../context/AuthContext";
 
 // Register ChartJS components
@@ -64,8 +64,8 @@ const AdminPage = () => {
       setLoading(true);
       setError(null);
       const endpoint = isOwnerView
-        ? `https://ok-motor.onrender.com/api/dashboard/owner`
-        : `https://ok-motor.onrender.com/api/dashboard`;
+        ? `http://localhost:2500/api/dashboard/owner`
+        : `http://localhost:2500/api/dashboard`;
 
       const response = await fetch(endpoint, {
         headers: {
@@ -673,7 +673,7 @@ const AdminPage = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
+         <img src={logo} alt="logo" style={{width: '12.5rem', height: '7.5rem', color: '#7c3aed'}} />
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 
@@ -1015,6 +1015,7 @@ const styles = {
     marginTop: "8px",
     margin: "8px 0 0 0",
   },
+  
   cardsGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",

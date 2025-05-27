@@ -17,6 +17,8 @@ import {
   UserPlus,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
+import logo from '../images/company.png';
+
 const StaffList = () => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
@@ -30,7 +32,7 @@ const StaffList = () => {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const response = await axios.get("https://ok-motor.onrender.com/api/users");
+        const response = await axios.get("http://localhost:2500/api/users");
         setStaff(response.data);
       } catch (err) {
         setError(
@@ -48,7 +50,7 @@ const StaffList = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this staff member?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/users/${id}`);
+        await axios.delete(`http://localhost:2500/api/users/${id}`);
         setStaff(staff.filter((user) => user._id !== id));
       } catch (err) {
         setError(
@@ -136,7 +138,7 @@ const StaffList = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
+           <img src={logo} alt="logo" style={{width: '12.5rem', height: '7.5rem', color: '#7c3aed'}} />
           <p style={styles.sidebarSubtitle}>Welcome, Admin</p>
         </div>
 

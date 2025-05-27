@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import logo from "../images/company.png";
 
 import AuthContext from "../context/AuthContext";
 
@@ -68,7 +69,7 @@ const ServiceBillForm = () => {
   });
 
   const [previewMode, setPreviewMode] = useState(false);
-  const API_BASE_URL = "https://ok-motor.onrender.com/api";
+  const API_BASE_URL = "http://localhost:2500/api";
   const calculateAmounts = (data) => {
     const totalAmount = (data.serviceItems || []).reduce(
       (sum, item) => sum + (item.quantity || 0) * (item.rate || 0),
@@ -433,6 +434,11 @@ const ServiceBillForm = () => {
       alert("Failed to generate PDF. Please try again.");
     }
   };
+  const handleInput = (e) => {
+    const { name, value } = e.target;
+    e.target.value = value.toUpperCase();
+    handleChange(e);
+  };
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -500,10 +506,10 @@ const ServiceBillForm = () => {
   };
 
   const handleMenuClick = (menuName, path) => {
-  setActiveMenu(menuName);
-  const actualPath = typeof path === 'function' ? path(user?.role) : path;
-  navigate(actualPath);
-};
+    setActiveMenu(menuName);
+    const actualPath = typeof path === "function" ? path(user?.role) : path;
+    navigate(actualPath);
+  };
 
   if (previewMode) {
     return (
@@ -536,7 +542,11 @@ const ServiceBillForm = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
+          <img
+            src={logo}
+            alt="logo"
+            style={{ width: "7.5rem", height: "7.5rem", color: "#7c3aed" }}
+          />
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 
@@ -619,56 +629,64 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Customer Name
+                    Customer Name || ग्राहक का नाम
                   </label>
                   <input
                     type="text"
                     name="customerName"
                     value={formData.customerName}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Customer Phone
+                    Customer Phone || ग्राहक का फोन नंबर
                   </label>
                   <input
                     type="text"
                     name="customerPhone"
                     value={formData.customerPhone}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={10}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Customer Address
+                    Customer Address || ग्राहक का पता
                   </label>
                   <input
                     type="text"
                     name="customerAddress"
                     value={formData.customerAddress}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={100}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Customer Email
+                    Customer Email || ग्राहक का ईमेल
                   </label>
                   <input
                     type="email"
                     name="customerEmail"
                     value={formData.customerEmail}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
+                    maxLength={30}
                   />
                 </div>
               </div>
@@ -683,7 +701,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Type
+                    Vehicle Type || वाहन का प्रकार
                   </label>
                   <select
                     name="vehicleType"
@@ -701,27 +719,30 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Brand
+                    Vehicle Brand || वाहन का ब्रांड
                   </label>
                   <input
                     type="text"
                     name="vehicleBrand"
                     value={formData.vehicleBrand}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={11}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Model
+                    Vehicle Model || वाहन का मॉडल
                   </label>
                   <input
                     type="text"
                     name="vehicleModel"
                     value={formData.vehicleModel}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
                   />
@@ -729,34 +750,38 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Registration Number
+                    Registration Number || रजिस्ट्रेशन नंबर
                   </label>
                   <input
                     type="text"
                     name="registrationNumber"
                     value={formData.registrationNumber}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={15}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Chassis Number
+                    Chassis Number || चासिस नंबर
                   </label>
                   <input
                     type="text"
                     name="chassisNumber"
                     value={formData.chassisNumber}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
+                    maxLength={15}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Engine Number
+                    Engine Number || इंजन नंबर
                   </label>
                   <input
                     type="text"
@@ -769,15 +794,17 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    KM Reading
+                    KM Reading || किलोमीटर पढ़ाई
                   </label>
                   <input
                     type="number"
                     name="kmReading"
                     value={formData.kmReading}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={10}
                   />
                 </div>
               </div>
@@ -792,7 +819,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Calendar style={styles.formIcon} />
-                    Service Date
+                    Service Date || सेवा की तिथि
                   </label>
                   <input
                     type="date"
@@ -806,21 +833,23 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Calendar style={styles.formIcon} />
-                    Delivery Date
+                    Delivery Date || डिलीवरी की तिथि
                   </label>
                   <input
                     type="date"
                     name="deliveryDate"
                     value={formData.deliveryDate}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={10}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Wrench style={styles.formIcon} />
-                    Service Type
+                    Service Type || सेवा का प्रकार
                   </label>
                   <select
                     name="serviceType"
@@ -846,18 +875,22 @@ const ServiceBillForm = () => {
                 {formData.serviceItems.map((item, index) => (
                   <div key={index} style={styles.serviceItemRow}>
                     <div style={styles.serviceItemField}>
-                      <label style={styles.formLabel}>Description</label>
+                      <label style={styles.formLabel}>
+                        Description || विवरण
+                      </label>
                       <input
                         type="text"
                         name="description"
                         value={item.description}
                         onChange={(e) => handleServiceItemChange(index, e)}
+                        onInput={handleInput}
                         style={styles.formInput}
                         required
+                        maxLength={30}
                       />
                     </div>
                     <div style={styles.serviceItemField}>
-                      <label style={styles.formLabel}>Qty</label>
+                      <label style={styles.formLabel}>Qty || मात्रा</label>
                       <input
                         type="number"
                         name="quantity"
@@ -866,10 +899,11 @@ const ServiceBillForm = () => {
                         style={styles.formInput}
                         min="1"
                         required
+                        maxLength={10}
                       />
                     </div>
                     <div style={styles.serviceItemField}>
-                      <label style={styles.formLabel}>Rate (₹)</label>
+                      <label style={styles.formLabel}>Rate (₹) || दर (₹)</label>
                       <input
                         type="number"
                         name="rate"
@@ -879,10 +913,13 @@ const ServiceBillForm = () => {
                         min="0"
                         step="0.01"
                         required
+                        maxLength={10}
                       />
                     </div>
                     <div style={styles.serviceItemField}>
-                      <label style={styles.formLabel}>Amount (₹)</label>
+                      <label style={styles.formLabel}>
+                        Amount (₹) || राशि (₹)
+                      </label>
                       <input
                         type="text"
                         value={item.amount.toFixed(2)}
@@ -919,7 +956,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Enable Tax
+                    Enable Tax || कर सक्षम करें
                   </label>
                   <div style={styles.toggleContainer}>
                     <label style={styles.toggleSwitch}>
@@ -946,33 +983,45 @@ const ServiceBillForm = () => {
                 {formData.taxEnabled && (
                   <>
                     <div style={styles.formField}>
-                      <label style={styles.formLabel}>Business Name</label>
+                      <label style={styles.formLabel}>
+                        Business Name || व्यापार का नाम
+                      </label>
                       <input
                         type="text"
                         name="businessName"
                         value={formData.businessName}
                         onChange={handleChange}
+                        onInput={handleInput}
                         style={styles.formInput}
+                        maxLength={30}
                       />
                     </div>
                     <div style={styles.formField}>
-                      <label style={styles.formLabel}>Business GSTIN</label>
+                      <label style={styles.formLabel}>
+                        Business GSTIN || व्यापार का GSTIN
+                      </label>
                       <input
                         type="text"
                         name="businessGSTIN"
                         value={formData.businessGSTIN}
                         onChange={handleChange}
+                        onInput={handleInput}
                         style={styles.formInput}
+                        maxLength={11}
                       />
                     </div>
                     <div style={styles.formField}>
-                      <label style={styles.formLabel}>Business Address</label>
+                      <label style={styles.formLabel}>
+                        Business Address || व्यापार का पता
+                      </label>
                       <textarea
                         name="businessAddress"
                         value={formData.businessAddress}
                         onChange={handleChange}
                         rows={3}
+                        onInput={handleInput}
                         style={styles.formTextarea}
+                        maxLength={100}
                       />
                     </div>
                   </>
@@ -982,7 +1031,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Sub Total (₹)
+                    Sub Total (₹) || कुल राशि (₹)
                   </label>
                   <input
                     type="number"
@@ -994,7 +1043,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Tax Rate (%)
+                    Tax Rate (%) || कर दर (%)
                   </label>
                   <input
                     type="number"
@@ -1011,7 +1060,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Tax Amount (₹)
+                    Tax Amount (₹) || कर राशि (₹)
                   </label>
                   <input
                     type="number"
@@ -1027,7 +1076,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Discount (₹)
+                    Discount (₹) || छूट (₹)
                   </label>
                   <input
                     type="number"
@@ -1042,7 +1091,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Grand Total (₹)
+                    Grand Total (₹) || कुल राशि (₹)
                   </label>
                   <input
                     type="number"
@@ -1054,7 +1103,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Advance Paid (₹)
+                    Advance Paid (₹) || आगामी भुगतान (₹)
                   </label>
                   <input
                     type="number"
@@ -1069,7 +1118,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Balance Due (₹)
+                    Balance Due (₹) || बैलेंस डु (₹)
                   </label>
                   <input
                     type="number"
@@ -1081,7 +1130,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Payment Method
+                    Payment Method || भुगतान की विधि
                   </label>
                   <select
                     name="paymentMethod"
@@ -1098,7 +1147,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Payment Status
+                    Payment Status || भुगतान की स्थिति
                   </label>
                   <select
                     name="paymentStatus"
@@ -1124,40 +1173,46 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <AlertCircle style={styles.formIcon} />
-                    Issues Reported
+                    Issues Reported || समस्याएं रिपोर्ट की गई
                   </label>
                   <textarea
                     name="issuesReported"
                     value={formData.issuesReported}
                     onChange={handleChange}
                     rows={3}
+                    onInput={handleInput}
                     style={styles.formTextarea}
+                    maxLength={100}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <AlertCircle style={styles.formIcon} />
-                    Technician Notes
+                    Technician Notes || तकनीकी नोट्स
                   </label>
                   <textarea
                     name="technicianNotes"
                     value={formData.technicianNotes}
                     onChange={handleChange}
                     rows={3}
+                    onInput={handleInput}
                     style={styles.formTextarea}
+                    maxLength={100}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <AlertCircle style={styles.formIcon} />
-                    Warranty Information
+                    Warranty Information || बिक्री की विधि
                   </label>
                   <textarea
                     name="warrantyInfo"
                     value={formData.warrantyInfo}
                     onChange={handleChange}
                     rows={3}
+                    onInput={handleInput}
                     style={styles.formTextarea}
+                    maxLength={100}
                   />
                 </div>
               </div>

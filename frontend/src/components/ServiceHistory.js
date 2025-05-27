@@ -20,55 +20,106 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
+import logo from "../images/company.png";
 
 const ServiceHistory = () => {
   const { user } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Service History");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [serviceBills, setServiceBills] = useState([]);
+  const [purchaseHistory, setPurchaseHistory] = useState([]);
+  const [sellHistory, setSellHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showVehicleHistory, setShowVehicleHistory] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchServiceBills = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
-          `https://ok-motor.onrender.com/api/service-bills?page=${currentPage}`,
+
+        // Fetch service bills
+        const serviceResponse = await axios.get(
+          `http://localhost:2500/api/service-bills?page=${currentPage}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           }
         );
-        setServiceBills(response.data.data || response.data);
-        setTotalPages(response.data.totalPages || 1);
+        setServiceBills(serviceResponse.data.data || serviceResponse.data);
+        setTotalPages(serviceResponse.data.totalPages || 1);
+
+        // Fetch purchase history (if needed)
+        const purchaseResponse = await axios.get(
+          `http://localhost:2500/api/buy-letters`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        setPurchaseHistory(purchaseResponse.data.data || purchaseResponse.data);
+
+        // Fetch sell history (if needed)
+        const sellResponse = await axios.get(
+          `http://localhost:2500/api/sell-letters`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        setSellHistory(sellResponse.data.data || sellResponse.data);
       } catch (error) {
-        console.error("Error fetching service bills:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchServiceBills();
+    fetchData();
   }, [currentPage]);
 
-  const filteredBills = serviceBills.filter(
-    (bill) =>
-      bill.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bill.registrationNumber
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      bill.vehicleModel.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+
+    // If the search term is a registration number and has at least 3 characters
+    if (term.length >= 3) {
+      setShowVehicleHistory(true);
+    } else {
+      setShowVehicleHistory(false);
+    }
+  };
+
+  const getFilteredData = () => {
+    if (!searchTerm) return { purchase: [], sell: [], service: [] };
+
+    const lowerSearchTerm = searchTerm.toLowerCase();
+
+    return {
+      purchase: purchaseHistory.filter((item) =>
+        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm)
+      ),
+      sell: sellHistory.filter((item) =>
+        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm)
+      ),
+      service: serviceBills.filter((item) =>
+        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm)
+      ),
+    };
+  };
+
+  const filteredData = getFilteredData();
 
   const handleDownload = async (billId) => {
     try {
       const response = await axios.get(
-        `https://ok-motor.onrender.com/api/service-bills/${billId}/download`,
+        `http://localhost:2500/api/service-bills/${billId}/download`,
         {
           responseType: "blob",
           headers: {
@@ -93,7 +144,7 @@ const ServiceHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this service bill?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/service-bills/${id}`, {
+        await axios.delete(`http://localhost:2500/api/service-bills/${id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -180,7 +231,11 @@ const ServiceHistory = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
+          <img
+            src={logo}
+            alt="logo"
+            style={{ width: "7.5rem", height: "7.5rem", color: "#7c3aed" }}
+          />
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 
@@ -196,7 +251,6 @@ const ServiceHistory = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
-                    // Pass the path as-is (could be string or function)
                     handleMenuClick(item.name, item.path);
                   }
                 }}
@@ -249,7 +303,9 @@ const ServiceHistory = () => {
           <div style={styles.header}>
             <h1 style={styles.pageTitle}>Service History</h1>
             <p style={styles.pageSubtitle}>
-              View and manage all your service bills
+              {showVehicleHistory
+                ? `Showing history for vehicle: ${searchTerm}`
+                : "View and manage all your service bills"}
             </p>
           </div>
 
@@ -258,9 +314,9 @@ const ServiceHistory = () => {
               <Search size={18} style={styles.searchIcon} />
               <input
                 type="text"
-                placeholder="Search service bills..."
+                placeholder="Search by registration number..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearch}
                 style={styles.searchInput}
               />
             </div>
@@ -275,23 +331,167 @@ const ServiceHistory = () => {
 
           {loading ? (
             <div style={styles.loadingContainer}>
-              <p>Loading service bills...</p>
+              <p>Loading data...</p>
             </div>
-          ) : filteredBills.length === 0 ? (
-            <div style={styles.emptyState}>
-              <FileText size={48} style={styles.emptyIcon} />
-              <p style={styles.emptyText}>
-                {searchTerm
-                  ? "No matching service bills found"
-                  : "No service bills created yet"}
-              </p>
-              <button
-                style={styles.newBillButton}
-                onClick={() => navigate("/service/create")}
-              >
-                Create Your First Service Bill
-              </button>
-            </div>
+          ) : showVehicleHistory ? (
+            <>
+              {/* 1. Purchase History Table - Always shown with heading */}
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '16px' }}>
+                  Purchase History
+                </h3>
+                {filteredData.purchase.length > 0 ? (
+                  <div style={styles.tableContainer}>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr>
+                          <th style={styles.tableHeader}>Seller</th>
+                          <th style={styles.tableHeader}>Vehicle</th>
+                          <th style={styles.tableHeader}>Reg No.</th>
+                          <th style={styles.tableHeader}>Purchase Date</th>
+                          <th style={styles.tableHeader}>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredData.purchase.map((item) => (
+                          <tr key={item._id} style={styles.tableRow}>
+                            <td style={styles.tableCell}>{item.sellerName}</td>
+                            <td style={styles.tableCell}>
+                              {item.vehicleBrand} {item.vehicleModel}
+                            </td>
+                            <td style={styles.tableCell}>{item.registrationNumber}</td>
+                            <td style={styles.tableCell}>
+                              {new Date(item.purchaseDate).toLocaleDateString()}
+                            </td>
+                            <td style={styles.tableCell}>
+                              ₹{item.purchaseAmount?.toFixed(2) || 0}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p style={{ color: '#64748b' }}>No purchase records found</p>
+                )}
+              </div>
+          
+              {/* 2. Sell History Table - Always shown with heading */}
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '16px' }}>
+                  Sell History
+                </h3>
+                {filteredData.sell.length > 0 ? (
+                  <div style={styles.tableContainer}>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr>
+                          <th style={styles.tableHeader}>Buyer</th>
+                          <th style={styles.tableHeader}>Vehicle</th>
+                          <th style={styles.tableHeader}>Reg No.</th>
+                          <th style={styles.tableHeader}>Sell Date</th>
+                          <th style={styles.tableHeader}>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredData.sell.map((item) => (
+                          <tr key={item._id} style={styles.tableRow}>
+                            <td style={styles.tableCell}>{item.buyerName}</td>
+                            <td style={styles.tableCell}>
+                              {item.vehicleBrand} {item.vehicleModel}
+                            </td>
+                            <td style={styles.tableCell}>{item.registrationNumber}</td>
+                            <td style={styles.tableCell}>
+                              {new Date(item.sellDate).toLocaleDateString()}
+                            </td>
+                            <td style={styles.tableCell}>
+                              ₹{item.sellAmount?.toFixed(2) || 0}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p style={{ color: '#64748b' }}>No sell records found</p>
+                )}
+              </div>
+          
+              {/* 3. Service History Table - Always shown with heading */}
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '16px' }}>
+                  Service History
+                </h3>
+                {filteredData.service.length > 0 ? (
+                  <div style={styles.tableContainer}>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr>
+                          <th style={styles.tableHeader}>Customer</th>
+                          <th style={styles.tableHeader}>Vehicle</th>
+                          <th style={styles.tableHeader}>Reg No.</th>
+                          <th style={styles.tableHeader}>Amount</th>
+                          <th style={styles.tableHeader}>Date</th>
+                          <th style={styles.tableHeader}>Status</th>
+                          <th style={styles.tableHeader}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredData.service.map((bill) => (
+                          <tr key={bill._id} style={styles.tableRow}>
+                            <td style={styles.tableCell}>{bill.customerName}</td>
+                            <td style={styles.tableCell}>
+                              {bill.vehicleBrand} {bill.vehicleModel}
+                            </td>
+                            <td style={styles.tableCell}>{bill.registrationNumber}</td>
+                            <td style={styles.tableCell}>
+                              ₹{bill.grandTotal?.toFixed(2) || 0}
+                            </td>
+                            <td style={styles.tableCell}>
+                              {new Date(bill.createdAt).toLocaleDateString()}
+                            </td>
+                            <td style={styles.tableCell}>
+                              <span
+                                style={{
+                                  ...styles.statusBadge,
+                                  ...(bill.paymentStatus === "paid"
+                                    ? styles.statusPaid
+                                    : bill.paymentStatus === "partial"
+                                    ? styles.statusPartial
+                                    : styles.statusPending),
+                                }}
+                              >
+                                {bill.paymentStatus}
+                              </span>
+                            </td>
+                            <td style={styles.tableCell}>
+                              <button
+                                onClick={() => handleDownload(bill._id)}
+                                style={styles.iconButton}
+                                title="Download"
+                              >
+                                <Download size={16} />
+                              </button>
+                              {user?.role === "admin" && (
+                                <button
+                                  onClick={() => handleDelete(bill._id)}
+                                  style={styles.iconButton}
+                                  title="Delete"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p style={{ color: '#64748b' }}>No service records found</p>
+                )}
+              </div>
+            </>
           ) : (
             <>
               <div style={styles.tableContainer}>
@@ -308,7 +508,7 @@ const ServiceHistory = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredBills.map((bill) => (
+                    {serviceBills.map((bill) => (
                       <tr key={bill._id} style={styles.tableRow}>
                         <td style={styles.tableCell}>{bill.customerName}</td>
                         <td style={styles.tableCell}>
@@ -391,7 +591,6 @@ const ServiceHistory = () => {
     </div>
   );
 };
-
 const styles = {
   container: {
     display: "flex",

@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Bike } from "lucide-react";
-
+import logo from '../images/company.png';
 const AuthForm = ({ isLogin }) => {
   const navigate = useNavigate();
   const { user, login, loading: authLoading } = useContext(AuthContext);
@@ -56,8 +56,7 @@ const AuthForm = ({ isLogin }) => {
         <div className="auth-content">
           <div className="auth-header">
             <div className="brand-logo">
-              <Bike className="brand-icon" />
-              <span className="brand-text">OK Motors</span>
+              <img src={logo} alt="logo" className="brand-icon" />
             </div>
             <h1 className="auth-title">Welcome back</h1>
           </div>
@@ -205,8 +204,8 @@ const AuthForm = ({ isLogin }) => {
         }
 
         .brand-icon {
-          width: 2.5rem;
-          height: 2.5rem;
+          width: 20.5rem;
+          height: 15.5rem;
           color: #7c3aed;
         }
 

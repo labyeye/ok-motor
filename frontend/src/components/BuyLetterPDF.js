@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useContext } from "react";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
 import {
   FileText,
@@ -22,6 +22,8 @@ import {
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
+import logo from "../images/company.png";
+
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
@@ -104,7 +106,7 @@ const BuyLetterForm = () => {
     try {
       setIsSaving(true);
       const response = await axios.post(
-        "https://ok-motor.onrender.com/api/buy-letter",
+        "http://localhost:2500/api/buy-letter",
         formData
       );
       alert("Buy letter saved successfully!");
@@ -171,8 +173,6 @@ const BuyLetterForm = () => {
       return newData;
     });
   }, []);
-
-  // In the menuItems array (around line 250 in BuyLetterPDF.js)
   const menuItems = [
     {
       name: "Dashboard",
@@ -238,11 +238,11 @@ const BuyLetterForm = () => {
   };
 
   const handleMenuClick = (menuName, path) => {
-  setActiveMenu(menuName);
-  // Handle both string paths and function paths
-  const actualPath = typeof path === 'function' ? path(user?.role) : path;
-  navigate(actualPath);
-};
+    setActiveMenu(menuName);
+    // Handle both string paths and function paths
+    const actualPath = typeof path === "function" ? path(user?.role) : path;
+    navigate(actualPath);
+  };
   const fieldPositions = {
     sellerName: { x: 45, y: 630, size: 11 },
     sellerFatherName: { x: 330, y: 630, size: 11 },
@@ -306,22 +306,29 @@ const BuyLetterForm = () => {
         return;
       }
 
-      const templateUrl = "/templates/buyletter.pdf";
-      const existingPdfBytes = await fetch(templateUrl).then((res) =>
+      // Load buy letter template
+      const buyLetterUrl = "/templates/buyletter.pdf";
+      const existingPdfBytes = await fetch(buyLetterUrl).then((res) =>
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const page = pdfDoc.getPages()[0];
+
+      // Create vehicle invoice page
+      const invoicePage = pdfDoc.addPage([595, 842]); // A4 size
+
+      // Draw vehicle invoice content - pass pdfDoc as parameter
+      await drawVehicleInvoice(invoicePage, pdfDoc);
+
+      // Fill buy letter fields
       const formattedData = {
         ...formData,
         todayDate1: formatDate(formData.todayDate),
         todayTime1: formatTime(formData.todayTime),
-
       };
-  
+
       for (const [fieldName, position] of Object.entries(fieldPositions)) {
         if (formattedData[fieldName]) {
-          page.drawText(String(formattedData[fieldName]), {
+          pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
             y: position.y,
             size: position.size,
@@ -333,12 +340,373 @@ const BuyLetterForm = () => {
       const pdfBytes = await pdfDoc.save();
       saveAs(
         new Blob([pdfBytes], { type: "application/pdf" }),
-        "filled_buy_letter.pdf"
+        `vehicle_sale_invoice_${formData.registrationNumber || "document"}.pdf`
       );
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Failed to generate PDF. Please try again.");
     }
+  };
+  const handleInput = (e) => {
+    const { name, value } = e.target;
+    e.target.value = value.toUpperCase();
+    handleChange(e);
+  };
+  const drawVehicleInvoice = async (page, pdfDoc) => {
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    page.drawRectangle({
+      x: 0,
+      y: 780,
+      width: 595,
+      height: 80,
+      color: rgb(0.047, 0.098, 0.196), // Dark blue
+    });
+
+    // Draw dealership header
+    page.drawText("OK MOTORS", {
+      x: 50,
+      y: 810,
+      size: 24,
+      color: rgb(1, 1, 1), // White
+      font: boldFont,
+    });
+
+    // Draw tagline
+    page.drawText("UDAYAM-BR-26-0028550", {
+      x: 50,
+      y: 790,
+      size: 10,
+      color: rgb(1, 1, 1),
+      font: font,
+    });
+    page.drawText(
+      "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+      {
+        x: 50,
+        y: 770,
+        size: 8,
+        color: rgb(0.8, 0.8, 0.8),
+        font: font,
+      }
+    );
+    page.drawRectangle({
+      x: 0,
+      y: 750,
+      width: 595,
+      height: 30,
+      color: rgb(0.9, 0.9, 0.9),
+    });
+
+    page.drawText("VEHICLE SALE INVOICE", {
+      x: 200,
+      y: 758,
+      size: 18,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(
+      Math.random() * 10000
+    )
+      .toString()
+      .padStart(4, "0")}`;
+
+    page.drawText(`Invoice Number: ${invoiceNumber}`, {
+      x: 50,
+      y: 720,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    page.drawText(`Date: ${new Date().toLocaleDateString("en-IN")}`, {
+      x: 400,
+      y: 720,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    // Divider line
+    page.drawLine({
+      start: { x: 50, y: 710 },
+      end: { x: 545, y: 710 },
+      thickness: 1,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+
+    // Customer Information section
+    page.drawText("CUSTOMER DETAILS", {
+      x: 50,
+      y: 690,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+
+    // Customer details box
+    // page.drawRectangle({
+    //   x: 50,
+    //   y: 640,
+    //   width: 495,
+    //   height: 50,
+    //   borderColor: rgb(0.8, 0.8, 0.8),
+    //   borderWidth: 1,
+    // });
+
+    page.drawText(`Name: ${formData.sellerName || "N/A"}`, {
+      x: 60,
+      y: 665,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    page.drawText(`Address: ${formData.sellerCurrentAddress || "N/A"}`, {
+      x: 60,
+      y: 650,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    page.drawText(`Phone: ${formData.selleraadharphone || "N/A"}`, {
+      x: 350,
+      y: 665,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    page.drawText(`Aadhar: ${formData.selleraadhar || "N/A"}`, {
+      x: 350,
+      y: 650,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    // Vehicle Information section
+    page.drawText("VEHICLE DETAILS", {
+      x: 50,
+      y: 620,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+
+    // Vehicle details table header
+    page.drawRectangle({
+      x: 50,
+      y: 590,
+      width: 495,
+      height: 20,
+      color: rgb(0.9, 0.9, 0.9),
+    });
+
+    const vehicleHeaders = [
+      "Make",
+      "Model",
+      "Color",
+      "Reg No",
+      "Chassis",
+      "Engine",
+      "KM",
+    ];
+    const vehicleHeaderPositions = [60, 120, 180, 240, 300, 380, 460];
+
+    vehicleHeaders.forEach((header, index) => {
+      page.drawText(header, {
+        x: vehicleHeaderPositions[index],
+        y: 596,
+        size: 9,
+        color: rgb(0.2, 0.2, 0.2),
+        font: boldFont,
+      });
+    });
+
+    // Vehicle details row
+    const vehicleValues = [
+      formData.vehicleName || "N/A",
+      formData.vehicleModel || "N/A",
+      formData.vehicleColor || "N/A",
+      formData.registrationNumber || "N/A",
+      formData.chassisNumber || "N/A",
+      formData.engineNumber || "N/A",
+      formData.vehiclekm ? `${formData.vehiclekm} km` : "N/A",
+    ];
+
+    vehicleValues.forEach((value, index) => {
+      // Truncate long text to fit in columns
+      const truncatedValue =
+        value.length > 12 ? value.substring(0, 12) + "..." : value;
+      page.drawText(truncatedValue, {
+        x: vehicleHeaderPositions[index],
+        y: 575,
+        size: 8,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+    });
+
+    // Sale Information section
+    page.drawText("SALE INFORMATION", {
+      x: 50,
+      y: 550,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+
+    // // Sale details box
+    // page.drawRectangle({
+    //   x: 50,
+    //   y: 500,
+    //   width: 495,
+    //   height: 50,
+    //   borderColor: rgb(0.8, 0.8, 0.8),
+    //   borderWidth: 1,
+    // });
+
+    page.drawText(`Sale Date: ${formatDate(formData.saleDate)}`, {
+      x: 60,
+      y: 530,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    page.drawText(`Sale Amount: Rs. ${formData.saleAmount || "0"}`, {
+      x: 200,
+      y: 530,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    page.drawText(
+      `Payment: ${
+        formData.paymentMethod ? formData.paymentMethod.toUpperCase() : "CASH"
+      }`,
+      {
+        x: 350,
+        y: 530,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      }
+    );
+
+    page.drawText(
+      `Condition: ${
+        formData.vehicleCondition === "running" ? "RUNNING" : "NOT RUNNING"
+      }`,
+      {
+        x: 60,
+        y: 510,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      }
+    );
+
+    // Terms and Conditions section
+    page.drawText("TERMS & CONDITIONS", {
+      x: 50,
+      y: 470,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+
+    const terms = [
+      "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
+      "2. A 3-month guarantee is provided on the entire engine",
+      "3. Engine warranty extends from 6 months to 1 year for performance defects",
+      "4. Clutch plate is not covered under any guarantee or warranty",
+      "5. Monthly servicing during the 3-month guarantee is mandatory",
+      "6. First 3 services are free, with minimal charges for oil and parts (excluding engine)",
+      "7. Buyer must submit photocopies of the sell letter and transfer challan",
+      "8. Defects must be reported within 24 hours of purchase to avoid repair charges",
+      "9. Delay in transfer beyond 15 days incurs Rs. 7.5/day penalty",
+      "10. Customer signature confirms acceptance of all terms",
+    ];
+
+    terms.forEach((term, index) => {
+      page.drawText(term, {
+        x: 60,
+        y: 450 - index * 15,
+        size: 8,
+        color: rgb(0.3, 0.3, 0.3),
+        font: font,
+      });
+    });
+
+    // Signatures section
+    page.drawLine({
+      start: { x: 50, y: 295 },
+      end: { x: 545, y: 295 },
+      thickness: 0.5,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+  
+    // Seller Signature
+    page.drawText("Seller Signature", {
+      x: 100,
+      y: 275,
+      size: 10,
+      color: rgb(0.4, 0.4, 0.4),
+      font: font,
+    });
+  
+    page.drawLine({
+      start: { x: 100, y: 270 },
+      end: { x: 250, y: 270 },
+      thickness: 1,
+      color: rgb(0.6, 0.6, 0.6),
+    });
+  
+    // Buyer Signature (OK Motors)
+    page.drawText("Authorized Signatory", {
+      x: 350,
+      y: 275,
+      size: 10,
+      color: rgb(0.4, 0.4, 0.4),
+      font: font,
+    });
+  
+    
+  
+    page.drawLine({
+      start: { x: 350, y: 270 },
+      end: { x: 500, y: 270 },
+      thickness: 1,
+      color: rgb(0.6, 0.6, 0.6),
+    });
+  
+    // Footer
+    page.drawLine({
+      start: { x: 50, y: 100 },
+      end: { x: 545, y: 100 },
+      thickness: 0.5,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+  
+    page.drawText("Thank you for your business!", {
+      x: 220,
+      y: 80,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+  
+    page.drawText("OK MOTORS | 123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210", {
+      x: 180,
+      y: 60,
+      size: 8,
+      color: rgb(0.5, 0.5, 0.5),
+      font: font,
+    });
   };
 
   if (previewMode) {
@@ -366,27 +734,31 @@ const BuyLetterForm = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
+          <img
+            src={logo}
+            alt="logo"
+            style={{ width: "12.5rem", height: "7.5rem", color: "#7c3aed" }}
+          />
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 
         <nav style={styles.nav}>
           {menuItems.map((item) => (
             <div key={item.name}>
-    <div
-      style={{
-        ...styles.menuItem,
-        ...(activeMenu === item.name ? styles.menuItemActive : {}),
-      }}
-      onClick={() => {
-        if (item.submenu) {
-          toggleMenu(item.name);
-        } else {
-          // Pass the path as-is (could be string or function)
-          handleMenuClick(item.name, item.path);
-        }
-      }}
-    >
+              <div
+                style={{
+                  ...styles.menuItem,
+                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
+                }}
+                onClick={() => {
+                  if (item.submenu) {
+                    toggleMenu(item.name);
+                  } else {
+                    // Pass the path as-is (could be string or function)
+                    handleMenuClick(item.name, item.path);
+                  }
+                }}
+              >
                 <div style={styles.menuItemContent}>
                   <item.icon size={20} style={styles.menuIcon} />
                   <span style={styles.menuText}>{item.name}</span>
@@ -449,50 +821,56 @@ const BuyLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Seller Name
+                    Seller Name || विक्रेता का नाम
                   </label>
                   <input
                     type="text"
                     name="sellerName"
                     value={formData.sellerName}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Seller Father's Name
+                    Seller Father's Name || विक्रेता के पिता का नाम
                   </label>
                   <input
                     type="text"
                     name="sellerFatherName"
                     value={formData.sellerFatherName}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Seller Current Address
+                    Seller Current Address || विक्रेता का वर्तमान पता
                   </label>
                   <input
                     type="text"
                     name="sellerCurrentAddress"
                     value={formData.sellerCurrentAddress}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={100}
                   />
                 </div>
 
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Seller Aadhar Number
+                    Seller Aadhar Number || विक्रेता का आधार नंबर
                   </label>
                   <input
                     type="number"
@@ -500,27 +878,29 @@ const BuyLetterForm = () => {
                     value={formData.selleraadhar}
                     onChange={handleChange}
                     style={styles.formInput}
-                    max={12}
+                    maxLength={12}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Seller PAN Number
+                    Seller PAN Number || विक्रेता का पैन नंबर
                   </label>
                   <input
                     type="text"
                     name="sellerpan"
                     value={formData.sellerpan}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
-                    max={10}
+                    maxLength={11}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Seller Aadhar Linked Phone
+                    Seller Aadhar Linked Phone || विक्रेता का आधार नंबर संलग्न
+                    फोन
                   </label>
                   <input
                     type="number"
@@ -528,7 +908,7 @@ const BuyLetterForm = () => {
                     value={formData.selleraadharphone}
                     onChange={handleChange}
                     style={styles.formInput}
-                    max={10}
+                    maxLength={10}
                   />
                 </div>
               </div>
@@ -543,94 +923,103 @@ const BuyLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Name
+                    Vehicle Name || वाहन का नाम
                   </label>
                   <input
                     type="text"
                     name="vehicleName"
                     value={formData.vehicleName}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Model
+                    Vehicle Model || वाहन का मॉडल
                   </label>
                   <input
                     type="text"
                     name="vehicleModel"
                     value={formData.vehicleModel}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Color
+                    Vehicle Color || वाहन का रंग
                   </label>
                   <input
                     type="text"
                     name="vehicleColor"
                     value={formData.vehicleColor}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Registration Number
+                    Registration Number || रजिस्ट्रेशन नंबर
                   </label>
                   <input
                     type="text"
                     name="registrationNumber"
                     value={formData.registrationNumber}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
-                    max={11}
+                    maxLength={11}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Chassis Number
+                    Chassis Number || चासिस नंबर
                   </label>
                   <input
                     type="text"
                     name="chassisNumber"
                     value={formData.chassisNumber}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
-                    max={18}
+                    maxLength={18}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Engine Number
+                    Engine Number || इंजन नंबर
                   </label>
                   <input
                     type="text"
                     name="engineNumber"
                     value={formData.engineNumber}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
-                    max={15}
+                    maxLength={15}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Kilometers
+                    Vehicle Kilometers || वाहन किलोमीटर
                   </label>
                   <input
                     type="number"
@@ -638,13 +1027,13 @@ const BuyLetterForm = () => {
                     value={formData.vehiclekm}
                     onChange={handleChange}
                     style={styles.formInput}
-                    max={6}
+                    maxLength={6}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Condition
+                    Vehicle Condition || वाहन की स्थिति
                   </label>
                   <select
                     name="vehicleCondition"
@@ -669,64 +1058,72 @@ const BuyLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Buyer Name
+                    Buyer Name || खरीददार का नाम
                   </label>
                   <input
                     type="text"
                     name="buyerName"
                     value={formData.buyerName}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Buyer Father's Name
+                    Buyer Father's Name || खरीददार के पिता का नाम
                   </label>
                   <input
                     type="text"
                     name="buyerFatherName"
                     value={formData.buyerFatherName}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Buyer Current Address
+                    Buyer Current Address || खरीददार का वर्तमान पता
                   </label>
                   <input
                     type="text"
                     name="buyerCurrentAddress"
                     value={formData.buyerCurrentAddress}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={100}
                   />
                 </div>
 
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Buyer Business Name
+                    Buyer Business Name || खरीददार का व्यापार नाम
                   </label>
                   <input
                     type="text"
                     name="buyernames"
                     value={formData.buyernames}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
                     readOnly
+                    maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Buyer Phone
+                    Buyer Phone || खरीददार का फोन नंबर
                   </label>
                   <input
                     type="number"
@@ -735,7 +1132,7 @@ const BuyLetterForm = () => {
                     onChange={handleChange}
                     style={styles.formInput}
                     readOnly
-                    max={10}
+                    maxLength={10}
                   />
                 </div>
               </div>
@@ -750,7 +1147,7 @@ const BuyLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Calendar style={styles.formIcon} />
-                    Sale Date
+                    Sale Date || बिक्री की तिथि
                   </label>
                   <input
                     type="date"
@@ -763,7 +1160,7 @@ const BuyLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Clock style={styles.formIcon} />
-                    Sale Time
+                    Sale Time || बिक्री का समय
                   </label>
                   <input
                     type="time"
@@ -776,7 +1173,7 @@ const BuyLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Sale Amount (₹)
+                    Sale Amount (₹) || बिक्री की राशि (₹)
                   </label>
                   <input
                     type="number"
@@ -789,7 +1186,7 @@ const BuyLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Payment Method
+                    Payment Method || भुगतान की विधि
                   </label>
                   <select
                     name="paymentMethod"
@@ -806,7 +1203,7 @@ const BuyLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Calendar style={styles.formIcon} />
-                    Today's Date
+                    Today's Date || आज की तिथि
                   </label>
                   <input
                     type="date"
@@ -819,7 +1216,7 @@ const BuyLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Clock style={styles.formIcon} />
-                    Today's Time
+                    Today's Time || आज का समय
                   </label>
                   <input
                     type="time"
@@ -848,7 +1245,8 @@ const BuyLetterForm = () => {
                   />
                   <label style={styles.formCheckboxLabel}>
                     <CheckCircle style={styles.formIcon} />
-                    All documents verified and satisfactory (Line 2)
+                    All documents verified and satisfactory (Line 2) || सभी
+                    दस्तावेज सत्यापित और संतोषजनक (लाइन 2)
                   </label>
                 </div>
                 <div style={styles.formField}>
@@ -868,13 +1266,6 @@ const BuyLetterForm = () => {
             </div>
 
             <div style={styles.formActions}>
-              <button
-                type="button"
-                onClick={() => setPreviewMode(true)}
-                style={styles.previewButton}
-              >
-                <FileText style={styles.buttonIcon} /> Preview
-              </button>
               <button
                 type="button"
                 onClick={saveBuyLetter}
@@ -1088,6 +1479,8 @@ const styles = {
     height: "18px",
     color: "#64748b",
   },
+
+  // Update the formInput style in the styles object:
   formInput: {
     width: "90%",
     padding: "10px 12px",
@@ -1095,25 +1488,24 @@ const styles = {
     borderRadius: "8px",
     fontSize: "0.875rem",
     transition: "all 0.2s ease",
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff", // Changed from #f8fafc to white
     ":focus": {
       outline: "none",
       borderColor: "#3b82f6",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
-      backgroundColor: "#ffffff",
+      backgroundColor: "black",
     },
   },
+
   formSelect: {
     width: "90%",
     padding: "10px 12px",
     border: "1px solid #cbd5e1",
     borderRadius: "8px",
     fontSize: "0.875rem",
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff", // Changed from #f8fafc to white
     transition: "all 0.2s ease",
     appearance: "none",
-    backgroundImage:
-      "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")",
     backgroundRepeat: "no-repeat",
     backgroundPosition: "right 0.5rem center",
     backgroundSize: "1em",
@@ -1121,7 +1513,7 @@ const styles = {
       outline: "none",
       borderColor: "#3b82f6",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
-      backgroundColor: "#ffffff",
+      backgroundColor: "red", // Changed to light blue when focused
     },
   },
   formTextarea: {
@@ -1133,12 +1525,12 @@ const styles = {
     minHeight: "80px",
     resize: "vertical",
     transition: "all 0.2s ease",
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff", // Changed from #f8fafc to white
     ":focus": {
       outline: "none",
       borderColor: "#3b82f6",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
-      backgroundColor: "#ffffff",
+      backgroundColor: "#f8fafc", // Changed to light blue when focused
     },
   },
   formCheckboxField: {

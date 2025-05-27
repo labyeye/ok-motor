@@ -1,6 +1,5 @@
 // BuyLetterHistory.js
 import React, { useState, useEffect, useContext } from "react";
-
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -20,7 +19,8 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, rgb,StandardFonts } from "pdf-lib";
+import logo from '../images/company.png';
 
 import AuthContext from "../context/AuthContext";
 
@@ -198,7 +198,7 @@ const BuyLetterHistory = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `https://ok-motor.onrender.com/api/buy-letter?page=${currentPage}`,
+          `http://localhost:2500/api/buy-letter?page=${currentPage}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -303,7 +303,13 @@ const BuyLetterHistory = () => {
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const page = pdfDoc.getPages()[0];
+      
+      // Create vehicle invoice page
+      const invoicePage = pdfDoc.addPage([595, 842]); // A4 size
+      
+      // Draw vehicle invoice content
+      await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+  
       const formattedLetter = {
         ...letter,
         buyerName1: letter.buyerName,
@@ -312,15 +318,14 @@ const BuyLetterHistory = () => {
         sellerFatherName1: letter.sellerFatherName,
         buyerFatherName1: letter.buyerFatherName,
         buyerCurrentAddress1: letter.buyerCurrentAddress,
-        todayDate1: letter.todayDate,
+        todayDate1: formatDate(letter.todayDate),
         todayTime1: letter.todayTime,
         buyerCurrentAddress2: "PATNA BIHAR",
-
         saleDate: formatDate(letter.saleDate),
         todayDate: formatDate(letter.todayDate),
         todayDate1: formatDate(letter.todayDate),
       };
-
+  
       // Format date helper function
       function formatDate(dateString) {
         if (!dateString) return "";
@@ -330,7 +335,7 @@ const BuyLetterHistory = () => {
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
       }
-
+  
       const fieldPositions = {
         sellerName: { x: 45, y: 630, size: 11 },
         sellerFatherName: { x: 330, y: 630, size: 11 },
@@ -365,10 +370,10 @@ const BuyLetterHistory = () => {
         buyerphone: { x: 400, y: 70, size: 10 },
         note: { x: 60, y: 18, size: 10 },
       };
-
+  
       for (const [fieldName, position] of Object.entries(fieldPositions)) {
         if (formattedLetter[fieldName]) {
-          page.drawText(String(formattedLetter[fieldName]), {
+          pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
             x: position.x,
             y: position.y,
             size: position.size,
@@ -376,6 +381,7 @@ const BuyLetterHistory = () => {
           });
         }
       }
+  
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
@@ -390,11 +396,340 @@ const BuyLetterHistory = () => {
       alert("Failed to generate PDF. Please try again.");
     }
   };
+  const drawVehicleInvoice = async (page, pdfDoc, letter) => {
+    // Embed fonts first
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    
+    // Format date helper function
+    function formatDate(dateString) {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+  
+    // Header background
+    page.drawRectangle({
+      x: 0,
+      y: 780,
+      width: 595,
+      height: 80,
+      color: rgb(0.047, 0.098, 0.196), // Dark blue
+    });
+    
+    // Draw dealership header
+    page.drawText("OK MOTORS", {
+      x: 50,
+      y: 810,
+      size: 24,
+      color: rgb(1, 1, 1), // White
+      font: boldFont,
+    });
+  
+    // Draw tagline
+    page.drawText("UDAYAM-BR-26-0028550", {
+      x: 50,
+      y: 790,
+      size: 10,
+      color: rgb(1, 1, 1),
+      font: font,
+    });
+  
+    // Draw address and contact info
+    page.drawText("123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5", {
+      x: 50,
+      y: 770,
+      size: 8,
+      color: rgb(0.8, 0.8, 0.8),
+      font: font,
+    });
+  
+    // Invoice header with accent color
+    page.drawRectangle({
+      x: 0,
+      y: 750,
+      width: 595,
+      height: 30,
+      color: rgb(0.9, 0.9, 0.9),
+    });
+  
+    page.drawText("VEHICLE SALE INVOICE", {
+      x: 200,
+      y: 758,
+      size: 18,
+      color: rgb(0.047, 0.098, 0.196), // Dark blue
+      font: boldFont,
+    });
+  
+    // Invoice details section
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, "0")}`;
+    
+    page.drawText(`Invoice Number: ${invoiceNumber}`, {
+      x: 50,
+      y: 720,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+  
+    page.drawText(`Date: ${new Date().toLocaleDateString('en-IN')}`, {
+      x: 400,
+      y: 720,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+  
+    // Divider line
+    page.drawLine({
+      start: { x: 50, y: 710 },
+      end: { x: 545, y: 710 },
+      thickness: 1,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+  
+    // Customer Information section
+    page.drawText("CUSTOMER DETAILS", {
+      x: 50,
+      y: 690,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+  
+    page.drawText(`Name: ${letter.sellerName || "N/A"}`, {
+      x: 60,
+      y: 665,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+  
+    page.drawText(`Address: ${letter.sellerCurrentAddress || "N/A"}`, {
+      x: 60,
+      y: 650,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+  
+    page.drawText(`Phone: ${letter.selleraadharphone || "N/A"}`, {
+      x: 350,
+      y: 665,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+  
+    page.drawText(`Aadhar: ${letter.selleraadhar || "N/A"}`, {
+      x: 350,
+      y: 650,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+  
+    // Vehicle Information section
+    page.drawText("VEHICLE DETAILS", {
+      x: 50,
+      y: 620,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+  
+    // Vehicle details table header
+    page.drawRectangle({
+      x: 50,
+      y: 590,
+      width: 495,
+      height: 20,
+      color: rgb(0.9, 0.9, 0.9),
+    });
+  
+    const vehicleHeaders = ["Make", "Model", "Color", "Reg No", "Chassis", "Engine", "KM"];
+    const vehicleHeaderPositions = [60, 120, 180, 240, 300, 380, 460];
+    
+    vehicleHeaders.forEach((header, index) => {
+      page.drawText(header, {
+        x: vehicleHeaderPositions[index],
+        y: 596,
+        size: 9,
+        color: rgb(0.2, 0.2, 0.2),
+        font: boldFont,
+      });
+    });
+  
+    // Vehicle details row
+    const vehicleValues = [
+      letter.vehicleName || "N/A",
+      letter.vehicleModel || "N/A", 
+      letter.vehicleColor || "N/A",
+      letter.registrationNumber || "N/A",
+      letter.chassisNumber || "N/A",
+      letter.engineNumber || "N/A",
+      letter.vehiclekm ? `${letter.vehiclekm} km` : "N/A"
+    ];
+  
+    vehicleValues.forEach((value, index) => {
+      // Truncate long text to fit in columns
+      const truncatedValue = value.length > 12 ? value.substring(0, 12) + "..." : value;
+      page.drawText(truncatedValue, {
+        x: vehicleHeaderPositions[index],
+        y: 575,
+        size: 8,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+    });
+  
+    // Sale Information section
+    page.drawText("SALE INFORMATION", {
+      x: 50,
+      y: 550,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+  
+    page.drawText(`Sale Date: ${formatDate(letter.saleDate)}`, {
+      x: 60,
+      y: 530,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+  
+    page.drawText(`Sale Amount: Rs. ${letter.saleAmount || "0"}`, {
+      x: 200,
+      y: 530,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+  
+    page.drawText(`Payment: CASH`, {
+      x: 350,
+      y: 530,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+  
+    page.drawText(`Condition: RUNNING`, {
+      x: 60,
+      y: 510,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+  
+    // Terms and Conditions section
+    page.drawText("TERMS & CONDITIONS", {
+      x: 50,
+      y: 470,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+  
+    const terms = [
+      "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
+      "2. A 3-month guarantee is provided on the entire engine",
+      "3. Engine warranty extends from 6 months to 1 year for performance defects",
+      "4. Clutch plate is not covered under any guarantee or warranty",
+      "5. Monthly servicing during the 3-month guarantee is mandatory",
+      "6. First 3 services are free, with minimal charges for oil and parts (excluding engine)",
+      "7. Buyer must submit photocopies of the sell letter and transfer challan",
+      "8. Defects must be reported within 24 hours of purchase to avoid repair charges",
+      "9. Delay in transfer beyond 15 days incurs Rs. 7.5/day penalty",
+      "10. Customer signature confirms acceptance of all terms",
+    ];
+  
+    terms.forEach((term, index) => {
+      page.drawText(term, {
+        x: 60,
+        y: 450 - index * 15,
+        size: 8,
+        color: rgb(0.3, 0.3, 0.3),
+        font: font,
+      });
+    });
+  
+    // Signatures section
+    page.drawLine({
+      start: { x: 50, y: 295 },
+      end: { x: 545, y: 295 },
+      thickness: 0.5,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+  
+    // Seller Signature
+    page.drawText("Seller Signature", {
+      x: 100,
+      y: 275,
+      size: 10,
+      color: rgb(0.4, 0.4, 0.4),
+      font: font,
+    });
+  
+    page.drawLine({
+      start: { x: 100, y: 270 },
+      end: { x: 250, y: 270 },
+      thickness: 1,
+      color: rgb(0.6, 0.6, 0.6),
+    });
+  
+    // Buyer Signature (OK Motors)
+    page.drawText("Authorized Signatory", {
+      x: 350,
+      y: 275,
+      size: 10,
+      color: rgb(0.4, 0.4, 0.4),
+      font: font,
+    });
+  
+    
+  
+    page.drawLine({
+      start: { x: 350, y: 270 },
+      end: { x: 500, y: 270 },
+      thickness: 1,
+      color: rgb(0.6, 0.6, 0.6),
+    });
+  
+    // Footer
+    page.drawLine({
+      start: { x: 50, y: 100 },
+      end: { x: 545, y: 100 },
+      thickness: 0.5,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+  
+    page.drawText("Thank you for your business!", {
+      x: 220,
+      y: 80,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
+  
+    page.drawText("OK MOTORS | 123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210", {
+      x: 180,
+      y: 60,
+      size: 8,
+      color: rgb(0.5, 0.5, 0.5),
+      font: font,
+    });
+  };
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/buy-letter/${id}`);
+        await axios.delete(`http://localhost:2500/api/buy-letter/${id}`);
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting buy letter:", error);
@@ -409,7 +744,7 @@ const BuyLetterHistory = () => {
   const handleSaveEdit = async (updatedLetter) => {
     try {
       const response = await axios.put(
-        `https://ok-motor.onrender.com/api/buy-letter/${updatedLetter._id}`,
+        `http://localhost:2500/api/buy-letter/${updatedLetter._id}`,
         updatedLetter
       );
       setBuyLetters(
@@ -428,7 +763,7 @@ const BuyLetterHistory = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
+           <img src={logo} alt="logo" style={{width: '12.5rem', height: '7.5rem', color: '#7c3aed'}} />
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 

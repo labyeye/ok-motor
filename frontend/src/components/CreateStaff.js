@@ -16,6 +16,7 @@ import {
   LogOut,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
+import logo from '../images/company.png';
 
 const CreateStaff = () => {
   const navigate = useNavigate();
@@ -51,7 +52,7 @@ const CreateStaff = () => {
 
     try {
       const response = await axios.post(
-        "https://ok-motor.onrender.com/api/users",
+        "http://localhost:2500/api/users",
         formData
       );
       setSuccess(true);
@@ -145,7 +146,7 @@ const CreateStaff = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>OK MOTORS</h2>
+           <img src={logo} alt="logo" style={{width: '12.5rem', height: '7.5rem', color: '#7c3aed'}} />
           <p style={styles.sidebarSubtitle}>Welcome, {user?.role === 'admin' ? 'Admin' : 'Staff'}</p>
         </div>
 

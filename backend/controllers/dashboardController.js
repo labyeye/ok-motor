@@ -1,7 +1,7 @@
 // dashboardController.js
 const BuyLetter = require('../models/BuyLetter');
 const SellLetter = require('../models/SellLetter');
-const Service = require('../models/Service'); // Add this if you have a Service model
+const Service = require('../models/ServiceBill'); // Add this if you have a Service model
 const mongoose = require('mongoose');
 
 // Helper function to get monthly data
