@@ -184,7 +184,7 @@ const SellLetterHistory = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `http://localhost:2500/api/sell-letters/my-letters?page=${currentPage}`,
+          `https://ok-motor.onrender.com/api/sell-letters/my-letters?page=${currentPage}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -315,8 +315,13 @@ const SellLetterHistory = () => {
   // Add this function to the SellLetterHistory component
   const drawVehicleInvoice = async (page, pdfDoc, letter) => {
     // Embed fonts first
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const logoUrl = logo; // Use your imported logo
+    const logoImageBytes = await fetch(logoUrl).then((res) =>
+      res.arrayBuffer()
+    );
+    const logoImage = await pdfDoc.embedPng(logoImageBytes); // or embedJpg if using JPEG
     
     // Header background
     page.drawRectangle({
@@ -328,12 +333,11 @@ const SellLetterHistory = () => {
     });
     
     // Draw dealership header
-    page.drawText("OK MOTORS", {
+    page.drawImage(logoImage, {
       x: 50,
-      y: 810,
-      size: 24,
-      color: rgb(1, 1, 1), // White
-      font: boldFont,
+      y: 800, // Adjust position as needed
+      width: 100, // Adjust width as needed
+      height: 50, // Adjust height as needed
     });
   
     // Draw tagline
@@ -635,7 +639,7 @@ const SellLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this sell letter?")) {
       try {
-        await axios.delete(`http://localhost:2500/api/sell-letters/${id}`, {
+        await axios.delete(`https://ok-motor.onrender.com/api/sell-letters/${id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -660,7 +664,7 @@ const SellLetterHistory = () => {
   const handleSaveEdit = async (updatedLetter) => {
     try {
       const response = await axios.put(
-        `http://localhost:2500/api/sell-letters/${updatedLetter._id}`,
+        `https://ok-motor.onrender.com/api/sell-letters/${updatedLetter._id}`,
         updatedLetter,
         {
           headers: {

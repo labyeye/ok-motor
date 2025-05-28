@@ -64,8 +64,8 @@ const AdminPage = () => {
       setLoading(true);
       setError(null);
       const endpoint = isOwnerView
-        ? `http://localhost:2500/api/dashboard/owner`
-        : `http://localhost:2500/api/dashboard`;
+        ? `https://ok-motor.onrender.com/api/dashboard/owner`
+        : `https://ok-motor.onrender.com/api/dashboard`;
 
       const response = await fetch(endpoint, {
         headers: {
@@ -545,128 +545,6 @@ const AdminPage = () => {
     );
   };
 
-  const RecentTransactions = () => {
-    if (loading) {
-      return (
-        <div style={styles.transactionsContainer}>
-          {Array(3).fill().map((_, index) => (
-            <div key={index} style={styles.transactionCard}>
-              <h3 style={styles.transactionTitle}>
-                {index === 0 ? <ShoppingCart size={18} style={{ marginRight: 8 }} /> : 
-                 index === 1 ? <TrendingUp size={18} style={{ marginRight: 8 }} /> : 
-                 <Wrench size={18} style={{ marginRight: 8 }} />}
-                Loading...
-              </h3>
-              <div style={styles.transactionList}>
-                {Array(3).fill().map((_, i) => (
-                  <div key={i} style={styles.transactionItem}>
-                    <div style={styles.transactionInfo}>
-                      <p style={styles.transactionBike}>Loading...</p>
-                      <p style={styles.transactionCustomer}>Loading...</p>
-                    </div>
-                    <div style={styles.transactionDetails}>
-                      <p style={styles.transactionDate}>Loading...</p>
-                      <p style={styles.transactionAmount}>Loading...</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (error) {
-      return (
-        <div style={styles.transactionsContainer}>
-          <div style={{ ...styles.transactionCard, gridColumn: '1 / -1', textAlign: 'center' }}>
-            <p style={{ color: '#ef4444' }}>{error}</p>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div style={styles.transactionsContainer}>
-        <div style={styles.transactionCard}>
-          <h3 style={styles.transactionTitle}>
-            <ShoppingCart size={18} style={{ marginRight: 8 }} />
-            Recent Buy Letters
-          </h3>
-          <div style={styles.transactionList}>
-            {dashboardData.recentTransactions?.buy?.length > 0 ? (
-              dashboardData.recentTransactions.buy.map((transaction, index) => (
-                <div key={index} style={styles.transactionItem}>
-                  <div style={styles.transactionInfo}>
-                    <p style={styles.transactionBike}>{transaction.bikeNumber || 'N/A'}</p>
-                    <p style={styles.transactionCustomer}>{transaction.customerName || 'N/A'}</p>
-                  </div>
-                  <div style={styles.transactionDetails}>
-                    <p style={styles.transactionDate}>{formatDate(transaction.date)}</p>
-                    <p style={styles.transactionAmount}>{formatCurrency(transaction.amount)}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p style={{ color: '#6b7280', textAlign: 'center', padding: '10px' }}>No recent buy transactions</p>
-            )}
-          </div>
-        </div>
-        
-        <div style={styles.transactionCard}>
-          <h3 style={styles.transactionTitle}>
-            <TrendingUp size={18} style={{ marginRight: 8 }} />
-            Recent Sell Letters
-          </h3>
-          <div style={styles.transactionList}>
-            {dashboardData.recentTransactions?.sell?.length > 0 ? (
-              dashboardData.recentTransactions.sell.map((transaction, index) => (
-                <div key={index} style={styles.transactionItem}>
-                  <div style={styles.transactionInfo}>
-                    <p style={styles.transactionBike}>{transaction.bikeNumber || 'N/A'}</p>
-                    <p style={styles.transactionCustomer}>{transaction.customerName || 'N/A'}</p>
-                  </div>
-                  <div style={styles.transactionDetails}>
-                    <p style={styles.transactionDate}>{formatDate(transaction.date)}</p>
-                    <p style={styles.transactionAmount}>{formatCurrency(transaction.amount)}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p style={{ color: '#6b7280', textAlign: 'center', padding: '10px' }}>No recent sell transactions</p>
-            )}
-          </div>
-        </div>
-        
-        <div style={styles.transactionCard}>
-          <h3 style={styles.transactionTitle}>
-            <Wrench size={18} style={{ marginRight: 8 }} />
-            Recent Service Bills
-          </h3>
-          <div style={styles.transactionList}>
-            {dashboardData.recentTransactions?.service?.length > 0 ? (
-              dashboardData.recentTransactions.service.map((transaction, index) => (
-                <div key={index} style={styles.transactionItem}>
-                  <div style={styles.transactionInfo}>
-                    <p style={styles.transactionBike}>{transaction.bikeNumber || 'N/A'}</p>
-                    <p style={styles.transactionCustomer}>{transaction.customerName || 'N/A'}</p>
-                    <p style={styles.transactionService}>{transaction.serviceType || 'Service'}</p>
-                  </div>
-                  <div style={styles.transactionDetails}>
-                    <p style={styles.transactionDate}>{formatDate(transaction.date)}</p>
-                    <p style={styles.transactionAmount}>{formatCurrency(transaction.amount)}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p style={{ color: '#6b7280', textAlign: 'center', padding: '10px' }}>No recent service bills</p>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div style={styles.container}>
@@ -803,14 +681,7 @@ const AdminPage = () => {
             <>
               <DashboardCards />
               <RevenueCard />
-              
-              {/* Charts Section */}
               <ChartsSection />
-              
-              {/* Recent Transactions */}
-              <RecentTransactions />
-
-              {/* Quick Actions */}
               {!loading && !error && (
                 <div style={styles.quickActionsCard}>
                   <h3 style={styles.quickActionsTitle}>Quick Actions</h3>

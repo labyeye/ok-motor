@@ -106,7 +106,7 @@ const BuyLetterForm = () => {
     try {
       setIsSaving(true);
       const response = await axios.post(
-        "http://localhost:2500/api/buy-letter",
+        "https://ok-motor.onrender.com/api/buy-letter",
         formData
       );
       alert("Buy letter saved successfully!");
@@ -353,8 +353,20 @@ const BuyLetterForm = () => {
     handleChange(e);
   };
   const drawVehicleInvoice = async (page, pdfDoc) => {
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const logoUrl = logo; // Use your imported logo
+    const logoImageBytes = await fetch(logoUrl).then((res) =>
+      res.arrayBuffer()
+    );
+    const logoImage = await pdfDoc.embedPng(logoImageBytes); // or embedJpg if using JPEG
+
+    page.drawImage(logoImage, {
+      x: 50,
+      y: 800, // Adjust position as needed
+      width: 100, // Adjust width as needed
+      height: 50, // Adjust height as needed
+    });
     page.drawRectangle({
       x: 0,
       y: 780,
@@ -364,12 +376,11 @@ const BuyLetterForm = () => {
     });
 
     // Draw dealership header
-    page.drawText("OK MOTORS", {
+    page.drawImage(logoImage, {
       x: 50,
-      y: 810,
-      size: 24,
-      color: rgb(1, 1, 1), // White
-      font: boldFont,
+      y: 800, // Adjust position as needed
+      width: 100, // Adjust width as needed
+      height: 50, // Adjust height as needed
     });
 
     // Draw tagline
@@ -649,7 +660,7 @@ const BuyLetterForm = () => {
       thickness: 0.5,
       color: rgb(0.8, 0.8, 0.8),
     });
-  
+
     // Seller Signature
     page.drawText("Seller Signature", {
       x: 100,
@@ -658,14 +669,14 @@ const BuyLetterForm = () => {
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
-  
+
     page.drawLine({
       start: { x: 100, y: 270 },
       end: { x: 250, y: 270 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
-  
+
     // Buyer Signature (OK Motors)
     page.drawText("Authorized Signatory", {
       x: 350,
@@ -674,16 +685,14 @@ const BuyLetterForm = () => {
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
-  
-    
-  
+
     page.drawLine({
       start: { x: 350, y: 270 },
       end: { x: 500, y: 270 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
-  
+
     // Footer
     page.drawLine({
       start: { x: 50, y: 100 },
@@ -691,7 +700,7 @@ const BuyLetterForm = () => {
       thickness: 0.5,
       color: rgb(0.8, 0.8, 0.8),
     });
-  
+
     page.drawText("Thank you for your business!", {
       x: 220,
       y: 80,
@@ -699,14 +708,17 @@ const BuyLetterForm = () => {
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
     });
-  
-    page.drawText("OK MOTORS | 123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210", {
-      x: 180,
-      y: 60,
-      size: 8,
-      color: rgb(0.5, 0.5, 0.5),
-      font: font,
-    });
+
+    page.drawText(
+      "OK MOTORS | 123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210",
+      {
+        x: 180,
+        y: 60,
+        size: 8,
+        color: rgb(0.5, 0.5, 0.5),
+        font: font,
+      }
+    );
   };
 
   if (previewMode) {

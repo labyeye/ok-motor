@@ -198,7 +198,7 @@ const BuyLetterHistory = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `http://localhost:2500/api/buy-letter?page=${currentPage}`,
+          `https://ok-motor.onrender.com/api/buy-letter?page=${currentPage}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -398,8 +398,13 @@ const BuyLetterHistory = () => {
   };
   const drawVehicleInvoice = async (page, pdfDoc, letter) => {
     // Embed fonts first
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const logoUrl = logo; // Use your imported logo
+    const logoImageBytes = await fetch(logoUrl).then((res) =>
+      res.arrayBuffer()
+    );
+    const logoImage = await pdfDoc.embedPng(logoImageBytes); // or embedJpg if using JPEG
     
     // Format date helper function
     function formatDate(dateString) {
@@ -410,7 +415,7 @@ const BuyLetterHistory = () => {
       const year = date.getFullYear();
       return `${day}/${month}/${year}`;
     }
-  
+    
     // Header background
     page.drawRectangle({
       x: 0,
@@ -421,12 +426,11 @@ const BuyLetterHistory = () => {
     });
     
     // Draw dealership header
-    page.drawText("OK MOTORS", {
+    page.drawImage(logoImage, {
       x: 50,
-      y: 810,
-      size: 24,
-      color: rgb(1, 1, 1), // White
-      font: boldFont,
+      y: 800, // Adjust position as needed
+      width: 100, // Adjust width as needed
+      height: 50, // Adjust height as needed
     });
   
     // Draw tagline
@@ -729,7 +733,7 @@ const BuyLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
-        await axios.delete(`http://localhost:2500/api/buy-letter/${id}`);
+        await axios.delete(`https://ok-motor.onrender.com/api/buy-letter/${id}`);
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting buy letter:", error);
@@ -744,7 +748,7 @@ const BuyLetterHistory = () => {
   const handleSaveEdit = async (updatedLetter) => {
     try {
       const response = await axios.put(
-        `http://localhost:2500/api/buy-letter/${updatedLetter._id}`,
+        `https://ok-motor.onrender.com/api/buy-letter/${updatedLetter._id}`,
         updatedLetter
       );
       setBuyLetters(

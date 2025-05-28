@@ -187,7 +187,7 @@ const SellLetterForm = () => {
       }
 
       const response = await axios.post(
-        "http://localhost:2500/api/sell-letters",
+        "https://ok-motor.onrender.com/api/sell-letters",
         formData,
         {
           headers: {
@@ -253,8 +253,13 @@ const SellLetterForm = () => {
 
   const drawVehicleInvoice = async (page, pdfDoc) => {
     // Embed fonts first
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const logoUrl = logo; // Use your imported logo
+    const logoImageBytes = await fetch(logoUrl).then((res) =>
+      res.arrayBuffer()
+    );
+    const logoImage = await pdfDoc.embedPng(logoImageBytes); // or embedJpg if using JPEG
 
     // Header background
     page.drawRectangle({
@@ -266,12 +271,11 @@ const SellLetterForm = () => {
     });
 
     // Draw dealership header
-    page.drawText("OK MOTORS", {
+    page.drawImage(logoImage, {
       x: 50,
-      y: 810,
-      size: 24,
-      color: rgb(1, 1, 1), // White
-      font: boldFont,
+      y: 800, // Adjust position as needed
+      width: 100, // Adjust width as needed
+      height: 50, // Adjust height as needed
     });
 
     // Draw tagline

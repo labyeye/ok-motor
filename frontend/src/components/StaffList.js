@@ -32,7 +32,7 @@ const StaffList = () => {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const response = await axios.get("http://localhost:2500/api/users");
+        const response = await axios.get("https://ok-motor.onrender.com/api/users");
         setStaff(response.data);
       } catch (err) {
         setError(
@@ -50,7 +50,7 @@ const StaffList = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this staff member?")) {
       try {
-        await axios.delete(`http://localhost:2500/api/users/${id}`);
+        await axios.delete(`https://ok-motor.onrender.com/api/users/${id}`);
         setStaff(staff.filter((user) => user._id !== id));
       } catch (err) {
         setError(
