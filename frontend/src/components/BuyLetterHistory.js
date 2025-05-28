@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { PDFDocument, rgb,StandardFonts } from "pdf-lib";
 import logo from '../images/company.png';
+import logo1 from '../images/okmotor.png';
+
 
 import AuthContext from "../context/AuthContext";
 
@@ -400,7 +402,7 @@ const BuyLetterHistory = () => {
     // Embed fonts first
 const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const logoUrl = logo; // Use your imported logo
+    const logoUrl = logo1; // Use your imported logo
     const logoImageBytes = await fetch(logoUrl).then((res) =>
       res.arrayBuffer()
     );

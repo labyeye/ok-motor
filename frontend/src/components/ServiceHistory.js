@@ -21,6 +21,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
+import logo1 from '../images/okmotor.png';
 
 const ServiceHistory = () => {
   const { user } = useContext(AuthContext);
