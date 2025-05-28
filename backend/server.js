@@ -15,7 +15,7 @@ const app = express();
 connectDB();
 
 app.use(express.json());
-app.use(cors({ origin: 'https://ok-motor.onrender.com', credentials: true }));
+app.use(cors({ origin: 'https://ok-motor.vercel.app', credentials: true }));
 
 
 app.use('/api/auth', authRoutes);
