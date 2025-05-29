@@ -3,7 +3,6 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
 import axios from "axios";
 import {
-  ArrowLeft,
   User,
   FileSignature,
   Car,
