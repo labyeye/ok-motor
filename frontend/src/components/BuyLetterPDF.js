@@ -23,13 +23,15 @@ import {
   ChevronRight,
 } from "lucide-react";
 import logo from "../images/company.png";
-import logo1 from '../images/okmotor.png';
+import logo1 from "../images/okmotor.png";
 
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
 const BuyLetterForm = () => {
   const { user } = useContext(AuthContext);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [savedLetterData, setSavedLetterData] = useState(null);
   const [activeMenu, setActiveMenu] = useState("Create Buy Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
@@ -131,9 +133,17 @@ const BuyLetterForm = () => {
     }
   };
   const handleSaveAndDownload = async () => {
-    const savedLetter = await saveBuyLetter();
-    if (savedLetter) {
-      await fillAndDownloadPdf();
+    try {
+      setIsSaving(true);
+      const savedLetter = await saveBuyLetter();
+      if (savedLetter) {
+        setSavedLetterData(savedLetter);
+        setShowLanguageModal(true);
+      }
+    } catch (error) {
+      console.error("Error saving buy letter:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
   const handleChange = useCallback((e) => {
@@ -296,7 +306,7 @@ const BuyLetterForm = () => {
     }
   };
 
-  const fillAndDownloadPdf = async () => {
+  const fillAndDownloadHindiPdf = async () => {
     try {
       const hasData = Object.values(formData).some(
         (value) => value !== "" && value !== null && value !== undefined
@@ -307,20 +317,15 @@ const BuyLetterForm = () => {
         return;
       }
 
-      // Load buy letter template
       const buyLetterUrl = "/templates/buyletter.pdf";
       const existingPdfBytes = await fetch(buyLetterUrl).then((res) =>
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-      // Create vehicle invoice page
-      const invoicePage = pdfDoc.addPage([595, 842]); // A4 size
-
-      // Draw vehicle invoice content - pass pdfDoc as parameter
+      const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
-      // Fill buy letter fields
       const formattedData = {
         ...formData,
         todayDate1: formatDate(formData.todayDate),
@@ -348,13 +353,91 @@ const BuyLetterForm = () => {
       alert("Failed to generate PDF. Please try again.");
     }
   };
+
+  const fillAndDownloadEnglishPdf = async () => {
+    try {
+      const buyLetterUrl = "/templates/englishbuyletter.pdf";
+      const existingPdfBytes = await fetch(buyLetterUrl).then((res) =>
+        res.arrayBuffer()
+      );
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc);
+
+      const englishFieldPositions = {
+        sellerName: { x: 33, y: 629, size: 11 },
+        sellerFatherName: { x: 330, y: 629, size: 11 },
+        sellerCurrentAddress: { x: 85, y: 605, size: 11 },
+        vehicleName: { x: 421, y: 585, size: 11 },
+        vehicleModel: { x: 527, y: 585, size: 11 },
+        vehicleColor: { x: 63, y: 565, size: 11 },
+        registrationNumber: { x: 260, y: 565, size: 11 },
+        chassisNumber: { x: 454, y: 565, size: 11 },
+        engineNumber: { x: 90, y: 546, size: 11 },
+        vehiclekm: { x: 320, y: 546, size: 11 },
+        buyerName: { x: 40, y: 527, size: 11 },
+        buyerFatherName: { x: 352, y: 527, size: 11 },
+        buyerCurrentAddress: { x: 26, y: 507, size: 11 },
+        saleDate: { x: 384, y: 507, size: 11 },
+        saleTime: { x: 500, y: 507, size: 11 },
+        saleAmount: { x: 120, y: 490, size: 11 },
+        todayDate: { x: 132, y: 470, size: 11 },
+        todayTime: { x: 269, y: 470, size: 11 },
+        sellerName1: { x: 45, y: 436, size: 11 },
+        sellerFatherName1: { x: 336, y: 436, size: 11 },
+        buyerName1: { x: 26, y: 401, size: 11 },
+        buyerFatherName1: { x: 380, y: 401, size: 11 },
+        todayDate1: { x: 192, y: 419, size: 11 },
+        todayTime1: { x: 350, y: 419, size: 11 },
+        buyerName2: { x: 130, y: 354, size: 11 },
+        buyerCurrentAddress2: { x: 377, y: 354, size: 11 },
+        selleraadhar: { x: 403, y: 216, size: 10 },
+        sellerpan: { x: 404, y: 196, size: 10 },
+        selleraadharphone: { x: 426, y: 177, size: 10 },
+        buyernames: { x: 400, y: 87, size: 10 },
+        buyerphone: { x: 400, y: 71, size: 10 },
+        note: { x: 60, y: 18, size: 10 },
+      };
+
+      const formattedData = {
+        ...formData,
+        todayDate1: formatDate(formData.todayDate),
+        todayTime1: formatTime(formData.todayTime),
+      };
+
+      for (const [fieldName, position] of Object.entries(
+        englishFieldPositions
+      )) {
+        if (formattedData[fieldName]) {
+          pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        }
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      saveAs(
+        new Blob([pdfBytes], { type: "application/pdf" }),
+        `vehicle_sale_agreement_${
+          formData.registrationNumber || "document"
+        }.pdf`
+      );
+    } catch (error) {
+      console.error("Error generating English PDF:", error);
+      alert("Failed to generate English PDF. Please try again.");
+    }
+  };
   const handleInput = (e) => {
     const { name, value } = e.target;
     e.target.value = value.toUpperCase();
     handleChange(e);
   };
   const drawVehicleInvoice = async (page, pdfDoc) => {
-const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const logoUrl = logo1; // Use your imported logo
     const logoImageBytes = await fetch(logoUrl).then((res) =>
@@ -729,11 +812,6 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
           <button onClick={() => setPreviewMode(false)} className="back-button">
             <ArrowLeft className="button-icon" /> Back to Edit
           </button>
-          <div className="preview-actions">
-            <button onClick={fillAndDownloadPdf} className="download-button">
-              <Download className="button-icon" /> Download PDF
-            </button>
-          </div>
         </div>
         <div className="pdf-preview">
           <p>PDF Preview would show here</p>
@@ -1297,6 +1375,42 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
             </div>
           </form>
         </div>
+        {showLanguageModal && (
+          <div style={styles.modalOverlay}>
+            <div style={styles.modalContent}>
+              <h3 style={styles.modalTitle}>Select PDF Language</h3>
+              <p style={styles.modalText}>
+                Choose the language for your buy letter:
+              </p>
+              <div style={styles.modalButtons}>
+                <button
+                  style={styles.englishButton}
+                  onClick={() => {
+                    fillAndDownloadEnglishPdf();
+                    setShowLanguageModal(false);
+                  }}
+                >
+                  English PDF
+                </button>
+                <button
+                  style={styles.hindiButton}
+                  onClick={() => {
+                    fillAndDownloadHindiPdf();
+                    setShowLanguageModal(false);
+                  }}
+                >
+                  Hindi PDF
+                </button>
+              </div>
+              <button
+                style={styles.modalCloseButton}
+                onClick={() => setShowLanguageModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1415,6 +1529,79 @@ const styles = {
     fontWeight: "700",
     color: "#1e293b",
     margin: 0,
+  },
+  modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  },
+  modalContent: {
+    backgroundColor: "#ffffff",
+    padding: "24px",
+    borderRadius: "8px",
+    width: "400px",
+    maxWidth: "90%",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  },
+  modalTitle: {
+    fontSize: "1.25rem",
+    fontWeight: "600",
+    marginBottom: "16px",
+    color: "#1e293b",
+  },
+  modalText: {
+    marginBottom: "24px",
+    color: "#64748b",
+  },
+  modalButtons: {
+    display: "flex",
+    gap: "16px",
+    marginBottom: "24px",
+  },
+  englishButton: {
+    flex: 1,
+    padding: "12px",
+    backgroundColor: "#3b82f6",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: "500",
+    ":hover": {
+      backgroundColor: "#2563eb",
+    },
+  },
+  hindiButton: {
+    flex: 1,
+    padding: "12px",
+    backgroundColor: "#10b981",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: "500",
+    ":hover": {
+      backgroundColor: "#059669",
+    },
+  },
+  modalCloseButton: {
+    width: "100%",
+    padding: "8px",
+    backgroundColor: "#f1f5f9",
+    color: "#64748b",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    ":hover": {
+      backgroundColor: "#e2e8f0",
+    },
   },
   pageSubtitle: {
     fontSize: "1rem",
