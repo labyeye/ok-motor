@@ -104,7 +104,6 @@ const BuyLetterForm = () => {
       minute: "2-digit",
     });
   };
-  const [previewMode, setPreviewMode] = useState(false);
   const saveBuyLetter = async () => {
     try {
       setIsSaving(true);
@@ -135,13 +134,40 @@ const BuyLetterForm = () => {
   const handleSaveAndDownload = async () => {
     try {
       setIsSaving(true);
-      const savedLetter = await saveBuyLetter();
-      if (savedLetter) {
-        setSavedLetterData(savedLetter);
+
+      // First check if a record with this registration number exists
+      const existingLetter = await axios.get(
+        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (existingLetter.data && existingLetter.data.length > 0) {
+        setSavedLetterData(existingLetter.data[0]);
         setShowLanguageModal(true);
+      } else {
+        const savedLetter = await saveBuyLetter();
+        if (savedLetter) {
+          setSavedLetterData(savedLetter);
+          setShowLanguageModal(true);
+        }
       }
     } catch (error) {
-      console.error("Error saving buy letter:", error);
+      console.error("Error checking/saving buy letter:", error);
+      let errorMessage = "Failed to process buy letter. Please try again.";
+
+      if (error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+        if (error.response.data.error) {
+          errorMessage += ` (${error.response.data.error})`;
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your connection.";
+      }
+      alert(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -805,20 +831,7 @@ const BuyLetterForm = () => {
     );
   };
 
-  if (previewMode) {
-    return (
-      <div className="form-preview-container">
-        <div className="form-preview-header">
-          <button onClick={() => setPreviewMode(false)} className="back-button">
-            <ArrowLeft className="button-icon" /> Back to Edit
-          </button>
-        </div>
-        <div className="pdf-preview">
-          <p>PDF Preview would show here</p>
-        </div>
-      </div>
-    );
-  }
+  
 
   return (
     <div style={styles.container}>
@@ -1357,14 +1370,7 @@ const BuyLetterForm = () => {
             </div>
 
             <div style={styles.formActions}>
-              <button
-                type="button"
-                onClick={saveBuyLetter}
-                style={styles.saveButton}
-                disabled={isSaving}
-              >
-                {isSaving ? "Saving..." : "Save"}
-              </button>
+              
               <button
                 type="button"
                 onClick={handleSaveAndDownload}

@@ -14,7 +14,11 @@ const BuyLetterSchema = new mongoose.Schema({
   vehicleName: { type: String, required: true },
   vehicleModel: { type: String, required: true },
   vehicleColor: { type: String, required: true },
-  registrationNumber: { type: String, required: true },
+  registrationNumber: {
+    type: String,
+    required: true,
+    unique: true, 
+  },
   chassisNumber: { type: String, required: true },
   engineNumber: { type: String, required: true },
   vehiclekm: { type: String },

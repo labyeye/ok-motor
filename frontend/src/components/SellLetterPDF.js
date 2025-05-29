@@ -23,13 +23,15 @@ import {
   Bike,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import logo from '../images/company.png';
-import logo1 from '../images/okmotor.png';
+import logo from "../images/company.png";
+import logo1 from "../images/okmotor.png";
 
 import AuthContext from "../context/AuthContext";
 
 const SellLetterForm = () => {
   const { user } = useContext(AuthContext);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [savedLetterData, setSavedLetterData] = useState(null);
   const [activeMenu, setActiveMenu] = useState("Create Sell Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
@@ -223,12 +225,48 @@ const SellLetterForm = () => {
     }
   };
   const handleSaveAndDownload = async () => {
-    const savedSuccessfully = await saveToDatabase();
-    if (savedSuccessfully) {
-      await fillAndDownloadPdf();
+    try {
+      setIsSaving(true);
+
+      // First check if a record with this registration number exists
+      const existingLetter = await axios.get(
+        `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (existingLetter.data && existingLetter.data.length > 0) {
+        setSavedLetterData(existingLetter.data[0]);
+        setShowLanguageModal(true);
+      } else {
+        const savedLetter = await saveToDatabase();
+        if (savedLetter) {
+          setSavedLetterData(savedLetter);
+          setShowLanguageModal(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error checking/saving sell letter:", error);
+      let errorMessage = "Failed to process sell letter. Please try again.";
+
+      if (error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+        if (error.response.data.error) {
+          errorMessage += ` (${error.response.data.error})`;
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your connection.";
+      }
+      alert(errorMessage);
+    } finally {
+      setIsSaving(false);
     }
   };
-  const fieldPositions = {
+  // Hindi template field positions
+  const hindiFieldPositions = {
     vehicleName: { x: 339, y: 702, size: 11 },
     vehicleModel: { x: 207, y: 682, size: 11 },
     vehicleColor: { x: 97, y: 682, size: 11 },
@@ -252,9 +290,33 @@ const SellLetterForm = () => {
     buyerAadhar: { x: 145, y: 190, size: 11 },
   };
 
+  const englishFieldPositions = {
+    vehicleName: { x: 350, y: 685, size: 11 }, 
+    vehicleModel: { x: 110, y: 670, size: 11 },
+    vehicleColor: { x: 465, y: 685, size: 11 },
+    registrationNumber: { x: 370, y: 670, size: 11 },
+    chassisNumber: { x: 160, y: 650, size: 11 },
+    engineNumber: { x: 370, y: 650, size: 11 },
+    vehiclekm: { x: 130, y: 630, size: 11 },
+    buyerName: { x: 305, y: 631, size: 11 },
+    buyerFatherName: { x: 110, y: 613, size: 11 },
+    buyerAddress: { x: 321, y: 613, size: 11 },
+    buyerName1: { x: 186, y: 529, size: 11 },
+    buyerName2: { x: 368, y: 482, size: 11 },
+    saleDate: { x: 166, y: 592, size: 11 },
+    saleTime: { x: 251, y: 592, size: 11 },
+    saleAmount: { x: 326, y: 592, size: 11 },
+    todayDate: { x: 156, y: 574, size: 11 },
+    todayTime: { x: 291, y: 574, size: 11 },
+    previousDate: { x: 278, y: 553, size: 11 },
+    previousTime: { x: 383, y: 553, size: 11 },
+    buyerPhone: { x: 120, y: 233, size: 11 },
+    buyerAadhar: { x: 145, y: 212, size: 11 },
+  };
+
   const drawVehicleInvoice = async (page, pdfDoc) => {
     // Embed fonts first
-const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const logoUrl = logo1; // Use your imported logo
     const logoImageBytes = await fetch(logoUrl).then((res) =>
@@ -540,7 +602,7 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       thickness: 0.5,
       color: rgb(0.8, 0.8, 0.8),
     });
-  
+
     // Seller Signature
     page.drawText("Seller Signature", {
       x: 100,
@@ -549,14 +611,14 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
-  
+
     page.drawLine({
       start: { x: 100, y: 270 },
       end: { x: 250, y: 270 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
-  
+
     // Buyer Signature (OK Motors)
     page.drawText("Authorized Signatory", {
       x: 350,
@@ -565,16 +627,14 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
-  
-    
-  
+
     page.drawLine({
       start: { x: 350, y: 270 },
       end: { x: 500, y: 270 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
-  
+
     // Footer
     page.drawLine({
       start: { x: 50, y: 100 },
@@ -582,7 +642,7 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       thickness: 0.5,
       color: rgb(0.8, 0.8, 0.8),
     });
-  
+
     page.drawText("Thank you for your business!", {
       x: 220,
       y: 80,
@@ -590,14 +650,17 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
     });
-  
-    page.drawText("OK MOTORS | 123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210", {
-      x: 180,
-      y: 60,
-      size: 8,
-      color: rgb(0.5, 0.5, 0.5),
-      font: font,
-    });
+
+    page.drawText(
+      "OK MOTORS | 123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210",
+      {
+        x: 180,
+        y: 60,
+        size: 8,
+        color: rgb(0.5, 0.5, 0.5),
+        font: font,
+      }
+    );
   };
   const handleInput = (e) => {
     const { name, value } = e.target;
@@ -613,31 +676,25 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     return `${day}/${month}/${year}`;
   };
 
-  const fillAndDownloadPdf = async () => {
+  const fillAndDownloadHindiPdf = async () => {
     try {
-      const templateUrl = "/templates/sellletter.pdf";
+      const templateUrl = "/templates/sellletter.pdf"; // Hindi template
       const existingPdfBytes = await fetch(templateUrl).then((res) =>
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const invoicePage = pdfDoc.addPage([595, 842]);
-      await drawVehicleInvoice(invoicePage, pdfDoc);
-      function formatDate(dateString) {
-        if (!dateString) return "";
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
-      }
       function formatTime(timeString) {
         if (!timeString) return "";
         return timeString.slice(0, 5);
       }
+      // Add invoice page if needed
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc);
+
       const formattedLetter = {
         ...formData,
         buyerName1: formData.buyerName,
-        buyerName2: formData.buyerName, 
+        buyerName2: formData.buyerName,
         saleDate: formatDate(formData.saleDate),
         saleTime: formatTime(formData.saleTime),
         todayDate: formatDate(formData.todayDate || new Date()),
@@ -651,7 +708,7 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       };
 
       // Fill sell letter fields
-      for (const [fieldName, position] of Object.entries(fieldPositions)) {
+      for (const [fieldName, position] of Object.entries(hindiFieldPositions)) {
         if (formattedLetter[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
             x: position.x,
@@ -665,11 +722,70 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const pdfBytes = await pdfDoc.save();
       saveAs(
         new Blob([pdfBytes], { type: "application/pdf" }),
-        `vehicle_sale_invoice_${formData.registrationNumber || "document"}.pdf`
+        `vehicle_sale_agreement_hindi_${
+          formData.registrationNumber || "document"
+        }.pdf`
       );
     } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF. Please try again.");
+      console.error("Error generating Hindi PDF:", error);
+      alert("Failed to generate Hindi PDF. Please try again.");
+    }
+  };
+
+  const fillAndDownloadEnglishPdf = async () => {
+    try {
+      const templateUrl = "/templates/englishsell.pdf"; 
+      const existingPdfBytes = await fetch(templateUrl).then((res) =>
+        res.arrayBuffer()
+      );
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      function formatTime(timeString) {
+        if (!timeString) return "";
+        return timeString.slice(0, 5);
+      }
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc);
+
+      const formattedLetter = {
+        ...formData,
+        buyerName1: formData.buyerName,
+        buyerName2: formData.buyerName,
+        saleDate: formatDate(formData.saleDate),
+        saleTime: formatTime(formData.saleTime),
+        todayDate: formatDate(formData.todayDate || new Date()),
+        todayTime: formatTime(formData.todayTime || "12:00"),
+        previousDate: formatDate(
+          formData.previousDate || formData.todayDate || new Date()
+        ),
+        previousTime: formatTime(
+          formData.previousTime || formData.todayTime || "12:00"
+        ),
+      };
+
+      // Fill sell letter fields
+      for (const [fieldName, position] of Object.entries(
+        englishFieldPositions
+      )) {
+        if (formattedLetter[fieldName]) {
+          pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        }
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      saveAs(
+        new Blob([pdfBytes], { type: "application/pdf" }),
+        `vehicle_sale_agreement_english_${
+          formData.registrationNumber || "document"
+        }.pdf`
+      );
+    } catch (error) {
+      console.error("Error generating English PDF:", error);
+      alert("Failed to generate English PDF. Please try again.");
     }
   };
 
@@ -686,7 +802,11 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-           <img src={logo} alt="logo" style={{width: '12.5rem', height: '7.5rem', color: '#7c3aed'}} />
+          <img
+            src={logo}
+            alt="logo"
+            style={{ width: "12.5rem", height: "7.5rem", color: "#7c3aed" }}
+          />
           <p style={styles.sidebarSubtitle}>Welcome, {user?.name}</p>
         </div>
 
@@ -1002,7 +1122,6 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
                     onChange={handleChange}
                     onInput={handleInput}
                     style={styles.formInput}
-
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1037,7 +1156,7 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Payment Method || भुगतान की विधि 
+                    Payment Method || भुगतान की विधि
                   </label>
                   <select
                     name="paymentMethod"
@@ -1097,21 +1216,14 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
                   />
                   <label style={styles.formCheckboxLabel}>
                     <CheckCircle style={styles.formIcon} />
-                    All documents verified and satisfactory || सभी दस्तावेज सत्यापित और संतोषजनक
+                    All documents verified and satisfactory || सभी दस्तावेज
+                    सत्यापित और संतोषजनक
                   </label>
                 </div>
               </div>
             </div>
 
             <div style={styles.formActions}>
-              <button
-                type="button"
-                onClick={saveToDatabase}
-                style={styles.saveButton}
-                disabled={isSaving}
-              >
-                {isSaving ? "Saving..." : "Save"}
-              </button>
               <button
                 type="button"
                 onClick={handleSaveAndDownload}
@@ -1122,6 +1234,42 @@ const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
             </div>
           </form>
         </div>
+        {showLanguageModal && (
+          <div style={styles.modalOverlay}>
+            <div style={styles.modalContent}>
+              <h3 style={styles.modalTitle}>Select PDF Language</h3>
+              <p style={styles.modalText}>
+                Choose the language for your sell letter:
+              </p>
+              <div style={styles.modalButtons}>
+                <button
+                  style={styles.englishButton}
+                  onClick={() => {
+                    fillAndDownloadEnglishPdf();
+                    setShowLanguageModal(false);
+                  }}
+                >
+                  English PDF
+                </button>
+                <button
+                  style={styles.hindiButton}
+                  onClick={() => {
+                    fillAndDownloadHindiPdf();
+                    setShowLanguageModal(false);
+                  }}
+                >
+                  Hindi PDF
+                </button>
+              </div>
+              <button
+                style={styles.modalCloseButton}
+                onClick={() => setShowLanguageModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1246,8 +1394,79 @@ const styles = {
     color: "#64748b",
     margin: "8px 0 0 0",
   },
-
-  // Form Styles
+  modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  },
+  modalContent: {
+    backgroundColor: "#ffffff",
+    padding: "24px",
+    borderRadius: "8px",
+    width: "400px",
+    maxWidth: "90%",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  },
+  modalTitle: {
+    fontSize: "1.25rem",
+    fontWeight: "600",
+    marginBottom: "16px",
+    color: "#1e293b",
+  },
+  modalText: {
+    marginBottom: "24px",
+    color: "#64748b",
+  },
+  modalButtons: {
+    display: "flex",
+    gap: "16px",
+    marginBottom: "24px",
+  },
+  englishButton: {
+    flex: 1,
+    padding: "12px",
+    backgroundColor: "#3b82f6",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: "500",
+    ":hover": {
+      backgroundColor: "#2563eb",
+    },
+  },
+  hindiButton: {
+    flex: 1,
+    padding: "12px",
+    backgroundColor: "#10b981",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: "500",
+    ":hover": {
+      backgroundColor: "#059669",
+    },
+  },
+  modalCloseButton: {
+    width: "100%",
+    padding: "8px",
+    backgroundColor: "#f1f5f9",
+    color: "#64748b",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    ":hover": {
+      backgroundColor: "#e2e8f0",
+    },
+  },
   form: {
     backgroundColor: "#ffffff",
     borderRadius: "12px",

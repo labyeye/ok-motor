@@ -3,14 +3,12 @@ const fs = require("fs");
 const path = require("path");
 exports.createBuyLetter = async (req, res) => {
   try {
-    // Create the buy letter data without $or operator
     const buyLetterData = {
       ...req.body,
-      user: req.user.id, // Associate with the creating user
-      visibility: req.body.visibility || 'private' // Default visibility
+      user: req.user.id, 
+      visibility: req.body.visibility || 'private' 
     };
 
-    // Convert date strings to Date objects
     if (buyLetterData.saleDate) {
       buyLetterData.saleDate = new Date(buyLetterData.saleDate);
     }
@@ -26,24 +24,21 @@ exports.createBuyLetter = async (req, res) => {
     console.error("Error creating buy letter:", error);
     res.status(500).json({ 
       message: "Server Error",
-      error: error.message // Include the actual error message
+      error: error.message 
     });
   }
 };
 
-// Get all buy letters for the logged-in user with pagination
 exports.getBuyLetters = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // Modified query conditions
     const conditions = {
       $or: [
         { user: req.user.id },
         { visibility: "staff" },
-        // Add this for admin users to see all records
         ...(req.user.role === "staff" || req.user.role === "admin" ? [{}] : [])
       ]
     };
@@ -70,18 +65,15 @@ exports.getBuyLettersByRegistration = async (req, res) => {
   try {
     const { registrationNumber } = req.query;
     if (!registrationNumber) {
-      return res
-        .status(400)
-        .json({ message: "Registration number is required" });
+      return res.status(400).json({ message: "Registration number is required" });
     }
 
     const buyLetters = await BuyLetter.find({
       registrationNumber: new RegExp(registrationNumber, "i"),
       $or: [
-        { user: req.user.id }, // Records created by the current user
-        { visibility: "staff" }, // Or records marked as visible to staff
-        // Or if staff should see all records for the registration number:
-        ...(req.user.role === "staff" ? [{}] : []), // Staff can see all matching registration numbers
+        { user: req.user.id },
+        { visibility: "staff" },
+        ...(req.user.role === "staff" || req.user.role === "admin" ? [{}] : [])
       ],
     }).sort({ createdAt: -1 });
 
