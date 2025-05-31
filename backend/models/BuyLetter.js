@@ -9,6 +9,7 @@ const BuyLetterSchema = new mongoose.Schema({
   selleraadhar: { type: String },
   sellerpan: { type: String },
   selleraadharphone: { type: String },
+  selleraadharphone2: { type: String },
 
   // Vehicle Information
   vehicleName: { type: String, required: true },
@@ -17,7 +18,7 @@ const BuyLetterSchema = new mongoose.Schema({
   registrationNumber: {
     type: String,
     required: true,
-    unique: true, 
+    unique: true,
   },
   chassisNumber: { type: String, required: true },
   engineNumber: { type: String, required: true },
@@ -34,6 +35,16 @@ const BuyLetterSchema = new mongoose.Schema({
   buyerCurrentAddress: { type: String, required: true },
   buyernames: { type: String },
   buyerphone: { type: String },
+
+  //Witness Information
+  witnessname: { type: String },
+  witnessphone: { type: String },
+
+  dealername: { type: String },
+  dealeraddress: { type: String },
+
+  //Return Information
+  returnpersonname: { type: String },
 
   // Sale Details
   saleDate: { type: Date, required: true },

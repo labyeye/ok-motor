@@ -215,11 +215,11 @@ const BuyLetterHistory = () => {
             },
           }
         );
-        console.log("API Response:", response.data); // Add this line
+        console.log("API Response:", response.data);
         setBuyLetters(response.data.buyLetters);
         setTotalPages(response.data.pages);
       } catch (error) {
-        console.error("Error details:", error.response?.data || error.message); // Enhanced error logging
+        console.error("Error details:", error.response?.data || error.message); 
       } finally {
         setLoading(false);
       }
@@ -228,7 +228,6 @@ const BuyLetterHistory = () => {
     fetchBuyLetters();
   }, [currentPage]);
 
-  // In the menuItems array (around line 250 in BuyLetterPDF.js)
   const menuItems = [
     {
       name: "Dashboard",
@@ -310,70 +309,187 @@ const BuyLetterHistory = () => {
     sellerName: { x: 33, y: 629, size: 11 },
     sellerFatherName: { x: 330, y: 629, size: 11 },
     sellerCurrentAddress: { x: 85, y: 605, size: 11 },
-    vehicleName: { x: 421, y: 585, size: 11 },
-    vehicleModel: { x: 527, y: 585, size: 11 },
-    vehicleColor: { x: 63, y: 565, size: 11 },
-    registrationNumber: { x: 260, y: 565, size: 11 },
-    chassisNumber: { x: 454, y: 565, size: 11 },
-    engineNumber: { x: 90, y: 546, size: 11 },
-    vehiclekm: { x: 320, y: 546, size: 11 },
-    buyerName: { x: 40, y: 527, size: 11 },
-    buyerFatherName: { x: 352, y: 527, size: 11 },
-    buyerCurrentAddress: { x: 26, y: 507, size: 11 },
-    saleDate: { x: 384, y: 507, size: 11 },
-    saleTime: { x: 500, y: 507, size: 11 },
-    saleAmount: { x: 120, y: 490, size: 11 },
+    vehicleName: { x: 421, y: 583, size: 11 },
+    vehicleModel: { x: 527, y: 583, size: 11 },
+    vehicleColor: { x: 63, y: 564, size: 11 },
+    registrationNumber: { x: 260, y: 564, size: 11 },
+    chassisNumber: { x: 458, y: 564, size: 11 },
+    engineNumber: { x: 90, y: 545, size: 11 },
+    vehiclekm: { x: 320, y: 545, size: 11 },
+    buyerName: { x: 50, y: 526, size: 11 },
+    buyerFatherName: { x: 375, y: 526, size: 11 },
+    buyerCurrentAddress: { x: 89, y: 507, size: 11 },
+    saleDate: { x: 483, y: 507, size: 11 },
+    saleTime: { x: 25, y: 490, size: 11 },
+    saleAmount: { x: 190, y: 490, size: 11 },
     todayDate: { x: 132, y: 470, size: 11 },
-    todayTime: { x: 269, y: 470, size: 11 },
-    sellerName1: { x: 45, y: 436, size: 11 },
-    sellerFatherName1: { x: 336, y: 436, size: 11 },
+    todayTime: { x: 273, y: 470, size: 11 },
+    sellerName1: { x: 80, y: 437, size: 11 },
+    sellerFatherName1: { x: 345, y: 437, size: 11 },
     buyerName1: { x: 26, y: 401, size: 11 },
     buyerFatherName1: { x: 380, y: 401, size: 11 },
-    todayDate1: { x: 192, y: 419, size: 11 },
-    todayTime1: { x: 350, y: 419, size: 11 },
-    buyerName2: { x: 130, y: 354, size: 11 },
-    buyerCurrentAddress2: { x: 377, y: 354, size: 11 },
-    selleraadhar: { x: 403, y: 216, size: 10 },
-    sellerpan: { x: 404, y: 196, size: 10 },
-    selleraadharphone: { x: 426, y: 177, size: 10 },
-    buyernames: { x: 400, y: 87, size: 10 },
-    buyerphone: { x: 400, y: 71, size: 10 },
+    todayDate1: { x: 168, y: 419, size: 11 },
+    todayTime1: { x: 305, y: 419, size: 11 },
+    dealername: { x: 132, y: 348, size: 11 },
+    dealeraddress: { x: 377, y: 348, size: 11 },
+    selleraadhar: { x: 403, y: 220, size: 10 },
+    sellerpan: { x: 404, y: 204, size: 10 },
+    selleraadharphone: { x: 426, y: 188, size: 10 },
+    selleraadharphone2: { x: 490, y: 188, size: 10 },
+    witnessname: { x: 400, y: 87, size: 10 },
+    witnessphone: { x: 400, y: 71, size: 10 },
     note: { x: 60, y: 18, size: 10 },
+    returnpersonname: { x: 330, y: 297, size: 10 },
   };
+
   const fieldPositions = {
-    sellerName: { x: 45, y: 630, size: 11 },
-    sellerFatherName: { x: 330, y: 630, size: 11 },
-    sellerCurrentAddress: { x: 54, y: 608, size: 11 },
-    vehicleName: { x: 313, y: 586, size: 11 },
-    vehicleModel: { x: 430, y: 586, size: 11 },
-    vehicleColor: { x: 527, y: 586, size: 11 },
-    registrationNumber: { x: 140, y: 565, size: 11 },
-    chassisNumber: { x: 285, y: 565, size: 11 },
-    engineNumber: { x: 465, y: 565, size: 11 },
-    vehiclekm: { x: 80, y: 546, size: 11 },
-    buyerName: { x: 286, y: 546, size: 11 },
-    buyerFatherName: { x: 61, y: 527, size: 11 },
-    buyerCurrentAddress: { x: 250, y: 527, size: 11 },
-    saleDate: { x: 105, y: 507, size: 11 },
-    saleTime: { x: 215, y: 507, size: 11 },
-    saleAmount: { x: 305, y: 507, size: 11 },
-    todayDate: { x: 520, y: 507, size: 11 },
-    todayTime: { x: 61, y: 490, size: 11 },
-    sellerName1: { x: 312, y: 470, size: 11 },
-    sellerFatherName1: { x: 56, y: 451, size: 11 },
-    buyerName1: { x: 335, y: 432, size: 11 },
-    buyerFatherName1: { x: 56, y: 412, size: 11 },
-    todayDate1: { x: 445, y: 451, size: 11 },
-    todayTime1: { x: 535, y: 451, size: 11 },
-    buyerName2: { x: 50, y: 372, size: 11 },
-    buyerCurrentAddress2: { x: 230, y: 372, size: 11 },
+    sellerName: { x: 45, y: 632, size: 11 },
+    sellerFatherName: { x: 330, y: 632, size: 11 },
+    sellerCurrentAddress: { x: 54, y: 610, size: 11 },
+    vehicleName: { x: 313, y: 587, size: 11 },
+    vehicleModel: { x: 430, y: 587, size: 11 },
+    vehicleColor: { x: 534, y: 587, size: 11 },
+    registrationNumber: { x: 142, y: 567, size: 11 },
+    chassisNumber: { x: 289, y: 567, size: 11 },
+    engineNumber: { x: 476, y: 567, size: 11 },
+    vehiclekm: { x: 81, y: 548, size: 11 },
+    buyerName: { x: 325, y: 548, size: 11 },
+    buyerFatherName: { x: 55, y: 529, size: 11 },
+    buyerCurrentAddress: { x: 249, y: 529, size: 11 },
+    saleDate: { x: 118, y: 510, size: 11 },
+    saleTime: { x: 217, y: 510, size: 11 },
+    saleAmount: { x: 308, y: 510, size: 11 },
+    todayDate: { x: 176, y: 491, size: 11 },
+    todayTime: { x: 303, y: 491, size: 11 },
+    sellerName1: { x: 26, y: 454, size: 11 },
+    sellerFatherName1: { x: 306, y: 454, size: 11 },
+    buyerName1: { x: 30, y: 414, size: 11 },
+    buyerFatherName1: { x: 331, y: 414, size: 11 },
+    todayDate1: { x: 98, y: 434, size: 11 },
+    todayTime1: { x: 193, y: 434, size: 11 },
+    dealername: { x: 256, y: 376, size: 11 },
+    dealeraddress: { x: 34, y: 358, size: 11 },
     selleraadhar: { x: 403, y: 215, size: 10 },
     sellerpan: { x: 400, y: 195, size: 10 },
-    selleraadharphone: { x: 426, y: 177, size: 10 },
-    buyernames: { x: 400, y: 87, size: 10 },
-    buyerphone: { x: 400, y: 70, size: 10 },
+    selleraadharphone: { x: 420, y: 177, size: 10 },
+    selleraadharphone2: { x: 481, y: 177, size: 10 },
+    witnessname: { x: 400, y: 87, size: 10 },
+    witnessphone: { x: 400, y: 70, size: 10 },
+    returnpersonname: { x: 427, y: 320, size: 10 },
     note: { x: 60, y: 18, size: 10 },
   };
+  const formatIndianAmountInWords = (amount) => {
+    if (isNaN(amount)) return "Zero Rupees";
+
+    const num = parseFloat(amount);
+    const units = [
+      "",
+      "One",
+      "Two",
+      "Three",
+      "Four",
+      "Five",
+      "Six",
+      "Seven",
+      "Eight",
+      "Nine",
+    ];
+    const teens = [
+      "Ten",
+      "Eleven",
+      "Twelve",
+      "Thirteen",
+      "Fourteen",
+      "Fifteen",
+      "Sixteen",
+      "Seventeen",
+      "Eighteen",
+      "Nineteen",
+    ];
+    const tens = [
+      "",
+      "Ten",
+      "Twenty",
+      "Thirty",
+      "Forty",
+      "Fifty",
+      "Sixty",
+      "Seventy",
+      "Eighty",
+      "Ninety",
+    ];
+
+    const convertLessThanThousand = (num) => {
+      if (num === 0) return "";
+      if (num < 10) return units[num];
+      if (num < 20) return teens[num - 10];
+      if (num < 100)
+        return (
+          tens[Math.floor(num / 10)] +
+          (num % 10 !== 0 ? " " + units[num % 10] : "")
+        );
+      return (
+        units[Math.floor(num / 100)] +
+        " Hundred" +
+        (num % 100 !== 0 ? " and " + convertLessThanThousand(num % 100) : "")
+      );
+    };
+
+    const convert = (num) => {
+      if (num === 0) return "Zero Rupees";
+      let result = "";
+      const crore = Math.floor(num / 10000000);
+      if (crore > 0) {
+        result += convertLessThanThousand(crore) + " Crore ";
+        num %= 10000000;
+      }
+      const lakh = Math.floor(num / 100000);
+      if (lakh > 0) {
+        result += convertLessThanThousand(lakh) + " Lakh ";
+        num %= 100000;
+      }
+      const thousand = Math.floor(num / 1000);
+      if (thousand > 0) {
+        result += convertLessThanThousand(thousand) + " Thousand ";
+        num %= 1000;
+      }
+      const remainder = convertLessThanThousand(num);
+      if (remainder) {
+        result += remainder;
+      }
+
+      return result.trim() + " Only";
+    };
+
+    return convert(num);
+  };
+
+  const formatRupee = (val) => {
+    const num = parseFloat(val);
+    return isNaN(num)
+      ? "0.00"
+      : `Rs. ${new Intl.NumberFormat("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(num)}`;
+  };
+
+  const formatKm = (val) => {
+    const num = parseFloat(val);
+    return isNaN(num)
+      ? "0.00"
+      : new Intl.NumberFormat("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(num);
+  };
+
+  const formatAadhar = (val) =>
+    val
+      .replace(/\D/g, "")
+      .match(/.{1,4}/g)
+      ?.join("-") || "";
+
   const downloadHindiPDF = async (letter) => {
     try {
       const templateUrl = "/templates/buyletter.pdf";
@@ -400,6 +516,9 @@ const BuyLetterHistory = () => {
         saleDate: formatDate(letter.saleDate),
         todayDate: formatDate(letter.todayDate),
         todayDate1: formatDate(letter.todayDate),
+        saleAmount: formatRupee(letter.saleAmount),
+        vehiclekm: formatKm(letter.vehiclekm),
+        amountInWords: formatIndianAmountInWords(letter.saleAmount),
       };
 
       for (const [fieldName, position] of Object.entries(fieldPositions)) {
@@ -412,6 +531,22 @@ const BuyLetterHistory = () => {
           });
         }
       }
+
+      // Draw amount in words
+      const saleAmountText = formattedLetter.saleAmount || "";
+      const saleAmountWidth =
+        saleAmountText.length * (fieldPositions.saleAmount.size / 2);
+      const amountInWordsX =
+        fieldPositions.saleAmount.x +
+        saleAmountWidth +
+        3 * (fieldPositions.saleAmount.size / 2);
+
+      pdfDoc.getPages()[0].drawText(formattedLetter.amountInWords, {
+        x: amountInWordsX,
+        y: fieldPositions.saleAmount.y,
+        size: fieldPositions.saleAmount.size,
+        color: rgb(0, 0, 0),
+      });
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -453,6 +588,9 @@ const BuyLetterHistory = () => {
         saleDate: formatDate(letter.saleDate),
         todayDate: formatDate(letter.todayDate),
         todayDate1: formatDate(letter.todayDate),
+        saleAmount: formatRupee(letter.saleAmount),
+        vehiclekm: formatKm(letter.vehiclekm),
+        amountInWords: formatIndianAmountInWords(letter.saleAmount),
       };
 
       for (const [fieldName, position] of Object.entries(
@@ -467,6 +605,22 @@ const BuyLetterHistory = () => {
           });
         }
       }
+
+      // Draw amount in words
+      const saleAmountText = formattedLetter.saleAmount || "";
+      const saleAmountWidth =
+        saleAmountText.length * (englishFieldPositions.saleAmount.size / 2);
+      const amountInWordsX =
+        englishFieldPositions.saleAmount.x +
+        saleAmountWidth +
+        3 * (englishFieldPositions.saleAmount.size / 2);
+
+      pdfDoc.getPages()[0].drawText(formattedLetter.amountInWords, {
+        x: amountInWordsX,
+        y: englishFieldPositions.saleAmount.y,
+        size: englishFieldPositions.saleAmount.size,
+        color: rgb(0, 0, 0),
+      });
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -487,324 +641,363 @@ const BuyLetterHistory = () => {
     setShowLanguageModal(true);
   };
   const drawVehicleInvoice = async (page, pdfDoc, letter) => {
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const logoUrl = logo1;
-    const logoImageBytes = await fetch(logoUrl).then((res) =>
-      res.arrayBuffer()
-    );
-    const logoImage = await pdfDoc.embedPng(logoImageBytes);
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const logoUrl = logo1;
+  const logoImageBytes = await fetch(logoUrl).then((res) =>
+    res.arrayBuffer()
+  );
+  const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
-    function formatDate(dateString) {
-      if (!dateString) return "";
-      const date = new Date(dateString);
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
+  // Header with logo
+  page.drawRectangle({
+    x: 0,
+    y: 780,
+    width: 595,
+    height: 80,
+    color: rgb(0.047, 0.098, 0.196),
+  });
+  
+  page.drawImage(logoImage, {
+    x: 50,
+    y: 800,
+    width: 100,
+    height: 50,
+  });
+  
+  page.drawText("UDAYAM-BR-26-0028550", {
+    x: 50,
+    y: 790,
+    size: 10,
+    color: rgb(1, 1, 1),
+    font: font,
+  });
+  
+  page.drawText(
+    "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+    {
+      x: 50,
+      y: 770,
+      size: 8,
+      color: rgb(0.8, 0.8, 0.8),
+      font: font,
     }
-    page.drawRectangle({
-      x: 0,
-      y: 780,
-      width: 595,
-      height: 80,
-      color: rgb(0.047, 0.098, 0.196),
-    });
-    page.drawImage(logoImage, {
-      x: 50,
-      y: 800,
-      width: 100,
-      height: 50,
-    });
-    page.drawText("UDAYAM-BR-26-0028550", {
-      x: 50,
-      y: 790,
-      size: 10,
-      color: rgb(1, 1, 1),
-      font: font,
-    });
-    page.drawText(
-      "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
-      {
-        x: 50,
-        y: 770,
-        size: 8,
-        color: rgb(0.8, 0.8, 0.8),
-        font: font,
-      }
-    );
-    page.drawRectangle({
-      x: 0,
-      y: 750,
-      width: 595,
-      height: 30,
-      color: rgb(0.9, 0.9, 0.9),
-    });
+  );
 
-    page.drawText("VEHICLE SALE INVOICE", {
-      x: 200,
-      y: 758,
-      size: 18,
-      color: rgb(0.047, 0.098, 0.196),
-      font: boldFont,
-    });
-    const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(
-      Math.random() * 10000
-    )
-      .toString()
-      .padStart(4, "0")}`;
+  // Invoice title
+  page.drawRectangle({
+    x: 0,
+    y: 750,
+    width: 595,
+    height: 30,
+    color: rgb(0.9, 0.9, 0.9),
+  });
 
-    page.drawText(`Invoice Number: ${invoiceNumber}`, {
-      x: 50,
-      y: 720,
+  page.drawText("VEHICLE SALE INVOICE", {
+    x: 200,
+    y: 758,
+    size: 18,
+    color: rgb(0.047, 0.098, 0.196),
+    font: boldFont,
+  });
+
+  // Invoice info
+  const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(
+    Math.random() * 10000
+  )
+    .toString()
+    .padStart(4, "0")}`;
+
+  page.drawText(`Invoice Number: ${invoiceNumber}`, {
+    x: 50,
+    y: 720,
+    size: 10,
+    color: rgb(0.2, 0.2, 0.2),
+    font: font,
+  });
+
+  page.drawText(`Date: ${new Date().toLocaleDateString("en-IN")}`, {
+    x: 400,
+    y: 720,
+    size: 10,
+    color: rgb(0.2, 0.2, 0.2),
+    font: font,
+  });
+
+  // Divider line
+  page.drawLine({
+    start: { x: 50, y: 710 },
+    end: { x: 545, y: 710 },
+    thickness: 1,
+    color: rgb(0.8, 0.8, 0.8),
+  });
+
+  // Customer Information
+  page.drawText("CUSTOMER DETAILS", {
+    x: 50,
+    y: 690,
+    size: 12,
+    color: rgb(0.047, 0.098, 0.196),
+    font: boldFont,
+  });
+
+  page.drawText(`Name: ${letter.sellerName || "N/A"}`, {
+    x: 60,
+    y: 665,
+    size: 10,
+    color: rgb(0.2, 0.2, 0.2),
+    font: font,
+  });
+
+  // Handle multi-line address
+  const address = letter.sellerCurrentAddress || "N/A";
+  const maxCharsPerLine = 38;
+  const lineHeight = 12;
+  const label = "Address: ";
+  const labelWidth = 45;
+
+  const addressLines = [];
+  for (let i = 0; i < address.length; i += maxCharsPerLine) {
+    addressLines.push(address.substring(i, i + maxCharsPerLine));
+  }
+
+  addressLines.forEach((line, index) => {
+    const text = index === 0 ? `${label}${line}` : line;
+    const xPos = index === 0 ? 60 : 60 + labelWidth;
+
+    page.drawText(text, {
+      x: xPos,
+      y: 650 - index * lineHeight,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
+  });
 
-    page.drawText(`Date: ${new Date().toLocaleDateString("en-IN")}`, {
-      x: 400,
-      y: 720,
-      size: 10,
+  page.drawText(`Phone: ${letter.selleraadharphone || "N/A"}`, {
+    x: 350,
+    y: 665,
+    size: 10,
+    color: rgb(0.2, 0.2, 0.2),
+    font: font,
+  });
+
+  page.drawText(`Aadhar: ${formatAadhar(letter.selleraadhar) || "N/A"}`, {
+    x: 350,
+    y: 650,
+    size: 10,
+    color: rgb(0.2, 0.2, 0.2),
+    font: font,
+  });
+
+  // Vehicle Information
+  page.drawText("VEHICLE DETAILS", {
+    x: 50,
+    y: 620,
+    size: 12,
+    color: rgb(0.047, 0.098, 0.196),
+    font: boldFont,
+  });
+
+  // Vehicle table header
+  page.drawRectangle({
+    x: 50,
+    y: 590,
+    width: 495,
+    height: 20,
+    color: rgb(0.9, 0.9, 0.9),
+  });
+
+  const vehicleHeaders = [
+    "Make",
+    "Model",
+    "Color",
+    "Reg No",
+    "Chassis",
+    "Engine",
+    "KM",
+  ];
+  const vehicleHeaderPositions = [60, 120, 180, 240, 300, 380, 460];
+
+  vehicleHeaders.forEach((header, index) => {
+    page.drawText(header, {
+      x: vehicleHeaderPositions[index],
+      y: 596,
+      size: 9,
+      color: rgb(0.2, 0.2, 0.2),
+      font: boldFont,
+    });
+  });
+
+  // Vehicle data
+  const vehicleValues = [
+    letter.vehicleName || "N/A",
+    letter.vehicleModel || "N/A",
+    letter.vehicleColor || "N/A",
+    letter.registrationNumber || "N/A",
+    letter.chassisNumber || "N/A",
+    letter.engineNumber || "N/A",
+    letter.vehiclekm ? `${formatKm(letter.vehiclekm)} km` : "N/A",
+  ];
+
+  vehicleValues.forEach((value, index) => {
+    const truncatedValue =
+      value.length > 12 ? value.substring(0, 12) + "..." : value;
+    page.drawText(truncatedValue, {
+      x: vehicleHeaderPositions[index],
+      y: 575,
+      size: 8,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
-    page.drawLine({
-      start: { x: 50, y: 710 },
-      end: { x: 545, y: 710 },
-      thickness: 1,
-      color: rgb(0.8, 0.8, 0.8),
-    });
-    page.drawText("CUSTOMER DETAILS", {
-      x: 50,
-      y: 690,
-      size: 12,
-      color: rgb(0.047, 0.098, 0.196),
-      font: boldFont,
-    });
+  });
 
-    page.drawText(`Name: ${letter.sellerName || "N/A"}`, {
+  // Sale Information
+  page.drawText("SALE INFORMATION", {
+    x: 50,
+    y: 550,
+    size: 12,
+    color: rgb(0.047, 0.098, 0.196),
+    font: boldFont,
+  });
+
+  page.drawText(`Sale Date: ${formatDate(letter.saleDate)}`, {
+    x: 60,
+    y: 530,
+    size: 10,
+    color: rgb(0.2, 0.2, 0.2),
+    font: font,
+  });
+
+  page.drawText(`Sale Amount: ${formatRupee(letter.saleAmount)}`, {
+    x: 200,
+    y: 530,
+    size: 10,
+    color: rgb(0.2, 0.2, 0.2),
+    font: font,
+  });
+
+  page.drawText(`Amount in Words: ${formatIndianAmountInWords(letter.saleAmount)}`, {
+    x: 60,
+    y: 515,
+    size: 10,
+    color: rgb(0.2, 0.2, 0.2),
+    font: font,
+  });
+
+  page.drawText(`Payment: CASH`, {
+    x: 350,
+    y: 530,
+    size: 10,
+    color: rgb(0.2, 0.2, 0.2),
+    font: font,
+  });
+
+  page.drawText(`Condition: RUNNING`, {
+    x: 60,
+    y: 500,
+    size: 10,
+    color: rgb(0.2, 0.2, 0.2),
+    font: font,
+  });
+
+  // Terms and Conditions
+  page.drawText("TERMS & CONDITIONS", {
+    x: 50,
+    y: 470,
+    size: 12,
+    color: rgb(0.047, 0.098, 0.196),
+    font: boldFont,
+  });
+
+  const terms = [
+    "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
+    "2. A 3-month guarantee is provided on the entire engine",
+    "3. Engine warranty extends from 6 months to 1 year for performance defects",
+    "4. Clutch plate is not covered under any guarantee or warranty",
+    "5. Monthly servicing during the 3-month guarantee is mandatory",
+    "6. First 3 services are free, with minimal charges for oil and parts (excluding engine)",
+    "7. Buyer must submit photocopies of the sell letter and transfer challan",
+    "8. Defects must be reported within 24 hours of purchase to avoid repair charges",
+    "9. Delay in transfer beyond 15 days incurs Rs. 16/day penalty",
+    "10. Customer signature confirms acceptance of all terms",
+  ];
+
+  terms.forEach((term, index) => {
+    page.drawText(term, {
       x: 60,
-      y: 665,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
+      y: 450 - index * 15,
+      size: 8,
+      color: rgb(0.3, 0.3, 0.3),
       font: font,
     });
+  });
 
-    page.drawText(`Address: ${letter.sellerCurrentAddress || "N/A"}`, {
-      x: 60,
-      y: 650,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
+  // Signatures
+  page.drawLine({
+    start: { x: 50, y: 275 },
+    end: { x: 545, y: 275 },
+    thickness: 0.5,
+    color: rgb(0.8, 0.8, 0.8),
+  });
+
+  page.drawText("Seller Signature", {
+    x: 100,
+    y: 255,
+    size: 10,
+    color: rgb(0.4, 0.4, 0.4),
+    font: font,
+  });
+
+  page.drawLine({
+    start: { x: 100, y: 250 },
+    end: { x: 250, y: 250 },
+    thickness: 1,
+    color: rgb(0.6, 0.6, 0.6),
+  });
+
+  page.drawText("Authorized Signatory", {
+    x: 350,
+    y: 255,
+    size: 10,
+    color: rgb(0.4, 0.4, 0.4),
+    font: font,
+  });
+
+  page.drawLine({
+    start: { x: 350, y: 250 },
+    end: { x: 500, y: 250 },
+    thickness: 1,
+    color: rgb(0.6, 0.6, 0.6),
+  });
+
+  // Footer
+  page.drawLine({
+    start: { x: 50, y: 100 },
+    end: { x: 545, y: 100 },
+    thickness: 0.5,
+    color: rgb(0.8, 0.8, 0.8),
+  });
+
+  page.drawText("Thank you for your business!", {
+    x: 220,
+    y: 80,
+    size: 12,
+    color: rgb(0.047, 0.098, 0.196),
+    font: boldFont,
+  });
+
+  page.drawText(
+    "OK MOTORS | 123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210",
+    {
+      x: 180,
+      y: 60,
+      size: 8,
+      color: rgb(0.5, 0.5, 0.5),
       font: font,
-    });
-
-    page.drawText(`Phone: ${letter.selleraadharphone || "N/A"}`, {
-      x: 350,
-      y: 665,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
-
-    page.drawText(`Aadhar: ${letter.selleraadhar || "N/A"}`, {
-      x: 350,
-      y: 650,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
-    page.drawText("VEHICLE DETAILS", {
-      x: 50,
-      y: 620,
-      size: 12,
-      color: rgb(0.047, 0.098, 0.196),
-      font: boldFont,
-    });
-    page.drawRectangle({
-      x: 50,
-      y: 590,
-      width: 495,
-      height: 20,
-      color: rgb(0.9, 0.9, 0.9),
-    });
-
-    const vehicleHeaders = [
-      "Make",
-      "Model",
-      "Color",
-      "Reg No",
-      "Chassis",
-      "Engine",
-      "KM",
-    ];
-    const vehicleHeaderPositions = [60, 120, 180, 240, 300, 380, 460];
-
-    vehicleHeaders.forEach((header, index) => {
-      page.drawText(header, {
-        x: vehicleHeaderPositions[index],
-        y: 596,
-        size: 9,
-        color: rgb(0.2, 0.2, 0.2),
-        font: boldFont,
-      });
-    });
-    const vehicleValues = [
-      letter.vehicleName || "N/A",
-      letter.vehicleModel || "N/A",
-      letter.vehicleColor || "N/A",
-      letter.registrationNumber || "N/A",
-      letter.chassisNumber || "N/A",
-      letter.engineNumber || "N/A",
-      letter.vehiclekm ? `${letter.vehiclekm} km` : "N/A",
-    ];
-
-    vehicleValues.forEach((value, index) => {
-      const truncatedValue =
-        value.length > 12 ? value.substring(0, 12) + "..." : value;
-      page.drawText(truncatedValue, {
-        x: vehicleHeaderPositions[index],
-        y: 575,
-        size: 8,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      });
-    });
-
-    page.drawText("SALE INFORMATION", {
-      x: 50,
-      y: 550,
-      size: 12,
-      color: rgb(0.047, 0.098, 0.196),
-      font: boldFont,
-    });
-
-    page.drawText(`Sale Date: ${formatDate(letter.saleDate)}`, {
-      x: 60,
-      y: 530,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
-
-    page.drawText(`Sale Amount: Rs. ${letter.saleAmount || "0"}`, {
-      x: 200,
-      y: 530,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
-
-    page.drawText(`Payment: CASH`, {
-      x: 350,
-      y: 530,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
-
-    page.drawText(`Condition: RUNNING`, {
-      x: 60,
-      y: 510,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
-
-    page.drawText("TERMS & CONDITIONS", {
-      x: 50,
-      y: 470,
-      size: 12,
-      color: rgb(0.047, 0.098, 0.196),
-      font: boldFont,
-    });
-
-    const terms = [
-      "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
-      "2. A 3-month guarantee is provided on the entire engine",
-      "3. Engine warranty extends from 6 months to 1 year for performance defects",
-      "4. Clutch plate is not covered under any guarantee or warranty",
-      "5. Monthly servicing during the 3-month guarantee is mandatory",
-      "6. First 3 services are free, with minimal charges for oil and parts (excluding engine)",
-      "7. Buyer must submit photocopies of the sell letter and transfer challan",
-      "8. Defects must be reported within 24 hours of purchase to avoid repair charges",
-      "9. Delay in transfer beyond 15 days incurs Rs. 7.5/day penalty",
-      "10. Customer signature confirms acceptance of all terms",
-    ];
-
-    terms.forEach((term, index) => {
-      page.drawText(term, {
-        x: 60,
-        y: 450 - index * 15,
-        size: 8,
-        color: rgb(0.3, 0.3, 0.3),
-        font: font,
-      });
-    });
-
-    page.drawLine({
-      start: { x: 50, y: 295 },
-      end: { x: 545, y: 295 },
-      thickness: 0.5,
-      color: rgb(0.8, 0.8, 0.8),
-    });
-
-    page.drawText("Seller Signature", {
-      x: 100,
-      y: 275,
-      size: 10,
-      color: rgb(0.4, 0.4, 0.4),
-      font: font,
-    });
-
-    page.drawLine({
-      start: { x: 100, y: 270 },
-      end: { x: 250, y: 270 },
-      thickness: 1,
-      color: rgb(0.6, 0.6, 0.6),
-    });
-
-    page.drawText("Authorized Signatory", {
-      x: 350,
-      y: 275,
-      size: 10,
-      color: rgb(0.4, 0.4, 0.4),
-      font: font,
-    });
-
-    page.drawLine({
-      start: { x: 350, y: 270 },
-      end: { x: 500, y: 270 },
-      thickness: 1,
-      color: rgb(0.6, 0.6, 0.6),
-    });
-
-    page.drawLine({
-      start: { x: 50, y: 100 },
-      end: { x: 545, y: 100 },
-      thickness: 0.5,
-      color: rgb(0.8, 0.8, 0.8),
-    });
-
-    page.drawText("Thank you for your business!", {
-      x: 220,
-      y: 80,
-      size: 12,
-      color: rgb(0.047, 0.098, 0.196),
-      font: boldFont,
-    });
-
-    page.drawText(
-      "OK MOTORS | 123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210",
-      {
-        x: 180,
-        y: 60,
-        size: 8,
-        color: rgb(0.5, 0.5, 0.5),
-        font: font,
-      }
-    );
-  };
+    }
+  );
+};
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {

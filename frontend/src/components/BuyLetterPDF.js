@@ -72,16 +72,111 @@ const BuyLetterForm = () => {
     sellerCurrentAddress1: "",
     buyerName1: "OK MOTORS",
     buyerFatherName1: "",
-    buyerName2: "OK MOTORS",
-    buyerCurrentAddress2: "PATNA BIHAR",
+    dealername: "",
+    dealeraddress: "",
     documentsVerified1: true,
     selleraadhar: "",
     sellerpan: "",
     selleraadharphone: "",
-    buyernames: "OK MOTORS",
-    buyerphone: "9876543210",
+    selleraadharphone2: "",
+    witnessname: "",
+    witnessphone: "",
+    returnpersonname: "",
     note: "",
   });
+  const formatIndianAmountInWords = (amount) => {
+    if (isNaN(amount)) return "Zero Rupees";
+
+    const num = parseFloat(amount) / 100;
+    const units = [
+      "",
+      "One",
+      "Two",
+      "Three",
+      "Four",
+      "Five",
+      "Six",
+      "Seven",
+      "Eight",
+      "Nine",
+    ];
+    const teens = [
+      "Ten",
+      "Eleven",
+      "Twelve",
+      "Thirteen",
+      "Fourteen",
+      "Fifteen",
+      "Sixteen",
+      "Seventeen",
+      "Eighteen",
+      "Nineteen",
+    ];
+    const tens = [
+      "",
+      "Ten",
+      "Twenty",
+      "Thirty",
+      "Forty",
+      "Fifty",
+      "Sixty",
+      "Seventy",
+      "Eighty",
+      "Ninety",
+    ];
+
+    const convertLessThanThousand = (num) => {
+      if (num === 0) return "";
+      if (num < 10) return units[num];
+      if (num < 20) return teens[num - 10];
+      if (num < 100)
+        return (
+          tens[Math.floor(num / 10)] +
+          (num % 10 !== 0 ? " " + units[num % 10] : "")
+        );
+      return (
+        units[Math.floor(num / 100)] +
+        " Hundred" +
+        (num % 100 !== 0 ? " and " + convertLessThanThousand(num % 100) : "")
+      );
+    };
+
+    const convert = (num) => {
+      if (num === 0) return "Zero Rupees";
+      let result = "";
+
+      // Handle Crores
+      const crore = Math.floor(num / 10000000);
+      if (crore > 0) {
+        result += convertLessThanThousand(crore) + " Crore ";
+        num %= 10000000;
+      }
+
+      // Handle Lakhs
+      const lakh = Math.floor(num / 100000);
+      if (lakh > 0) {
+        result += convertLessThanThousand(lakh) + " Lakh ";
+        num %= 100000;
+      }
+
+      // Handle Thousands
+      const thousand = Math.floor(num / 1000);
+      if (thousand > 0) {
+        result += convertLessThanThousand(thousand) + " Thousand ";
+        num %= 1000;
+      }
+
+      // Handle Hundreds and below
+      const remainder = convertLessThanThousand(num);
+      if (remainder) {
+        result += remainder;
+      }
+
+      return result.trim() + " Only";
+    };
+
+    return convert(num);
+  };
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -92,18 +187,17 @@ const BuyLetterForm = () => {
   };
   const formatTime = (timeString) => {
     if (!timeString) return "";
-    // If the time is already in HH:mm format (from the time input), just return it
-    if (/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeString)) {
-      return timeString;
-    }
-    // Otherwise, try to parse it as a Date object
-    const time = new Date(`1970-01-01T${timeString}`);
-    return time.toLocaleTimeString("en-IN", {
-      hour12: false,
+    const [hour, minute] = timeString.split(":").map(Number);
+    const date = new Date();
+    date.setHours(hour);
+    date.setMinutes(minute);
+    return date.toLocaleTimeString("en-IN", {
       hour: "2-digit",
       minute: "2-digit",
+      hour12: true,
     });
   };
+
   const saveBuyLetter = async () => {
     try {
       setIsSaving(true);
@@ -183,7 +277,6 @@ const BuyLetterForm = () => {
 
       if (name === "buyerName") {
         newData.buyerName1 = value;
-        newData.buyerName2 = value;
       }
       if (name === "sellerName") {
         newData.sellerName1 = value;
@@ -281,37 +374,39 @@ const BuyLetterForm = () => {
     navigate(actualPath);
   };
   const fieldPositions = {
-    sellerName: { x: 45, y: 630, size: 11 },
-    sellerFatherName: { x: 330, y: 630, size: 11 },
-    sellerCurrentAddress: { x: 54, y: 608, size: 11 },
-    vehicleName: { x: 313, y: 586, size: 11 },
-    vehicleModel: { x: 430, y: 586, size: 11 },
-    vehicleColor: { x: 527, y: 586, size: 11 },
-    registrationNumber: { x: 140, y: 565, size: 11 },
-    chassisNumber: { x: 285, y: 565, size: 11 },
-    engineNumber: { x: 465, y: 565, size: 11 },
-    vehiclekm: { x: 80, y: 546, size: 11 },
-    buyerName: { x: 286, y: 546, size: 11 },
-    buyerFatherName: { x: 61, y: 527, size: 11 },
-    buyerCurrentAddress: { x: 250, y: 527, size: 11 },
-    saleDate: { x: 105, y: 507, size: 11 },
-    saleTime: { x: 215, y: 507, size: 11 },
-    saleAmount: { x: 305, y: 507, size: 11 },
-    todayDate: { x: 520, y: 507, size: 11 },
-    todayTime: { x: 61, y: 490, size: 11 },
-    sellerName1: { x: 312, y: 470, size: 11 },
-    sellerFatherName1: { x: 56, y: 451, size: 11 },
-    buyerName1: { x: 335, y: 432, size: 11 },
-    buyerFatherName1: { x: 56, y: 412, size: 11 },
-    todayDate1: { x: 445, y: 451, size: 11 },
-    todayTime1: { x: 535, y: 451, size: 11 },
-    buyerName2: { x: 50, y: 372, size: 11 },
-    buyerCurrentAddress2: { x: 230, y: 372, size: 11 },
+    sellerName: { x: 45, y: 632, size: 11 },
+    sellerFatherName: { x: 330, y: 632, size: 11 },
+    sellerCurrentAddress: { x: 54, y: 610, size: 11 },
+    vehicleName: { x: 313, y: 587, size: 11 },
+    vehicleModel: { x: 430, y: 587, size: 11 },
+    vehicleColor: { x: 534, y: 587, size: 11 },
+    registrationNumber: { x: 142, y: 567, size: 11 },
+    chassisNumber: { x: 289, y: 567, size: 11 },
+    engineNumber: { x: 476, y: 567, size: 11 },
+    vehiclekm: { x: 81, y: 548, size: 11 },
+    buyerName: { x: 325, y: 548, size: 11 },
+    buyerFatherName: { x: 55, y: 529, size: 11 },
+    buyerCurrentAddress: { x: 249, y: 529, size: 11 },
+    saleDate: { x: 118, y: 510, size: 11 },
+    saleTime: { x: 217, y: 510, size: 11 },
+    saleAmount: { x: 308, y: 510, size: 11 },
+    todayDate: { x: 176, y: 491, size: 11 },
+    todayTime: { x: 303, y: 491, size: 11 },
+    sellerName1: { x: 26, y: 454, size: 11 },
+    sellerFatherName1: { x: 306, y: 454, size: 11 },
+    buyerName1: { x: 30, y: 414, size: 11 },
+    buyerFatherName1: { x: 331, y: 414, size: 11 },
+    todayDate1: { x: 98, y: 434, size: 11 },
+    todayTime1: { x: 193, y: 434, size: 11 },
+    dealername: { x: 256, y: 376, size: 11 },
+    dealeraddress: { x: 34, y: 358, size: 11 },
     selleraadhar: { x: 403, y: 215, size: 10 },
     sellerpan: { x: 400, y: 195, size: 10 },
-    selleraadharphone: { x: 426, y: 177, size: 10 },
-    buyernames: { x: 400, y: 87, size: 10 },
-    buyerphone: { x: 400, y: 70, size: 10 },
+    selleraadharphone: { x: 420, y: 177, size: 10 },
+    selleraadharphone2: { x: 481, y: 177, size: 10 },
+    witnessname: { x: 400, y: 87, size: 10 },
+    witnessphone: { x: 400, y: 70, size: 10 },
+    returnpersonname: { x: 427, y: 320, size: 10 },
     note: { x: 60, y: 18, size: 10 },
   };
 
@@ -354,8 +449,15 @@ const BuyLetterForm = () => {
 
       const formattedData = {
         ...formData,
+        saleDate: formatDate(formData.saleDate),
+        todayDate: formatDate(formData.todayDate),
         todayDate1: formatDate(formData.todayDate),
+        todayTime: formatTime(formData.todayTime),
         todayTime1: formatTime(formData.todayTime),
+        saleTime: formatTime(formData.saleTime),
+        saleAmount: formatRupee(formData.saleAmount),
+        vehiclekm: formatKm(formData.vehiclekm),
+        amountInWords: formatIndianAmountInWords(formData.saleAmount), // Amount in words
       };
 
       for (const [fieldName, position] of Object.entries(fieldPositions)) {
@@ -368,7 +470,19 @@ const BuyLetterForm = () => {
           });
         }
       }
-
+      const saleAmountText = formattedData.saleAmount || "";
+      const saleAmountWidth =
+        saleAmountText.length * (fieldPositions.saleAmount.size / 2); // Approximate width
+      const amountInWordsX =
+        fieldPositions.saleAmount.x +
+        saleAmountWidth +
+        3 * (fieldPositions.saleAmount.size / 2);
+      pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
+        x: amountInWordsX,
+        y: fieldPositions.saleAmount.y,
+        size: fieldPositions.saleAmount.size,
+        color: rgb(0, 0, 0),
+      });
       const pdfBytes = await pdfDoc.save();
       saveAs(
         new Blob([pdfBytes], { type: "application/pdf" }),
@@ -378,6 +492,29 @@ const BuyLetterForm = () => {
       console.error("Error generating PDF:", error);
       alert("Failed to generate PDF. Please try again.");
     }
+  };
+  const formatKm = (val) => {
+    const num = parseFloat(val.toString().replace(/,/g, ""));
+    return isNaN(num)
+      ? "0.00"
+      : new Intl.NumberFormat("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(num);
+  };
+  const formatAadhar = (val) =>
+    val
+      .replace(/\D/g, "")
+      .match(/.{1,4}/g)
+      ?.join("-") || "";
+  const formatRupee = (val) => {
+    const num = parseFloat(val.toString().replace(/,/g, ""));
+    return isNaN(num)
+      ? "0.00"
+      : `Rs. ${new Intl.NumberFormat("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(num / 100)}`;
   };
 
   const fillAndDownloadEnglishPdf = async () => {
@@ -395,41 +532,46 @@ const BuyLetterForm = () => {
         sellerName: { x: 33, y: 629, size: 11 },
         sellerFatherName: { x: 330, y: 629, size: 11 },
         sellerCurrentAddress: { x: 85, y: 605, size: 11 },
-        vehicleName: { x: 421, y: 585, size: 11 },
-        vehicleModel: { x: 527, y: 585, size: 11 },
-        vehicleColor: { x: 63, y: 565, size: 11 },
-        registrationNumber: { x: 260, y: 565, size: 11 },
-        chassisNumber: { x: 454, y: 565, size: 11 },
-        engineNumber: { x: 90, y: 546, size: 11 },
-        vehiclekm: { x: 320, y: 546, size: 11 },
-        buyerName: { x: 40, y: 527, size: 11 },
-        buyerFatherName: { x: 352, y: 527, size: 11 },
-        buyerCurrentAddress: { x: 26, y: 507, size: 11 },
-        saleDate: { x: 384, y: 507, size: 11 },
-        saleTime: { x: 500, y: 507, size: 11 },
-        saleAmount: { x: 120, y: 490, size: 11 },
+        vehicleName: { x: 421, y: 583, size: 11 },
+        vehicleModel: { x: 527, y: 583, size: 11 },
+        vehicleColor: { x: 63, y: 564, size: 11 },
+        registrationNumber: { x: 260, y: 564, size: 11 },
+        chassisNumber: { x: 458, y: 564, size: 11 },
+        engineNumber: { x: 90, y: 545, size: 11 },
+        vehiclekm: { x: 320, y: 545, size: 11 },
+        buyerName: { x: 50, y: 526, size: 11 },
+        buyerFatherName: { x: 375, y: 526, size: 11 },
+        buyerCurrentAddress: { x: 89, y: 507, size: 11 },
+        saleDate: { x: 483, y: 507, size: 11 },
+        saleTime: { x: 25, y: 490, size: 11 },
+        saleAmount: { x: 190, y: 490, size: 11 },
         todayDate: { x: 132, y: 470, size: 11 },
-        todayTime: { x: 269, y: 470, size: 11 },
-        sellerName1: { x: 45, y: 436, size: 11 },
-        sellerFatherName1: { x: 336, y: 436, size: 11 },
+        todayTime: { x: 273, y: 470, size: 11 },
+        sellerName1: { x: 80, y: 437, size: 11 },
+        sellerFatherName1: { x: 345, y: 437, size: 11 },
         buyerName1: { x: 26, y: 401, size: 11 },
         buyerFatherName1: { x: 380, y: 401, size: 11 },
-        todayDate1: { x: 192, y: 419, size: 11 },
-        todayTime1: { x: 350, y: 419, size: 11 },
-        buyerName2: { x: 130, y: 354, size: 11 },
-        buyerCurrentAddress2: { x: 377, y: 354, size: 11 },
-        selleraadhar: { x: 403, y: 216, size: 10 },
-        sellerpan: { x: 404, y: 196, size: 10 },
-        selleraadharphone: { x: 426, y: 177, size: 10 },
-        buyernames: { x: 400, y: 87, size: 10 },
-        buyerphone: { x: 400, y: 71, size: 10 },
+        todayDate1: { x: 175, y: 419, size: 11 },
+        todayTime1: { x: 305, y: 419, size: 11 },
+        dealername: { x: 132, y: 348, size: 11 },
+        dealeraddress: { x: 377, y: 348, size: 11 },
+        selleraadhar: { x: 403, y: 220, size: 10 },
+        sellerpan: { x: 404, y: 204, size: 10 },
+        selleraadharphone: { x: 426, y: 188, size: 10 },
+        selleraadharphone2: { x: 490, y: 188, size: 10 },
+        witnessname: { x: 400, y: 87, size: 10 },
+        witnessphone: { x: 400, y: 71, size: 10 },
         note: { x: 60, y: 18, size: 10 },
+        returnpersonname: { x: 330, y: 297, size: 10 },
       };
 
       const formattedData = {
         ...formData,
         todayDate1: formatDate(formData.todayDate),
         todayTime1: formatTime(formData.todayTime),
+        saleAmount: formatRupee(formData.saleAmount),
+        vehiclekm: formatKm(formData.vehiclekm),
+        amountInWords: formatIndianAmountInWords(formData.saleAmount), // Amount in words
       };
 
       for (const [fieldName, position] of Object.entries(
@@ -444,6 +586,20 @@ const BuyLetterForm = () => {
           });
         }
       }
+      const saleAmountText = formattedData.saleAmount || "";
+      const saleAmountWidth =
+        saleAmountText.length * (englishFieldPositions.saleAmount.size / 2);
+      const amountInWordsX =
+        englishFieldPositions.saleAmount.x +
+        saleAmountWidth +
+        3 * (englishFieldPositions.saleAmount.size / 2);
+
+      pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
+        x: amountInWordsX,
+        y: englishFieldPositions.saleAmount.y,
+        size: englishFieldPositions.saleAmount.size,
+        color: rgb(0, 0, 0),
+      });
 
       const pdfBytes = await pdfDoc.save();
       saveAs(
@@ -487,17 +643,17 @@ const BuyLetterForm = () => {
 
     // Draw dealership header
     page.drawImage(logoImage, {
-      x: 50,
-      y: 800, // Adjust position as needed
-      width: 100, // Adjust width as needed
-      height: 50, // Adjust height as needed
+      x: 440,
+      y: 744, // Adjust position as needed
+      width: 160, // Adjust width as needed
+      height: 130, // Adjust height as needed
     });
 
     // Draw tagline
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 50,
-      y: 790,
-      size: 10,
+      y: 805,
+      size: 20,
       color: rgb(1, 1, 1),
       font: font,
     });
@@ -583,14 +739,37 @@ const BuyLetterForm = () => {
       font: font,
     });
 
-    page.drawText(`Address: ${formData.sellerCurrentAddress || "N/A"}`, {
+    page.drawText(`Name: ${formData.sellerName || "N/A"}`, {
       x: 60,
-      y: 650,
+      y: 665,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
 
+    const address = formData.sellerCurrentAddress || "N/A";
+    const maxCharsPerLine = 38;
+    const lineHeight = 12;
+    const label = "Address: ";
+    const labelWidth = 45;
+
+    const addressLines = [];
+    for (let i = 0; i < address.length; i += maxCharsPerLine) {
+      addressLines.push(address.substring(i, i + maxCharsPerLine));
+    }
+
+    addressLines.forEach((line, index) => {
+      const text = index === 0 ? `${label}${line}` : line;
+      const xPos = index === 0 ? 60 : 60 + labelWidth;
+
+      page.drawText(text, {
+        x: xPos,
+        y: 650 - index * lineHeight,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+    });
     page.drawText(`Phone: ${formData.selleraadharphone || "N/A"}`, {
       x: 350,
       y: 665,
@@ -599,7 +778,7 @@ const BuyLetterForm = () => {
       font: font,
     });
 
-    page.drawText(`Aadhar: ${formData.selleraadhar || "N/A"}`, {
+    page.drawText(`Aadhar: ${formatAadhar(formData.selleraadhar) || "N/A"}`, {
       x: 350,
       y: 650,
       size: 10,
@@ -654,7 +833,7 @@ const BuyLetterForm = () => {
       formData.registrationNumber || "N/A",
       formData.chassisNumber || "N/A",
       formData.engineNumber || "N/A",
-      formData.vehiclekm ? `${formData.vehiclekm} km` : "N/A",
+      formData.vehiclekm ? `${formatKm(formData.vehiclekm)} km` : "N/A",
     ];
 
     vehicleValues.forEach((value, index) => {
@@ -697,13 +876,24 @@ const BuyLetterForm = () => {
       font: font,
     });
 
-    page.drawText(`Sale Amount: Rs. ${formData.saleAmount || "0"}`, {
+    page.drawText(`Sale Amount: ${formatRupee(formData.saleAmount)}`, {
       x: 200,
       y: 530,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
+
+    page.drawText(
+      `Amount in Words: ${formatIndianAmountInWords(formData.saleAmount)}`,
+      {
+        x: 60,
+        y: 515,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      }
+    );
 
     page.drawText(
       `Payment: ${
@@ -724,7 +914,7 @@ const BuyLetterForm = () => {
       }`,
       {
         x: 60,
-        y: 510,
+        y: 500,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
@@ -734,7 +924,7 @@ const BuyLetterForm = () => {
     // Terms and Conditions section
     page.drawText("TERMS & CONDITIONS", {
       x: 50,
-      y: 470,
+      y: 450,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -749,15 +939,15 @@ const BuyLetterForm = () => {
       "6. First 3 services are free, with minimal charges for oil and parts (excluding engine)",
       "7. Buyer must submit photocopies of the sell letter and transfer challan",
       "8. Defects must be reported within 24 hours of purchase to avoid repair charges",
-      "9. Delay in transfer beyond 15 days incurs Rs. 7.5/day penalty",
+      "9. Delay in transfer beyond 15 days incurs Rs. 16/day penalty",
       "10. Customer signature confirms acceptance of all terms",
     ];
 
     terms.forEach((term, index) => {
       page.drawText(term, {
         x: 60,
-        y: 450 - index * 15,
-        size: 8,
+        y: 430 - index * 15,
+        size: 10,
         color: rgb(0.3, 0.3, 0.3),
         font: font,
       });
@@ -765,8 +955,8 @@ const BuyLetterForm = () => {
 
     // Signatures section
     page.drawLine({
-      start: { x: 50, y: 295 },
-      end: { x: 545, y: 295 },
+      start: { x: 50, y: 275 },
+      end: { x: 545, y: 275 },
       thickness: 0.5,
       color: rgb(0.8, 0.8, 0.8),
     });
@@ -774,15 +964,15 @@ const BuyLetterForm = () => {
     // Seller Signature
     page.drawText("Seller Signature", {
       x: 100,
-      y: 275,
+      y: 255,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 100, y: 270 },
-      end: { x: 250, y: 270 },
+      start: { x: 100, y: 250 },
+      end: { x: 250, y: 250 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
@@ -790,15 +980,15 @@ const BuyLetterForm = () => {
     // Buyer Signature (OK Motors)
     page.drawText("Authorized Signatory", {
       x: 350,
-      y: 275,
+      y: 255,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 350, y: 270 },
-      end: { x: 500, y: 270 },
+      start: { x: 350, y: 250 },
+      end: { x: 500, y: 250 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
@@ -813,14 +1003,14 @@ const BuyLetterForm = () => {
 
     page.drawText("Thank you for your business!", {
       x: 220,
-      y: 80,
+      y: 60,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
     });
 
     page.drawText(
-      "OK MOTORS | 123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210",
+      "OK MOTORS | Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014",
       {
         x: 180,
         y: 60,
@@ -830,8 +1020,6 @@ const BuyLetterForm = () => {
       }
     );
   };
-
-  
 
   return (
     <div style={styles.container}>
@@ -977,12 +1165,21 @@ const BuyLetterForm = () => {
                     Seller Aadhar Number || विक्रेता का आधार नंबर
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="selleraadhar"
                     value={formData.selleraadhar}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      let value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 12);
+                      let formatted = value.match(/.{1,4}/g)?.join("-") || "";
+                      setFormData((prev) => ({
+                        ...prev,
+                        selleraadhar: formatted,
+                      }));
+                    }}
                     style={styles.formInput}
-                    maxLength={12}
+                    placeholder="1234-5678-9012"
                   />
                 </div>
                 <div style={styles.formField}>
@@ -997,7 +1194,7 @@ const BuyLetterForm = () => {
                     onChange={handleChange}
                     onInput={handleInput}
                     style={styles.formInput}
-                    maxLength={11}
+                    maxLength={10}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1007,9 +1204,23 @@ const BuyLetterForm = () => {
                     फोन
                   </label>
                   <input
-                    type="number"
+                    type="type"
                     name="selleraadharphone"
                     value={formData.selleraadharphone}
+                    onChange={handleChange}
+                    style={styles.formInput}
+                    maxLength={10}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <User style={styles.formIcon} />
+                    Seller Alternate Phone || विक्रेता का वैकल्पिक फोन नंबर
+                  </label>
+                  <input
+                    type="text"
+                    name="selleraadharphone2"
+                    value={formData.selleraadharphone2}
                     onChange={handleChange}
                     style={styles.formInput}
                     maxLength={10}
@@ -1027,7 +1238,7 @@ const BuyLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Name || वाहन का नाम
+                    Vehicle Brand || वाहन का ब्रांड
                   </label>
                   <input
                     type="text"
@@ -1126,12 +1337,25 @@ const BuyLetterForm = () => {
                     Vehicle Kilometers || वाहन किलोमीटर
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="vehiclekm"
-                    value={formData.vehiclekm}
-                    onChange={handleChange}
+                    value={
+                      formData.vehiclekm === ""
+                        ? ""
+                        : new Intl.NumberFormat("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(Number(formData.vehiclekm) / 100)
+                    }
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      setFormData((prev) => ({
+                        ...prev,
+                        vehiclekm: rawValue,
+                      }));
+                    }}
                     style={styles.formInput}
-                    maxLength={6}
+                    placeholder="e.g. 36,000.00"
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1207,35 +1431,84 @@ const BuyLetterForm = () => {
                     maxLength={100}
                   />
                 </div>
-
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Buyer Business Name || खरीददार का व्यापार नाम
+                    Dealer Name || डीलर का नाम
                   </label>
                   <input
                     type="text"
-                    name="buyernames"
-                    value={formData.buyernames}
+                    name="dealername"
+                    value={formData.dealername}
                     onChange={handleChange}
                     onInput={handleInput}
                     style={styles.formInput}
-                    readOnly
+                    required
                     maxLength={30}
                   />
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Buyer Phone || खरीददार का फोन नंबर
+                    Dealer Address || डीलर का पता
                   </label>
                   <input
-                    type="number"
-                    name="buyerphone"
-                    value={formData.buyerphone}
+                    type="text"
+                    name="dealeraddress"
+                    value={formData.dealeraddress}
                     onChange={handleChange}
+                    onInput={handleInput}
                     style={styles.formInput}
-                    readOnly
+                    required
+                    maxLength={100}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <User style={styles.formIcon} />
+                    Return Person Name || वापसी व्यक्ति का नाम
+                  </label>
+                  <input
+                    type="text"
+                    name="returnpersonname"
+                    value={formData.returnpersonname}
+                    onChange={handleChange}
+                    onInput={handleInput}
+                    style={styles.formInput}
+                    required
+                    maxLength={30}
+                  />
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <User style={styles.formIcon} />
+                    Witness Name || गवाह का नाम
+                  </label>
+                  <input
+                    type="text"
+                    name="witnessname"
+                    value={formData.witnessname}
+                    onChange={handleChange}
+                    onInput={handleInput}
+                    style={styles.formInput}
+                    required
+                    maxLength={30}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <User style={styles.formIcon} />
+                    Witness Phone || गवाह का फोन नंबर
+                  </label>
+                  <input
+                    type="text"
+                    name="witnessphone"
+                    value={formData.witnessphone}
+                    onChange={handleChange}
+                    onInput={handleInput}
+                    style={styles.formInput}
+                    required
                     maxLength={10}
                   />
                 </div>
@@ -1280,10 +1553,23 @@ const BuyLetterForm = () => {
                     Sale Amount (₹) || बिक्री की राशि (₹)
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="saleAmount"
-                    value={formData.saleAmount}
-                    onChange={handleChange}
+                    value={
+                      formData.saleAmount === ""
+                        ? ""
+                        : new Intl.NumberFormat("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(Number(formData.saleAmount) / 100)
+                    }
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      setFormData((prev) => ({
+                        ...prev,
+                        saleAmount: rawValue,
+                      }));
+                    }}
                     style={styles.formInput}
                   />
                 </div>
@@ -1370,7 +1656,6 @@ const BuyLetterForm = () => {
             </div>
 
             <div style={styles.formActions}>
-              
               <button
                 type="button"
                 onClick={handleSaveAndDownload}

@@ -290,7 +290,7 @@ const SellLetterForm = () => {
   };
 
   const englishFieldPositions = {
-    vehicleName: { x: 350, y: 685, size: 11 }, 
+    vehicleName: { x: 350, y: 685, size: 11 },
     vehicleModel: { x: 110, y: 670, size: 11 },
     vehicleColor: { x: 465, y: 685, size: 11 },
     registrationNumber: { x: 370, y: 670, size: 11 },
@@ -733,7 +733,7 @@ const SellLetterForm = () => {
 
   const fillAndDownloadEnglishPdf = async () => {
     try {
-      const templateUrl = "/templates/englishsell.pdf"; 
+      const templateUrl = "/templates/englishsell.pdf";
       const existingPdfBytes = await fetch(templateUrl).then((res) =>
         res.arrayBuffer()
       );
@@ -887,7 +887,7 @@ const SellLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Vehicle Name || वाहन का नाम
+                    Vehicle Brand || वाहन का ब्रांड
                   </label>
                   <input
                     type="text"
@@ -979,20 +979,32 @@ const SellLetterForm = () => {
                     maxLength={15}
                   />
                 </div>
+                // In the Vehicle Information section
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
                     Vehicle KM || वाहन किलोमीटर
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="vehiclekm"
-                    value={formData.vehiclekm}
-                    onChange={handleChange}
-                    onInput={handleInput}
+                    value={
+                      formData.vehiclekm === ""
+                        ? ""
+                        : new Intl.NumberFormat("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(Number(formData.vehiclekm) / 100)
+                    }
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      setFormData((prev) => ({
+                        ...prev,
+                        vehiclekm: rawValue,
+                      }));
+                    }}
                     style={styles.formInput}
-                    required
-                    maxLength={6}
+                    placeholder="e.g. 36,000.00"
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1074,13 +1086,19 @@ const SellLetterForm = () => {
                     Buyer Phone || खरीददार का फोन नंबर
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="buyerPhone"
                     value={formData.buyerPhone}
-                    onChange={handleChange}
-                    onInput={handleInput}
+                    onChange={(e) => {
+                      const rawValue = e.target.value
+                        .replace(/[^0-9]/g, "")
+                        .slice(0, 10);
+                      setFormData((prev) => ({
+                        ...prev,
+                        buyerPhone: rawValue,
+                      }));
+                    }}
                     style={styles.formInput}
-                    required
                     maxLength={10}
                   />
                 </div>
@@ -1090,20 +1108,26 @@ const SellLetterForm = () => {
                     Buyer Aadhar || खरीददार का आधार नंबर
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="buyerAadhar"
                     value={formData.buyerAadhar}
-                    onChange={handleChange}
-                    onInput={handleInput}
+                    onChange={(e) => {
+                      let value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 12);
+                      let formatted = value.match(/.{1,4}/g)?.join("-") || "";
+                      setFormData((prev) => ({
+                        ...prev,
+                        buyerAadhar: formatted,
+                      }));
+                    }}
                     style={styles.formInput}
-                    required
-                    maxLength={11}
+                    placeholder="1234-5678-9012"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Sale Details Section - Updated */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <IndianRupee style={styles.sectionIcon} /> Sale Details
@@ -1143,13 +1167,24 @@ const SellLetterForm = () => {
                     Sale Amount (₹) || बिक्री की राशि (₹)
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="saleAmount"
-                    value={formData.saleAmount}
-                    onChange={handleChange}
-                    onInput={handleInput}
+                    value={
+                      formData.saleAmount === ""
+                        ? ""
+                        : new Intl.NumberFormat("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(Number(formData.saleAmount) / 100)
+                    }
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      setFormData((prev) => ({
+                        ...prev,
+                        saleAmount: rawValue,
+                      }));
+                    }}
                     style={styles.formInput}
-                    maxLength={10}
                   />
                 </div>
                 <div style={styles.formField}>
