@@ -204,15 +204,10 @@ const SellLetterForm = () => {
       const positions =
         language === "hindi" ? hindiFieldPositions : englishFieldPositions;
 
-      for (const [fieldName, position] of Object.entries(fieldPositions)) {
-        if (
-          fieldName === "buyerPhone" &&
-          formattedData.buyerPhone
-        ) {
+      for (const [fieldName, position] of Object.entries(positions)) {
+        if (fieldName === "buyerPhone" && formattedData.buyerPhone) {
           const combinedPhones = `${formattedData.buyerPhone}${
-            formattedData.buyerPhone2
-              ? ` , ${formattedData.buyerPhone2}`
-              : ""
+            formattedData.buyerPhone2 ? ` , ${formattedData.buyerPhone2}` : ""
           }`;
           pdfDoc.getPages()[0].drawText(combinedPhones, {
             x: position.x,
@@ -221,10 +216,7 @@ const SellLetterForm = () => {
             weight: "bold",
             color: rgb(0, 0, 0),
           });
-        } else if (
-          fieldName !== "buyerPhone2" &&
-          formattedData[fieldName]
-        ) {
+        } else if (fieldName !== "buyerPhone2" && formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
             y: position.y,
@@ -1003,35 +995,29 @@ const SellLetterForm = () => {
 
       // Fill sell letter fields
       for (const [fieldName, position] of Object.entries(
-              englishFieldPositions
-            )) {
-              if (
-                fieldName === "buyerPhone" &&
-                formattedLetter.buyerPhone
-              ) {
-                const combinedPhones = `${formattedLetter.buyerPhone}${
-                  formattedLetter.buyerPhone2
-                    ? ` , ${formattedLetter.buyerPhone2}`
-                    : ""
-                }`;
-                pdfDoc.getPages()[0].drawText(combinedPhones, {
-                  x: position.x,
-                  y: position.y,
-                  size: position.size,
-                  color: rgb(0, 0, 0),
-                });
-              } else if (
-                fieldName !== "buyerPhone2" &&
-                formattedLetter[fieldName]
-              ) {
-                pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
-                  x: position.x,
-                  y: position.y,
-                  size: position.size,
-                  color: rgb(0, 0, 0),
-                });
-              }
-            }
+        englishFieldPositions
+      )) {
+        if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
+          const combinedPhones = `${formattedLetter.buyerPhone}${
+            formattedLetter.buyerPhone2
+              ? ` , ${formattedLetter.buyerPhone2}`
+              : ""
+          }`;
+          pdfDoc.getPages()[0].drawText(combinedPhones, {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        } else if (fieldName !== "buyerPhone2" && formattedLetter[fieldName]) {
+          pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        }
+      }
 
       const pdfBytes = await pdfDoc.save();
       saveAs(
