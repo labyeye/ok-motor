@@ -29,9 +29,12 @@ import axios from "axios";
 import AuthContext from "../context/AuthContext";
 const BuyLetterForm = () => {
   const { user } = useContext(AuthContext);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [savedLetterData, setSavedLetterData] = useState(null);
   const [activeMenu, setActiveMenu] = useState("Create Buy Letter");
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
   const [previewPdf, setPreviewPdf] = useState(null);
@@ -88,6 +91,15 @@ const BuyLetterForm = () => {
     returnpersonname: "",
     note: "",
   });
+  const LoadingOverlay = () => (
+    <div style={styles.loadingOverlay}>
+      <div style={styles.loadingContent}>
+        <div style={styles.loadingSpinner}></div>
+        <p style={styles.loadingText}>Generating PDF Preview...</p>
+        <p style={styles.loadingSubtext}>This may take a few seconds</p>
+      </div>
+    </div>
+  );
   const formatIndianAmountInWords = (amount) => {
     if (isNaN(amount)) return "(Zero Rupees)";
 
@@ -130,57 +142,58 @@ const BuyLetterForm = () => {
       "Eighty",
       "Ninety",
     ];
-
-    const convertLessThanThousand = (num) => {
-      if (num <= 0) return "";
-      if (num < 10) return units[num];
-      if (num < 20) return teens[num - 10];
-      if (num < 100) {
-        return (
-          tens[Math.floor(num / 10)] +
-          (num % 10 !== 0 ? " " + units[num % 10] : "")
-        );
-      }
+    const convertLessThanHundred = (n) => {
+      if (n < 10) return units[n];
+      if (n < 20) return teens[n - 10];
       return (
-        units[Math.floor(num / 100)] +
-        " Hundred" +
-        (num % 100 !== 0 ? " and " + convertLessThanThousand(num % 100) : "")
+        tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + units[n % 10] : "")
       );
     };
 
-    const convert = (num) => {
-      if (num <= 0) return "Zero";
+    const convertLessThanThousand = (n) => {
+      if (n < 100) return convertLessThanHundred(n);
+      const hundred = Math.floor(n / 100);
+      const remainder = n % 100;
+      return (
+        units[hundred] +
+        " Hundred" +
+        (remainder !== 0 ? " and " + convertLessThanHundred(remainder) : "")
+      );
+    };
+
+    const convert = (n) => {
+      if (n === 0) return "Zero";
 
       let result = "";
-      const crore = Math.floor(num / 10000000);
+      const crore = Math.floor(n / 10000000);
       if (crore > 0) {
         result += convertLessThanThousand(crore) + " Crore ";
-        num = num % 10000000;
+        n = n % 10000000;
       }
 
-      const lakh = Math.floor(num / 100000);
+      const lakh = Math.floor(n / 100000);
       if (lakh > 0) {
         result += convertLessThanThousand(lakh) + " Lakh ";
-        num = num % 100000;
+        n = n % 100000;
       }
 
-      const thousand = Math.floor(num / 1000);
+      const thousand = Math.floor(n / 1000);
       if (thousand > 0) {
         result += convertLessThanThousand(thousand) + " Thousand ";
-        num = num % 1000;
+        n = n % 1000;
       }
 
-      const remainder = convertLessThanThousand(num);
-      if (remainder) {
-        result += remainder;
+      if (n > 0) {
+        result += convertLessThanThousand(n);
       }
 
       return result.trim();
     };
 
-    const amountInPaise = num / 100; // Convert to rupees from paise
+    const amountInPaise = num / 100;
     return `(${convert(amountInPaise)} Only)`;
   };
+
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -232,6 +245,7 @@ const BuyLetterForm = () => {
 
   const handleSaveAndDownload = async () => {
     try {
+      setIsDownloading(true);
       setIsSaving(true);
 
       const existingLetter = await axios.get(
@@ -268,6 +282,7 @@ const BuyLetterForm = () => {
       alert(errorMessage);
     } finally {
       setIsSaving(false);
+      setIsDownloading(false);
     }
   };
   const handleChange = useCallback((e) => {
@@ -379,36 +394,36 @@ const BuyLetterForm = () => {
     sellerName: { x: 34, y: 632, size: 11 },
     sellerFatherName: { x: 322, y: 632, size: 11 },
     sellerCurrentAddress: { x: 50, y: 610, size: 11 },
-    vehicleName: { x: 313, y: 587, size: 11 },
-    vehicleModel: { x: 450, y: 587, size: 11 },
-    vehicleColor: { x: 551, y: 587, size: 11 },
-    registrationNumber: { x: 142, y: 567, size: 11 },
-    chassisNumber: { x: 289, y: 567, size: 11 },
-    engineNumber: { x: 476, y: 567, size: 11 },
-    vehiclekm: { x: 81, y: 548, size: 11 },
-    buyerName: { x: 345, y: 548, size: 11 },
-    buyerFatherName: { x: 55, y: 529, size: 11 },
-    buyerCurrentAddress: { x: 249, y: 529, size: 11 },
-    saleDate: { x: 109, y: 510, size: 11 },
-    saleTime: { x: 206, y: 510, size: 11 },
-    saleAmount: { x: 297, y: 510, size: 11 },
-    todayDate: { x: 176, y: 491, size: 11 },
-    todayTime: { x: 300, y: 491, size: 11 },
-    sellerName1: { x: 26, y: 453, size: 11 },
-    sellerFatherName1: { x: 292, y: 453, size: 11 },
-    buyerName1: { x: 26, y: 414, size: 11 },
-    buyerFatherName1: { x: 334, y: 414, size: 11 },
-    todayDate1: { x: 95, y: 434, size: 11 },
-    todayTime1: { x: 193, y: 434, size: 11 },
-    dealername: { x: 256, y: 376, size: 11 },
-    dealeraddress: { x: 27, y: 358, size: 11 },
+    vehicleName: { x: 235, y: 590, size: 11 },
+    vehicleModel: { x: 384, y: 590, size: 11 },
+    vehicleColor: { x: 531, y: 590, size: 11 },
+    registrationNumber: { x: 142, y: 571, size: 11 },
+    chassisNumber: { x: 289, y: 571, size: 11 },
+    engineNumber: { x: 476, y: 571, size: 11 },
+    vehiclekm: { x: 81, y: 552, size: 11 },
+    buyerName: { x: 345, y: 552, size: 11 },
+    buyerFatherName: { x: 55, y: 533, size: 11 },
+    buyerCurrentAddress: { x: 249, y: 533, size: 11 },
+    saleDate: { x: 109, y: 514, size: 11 },
+    saleTime: { x: 206, y: 514, size: 11 },
+    saleAmount: { x: 297, y: 514, size: 11 },
+    todayDate: { x: 176, y: 495, size: 11 },
+    todayTime: { x: 300, y: 495, size: 11 },
+    sellerName1: { x: 26, y: 457, size: 11 },
+    sellerFatherName1: { x: 292, y: 457, size: 11 },
+    buyerName1: { x: 26, y: 418, size: 11 },
+    buyerFatherName1: { x: 334, y: 418, size: 11 },
+    todayDate1: { x: 95, y: 438, size: 11 },
+    todayTime1: { x: 193, y: 438, size: 11 },
+    dealername: { x: 256, y: 380, size: 11 },
+    dealeraddress: { x: 27, y: 362, size: 11 },
     selleraadhar: { x: 393, y: 215, size: 10 },
     sellerpan: { x: 391, y: 195, size: 10 },
     selleraadharphone: { x: 420, y: 176, size: 10 },
     selleraadharphone2: { x: 481, y: 176, size: 10 },
     witnessname: { x: 390, y: 87, size: 10 },
     witnessphone: { x: 390, y: 70, size: 10 },
-    returnpersonname: { x: 427, y: 320, size: 10 },
+    returnpersonname: { x: 427, y: 323, size: 10 },
     note: { x: 60, y: 18, size: 10 },
   };
 
@@ -664,99 +679,107 @@ const BuyLetterForm = () => {
   };
   const handlePreview = async (language = "hindi") => {
     try {
-      setIsSaving(true);
-      const templateUrl =
-        language === "hindi"
-          ? "/templates/buyletter.pdf"
-          : "/templates/englishbuyletter.pdf";
+      setShowLoadingOverlay(true);
+      setPreviewLanguage(language);
 
-      const existingPdfBytes = await fetch(templateUrl).then((res) =>
-        res.arrayBuffer()
-      );
-      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      const delay = new Promise((resolve) => setTimeout(resolve, 800));
 
-      // Add invoice page to the preview as well
-      const invoicePage = pdfDoc.addPage([595, 842]);
-      await drawVehicleInvoice(invoicePage, pdfDoc);
+      const generateTask = (async () => {
+        const templateUrl =
+          language === "hindi"
+            ? "/templates/buyletter.pdf"
+            : "/templates/englishbuyletter.pdf";
 
-      const formattedData = {
-        ...formData,
-        saleDate: formatDate(formData.saleDate),
-        todayDate: formatDate(formData.todayDate),
-        todayDate1: formatDate(formData.todayDate),
-        todayTime: formatTime(formData.todayTime),
-        todayTime1: formatTime(formData.todayTime),
-        saleTime: formatTime(formData.saleTime),
-        saleAmount: formatRupee(formData.saleAmount),
-        vehiclekm: formatKm(formData.vehiclekm),
-        amountInWords: formatIndianAmountInWords(
-          formData.saleAmount
-            ? formData.saleAmount.toString().replace(/\D/g, "")
-            : "0"
-        ),
-      };
+        const existingPdfBytes = await fetch(templateUrl).then((res) =>
+          res.arrayBuffer()
+        );
+        const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-      const positions =
-        language === "hindi" ? fieldPositions : englishFieldPositions;
+        // Add invoice page to the preview as well
+        const invoicePage = pdfDoc.addPage([595, 842]);
+        await drawVehicleInvoice(invoicePage, pdfDoc);
 
-      for (const [fieldName, position] of Object.entries(positions)) {
-        if (
-          fieldName === "selleraadharphone" &&
-          formattedData.selleraadharphone
-        ) {
-          const combinedPhones = `${formattedData.selleraadharphone}${
-            formattedData.selleraadharphone2
-              ? ` , ${formattedData.selleraadharphone2}`
-              : ""
-          }`;
-          pdfDoc.getPages()[0].drawText(combinedPhones, {
-            x: position.x,
-            y: position.y,
-            size: position.size,
-            color: rgb(0, 0, 0),
-          });
-        } else if (
-          fieldName !== "selleraadharphone2" &&
-          formattedData[fieldName]
-        ) {
-          pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
-            x: position.x,
-            y: position.y,
-            size: position.size,
+        const formattedData = {
+          ...formData,
+          saleDate: formatDate(formData.saleDate),
+          todayDate: formatDate(formData.todayDate),
+          todayDate1: formatDate(formData.todayDate),
+          todayTime: formatTime(formData.todayTime),
+          todayTime1: formatTime(formData.todayTime),
+          saleTime: formatTime(formData.saleTime),
+          saleAmount: formatRupee(formData.saleAmount),
+          vehiclekm: formatKm(formData.vehiclekm),
+          amountInWords: formatIndianAmountInWords(
+            formData.saleAmount
+              ? formData.saleAmount.toString().replace(/\D/g, "")
+              : "0"
+          ),
+        };
+
+        const positions =
+          language === "hindi" ? fieldPositions : englishFieldPositions;
+
+        for (const [fieldName, position] of Object.entries(positions)) {
+          if (
+            fieldName === "selleraadharphone" &&
+            formattedData.selleraadharphone
+          ) {
+            const combinedPhones = `${formattedData.selleraadharphone}${
+              formattedData.selleraadharphone2
+                ? ` , ${formattedData.selleraadharphone2}`
+                : ""
+            }`;
+            pdfDoc.getPages()[0].drawText(combinedPhones, {
+              x: position.x,
+              y: position.y,
+              size: position.size,
+              color: rgb(0, 0, 0),
+            });
+          } else if (
+            fieldName !== "selleraadharphone2" &&
+            formattedData[fieldName]
+          ) {
+            pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
+              x: position.x,
+              y: position.y,
+              size: position.size,
+              color: rgb(0, 0, 0),
+            });
+          }
+        }
+
+        // Add amount in words to the preview
+        if (formattedData.saleAmount && formattedData.amountInWords) {
+          const saleAmountText = formattedData.saleAmount || "";
+          const saleAmountWidth =
+            saleAmountText.length * (positions.saleAmount.size / 2);
+          const amountInWordsX =
+            positions.saleAmount.x +
+            saleAmountWidth +
+            3 * (positions.saleAmount.size / 2);
+
+          pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
+            x: amountInWordsX,
+            y: positions.saleAmount.y,
+            size: positions.saleAmount.size,
             color: rgb(0, 0, 0),
           });
         }
-      }
 
-      // Add amount in words to the preview
-      if (formattedData.saleAmount && formattedData.amountInWords) {
-        const saleAmountText = formattedData.saleAmount || "";
-        const saleAmountWidth =
-          saleAmountText.length * (positions.saleAmount.size / 2);
-        const amountInWordsX =
-          positions.saleAmount.x +
-          saleAmountWidth +
-          3 * (positions.saleAmount.size / 2);
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
 
-        pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
-          x: amountInWordsX,
-          y: positions.saleAmount.y,
-          size: positions.saleAmount.size,
-          color: rgb(0, 0, 0),
-        });
-      }
-
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-
-      setPreviewPdf(url);
-      setShowPreviewModal(true);
+        setPreviewPdf(url);
+        setShowPreviewModal(true);
+      })();
+      await Promise.all([delay, generateTask]);
     } catch (error) {
       console.error("Error generating preview:", error);
       alert("Failed to generate preview. Please try again.");
     } finally {
       setIsSaving(false);
+      setShowLoadingOverlay(false);
     }
   };
   const handlePreviewAndDownload = async (language) => {
@@ -942,6 +965,13 @@ const BuyLetterForm = () => {
       height: 20,
       color: rgb(0.9, 0.9, 0.9),
     });
+    page.drawText("Condition: " + (formData.vehicleCondition || "N/A"), {
+      x: 60,
+      y: 597,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
 
     const vehicleHeaders = [
       "Make",
@@ -952,7 +982,7 @@ const BuyLetterForm = () => {
       "Engine",
       "KM",
     ];
-    const vehicleHeaderPositions = [60, 120, 180, 240, 300, 380, 460];
+    const vehicleHeaderPositions = [60, 120, 180, 220, 280, 370, 460];
 
     vehicleHeaders.forEach((header, index) => {
       page.drawText(header, {
@@ -963,34 +993,54 @@ const BuyLetterForm = () => {
         font: boldFont,
       });
     });
-
-    // Vehicle details row
     const vehicleValues = [
-      formData.vehicleName || "N/A",
-      formData.vehicleModel || "N/A",
-      formData.vehicleColor || "N/A",
-      formData.registrationNumber || "N/A",
-      formData.chassisNumber || "N/A",
-      formData.engineNumber || "N/A",
-      formData.vehiclekm ? `${formatKm(formData.vehiclekm)} km` : "N/A",
-    ];
+    formData.vehicleName || "N/A",
+    formData.vehicleModel || "N/A",
+    formData.vehicleColor || "N/A",
+    formData.registrationNumber || "N/A",
+    formData.chassisNumber || "N/A",
+    formData.engineNumber || "N/A",
+    formData.vehiclekm ? `${formatKm(formData.vehiclekm)} km` : "N/A",
+  ];
 
-    vehicleValues.forEach((value, index) => {
-      // Truncate long text to fit in columns
-      const truncatedValue =
-        value.length > 12 ? value.substring(0, 12) + "..." : value;
-      page.drawText(truncatedValue, {
-        x: vehicleHeaderPositions[index],
-        y: 555,
+  const columnWidths = [60, 60, 40, 60, 80, 80, 40, 60];
+  
+  vehicleValues.forEach((value, index) => {
+    const maxWidth = columnWidths[index];
+    const xPos = vehicleHeaderPositions[index];
+    let yPos = 555;
+
+    const lines = [];
+    let currentLine = "";
+
+    for (const word of value.split(" ")) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      const testWidth = font.widthOfTextAtSize(testLine, 10);
+
+      if (testWidth <= maxWidth) {
+        currentLine = testLine;
+      } else {
+        if (currentLine) lines.push(currentLine);
+        currentLine = word;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+
+    // Draw each line
+    lines.forEach((line, lineIndex) => {
+      page.drawText(line, {
+        x: xPos,
+        y: yPos - lineIndex * lineHeight,
         size: 8,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
     });
+  });
 
     page.drawText("BUY INFORMATION", {
       x: 50,
-      y: 530,
+      y: 510,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -998,7 +1048,7 @@ const BuyLetterForm = () => {
 
     page.drawText(`Buy Date: ${formatDate(formData.saleDate)}`, {
       x: 60,
-      y: 510,
+      y: 490,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
@@ -1006,22 +1056,11 @@ const BuyLetterForm = () => {
 
     page.drawText(`Buy Amount: ${formatRupee(formData.saleAmount)}`, {
       x: 200,
-      y: 510,
+      y: 490,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
-
-    page.drawText(
-      `Amount in Words: ${formatIndianAmountInWords(formData.saleAmount)}`,
-      {
-        x: 60,
-        y: 595,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      }
-    );
 
     page.drawText(
       `Payment: ${
@@ -1029,20 +1068,17 @@ const BuyLetterForm = () => {
       }`,
       {
         x: 350,
-        y: 510,
+        y: 490,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       }
     );
-
     page.drawText(
-      `Condition: ${
-        formData.vehicleCondition === "running" ? "RUNNING" : "NOT RUNNING"
-      }`,
+      `Amount in Words: ${formatIndianAmountInWords(formData.saleAmount)}`,
       {
         x: 60,
-        y: 480,
+        y: 460,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
@@ -1394,6 +1430,52 @@ const BuyLetterForm = () => {
                     maxLength={10}
                   />
                 </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <User style={styles.formIcon} />
+                    Witness Name || गवाह का नाम
+                  </label>
+                  <input
+                    type="text"
+                    name="witnessname"
+                    value={formData.witnessname}
+                    onChange={handleChange}
+                    onInput={handleInput}
+                    onFocus={() => setFocusedInput("witnessname")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "witnessname"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
+                    required
+                    maxLength={30}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <User style={styles.formIcon} />
+                    Witness Phone || गवाह का फोन नंबर
+                  </label>
+                  <input
+                    type="text"
+                    name="witnessphone"
+                    value={formData.witnessphone}
+                    onChange={handleChange}
+                    onInput={handleInput}
+                    onFocus={() => setFocusedInput("witnessphone")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "witnessphone"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
+                    required
+                    maxLength={10}
+                  />
+                </div>
               </div>
             </div>
 
@@ -1679,7 +1761,7 @@ const BuyLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Dealer Name || डीलर का नाम
+                    Purchase Through || वाहन का माध्यम
                   </label>
                   <input
                     type="text"
@@ -1702,7 +1784,7 @@ const BuyLetterForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
-                    Dealer Address || डीलर का पता
+                    Address || माध्यम का पता
                   </label>
                   <input
                     type="text"
@@ -1743,53 +1825,6 @@ const BuyLetterForm = () => {
                     }}
                     required
                     maxLength={30}
-                  />
-                </div>
-
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <User style={styles.formIcon} />
-                    Witness Name || गवाह का नाम
-                  </label>
-                  <input
-                    type="text"
-                    name="witnessname"
-                    value={formData.witnessname}
-                    onChange={handleChange}
-                    onInput={handleInput}
-                    onFocus={() => setFocusedInput("witnessname")}
-                    onBlur={() => setFocusedInput(null)}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "witnessname"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                    required
-                    maxLength={30}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <User style={styles.formIcon} />
-                    Witness Phone || गवाह का फोन नंबर
-                  </label>
-                  <input
-                    type="text"
-                    name="witnessphone"
-                    value={formData.witnessphone}
-                    onChange={handleChange}
-                    onInput={handleInput}
-                    onFocus={() => setFocusedInput("witnessphone")}
-                    onBlur={() => setFocusedInput(null)}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "witnessphone"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                    required
-                    maxLength={10}
                   />
                 </div>
               </div>
@@ -1940,8 +1975,6 @@ const BuyLetterForm = () => {
                 </div>
               </div>
             </div>
-
-            {/* Additional Information */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <FileText style={styles.sectionIcon} /> Additional Information
@@ -2003,7 +2036,7 @@ const BuyLetterForm = () => {
                   type="button"
                   onClick={() => handlePreview(previewLanguage)}
                   style={styles.previewButton}
-                  disabled={isSaving}
+                  disabled={isSaving || isGeneratingPreview}
                 >
                   <FileText style={styles.buttonIcon} /> Preview
                 </button>
@@ -2118,6 +2151,7 @@ const BuyLetterForm = () => {
             </div>
           </div>
         )}
+        {showLoadingOverlay && <LoadingOverlay />}
       </div>
     </div>
   );
@@ -2345,6 +2379,51 @@ const styles = {
       borderBottom: "none",
       marginBottom: "0",
     },
+  },
+  loadingOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2000,
+    backdropFilter: "blur(4px)",
+  },
+  loadingContent: {
+    backgroundColor: "#ffffff",
+    borderRadius: "12px",
+    padding: "32px",
+    textAlign: "center",
+    maxWidth: "400px",
+    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+  },
+  loadingSpinner: {
+    width: "50px",
+    height: "50px",
+    margin: "0 auto 20px",
+    border: "5px solid #f3f3f3",
+    borderTop: "5px solid #3b82f6",
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
+  },
+  loadingText: {
+    fontSize: "1.125rem",
+    fontWeight: "600",
+    color: "#1e293b",
+    marginBottom: "8px",
+  },
+  loadingSubtext: {
+    fontSize: "0.875rem",
+    color: "#64748b",
+  },
+  "@keyframes spin": {
+    "0%": { transform: "rotate(0deg)" },
+    "50%": { transform: "rotate(180deg)" },
+    "100%": { transform: "rotate(360deg)" },
   },
   sectionTitle: {
     fontSize: "1.25rem",
