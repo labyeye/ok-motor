@@ -52,6 +52,7 @@ const SellLetterForm = () => {
     buyerFatherName: "",
     buyerAddress: "",
     buyerPhone: "",
+    buyerPhone2: "",
     buyerAadhar: "",
     buyerName1: "",
     buyerName2: "",
@@ -203,17 +204,36 @@ const SellLetterForm = () => {
       const positions =
         language === "hindi" ? hindiFieldPositions : englishFieldPositions;
 
-      for (const [fieldName, position] of Object.entries(positions)) {
-        if (formattedData[fieldName]) {
+      for (const [fieldName, position] of Object.entries(fieldPositions)) {
+        if (
+          fieldName === "buyerPhone" &&
+          formattedData.buyerPhone
+        ) {
+          const combinedPhones = `${formattedData.buyerPhone}${
+            formattedData.buyerPhone2
+              ? ` , ${formattedData.buyerPhone2}`
+              : ""
+          }`;
+          pdfDoc.getPages()[0].drawText(combinedPhones, {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            weight: "bold",
+            color: rgb(0, 0, 0),
+          });
+        } else if (
+          fieldName !== "buyerPhone2" &&
+          formattedData[fieldName]
+        ) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
             y: position.y,
             size: position.size,
+            weight: "bold",
             color: rgb(0, 0, 0),
           });
         }
       }
-
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -388,6 +408,7 @@ const SellLetterForm = () => {
         "buyerFatherName",
         "buyerAddress",
         "buyerPhone",
+        "buyerPhone2",
         "buyerAadhar",
         "saleAmount",
         "selleraadhar",
@@ -501,6 +522,7 @@ const SellLetterForm = () => {
     previousDate: { x: 180, y: 511, size: 11 },
     previousTime: { x: 300, y: 511, size: 11 },
     buyerPhone: { x: 85, y: 209, size: 11 },
+    buyerPhone2: { x: 85, y: 209, size: 11 },
     buyerAadhar: { x: 110, y: 191, size: 11 },
     witnessName: { x: 70, y: 105, size: 11 },
     witnessPhone: { x: 70, y: 87, size: 11 },
@@ -527,6 +549,7 @@ const SellLetterForm = () => {
     previousDate: { x: 240, y: 538, size: 11 },
     previousTime: { x: 340, y: 538, size: 11 },
     buyerPhone: { x: 120, y: 233, size: 11 },
+    buyerPhone2: { x: 120, y: 233, size: 11 },
     buyerAadhar: { x: 142, y: 213, size: 11 },
     witnessName: { x: 115, y: 91, size: 11 },
     witnessPhone: { x: 115, y: 75, size: 11 },
@@ -535,18 +558,18 @@ const SellLetterForm = () => {
   const drawVehicleInvoice = async (page, pdfDoc) => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const logoUrl = logo1; // Use your imported logo
+    const logoUrl = logo1;
     const logoImageBytes = await fetch(logoUrl).then((res) =>
       res.arrayBuffer()
     );
-    const logoImage = await pdfDoc.embedPng(logoImageBytes); // or embedJpg if using JPEG
+    const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
     page.drawRectangle({
       x: 0,
       y: 780,
       width: 595,
       height: 80,
-      color: rgb(0.047, 0.098, 0.196), // Dark blue
+      color: rgb(0.047, 0.098, 0.196),
     });
 
     page.drawImage(logoImage, {
@@ -650,6 +673,13 @@ const SellLetterForm = () => {
 
     page.drawText(`Phone: ${formData.buyerPhone || "N/A"}`, {
       x: 350,
+      y: 665,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+    page.drawText(`Phone: ${formData.buyerPhone2 || "N/A"}`, {
+      x: 450,
       y: 665,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
@@ -973,17 +1003,35 @@ const SellLetterForm = () => {
 
       // Fill sell letter fields
       for (const [fieldName, position] of Object.entries(
-        englishFieldPositions
-      )) {
-        if (formattedLetter[fieldName]) {
-          pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
-            x: position.x,
-            y: position.y,
-            size: position.size,
-            color: rgb(0, 0, 0),
-          });
-        }
-      }
+              englishFieldPositions
+            )) {
+              if (
+                fieldName === "buyerPhone" &&
+                formattedLetter.buyerPhone
+              ) {
+                const combinedPhones = `${formattedLetter.buyerPhone}${
+                  formattedLetter.buyerPhone2
+                    ? ` , ${formattedLetter.buyerPhone2}`
+                    : ""
+                }`;
+                pdfDoc.getPages()[0].drawText(combinedPhones, {
+                  x: position.x,
+                  y: position.y,
+                  size: position.size,
+                  color: rgb(0, 0, 0),
+                });
+              } else if (
+                fieldName !== "buyerPhone2" &&
+                formattedLetter[fieldName]
+              ) {
+                pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
+                  x: position.x,
+                  y: position.y,
+                  size: position.size,
+                  color: rgb(0, 0, 0),
+                });
+              }
+            }
 
       const pdfBytes = await pdfDoc.save();
       saveAs(
@@ -1305,6 +1353,28 @@ const SellLetterForm = () => {
                       setFormData((prev) => ({
                         ...prev,
                         buyerPhone: rawValue,
+                      }));
+                    }}
+                    style={styles.formInput}
+                    maxLength={10}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <User style={styles.formIcon} />
+                    Buyer Alternate Phone || खरीददार का वैकल्पिक फोन नंबर
+                  </label>
+                  <input
+                    type="text"
+                    name="buyerPhone2"
+                    value={formData.buyerPhone2}
+                    onChange={(e) => {
+                      const rawValue = e.target.value
+                        .replace(/[^0-9]/g, "")
+                        .slice(0, 10);
+                      setFormData((prev) => ({
+                        ...prev,
+                        buyerPhone2: rawValue,
                       }));
                     }}
                     style={styles.formInput}
