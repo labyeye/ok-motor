@@ -3,7 +3,6 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
 import {
   FileText,
-  ArrowLeft,
   User,
   Car,
   Download,
@@ -35,7 +34,12 @@ const BuyLetterForm = () => {
   const [activeMenu, setActiveMenu] = useState("Create Buy Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
+  const [previewPdf, setPreviewPdf] = useState(null);
+  const [previewLanguage, setPreviewLanguage] = useState("hindi");
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [focusedInput, setFocusedInput] = useState(null);
+
   const [formData, setFormData] = useState({
     sellerName: "",
     sellerFatherName: "",
@@ -85,9 +89,11 @@ const BuyLetterForm = () => {
     note: "",
   });
   const formatIndianAmountInWords = (amount) => {
-    if (isNaN(amount)) return "Zero Rupees";
+    if (isNaN(amount)) return "(Zero Rupees)";
 
-    const num = parseFloat(amount) / 100;
+    const num = parseFloat(amount);
+    if (num === 0) return "(Zero Rupees)";
+
     const units = [
       "",
       "One",
@@ -126,14 +132,15 @@ const BuyLetterForm = () => {
     ];
 
     const convertLessThanThousand = (num) => {
-      if (num === 0) return "";
+      if (num <= 0) return "";
       if (num < 10) return units[num];
       if (num < 20) return teens[num - 10];
-      if (num < 100)
+      if (num < 100) {
         return (
           tens[Math.floor(num / 10)] +
           (num % 10 !== 0 ? " " + units[num % 10] : "")
         );
+      }
       return (
         units[Math.floor(num / 100)] +
         " Hundred" +
@@ -142,40 +149,37 @@ const BuyLetterForm = () => {
     };
 
     const convert = (num) => {
-      if (num === 0) return "Zero Rupees";
-      let result = "";
+      if (num <= 0) return "Zero";
 
-      // Handle Crores
+      let result = "";
       const crore = Math.floor(num / 10000000);
       if (crore > 0) {
         result += convertLessThanThousand(crore) + " Crore ";
-        num %= 10000000;
+        num = num % 10000000;
       }
 
-      // Handle Lakhs
       const lakh = Math.floor(num / 100000);
       if (lakh > 0) {
         result += convertLessThanThousand(lakh) + " Lakh ";
-        num %= 100000;
+        num = num % 100000;
       }
 
-      // Handle Thousands
       const thousand = Math.floor(num / 1000);
       if (thousand > 0) {
         result += convertLessThanThousand(thousand) + " Thousand ";
-        num %= 1000;
+        num = num % 1000;
       }
 
-      // Handle Hundreds and below
       const remainder = convertLessThanThousand(num);
       if (remainder) {
         result += remainder;
       }
 
-      return result.trim() + " Only";
+      return result.trim();
     };
 
-    return convert(num);
+    const amountInPaise = num / 100; // Convert to rupees from paise
+    return `(${convert(amountInPaise)} Only)`;
   };
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -225,11 +229,11 @@ const BuyLetterForm = () => {
       setIsSaving(false);
     }
   };
+
   const handleSaveAndDownload = async () => {
     try {
       setIsSaving(true);
 
-      // First check if a record with this registration number exists
       const existingLetter = await axios.get(
         `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
@@ -333,7 +337,6 @@ const BuyLetterForm = () => {
         { name: "Service History", path: "/service/history" },
       ],
     },
-    // Add the conditional check here
     ...(user?.role !== "staff"
       ? [
           {
@@ -369,43 +372,42 @@ const BuyLetterForm = () => {
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    // Handle both string paths and function paths
     const actualPath = typeof path === "function" ? path(user?.role) : path;
     navigate(actualPath);
   };
   const fieldPositions = {
-    sellerName: { x: 45, y: 632, size: 11 },
-    sellerFatherName: { x: 330, y: 632, size: 11 },
-    sellerCurrentAddress: { x: 54, y: 610, size: 11 },
+    sellerName: { x: 34, y: 632, size: 11 },
+    sellerFatherName: { x: 322, y: 632, size: 11 },
+    sellerCurrentAddress: { x: 50, y: 610, size: 11 },
     vehicleName: { x: 313, y: 587, size: 11 },
-    vehicleModel: { x: 430, y: 587, size: 11 },
-    vehicleColor: { x: 534, y: 587, size: 11 },
+    vehicleModel: { x: 450, y: 587, size: 11 },
+    vehicleColor: { x: 551, y: 587, size: 11 },
     registrationNumber: { x: 142, y: 567, size: 11 },
     chassisNumber: { x: 289, y: 567, size: 11 },
     engineNumber: { x: 476, y: 567, size: 11 },
     vehiclekm: { x: 81, y: 548, size: 11 },
-    buyerName: { x: 325, y: 548, size: 11 },
+    buyerName: { x: 345, y: 548, size: 11 },
     buyerFatherName: { x: 55, y: 529, size: 11 },
     buyerCurrentAddress: { x: 249, y: 529, size: 11 },
-    saleDate: { x: 118, y: 510, size: 11 },
-    saleTime: { x: 217, y: 510, size: 11 },
-    saleAmount: { x: 308, y: 510, size: 11 },
+    saleDate: { x: 109, y: 510, size: 11 },
+    saleTime: { x: 206, y: 510, size: 11 },
+    saleAmount: { x: 297, y: 510, size: 11 },
     todayDate: { x: 176, y: 491, size: 11 },
-    todayTime: { x: 303, y: 491, size: 11 },
-    sellerName1: { x: 26, y: 454, size: 11 },
-    sellerFatherName1: { x: 306, y: 454, size: 11 },
-    buyerName1: { x: 30, y: 414, size: 11 },
-    buyerFatherName1: { x: 331, y: 414, size: 11 },
-    todayDate1: { x: 98, y: 434, size: 11 },
+    todayTime: { x: 300, y: 491, size: 11 },
+    sellerName1: { x: 26, y: 453, size: 11 },
+    sellerFatherName1: { x: 292, y: 453, size: 11 },
+    buyerName1: { x: 26, y: 414, size: 11 },
+    buyerFatherName1: { x: 334, y: 414, size: 11 },
+    todayDate1: { x: 95, y: 434, size: 11 },
     todayTime1: { x: 193, y: 434, size: 11 },
     dealername: { x: 256, y: 376, size: 11 },
-    dealeraddress: { x: 34, y: 358, size: 11 },
-    selleraadhar: { x: 403, y: 215, size: 10 },
-    sellerpan: { x: 400, y: 195, size: 10 },
-    selleraadharphone: { x: 420, y: 177, size: 10 },
-    selleraadharphone2: { x: 481, y: 177, size: 10 },
-    witnessname: { x: 400, y: 87, size: 10 },
-    witnessphone: { x: 400, y: 70, size: 10 },
+    dealeraddress: { x: 27, y: 358, size: 11 },
+    selleraadhar: { x: 393, y: 215, size: 10 },
+    sellerpan: { x: 391, y: 195, size: 10 },
+    selleraadharphone: { x: 420, y: 176, size: 10 },
+    selleraadharphone2: { x: 481, y: 176, size: 10 },
+    witnessname: { x: 390, y: 87, size: 10 },
+    witnessphone: { x: 390, y: 70, size: 10 },
     returnpersonname: { x: 427, y: 320, size: 10 },
     note: { x: 60, y: 18, size: 10 },
   };
@@ -461,22 +463,43 @@ const BuyLetterForm = () => {
       };
 
       for (const [fieldName, position] of Object.entries(fieldPositions)) {
-        if (formattedData[fieldName]) {
+        if (
+          fieldName === "selleraadharphone" &&
+          formattedData.selleraadharphone
+        ) {
+          const combinedPhones = `${formattedData.selleraadharphone}${
+            formattedData.selleraadharphone2
+              ? ` , ${formattedData.selleraadharphone2}`
+              : ""
+          }`;
+          pdfDoc.getPages()[0].drawText(combinedPhones, {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            weight: "bold",
+            color: rgb(0, 0, 0),
+          });
+        } else if (
+          fieldName !== "selleraadharphone2" &&
+          formattedData[fieldName]
+        ) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
             y: position.y,
             size: position.size,
+            weight: "bold",
             color: rgb(0, 0, 0),
           });
         }
       }
+
       const saleAmountText = formattedData.saleAmount || "";
       const saleAmountWidth =
         saleAmountText.length * (fieldPositions.saleAmount.size / 2); // Approximate width
       const amountInWordsX =
         fieldPositions.saleAmount.x +
         saleAmountWidth +
-        3 * (fieldPositions.saleAmount.size / 2);
+        1.4 * (fieldPositions.saleAmount.size / 2);
       pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
         x: amountInWordsX,
         y: fieldPositions.saleAmount.y,
@@ -492,6 +515,42 @@ const BuyLetterForm = () => {
       console.error("Error generating PDF:", error);
       alert("Failed to generate PDF. Please try again.");
     }
+  };
+  const englishFieldPositions = {
+    sellerName: { x: 29, y: 628, size: 11 },
+    sellerFatherName: { x: 327, y: 628, size: 11 },
+    sellerCurrentAddress: { x: 83, y: 605, size: 11 },
+    vehicleName: { x: 373, y: 583, size: 11 },
+    vehicleModel: { x: 502, y: 583, size: 11 },
+    vehicleColor: { x: 60, y: 563, size: 11 },
+    registrationNumber: { x: 244, y: 563, size: 11 },
+    chassisNumber: { x: 417, y: 563, size: 11 },
+    engineNumber: { x: 92, y: 543, size: 11 },
+    vehiclekm: { x: 323, y: 543, size: 11 },
+    buyerName: { x: 74, y: 526, size: 11 },
+    buyerFatherName: { x: 385, y: 526, size: 11 },
+    buyerCurrentAddress: { x: 89, y: 507, size: 11 },
+    saleDate: { x: 483, y: 507, size: 11 },
+    saleTime: { x: 23, y: 490, size: 11 },
+    saleAmount: { x: 190, y: 490, size: 11 },
+    todayDate: { x: 132, y: 470, size: 11 },
+    todayTime: { x: 273, y: 470, size: 11 },
+    sellerName1: { x: 73, y: 437, size: 11 },
+    sellerFatherName1: { x: 349, y: 437, size: 11 },
+    buyerName1: { x: 26, y: 401, size: 11 },
+    buyerFatherName1: { x: 382, y: 401, size: 11 },
+    todayDate1: { x: 170, y: 419, size: 11 },
+    todayTime1: { x: 305, y: 419, size: 11 },
+    dealername: { x: 136, y: 348, size: 11 },
+    dealeraddress: { x: 368, y: 348, size: 11 },
+    selleraadhar: { x: 403, y: 223, size: 10 },
+    sellerpan: { x: 403, y: 207, size: 10 },
+    selleraadharphone: { x: 426, y: 192, size: 10 },
+    selleraadharphone2: { x: 490, y: 192, size: 10 },
+    witnessname: { x: 400, y: 96, size: 10 },
+    witnessphone: { x: 400, y: 80, size: 10 },
+    note: { x: 60, y: 18, size: 10 },
+    returnpersonname: { x: 332, y: 297, size: 10 },
   };
   const formatKm = (val) => {
     const num = parseFloat(val.toString().replace(/,/g, ""));
@@ -511,7 +570,7 @@ const BuyLetterForm = () => {
     const num = parseFloat(val.toString().replace(/,/g, ""));
     return isNaN(num)
       ? "0.00"
-      : `Rs. ${new Intl.NumberFormat("en-IN", {
+      : `${new Intl.NumberFormat("en-IN", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }).format(num / 100)}`;
@@ -528,56 +587,45 @@ const BuyLetterForm = () => {
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
-      const englishFieldPositions = {
-        sellerName: { x: 33, y: 629, size: 11 },
-        sellerFatherName: { x: 330, y: 629, size: 11 },
-        sellerCurrentAddress: { x: 85, y: 605, size: 11 },
-        vehicleName: { x: 421, y: 583, size: 11 },
-        vehicleModel: { x: 527, y: 583, size: 11 },
-        vehicleColor: { x: 63, y: 564, size: 11 },
-        registrationNumber: { x: 260, y: 564, size: 11 },
-        chassisNumber: { x: 458, y: 564, size: 11 },
-        engineNumber: { x: 90, y: 545, size: 11 },
-        vehiclekm: { x: 320, y: 545, size: 11 },
-        buyerName: { x: 50, y: 526, size: 11 },
-        buyerFatherName: { x: 375, y: 526, size: 11 },
-        buyerCurrentAddress: { x: 89, y: 507, size: 11 },
-        saleDate: { x: 483, y: 507, size: 11 },
-        saleTime: { x: 25, y: 490, size: 11 },
-        saleAmount: { x: 190, y: 490, size: 11 },
-        todayDate: { x: 132, y: 470, size: 11 },
-        todayTime: { x: 273, y: 470, size: 11 },
-        sellerName1: { x: 80, y: 437, size: 11 },
-        sellerFatherName1: { x: 345, y: 437, size: 11 },
-        buyerName1: { x: 26, y: 401, size: 11 },
-        buyerFatherName1: { x: 380, y: 401, size: 11 },
-        todayDate1: { x: 175, y: 419, size: 11 },
-        todayTime1: { x: 305, y: 419, size: 11 },
-        dealername: { x: 132, y: 348, size: 11 },
-        dealeraddress: { x: 377, y: 348, size: 11 },
-        selleraadhar: { x: 403, y: 220, size: 10 },
-        sellerpan: { x: 404, y: 204, size: 10 },
-        selleraadharphone: { x: 426, y: 188, size: 10 },
-        selleraadharphone2: { x: 490, y: 188, size: 10 },
-        witnessname: { x: 400, y: 87, size: 10 },
-        witnessphone: { x: 400, y: 71, size: 10 },
-        note: { x: 60, y: 18, size: 10 },
-        returnpersonname: { x: 330, y: 297, size: 10 },
-      };
-
       const formattedData = {
         ...formData,
+        saleDate: formatDate(formData.saleDate),
+        todayDate: formatDate(formData.todayDate),
         todayDate1: formatDate(formData.todayDate),
+        todayTime: formatTime(formData.todayTime),
+        saleTime: formatTime(formData.saleTime),
         todayTime1: formatTime(formData.todayTime),
         saleAmount: formatRupee(formData.saleAmount),
         vehiclekm: formatKm(formData.vehiclekm),
-        amountInWords: formatIndianAmountInWords(formData.saleAmount), // Amount in words
+        amountInWords: formatIndianAmountInWords(
+          formData.saleAmount
+            ? formData.saleAmount.toString().replace(/\D/g, "")
+            : "0"
+        ),
       };
 
       for (const [fieldName, position] of Object.entries(
         englishFieldPositions
       )) {
-        if (formattedData[fieldName]) {
+        if (
+          fieldName === "selleraadharphone" &&
+          formattedData.selleraadharphone
+        ) {
+          const combinedPhones = `${formattedData.selleraadharphone}${
+            formattedData.selleraadharphone2
+              ? ` , ${formattedData.selleraadharphone2}`
+              : ""
+          }`;
+          pdfDoc.getPages()[0].drawText(combinedPhones, {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        } else if (
+          fieldName !== "selleraadharphone2" &&
+          formattedData[fieldName]
+        ) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
             y: position.y,
@@ -586,6 +634,7 @@ const BuyLetterForm = () => {
           });
         }
       }
+
       const saleAmountText = formattedData.saleAmount || "";
       const saleAmountWidth =
         saleAmountText.length * (englishFieldPositions.saleAmount.size / 2);
@@ -613,6 +662,111 @@ const BuyLetterForm = () => {
       alert("Failed to generate English PDF. Please try again.");
     }
   };
+  const handlePreview = async (language = "hindi") => {
+    try {
+      setIsSaving(true);
+      const templateUrl =
+        language === "hindi"
+          ? "/templates/buyletter.pdf"
+          : "/templates/englishbuyletter.pdf";
+
+      const existingPdfBytes = await fetch(templateUrl).then((res) =>
+        res.arrayBuffer()
+      );
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+      // Add invoice page to the preview as well
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc);
+
+      const formattedData = {
+        ...formData,
+        saleDate: formatDate(formData.saleDate),
+        todayDate: formatDate(formData.todayDate),
+        todayDate1: formatDate(formData.todayDate),
+        todayTime: formatTime(formData.todayTime),
+        todayTime1: formatTime(formData.todayTime),
+        saleTime: formatTime(formData.saleTime),
+        saleAmount: formatRupee(formData.saleAmount),
+        vehiclekm: formatKm(formData.vehiclekm),
+        amountInWords: formatIndianAmountInWords(
+          formData.saleAmount
+            ? formData.saleAmount.toString().replace(/\D/g, "")
+            : "0"
+        ),
+      };
+
+      const positions =
+        language === "hindi" ? fieldPositions : englishFieldPositions;
+
+      for (const [fieldName, position] of Object.entries(positions)) {
+        if (
+          fieldName === "selleraadharphone" &&
+          formattedData.selleraadharphone
+        ) {
+          const combinedPhones = `${formattedData.selleraadharphone}${
+            formattedData.selleraadharphone2
+              ? ` , ${formattedData.selleraadharphone2}`
+              : ""
+          }`;
+          pdfDoc.getPages()[0].drawText(combinedPhones, {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        } else if (
+          fieldName !== "selleraadharphone2" &&
+          formattedData[fieldName]
+        ) {
+          pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        }
+      }
+
+      // Add amount in words to the preview
+      if (formattedData.saleAmount && formattedData.amountInWords) {
+        const saleAmountText = formattedData.saleAmount || "";
+        const saleAmountWidth =
+          saleAmountText.length * (positions.saleAmount.size / 2);
+        const amountInWordsX =
+          positions.saleAmount.x +
+          saleAmountWidth +
+          3 * (positions.saleAmount.size / 2);
+
+        pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
+          x: amountInWordsX,
+          y: positions.saleAmount.y,
+          size: positions.saleAmount.size,
+          color: rgb(0, 0, 0),
+        });
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+
+      setPreviewPdf(url);
+      setShowPreviewModal(true);
+    } catch (error) {
+      console.error("Error generating preview:", error);
+      alert("Failed to generate preview. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  const handlePreviewAndDownload = async (language) => {
+    setShowPreviewModal(false);
+    if (language === "hindi") {
+      await fillAndDownloadHindiPdf();
+    } else {
+      await fillAndDownloadEnglishPdf();
+    }
+  };
   const handleInput = (e) => {
     const { name, value } = e.target;
     e.target.value = value.toUpperCase();
@@ -625,35 +779,27 @@ const BuyLetterForm = () => {
     const logoImageBytes = await fetch(logoUrl).then((res) =>
       res.arrayBuffer()
     );
-    const logoImage = await pdfDoc.embedPng(logoImageBytes); // or embedJpg if using JPEG
+    const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
-    page.drawImage(logoImage, {
-      x: 50,
-      y: 800, // Adjust position as needed
-      width: 100, // Adjust width as needed
-      height: 50, // Adjust height as needed
-    });
     page.drawRectangle({
       x: 0,
       y: 780,
       width: 595,
       height: 80,
-      color: rgb(0.047, 0.098, 0.196), // Dark blue
+      color: rgb(0.047, 0.098, 0.196),
     });
 
-    // Draw dealership header
     page.drawImage(logoImage, {
-      x: 440,
-      y: 744, // Adjust position as needed
-      width: 160, // Adjust width as needed
-      height: 130, // Adjust height as needed
+      x: 50,
+      y: 744,
+      width: 160,
+      height: 130,
     });
 
-    // Draw tagline
     page.drawText("UDAYAM-BR-26-0028550", {
-      x: 50,
+      x: 330,
       y: 805,
-      size: 20,
+      size: 18,
       color: rgb(1, 1, 1),
       font: font,
     });
@@ -675,7 +821,7 @@ const BuyLetterForm = () => {
       color: rgb(0.9, 0.9, 0.9),
     });
 
-    page.drawText("VEHICLE SALE INVOICE", {
+    page.drawText("VEHICLE BUY INVOICE", {
       x: 200,
       y: 758,
       size: 18,
@@ -720,16 +866,6 @@ const BuyLetterForm = () => {
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
     });
-
-    // Customer details box
-    // page.drawRectangle({
-    //   x: 50,
-    //   y: 640,
-    //   width: 495,
-    //   height: 50,
-    //   borderColor: rgb(0.8, 0.8, 0.8),
-    //   borderWidth: 1,
-    // });
 
     page.drawText(`Name: ${formData.sellerName || "N/A"}`, {
       x: 60,
@@ -777,6 +913,13 @@ const BuyLetterForm = () => {
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
+    page.drawText(`, ${formData.selleraadharphone2 || "N/A"}`, {
+      x: 440,
+      y: 665,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
 
     page.drawText(`Aadhar: ${formatAadhar(formData.selleraadhar) || "N/A"}`, {
       x: 350,
@@ -785,8 +928,6 @@ const BuyLetterForm = () => {
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
-
-    // Vehicle Information section
     page.drawText("VEHICLE DETAILS", {
       x: 50,
       y: 620,
@@ -794,8 +935,6 @@ const BuyLetterForm = () => {
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
     });
-
-    // Vehicle details table header
     page.drawRectangle({
       x: 50,
       y: 590,
@@ -818,7 +957,7 @@ const BuyLetterForm = () => {
     vehicleHeaders.forEach((header, index) => {
       page.drawText(header, {
         x: vehicleHeaderPositions[index],
-        y: 596,
+        y: 570,
         size: 9,
         color: rgb(0.2, 0.2, 0.2),
         font: boldFont,
@@ -842,43 +981,32 @@ const BuyLetterForm = () => {
         value.length > 12 ? value.substring(0, 12) + "..." : value;
       page.drawText(truncatedValue, {
         x: vehicleHeaderPositions[index],
-        y: 575,
+        y: 555,
         size: 8,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
     });
 
-    // Sale Information section
-    page.drawText("SALE INFORMATION", {
+    page.drawText("BUY INFORMATION", {
       x: 50,
-      y: 550,
+      y: 530,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
     });
 
-    // // Sale details box
-    // page.drawRectangle({
-    //   x: 50,
-    //   y: 500,
-    //   width: 495,
-    //   height: 50,
-    //   borderColor: rgb(0.8, 0.8, 0.8),
-    //   borderWidth: 1,
-    // });
-
-    page.drawText(`Sale Date: ${formatDate(formData.saleDate)}`, {
+    page.drawText(`Buy Date: ${formatDate(formData.saleDate)}`, {
       x: 60,
-      y: 530,
+      y: 510,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
 
-    page.drawText(`Sale Amount: ${formatRupee(formData.saleAmount)}`, {
+    page.drawText(`Buy Amount: ${formatRupee(formData.saleAmount)}`, {
       x: 200,
-      y: 530,
+      y: 510,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
@@ -888,7 +1016,7 @@ const BuyLetterForm = () => {
       `Amount in Words: ${formatIndianAmountInWords(formData.saleAmount)}`,
       {
         x: 60,
-        y: 515,
+        y: 595,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
@@ -901,7 +1029,7 @@ const BuyLetterForm = () => {
       }`,
       {
         x: 350,
-        y: 530,
+        y: 510,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
@@ -914,7 +1042,7 @@ const BuyLetterForm = () => {
       }`,
       {
         x: 60,
-        y: 500,
+        y: 480,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
@@ -924,7 +1052,7 @@ const BuyLetterForm = () => {
     // Terms and Conditions section
     page.drawText("TERMS & CONDITIONS", {
       x: 50,
-      y: 450,
+      y: 430,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -937,73 +1065,62 @@ const BuyLetterForm = () => {
       "4. Clutch plate is not covered under any guarantee or warranty",
       "5. Monthly servicing during the 3-month guarantee is mandatory",
       "6. First 3 services are free, with minimal charges for oil and parts (excluding engine)",
-      "7. Buyer must submit photocopies of the sell letter and transfer challan",
-      "8. Defects must be reported within 24 hours of purchase to avoid repair charges",
-      "9. Delay in transfer beyond 15 days incurs Rs. 16/day penalty",
-      "10. Customer signature confirms acceptance of all terms",
+      "7. Defects must be reported within 24 hours of purchase to avoid repair charges",
+      "8. Delay in transfer beyond 15 days incurs Rs. 16/day penalty",
+      "9. Customer signature confirms acceptance of all terms",
     ];
 
     terms.forEach((term, index) => {
       page.drawText(term, {
         x: 60,
-        y: 430 - index * 15,
+        y: 410 - index * 15,
         size: 10,
         color: rgb(0.3, 0.3, 0.3),
         font: font,
       });
     });
 
-    // Signatures section
-    page.drawLine({
-      start: { x: 50, y: 275 },
-      end: { x: 545, y: 275 },
-      thickness: 0.5,
-      color: rgb(0.8, 0.8, 0.8),
-    });
-
     // Seller Signature
     page.drawText("Seller Signature", {
       x: 100,
-      y: 255,
+      y: 235,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 100, y: 250 },
+      start: { x: 60, y: 250 },
       end: { x: 250, y: 250 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
 
-    // Buyer Signature (OK Motors)
     page.drawText("Authorized Signatory", {
       x: 350,
-      y: 255,
+      y: 235,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 350, y: 250 },
+      start: { x: 310, y: 250 },
       end: { x: 500, y: 250 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
 
-    // Footer
     page.drawLine({
-      start: { x: 50, y: 100 },
-      end: { x: 545, y: 100 },
+      start: { x: 50, y: 70 },
+      end: { x: 545, y: 70 },
       thickness: 0.5,
       color: rgb(0.8, 0.8, 0.8),
     });
 
     page.drawText("Thank you for your business!", {
       x: 220,
-      y: 60,
+      y: 50,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -1012,8 +1129,8 @@ const BuyLetterForm = () => {
     page.drawText(
       "OK MOTORS | Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014",
       {
-        x: 180,
-        y: 60,
+        x: 130,
+        y: 30,
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
         font: font,
@@ -1121,7 +1238,14 @@ const BuyLetterForm = () => {
                     value={formData.sellerName}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("sellerName")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "sellerName"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1137,7 +1261,14 @@ const BuyLetterForm = () => {
                     value={formData.sellerFatherName}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("sellerFatherName")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "sellerFatherName"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1153,7 +1284,14 @@ const BuyLetterForm = () => {
                     value={formData.sellerCurrentAddress}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("sellerCurrentAddress")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "sellerCurrentAddress"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={100}
                   />
@@ -1178,7 +1316,15 @@ const BuyLetterForm = () => {
                         selleraadhar: formatted,
                       }));
                     }}
-                    style={styles.formInput}
+                    onInput={handleInput}
+                    onFocus={() => setFocusedInput("selleraadhar")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "selleraadhar"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     placeholder="1234-5678-9012"
                   />
                 </div>
@@ -1193,7 +1339,14 @@ const BuyLetterForm = () => {
                     value={formData.sellerpan}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("sellerpan")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "sellerpan"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     maxLength={10}
                   />
                 </div>
@@ -1208,7 +1361,14 @@ const BuyLetterForm = () => {
                     name="selleraadharphone"
                     value={formData.selleraadharphone}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("selleraadharphone")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "selleraadharphone"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     maxLength={10}
                   />
                 </div>
@@ -1222,7 +1382,15 @@ const BuyLetterForm = () => {
                     name="selleraadharphone2"
                     value={formData.selleraadharphone2}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    onInput={handleInput}
+                    onFocus={() => setFocusedInput("selleraadharphone2")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "selleraadharphone2"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     maxLength={10}
                   />
                 </div>
@@ -1246,7 +1414,14 @@ const BuyLetterForm = () => {
                     value={formData.vehicleName}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("vehicleName")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "vehicleName"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1262,7 +1437,14 @@ const BuyLetterForm = () => {
                     value={formData.vehicleModel}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("vehicleModel")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "vehicleModel"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1278,7 +1460,14 @@ const BuyLetterForm = () => {
                     value={formData.vehicleColor}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("vehicleColor")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "vehicleColor"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1294,7 +1483,14 @@ const BuyLetterForm = () => {
                     value={formData.registrationNumber}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("registrationNumber")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "registrationNumber"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={11}
                   />
@@ -1310,7 +1506,14 @@ const BuyLetterForm = () => {
                     value={formData.chassisNumber}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("chassisNumber")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "chassisNumber"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={18}
                   />
@@ -1326,7 +1529,14 @@ const BuyLetterForm = () => {
                     value={formData.engineNumber}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("engineNumber")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "engineNumber"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={15}
                   />
@@ -1354,7 +1564,14 @@ const BuyLetterForm = () => {
                         vehiclekm: rawValue,
                       }));
                     }}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("vehiclekm")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "vehiclekm"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     placeholder="e.g. 36,000.00"
                   />
                 </div>
@@ -1367,7 +1584,14 @@ const BuyLetterForm = () => {
                     name="vehicleCondition"
                     value={formData.vehicleCondition}
                     onChange={handleChange}
-                    style={styles.formSelect}
+                    onFocus={() => setFocusedInput("vehicleCondition")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formSelect,
+                      ...(focusedInput === "vehicleCondition"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                   >
                     <option value="running">Running</option>
@@ -1394,7 +1618,14 @@ const BuyLetterForm = () => {
                     value={formData.buyerName}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("buyerName")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "buyerName"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1410,7 +1641,14 @@ const BuyLetterForm = () => {
                     value={formData.buyerFatherName}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("buyerFatherName")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "buyerFatherName"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1426,7 +1664,14 @@ const BuyLetterForm = () => {
                     value={formData.buyerCurrentAddress}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("buyerCurrentAddress")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "buyerCurrentAddress"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={100}
                   />
@@ -1442,7 +1687,14 @@ const BuyLetterForm = () => {
                     value={formData.dealername}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("dealername")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "dealername"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1458,7 +1710,14 @@ const BuyLetterForm = () => {
                     value={formData.dealeraddress}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("dealeraddress")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "dealeraddress"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={100}
                   />
@@ -1474,7 +1733,14 @@ const BuyLetterForm = () => {
                     value={formData.returnpersonname}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("returnpersonname")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "returnpersonname"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1491,7 +1757,14 @@ const BuyLetterForm = () => {
                     value={formData.witnessname}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("witnessname")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "witnessname"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1507,7 +1780,14 @@ const BuyLetterForm = () => {
                     value={formData.witnessphone}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("witnessphone")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "witnessphone"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={10}
                   />
@@ -1531,7 +1811,14 @@ const BuyLetterForm = () => {
                     name="saleDate"
                     value={formData.saleDate}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("saleDate")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "saleDate"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1544,7 +1831,14 @@ const BuyLetterForm = () => {
                     name="saleTime"
                     value={formData.saleTime}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("saleTime")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "saleTime"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1570,7 +1864,14 @@ const BuyLetterForm = () => {
                         saleAmount: rawValue,
                       }));
                     }}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("saleAmount")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "saleAmount"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1582,10 +1883,17 @@ const BuyLetterForm = () => {
                     name="paymentMethod"
                     value={formData.paymentMethod}
                     onChange={handleChange}
-                    style={styles.formSelect}
+                    onFocus={() => setFocusedInput("paymentMethod")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formSelect,
+                      ...(focusedInput === "paymentMethod"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                   >
                     <option value="cash">Cash</option>
-                    <option value="check">Check</option>
+                    <option value="upi">UPI</option>
                     <option value="bankTransfer">Bank Transfer</option>
                     <option value="other">Other</option>
                   </select>
@@ -1600,7 +1908,14 @@ const BuyLetterForm = () => {
                     name="todayDate"
                     value={formData.todayDate}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("todayDate")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "todayDate"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1613,7 +1928,14 @@ const BuyLetterForm = () => {
                     name="todayTime"
                     value={formData.todayTime}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("todayTime")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "todayTime"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                   />
                 </div>
               </div>
@@ -1631,7 +1953,12 @@ const BuyLetterForm = () => {
                     name="documentsVerified1"
                     checked={formData.documentsVerified1}
                     onChange={handleChange}
-                    style={styles.formCheckbox}
+                    style={{
+                      ...styles.formCheckbox,
+                      ...(focusedInput === "documentsVerified1"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                   />
                   <label style={styles.formCheckboxLabel}>
                     <CheckCircle style={styles.formIcon} />
@@ -1648,18 +1975,44 @@ const BuyLetterForm = () => {
                     name="note"
                     value={formData.note}
                     onChange={handleChange}
+                    onFocus={() => setFocusedInput("note")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "note" ? styles.inputFocused : {}),
+                    }}
                     rows={3}
-                    style={styles.formTextarea}
                   />
                 </div>
               </div>
             </div>
 
             <div style={styles.formActions}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              >
+                <select
+                  value={previewLanguage}
+                  onChange={(e) => setPreviewLanguage(e.target.value)}
+                  style={styles.formSelect}
+                >
+                  <option value="hindi">Hindi Preview</option>
+                  <option value="english">English Preview</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => handlePreview(previewLanguage)}
+                  style={styles.previewButton}
+                  disabled={isSaving}
+                >
+                  <FileText style={styles.buttonIcon} /> Preview
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={handleSaveAndDownload}
                 style={styles.downloadButton}
+                disabled={isSaving}
               >
                 <Download style={styles.buttonIcon} /> Save & Download
               </button>
@@ -1698,6 +2051,69 @@ const BuyLetterForm = () => {
                 onClick={() => setShowLanguageModal(false)}
               >
                 Close
+              </button>
+            </div>
+          </div>
+        )}
+        {showPreviewModal && (
+          <div style={styles.modalOverlay}>
+            <div
+              style={{
+                ...styles.modalContent,
+                maxWidth: "90%",
+                width: "800px",
+              }}
+            >
+              <h3 style={styles.modalTitle}>
+                Document Preview -{" "}
+                {previewLanguage === "hindi" ? "Hindi" : "English"}
+              </h3>
+              <div
+                style={{ height: "70vh", width: "100%", marginBottom: "20px" }}
+              >
+                {previewPdf ? (
+                  <iframe
+                    src={previewPdf}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      border: "1px solid #e2e8f0",
+                    }}
+                    title="PDF Preview"
+                  />
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "100%",
+                      color: "#64748b",
+                    }}
+                  >
+                    Loading preview...
+                  </div>
+                )}
+              </div>
+              <div style={styles.modalButtons}>
+                <button
+                  style={styles.englishButton}
+                  onClick={() => handlePreviewAndDownload("english")}
+                >
+                  Download English PDF
+                </button>
+                <button
+                  style={styles.hindiButton}
+                  onClick={() => handlePreviewAndDownload("hindi")}
+                >
+                  Download Hindi PDF
+                </button>
+              </div>
+              <button
+                style={styles.modalCloseButton}
+                onClick={() => setShowPreviewModal(false)}
+              >
+                Close Preview
               </button>
             </div>
           </div>
@@ -1833,6 +2249,10 @@ const styles = {
     justifyContent: "center",
     zIndex: 1000,
   },
+  inputFocused: {
+    backgroundColor: "yellow",
+  },
+
   modalContent: {
     backgroundColor: "#ffffff",
     padding: "24px",
@@ -1893,6 +2313,15 @@ const styles = {
     ":hover": {
       backgroundColor: "#e2e8f0",
     },
+  },
+  // Add this to your styles object
+  formSelect: {
+    padding: "8px 12px",
+    border: "1px solid #cbd5e1",
+    borderRadius: "6px",
+    fontSize: "0.875rem",
+    backgroundColor: "#ffffff",
+    cursor: "pointer",
   },
   pageSubtitle: {
     fontSize: "1rem",
@@ -2007,6 +2436,7 @@ const styles = {
       backgroundColor: "red", // Changed to light blue when focused
     },
   },
+
   formTextarea: {
     width: "90%",
     padding: "10px 12px",

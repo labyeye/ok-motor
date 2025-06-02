@@ -20,6 +20,7 @@ import {
   ChevronDown,
   ChevronRight,
   Bike,
+  FileText,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "../images/company.png";
@@ -33,6 +34,10 @@ const SellLetterForm = () => {
   const [savedLetterData, setSavedLetterData] = useState(null);
   const [activeMenu, setActiveMenu] = useState("Create Sell Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
+  const [previewPdf, setPreviewPdf] = useState(null);
+  const [previewLanguage, setPreviewLanguage] = useState("hindi");
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [focusedInput, setFocusedInput] = useState(null);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -73,6 +78,8 @@ const SellLetterForm = () => {
     paymentMethod: "cash",
     sellerphone: "9876543210",
     selleraadhar: "764465626571",
+    witnessName: "",
+    witnessPhone: "",
     documentsVerified: true,
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -143,6 +150,185 @@ const SellLetterForm = () => {
       path: "/bike-history",
     },
   ];
+  const handlePreview = async (language = "hindi") => {
+    try {
+      setIsSaving(true);
+      const templateUrl =
+        language === "hindi"
+          ? "/templates/sellletter.pdf"
+          : "/templates/englishsell.pdf";
+
+      const existingPdfBytes = await fetch(templateUrl).then((res) =>
+        res.arrayBuffer()
+      );
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+      // Add invoice page to the preview as well
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc);
+
+      const formattedData = {
+        ...formData,
+        buyerName1: formData.buyerName,
+        buyerName2: formData.buyerName,
+        saleAmount: formatRupee(formData.saleAmount) || "0",
+        amountInWords: formatIndianAmountInWords(formData.saleAmount),
+        vehiclekm: formatKm(formData.vehiclekm) || "0",
+        saleDate: formatDate(formData.saleDate),
+        saleTime: formatTime(formData.saleTime),
+        todayDate: formatDate(formData.todayDate || new Date()),
+        todayTime: formatTime(formData.todayTime || "12:00"),
+        previousDate: formatDate(
+          formData.previousDate || formData.todayDate || new Date()
+        ),
+        previousTime: formatTime(
+          formData.previousTime || formData.todayTime || "12:00"
+        ),
+      };
+      const saleAmountText = formattedData.saleAmount || "";
+
+      const saleAmountWidth =
+        saleAmountText.length * (englishFieldPositions.saleAmount.size / 2);
+      const amountInWordsX =
+        englishFieldPositions.saleAmount.x +
+        saleAmountWidth +
+        1 * (englishFieldPositions.saleAmount.size / 1);
+
+      pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
+        x: amountInWordsX,
+        y: englishFieldPositions.saleAmount.y,
+        size: englishFieldPositions.saleAmount.size,
+        color: rgb(0, 0, 0),
+      });
+      const positions =
+        language === "hindi" ? hindiFieldPositions : englishFieldPositions;
+
+      for (const [fieldName, position] of Object.entries(positions)) {
+        if (formattedData[fieldName]) {
+          pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        }
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+
+      setPreviewPdf(url);
+      setShowPreviewModal(true);
+    } catch (error) {
+      console.error("Error generating preview:", error);
+      alert("Failed to generate preview. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handlePreviewAndDownload = async (language) => {
+    setShowPreviewModal(false);
+    if (language === "hindi") {
+      await fillAndDownloadHindiPdf();
+    } else {
+      await fillAndDownloadEnglishPdf();
+    }
+  };
+  const formatIndianAmountInWords = (amount) => {
+    if (isNaN(amount)) return "(Zero Rupees)";
+
+    const num = parseFloat(amount);
+    if (num === 0) return "(Zero Rupees)";
+
+    const units = [
+      "",
+      "One",
+      "Two",
+      "Three",
+      "Four",
+      "Five",
+      "Six",
+      "Seven",
+      "Eight",
+      "Nine",
+    ];
+    const teens = [
+      "Ten",
+      "Eleven",
+      "Twelve",
+      "Thirteen",
+      "Fourteen",
+      "Fifteen",
+      "Sixteen",
+      "Seventeen",
+      "Eighteen",
+      "Nineteen",
+    ];
+    const tens = [
+      "",
+      "Ten",
+      "Twenty",
+      "Thirty",
+      "Forty",
+      "Fifty",
+      "Sixty",
+      "Seventy",
+      "Eighty",
+      "Ninety",
+    ];
+
+    const convertLessThanThousand = (num) => {
+      if (num <= 0) return "";
+      if (num < 10) return units[num];
+      if (num < 20) return teens[num - 10];
+      if (num < 100) {
+        return (
+          tens[Math.floor(num / 10)] +
+          (num % 10 !== 0 ? " " + units[num % 10] : "")
+        );
+      }
+      return (
+        units[Math.floor(num / 100)] +
+        " Hundred" +
+        (num % 100 !== 0 ? " and " + convertLessThanThousand(num % 100) : "")
+      );
+    };
+
+    const convert = (num) => {
+      if (num <= 0) return "Zero";
+
+      let result = "";
+      const crore = Math.floor(num / 10000000);
+      if (crore > 0) {
+        result += convertLessThanThousand(crore) + " Crore ";
+        num = num % 10000000;
+      }
+
+      const lakh = Math.floor(num / 100000);
+      if (lakh > 0) {
+        result += convertLessThanThousand(lakh) + " Lakh ";
+        num = num % 100000;
+      }
+
+      const thousand = Math.floor(num / 1000);
+      if (thousand > 0) {
+        result += convertLessThanThousand(thousand) + " Thousand ";
+        num = num % 1000;
+      }
+
+      const remainder = convertLessThanThousand(num);
+      if (remainder) {
+        result += remainder;
+      }
+
+      return result.trim();
+    };
+
+    const amountInPaise = num / 100; // Convert to rupees from paise
+    return `(${convert(amountInPaise)} Only)`;
+  };
 
   const toggleMenu = (menuName) => {
     setExpandedMenus((prev) => ({
@@ -150,10 +336,40 @@ const SellLetterForm = () => {
       [menuName]: !prev[menuName],
     }));
   };
+  const formatKm = (val) => {
+    const num = parseFloat(val.toString().replace(/,/g, ""));
+    return isNaN(num)
+      ? "0.00"
+      : new Intl.NumberFormat("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(num / 100);
+  };
+
+  const formatRupee = (val) => {
+    const num = parseFloat(val.toString().replace(/,/g, ""));
+    return isNaN(num)
+      ? "0.00"
+      : `${new Intl.NumberFormat("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(num / 100)}`;
+  };
+  const formatTime = (timeString) => {
+    if (!timeString) return "";
+    const [hour, minute] = timeString.split(":").map(Number);
+    const date = new Date();
+    date.setHours(hour);
+    date.setMinutes(minute);
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    // Handle both string paths and function paths
     const actualPath = typeof path === "function" ? path(user?.role) : path;
     navigate(actualPath);
   };
@@ -264,57 +480,59 @@ const SellLetterForm = () => {
       setIsSaving(false);
     }
   };
-  // Hindi template field positions
   const hindiFieldPositions = {
-    vehicleName: { x: 339, y: 702, size: 11 },
-    vehicleModel: { x: 207, y: 682, size: 11 },
-    vehicleColor: { x: 97, y: 682, size: 11 },
-    registrationNumber: { x: 436, y: 682, size: 11 },
-    chassisNumber: { x: 151, y: 662, size: 11 },
-    engineNumber: { x: 362, y: 662, size: 11 },
-    vehiclekm: { x: 160, y: 642, size: 11 },
-    buyerName: { x: 75, y: 624, size: 11 },
-    buyerFatherName: { x: 275, y: 624, size: 11 },
-    buyerAddress: { x: 100, y: 604, size: 11 },
-    buyerName1: { x: 252, y: 509, size: 11 },
-    buyerName2: { x: 364, y: 470, size: 11 },
-    saleDate: { x: 235, y: 584, size: 11 },
-    saleTime: { x: 370, y: 584, size: 11 },
-    saleAmount: { x: 460, y: 584, size: 11 },
-    todayDate: { x: 260, y: 564, size: 11 },
-    todayTime: { x: 420, y: 564, size: 11 },
-    previousDate: { x: 373, y: 526, size: 11 },
-    previousTime: { x: 482, y: 526, size: 11 },
-    buyerPhone: { x: 110, y: 208, size: 11 },
-    buyerAadhar: { x: 145, y: 190, size: 11 },
+    vehicleName: { x: 303, y: 690, size: 11 },
+    vehicleModel: { x: 39, y: 668, size: 11 },
+    vehicleColor: { x: 453, y: 690, size: 11 },
+    registrationNumber: { x: 267, y: 668, size: 11 },
+    chassisNumber: { x: 416, y: 668, size: 11 },
+    engineNumber: { x: 87, y: 646, size: 11 },
+    vehiclekm: { x: 308, y: 646, size: 11 },
+    buyerName: { x: 40, y: 623, size: 11 },
+    buyerFatherName: { x: 278, y: 623, size: 11 },
+    buyerAddress: { x: 65, y: 600, size: 11 },
+    buyerName1: { x: 40, y: 490, size: 11 },
+    buyerName2: { x: 40, y: 445, size: 11 },
+    saleDate: { x: 78, y: 578, size: 11 },
+    saleTime: { x: 180, y: 578, size: 11 },
+    saleAmount: { x: 273, y: 578, size: 11 },
+    todayDate: { x: 195, y: 556, size: 11 },
+    todayTime: { x: 321, y: 556, size: 11 },
+    previousDate: { x: 180, y: 511, size: 11 },
+    previousTime: { x: 300, y: 511, size: 11 },
+    buyerPhone: { x: 85, y: 209, size: 11 },
+    buyerAadhar: { x: 110, y: 191, size: 11 },
+    witnessName: { x: 70, y: 105, size: 11 },
+    witnessPhone: { x: 70, y: 87, size: 11 },
   };
 
   const englishFieldPositions = {
-    vehicleName: { x: 350, y: 685, size: 11 },
-    vehicleModel: { x: 110, y: 670, size: 11 },
-    vehicleColor: { x: 465, y: 685, size: 11 },
-    registrationNumber: { x: 370, y: 670, size: 11 },
-    chassisNumber: { x: 160, y: 650, size: 11 },
-    engineNumber: { x: 370, y: 650, size: 11 },
-    vehiclekm: { x: 130, y: 630, size: 11 },
-    buyerName: { x: 305, y: 631, size: 11 },
-    buyerFatherName: { x: 110, y: 613, size: 11 },
-    buyerAddress: { x: 321, y: 613, size: 11 },
-    buyerName1: { x: 186, y: 529, size: 11 },
-    buyerName2: { x: 368, y: 482, size: 11 },
-    saleDate: { x: 166, y: 592, size: 11 },
-    saleTime: { x: 251, y: 592, size: 11 },
-    saleAmount: { x: 326, y: 592, size: 11 },
-    todayDate: { x: 156, y: 574, size: 11 },
-    todayTime: { x: 291, y: 574, size: 11 },
-    previousDate: { x: 278, y: 553, size: 11 },
-    previousTime: { x: 383, y: 553, size: 11 },
+    vehicleName: { x: 300, y: 680, size: 11 },
+    vehicleModel: { x: 109, y: 660, size: 11 },
+    vehicleColor: { x: 463, y: 680, size: 11 },
+    registrationNumber: { x: 375, y: 660, size: 11 },
+    chassisNumber: { x: 70, y: 640, size: 11 },
+    engineNumber: { x: 279, y: 640, size: 11 },
+    vehiclekm: { x: 471, y: 640, size: 11 },
+    buyerName: { x: 185, y: 619, size: 11 },
+    buyerFatherName: { x: 445, y: 619, size: 11 },
+    buyerAddress: { x: 123, y: 599, size: 11 },
+    buyerName1: { x: 120, y: 517, size: 11 },
+    buyerName2: { x: 286, y: 482, size: 11 },
+    saleDate: { x: 70, y: 578, size: 11 },
+    saleTime: { x: 181, y: 578, size: 11 },
+    saleAmount: { x: 285, y: 578, size: 11 },
+    todayDate: { x: 156, y: 557, size: 11 },
+    todayTime: { x: 291, y: 557, size: 11 },
+    previousDate: { x: 240, y: 538, size: 11 },
+    previousTime: { x: 340, y: 538, size: 11 },
     buyerPhone: { x: 120, y: 233, size: 11 },
-    buyerAadhar: { x: 145, y: 212, size: 11 },
+    buyerAadhar: { x: 142, y: 213, size: 11 },
+    witnessName: { x: 115, y: 91, size: 11 },
+    witnessPhone: { x: 115, y: 75, size: 11 },
   };
 
   const drawVehicleInvoice = async (page, pdfDoc) => {
-    // Embed fonts first
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const logoUrl = logo1; // Use your imported logo
@@ -323,7 +541,6 @@ const SellLetterForm = () => {
     );
     const logoImage = await pdfDoc.embedPng(logoImageBytes); // or embedJpg if using JPEG
 
-    // Header background
     page.drawRectangle({
       x: 0,
       y: 780,
@@ -332,24 +549,21 @@ const SellLetterForm = () => {
       color: rgb(0.047, 0.098, 0.196), // Dark blue
     });
 
-    // Draw dealership header
     page.drawImage(logoImage, {
       x: 50,
-      y: 800, // Adjust position as needed
-      width: 100, // Adjust width as needed
-      height: 50, // Adjust height as needed
+      y: 744,
+      width: 160,
+      height: 130,
     });
 
-    // Draw tagline
     page.drawText("UDAYAM-BR-26-0028550", {
-      x: 50,
-      y: 790,
-      size: 10,
+      x: 330,
+      y: 805,
+      size: 18,
       color: rgb(1, 1, 1),
       font: font,
     });
 
-    // Draw address and contact info
     page.drawText(
       "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
       {
@@ -497,7 +711,7 @@ const SellLetterForm = () => {
       formData.registrationNumber || "N/A",
       formData.chassisNumber || "N/A",
       formData.engineNumber || "N/A",
-      formData.vehiclekm ? `${formData.vehiclekm} km` : "N/A",
+      formData.vehiclekm ? `${formatKm(formData.vehiclekm)} km` : "N/A",
     ];
 
     vehicleValues.forEach((value, index) => {
@@ -589,47 +803,39 @@ const SellLetterForm = () => {
       page.drawText(term, {
         x: 60,
         y: 450 - index * 15,
-        size: 8,
+        size: 10,
         color: rgb(0.3, 0.3, 0.3),
         font: font,
       });
     });
 
-    page.drawLine({
-      start: { x: 50, y: 295 },
-      end: { x: 545, y: 295 },
-      thickness: 0.5,
-      color: rgb(0.8, 0.8, 0.8),
-    });
-
     // Seller Signature
     page.drawText("Seller Signature", {
       x: 100,
-      y: 275,
+      y: 235,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 100, y: 270 },
-      end: { x: 250, y: 270 },
+      start: { x: 60, y: 250 },
+      end: { x: 250, y: 250 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
 
-    // Buyer Signature (OK Motors)
     page.drawText("Authorized Signatory", {
       x: 350,
-      y: 275,
+      y: 235,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 350, y: 270 },
-      end: { x: 500, y: 270 },
+      start: { x: 310, y: 250 },
+      end: { x: 500, y: 250 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
@@ -677,7 +883,7 @@ const SellLetterForm = () => {
 
   const fillAndDownloadHindiPdf = async () => {
     try {
-      const templateUrl = "/templates/sellletter.pdf"; // Hindi template
+      const templateUrl = "/templates/sellletter.pdf";
       const existingPdfBytes = await fetch(templateUrl).then((res) =>
         res.arrayBuffer()
       );
@@ -686,7 +892,6 @@ const SellLetterForm = () => {
         if (!timeString) return "";
         return timeString.slice(0, 5);
       }
-      // Add invoice page if needed
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
@@ -694,6 +899,9 @@ const SellLetterForm = () => {
         ...formData,
         buyerName1: formData.buyerName,
         buyerName2: formData.buyerName,
+        saleAmount: formatRupee(formData.saleAmount),
+        amountInWords: formatIndianAmountInWords(formData.saleAmount),
+        vehiclekm: formatKm(formData.vehiclekm),
         saleDate: formatDate(formData.saleDate),
         saleTime: formatTime(formData.saleTime),
         todayDate: formatDate(formData.todayDate || new Date()),
@@ -706,7 +914,6 @@ const SellLetterForm = () => {
         ),
       };
 
-      // Fill sell letter fields
       for (const [fieldName, position] of Object.entries(hindiFieldPositions)) {
         if (formattedLetter[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
@@ -749,6 +956,9 @@ const SellLetterForm = () => {
         ...formData,
         buyerName1: formData.buyerName,
         buyerName2: formData.buyerName,
+        saleAmount: formData.saleAmount,
+        amountInWords: formatIndianAmountInWords(formData.saleAmount),
+        vehiclekm: formData.vehiclekm,
         saleDate: formatDate(formData.saleDate),
         saleTime: formatTime(formData.saleTime),
         todayDate: formatDate(formData.todayDate || new Date()),
@@ -979,7 +1189,6 @@ const SellLetterForm = () => {
                     maxLength={15}
                   />
                 </div>
-                // In the Vehicle Information section
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
@@ -1061,7 +1270,7 @@ const SellLetterForm = () => {
                     onInput={handleInput}
                     style={styles.formInput}
                     required
-                    maxLength={30}
+                    maxLength={16}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1123,6 +1332,43 @@ const SellLetterForm = () => {
                     }}
                     style={styles.formInput}
                     placeholder="1234-5678-9012"
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <User style={styles.formIcon} />
+                    Witness Name || गवाह का नाम
+                  </label>
+                  <input
+                    type="text"
+                    name="witnessName"
+                    value={formData.witnessName}
+                    onChange={handleChange}
+                    style={styles.formInput}
+                    required
+                    maxLength={30}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <User style={styles.formIcon} />
+                    Witness Phone || गवाह का फोन नंबर
+                  </label>
+                  <input
+                    type="text"
+                    name="witnessPhone"
+                    value={formData.witnessPhone}
+                    onChange={(e) => {
+                      const rawValue = e.target.value
+                        .replace(/[^0-9]/g, "")
+                        .slice(0, 10);
+                      setFormData((prev) => ({
+                        ...prev,
+                        witnessPhone: rawValue,
+                      }));
+                    }}
+                    style={styles.formInput}
+                    maxLength={10}
                   />
                 </div>
               </div>
@@ -1258,10 +1504,31 @@ const SellLetterForm = () => {
             </div>
 
             <div style={styles.formActions}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              >
+                <select
+                  value={previewLanguage}
+                  onChange={(e) => setPreviewLanguage(e.target.value)}
+                  style={styles.formSelect}
+                >
+                  <option value="hindi">Hindi Preview</option>
+                  <option value="english">English Preview</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => handlePreview(previewLanguage)}
+                  style={styles.previewButton}
+                  disabled={isSaving}
+                >
+                  <FileText style={styles.buttonIcon} /> Preview
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={handleSaveAndDownload}
                 style={styles.downloadButton}
+                disabled={isSaving}
               >
                 <Download style={styles.buttonIcon} /> Save & Download
               </button>
@@ -1300,6 +1567,69 @@ const SellLetterForm = () => {
                 onClick={() => setShowLanguageModal(false)}
               >
                 Close
+              </button>
+            </div>
+          </div>
+        )}
+        {showPreviewModal && (
+          <div style={styles.modalOverlay}>
+            <div
+              style={{
+                ...styles.modalContent,
+                maxWidth: "90%",
+                width: "800px",
+              }}
+            >
+              <h3 style={styles.modalTitle}>
+                Document Preview -{" "}
+                {previewLanguage === "hindi" ? "Hindi" : "English"}
+              </h3>
+              <div
+                style={{ height: "70vh", width: "100%", marginBottom: "20px" }}
+              >
+                {previewPdf ? (
+                  <iframe
+                    src={previewPdf}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      border: "1px solid #e2e8f0",
+                    }}
+                    title="PDF Preview"
+                  />
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "100%",
+                      color: "#64748b",
+                    }}
+                  >
+                    Loading preview...
+                  </div>
+                )}
+              </div>
+              <div style={styles.modalButtons}>
+                <button
+                  style={styles.englishButton}
+                  onClick={() => handlePreviewAndDownload("english")}
+                >
+                  Download English PDF
+                </button>
+                <button
+                  style={styles.hindiButton}
+                  onClick={() => handlePreviewAndDownload("hindi")}
+                >
+                  Download Hindi PDF
+                </button>
+              </div>
+              <button
+                style={styles.modalCloseButton}
+                onClick={() => setShowPreviewModal(false)}
+              >
+                Close Preview
               </button>
             </div>
           </div>

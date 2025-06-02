@@ -28,7 +28,10 @@ const SellLetterSchema = new mongoose.Schema({
   todayTime: { type: String },
   previousDate: { type: Date },
   previousTime: { type: String },
-  
+
+  // Witness Information
+  witnessName: { type: String, required: true },
+  witnessPhone: { type: String, required: true },
   // Legal Terms
   documentsVerified: { type: Boolean, default: true },
   
