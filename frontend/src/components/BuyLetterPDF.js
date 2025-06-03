@@ -818,6 +818,13 @@ const BuyLetterForm = () => {
       width: 160,
       height: 130,
     });
+    page.drawImage(logoImage, {
+      x: 180,
+      y: 430,
+      width: 260,
+      height: 220,
+      opacity: 0.3,
+    });
 
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
@@ -888,14 +895,6 @@ const BuyLetterForm = () => {
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
-    });
-
-    page.drawText(`Name: ${formData.sellerName || "N/A"}`, {
-      x: 60,
-      y: 665,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
     });
 
     page.drawText(`Name: ${formData.sellerName || "N/A"}`, {
@@ -994,49 +993,49 @@ const BuyLetterForm = () => {
       });
     });
     const vehicleValues = [
-    formData.vehicleName || "N/A",
-    formData.vehicleModel || "N/A",
-    formData.vehicleColor || "N/A",
-    formData.registrationNumber || "N/A",
-    formData.chassisNumber || "N/A",
-    formData.engineNumber || "N/A",
-    formData.vehiclekm ? `${formatKm(formData.vehiclekm)} km` : "N/A",
-  ];
+      formData.vehicleName || "N/A",
+      formData.vehicleModel || "N/A",
+      formData.vehicleColor || "N/A",
+      formData.registrationNumber || "N/A",
+      formData.chassisNumber || "N/A",
+      formData.engineNumber || "N/A",
+      formData.vehiclekm ? `${formatKm(formData.vehiclekm)} km` : "N/A",
+    ];
 
-  const columnWidths = [60, 60, 40, 60, 80, 80, 40, 60];
-  
-  vehicleValues.forEach((value, index) => {
-    const maxWidth = columnWidths[index];
-    const xPos = vehicleHeaderPositions[index];
-    let yPos = 555;
+    const columnWidths = [60, 60, 40, 60, 80, 80, 40, 60];
 
-    const lines = [];
-    let currentLine = "";
+    vehicleValues.forEach((value, index) => {
+      const maxWidth = columnWidths[index];
+      const xPos = vehicleHeaderPositions[index];
+      let yPos = 555;
 
-    for (const word of value.split(" ")) {
-      const testLine = currentLine ? `${currentLine} ${word}` : word;
-      const testWidth = font.widthOfTextAtSize(testLine, 10);
+      const lines = [];
+      let currentLine = "";
 
-      if (testWidth <= maxWidth) {
-        currentLine = testLine;
-      } else {
-        if (currentLine) lines.push(currentLine);
-        currentLine = word;
+      for (const word of value.split(" ")) {
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        const testWidth = font.widthOfTextAtSize(testLine, 10);
+
+        if (testWidth <= maxWidth) {
+          currentLine = testLine;
+        } else {
+          if (currentLine) lines.push(currentLine);
+          currentLine = word;
+        }
       }
-    }
-    if (currentLine) lines.push(currentLine);
+      if (currentLine) lines.push(currentLine);
 
-    // Draw each line
-    lines.forEach((line, lineIndex) => {
-      page.drawText(line, {
-        x: xPos,
-        y: yPos - lineIndex * lineHeight,
-        size: 8,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
+      // Draw each line
+      lines.forEach((line, lineIndex) => {
+        page.drawText(line, {
+          x: xPos,
+          y: yPos - lineIndex * lineHeight,
+          size: 8,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font,
+        });
       });
     });
-  });
 
     page.drawText("BUY INFORMATION", {
       x: 50,
@@ -1096,14 +1095,14 @@ const BuyLetterForm = () => {
 
     const terms = [
       "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
-      "2. A 3-month guarantee is provided on the entire engine",
-      "3. Engine warranty extends from 6 months to 1 year for performance defects",
-      "4. Clutch plate is not covered under any guarantee or warranty",
-      "5. Monthly servicing during the 3-month guarantee is mandatory",
-      "6. First 3 services are free, with minimal charges for oil and parts (excluding engine)",
-      "7. Defects must be reported within 24 hours of purchase to avoid repair charges",
-      "8. Delay in transfer beyond 15 days incurs Rs. 16/day penalty",
-      "9. Customer signature confirms acceptance of all terms",
+      "2. Customer signature confirms acceptance of all terms.",
+      `3. OK MOTORS has paid the money amount of ${formatRupee(formData.saleAmount)} to ${formData.sellerName}.`,
+      "4. The seller confirms that the vehicle is free from any loans, liabilities, or pending challans at the time of sale.",
+      "5. The seller agrees to provide all original documents including RC, insurance, and ID proof at the time of sale.",
+      "6. OK MOTORS is not responsible for any past traffic violations, legal disputes, or ownership claims before the date of purchase.",
+      "7. The seller confirms that the bike has not been involved in any major accidents or insurance claims.",
+      "8. Vehicle handover includes all keys, documents, and accessories as agreed.",
+      "9. The seller confirms that the chassis and engine numbers are intact and not tampered with.",
     ];
 
     terms.forEach((term, index) => {

@@ -25,7 +25,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import logo from "../images/company.png";
-import logo1 from '../images/okmotor.png';
+
 
 import AuthContext from "../context/AuthContext";
 

@@ -163,8 +163,6 @@ const SellLetterForm = () => {
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-
-      // Add invoice page to the preview as well
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
@@ -571,6 +569,14 @@ const SellLetterForm = () => {
       height: 130,
     });
 
+    page.drawImage(logoImage, {
+      x: 180,
+      y: 430,
+      width: 260,
+      height: 220,
+      opacity: 0.3,
+    });
+
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
       y: 805,
@@ -578,19 +584,6 @@ const SellLetterForm = () => {
       color: rgb(1, 1, 1),
       font: font,
     });
-
-    page.drawText(
-      "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
-      {
-        x: 50,
-        y: 770,
-        size: 8,
-        color: rgb(0.8, 0.8, 0.8),
-        font: font,
-      }
-    );
-
-    // Invoice header with accent color
     page.drawRectangle({
       x: 0,
       y: 750,
@@ -603,11 +596,10 @@ const SellLetterForm = () => {
       x: 200,
       y: 758,
       size: 18,
-      color: rgb(0.047, 0.098, 0.196), // Dark blue
+      color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
     });
 
-    // Invoice details section
     const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(
       Math.random() * 10000
     )
@@ -629,8 +621,6 @@ const SellLetterForm = () => {
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
-
-    // Divider line
     page.drawLine({
       start: { x: 50, y: 710 },
       end: { x: 545, y: 710 },
@@ -638,7 +628,6 @@ const SellLetterForm = () => {
       color: rgb(0.8, 0.8, 0.8),
     });
 
-    // Customer Information section
     page.drawText("CUSTOMER DETAILS", {
       x: 50,
       y: 690,
@@ -654,13 +643,29 @@ const SellLetterForm = () => {
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
+    const lineHeight2 = 12;
 
-    page.drawText(`Address: ${formData.buyerAddress || "N/A"}`, {
-      x: 60,
-      y: 650,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
+    const address = formData.buyerAddress || "N/A";
+    const maxCharsPerLine = 38;
+    const label = "Address: ";
+    const labelWidth = 45;
+
+    const addressLines = [];
+    for (let i = 0; i < address.length; i += maxCharsPerLine) {
+      addressLines.push(address.substring(i, i + maxCharsPerLine));
+    }
+
+    addressLines.forEach((line, index) => {
+      const text = index === 0 ? `${label}${line}` : line;
+      const xPos = index === 0 ? 60 : 60 + labelWidth;
+
+      page.drawText(text, {
+        x: xPos,
+        y: 650 - index * lineHeight2,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
     });
 
     page.drawText(`Phone: ${formData.buyerPhone || "N/A"}`, {
@@ -670,8 +675,8 @@ const SellLetterForm = () => {
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
-    page.drawText(`Phone: ${formData.buyerPhone2 || "N/A"}`, {
-      x: 450,
+    page.drawText(`, ${formData.buyerPhone2 || "N/A"}`, {
+      x: 440,
       y: 665,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
@@ -713,17 +718,18 @@ const SellLetterForm = () => {
       "Engine",
       "KM",
     ];
-    const vehicleHeaderPositions = [60, 120, 180, 240, 300, 380, 460];
+    const vehicleHeaderPositions = [60, 120, 180, 220, 280, 370, 460];
 
     vehicleHeaders.forEach((header, index) => {
       page.drawText(header, {
         x: vehicleHeaderPositions[index],
-        y: 596,
+        y: 571,
         size: 9,
         color: rgb(0.2, 0.2, 0.2),
         font: boldFont,
       });
     });
+    const lineHeight = 12;
 
     // Vehicle details row
     const vehicleValues = [
@@ -736,22 +742,45 @@ const SellLetterForm = () => {
       formData.vehiclekm ? `${formatKm(formData.vehiclekm)} km` : "N/A",
     ];
 
+    const columnWidths = [60, 60, 40, 60, 80, 80, 40, 60];
+
     vehicleValues.forEach((value, index) => {
-      const truncatedValue =
-        value.length > 12 ? value.substring(0, 12) + "..." : value;
-      page.drawText(truncatedValue, {
-        x: vehicleHeaderPositions[index],
-        y: 575,
-        size: 8,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
+      const maxWidth = columnWidths[index];
+      const xPos = vehicleHeaderPositions[index];
+      let yPos = 550;
+
+      const lines = [];
+      let currentLine = "";
+
+      for (const word of value.split(" ")) {
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        const testWidth = font.widthOfTextAtSize(testLine, 10);
+
+        if (testWidth <= maxWidth) {
+          currentLine = testLine;
+        } else {
+          if (currentLine) lines.push(currentLine);
+          currentLine = word;
+        }
+      }
+      if (currentLine) lines.push(currentLine);
+
+      // Draw each line
+      lines.forEach((line, lineIndex) => {
+        page.drawText(line, {
+          x: xPos,
+          y: yPos - lineIndex * lineHeight,
+          size: 8,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font,
+        });
       });
     });
 
     // Sale Information section
     page.drawText("SALE INFORMATION", {
       x: 50,
-      y: 550,
+      y: 505,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -759,19 +788,22 @@ const SellLetterForm = () => {
 
     page.drawText(`Sale Date: ${formatDate(formData.saleDate)}`, {
       x: 60,
-      y: 530,
+      y: 485,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
 
-    page.drawText(`Sale Amount: Rs. ${formData.saleAmount || "0"}`, {
-      x: 200,
-      y: 530,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
+    page.drawText(
+      `Sale Amount: Rs. ${formatRupee(formData.saleAmount) || "0"}`,
+      {
+        x: 200,
+        y: 485,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      }
+    );
 
     page.drawText(
       `Payment: ${
@@ -779,7 +811,19 @@ const SellLetterForm = () => {
       }`,
       {
         x: 350,
-        y: 530,
+        y: 485,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      }
+    );
+    page.drawText(
+      `Amount in Words: ${
+        formatIndianAmountInWords(formData.saleAmount) || "N/A"
+      }`,
+      {
+        x: 60,
+        y: 465,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
@@ -792,17 +836,23 @@ const SellLetterForm = () => {
       }`,
       {
         x: 60,
-        y: 510,
+        y: 596,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       }
     );
+    page.drawText("GUARRANTEE & WARRANTY CERTIFICATE", {
+      x: 175,
+      y: 420,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: boldFont,
+    });
 
-    // Terms and Conditions section
     page.drawText("TERMS & CONDITIONS", {
       x: 50,
-      y: 470,
+      y: 390,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -817,14 +867,15 @@ const SellLetterForm = () => {
       "6. First 3 services are free, with minimal charges for oil and parts (excluding engine)",
       "7. Buyer must submit photocopies of the sell letter and transfer challan",
       "8. Defects must be reported within 24 hours of purchase to avoid repair charges",
-      "9. Delay in transfer beyond 15 days incurs Rs. 7.5/day penalty",
+      "9. Delay in transfer beyond 15 days incurs Rs. 17/day penalty",
       "10. Customer signature confirms acceptance of all terms",
+      `11. OK MOTORS has recieved the money amount ${formatRupee(formData.saleAmount)} from ${formData.buyerName}`,
     ];
 
     terms.forEach((term, index) => {
       page.drawText(term, {
         x: 60,
-        y: 450 - index * 15,
+        y: 370 - index * 15,
         size: 10,
         color: rgb(0.3, 0.3, 0.3),
         font: font,
@@ -834,55 +885,55 @@ const SellLetterForm = () => {
     // Seller Signature
     page.drawText("Seller Signature", {
       x: 100,
-      y: 235,
+      y: 145,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 60, y: 250 },
-      end: { x: 250, y: 250 },
+      start: { x: 60, y: 160 },
+      end: { x: 250, y: 160 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
 
     page.drawText("Authorized Signatory", {
       x: 350,
-      y: 235,
+      y: 145,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 310, y: 250 },
-      end: { x: 500, y: 250 },
+      start: { x: 310, y: 160 },
+      end: { x: 500, y: 160 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
 
     // Footer
     page.drawLine({
-      start: { x: 50, y: 100 },
-      end: { x: 545, y: 100 },
+      start: { x: 50, y: 60 },
+      end: { x: 545, y: 60 },
       thickness: 0.5,
       color: rgb(0.8, 0.8, 0.8),
     });
 
     page.drawText("Thank you for your business!", {
       x: 220,
-      y: 80,
+      y: 40,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
     });
 
     page.drawText(
-      "OK MOTORS | 123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210",
+      "OK MOTORS | Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014",
       {
-        x: 180,
-        y: 60,
+        x: 130,
+        y: 20,
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
         font: font,
