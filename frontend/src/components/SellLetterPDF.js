@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "../images/company.png";
-import logo1 from "../images/okmotor.png";
+import logo1 from "../images/okmotorback.png";
 
 import AuthContext from "../context/AuthContext";
 
@@ -252,6 +252,9 @@ const SellLetterForm = () => {
     const num = parseFloat(amount);
     if (num === 0) return "(Zero Rupees)";
 
+    // Handle very small amounts that might cause recursion issues
+    if (num < 1) return "(Less Than One Rupee)";
+
     const units = [
       "",
       "One",
@@ -290,21 +293,23 @@ const SellLetterForm = () => {
     ];
 
     const convertLessThanThousand = (num) => {
-      if (num <= 0) return "";
-      if (num < 10) return units[num];
-      if (num < 20) return teens[num - 10];
-      if (num < 100) {
-        return (
-          tens[Math.floor(num / 10)] +
-          (num % 10 !== 0 ? " " + units[num % 10] : "")
-        );
-      }
-      return (
-        units[Math.floor(num / 100)] +
-        " Hundred" +
-        (num % 100 !== 0 ? " and " + convertLessThanThousand(num % 100) : "")
-      );
-    };
+  if (typeof num !== "number" || isNaN(num) || num <= 0) return "";
+
+  if (num < 10) return units[num];
+  if (num < 20) return teens[num - 10];
+  if (num < 100) {
+    return (
+      tens[Math.floor(num / 10)] +
+      (num % 10 !== 0 ? " " + units[num % 10] : "")
+    );
+  }
+  return (
+    units[Math.floor(num / 100)] +
+    " Hundred" +
+    (num % 100 !== 0 ? " and " + convertLessThanThousand(num % 100) : "")
+  );
+};
+
 
     const convert = (num) => {
       if (num <= 0) return "Zero";
@@ -335,9 +340,7 @@ const SellLetterForm = () => {
 
       return result.trim();
     };
-
-    const amountInPaise = num / 100; // Convert to rupees from paise
-    return `(${convert(amountInPaise)} Only)`;
+    return `(${convert(num)} Only)`;
   };
 
   const toggleMenu = (menuName) => {
@@ -495,22 +498,22 @@ const SellLetterForm = () => {
     vehicleName: { x: 303, y: 690, size: 11 },
     vehicleModel: { x: 39, y: 668, size: 11 },
     vehicleColor: { x: 453, y: 690, size: 11 },
-    registrationNumber: { x: 267, y: 668, size: 11 },
-    chassisNumber: { x: 416, y: 668, size: 11 },
+    registrationNumber: { x: 295, y: 668, size: 11 },
+    chassisNumber: { x: 432, y: 668, size: 11 },
     engineNumber: { x: 87, y: 646, size: 11 },
     vehiclekm: { x: 308, y: 646, size: 11 },
     buyerName: { x: 40, y: 623, size: 11 },
     buyerFatherName: { x: 278, y: 623, size: 11 },
     buyerAddress: { x: 65, y: 600, size: 11 },
-    buyerName1: { x: 40, y: 490, size: 11 },
-    buyerName2: { x: 40, y: 445, size: 11 },
+    buyerName1: { x: 102, y: 489, size: 11 },
+    buyerName2: { x: 102, y: 445, size: 11 },
     saleDate: { x: 78, y: 578, size: 11 },
     saleTime: { x: 180, y: 578, size: 11 },
     saleAmount: { x: 273, y: 578, size: 11 },
-    todayDate: { x: 195, y: 556, size: 11 },
-    todayTime: { x: 321, y: 556, size: 11 },
-    previousDate: { x: 180, y: 511, size: 11 },
-    previousTime: { x: 300, y: 511, size: 11 },
+    todayDate: { x: 210, y: 556, size: 11 },
+    todayTime: { x: 322, y: 556, size: 11 },
+    previousDate: { x: 243, y: 511, size: 11 },
+    previousTime: { x: 361, y: 511, size: 11 },
     buyerPhone: { x: 85, y: 209, size: 11 },
     buyerPhone2: { x: 85, y: 209, size: 11 },
     buyerAadhar: { x: 110, y: 191, size: 11 },
@@ -576,6 +579,13 @@ const SellLetterForm = () => {
       height: 220,
       opacity: 0.3,
     });
+    page.drawImage(logoImage, {
+      x: 150,
+      y: 200,
+      width: 330,
+      height: 260,
+      opacity: 0.3,
+    });
 
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
@@ -614,7 +624,7 @@ const SellLetterForm = () => {
       font: font,
     });
 
-    page.drawText(`Date: ${new Date().toLocaleDateString("en-IN")}`, {
+    page.drawText(`Date: ${formatDate(formData.todayDate)}`, {
       x: 400,
       y: 720,
       size: 10,
@@ -860,16 +870,17 @@ const SellLetterForm = () => {
 
     const terms = [
       "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
-      "2. A 3-month guarantee is provided on the entire engine",
-      "3. Engine warranty extends from 6 months to 1 year for performance defects",
-      "4. Clutch plate is not covered under any guarantee or warranty",
-      "5. Monthly servicing during the 3-month guarantee is mandatory",
-      "6. First 3 services are free, with minimal charges for oil and parts (excluding engine)",
-      "7. Buyer must submit photocopies of the sell letter and transfer challan",
-      "8. Defects must be reported within 24 hours of purchase to avoid repair charges",
-      "9. Delay in transfer beyond 15 days incurs Rs. 17/day penalty",
-      "10. Customer signature confirms acceptance of all terms",
-      `11. OK MOTORS has recieved the money amount ${formatRupee(formData.saleAmount)} from ${formData.buyerName}`,
+      "2. A 3-month guarantee is provided on the entire engine.",
+      "3. Engine warranty extends from 6 months to 1 year for performance defects.",
+      "4. Clutch plate is not covered under any guarantee or warranty.",
+      "5. Monthly servicing during the 3-month guarantee is mandatory.",
+      "6. First 3 services are free, with minimal charges for oil and parts (excluding engine).",
+      "7. Defects must be reported within 24 hours of purchase to avoid repair charges.",
+      "8. Delay in transfer beyond 15 days incurs Rs. 17/day penalty.",
+      "9. Customer signature confirms acceptance of all terms.",
+      `10. OK MOTORS has recieved the money amount ${formatRupee(
+        formData.saleAmount
+      )} from ${formData.buyerName}.`,
     ];
 
     terms.forEach((term, index) => {
@@ -885,45 +896,45 @@ const SellLetterForm = () => {
     // Seller Signature
     page.drawText("Seller Signature", {
       x: 100,
-      y: 145,
+      y: 125,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 60, y: 160 },
-      end: { x: 250, y: 160 },
+      start: { x: 60, y: 140 },
+      end: { x: 250, y: 140 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
 
     page.drawText("Authorized Signatory", {
       x: 350,
-      y: 145,
+      y: 125,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 310, y: 160 },
-      end: { x: 500, y: 160 },
+      start: { x: 310, y: 140 },
+      end: { x: 500, y: 140 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
 
     // Footer
     page.drawLine({
-      start: { x: 50, y: 60 },
-      end: { x: 545, y: 60 },
+      start: { x: 50, y: 80 },
+      end: { x: 545, y: 80 },
       thickness: 0.5,
       color: rgb(0.8, 0.8, 0.8),
     });
 
     page.drawText("Thank you for your business!", {
       x: 220,
-      y: 40,
+      y: 60,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -933,7 +944,7 @@ const SellLetterForm = () => {
       "OK MOTORS | Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014",
       {
         x: 130,
-        y: 20,
+        y: 40,
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
         font: font,
@@ -1553,7 +1564,7 @@ const SellLetterForm = () => {
                     style={styles.formSelect}
                   >
                     <option value="cash">Cash</option>
-                    <option value="check">Check</option>
+                    <option value="check">Upi</option>
                     <option value="bankTransfer">Bank Transfer</option>
                     <option value="other">Other</option>
                   </select>

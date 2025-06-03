@@ -20,7 +20,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import logo from "../images/company.png";
-import logo1 from "../images/okmotor.png";
+import logo1 from "../images/okmotorback.png";
 
 import AuthContext from "../context/AuthContext";
 

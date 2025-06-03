@@ -730,7 +730,7 @@ const ServiceBillForm = () => {
                     onInput={handleInput}
                     style={styles.formInput}
                     required
-                    maxLength={11}
+                    maxLength={15}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -798,14 +798,24 @@ const ServiceBillForm = () => {
                     KM Reading || किलोमीटर पढ़ाई
                   </label>
                   <input
-                    type="number"
-                    name="kmReading"
-                    value={formData.kmReading}
-                    onChange={handleChange}
-                    onInput={handleInput}
-                    style={styles.formInput}
-                    required
-                    maxLength={10}
+                    type="text"
+                    name="vehiclekm"
+                    value={
+                      formData.vehiclekm === ""
+                        ? ""
+                        : new Intl.NumberFormat("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(Number(formData.vehiclekm) / 100)
+                    }
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      setFormData((prev) => ({
+                        ...prev,
+                        vehiclekm: rawValue,
+                      }));
+                    }}
+                    placeholder="e.g. 36,000.00"
                   />
                 </div>
               </div>

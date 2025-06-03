@@ -22,7 +22,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import logo from "../images/company.png";
-import logo1 from "../images/okmotor.png";
+import logo1 from "../images/okmotorback.png";
 
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -565,7 +565,7 @@ const BuyLetterForm = () => {
     witnessname: { x: 400, y: 96, size: 10 },
     witnessphone: { x: 400, y: 80, size: 10 },
     note: { x: 60, y: 18, size: 10 },
-    returnpersonname: { x: 332, y: 297, size: 10 },
+    returnpersonname: { x: 332, y: 298, size: 10 },
   };
   const formatKm = (val) => {
     const num = parseFloat(val.toString().replace(/,/g, ""));
@@ -814,15 +814,23 @@ const BuyLetterForm = () => {
 
     page.drawImage(logoImage, {
       x: 50,
-      y: 744,
+      y: 740,
       width: 160,
       height: 130,
     });
     page.drawImage(logoImage, {
-      x: 180,
-      y: 430,
-      width: 260,
-      height: 220,
+      x: 150,
+      y: 400,
+      width: 330,
+      height: 260,
+      opacity: 0.3,
+    });
+
+    page.drawImage(logoImage, {
+      x: 150,
+      y: 200,
+      width: 330,
+      height: 260,
       opacity: 0.3,
     });
 
@@ -872,7 +880,7 @@ const BuyLetterForm = () => {
       font: font,
     });
 
-    page.drawText(`Date: ${new Date().toLocaleDateString("en-IN")}`, {
+    page.drawText(`Date: ${formatDate(formData.todayDate)}`, {
       x: 400,
       y: 720,
       size: 10,
@@ -1086,7 +1094,7 @@ const BuyLetterForm = () => {
 
     // Terms and Conditions section
     page.drawText("TERMS & CONDITIONS", {
-      x: 50,
+      x: 40,
       y: 430,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
@@ -1099,7 +1107,7 @@ const BuyLetterForm = () => {
       `3. OK MOTORS has paid the money amount of ${formatRupee(formData.saleAmount)} to ${formData.sellerName}.`,
       "4. The seller confirms that the vehicle is free from any loans, liabilities, or pending challans at the time of sale.",
       "5. The seller agrees to provide all original documents including RC, insurance, and ID proof at the time of sale.",
-      "6. OK MOTORS is not responsible for any past traffic violations, legal disputes, or ownership claims before the date of purchase.",
+      "6. OK MOTORS is not responsible for any past violations, legal disputes, or ownership claims before the date of purchase.",
       "7. The seller confirms that the bike has not been involved in any major accidents or insurance claims.",
       "8. Vehicle handover includes all keys, documents, and accessories as agreed.",
       "9. The seller confirms that the chassis and engine numbers are intact and not tampered with.",
@@ -1107,7 +1115,7 @@ const BuyLetterForm = () => {
 
     terms.forEach((term, index) => {
       page.drawText(term, {
-        x: 60,
+        x: 40,
         y: 410 - index * 15,
         size: 10,
         color: rgb(0.3, 0.3, 0.3),
@@ -1117,31 +1125,31 @@ const BuyLetterForm = () => {
 
     // Seller Signature
     page.drawText("Seller Signature", {
-      x: 100,
-      y: 235,
+      x: 110,
+      y: 170,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 60, y: 250 },
-      end: { x: 250, y: 250 },
+      start: { x: 60, y: 185 },
+      end: { x: 250, y: 185 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
 
     page.drawText("Authorized Signatory", {
       x: 350,
-      y: 235,
+      y: 170,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 310, y: 250 },
-      end: { x: 500, y: 250 },
+      start: { x: 310, y: 185 },
+      end: { x: 500, y: 185 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
