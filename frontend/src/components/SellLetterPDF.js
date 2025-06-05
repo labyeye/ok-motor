@@ -514,11 +514,11 @@ const SellLetterForm = () => {
     todayTime: { x: 322, y: 556, size: 11 },
     previousDate: { x: 243, y: 511, size: 11 },
     previousTime: { x: 361, y: 511, size: 11 },
-    buyerPhone: { x: 85, y: 209, size: 11 },
-    buyerPhone2: { x: 85, y: 209, size: 11 },
-    buyerAadhar: { x: 110, y: 191, size: 11 },
-    witnessName: { x: 70, y: 105, size: 11 },
-    witnessPhone: { x: 70, y: 87, size: 11 },
+    buyerPhone: { x: 85, y: 223, size: 11 },
+    buyerPhone2: { x: 85, y: 223, size: 11 },
+    buyerAadhar: { x: 110, y: 205, size: 11 },
+    witnessName: { x: 70, y: 121, size: 11 },
+    witnessPhone: { x: 70, y: 105, size: 11 },
   };
 
   const englishFieldPositions = {
@@ -544,8 +544,8 @@ const SellLetterForm = () => {
     buyerPhone: { x: 120, y: 254, size: 11 },
     buyerPhone2: { x: 120, y: 254, size: 11 },
     buyerAadhar: { x: 142, y: 235, size: 11 },
-    witnessName: { x: 115, y: 91, size: 11 },
-    witnessPhone: { x: 115, y: 75, size: 11 },
+    witnessName: { x: 115, y: 112, size: 11 },
+    witnessPhone: { x: 115, y: 96, size: 11 },
   };
 
   const drawVehicleInvoice = async (page, pdfDoc) => {
