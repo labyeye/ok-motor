@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useContext } from "react";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { saveAs } from "file-saver";
 import {
   FileText,
@@ -446,24 +446,57 @@ const BuyLetterForm = () => {
 
   const fillAndDownloadHindiPdf = async () => {
     try {
-      const hasData = Object.values(formData).some(
-        (value) => value !== "" && value !== null && value !== undefined
+      setIsDownloading(true);
+      setIsSaving(true);
+
+      // Check if letter exists first
+      const existingLetter = await axios.get(
+        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
       );
 
-      if (!hasData) {
-        await generateBlankPDF();
-        return;
+      let savedLetterData;
+      if (existingLetter.data && existingLetter.data.length > 0) {
+        savedLetterData = existingLetter.data[0];
+      } else {
+        // Save new letter if doesn't exist
+        const response = await axios.post(
+          "https://ok-motor.onrender.com/api/buy-letter",
+          formData
+        );
+        savedLetterData = response.data;
       }
 
+      // Load PDF template
       const buyLetterUrl = "/templates/buyletter.pdf";
       const existingPdfBytes = await fetch(buyLetterUrl).then((res) =>
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-      const invoicePage = pdfDoc.addPage([595, 842]);
-      await drawVehicleInvoice(invoicePage, pdfDoc);
+      // Load and embed company logo
+      const logoUrl = logo1;
+      const logoImageBytes = await fetch(logoUrl).then((res) =>
+        res.arrayBuffer()
+      );
+      const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
+      // Get first page and add logo
+      const firstPage = pdfDoc.getPages()[0];
+      firstPage.drawImage(logoImage, {
+        x: 200,
+        y: 680,
+        width: 205,
+        height: 155,
+        opacity: 0.9,
+        rotate: degrees(0),
+      });
+
+      // Format all data for PDF
       const formattedData = {
         ...formData,
         saleDate: formatDate(formData.saleDate),
@@ -474,9 +507,10 @@ const BuyLetterForm = () => {
         saleTime: formatTime(formData.saleTime),
         saleAmount: formatRupee(formData.saleAmount),
         vehiclekm: formatKm(formData.vehiclekm),
-        amountInWords: formatIndianAmountInWords(formData.saleAmount), // Amount in words
+        amountInWords: formatIndianAmountInWords(formData.saleAmount),
       };
 
+      // Fill all form fields
       for (const [fieldName, position] of Object.entries(fieldPositions)) {
         if (
           fieldName === "selleraadharphone" &&
@@ -487,50 +521,74 @@ const BuyLetterForm = () => {
               ? ` , ${formattedData.selleraadharphone2}`
               : ""
           }`;
-          pdfDoc.getPages()[0].drawText(combinedPhones, {
+          firstPage.drawText(combinedPhones, {
             x: position.x,
             y: position.y,
             size: position.size,
-            weight: "bold",
             color: rgb(0, 0, 0),
           });
         } else if (
           fieldName !== "selleraadharphone2" &&
           formattedData[fieldName]
         ) {
-          pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
+          firstPage.drawText(String(formattedData[fieldName]), {
             x: position.x,
             y: position.y,
             size: position.size,
-            weight: "bold",
             color: rgb(0, 0, 0),
           });
         }
       }
 
+      // Add amount in words
       const saleAmountText = formattedData.saleAmount || "";
       const saleAmountWidth =
-        saleAmountText.length * (fieldPositions.saleAmount.size / 2); // Approximate width
+        saleAmountText.length * (fieldPositions.saleAmount.size / 2);
       const amountInWordsX =
         fieldPositions.saleAmount.x +
         saleAmountWidth +
         1.4 * (fieldPositions.saleAmount.size / 2);
-      pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
+
+      firstPage.drawText(formattedData.amountInWords, {
         x: amountInWordsX,
         y: fieldPositions.saleAmount.y,
         size: fieldPositions.saleAmount.size,
         color: rgb(0, 0, 0),
       });
+
+      // Add invoice page
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc);
+
+      // Generate and download PDF
       const pdfBytes = await pdfDoc.save();
       saveAs(
         new Blob([pdfBytes], { type: "application/pdf" }),
-        `vehicle_sale_invoice_${formData.registrationNumber || "document"}.pdf`
+        `vehicle_buy_agreement_${formData.registrationNumber || "document"}.pdf`
       );
+
+      return savedLetterData;
     } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF. Please try again.");
+      console.error("Error generating Hindi PDF:", error);
+
+      let errorMessage = "Failed to generate Hindi PDF. Please try again.";
+      if (error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+        if (error.response.data.error) {
+          errorMessage += ` (${error.response.data.error})`;
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your connection.";
+      }
+
+      alert(errorMessage);
+      throw error;
+    } finally {
+      setIsDownloading(false);
+      setIsSaving(false);
     }
   };
+
   const englishFieldPositions = {
     sellerName: { x: 29, y: 628, size: 11 },
     sellerFatherName: { x: 327, y: 628, size: 11 },
@@ -593,23 +651,61 @@ const BuyLetterForm = () => {
 
   const fillAndDownloadEnglishPdf = async () => {
     try {
-      const buyLetterUrl = "/templates/englishbuyletter.pdf";
-      const existingPdfBytes = await fetch(buyLetterUrl).then((res) =>
+      setIsDownloading(true);
+      setIsSaving(true);
+
+      // Check if letter exists first
+      const existingLetter = await axios.get(
+        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      let savedLetterData;
+      if (existingLetter.data && existingLetter.data.length > 0) {
+        savedLetterData = existingLetter.data[0];
+      } else {
+        const response = await axios.post(
+          "https://ok-motor.onrender.com/api/buy-letter",
+          formData
+        );
+        savedLetterData = response.data;
+      }
+
+      const englishTemplateUrl = "/templates/englishbuyletter.pdf";
+      const existingPdfBytes = await fetch(englishTemplateUrl).then((res) =>
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-      const invoicePage = pdfDoc.addPage([595, 842]);
-      await drawVehicleInvoice(invoicePage, pdfDoc);
+      const logoUrl = logo1;
+      const logoImageBytes = await fetch(logoUrl).then((res) =>
+        res.arrayBuffer()
+      );
+      const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
+      const firstPage = pdfDoc.getPages()[0];
+      firstPage.drawImage(logoImage, {
+        x: 200,
+        y: 680,
+        width: 205,
+        height: 155,
+        opacity: 0.9,
+        rotate: degrees(0),
+      });
+
+      // Format all data for English PDF
       const formattedData = {
         ...formData,
         saleDate: formatDate(formData.saleDate),
         todayDate: formatDate(formData.todayDate),
         todayDate1: formatDate(formData.todayDate),
         todayTime: formatTime(formData.todayTime),
-        saleTime: formatTime(formData.saleTime),
         todayTime1: formatTime(formData.todayTime),
+        saleTime: formatTime(formData.saleTime),
         saleAmount: formatRupee(formData.saleAmount),
         vehiclekm: formatKm(formData.vehiclekm),
         amountInWords: formatIndianAmountInWords(
@@ -619,6 +715,7 @@ const BuyLetterForm = () => {
         ),
       };
 
+      // Fill all form fields using English positions
       for (const [fieldName, position] of Object.entries(
         englishFieldPositions
       )) {
@@ -631,7 +728,7 @@ const BuyLetterForm = () => {
               ? ` , ${formattedData.selleraadharphone2}`
               : ""
           }`;
-          pdfDoc.getPages()[0].drawText(combinedPhones, {
+          firstPage.drawText(combinedPhones, {
             x: position.x,
             y: position.y,
             size: position.size,
@@ -641,7 +738,7 @@ const BuyLetterForm = () => {
           fieldName !== "selleraadharphone2" &&
           formattedData[fieldName]
         ) {
-          pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
+          firstPage.drawText(String(formattedData[fieldName]), {
             x: position.x,
             y: position.y,
             size: position.size,
@@ -650,136 +747,171 @@ const BuyLetterForm = () => {
         }
       }
 
-      const saleAmountText = formattedData.saleAmount || "";
-      const saleAmountWidth =
-        saleAmountText.length * (englishFieldPositions.saleAmount.size / 2);
-      const amountInWordsX =
-        englishFieldPositions.saleAmount.x +
-        saleAmountWidth +
-        3 * (englishFieldPositions.saleAmount.size / 2);
+      // Add amount in words (positioned for English layout)
+      if (formattedData.saleAmount && formattedData.amountInWords) {
+        const saleAmountText = formattedData.saleAmount || "";
+        const saleAmountWidth =
+          saleAmountText.length * (englishFieldPositions.saleAmount.size / 2);
+        const amountInWordsX =
+          englishFieldPositions.saleAmount.x +
+          saleAmountWidth +
+          3 * (englishFieldPositions.saleAmount.size / 2);
 
-      pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
-        x: amountInWordsX,
-        y: englishFieldPositions.saleAmount.y,
-        size: englishFieldPositions.saleAmount.size,
-        color: rgb(0, 0, 0),
-      });
+        firstPage.drawText(formattedData.amountInWords, {
+          x: amountInWordsX,
+          y: englishFieldPositions.saleAmount.y,
+          size: englishFieldPositions.saleAmount.size,
+          color: rgb(0, 0, 0),
+        });
+      }
 
+      // Add invoice page
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc);
+
+      // Generate and download PDF
       const pdfBytes = await pdfDoc.save();
       saveAs(
         new Blob([pdfBytes], { type: "application/pdf" }),
-        `vehicle_sale_agreement_${
+        `vehicle_purchase_agreement_${
           formData.registrationNumber || "document"
-        }.pdf`
+        }_en.pdf`
       );
+
+      return savedLetterData;
     } catch (error) {
       console.error("Error generating English PDF:", error);
-      alert("Failed to generate English PDF. Please try again.");
+
+      let errorMessage = "Failed to generate English PDF. Please try again.";
+      if (error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+        if (error.response.data.error) {
+          errorMessage += ` (${error.response.data.error})`;
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your connection.";
+      }
+
+      alert(errorMessage);
+      throw error;
+    } finally {
+      setIsDownloading(false);
+      setIsSaving(false);
     }
   };
+
   const handlePreview = async (language = "hindi") => {
     try {
       setShowLoadingOverlay(true);
       setPreviewLanguage(language);
+      setIsGeneratingPreview(true);
 
-      const delay = new Promise((resolve) => setTimeout(resolve, 800));
+      const templateUrl =
+        language === "hindi"
+          ? "/templates/buyletter.pdf"
+          : "/templates/englishbuyletter.pdf";
 
-      const generateTask = (async () => {
-        const templateUrl =
-          language === "hindi"
-            ? "/templates/buyletter.pdf"
-            : "/templates/englishbuyletter.pdf";
+      const existingPdfBytes = await fetch(templateUrl).then((res) =>
+        res.arrayBuffer()
+      );
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-        const existingPdfBytes = await fetch(templateUrl).then((res) =>
-          res.arrayBuffer()
-        );
-        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      const logoUrl = logo1;
+      const logoImageBytes = await fetch(logoUrl).then((res) =>
+        res.arrayBuffer()
+      );
+      const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
-        // Add invoice page to the preview as well
-        const invoicePage = pdfDoc.addPage([595, 842]);
-        await drawVehicleInvoice(invoicePage, pdfDoc);
+      const firstPage = pdfDoc.getPages()[0];
+      firstPage.drawImage(logoImage, {
+        x: language === "hindi" ? 200 : 200,
+        y: language === "hindi" ? 680 : 680,
+        width: 205,
+        height: 155,
+        opacity: 0.9,
+        rotate: degrees(0),
+      });
 
-        const formattedData = {
-          ...formData,
-          saleDate: formatDate(formData.saleDate),
-          todayDate: formatDate(formData.todayDate),
-          todayDate1: formatDate(formData.todayDate),
-          todayTime: formatTime(formData.todayTime),
-          todayTime1: formatTime(formData.todayTime),
-          saleTime: formatTime(formData.saleTime),
-          saleAmount: formatRupee(formData.saleAmount),
-          vehiclekm: formatKm(formData.vehiclekm),
-          amountInWords: formatIndianAmountInWords(
-            formData.saleAmount
-              ? formData.saleAmount.toString().replace(/\D/g, "")
-              : "0"
-          ),
-        };
+      const formattedData = {
+        ...formData,
+        saleDate: formatDate(formData.saleDate),
+        todayDate: formatDate(formData.todayDate),
+        todayDate1: formatDate(formData.todayDate),
+        todayTime: formatTime(formData.todayTime),
+        todayTime1: formatTime(formData.todayTime),
+        saleTime: formatTime(formData.saleTime),
+        saleAmount: formatRupee(formData.saleAmount),
+        vehiclekm: formatKm(formData.vehiclekm),
+        amountInWords: formatIndianAmountInWords(
+          formData.saleAmount
+            ? formData.saleAmount.toString().replace(/\D/g, "")
+            : "0"
+        ),
+      };
 
-        const positions =
-          language === "hindi" ? fieldPositions : englishFieldPositions;
-
-        for (const [fieldName, position] of Object.entries(positions)) {
-          if (
-            fieldName === "selleraadharphone" &&
-            formattedData.selleraadharphone
-          ) {
-            const combinedPhones = `${formattedData.selleraadharphone}${
-              formattedData.selleraadharphone2
-                ? ` , ${formattedData.selleraadharphone2}`
-                : ""
-            }`;
-            pdfDoc.getPages()[0].drawText(combinedPhones, {
-              x: position.x,
-              y: position.y,
-              size: position.size,
-              color: rgb(0, 0, 0),
-            });
-          } else if (
-            fieldName !== "selleraadharphone2" &&
-            formattedData[fieldName]
-          ) {
-            pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
-              x: position.x,
-              y: position.y,
-              size: position.size,
-              color: rgb(0, 0, 0),
-            });
-          }
-        }
-
-        // Add amount in words to the preview
-        if (formattedData.saleAmount && formattedData.amountInWords) {
-          const saleAmountText = formattedData.saleAmount || "";
-          const saleAmountWidth =
-            saleAmountText.length * (positions.saleAmount.size / 2);
-          const amountInWordsX =
-            positions.saleAmount.x +
-            saleAmountWidth +
-            3 * (positions.saleAmount.size / 2);
-
-          pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
-            x: amountInWordsX,
-            y: positions.saleAmount.y,
-            size: positions.saleAmount.size,
+      const positions =
+        language === "hindi" ? fieldPositions : englishFieldPositions;
+      for (const [fieldName, position] of Object.entries(positions)) {
+        if (
+          fieldName === "selleraadharphone" &&
+          formattedData.selleraadharphone
+        ) {
+          const combinedPhones = `${formattedData.selleraadharphone}${
+            formattedData.selleraadharphone2
+              ? ` , ${formattedData.selleraadharphone2}`
+              : ""
+          }`;
+          firstPage.drawText(combinedPhones, {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        } else if (
+          fieldName !== "selleraadharphone2" &&
+          formattedData[fieldName]
+        ) {
+          firstPage.drawText(String(formattedData[fieldName]), {
+            x: position.x,
+            y: position.y,
+            size: position.size,
             color: rgb(0, 0, 0),
           });
         }
+      }
 
-        const pdfBytes = await pdfDoc.save();
-        const blob = new Blob([pdfBytes], { type: "application/pdf" });
-        const url = URL.createObjectURL(blob);
+      if (formattedData.saleAmount && formattedData.amountInWords) {
+        const saleAmountText = formattedData.saleAmount || "";
+        const saleAmountWidth =
+          saleAmountText.length * (positions.saleAmount.size / 2);
+        const amountInWordsX =
+          positions.saleAmount.x +
+          saleAmountWidth +
+          3 * (positions.saleAmount.size / 2);
 
-        setPreviewPdf(url);
-        setShowPreviewModal(true);
-      })();
-      await Promise.all([delay, generateTask]);
+        firstPage.drawText(formattedData.amountInWords, {
+          x: amountInWordsX,
+          y: positions.saleAmount.y,
+          size: positions.saleAmount.size,
+          color: rgb(0, 0, 0),
+        });
+      }
+
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc);
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+
+      setPreviewPdf(url);
+      setShowPreviewModal(true);
     } catch (error) {
       console.error("Error generating preview:", error);
-      alert("Failed to generate preview. Please try again.");
+      alert(`Failed to generate ${language} preview. Please try again.`);
     } finally {
-      setIsSaving(false);
       setShowLoadingOverlay(false);
+      setIsGeneratingPreview(false);
     }
   };
   const handlePreviewAndDownload = async (language) => {
@@ -1104,7 +1236,9 @@ const BuyLetterForm = () => {
     const terms = [
       "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
       "2. Customer signature confirms acceptance of all terms.",
-      `3. OK MOTORS has paid the money amount of ${formatRupee(formData.saleAmount)} to ${formData.sellerName}.`,
+      `3. OK MOTORS has paid the money amount of ${formatRupee(
+        formData.saleAmount
+      )} to ${formData.sellerName}.`,
       "4. The seller confirms that the vehicle is free from any loans, liabilities, or pending challans at the time of sale.",
       "5. The seller agrees to provide all original documents including RC, insurance, and ID proof at the time of sale.",
       "6. OK MOTORS is not responsible for any past violations, legal disputes, or ownership claims before the date of purchase.",
