@@ -697,7 +697,6 @@ const BuyLetterForm = () => {
         rotate: degrees(0),
       });
 
-      // Format all data for English PDF
       const formattedData = {
         ...formData,
         saleDate: formatDate(formData.saleDate),
@@ -715,7 +714,6 @@ const BuyLetterForm = () => {
         ),
       };
 
-      // Fill all form fields using English positions
       for (const [fieldName, position] of Object.entries(
         englishFieldPositions
       )) {
