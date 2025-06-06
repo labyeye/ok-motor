@@ -1,13 +1,19 @@
-export function register() {
-  if ('serviceWorker' in navigator) {
+export function register(config) {
+  if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
+    const publicUrl = new URL(process.env.PUBLIC_URL, window.location.href);
+    if (publicUrl.origin !== window.location.origin) {
+      return;
+    }
+
     window.addEventListener('load', () => {
-      navigator.serviceWorker
-        .register('/service-worker.js')
+      const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
+
+      navigator.serviceWorker.register(swUrl)
         .then(registration => {
-          console.log('ServiceWorker registration successful');
+          console.log('Service Worker registered: ', registration);
         })
-        .catch(err => {
-          console.log('ServiceWorker registration failed: ', err);
+        .catch(registrationError => {
+          console.log('Service Worker registration failed: ', registrationError);
         });
     });
   }
@@ -15,8 +21,12 @@ export function register() {
 
 export function unregister() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.ready.then(registration => {
-      registration.unregister();
-    });
+    navigator.serviceWorker.ready
+      .then(registration => {
+        registration.unregister();
+      })
+      .catch(error => {
+        console.error(error.message);
+      });
   }
 }
