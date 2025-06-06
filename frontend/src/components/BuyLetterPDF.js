@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
-
+import { offlineManager } from "../utils/offlineManager";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
@@ -42,6 +42,7 @@ const BuyLetterForm = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   const [formData, setFormData] = useState({
     sellerName: "",
@@ -91,6 +92,91 @@ const BuyLetterForm = () => {
     returnpersonname: "",
     note: "",
   });
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    // Check for pending submissions when coming online
+    const checkPendingSubmissions = async () => {
+      if (isOnline) {
+        const pending = await offlineManager.getPendingSubmissions();
+        if (pending.length > 0) {
+          await syncPendingSubmissions(pending);
+        }
+      }
+    };
+
+    checkPendingSubmissions();
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [isOnline]);
+  const syncPendingSubmissions = async (pendingSubmissions) => {
+    try {
+      for (const submission of pendingSubmissions) {
+        if (submission.type === "buy-letter" && !submission.synced) {
+          try {
+            const response = await axios.post(
+              "https://ok-motor.onrender.com/api/buy-letter",
+              submission.data
+            );
+            await offlineManager.markAsSynced(submission.localId);
+            console.log("Synced submission:", submission.localId);
+          } catch (error) {
+            console.error("Error syncing submission:", error);
+          }
+        }
+      }
+      await offlineManager.clearSyncedSubmissions();
+    } catch (error) {
+      console.error("Error syncing submissions:", error);
+    }
+  };
+
+  const saveBuyLetter = async () => {
+    try {
+      setIsSaving(true);
+
+      if (isOnline) {
+        const response = await axios.post(
+          "https://ok-motor.onrender.com/api/buy-letter",
+          formData
+        );
+        return response.data;
+      } else {
+        // Save offline
+        const submission = await offlineManager.savePendingSubmission(
+          "buy-letter",
+          formData
+        );
+        alert(
+          "Buy letter saved locally! It will sync when you're back online."
+        );
+        return submission;
+      }
+    } catch (error) {
+      console.error("Error saving buy letter:", error);
+      let errorMessage = "Failed to save buy letter. Please try again.";
+
+      if (error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+        if (error.response.data.error) {
+          errorMessage += ` (${error.response.data.error})`;
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your connection.";
+      }
+      alert(errorMessage);
+      throw error;
+    } finally {
+      setIsSaving(false);
+    }
+  };
   const LoadingOverlay = () => (
     <div style={styles.loadingOverlay}>
       <div style={styles.loadingContent}>
@@ -213,34 +299,6 @@ const BuyLetterForm = () => {
       minute: "2-digit",
       hour12: true,
     });
-  };
-
-  const saveBuyLetter = async () => {
-    try {
-      setIsSaving(true);
-      const response = await axios.post(
-        "https://ok-motor.onrender.com/api/buy-letter",
-        formData
-      );
-      alert("Buy letter saved successfully!");
-      return response.data;
-    } catch (error) {
-      console.error("Error saving buy letter:", error);
-      let errorMessage = "Failed to save buy letter. Please try again.";
-
-      if (error.response) {
-        errorMessage = error.response.data.message || errorMessage;
-        if (error.response.data.error) {
-          errorMessage += ` (${error.response.data.error})`;
-        }
-      } else if (error.request) {
-        errorMessage = "No response from server. Please check your connection.";
-      }
-      alert(errorMessage);
-      throw error;
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   const handleSaveAndDownload = async () => {
