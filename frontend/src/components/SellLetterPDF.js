@@ -246,14 +246,11 @@ const SellLetterForm = () => {
       await fillAndDownloadEnglishPdf();
     }
   };
-  const formatIndianAmountInWords = (amount) => {
+   const formatIndianAmountInWords = (amount) => {
     if (isNaN(amount)) return "(Zero Rupees)";
 
     const num = parseFloat(amount);
     if (num === 0) return "(Zero Rupees)";
-
-    // Handle very small amounts that might cause recursion issues
-    if (num < 1) return "(Less Than One Rupee)";
 
     const units = [
       "",
@@ -291,56 +288,56 @@ const SellLetterForm = () => {
       "Eighty",
       "Ninety",
     ];
+    const convertLessThanHundred = (n) => {
+      if (n < 10) return units[n];
+      if (n < 20) return teens[n - 10];
+      return (
+        tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + units[n % 10] : "")
+      );
+    };
 
-    const convertLessThanThousand = (num) => {
-  if (typeof num !== "number" || isNaN(num) || num <= 0) return "";
+    const convertLessThanThousand = (n) => {
+      if (n < 100) return convertLessThanHundred(n);
+      const hundred = Math.floor(n / 100);
+      const remainder = n % 100;
+      return (
+        units[hundred] +
+        " Hundred" +
+        (remainder !== 0 ? " and " + convertLessThanHundred(remainder) : "")
+      );
+    };
 
-  if (num < 10) return units[num];
-  if (num < 20) return teens[num - 10];
-  if (num < 100) {
-    return (
-      tens[Math.floor(num / 10)] +
-      (num % 10 !== 0 ? " " + units[num % 10] : "")
-    );
-  }
-  return (
-    units[Math.floor(num / 100)] +
-    " Hundred" +
-    (num % 100 !== 0 ? " and " + convertLessThanThousand(num % 100) : "")
-  );
-};
-
-
-    const convert = (num) => {
-      if (num <= 0) return "Zero";
+    const convert = (n) => {
+      if (n === 0) return "Zero";
 
       let result = "";
-      const crore = Math.floor(num / 10000000);
+      const crore = Math.floor(n / 10000000);
       if (crore > 0) {
         result += convertLessThanThousand(crore) + " Crore ";
-        num = num % 10000000;
+        n = n % 10000000;
       }
 
-      const lakh = Math.floor(num / 100000);
+      const lakh = Math.floor(n / 100000);
       if (lakh > 0) {
         result += convertLessThanThousand(lakh) + " Lakh ";
-        num = num % 100000;
+        n = n % 100000;
       }
 
-      const thousand = Math.floor(num / 1000);
+      const thousand = Math.floor(n / 1000);
       if (thousand > 0) {
         result += convertLessThanThousand(thousand) + " Thousand ";
-        num = num % 1000;
+        n = n % 1000;
       }
 
-      const remainder = convertLessThanThousand(num);
-      if (remainder) {
-        result += remainder;
+      if (n > 0) {
+        result += convertLessThanThousand(n);
       }
 
       return result.trim();
     };
-    return `(${convert(num)} Only)`;
+
+    const amountInPaise = num / 100;
+    return `(${convert(amountInPaise)} Only)`;
   };
 
   const toggleMenu = (menuName) => {
@@ -419,7 +416,7 @@ const SellLetterForm = () => {
       }
 
       const response = await axios.post(
-        "https://ok-motor.onrender.com/api/sell-letters",
+        "http://localhost:2500/api/sell-letters",
         formData,
         {
           headers: {
@@ -459,7 +456,7 @@ const SellLetterForm = () => {
 
       // First check if a record with this registration number exists
       const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
+        `http://localhost:2500/api/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,

@@ -70,7 +70,7 @@ const ServiceBillForm = () => {
   });
 
   const [previewMode, setPreviewMode] = useState(false);
-  const API_BASE_URL = "https://ok-motor.onrender.com/api";
+  const API_BASE_URL = "http://localhost:2500/api";
   const calculateAmounts = (data) => {
     const totalAmount = (data.serviceItems || []).reduce(
       (sum, item) => sum + (item.quantity || 0) * (item.rate || 0),
