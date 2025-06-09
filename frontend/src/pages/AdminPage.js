@@ -64,8 +64,8 @@ const AdminPage = () => {
       setLoading(true);
       setError(null);
       const endpoint = isOwnerView
-        ? `http://localhost:2500/api/dashboard/owner`
-        : `http://localhost:2500/api/dashboard`;
+        ? `https://ok-motor.onrender.com/api/dashboard/owner`
+        : `https://ok-motor.onrender.com/api/dashboard`;
 
       const response = await fetch(endpoint, {
         headers: {
