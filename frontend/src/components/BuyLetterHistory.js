@@ -688,21 +688,7 @@ const BuyLetterHistory = () => {
       width: 160,
       height: 130,
     });
-    page.drawImage(logoImage, {
-      x: 150,
-      y: 400,
-      width: 330,
-      height: 260,
-      opacity: 0.3,
-    });
 
-    page.drawImage(logoImage, {
-      x: 150,
-      y: 200,
-      width: 330,
-      height: 260,
-      opacity: 0.3,
-    });
 
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
