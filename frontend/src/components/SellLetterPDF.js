@@ -146,7 +146,7 @@ const SellLetterForm = () => {
       ],
     },
     {
-      name: "Bike History",
+      name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
     },
