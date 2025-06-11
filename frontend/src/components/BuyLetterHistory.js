@@ -507,14 +507,7 @@ const BuyLetterHistory = () => {
 
       // Get first page and add logo (matching BuyLetterPDF.js positioning)
       const firstPage = pdfDoc.getPages()[0];
-      firstPage.drawImage(logoImage, {
-        x: 200,
-        y: 680,
-        width: 205,
-        height: 155,
-        opacity: 0.9,
-        rotate: degrees(0),
-      });
+
 
       // Format all data for PDF
       const formattedData = {
@@ -591,14 +584,7 @@ const BuyLetterHistory = () => {
       );
       const logoImage = await pdfDoc.embedPng(logoImageBytes);
       const firstPage = pdfDoc.getPages()[0];
-      firstPage.drawImage(logoImage, {
-        x: 200,
-        y: 680,
-        width: 205,
-        height: 155,
-        opacity: 0.9,
-        rotate: degrees(0),
-      });
+
       const formattedData = {
         ...letter,
         buyerName1: letter.buyerName,
