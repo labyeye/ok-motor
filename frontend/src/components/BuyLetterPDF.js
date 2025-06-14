@@ -471,14 +471,7 @@ const BuyLetterForm = () => {
 
       // Get first page and add logo
       const firstPage = pdfDoc.getPages()[0];
-      firstPage.drawImage(logoImage, {
-        x: 200,
-        y: 680,
-        width: 205,
-        height: 155,
-        opacity: 0.9,
-        rotate: degrees(0),
-      });
+
 
       // Format all data for PDF
       const formattedData = {
@@ -672,14 +665,7 @@ const BuyLetterForm = () => {
       const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
       const firstPage = pdfDoc.getPages()[0];
-      firstPage.drawImage(logoImage, {
-        x: 200,
-        y: 680,
-        width: 205,
-        height: 155,
-        opacity: 0.9,
-        rotate: degrees(0),
-      });
+
 
       const formattedData = {
         ...formData,
@@ -805,14 +791,7 @@ const BuyLetterForm = () => {
       const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
       const firstPage = pdfDoc.getPages()[0];
-      firstPage.drawImage(logoImage, {
-        x: language === "hindi" ? 200 : 200,
-        y: language === "hindi" ? 715 : 680,
-        width: 205,
-        height: 155,
-        opacity: 0.9,
-        rotate: degrees(0),
-      });
+      
 
       const formattedData = {
         ...formData,
@@ -932,21 +911,7 @@ const BuyLetterForm = () => {
       width: 160,
       height: 130,
     });
-    page.drawImage(logoImage, {
-      x: 150,
-      y: 400,
-      width: 330,
-      height: 260,
-      opacity: 0.3,
-    });
 
-    page.drawImage(logoImage, {
-      x: 150,
-      y: 200,
-      width: 330,
-      height: 260,
-      opacity: 0.3,
-    });
 
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
