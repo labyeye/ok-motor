@@ -58,7 +58,7 @@ const AuthForm = ({ isLogin }) => {
             <div className="brand-logo">
               <img src={logo} alt="logo" className="brand-icon" />
             </div>
-            <h1 className="auth-title">Welcome back</h1>
+            <h1 className="auth-title">Welcome OK MOTORS</h1>
           </div>
           {error && (
             <div className="auth-error">
