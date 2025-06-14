@@ -228,16 +228,16 @@ const BuyLetterHistory = () => {
     fetchBuyLetters();
   }, [currentPage]);
   const formatTime = (timeString) => {
-  if (!timeString) return "";
-  const [hour, minute] = timeString.split(":").map(Number);
-  let hours = hour % 12;
-  hours = hours ? hours : 12; 
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  
-  const minutes = minute.toString().padStart(2, '0');
-  
-  return `${hours}:${minutes} ${ampm}`;
-};
+    if (!timeString) return "";
+    const [hour, minute] = timeString.split(":").map(Number);
+    let hours = hour % 12;
+    hours = hours ? hours : 12;
+    const ampm = hour >= 12 ? "PM" : "AM";
+
+    const minutes = minute.toString().padStart(2, "0");
+
+    return `${hours}:${minutes} ${ampm}`;
+  };
 
   const menuItems = [
     {
@@ -517,8 +517,20 @@ const BuyLetterHistory = () => {
       const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
       // Get first page and add logo (matching BuyLetterPDF.js positioning)
-      const firstPage = pdfDoc.getPages()[0];
+      firstPage.drawRectangle({
+        x: 220, // Adjust if your logo is placed elsewhere
+        y: 725,
+        width: 180,
+        height: 50,
+        color: rgb(1, 1, 1), // White background
+      });
 
+      firstPage.drawImage(logoImage, {
+        x: 220,
+        y: 690,
+        width: 180,
+        height: 130,
+      });
 
       // Format all data for PDF
       const formattedData = {
@@ -530,12 +542,12 @@ const BuyLetterHistory = () => {
         buyerFatherName1: letter.buyerFatherName,
         buyerCurrentAddress1: letter.buyerCurrentAddress,
         todayDate1: formatDate(letter.todayDate),
-                todayTime: formatTime(letter.todayTime),
+        todayTime: formatTime(letter.todayTime),
 
         todayTime1: formatTime(letter.todayTime),
         buyerCurrentAddress2: "PATNA BIHAR",
         saleDate: formatDate(letter.saleDate),
-        saleTime:formatTime(letter.saleTime),
+        saleTime: formatTime(letter.saleTime),
         todayDate: formatDate(letter.todayDate),
         todayDate1: formatDate(letter.todayDate),
         saleAmount: formatRupee(letter.saleAmount),
@@ -597,7 +609,20 @@ const BuyLetterHistory = () => {
         res.arrayBuffer()
       );
       const logoImage = await pdfDoc.embedPng(logoImageBytes);
-      const firstPage = pdfDoc.getPages()[0];
+      firstPage.drawRectangle({
+        x: 220, // Adjust if your logo is placed elsewhere
+        y: 725,
+        width: 180,
+        height: 50,
+        color: rgb(1, 1, 1), // White background
+      });
+
+      firstPage.drawImage(logoImage, {
+        x: 220,
+        y: 690,
+        width: 180,
+        height: 130,
+      });
 
       const formattedData = {
         ...letter,
@@ -612,7 +637,7 @@ const BuyLetterHistory = () => {
         todayTime1: formatTime(letter.todayTime),
         buyerCurrentAddress2: "PATNA BIHAR",
         saleDate: formatDate(letter.saleDate),
-        saleTime:formatTime(letter.saleTime),
+        saleTime: formatTime(letter.saleTime),
         todayDate: formatDate(letter.todayDate),
         todayDate1: formatDate(letter.todayDate),
         saleAmount: formatRupee(letter.saleAmount),
@@ -690,7 +715,6 @@ const BuyLetterHistory = () => {
       width: 160,
       height: 130,
     });
-
 
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
@@ -1044,7 +1068,9 @@ const BuyLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/buy-letter/${id}`);
+        await axios.delete(
+          `https://ok-motor.onrender.com/api/buy-letter/${id}`
+        );
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting buy letter:", error);
