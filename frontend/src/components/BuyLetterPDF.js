@@ -2227,6 +2227,69 @@ const BuyLetterForm = () => {
             </div>
           </div>
         )}
+        {showPreviewModal && (
+          <div style={styles.modalOverlay}>
+            <div
+              style={{
+                ...styles.modalContent,
+                maxWidth: "90%",
+                width: "800px",
+              }}
+            >
+              <h3 style={styles.modalTitle}>
+                Document Preview -{" "}
+                {previewLanguage === "hindi" ? "Hindi" : "English"}
+              </h3>
+              <div
+                style={{ height: "70vh", width: "100%", marginBottom: "20px" }}
+              >
+                {previewPdf ? (
+                  <iframe
+                    src={previewPdf}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      border: "1px solid #e2e8f0",
+                    }}
+                    title="PDF Preview"
+                  />
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "100%",
+                      color: "#64748b",
+                    }}
+                  >
+                    Loading preview...
+                  </div>
+                )}
+              </div>
+              <div style={styles.modalButtons}>
+                <button
+                  style={styles.englishButton}
+                  onClick={() => handlePreviewAndDownload("english")}
+                >
+                  Download English PDF
+                </button>
+                <button
+                  style={styles.hindiButton}
+                  onClick={() => handlePreviewAndDownload("hindi")}
+                >
+                  Download Hindi PDF
+                </button>
+              </div>
+              <button
+                style={styles.modalCloseButton}
+                onClick={() => setShowPreviewModal(false)}
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        )}
         {showLoadingOverlay && <LoadingOverlay />}
       </div>
     </div>
