@@ -204,15 +204,18 @@ const BuyLetterForm = () => {
   };
   const formatTime = (timeString) => {
     if (!timeString) return "";
+
     const [hour, minute] = timeString.split(":").map(Number);
+
     const date = new Date();
     date.setHours(hour);
     date.setMinutes(minute);
-    return date.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    let hours = hour % 12;
+    hours = hours ? hours : 12;
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const minutes = minute.toString().padStart(2, "0");
+
+    return `${hours}:${minutes} ${ampm}`;
   };
 
   const saveBuyLetter = async () => {
@@ -391,42 +394,41 @@ const BuyLetterForm = () => {
     navigate(actualPath);
   };
   const fieldPositions = {
-    sellerName: { x: 34, y: 651, size: 11 },
-    sellerFatherName: { x: 322, y: 651, size: 11 },
-    sellerCurrentAddress: { x: 50, y: 629, size: 11 },
-    vehicleName: { x: 233, y: 610, size: 11 },
-    vehicleModel: { x: 372, y: 610, size: 11 },
-    vehicleColor: { x: 531, y: 610, size: 11 },
-    registrationNumber: { x: 142, y: 591, size: 11 },
-    chassisNumber: { x: 289, y: 591, size: 11 },
-    engineNumber: { x: 464, y: 591, size: 11 },
-    vehiclekm: { x: 81, y: 573, size: 11 },
-    buyerName: { x: 345, y: 573, size: 11 },
-    buyerFatherName: { x: 55, y: 554, size: 11 },
-    buyerCurrentAddress: { x: 249, y: 554, size: 11 },
-    saleDate: { x: 103, y: 536, size: 11 },
-    saleTime: { x: 200, y: 536, size: 11 },
-    saleAmount: { x: 297, y: 536, size: 11 },
-    todayDate: { x: 176, y: 517, size: 11 },
-    todayTime: { x: 300, y: 517, size: 11 },
-    sellerName1: { x: 26, y: 480, size: 11 },
-    sellerFatherName1: { x: 292, y: 480, size: 11 },
-    buyerName1: { x: 26, y: 442, size: 11 },
-    buyerFatherName1: { x: 334, y: 442, size: 11 },
-    todayDate1: { x: 95, y: 460, size: 11 },
-    todayTime1: { x: 192, y: 460, size: 11 },
-    dealername: { x: 256, y: 405, size: 11 },
-    dealeraddress: { x: 27, y: 385, size: 11 },
-    selleraadhar: { x: 393, y: 245, size: 10 },
-    sellerpan: { x: 391, y: 225, size: 10 },
-    selleraadharphone: { x: 405, y: 206, size: 10 },
-    selleraadharphone2: { x: 455, y: 206, size: 10 },
-    witnessname: { x: 390, y: 119, size: 10 },
-    witnessphone: { x: 390, y: 105, size: 10 },
-    returnpersonname: { x: 427, y: 350, size: 10 },
+    sellerName: { x: 34, y: 632, size: 11 },
+    sellerFatherName: { x: 322, y: 632, size: 11 },
+    sellerCurrentAddress: { x: 50, y: 610, size: 11 },
+    vehicleName: { x: 235, y: 590, size: 11 },
+    vehicleModel: { x: 384, y: 590, size: 11 },
+    vehicleColor: { x: 531, y: 590, size: 11 },
+    registrationNumber: { x: 142, y: 571, size: 11 },
+    chassisNumber: { x: 289, y: 571, size: 11 },
+    engineNumber: { x: 476, y: 571, size: 11 },
+    vehiclekm: { x: 81, y: 552, size: 11 },
+    buyerName: { x: 345, y: 552, size: 11 },
+    buyerFatherName: { x: 55, y: 533, size: 11 },
+    buyerCurrentAddress: { x: 249, y: 533, size: 11 },
+    saleDate: { x: 109, y: 514, size: 11 },
+    saleTime: { x: 206, y: 514, size: 11 },
+    saleAmount: { x: 297, y: 514, size: 11 },
+    todayDate: { x: 176, y: 495, size: 11 },
+    todayTime: { x: 300, y: 495, size: 11 },
+    sellerName1: { x: 26, y: 457, size: 11 },
+    sellerFatherName1: { x: 292, y: 457, size: 11 },
+    buyerName1: { x: 26, y: 418, size: 11 },
+    buyerFatherName1: { x: 334, y: 418, size: 11 },
+    todayDate1: { x: 95, y: 438, size: 11 },
+    todayTime1: { x: 193, y: 438, size: 11 },
+    dealername: { x: 256, y: 380, size: 11 },
+    dealeraddress: { x: 27, y: 362, size: 11 },
+    selleraadhar: { x: 393, y: 215, size: 10 },
+    sellerpan: { x: 391, y: 195, size: 10 },
+    selleraadharphone: { x: 420, y: 176, size: 10 },
+    selleraadharphone2: { x: 481, y: 176, size: 10 },
+    witnessname: { x: 390, y: 87, size: 10 },
+    witnessphone: { x: 390, y: 70, size: 10 },
+    returnpersonname: { x: 427, y: 323, size: 10 },
     note: { x: 60, y: 18, size: 10 },
   };
-
 
   const fillAndDownloadHindiPdf = async () => {
     try {
@@ -462,18 +464,27 @@ const BuyLetterForm = () => {
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-      // Load and embed company logo
       const logoUrl = logo1;
       const logoImageBytes = await fetch(logoUrl).then((res) =>
         res.arrayBuffer()
       );
       const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
-      // Get first page and add logo
       const firstPage = pdfDoc.getPages()[0];
+      firstPage.drawRectangle({
+        x: 220, // Adjust if your logo is placed elsewhere
+        y: 725,
+        width: 180,
+        height: 50,
+        color: rgb(1, 1, 1), // White background
+      });
 
-
-      // Format all data for PDF
+      firstPage.drawImage(logoImage, {
+        x: 220,
+        y: 690,
+        width: 180,
+        height: 130,
+      });
       const formattedData = {
         ...formData,
         saleDate: formatDate(formData.saleDate),
@@ -593,7 +604,7 @@ const BuyLetterForm = () => {
     todayTime1: { x: 305, y: 421, size: 11 },
     dealername: { x: 136, y: 351, size: 11 },
     dealeraddress: { x: 368, y: 351, size: 11 },
-    selleraadhar: { x: 403, y: 223, size: 10 },
+    selleraadhar: { x: 403, y: 221, size: 10 },
     sellerpan: { x: 403, y: 207, size: 10 },
     selleraadharphone: { x: 426, y: 192, size: 10 },
     selleraadharphone2: { x: 490, y: 192, size: 10 },
@@ -663,10 +674,22 @@ const BuyLetterForm = () => {
         res.arrayBuffer()
       );
       const logoImage = await pdfDoc.embedPng(logoImageBytes);
-
       const firstPage = pdfDoc.getPages()[0];
+      // ✅ JUST BEFORE drawing the logo (logo1)
+      firstPage.drawRectangle({
+        x: 220, // Adjust if your logo is placed elsewhere
+        y: 725,
+        width: 180,
+        height: 50,
+        color: rgb(1, 1, 1), // White background
+      });
 
-
+      firstPage.drawImage(logoImage, {
+        x: 220,
+        y: 690,
+        width: 180,
+        height: 130,
+      });
       const formattedData = {
         ...formData,
         saleDate: formatDate(formData.saleDate),
@@ -791,7 +814,21 @@ const BuyLetterForm = () => {
       const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
       const firstPage = pdfDoc.getPages()[0];
-      
+      // ✅ JUST BEFORE drawing the logo (logo1)
+      firstPage.drawRectangle({
+        x: 220, // Adjust if your logo is placed elsewhere
+        y: 725,
+        width: 180,
+        height: 50,
+        color: rgb(1, 1, 1), // White background
+      });
+
+      firstPage.drawImage(logoImage, {
+        x: 220,
+        y: 690,
+        width: 180,
+        height: 130,
+      });
 
       const formattedData = {
         ...formData,
@@ -907,11 +944,25 @@ const BuyLetterForm = () => {
 
     page.drawImage(logoImage, {
       x: 50,
-      y: 740,
+      y: 744,
       width: 160,
       height: 130,
     });
 
+    page.drawImage(logoImage, {
+      x: 180,
+      y: 430,
+      width: 260,
+      height: 220,
+      opacity: 0.3,
+    });
+    page.drawImage(logoImage, {
+      x: 150,
+      y: 200,
+      width: 330,
+      height: 260,
+      opacity: 0.3,
+    });
 
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,

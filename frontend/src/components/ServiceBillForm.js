@@ -799,20 +799,20 @@ const ServiceBillForm = () => {
                   </label>
                   <input
                     type="text"
-                    name="vehiclekm"
+                    name="kmReading"
                     value={
-                      formData.vehiclekm === ""
+                      formData.kmReading === ""
                         ? ""
                         : new Intl.NumberFormat("en-IN", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
-                          }).format(Number(formData.vehiclekm) / 100)
+                          }).format(Number(formData.kmReading) / 100)
                     }
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");
                       setFormData((prev) => ({
                         ...prev,
-                        vehiclekm: rawValue,
+                        kmReading: rawValue,
                       }));
                     }}
                     placeholder="e.g. 36,000.00"
