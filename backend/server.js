@@ -13,9 +13,14 @@ const cors = require('cors');
 const app = express();
 
 connectDB();
-
+const corsOptions = {
+  origin: 'https://ok-motor.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
 app.use(express.json());
-app.use(cors({ origin: 'https://ok-motor.vercel.app', credentials: true }));
+app.use(cors(corsOptions));
 
 
 app.use('/api/auth', authRoutes);
