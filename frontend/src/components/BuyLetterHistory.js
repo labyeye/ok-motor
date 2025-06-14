@@ -349,7 +349,7 @@ const BuyLetterHistory = () => {
     selleraadharphone2: { x: 470, y: 192, size: 10 },
     witnessname: { x: 400, y: 96, size: 10 },
     witnessphone: { x: 400, y: 80, size: 10 },
-    note: { x: 60, y: 18, size: 10 },
+    note: { x: 60, y: 20, size: 10 },
     returnpersonname: { x: 332, y: 298, size: 10 },
   };
 
