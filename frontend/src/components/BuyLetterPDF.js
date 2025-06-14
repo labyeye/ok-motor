@@ -368,7 +368,7 @@ const BuyLetterForm = () => {
         ]
       : []),
     {
-      name: "Bike History",
+      name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
     },
@@ -2227,7 +2227,6 @@ const BuyLetterForm = () => {
             </div>
           </div>
         )}
-        https://ok-motor.onrender.com
         {showLoadingOverlay && <LoadingOverlay />}
       </div>
     </div>

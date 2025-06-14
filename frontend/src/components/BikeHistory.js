@@ -341,7 +341,7 @@ const BikeHistory = () => {
 
           {loading ? (
             <div style={styles.loadingContainer}>
-              <p>Loading bike history...</p>
+              <p>Loading vehicle history...</p>
             </div>
           ) : bikeHistory.length === 0 ? (
             <div style={styles.emptyState}>
