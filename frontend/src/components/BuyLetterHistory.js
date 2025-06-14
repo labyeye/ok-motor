@@ -511,27 +511,13 @@ const BuyLetterHistory = () => {
 
       // Load and embed company logo (updated positioning)
       const logoUrl = logo1;
-      const logoImageBytes = await fetch(logoUrl).then((res) =>
-        res.arrayBuffer()
-      );
-      const logoImage = await pdfDoc.embedPng(logoImageBytes);
-      const firstPage = pdfDoc.getPages()[0];
+
+            const firstPage = pdfDoc.getPages()[0];
 
       // Get first page and add logo (matching BuyLetterPDF.js positioning)
-      firstPage.drawRectangle({
-        x: 220, // Adjust if your logo is placed elsewhere
-        y: 725,
-        width: 180,
-        height: 50,
-        color: rgb(1, 1, 1), // White background
-      });
+      
 
-      firstPage.drawImage(logoImage, {
-        x: 220,
-        y: 690,
-        width: 180,
-        height: 130,
-      });
+
 
       // Format all data for PDF
       const formattedData = {
@@ -606,26 +592,12 @@ const BuyLetterHistory = () => {
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const logoUrl = logo1;
-      const logoImageBytes = await fetch(logoUrl).then((res) =>
-        res.arrayBuffer()
-      );
-      const logoImage = await pdfDoc.embedPng(logoImageBytes);
-      const firstPage = pdfDoc.getPages()[0];
 
-      firstPage.drawRectangle({
-        x: 220, // Adjust if your logo is placed elsewhere
-        y: 725,
-        width: 180,
-        height: 50,
-        color: rgb(1, 1, 1), // White background
-      });
+            const firstPage = pdfDoc.getPages()[0];
 
-      firstPage.drawImage(logoImage, {
-        x: 220,
-        y: 690,
-        width: 180,
-        height: 130,
-      });
+      
+
+
 
       const formattedData = {
         ...letter,
@@ -701,8 +673,7 @@ const BuyLetterHistory = () => {
     const logoImageBytes = await fetch(logoUrl).then((res) =>
       res.arrayBuffer()
     );
-    const logoImage = await pdfDoc.embedPng(logoImageBytes);
-
+    
     // Header with logo
     page.drawRectangle({
       x: 0,
@@ -1057,7 +1028,7 @@ const BuyLetterHistory = () => {
     });
 
     page.drawText(
-      "OK MOTORS | Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014",
+      "OK MOTORS | Pillar num.53, Bailey Rd,  Raja Bazar,  Patna, Bihar 800014",
       {
         x: 130,
         y: 30,

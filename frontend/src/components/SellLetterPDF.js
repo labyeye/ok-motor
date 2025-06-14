@@ -164,27 +164,11 @@ const SellLetterForm = () => {
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const logoUrl = logo1;
-      const logoImageBytes = await fetch(logoUrl).then((res) =>
-        res.arrayBuffer()
-      );
-      const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
+      
       const firstPage = pdfDoc.getPages()[0];
       // ✅ JUST BEFORE drawing the logo (logo1)
-      firstPage.drawRectangle({
-        x: 220, // Adjust if your logo is placed elsewhere
-        y: 785,
-        width: 170,
-        height: 50,
-        color: rgb(1, 1, 1), // White background
-      });
-
-      firstPage.drawImage(logoImage, {
-        x: 220,
-        y: 750,
-        width: 170,
-        height: 120,
-      });
+      
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
@@ -574,8 +558,7 @@ const SellLetterForm = () => {
     const logoImageBytes = await fetch(logoUrl).then((res) =>
       res.arrayBuffer()
     );
-    const logoImage = await pdfDoc.embedPng(logoImageBytes);
-
+    
     page.drawRectangle({
       x: 0,
       y: 780,
@@ -960,7 +943,7 @@ const SellLetterForm = () => {
     });
 
     page.drawText(
-      "OK MOTORS | Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014",
+      "OK MOTORS | Pillar num.53, Bailey Rd,  Raja Bazar,  Patna, Bihar 800014",
       {
         x: 130,
         y: 40,
@@ -992,26 +975,10 @@ const SellLetterForm = () => {
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const logoUrl = logo1;
-      const logoImageBytes = await fetch(logoUrl).then((res) =>
-        res.arrayBuffer()
-      );
-      const logoImage = await pdfDoc.embedPng(logoImageBytes);
-      const firstPage = pdfDoc.getPages()[0];
-      // ✅ JUST BEFORE drawing the logo (logo1)
-      firstPage.drawRectangle({
-        x: 220, // Adjust if your logo is placed elsewhere
-        y: 785,
-        width: 170,
-        height: 50,
-        color: rgb(1, 1, 1), // White background
-      });
 
-      firstPage.drawImage(logoImage, {
-        x: 220,
-        y: 750,
-        width: 170,
-        height: 120,
-      });
+            const firstPage = pdfDoc.getPages()[0];
+      // ✅ JUST BEFORE drawing the logo (logo1)
+      
       function formatTime(timeString) {
         if (!timeString) return "";
         return timeString.slice(0, 5);
@@ -1070,26 +1037,10 @@ const SellLetterForm = () => {
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const logoUrl = logo1;
-      const logoImageBytes = await fetch(logoUrl).then((res) =>
-        res.arrayBuffer()
-      );
-      const logoImage = await pdfDoc.embedPng(logoImageBytes);
-      const firstPage = pdfDoc.getPages()[0];
-      // ✅ JUST BEFORE drawing the logo (logo1)
-      firstPage.drawRectangle({
-        x: 220, // Adjust if your logo is placed elsewhere
-        y: 785,
-        width: 170,
-        height: 50,
-        color: rgb(1, 1, 1), // White background
-      });
 
-      firstPage.drawImage(logoImage, {
-        x: 220,
-        y: 750,
-        width: 170,
-        height: 120,
-      });
+            const firstPage = pdfDoc.getPages()[0];
+      // ✅ JUST BEFORE drawing the logo (logo1)
+      
       function formatTime(timeString) {
         if (!timeString) return "";
         return timeString.slice(0, 5);

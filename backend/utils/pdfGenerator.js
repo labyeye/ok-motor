@@ -572,7 +572,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     // Company info
     page.drawText(
-      "OK MOTORS | Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014",
+      "OK MOTORS | Pillar num.53, Bailey Rd,  Raja Bazar,  Patna, Bihar 800014",
       {
         x: 130,
         y: footerY - 50,

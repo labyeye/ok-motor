@@ -465,26 +465,12 @@ const BuyLetterForm = () => {
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const logoUrl = logo1;
-      const logoImageBytes = await fetch(logoUrl).then((res) =>
-        res.arrayBuffer()
-      );
-      const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
+      
       const firstPage = pdfDoc.getPages()[0];
-      firstPage.drawRectangle({
-        x: 220, // Adjust if your logo is placed elsewhere
-        y: 725,
-        width: 180,
-        height: 50,
-        color: rgb(1, 1, 1), // White background
-      });
+      
 
-      firstPage.drawImage(logoImage, {
-        x: 220,
-        y: 690,
-        width: 180,
-        height: 130,
-      });
+
       const formattedData = {
         ...formData,
         saleDate: formatDate(formData.saleDate),
@@ -670,26 +656,12 @@ const BuyLetterForm = () => {
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const logoUrl = logo1;
-      const logoImageBytes = await fetch(logoUrl).then((res) =>
-        res.arrayBuffer()
-      );
-      const logoImage = await pdfDoc.embedPng(logoImageBytes);
-      const firstPage = pdfDoc.getPages()[0];
-      // ✅ JUST BEFORE drawing the logo (logo1)
-      firstPage.drawRectangle({
-        x: 220, // Adjust if your logo is placed elsewhere
-        y: 725,
-        width: 180,
-        height: 50,
-        color: rgb(1, 1, 1), // White background
-      });
 
-      firstPage.drawImage(logoImage, {
-        x: 220,
-        y: 690,
-        width: 180,
-        height: 130,
-      });
+            const firstPage = pdfDoc.getPages()[0];
+      // ✅ JUST BEFORE drawing the logo (logo1)
+      
+
+
       const formattedData = {
         ...formData,
         saleDate: formatDate(formData.saleDate),
@@ -808,27 +780,13 @@ const BuyLetterForm = () => {
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const logoUrl = logo1;
-      const logoImageBytes = await fetch(logoUrl).then((res) =>
-        res.arrayBuffer()
-      );
-      const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
+      
       const firstPage = pdfDoc.getPages()[0];
       // ✅ JUST BEFORE drawing the logo (logo1)
-      firstPage.drawRectangle({
-        x: 220, // Adjust if your logo is placed elsewhere
-        y: 725,
-        width: 180,
-        height: 50,
-        color: rgb(1, 1, 1), // White background
-      });
+      
 
-      firstPage.drawImage(logoImage, {
-        x: 220,
-        y: 690,
-        width: 180,
-        height: 130,
-      });
+
 
       const formattedData = {
         ...formData,
@@ -932,8 +890,7 @@ const BuyLetterForm = () => {
     const logoImageBytes = await fetch(logoUrl).then((res) =>
       res.arrayBuffer()
     );
-    const logoImage = await pdfDoc.embedPng(logoImageBytes);
-
+    
     page.drawRectangle({
       x: 0,
       y: 780,
@@ -1302,7 +1259,7 @@ const BuyLetterForm = () => {
     });
 
     page.drawText(
-      "OK MOTORS | Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014",
+      "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014",
       {
         x: 130,
         y: 30,
