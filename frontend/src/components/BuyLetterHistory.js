@@ -515,6 +515,7 @@ const BuyLetterHistory = () => {
         res.arrayBuffer()
       );
       const logoImage = await pdfDoc.embedPng(logoImageBytes);
+      const firstPage = pdfDoc.getPages()[0];
 
       // Get first page and add logo (matching BuyLetterPDF.js positioning)
       firstPage.drawRectangle({
@@ -609,6 +610,8 @@ const BuyLetterHistory = () => {
         res.arrayBuffer()
       );
       const logoImage = await pdfDoc.embedPng(logoImageBytes);
+      const firstPage = pdfDoc.getPages()[0];
+
       firstPage.drawRectangle({
         x: 220, // Adjust if your logo is placed elsewhere
         y: 725,
