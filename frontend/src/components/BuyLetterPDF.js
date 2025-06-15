@@ -466,10 +466,7 @@ const BuyLetterForm = () => {
 
       const logoUrl = logo1;
 
-      
       const firstPage = pdfDoc.getPages()[0];
-      
-
 
       const formattedData = {
         ...formData,
@@ -657,10 +654,8 @@ const BuyLetterForm = () => {
 
       const logoUrl = logo1;
 
-            const firstPage = pdfDoc.getPages()[0];
+      const firstPage = pdfDoc.getPages()[0];
       // ✅ JUST BEFORE drawing the logo (logo1)
-      
-
 
       const formattedData = {
         ...formData,
@@ -781,12 +776,8 @@ const BuyLetterForm = () => {
 
       const logoUrl = logo1;
 
-      
       const firstPage = pdfDoc.getPages()[0];
       // ✅ JUST BEFORE drawing the logo (logo1)
-      
-
-
 
       const formattedData = {
         ...formData,
@@ -890,7 +881,7 @@ const BuyLetterForm = () => {
     const logoImageBytes = await fetch(logoUrl).then((res) =>
       res.arrayBuffer()
     );
-    
+
     page.drawRectangle({
       x: 0,
       y: 780,
@@ -970,6 +961,13 @@ const BuyLetterForm = () => {
     page.drawText(`Date: ${formatDate(formData.todayDate)}`, {
       x: 400,
       y: 720,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+    page.drawText(`Time: ${formatTime(formData.saleTime)}`, {
+      x: 450, 
+      y: 700,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
@@ -1425,7 +1423,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={100}
+                    maxLength={70}
                   />
                 </div>
 
