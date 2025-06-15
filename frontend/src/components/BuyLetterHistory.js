@@ -512,12 +512,9 @@ const BuyLetterHistory = () => {
       // Load and embed company logo (updated positioning)
       const logoUrl = logo1;
 
-            const firstPage = pdfDoc.getPages()[0];
+      const firstPage = pdfDoc.getPages()[0];
 
       // Get first page and add logo (matching BuyLetterPDF.js positioning)
-      
-
-
 
       // Format all data for PDF
       const formattedData = {
@@ -593,11 +590,7 @@ const BuyLetterHistory = () => {
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const logoUrl = logo1;
 
-            const firstPage = pdfDoc.getPages()[0];
-
-      
-
-
+      const firstPage = pdfDoc.getPages()[0];
 
       const formattedData = {
         ...letter,
@@ -673,7 +666,8 @@ const BuyLetterHistory = () => {
     const logoImageBytes = await fetch(logoUrl).then((res) =>
       res.arrayBuffer()
     );
-    
+    const logoImage = await pdfDoc.embedPng(logoImageBytes);
+
     // Header with logo
     page.drawRectangle({
       x: 0,
@@ -739,6 +733,13 @@ const BuyLetterHistory = () => {
     page.drawText(`Date: ${formatDate(letter.todayDate)}`, {
       x: 400,
       y: 720,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+    page.drawText(`Time: ${formatTime(letter.saleTime)}`, {
+      x: 450,
+      y: 700,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
@@ -1042,9 +1043,7 @@ const BuyLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
-        await axios.delete(
-          `https://ok-motor.onrender.com/api/buy-letter/${id}`
-        );
+        await axios.delete(`https://ok-motor.onrender.com/api/buy-letter/${id}`);
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting buy letter:", error);

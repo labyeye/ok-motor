@@ -34,6 +34,8 @@ const SellLetterSchema = new mongoose.Schema({
   witnessName: { type: String, required: true },
   witnessPhone: { type: String, required: true },
   // Legal Terms
+    note: { type: String },
+
   documentsVerified: { type: Boolean, default: true },
   
   // Reference to user who created it

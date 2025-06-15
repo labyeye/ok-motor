@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Wrench,
   Users,
+  AlertCircle,
   LogOut,
   ChevronDown,
   ChevronRight,
@@ -82,6 +83,7 @@ const SellLetterForm = () => {
     witnessName: "",
     witnessPhone: "",
     documentsVerified: true,
+    note: "",
   });
   const [isSaving, setIsSaving] = useState(false);
   const handleChange = useCallback((e) => {
@@ -163,12 +165,6 @@ const SellLetterForm = () => {
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const logoUrl = logo1;
-
-      
-      const firstPage = pdfDoc.getPages()[0];
-      // ✅ JUST BEFORE drawing the logo (logo1)
-      
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
@@ -201,7 +197,7 @@ const SellLetterForm = () => {
 
       pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
         x: amountInWordsX,
-        y: englishFieldPositions.saleAmount.y,
+        y: 584,
         size: englishFieldPositions.saleAmount.size,
         color: rgb(0, 0, 0),
       });
@@ -460,7 +456,6 @@ const SellLetterForm = () => {
     try {
       setIsSaving(true);
 
-      // First check if a record with this registration number exists
       const existingLetter = await axios.get(
         `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
@@ -498,57 +493,59 @@ const SellLetterForm = () => {
     }
   };
   const hindiFieldPositions = {
-    vehicleName: { x: 303, y: 690, size: 11 },
-    vehicleModel: { x: 39, y: 668, size: 11 },
-    vehicleColor: { x: 453, y: 690, size: 11 },
-    registrationNumber: { x: 295, y: 668, size: 11 },
-    chassisNumber: { x: 432, y: 668, size: 11 },
-    engineNumber: { x: 87, y: 646, size: 11 },
-    vehiclekm: { x: 308, y: 646, size: 11 },
-    buyerName: { x: 40, y: 623, size: 11 },
-    buyerFatherName: { x: 278, y: 623, size: 11 },
-    buyerAddress: { x: 65, y: 600, size: 11 },
-    buyerName1: { x: 102, y: 489, size: 11 },
-    buyerName2: { x: 102, y: 445, size: 11 },
-    saleDate: { x: 78, y: 578, size: 11 },
-    saleTime: { x: 180, y: 578, size: 11 },
-    saleAmount: { x: 273, y: 578, size: 11 },
-    todayDate: { x: 210, y: 556, size: 11 },
-    todayTime: { x: 322, y: 556, size: 11 },
-    previousDate: { x: 243, y: 511, size: 11 },
-    previousTime: { x: 361, y: 511, size: 11 },
-    buyerPhone: { x: 85, y: 223, size: 11 },
-    buyerPhone2: { x: 150, y: 223, size: 11 },
-    buyerAadhar: { x: 110, y: 205, size: 11 },
+    vehicleName: { x: 303, y: 696, size: 11 },
+    vehicleModel: { x: 39, y: 674, size: 11 },
+    vehicleColor: { x: 453, y: 696, size: 11 },
+    registrationNumber: { x: 296, y: 674, size: 11 },
+    chassisNumber: { x: 433, y: 674, size: 11 },
+    engineNumber: { x: 87, y: 652, size: 11 },
+    vehiclekm: { x: 308, y: 652, size: 11 },
+    buyerName: { x: 40, y: 629, size: 11 },
+    buyerFatherName: { x: 278, y: 629, size: 11 },
+    buyerAddress: { x: 65, y: 606, size: 11 },
+    buyerName1: { x: 102, y: 495, size: 11 },
+    buyerName2: { x: 102, y: 451, size: 11 },
+    saleDate: { x: 78, y: 584, size: 11 },
+    saleTime: { x: 180, y: 584, size: 11 },
+    saleAmount: { x: 273, y: 584, size: 11 },
+    todayDate: { x: 210, y: 562, size: 11 },
+    todayTime: { x: 324, y: 562, size: 11 },
+    previousDate: { x: 243, y: 517, size: 11 },
+    previousTime: { x: 363, y: 517, size: 11 },
+    buyerPhone: { x: 85, y: 240, size: 11 },
+    buyerPhone2: { x: 150, y: 240, size: 11 },
+    buyerAadhar: { x: 111, y: 222, size: 11 },
     witnessName: { x: 70, y: 121, size: 11 },
     witnessPhone: { x: 70, y: 105, size: 11 },
+    note: { x: 60, y: 33, size: 10 },
   };
 
   const englishFieldPositions = {
-    vehicleName: { x: 300, y: 680, size: 11 },
-    vehicleModel: { x: 109, y: 660, size: 11 },
-    vehicleColor: { x: 463, y: 680, size: 11 },
-    registrationNumber: { x: 408, y: 660, size: 11 },
-    chassisNumber: { x: 70, y: 640, size: 11 },
-    engineNumber: { x: 279, y: 640, size: 11 },
-    vehiclekm: { x: 471, y: 640, size: 11 },
-    buyerName: { x: 185, y: 619, size: 11 },
-    buyerFatherName: { x: 445, y: 619, size: 11 },
-    buyerAddress: { x: 123, y: 599, size: 11 },
-    buyerName1: { x: 120, y: 517, size: 11 },
-    buyerName2: { x: 286, y: 482, size: 11 },
-    saleDate: { x: 70, y: 578, size: 11 },
-    saleTime: { x: 181, y: 578, size: 11 },
-    saleAmount: { x: 285, y: 578, size: 11 },
-    todayDate: { x: 156, y: 557, size: 11 },
-    todayTime: { x: 291, y: 557, size: 11 },
-    previousDate: { x: 240, y: 538, size: 11 },
-    previousTime: { x: 340, y: 538, size: 11 },
-    buyerPhone: { x: 120, y: 254, size: 11 },
-    buyerPhone2: { x: 120, y: 254, size: 11 },
-    buyerAadhar: { x: 142, y: 235, size: 11 },
-    witnessName: { x: 115, y: 112, size: 11 },
-    witnessPhone: { x: 115, y: 96, size: 11 },
+    vehicleName: { x: 284, y: 680, size: 11 },
+    vehicleModel: { x: 93, y: 660, size: 11 },
+    vehicleColor: { x: 447, y: 680, size: 11 },
+    registrationNumber: { x: 392, y: 660, size: 11 },
+    chassisNumber: { x: 54, y: 640, size: 11 },
+    engineNumber: { x: 263, y: 640, size: 11 },
+    vehiclekm: { x: 455, y: 640, size: 11 },
+    buyerName: { x: 185 - 16, y: 619, size: 11 },
+    buyerFatherName: { x: 445 - 16, y: 619, size: 11 },
+    buyerAddress: { x: 123 - 16, y: 599, size: 11 },
+    buyerName1: { x: 120 - 16, y: 517, size: 11 },
+    buyerName2: { x: 286 - 16, y: 482, size: 11 },
+    saleDate: { x: 70 - 16, y: 578, size: 11 },
+    saleTime: { x: 181 - 16, y: 578, size: 11 },
+    saleAmount: { x: 285 - 16, y: 578, size: 11 },
+    todayDate: { x: 156 - 16, y: 557, size: 11 },
+    todayTime: { x: 291 - 16, y: 557, size: 11 },
+    previousDate: { x: 240 - 16, y: 538, size: 11 },
+    previousTime: { x: 340 - 16, y: 538, size: 11 },
+    buyerPhone: { x: 109, y: 282, size: 11 },
+    buyerPhone2: { x: 115, y: 282, size: 11 },
+    buyerAadhar: { x: 137, y: 263, size: 11 },
+    witnessName: { x: 105, y: 135, size: 11 },
+    witnessPhone: { x: 105, y: 116, size: 11 },
+    note: { x: 70, y: 35, size: 10 },
   };
 
   const drawVehicleInvoice = async (page, pdfDoc) => {
@@ -558,7 +555,8 @@ const SellLetterForm = () => {
     const logoImageBytes = await fetch(logoUrl).then((res) =>
       res.arrayBuffer()
     );
-    
+    const logoImage = await pdfDoc.embedPng(logoImageBytes);
+
     page.drawRectangle({
       x: 0,
       y: 780,
@@ -627,7 +625,14 @@ const SellLetterForm = () => {
     });
 
     page.drawText(`Date: ${formatDate(formData.todayDate)}`, {
-      x: 400,
+      x: 385,
+      y: 720,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+    page.drawText(`Time: ${formatTime(formData.saleTime)}`, {
+      x: 470,
       y: 720,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
@@ -855,10 +860,11 @@ const SellLetterForm = () => {
       }
     );
     page.drawText("GUARRANTEE & WARRANTY CERTIFICATE", {
-      x: 175,
-      y: 420,
-      size: 12,
+      x: 130,
+      y: 430,
+      size: 17,
       color: rgb(0.047, 0.098, 0.196),
+      fontWeight: "bold",
       font: boldFont,
     });
 
@@ -945,7 +951,7 @@ const SellLetterForm = () => {
     page.drawText(
       "OK MOTORS | Pillar num.53, Bailey Rd,  Raja Bazar,  Patna, Bihar 800014",
       {
-        x: 130,
+        x: 160,
         y: 40,
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
@@ -974,11 +980,6 @@ const SellLetterForm = () => {
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const logoUrl = logo1;
-
-            const firstPage = pdfDoc.getPages()[0];
-      // ✅ JUST BEFORE drawing the logo (logo1)
-      
       function formatTime(timeString) {
         if (!timeString) return "";
         return timeString.slice(0, 5);
@@ -1038,9 +1039,9 @@ const SellLetterForm = () => {
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const logoUrl = logo1;
 
-            const firstPage = pdfDoc.getPages()[0];
+      const firstPage = pdfDoc.getPages()[0];
       // ✅ JUST BEFORE drawing the logo (logo1)
-      
+
       function formatTime(timeString) {
         if (!timeString) return "";
         return timeString.slice(0, 5);
@@ -1629,6 +1630,24 @@ const SellLetterForm = () => {
                     All documents verified and satisfactory || सभी दस्तावेज
                     सत्यापित और संतोषजनक
                   </label>
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <AlertCircle style={styles.formIcon} />
+                    Note
+                  </label>
+                  <textarea
+                    name="note"
+                    value={formData.note}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedInput("note")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "note" ? styles.inputFocused : {}),
+                    }}
+                    rows={3}
+                  />
                 </div>
               </div>
             </div>

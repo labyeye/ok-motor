@@ -878,9 +878,8 @@ const BuyLetterForm = () => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const logoUrl = logo1; // Use your imported logo
-    const logoImageBytes = await fetch(logoUrl).then((res) =>
-      res.arrayBuffer()
-    );
+    const logoImageBytes = await fetch(logoUrl).then((res) => res.arrayBuffer());
+    const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
     page.drawRectangle({
       x: 0,
@@ -959,15 +958,15 @@ const BuyLetterForm = () => {
     });
 
     page.drawText(`Date: ${formatDate(formData.todayDate)}`, {
-      x: 400,
+      x: 385,
       y: 720,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
     page.drawText(`Time: ${formatTime(formData.saleTime)}`, {
-      x: 450, 
-      y: 700,
+      x: 470, 
+      y: 720,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
@@ -1259,7 +1258,7 @@ const BuyLetterForm = () => {
     page.drawText(
       "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014",
       {
-        x: 130,
+        x: 160,
         y: 30,
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
