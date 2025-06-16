@@ -446,12 +446,36 @@ const SellLetterHistory = () => {
         selleraadhar: letter.selleraadhar || "764465626571",
       };
 
+      // for (const [fieldName, position] of Object.entries(hindiFieldPositions)) {
+      //   if (formattedLetter[fieldName]) {
+      //     pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
+      //       x: position.x,
+      //       y: position.y,
+      //       size: position.size,
+      //       color: rgb(0, 0, 0),
+      //     });
+      //   }
+      // }
       for (const [fieldName, position] of Object.entries(hindiFieldPositions)) {
-        if (formattedLetter[fieldName]) {
+        if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
+          const combinedPhones = `${formattedLetter.buyerPhone}${
+            formattedLetter.buyerPhone2
+              ? ` , ${formattedLetter.buyerPhone2}`
+              : ""
+          }`;
+          pdfDoc.getPages()[0].drawText(combinedPhones, {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            weight: "bold",
+            color: rgb(0, 0, 0),
+          });
+        } else if (fieldName !== "buyerPhone2" && formattedLetter[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
             x: position.x,
             y: position.y,
             size: position.size,
+            weight: "bold",
             color: rgb(0, 0, 0),
           });
         }
