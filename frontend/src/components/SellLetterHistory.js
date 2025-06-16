@@ -261,6 +261,15 @@ const SellLetterHistory = () => {
 
     fetchSellLetters();
   }, [currentPage]);
+  const formatTime12Hour = (timeString) => {
+    if (!timeString) return "";
+    const [hours, minutes] = timeString.split(":").map(Number);
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const hours12 = hours % 12 || 12;
+    return `${hours12.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")} ${ampm}`;
+  };
   const formatIndianAmountInWords = (amount) => {
     if (isNaN(amount)) return "(Zero Rupees)";
 
@@ -421,15 +430,18 @@ const SellLetterHistory = () => {
         buyerName1: letter.buyerName,
         buyerName2: letter.buyerName,
         saleDate: formatDate(letter.saleDate),
-        saleTime: formatTime(letter.saleTime),
+        saleTime: formatTime12Hour(letter.saleTime),
+        vehiclekm: formatKm(letter.vehiclekm),
         todayDate: formatDate(letter.todayDate || new Date()),
-        todayTime: formatTime(letter.todayTime || "12:00"),
+        todayTime: formatTime12Hour(letter.todayTime || "12:00"),
         previousDate: formatDate(
           letter.previousDate || letter.todayDate || new Date()
         ),
-        previousTime: formatTime(
+        previousTime: formatTime12Hour(
           letter.previousTime || letter.todayTime || "12:00"
         ),
+        amountInWords: formatIndianAmountInWords(letter.saleAmount), // Amount in words
+        saleAmount: formatRupee(letter.saleAmount), // Formatted amount
         sellerphone: letter.sellerphone || "9876543210",
         selleraadhar: letter.selleraadhar || "764465626571",
       };
@@ -482,15 +494,18 @@ const SellLetterHistory = () => {
         buyerName1: letter.buyerName,
         buyerName2: letter.buyerName,
         saleDate: formatDate(letter.saleDate),
-        saleTime: formatTime(letter.saleTime),
+        saleTime: formatTime12Hour(letter.saleTime), // Use 12-hour format
         todayDate: formatDate(letter.todayDate || new Date()),
-        todayTime: formatTime(letter.todayTime || "12:00"),
+        todayTime: formatTime12Hour(letter.todayTime || "12:00"),
         previousDate: formatDate(
           letter.previousDate || letter.todayDate || new Date()
         ),
-        previousTime: formatTime(
+        previousTime: formatTime12Hour(
           letter.previousTime || letter.todayTime || "12:00"
         ),
+        vehiclekm: formatKm(letter.vehiclekm), // Formatted KM
+        saleAmount: formatRupee(letter.saleAmount), // Formatted amount
+        amountInWords: formatIndianAmountInWords(letter.saleAmount), // Amount in words
         sellerphone: letter.sellerphone || "9876543210",
         selleraadhar: letter.selleraadhar || "764465626571",
       };
