@@ -426,6 +426,22 @@ const SellLetterHistory = () => {
       width: 100, // Adjust width as needed
       height: 50, // Adjust height as needed
     });
+      page.drawImage(logoImage, {
+      x: 180,
+      y: 430,
+      width: 260,
+      height: 220,
+      opacity: 0.3,
+    });
+    page.drawImage(logoImage, {
+      x: 150,
+      y: 200,
+      width: 330,
+      height: 260,
+      opacity: 0.3,
+    });
+
+
 
     // Draw tagline
     page.drawText("UDAYAM-BR-26-0028550", {
