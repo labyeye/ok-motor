@@ -580,7 +580,7 @@ const SellLetterHistory = () => {
       "Engine",
       "KM",
     ];
-    const vehicleHeaderPositions = [60, 120, 180, 240, 300, 380, 460];
+    const vehicleHeaderPositions = [60, 145, 205, 265, 325, 405, 485];
 
     vehicleHeaders.forEach((header, index) => {
       page.drawText(header, {
