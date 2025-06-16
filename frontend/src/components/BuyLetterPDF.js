@@ -896,16 +896,10 @@ const BuyLetterForm = () => {
       height: 130,
     });
 
-    page.drawImage(logoImage, {
-      x: 180,
-      y: 430,
-      width: 260,
-      height: 220,
-      opacity: 0.3,
-    });
+
     page.drawImage(logoImage, {
       x: 150,
-      y: 200,
+      y: 300,
       width: 330,
       height: 260,
       opacity: 0.3,
@@ -1730,7 +1724,7 @@ const BuyLetterForm = () => {
                         : new Intl.NumberFormat("en-IN", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
-                          }).format(Number(formData.vehiclekm))
+                          }).format(Number(formData.vehiclekm)/100)
                     }
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");
@@ -1983,7 +1977,7 @@ const BuyLetterForm = () => {
                         : new Intl.NumberFormat("en-IN", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
-                          }).format(Number(formData.saleAmount))
+                          }).format(Number(formData.saleAmount)/100)
                     }
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");
