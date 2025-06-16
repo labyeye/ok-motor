@@ -788,16 +788,13 @@ const SellLetterHistory = () => {
       font: font,
     });
 
-    page.drawText(
-      `Sale Amount: Rs. ${formatRupee(letter.saleAmount) || "0"}`,
-      {
-        x: 200,
-        y: 485,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      }
-    );
+    page.drawText(`Sale Amount: Rs. ${formatRupee(letter.saleAmount) || "0"}`, {
+      x: 200,
+      y: 485,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
 
     page.drawText(
       `Payment: ${
@@ -1180,7 +1177,7 @@ const SellLetterHistory = () => {
                       <th style={styles.tableHeader}>Buyer</th>
                       <th style={styles.tableHeader}>Vehicle Model</th>
                       <th style={styles.tableHeader}>Vehicle Reg No</th>
-
+                      <th style={styles.tableHeader}>Seller</th>
                       <th style={styles.tableHeader}>Amount</th>
                       <th style={styles.tableHeader}>Date</th>
                       <th style={styles.tableHeader}>Actions</th>
@@ -1197,6 +1194,7 @@ const SellLetterHistory = () => {
                         <td style={styles.tableCell}>
                           {letter.registrationNumber}
                         </td>
+
                         <td style={styles.tableCell}>₹{letter.saleAmount}</td>
                         <td style={styles.tableCell}>
                           {new Date(letter.createdAt).toLocaleDateString()}
