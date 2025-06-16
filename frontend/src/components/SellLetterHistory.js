@@ -460,7 +460,7 @@ const SellLetterHistory = () => {
         const page = pdfDoc.getPages()[0];
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-        const saleText = `₹${formattedLetter.saleAmount}`;
+        const saleText = `${formattedLetter.saleAmount}`;
         const xBase = hindiFieldPositions.saleAmount.x;
         const yBase = hindiFieldPositions.saleAmount.y;
 
@@ -554,7 +554,7 @@ const SellLetterHistory = () => {
         const page = pdfDoc.getPages()[0];
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-        const saleText = `₹${formattedLetter.saleAmount}`;
+        const saleText = `${formattedLetter.saleAmount}`;
         const xBase = hindiFieldPositions.saleAmount.x;
         const yBase = hindiFieldPositions.saleAmount.y;
 
