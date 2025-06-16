@@ -1730,7 +1730,7 @@ const BuyLetterForm = () => {
                         : new Intl.NumberFormat("en-IN", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
-                          }).format(Number(formData.vehiclekm) / 100)
+                          }).format(Number(formData.vehiclekm))
                     }
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");
@@ -1983,7 +1983,7 @@ const BuyLetterForm = () => {
                         : new Intl.NumberFormat("en-IN", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
-                          }).format(Number(formData.saleAmount) / 100)
+                          }).format(Number(formData.saleAmount))
                     }
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");
