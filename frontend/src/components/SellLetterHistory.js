@@ -748,11 +748,14 @@ const SellLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this sell letter?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/sell-letters/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        await axios.delete(
+          `https://ok-motor.onrender.com/api/sell-letters/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
         setSellLetters(sellLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting sell letter:", error);
@@ -982,9 +985,10 @@ const SellLetterHistory = () => {
                 <table style={styles.table}>
                   <thead>
                     <tr>
-                      <th style={styles.tableHeader}>Vehicle</th>
-                      <th style={styles.tableHeader}>Reg No.</th>
                       <th style={styles.tableHeader}>Buyer</th>
+                      <th style={styles.tableHeader}>Vehicle Model</th>
+                      <th style={styles.tableHeader}>Vehicle Reg No</th>
+
                       <th style={styles.tableHeader}>Amount</th>
                       <th style={styles.tableHeader}>Date</th>
                       <th style={styles.tableHeader}>Actions</th>
@@ -993,13 +997,14 @@ const SellLetterHistory = () => {
                   <tbody>
                     {filteredLetters.map((letter) => (
                       <tr key={letter._id} style={styles.tableRow}>
+                        <td style={styles.tableCell}>{letter.buyerName}</td>
+
                         <td style={styles.tableCell}>
                           {letter.vehicleName} ({letter.vehicleModel})
                         </td>
                         <td style={styles.tableCell}>
                           {letter.registrationNumber}
                         </td>
-                        <td style={styles.tableCell}>{letter.buyerName}</td>
                         <td style={styles.tableCell}>₹{letter.saleAmount}</td>
                         <td style={styles.tableCell}>
                           {new Date(letter.createdAt).toLocaleDateString()}

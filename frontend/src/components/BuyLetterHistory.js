@@ -1043,7 +1043,9 @@ const BuyLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/buy-letter/${id}`);
+        await axios.delete(
+          `https://ok-motor.onrender.com/api/buy-letter/${id}`
+        );
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting buy letter:", error);
@@ -1189,7 +1191,8 @@ const BuyLetterHistory = () => {
                   <thead>
                     <tr>
                       <th style={styles.tableHeader}>Seller Name</th>
-                      <th style={styles.tableHeader}>Vehicle</th>
+                      <th style={styles.tableHeader}>Vehicle Model</th>
+                      <th style={styles.tableHeader}>Vehicle Reg No</th>
                       <th style={styles.tableHeader}>Buyer Name</th>
                       <th style={styles.tableHeader}>Sale Amount</th>
                       <th style={styles.tableHeader}>Date</th>
@@ -1200,8 +1203,9 @@ const BuyLetterHistory = () => {
                     {filteredLetters.map((letter) => (
                       <tr key={letter._id} style={styles.tableRow}>
                         <td style={styles.tableCell}>{letter.sellerName}</td>
+                        <td style={styles.tableCell}>{letter.vehicleModel}</td>
                         <td style={styles.tableCell}>
-                          {letter.vehicleName} ({letter.registrationNumber})
+                          ({letter.registrationNumber})
                         </td>
                         <td style={styles.tableCell}>{letter.buyerName}</td>
                         <td style={styles.tableCell}>₹{letter.saleAmount}</td>
