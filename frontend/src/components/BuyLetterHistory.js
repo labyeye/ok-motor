@@ -208,7 +208,7 @@ const BuyLetterHistory = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `http://localhost:2500/api/buy-letter?page=${currentPage}`,
+          `https://ok-motor.onrender.com/api/buy-letter?page=${currentPage}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -1044,7 +1044,7 @@ const BuyLetterHistory = () => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
         await axios.delete(
-          `http://localhost:2500/api/buy-letter/${id}`
+          `https://ok-motor.onrender.com/api/buy-letter/${id}`
         );
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
       } catch (error) {
@@ -1060,7 +1060,7 @@ const BuyLetterHistory = () => {
   const handleSaveEdit = async (updatedLetter) => {
     try {
       const response = await axios.put(
-        `http://localhost:2500/api/buy-letter/${updatedLetter._id}`,
+        `https://ok-motor.onrender.com/api/buy-letter/${updatedLetter._id}`,
         updatedLetter
       );
       setBuyLetters(

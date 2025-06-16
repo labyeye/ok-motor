@@ -242,7 +242,7 @@ const SellLetterHistory = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `http://localhost:2500/api/sell-letters/my-letters?page=${currentPage}`,
+          `https://ok-motor.onrender.com/api/sell-letters/my-letters?page=${currentPage}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -749,7 +749,7 @@ const SellLetterHistory = () => {
     if (window.confirm("Are you sure you want to delete this sell letter?")) {
       try {
         await axios.delete(
-          `http://localhost:2500/api/sell-letters/${id}`,
+          `https://ok-motor.onrender.com/api/sell-letters/${id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -776,7 +776,7 @@ const SellLetterHistory = () => {
   const handleSaveEdit = async (updatedLetter) => {
     try {
       const response = await axios.put(
-        `http://localhost:2500/api/sell-letters/${updatedLetter._id}`,
+        `https://ok-motor.onrender.com/api/sell-letters/${updatedLetter._id}`,
         updatedLetter,
         {
           headers: {

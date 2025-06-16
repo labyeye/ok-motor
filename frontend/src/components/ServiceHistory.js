@@ -44,7 +44,7 @@ const ServiceHistory = () => {
 
         // Fetch service bills
         const serviceResponse = await axios.get(
-          `http://localhost:2500/api/service-bills?page=${currentPage}`,
+          `https://ok-motor.onrender.com/api/service-bills?page=${currentPage}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -56,7 +56,7 @@ const ServiceHistory = () => {
 
         // Fetch purchase history (if needed)
         const purchaseResponse = await axios.get(
-          `http://localhost:2500/api/buy-letters`,
+          `https://ok-motor.onrender.com/api/buy-letters`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -67,7 +67,7 @@ const ServiceHistory = () => {
 
         // Fetch sell history (if needed)
         const sellResponse = await axios.get(
-          `http://localhost:2500/api/sell-letters`,
+          `https://ok-motor.onrender.com/api/sell-letters`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -120,7 +120,7 @@ const ServiceHistory = () => {
   const handleDownload = async (billId) => {
     try {
       const response = await axios.get(
-        `http://localhost:2500/api/service-bills/${billId}/download`,
+        `https://ok-motor.onrender.com/api/service-bills/${billId}/download`,
         {
           responseType: "blob",
           headers: {
@@ -145,7 +145,7 @@ const ServiceHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this service bill?")) {
       try {
-        await axios.delete(`http://localhost:2500/api/service-bills/${id}`, {
+        await axios.delete(`https://ok-motor.onrender.com/api/service-bills/${id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
