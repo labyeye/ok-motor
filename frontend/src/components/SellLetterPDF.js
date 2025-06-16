@@ -567,9 +567,9 @@ const SellLetterForm = () => {
 
     page.drawImage(logoImage, {
       x: 50,
-      y: 744,
-      width: 160,
-      height: 130,
+      y: 743,
+      width: 150,
+      height: 120,
     });
 
     page.drawImage(logoImage, {
