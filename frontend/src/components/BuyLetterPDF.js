@@ -1417,7 +1417,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={50}
+                    maxLength={60}
                   />
                 </div>
 
