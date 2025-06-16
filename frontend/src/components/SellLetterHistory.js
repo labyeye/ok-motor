@@ -1016,7 +1016,7 @@ const SellLetterHistory = () => {
                         <td style={styles.tableCell}>{letter.buyerName}</td>
 
                         <td style={styles.tableCell}>
-                          {letter.vehicleName} ({letter.vehicleModel})
+                         ({letter.vehicleModel})
                         </td>
                         <td style={styles.tableCell}>
                           {letter.registrationNumber}
