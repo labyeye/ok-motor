@@ -222,7 +222,7 @@ const SellLetterHistory = () => {
     previousDate: { x: 240 - 16, y: 538, size: 11 },
     previousTime: { x: 340 - 16, y: 538, size: 11 },
     buyerPhone: { x: 109, y: 282, size: 11 },
-    buyerPhone2: { x: 115, y: 282, size: 11 },
+    buyerPhone2: { x: 176, y: 282, size: 11 },
     buyerAadhar: { x: 137, y: 263, size: 11 },
     witnessName: { x: 105, y: 135, size: 11 },
     witnessPhone: { x: 105, y: 116, size: 11 },
@@ -553,14 +553,26 @@ const SellLetterHistory = () => {
       };
 
       // Fill sell letter fields
-      for (const [fieldName, position] of Object.entries(
-        englishFieldPositions
-      )) {
-        if (formattedLetter[fieldName]) {
+      for (const [fieldName, position] of Object.entries(englishFieldPositions)) {
+        if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
+          const combinedPhones = `${formattedLetter.buyerPhone}${
+            formattedLetter.buyerPhone2
+              ? ` , ${formattedLetter.buyerPhone2}`
+              : ""
+          }`;
+          pdfDoc.getPages()[0].drawText(combinedPhones, {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            weight: "bold",
+            color: rgb(0, 0, 0),
+          });
+        } else if (fieldName !== "buyerPhone2" && formattedLetter[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
             x: position.x,
             y: position.y,
             size: position.size,
+            weight: "bold",
             color: rgb(0, 0, 0),
           });
         }
