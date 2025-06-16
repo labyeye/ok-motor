@@ -456,12 +456,31 @@ const SellLetterHistory = () => {
           });
         }
       }
-      if (formattedLetter.amountInWords) {
-        pdfDoc.getPages()[0].drawText(formattedLetter.amountInWords, {
-          x: 60, // Adjust these coordinates as needed
-          y: 465,
+      if (formattedLetter.saleAmount && formattedLetter.amountInWords) {
+        const page = pdfDoc.getPages()[0];
+        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+        const saleText = `₹${formattedLetter.saleAmount}`;
+        const xBase = hindiFieldPositions.saleAmount.x;
+        const yBase = hindiFieldPositions.saleAmount.y;
+
+        // Draw Sale Amount
+        page.drawText(saleText, {
+          x: xBase,
+          y: yBase,
+          size: 11,
+          color: rgb(0, 0, 0),
+          font,
+        });
+
+        // Draw Amount in Words right next to it
+        const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
+        page.drawText(formattedLetter.amountInWords, {
+          x: xBase + saleTextWidth + 8, // 8px padding
+          y: yBase,
           size: 10,
           color: rgb(0, 0, 0),
+          font,
         });
       }
 
@@ -531,12 +550,31 @@ const SellLetterHistory = () => {
           });
         }
       }
-      if (formattedLetter.amountInWords) {
-        pdfDoc.getPages()[0].drawText(formattedLetter.amountInWords, {
-          x: 60, // Adjust these coordinates as needed
-          y: 465,
+      if (formattedLetter.saleAmount && formattedLetter.amountInWords) {
+        const page = pdfDoc.getPages()[0];
+        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+        const saleText = `₹${formattedLetter.saleAmount}`;
+        const xBase = hindiFieldPositions.saleAmount.x;
+        const yBase = hindiFieldPositions.saleAmount.y;
+
+        // Draw Sale Amount
+        page.drawText(saleText, {
+          x: xBase,
+          y: yBase,
+          size: 11,
+          color: rgb(0, 0, 0),
+          font,
+        });
+
+        // Draw Amount in Words right next to it
+        const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
+        page.drawText(formattedLetter.amountInWords, {
+          x: xBase + saleTextWidth + 8, // 8px padding
+          y: yBase,
           size: 10,
           color: rgb(0, 0, 0),
+          font,
         });
       }
 
