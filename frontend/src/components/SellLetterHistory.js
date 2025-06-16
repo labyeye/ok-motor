@@ -1246,7 +1246,6 @@ const SellLetterHistory = () => {
                       <th style={styles.tableHeader}>Buyer</th>
                       <th style={styles.tableHeader}>Vehicle Model</th>
                       <th style={styles.tableHeader}>Vehicle Reg No</th>
-                      <th style={styles.tableHeader}>Seller</th>
                       <th style={styles.tableHeader}>Amount</th>
                       <th style={styles.tableHeader}>Date</th>
                       <th style={styles.tableHeader}>Actions</th>
