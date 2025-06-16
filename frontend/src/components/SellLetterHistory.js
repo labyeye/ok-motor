@@ -456,6 +456,14 @@ const SellLetterHistory = () => {
           });
         }
       }
+      if (formattedLetter.amountInWords) {
+        pdfDoc.getPages()[0].drawText(formattedLetter.amountInWords, {
+          x: 60, // Adjust these coordinates as needed
+          y: 465,
+          size: 10,
+          color: rgb(0, 0, 0),
+        });
+      }
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -522,6 +530,14 @@ const SellLetterHistory = () => {
             color: rgb(0, 0, 0),
           });
         }
+      }
+      if (formattedLetter.amountInWords) {
+        pdfDoc.getPages()[0].drawText(formattedLetter.amountInWords, {
+          x: 60, // Adjust these coordinates as needed
+          y: 465,
+          size: 10,
+          color: rgb(0, 0, 0),
+        });
       }
 
       const pdfBytes = await pdfDoc.save();
