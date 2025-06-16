@@ -1422,7 +1422,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={70}
+                    maxLength={50}
                   />
                 </div>
 

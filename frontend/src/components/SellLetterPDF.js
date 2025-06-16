@@ -1395,7 +1395,7 @@ const SellLetterForm = () => {
                     onInput={handleInput}
                     style={styles.formInput}
                     required
-                    maxLength={100}
+                    maxLength={50}
                   />
                 </div>
                 <div style={styles.formField}>
