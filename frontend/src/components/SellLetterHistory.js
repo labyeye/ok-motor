@@ -464,15 +464,6 @@ const SellLetterHistory = () => {
         const xBase = hindiFieldPositions.saleAmount.x;
         const yBase = hindiFieldPositions.saleAmount.y;
 
-        // Draw Sale Amount
-        page.drawText(saleText, {
-          x: xBase,
-          y: yBase,
-          size: 11,
-          color: rgb(0, 0, 0),
-          font,
-        });
-
         // Draw Amount in Words right next to it
         const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
         page.drawText(formattedLetter.amountInWords, {
@@ -555,17 +546,8 @@ const SellLetterHistory = () => {
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
         const saleText = `${formattedLetter.saleAmount}`;
-        const xBase = hindiFieldPositions.saleAmount.x;
-        const yBase = hindiFieldPositions.saleAmount.y;
-
-        // Draw Sale Amount
-        page.drawText(saleText, {
-          x: xBase,
-          y: yBase,
-          size: 11,
-          color: rgb(0, 0, 0),
-          font,
-        });
+        const xBase = englishFieldPositions.saleAmount.x;
+        const yBase = englishFieldPositions.saleAmount.y;
 
         // Draw Amount in Words right next to it
         const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
