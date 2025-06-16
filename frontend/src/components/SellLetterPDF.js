@@ -418,7 +418,7 @@ const SellLetterForm = () => {
       }
 
       const response = await axios.post(
-        "https://ok-motor.onrender.com/api/sell-letters",
+        "http://localhost:2500/api/sell-letters",
         formData,
         {
           headers: {
@@ -457,7 +457,7 @@ const SellLetterForm = () => {
       setIsSaving(true);
 
       const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
+        `http://localhost:2500/api/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -1646,6 +1646,7 @@ const SellLetterForm = () => {
                       ...styles.formInput,
                       ...(focusedInput === "note" ? styles.inputFocused : {}),
                     }}
+                    maxLength={60}
                     rows={3}
                   />
                 </div>

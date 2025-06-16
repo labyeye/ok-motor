@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useContext } from "react";
-import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts, degrees, rotateDegrees } from "pdf-lib";
 import { saveAs } from "file-saver";
 import {
   FileText,
@@ -222,7 +222,7 @@ const BuyLetterForm = () => {
     try {
       setIsSaving(true);
       const response = await axios.post(
-        "https://ok-motor.onrender.com/api/buy-letter",
+        "http://localhost:2500/api/buy-letter",
         formData
       );
       alert("Buy letter saved successfully!");
@@ -252,7 +252,7 @@ const BuyLetterForm = () => {
       setIsSaving(true);
 
       const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
+        `http://localhost:2500/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -437,7 +437,7 @@ const BuyLetterForm = () => {
 
       // Check if letter exists first
       const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
+        `http://localhost:2500/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -451,7 +451,7 @@ const BuyLetterForm = () => {
       } else {
         // Save new letter if doesn't exist
         const response = await axios.post(
-          "https://ok-motor.onrender.com/api/buy-letter",
+          "http://localhost:2500/api/buy-letter",
           formData
         );
         savedLetterData = response.data;
@@ -627,7 +627,7 @@ const BuyLetterForm = () => {
 
       // Check if letter exists first
       const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
+        `http://localhost:2500/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -640,7 +640,7 @@ const BuyLetterForm = () => {
         savedLetterData = existingLetter.data[0];
       } else {
         const response = await axios.post(
-          "https://ok-motor.onrender.com/api/buy-letter",
+          "http://localhost:2500/api/buy-letter",
           formData
         );
         savedLetterData = response.data;
@@ -898,11 +898,12 @@ const BuyLetterForm = () => {
 
 
     page.drawImage(logoImage, {
-      x: 150,
-      y: 300,
-      width: 330,
-      height: 260,
+      x: 280,
+      y: 200,
+      width: 370,
+      height: 300,
       opacity: 0.3,
+      rotate: degrees(45)
     });
 
     page.drawText("UDAYAM-BR-26-0028550", {
@@ -2101,6 +2102,7 @@ const BuyLetterForm = () => {
                       ...styles.formInput,
                       ...(focusedInput === "note" ? styles.inputFocused : {}),
                     }}
+                    maxLength={60}
                     rows={3}
                   />
                 </div>
