@@ -580,7 +580,7 @@ const SellLetterForm = () => {
       opacity: 0.3,
     });
     page.drawImage(logoImage, {
-      x: 150,
+      x: 180,
       y: 200,
       width: 260,
       height: 220,
