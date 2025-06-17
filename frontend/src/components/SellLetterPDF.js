@@ -607,7 +607,7 @@ const SellLetterForm = () => {
     });
     page.drawImage(logoImage, {
       x: 180,
-      y: 200,
+      y: 130,
       width: 260,
       height: 220,
       opacity: 0.3,
@@ -889,25 +889,40 @@ const SellLetterForm = () => {
         font: font,
       }
     );
+    
     page.drawRectangle({
       x: 0,
-      y: 410,
+      y: 345,
       width: 595,
-      height: 30,
-      color: rgb(0.9, 0.9, 0.9),
-    });
-    page.drawText("GUARRANTEE & WARRANTY CERTIFICATE", {
-      x: 130,
-      y: 420,
-      size: 17,
+      height: 70,
       color: rgb(0.047, 0.098, 0.196),
+    });
+    page.drawImage(logoImage, {
+      x: 40,
+      y: 335,
+      width: 120,
+      height: 90,
+    });
+    page.drawText("GUARRANTEE &", {
+      x: 220,
+      y: 385,
+      size: 17,
+      color: rgb(1,1,1),
+      fontWeight: "bold",
+      font: boldFont,
+    });
+    page.drawText("WARRANTY CERTIFICATE", {
+      x: 180,
+      y: 365,
+      size: 17,
+      color: rgb(1,1,1),
       fontWeight: "bold",
       font: boldFont,
     });
 
     page.drawText("TERMS & CONDITIONS", {
       x: 50,
-      y: 370,
+      y: 315,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -931,7 +946,7 @@ const SellLetterForm = () => {
     terms.forEach((term, index) => {
       page.drawText(term, {
         x: 60,
-        y: 350 - index * 15,
+        y: 295 - index * 15,
         size: 10,
         color: rgb(0.3, 0.3, 0.3),
         font: font,
@@ -941,45 +956,45 @@ const SellLetterForm = () => {
     // Seller Signature
     page.drawText("Buyer Signature", {
       x: 120,
-      y: 125,
+      y: 70,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 60, y: 140 },
-      end: { x: 250, y: 140 },
+      start: { x: 60, y: 85 },
+      end: { x: 250, y: 85 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
 
     page.drawText("Authorized Signatory", {
       x: 360,
-      y: 125,
+      y: 70,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 310, y: 140 },
-      end: { x: 500, y: 140 },
+      start: { x: 310, y: 85 },
+      end: { x: 500, y: 85 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
 
     // Footer
     page.drawLine({
-      start: { x: 50, y: 80 },
-      end: { x: 545, y: 80 },
+      start: { x: 50, y: 55 },
+      end: { x: 545, y: 55 },
       thickness: 0.5,
       color: rgb(0.8, 0.8, 0.8),
     });
 
     page.drawText("Thank you for your business!", {
       x: 220,
-      y: 60,
+      y: 35,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -989,7 +1004,7 @@ const SellLetterForm = () => {
       "OK MOTORS | Pillar num.53, Bailey Rd,  Raja Bazar,  Patna, Bihar 800014",
       {
         x: 160,
-        y: 40,
+        y: 20,
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
         font: font,
@@ -1761,7 +1776,7 @@ const SellLetterForm = () => {
                       ...styles.formInput,
                       ...(focusedInput === "note" ? styles.inputFocused : {}),
                     }}
-                    maxLength={117}
+                    maxLength={112}
                     rows={3}
                   />
                 </div>
