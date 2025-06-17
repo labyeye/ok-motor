@@ -36,6 +36,7 @@ const SellLetterForm = () => {
   const [activeMenu, setActiveMenu] = useState("Create Sell Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [previewPdf, setPreviewPdf] = useState(null);
+  const [missingFields, setMissingFields] = useState([]);
   const [previewLanguage, setPreviewLanguage] = useState("hindi");
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
@@ -161,9 +162,34 @@ const SellLetterForm = () => {
           ? "/templates/sellletter.pdf"
           : "/templates/englishsell.pdf";
 
+      const requiredFields = [
+        "vehicleName",
+        "vehicleModel",
+        "vehicleColor",
+        "registrationNumber",
+        "chassisNumber",
+        "engineNumber",
+        "vehiclekm",
+        "buyerName",
+        "buyerFatherName",
+        "buyerAddress",
+        "buyerPhone",
+        "buyerAadhar",
+        "saleAmount",
+      ];
+      const emptyFields = requiredFields.filter((field) => !formData[field]);
+
+      if (emptyFields.length > 0) {
+        setMissingFields(emptyFields);
+        alert("Please fill all required fields before preview.");
+        return;
+      }
+
+      setMissingFields([]);
       const existingPdfBytes = await fetch(templateUrl).then((res) =>
         res.arrayBuffer()
       );
+
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
@@ -870,7 +896,7 @@ const SellLetterForm = () => {
 
     page.drawText("TERMS & CONDITIONS", {
       x: 50,
-      y: 390,
+      y: 380,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -894,7 +920,7 @@ const SellLetterForm = () => {
     terms.forEach((term, index) => {
       page.drawText(term, {
         x: 60,
-        y: 370 - index * 15,
+        y: 360 - index * 15,
         size: 10,
         color: rgb(0.3, 0.3, 0.3),
         font: font,
@@ -1222,14 +1248,15 @@ const SellLetterForm = () => {
                     Vehicle Brand || वाहन का ब्रांड
                   </label>
                   <input
-                    type="text"
                     name="vehicleName"
                     value={formData.vehicleName}
                     onChange={handleChange}
-                    onInput={handleInput}
-                    style={styles.formInput}
-                    required
-                    maxLength={30}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("vehicleName") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1243,7 +1270,12 @@ const SellLetterForm = () => {
                     value={formData.vehicleModel}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("vehicleModel") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1259,7 +1291,12 @@ const SellLetterForm = () => {
                     value={formData.vehicleColor}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("vehicleColor") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1275,7 +1312,12 @@ const SellLetterForm = () => {
                     value={formData.registrationNumber}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("registrationNumber") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     required
                     maxLength={11}
                   />
@@ -1291,7 +1333,12 @@ const SellLetterForm = () => {
                     value={formData.chassisNumber}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("chassisNumber") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     required
                     maxLength={18}
                   />
@@ -1306,7 +1353,12 @@ const SellLetterForm = () => {
                     name="engineNumber"
                     value={formData.engineNumber}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("engineNumber") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     required
                     maxLength={15}
                   />
@@ -1334,7 +1386,12 @@ const SellLetterForm = () => {
                         vehiclekm: rawValue,
                       }));
                     }}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("vehiclekm") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     placeholder="e.g. 36,000.00"
                   />
                 </div>
@@ -1374,7 +1431,12 @@ const SellLetterForm = () => {
                     value={formData.buyerName}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("buyerName") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1390,7 +1452,12 @@ const SellLetterForm = () => {
                     value={formData.buyerFatherName}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("buyerFatherName") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     required
                     maxLength={16}
                   />
@@ -1406,9 +1473,14 @@ const SellLetterForm = () => {
                     value={formData.buyerAddress}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("buyerAddress") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     required
-                    maxLength={70}
+                    maxLength={65}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1429,7 +1501,12 @@ const SellLetterForm = () => {
                         buyerPhone: rawValue,
                       }));
                     }}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("buyerPhone") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     maxLength={10}
                   />
                 </div>
@@ -1451,7 +1528,12 @@ const SellLetterForm = () => {
                         buyerPhone2: rawValue,
                       }));
                     }}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("buyerPhone2") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     maxLength={10}
                   />
                 </div>
@@ -1474,7 +1556,12 @@ const SellLetterForm = () => {
                         buyerAadhar: formatted,
                       }));
                     }}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("buyerAadhar") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     placeholder="1234-5678-9012"
                   />
                 </div>
@@ -1488,7 +1575,12 @@ const SellLetterForm = () => {
                     name="witnessName"
                     value={formData.witnessName}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("witnessName") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1511,7 +1603,12 @@ const SellLetterForm = () => {
                         witnessPhone: rawValue,
                       }));
                     }}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("witnessPhone") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                     maxLength={10}
                   />
                 </div>
@@ -1574,7 +1671,12 @@ const SellLetterForm = () => {
                         saleAmount: rawValue,
                       }));
                     }}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(missingFields.includes("saleAmount") && {
+                        border: "1px solid red",
+                      }),
+                    }}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1658,7 +1760,7 @@ const SellLetterForm = () => {
                       ...styles.formInput,
                       ...(focusedInput === "note" ? styles.inputFocused : {}),
                     }}
-                    maxLength={100}
+                    maxLength={110}
                     rows={3}
                   />
                 </div>
