@@ -582,8 +582,8 @@ const SellLetterForm = () => {
     page.drawImage(logoImage, {
       x: 150,
       y: 200,
-      width: 330,
-      height: 260,
+      width: 260,
+      height: 220,
       opacity: 0.3,
     });
 
@@ -902,7 +902,7 @@ const SellLetterForm = () => {
     });
 
     // Seller Signature
-    page.drawText("Seller Signature", {
+    page.drawText("Buyer Signature", {
       x: 100,
       y: 125,
       size: 10,
