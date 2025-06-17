@@ -1,5 +1,11 @@
 import React, { useState, useCallback, useContext } from "react";
-import { PDFDocument, rgb, StandardFonts, degrees, rotateDegrees } from "pdf-lib";
+import {
+  PDFDocument,
+  rgb,
+  StandardFonts,
+  degrees,
+  rotateDegrees,
+} from "pdf-lib";
 import { saveAs } from "file-saver";
 import {
   FileText,
@@ -878,7 +884,9 @@ const BuyLetterForm = () => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const logoUrl = logo1; // Use your imported logo
-    const logoImageBytes = await fetch(logoUrl).then((res) => res.arrayBuffer());
+    const logoImageBytes = await fetch(logoUrl).then((res) =>
+      res.arrayBuffer()
+    );
     const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
     page.drawRectangle({
@@ -896,14 +904,13 @@ const BuyLetterForm = () => {
       height: 130,
     });
 
-
     page.drawImage(logoImage, {
       x: 280,
       y: 200,
       width: 370,
       height: 300,
       opacity: 0.3,
-      rotate: degrees(45)
+      rotate: degrees(45),
     });
 
     page.drawText("UDAYAM-BR-26-0028550", {
@@ -960,7 +967,7 @@ const BuyLetterForm = () => {
       font: font,
     });
     page.drawText(`Time: ${formatTime(formData.saleTime)}`, {
-      x: 470, 
+      x: 470,
       y: 720,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
@@ -1148,10 +1155,15 @@ const BuyLetterForm = () => {
       font: font,
     });
 
+    const paymentMethodDisplay = {
+      cash: "CASH",
+      upi: "UPI",
+      bankTransfer: "BANK TRANSFER",
+      other: "OTHER",
+    };
+
     page.drawText(
-      `Payment: ${
-        formData.paymentMethod ? formData.paymentMethod.toUpperCase() : "CASH"
-      }`,
+      `Payment: ${paymentMethodDisplay[formData.paymentMethod] || "CASH"}`,
       {
         x: 350,
         y: 490,
@@ -1725,7 +1737,7 @@ const BuyLetterForm = () => {
                         : new Intl.NumberFormat("en-IN", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
-                          }).format(Number(formData.vehiclekm)/100)
+                          }).format(Number(formData.vehiclekm) / 100)
                     }
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");
@@ -1978,7 +1990,7 @@ const BuyLetterForm = () => {
                         : new Intl.NumberFormat("en-IN", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
-                          }).format(Number(formData.saleAmount)/100)
+                          }).format(Number(formData.saleAmount) / 100)
                     }
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");

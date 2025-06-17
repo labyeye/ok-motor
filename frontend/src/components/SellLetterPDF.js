@@ -528,7 +528,7 @@ const SellLetterForm = () => {
     vehiclekm: { x: 308, y: 652, size: 11 },
     buyerName: { x: 40, y: 629, size: 11 },
     buyerFatherName: { x: 278, y: 629, size: 11 },
-    buyerAddress: { x: 65, y: 606, size: 11 },
+    buyerAddress: { x: 65, y: 607, size: 11 },
     buyerName1: { x: 102, y: 495, size: 11 },
     buyerName2: { x: 102, y: 451, size: 11 },
     saleDate: { x: 78, y: 584, size: 11 },
@@ -541,8 +541,8 @@ const SellLetterForm = () => {
     buyerPhone: { x: 85, y: 240, size: 11 },
     buyerPhone2: { x: 150, y: 240, size: 11 },
     buyerAadhar: { x: 111, y: 222, size: 11 },
-    witnessName: { x: 70, y: 121, size: 11 },
-    witnessPhone: { x: 70, y: 105, size: 11 },
+    witnessName: { x: 70, y: 122, size: 11 },
+    witnessPhone: { x: 70, y: 106, size: 11 },
     note: { x: 60, y: 33, size: 10 },
   };
 
@@ -847,11 +847,15 @@ const SellLetterForm = () => {
         font: font,
       }
     );
+    const paymentMethodDisplay = {
+      cash: "CASH",
+      upi: "UPI",
+      bankTransfer: "BANK TRANSFER",
+      other: "OTHER",
+    };
 
     page.drawText(
-      `Payment: ${
-        formData.paymentMethod ? formData.paymentMethod.toUpperCase() : "CASH"
-      }`,
+      `Payment: ${paymentMethodDisplay[formData.paymentMethod] || "CASH"}`,
       {
         x: 350,
         y: 485,
@@ -885,9 +889,16 @@ const SellLetterForm = () => {
         font: font,
       }
     );
+    page.drawRectangle({
+      x: 0,
+      y: 410,
+      width: 595,
+      height: 30,
+      color: rgb(0.9, 0.9, 0.9),
+    });
     page.drawText("GUARRANTEE & WARRANTY CERTIFICATE", {
       x: 130,
-      y: 430,
+      y: 420,
       size: 17,
       color: rgb(0.047, 0.098, 0.196),
       fontWeight: "bold",
@@ -896,7 +907,7 @@ const SellLetterForm = () => {
 
     page.drawText("TERMS & CONDITIONS", {
       x: 50,
-      y: 380,
+      y: 370,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -920,7 +931,7 @@ const SellLetterForm = () => {
     terms.forEach((term, index) => {
       page.drawText(term, {
         x: 60,
-        y: 360 - index * 15,
+        y: 350 - index * 15,
         size: 10,
         color: rgb(0.3, 0.3, 0.3),
         font: font,
@@ -929,7 +940,7 @@ const SellLetterForm = () => {
 
     // Seller Signature
     page.drawText("Buyer Signature", {
-      x: 100,
+      x: 120,
       y: 125,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
@@ -944,7 +955,7 @@ const SellLetterForm = () => {
     });
 
     page.drawText("Authorized Signatory", {
-      x: 350,
+      x: 360,
       y: 125,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
@@ -1575,12 +1586,7 @@ const SellLetterForm = () => {
                     name="witnessName"
                     value={formData.witnessName}
                     onChange={handleChange}
-                    style={{
-                      ...styles.formInput,
-                      ...(missingFields.includes("witnessName") && {
-                        border: "1px solid red",
-                      }),
-                    }}
+                    style={styles.formInput}
                     required
                     maxLength={30}
                   />
@@ -1603,12 +1609,7 @@ const SellLetterForm = () => {
                         witnessPhone: rawValue,
                       }));
                     }}
-                    style={{
-                      ...styles.formInput,
-                      ...(missingFields.includes("witnessPhone") && {
-                        border: "1px solid red",
-                      }),
-                    }}
+                    style={styles.formInput}
                     maxLength={10}
                   />
                 </div>
