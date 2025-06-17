@@ -712,14 +712,14 @@ const SellLetterForm = () => {
     });
 
     page.drawText(`Phone: ${formData.buyerPhone || "N/A"}`, {
-      x: 350,
+      x: 370,
       y: 665,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
     page.drawText(`, ${formData.buyerPhone2 || "N/A"}`, {
-      x: 440,
+      x: 460,
       y: 665,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
@@ -727,7 +727,7 @@ const SellLetterForm = () => {
     });
 
     page.drawText(`Aadhar: ${formData.buyerAadhar || "N/A"}`, {
-      x: 350,
+      x: 370,
       y: 650,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
@@ -823,7 +823,7 @@ const SellLetterForm = () => {
     // Sale Information section
     page.drawText("SALE INFORMATION", {
       x: 50,
-      y: 505,
+      y: 515,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -831,7 +831,7 @@ const SellLetterForm = () => {
 
     page.drawText(`Sale Date: ${formatDate(formData.saleDate)}`, {
       x: 60,
-      y: 485,
+      y: 495,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
@@ -841,7 +841,7 @@ const SellLetterForm = () => {
       `Sale Amount: Rs. ${formatRupee(formData.saleAmount) || "0"}`,
       {
         x: 200,
-        y: 485,
+        y: 495,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
@@ -858,7 +858,7 @@ const SellLetterForm = () => {
       `Payment: ${paymentMethodDisplay[formData.paymentMethod] || "CASH"}`,
       {
         x: 350,
-        y: 485,
+        y: 495,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
@@ -870,7 +870,7 @@ const SellLetterForm = () => {
       }`,
       {
         x: 60,
-        y: 465,
+        y: 475,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
@@ -892,37 +892,43 @@ const SellLetterForm = () => {
     
     page.drawRectangle({
       x: 0,
-      y: 345,
+      y: 360,
       width: 595,
-      height: 70,
+      height: 60,
       color: rgb(0.047, 0.098, 0.196),
     });
     page.drawImage(logoImage, {
       x: 40,
-      y: 335,
+      y: 345,
       width: 120,
       height: 90,
     });
-    page.drawText("GUARRANTEE &", {
-      x: 220,
+    page.drawRectangle({
+      x: 0,
+      y: 335,
+      width: 595,
+      height: 30,
+      color: rgb(0.9, 0.9, 0.9),
+    });
+    page.drawText("GUARRANTEE & WARRANTY CERTIFICATE", {
+      x: 130,
+      y: 345,
+      size: 17,
+      color: rgb(0,0,0),
+      fontWeight: "bold",
+      font: boldFont,
+    });
+    page.drawText("UDAYAM-BR-26-0028550", {
+      x: 330,
       y: 385,
-      size: 17,
-      color: rgb(1,1,1),
-      fontWeight: "bold",
-      font: boldFont,
+      size: 18,
+      color: rgb(1, 1, 1),
+      font: font,
     });
-    page.drawText("WARRANTY CERTIFICATE", {
-      x: 180,
-      y: 365,
-      size: 17,
-      color: rgb(1,1,1),
-      fontWeight: "bold",
-      font: boldFont,
-    });
-
+    
     page.drawText("TERMS & CONDITIONS", {
       x: 50,
-      y: 315,
+      y: 305,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -946,7 +952,7 @@ const SellLetterForm = () => {
     terms.forEach((term, index) => {
       page.drawText(term, {
         x: 60,
-        y: 295 - index * 15,
+        y: 285 - index * 15,
         size: 10,
         color: rgb(0.3, 0.3, 0.3),
         font: font,

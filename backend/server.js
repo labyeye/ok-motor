@@ -9,9 +9,7 @@ const dashboardRoutes = require('./routes/dashboard');
 const serviceBillRoutes = require('./routes/serviceBillRoutes');
 const { protect } = require('./middleware/auth');
 const cors = require('cors');
-
 const app = express();
-
 connectDB();
 const corsOptions = {
   origin: 'https://ok-motor.vercel.app',
