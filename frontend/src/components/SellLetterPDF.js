@@ -1408,7 +1408,7 @@ const SellLetterForm = () => {
                     onInput={handleInput}
                     style={styles.formInput}
                     required
-                    maxLength={60}
+                    maxLength={70}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1659,7 +1659,7 @@ const SellLetterForm = () => {
                       ...styles.formInput,
                       ...(focusedInput === "note" ? styles.inputFocused : {}),
                     }}
-                    maxLength={80}
+                    maxLength={100}
                     rows={3}
                   />
                 </div>
