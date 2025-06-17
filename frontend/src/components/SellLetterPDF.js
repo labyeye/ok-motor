@@ -1586,7 +1586,6 @@ const SellLetterForm = () => {
                     name="paymentMethod"
                     value={formData.paymentMethod}
                     onChange={handleChange}
-                    onInput={handleInput}
                     style={styles.formSelect}
                   >
                     <option value="cash">Cash</option>
