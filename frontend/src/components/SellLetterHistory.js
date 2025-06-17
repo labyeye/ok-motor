@@ -646,8 +646,8 @@ const SellLetterHistory = () => {
     page.drawImage(logoImage, {
       x: 150,
       y: 200,
-      width: 330,
-      height: 260,
+      width: 260,
+      height: 220,
       opacity: 0.3,
     });
 
