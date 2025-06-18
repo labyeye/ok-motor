@@ -1,5 +1,5 @@
 // utils/pdfGenerator.js
-const { PDFDocument, rgb } = require("pdf-lib");
+const { PDFDocument, rgb,degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
 function formatTime12Hour(date) {
@@ -44,11 +44,12 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     // Watermark
     page.drawImage(logoImage, {
-      x: 180,
-      y: 430,
-      width: 260,
-      height: 220,
-      opacity: 0.1,
+      x: 280,
+      y: 200,
+      width: 400,
+      height: 360,
+      opacity: 0.3,
+      rotate: degrees(45),
     });
 
     page.drawText("UDAYAM-BR-26-0028550", {

@@ -657,34 +657,6 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    Chassis Number || चासिस नंबर
-                  </label>
-                  <input
-                    type="text"
-                    name="chassisNumber"
-                    value={formData.chassisNumber}
-                    onChange={handleChange}
-                    onInput={handleInput}
-                    style={styles.formInput}
-                    maxLength={15}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Car style={styles.formIcon} />
-                    Engine Number || इंजन नंबर
-                  </label>
-                  <input
-                    type="text"
-                    name="engineNumber"
-                    value={formData.engineNumber}
-                    onChange={handleChange}
-                    style={styles.formInput}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Car style={styles.formIcon} />
                     KM Reading || किलोमीटर पढ़ाई
                   </label>
                   <input
