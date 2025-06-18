@@ -1032,7 +1032,7 @@ const ServiceBillForm = () => {
                     <option value="cash">Cash</option>
                     <option value="card">Card</option>
                     <option value="upi">UPI</option>
-                    <option value="online">Online</option>
+                    <option value="bank transfer">Bank Transfer</option>
                   </select>
                 </div>
                 <div style={styles.formField}>
