@@ -26,7 +26,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import logo from "../images/company.png";
 
-
 import AuthContext from "../context/AuthContext";
 
 const ServiceBillForm = () => {
@@ -34,6 +33,9 @@ const ServiceBillForm = () => {
   const [activeMenu, setActiveMenu] = useState("Create Service Bill");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
+  const [previewPdf, setPreviewPdf] = useState(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     taxEnabled: false,
@@ -50,19 +52,20 @@ const ServiceBillForm = () => {
     customerEmail: "",
     vehicleType: "bike",
     vehicleBrand: "",
+    customServiceDescription: "",
     vehicleModel: "",
     registrationNumber: "",
     chassisNumber: "",
     engineNumber: "",
     kmReading: "",
     serviceDate: new Date().toISOString().split("T")[0],
-    deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0], // Tomorrow's date
+    deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
     serviceType: "regular",
     serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
     discount: 0,
     taxRate: 18,
     paymentMethod: "cash",
-    paymentStatus: "pending",
+    paymentStatus: "paid",
     advancePaid: 0,
     issuesReported: "",
     technicianNotes: "",
@@ -263,178 +266,65 @@ const ServiceBillForm = () => {
       setIsSaving(false);
     }
   };
+  const LoadingOverlay = () => (
+    <div style={styles.loadingOverlay}>
+      <div style={styles.loadingContent}>
+        <div style={styles.loadingSpinner}></div>
+        <p style={styles.loadingText}>Generating PDF Preview...</p>
+        <p style={styles.loadingSubtext}>This may take a few seconds</p>
+      </div>
+    </div>
+  );
 
-  const generateServiceBillPDF = async (billData = formData) => {
-    try {
-      const templateUrl = "/templates/service-bill.pdf";
-      const existingPdfBytes = await fetch(templateUrl).then((res) =>
-        res.arrayBuffer()
+  const generateServiceBillPDF = async (billData = formData, forPreview = false) => {
+  try {
+    setShowLoadingOverlay(true);
+    const token = localStorage.getItem("token");
+
+    // First save the bill if it doesn't have an ID
+    let billId = billData._id;
+    if (!billId) {
+      const saveResponse = await axios.post(
+        `${API_BASE_URL}/service-bills`,
+        { ...billData, user: user._id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
-      const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const page = pdfDoc.getPages()[0];
-      const font = await pdfDoc.embedFont(PDFDocument.Font.Helvetica);
-      const fontBold = await pdfDoc.embedFont(PDFDocument.Font.HelveticaBold);
-      page.drawText(billData.customerName, { x: 50, y: 650, size: 11 });
-      page.drawText(billData.customerPhone, { x: 300, y: 650, size: 11 });
-      page.drawText(billData.customerAddress, { x: 50, y: 630, size: 11 });
-      if (billData.taxEnabled) {
-        page.drawText("Business Information:", {
-          x: 50,
-          y: 610,
-          size: 14,
-          font: fontBold,
-        });
-        page.drawText(`Name: ${billData.businessName || "N/A"}`, {
-          x: 350,
-          y: 650,
-          size: 12,
-          font,
-        });
-        page.drawText(`GSTIN: ${billData.businessGSTIN || "N/A"}`, {
-          x: 50,
-          y: 650,
-          size: 12,
-          font,
-        });
-        page.drawText(`Address: ${billData.businessAddress || "N/A"}`, {
-          x: 50,
-          y: 550,
-          size: 12,
-          font,
-        });
-      }
-      page.drawText(billData.vehicleType.toUpperCase(), {
-        x: 50,
-        y: 600,
-        size: 11,
-      });
-      page.drawText(billData.vehicleBrand, { x: 150, y: 600, size: 11 });
-      page.drawText(billData.vehicleModel, { x: 300, y: 600, size: 11 });
-      page.drawText(billData.registrationNumber, { x: 450, y: 600, size: 11 });
-      page.drawText(billData.chassisNumber || "N/A", {
-        x: 50,
-        y: 580,
-        size: 11,
-      });
-      page.drawText(billData.engineNumber || "N/A", {
-        x: 250,
-        y: 580,
-        size: 11,
-      });
-      page.drawText(billData.kmReading.toString(), {
-        x: 450,
-        y: 580,
-        size: 11,
-      });
-      page.drawText(billData.serviceDate, { x: 50, y: 550, size: 11 });
-      page.drawText(billData.deliveryDate, { x: 200, y: 550, size: 11 });
-      page.drawText(billData.serviceType.toUpperCase(), {
-        x: 350,
-        y: 550,
-        size: 11,
-      });
-      let yPos = 500;
-      billData.serviceItems.forEach((item, index) => {
-        page.drawText((index + 1).toString(), { x: 50, y: yPos, size: 10 });
-        page.drawText(item.description, { x: 80, y: yPos, size: 10 });
-        page.drawText(item.quantity.toString(), { x: 300, y: yPos, size: 10 });
-        page.drawText(item.rate.toFixed(2), { x: 350, y: yPos, size: 10 });
-        page.drawText(item.amount.toFixed(2), { x: 450, y: yPos, size: 10 });
-        yPos -= 20;
-      });
-      page.drawText(billData.totalAmount.toFixed(2), {
-        x: 450,
-        y: 350,
-        size: 11,
-      });
-      page.drawText(billData.taxRate + "%", { x: 350, y: 330, size: 11 });
-      page.drawText(billData.taxAmount.toFixed(2), {
-        x: 450,
-        y: 330,
-        size: 11,
-      });
-      page.drawText(billData.discount.toFixed(2), { x: 450, y: 310, size: 11 });
-      page.drawText(billData.grandTotal.toFixed(2), {
-        x: 450,
-        y: 290,
-        size: 11,
-      });
-      page.drawText(billData.advancePaid.toFixed(2), {
-        x: 450,
-        y: 270,
-        size: 11,
-      });
-      page.drawText(billData.balanceDue.toFixed(2), {
-        x: 450,
-        y: 250,
-        size: 11,
-      });
-      page.drawText(billData.paymentMethod.toUpperCase(), {
-        x: 150,
-        y: 220,
-        size: 11,
-      });
-      page.drawText(billData.paymentStatus.toUpperCase(), {
-        x: 350,
-        y: 220,
-        size: 11,
-      });
-      page.drawText(billData.issuesReported || "N/A", {
-        x: 50,
-        y: 180,
-        size: 10,
-      });
-      page.drawText(billData.technicianNotes || "N/A", {
-        x: 50,
-        y: 150,
-        size: 10,
-      });
-      page.drawText(billData.warrantyInfo || "N/A", {
-        x: 50,
-        y: 120,
-        size: 10,
-      });
-
-      if (billData.taxEnabled) {
-        page.drawText("Business Information:", {
-          x: 50,
-          y: 610,
-          size: 14,
-          font: fontBold,
-        });
-        page.drawText(`Name: ${billData.businessName || "N/A"}`, {
-          x: 50,
-          y: 590,
-          size: 12,
-          font,
-        });
-        page.drawText(`GSTIN: ${billData.businessGSTIN || "N/A"}`, {
-          x: 50,
-          y: 570,
-          size: 12,
-          font,
-        });
-        page.drawText(`Address: ${billData.businessAddress || "N/A"}`, {
-          x: 50,
-          y: 550,
-          size: 12,
-          font,
-        });
-
-        // Adjust the Y positions of subsequent elements to make space
-        // You'll need to adjust all Y positions below this section accordingly
-      }
-
-      const pdfBytes = await pdfDoc.save();
-      saveAs(
-        new Blob([pdfBytes], { type: "application/pdf" }),
-        `service-bill-${new Date().getTime()}.pdf`
-      );
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF. Please try again.");
+      billId = saveResponse.data.data._id;
     }
-  };
+
+    // Get the PDF from the server
+    const pdfResponse = await axios.get(
+      `${API_BASE_URL}/service-bills/${billId}/download`,
+      {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/pdf",
+        },
+      }
+    );
+
+    const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+
+    if (forPreview) {
+      const url = URL.createObjectURL(pdfBlob);
+      setPreviewPdf(url);
+      setShowPreviewModal(true);
+    } else {
+      saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+    }
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    alert(`Failed to generate PDF: ${error.message}`);
+  } finally {
+    setShowLoadingOverlay(false);
+  }
+};
   const handleInput = (e) => {
     const { name, value } = e.target;
     e.target.value = value.toUpperCase();
@@ -672,7 +562,7 @@ const ServiceBillForm = () => {
                     onInput={handleInput}
                     style={styles.formInput}
                     required
-                    maxLength={100}
+                    maxLength={80}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -826,6 +716,7 @@ const ServiceBillForm = () => {
               <h2 style={styles.sectionTitle}>
                 <Wrench style={styles.sectionIcon} /> Service Details
               </h2>
+              {/* Service Details */}
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
@@ -851,10 +742,8 @@ const ServiceBillForm = () => {
                     name="deliveryDate"
                     value={formData.deliveryDate}
                     onChange={handleChange}
-                    onInput={handleInput}
                     style={styles.formInput}
                     required
-                    maxLength={10}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -874,6 +763,25 @@ const ServiceBillForm = () => {
                     <option value="custom">Custom Service</option>
                   </select>
                 </div>
+
+                {/* Add this conditional field */}
+                {formData.serviceType === "custom" && (
+                  <div style={styles.formField}>
+                    <label style={styles.formLabel}>
+                      <Wrench style={styles.formIcon} />
+                      Custom Service Description || कस्टम सेवा विवरण
+                    </label>
+                    <textarea
+                      name="customServiceDescription"
+                      value={formData.customServiceDescription}
+                      onChange={handleChange}
+                      rows={3}
+                      style={styles.formTextarea}
+                      placeholder="Describe the custom service requirements"
+                      maxLength={200}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1232,23 +1140,17 @@ const ServiceBillForm = () => {
             <div style={styles.formActions}>
               <button
                 type="button"
-                onClick={() => setPreviewMode(true)}
+                onClick={() => generateServiceBillPDF(formData, true)}
                 style={styles.previewButton}
+                disabled={isSaving}
               >
                 <FileText style={styles.buttonIcon} /> Preview
               </button>
               <button
                 type="button"
-                onClick={saveServiceBill}
-                style={styles.saveButton}
-                disabled={isSaving}
-              >
-                {isSaving ? "Saving..." : "Save"}
-              </button>
-              <button
-                type="button"
                 onClick={handleSaveAndDownload}
                 style={styles.downloadButton}
+                disabled={isSaving}
               >
                 <Download style={styles.buttonIcon} /> Save & Download
               </button>
@@ -1256,6 +1158,64 @@ const ServiceBillForm = () => {
           </form>
         </div>
       </div>
+      {showPreviewModal && (
+        <div style={styles.modalOverlay}>
+          <div
+            style={{
+              ...styles.modalContent,
+              maxWidth: "90%",
+              width: "800px",
+            }}
+          >
+            <h3 style={styles.modalTitle}>Service Bill Preview</h3>
+            <div
+              style={{ height: "70vh", width: "100%", marginBottom: "20px" }}
+            >
+              {previewPdf ? (
+                <iframe
+                  src={previewPdf}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    border: "1px solid #e2e8f0",
+                  }}
+                  title="PDF Preview"
+                />
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    color: "#64748b",
+                  }}
+                >
+                  Loading preview...
+                </div>
+              )}
+            </div>
+            <div style={styles.modalButtons}>
+              <button
+                style={styles.downloadButton}
+                onClick={() => {
+                  generateServiceBillPDF(formData);
+                  setShowPreviewModal(false);
+                }}
+              >
+                Download PDF
+              </button>
+            </div>
+            <button
+              style={styles.modalCloseButton}
+              onClick={() => setShowPreviewModal(false)}
+            >
+              Close Preview
+            </button>
+          </div>
+        </div>
+      )}
+      {showLoadingOverlay && <LoadingOverlay />}
     </div>
   );
 };
@@ -1276,6 +1236,99 @@ const styles = {
     top: 0,
     height: "100vh",
     backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
+  },
+  loadingOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2000,
+    backdropFilter: "blur(4px)",
+  },
+  loadingContent: {
+    backgroundColor: "#ffffff",
+    borderRadius: "12px",
+    padding: "32px",
+    textAlign: "center",
+    maxWidth: "400px",
+    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+  },
+  loadingSpinner: {
+    width: "50px",
+    height: "50px",
+    margin: "0 auto 20px",
+    border: "5px solid #f3f3f3",
+    borderTop: "5px solid #3b82f6",
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
+  },
+  loadingText: {
+    fontSize: "1.125rem",
+    fontWeight: "600",
+    color: "#1e293b",
+    marginBottom: "8px",
+  },
+  loadingSubtext: {
+    fontSize: "0.875rem",
+    color: "#64748b",
+  },
+  "@keyframes spin": {
+    "0%": { transform: "rotate(0deg)" },
+    "50%": { transform: "rotate(180deg)" },
+    "100%": { transform: "rotate(360deg)" },
+  },
+  modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  },
+  modalContent: {
+    backgroundColor: "#ffffff",
+    padding: "24px",
+    borderRadius: "8px",
+    width: "400px",
+    maxWidth: "90%",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  },
+  modalTitle: {
+    fontSize: "1.25rem",
+    fontWeight: "600",
+    marginBottom: "16px",
+    color: "#1e293b",
+  },
+  modalText: {
+    marginBottom: "24px",
+    color: "#64748b",
+  },
+  modalButtons: {
+    display: "flex",
+    gap: "16px",
+    marginBottom: "24px",
+    justifyContent: "center",
+  },
+  modalCloseButton: {
+    width: "100%",
+    padding: "8px",
+    backgroundColor: "#f1f5f9",
+    color: "#64748b",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    ":hover": {
+      backgroundColor: "#e2e8f0",
+    },
   },
   sidebarHeader: {
     padding: "24px",

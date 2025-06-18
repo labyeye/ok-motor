@@ -145,7 +145,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
 
       const address = serviceBill.businessAddress || "N/A";
-      const maxCharsPerLine = 60;
+      const maxCharsPerLine = 30;
       const addressLines = [];
       for (let i = 0; i < address.length; i += maxCharsPerLine) {
         addressLines.push(address.substring(i, i + maxCharsPerLine));
@@ -153,7 +153,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
       addressLines.forEach((line, index) => {
         page.drawText(index === 0 ? `Address: ${line}` : line, {
-          x: index === 0 ? 60 : 100,
+          x: index === 0 ? 30 : 40,
           y: 655 - index * 12,
           size: 10,
           color: rgb(0.2, 0.2, 0.2),
@@ -186,8 +186,8 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     const customerAddress = serviceBill.customerAddress || "N/A";
     const customerAddressLines = [];
-    for (let i = 0; i < customerAddress.length; i += 60) {
-      customerAddressLines.push(customerAddress.substring(i, i + 60));
+    for (let i = 0; i < customerAddress.length; i += 40) {
+      customerAddressLines.push(customerAddress.substring(i, i + 30));
     }
 
     customerAddressLines.forEach((line, index) => {

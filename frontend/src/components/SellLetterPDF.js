@@ -1782,7 +1782,7 @@ const SellLetterForm = () => {
                       ...styles.formInput,
                       ...(focusedInput === "note" ? styles.inputFocused : {}),
                     }}
-                    maxLength={112}
+                    maxLength={73}
                     rows={3}
                   />
                 </div>
