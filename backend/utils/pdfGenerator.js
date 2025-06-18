@@ -2,7 +2,14 @@
 const { PDFDocument, rgb } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
-
+function formatTime12Hour(date) {
+  return date.toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
 exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
   try {
     const pdfDoc = await PDFDocument.create();
@@ -12,7 +19,10 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
 
     // Load logo
-    const logoPath = path.join(__dirname, "../../frontend/src/images/okmotorback.png");
+    const logoPath = path.join(
+      __dirname,
+      "../../frontend/src/images/okmotorback.png"
+    );
     const logoBytes = fs.readFileSync(logoPath);
     const logoImage = await pdfDoc.embedPng(logoBytes);
 
@@ -67,8 +77,12 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     // Invoice Info
-    const invoiceNumber = serviceBill.billNumber || `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, "0")}`;
-    
+    const invoiceNumber =
+      serviceBill.billNumber ||
+      `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, "0")}`;
+
     page.drawText(`Invoice Number: ${invoiceNumber}`, {
       x: 50,
       y: 720,
@@ -77,13 +91,24 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: font,
     });
 
-    page.drawText(`Date: ${new Date(serviceBill.serviceDate || Date.now()).toLocaleDateString()}`, {
-      x: 400,
-      y: 720,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
+    const currentDate = new Date();
+    page.drawText(
+      `Date: ${currentDate.toLocaleDateString(
+        "en-IN"
+      )} Time: ${currentDate.toLocaleTimeString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })}`,
+      {
+        x: 400,
+        y: 720,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      }
+    );
 
     // Divider
     page.drawLine({
@@ -225,11 +250,19 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     // Vehicle details
     const vehicleDetails = [
-      { label: "Type:", value: serviceBill.vehicleType ? serviceBill.vehicleType.toUpperCase() : "N/A" },
+      {
+        label: "Type:",
+        value: serviceBill.vehicleType
+          ? serviceBill.vehicleType.toUpperCase()
+          : "N/A",
+      },
       { label: "Brand:", value: serviceBill.vehicleBrand || "N/A" },
       { label: "Model:", value: serviceBill.vehicleModel || "N/A" },
       { label: "Reg No:", value: serviceBill.registrationNumber || "N/A" },
-      { label: "KM:", value: serviceBill.kmReading ? `${serviceBill.kmReading} km` : "N/A" }
+      {
+        label: "KM:",
+        value: serviceBill.kmReading ? `${serviceBill.kmReading} km` : "N/A",
+      },
     ];
 
     let vehicleY = columnY - 50;
@@ -261,9 +294,24 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     const serviceDetails = [
-      { label: "Service Date:", value: new Date(serviceBill.serviceDate || Date.now()).toLocaleDateString() },
-      { label: "Delivery Date:", value: new Date(serviceBill.deliveryDate || Date.now() + 86400000).toLocaleDateString() },
-      { label: "Service Type:", value: serviceBill.serviceType ? serviceBill.serviceType.toUpperCase() : "N/A" }
+      {
+        label: "Service Date:",
+        value: new Date(
+          serviceBill.serviceDate || Date.now()
+        ).toLocaleDateString(),
+      },
+      {
+        label: "Delivery Date:",
+        value: new Date(
+          serviceBill.deliveryDate || Date.now() + 86400000
+        ).toLocaleDateString(),
+      },
+      {
+        label: "Service Type:",
+        value: serviceBill.serviceType
+          ? serviceBill.serviceType.toUpperCase()
+          : "N/A",
+      },
     ];
 
     serviceDetails.forEach((detail, index) => {
@@ -295,7 +343,13 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     // Table headers
-    const serviceHeaders = ["#", "Description", "Qty", "Rate Rs.", "Amount Rs."];
+    const serviceHeaders = [
+      "#",
+      "Description",
+      "Qty",
+      "Rate Rs.",
+      "Amount Rs.",
+    ];
     const serviceHeaderPositions = [60, 100, 300, 350, 450];
 
     serviceHeaders.forEach((header, index) => {
@@ -488,14 +542,14 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     page.drawText("Payment Status:", {
       x: 50,
-      y: totalsY-20,
+      y: totalsY - 20,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
     page.drawText(serviceBill.paymentStatus.toUpperCase(), {
       x: 150,
-      y: totalsY-20,
+      y: totalsY - 20,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
@@ -528,7 +582,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     // Footer with Signatures (now with more space)
     const footerY = 80;
-    
+
     // Customer Signature
     page.drawText("Customer Signature", {
       x: 100,
