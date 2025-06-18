@@ -825,21 +825,21 @@ const BuyLetterHistory = () => {
     });
     page.drawText("VEHICLE DETAILS", {
       x: 50,
-      y: 620,
+      y: 605,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
     });
     page.drawRectangle({
       x: 50,
-      y: 590,
+      y: 575,
       width: 495,
       height: 20,
       color: rgb(0.9, 0.9, 0.9),
     });
     page.drawText("Condition: " + (letter.vehicleCondition || "N/A"), {
       x: 60,
-      y: 597,
+      y: 581,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
@@ -859,7 +859,7 @@ const BuyLetterHistory = () => {
     vehicleHeaders.forEach((header, index) => {
       page.drawText(header, {
         x: vehicleHeaderPositions[index],
-        y: 570,
+        y: 555,
         size: 9,
         color: rgb(0.2, 0.2, 0.2),
         font: boldFont,
@@ -880,7 +880,7 @@ const BuyLetterHistory = () => {
     vehicleValues.forEach((value, index) => {
       const maxWidth = columnWidths[index];
       const xPos = vehicleHeaderPositions[index];
-      let yPos = 555;
+      let yPos = 543;
 
       const lines = [];
       let currentLine = "";

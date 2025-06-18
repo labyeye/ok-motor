@@ -1060,7 +1060,7 @@ const BuyLetterForm = () => {
     });
     page.drawText("Condition: " + (formData.vehicleCondition || "N/A"), {
       x: 60,
-      y: 572,
+      y: 581,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
@@ -1101,7 +1101,7 @@ const BuyLetterForm = () => {
     vehicleValues.forEach((value, index) => {
       const maxWidth = columnWidths[index];
       const xPos = vehicleHeaderPositions[index];
-      let yPos = 555;
+      let yPos = 543;
 
       const lines = [];
       let currentLine = "";
