@@ -1,5 +1,5 @@
 // utils/pdfGenerator.js
-const { PDFDocument, rgb,degrees } = require("pdf-lib");
+const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
 function formatTime12Hour(date) {
@@ -154,7 +154,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
       addressLines.forEach((line, index) => {
         page.drawText(index === 0 ? `Address: ${line}` : line, {
-          x: index === 0 ? 30 : 40,
+          x: index === 0 ? 60 : 100,
           y: 655 - index * 12,
           size: 10,
           color: rgb(0.2, 0.2, 0.2),
@@ -187,7 +187,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     const customerAddress = serviceBill.customerAddress || "N/A";
     const customerAddressLines = [];
-    for (let i = 0; i < customerAddress.length; i += 40) {
+    for (let i = 0; i < customerAddress.length; i += 30) {
       customerAddressLines.push(customerAddress.substring(i, i + 30));
     }
 
@@ -241,15 +241,13 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.9, 0.9, 0.9),
     });
 
-    page.drawText("Condition: " + (serviceBill.vehicleCondition || "Good"), {
+    page.drawText("Condition: " + (serviceBill.vehicleCondition || "Excellent"), {
       x: leftColumnX + 10,
       y: columnY - 23,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
-
-    // Vehicle details
     const vehicleDetails = [
       {
         label: "Type:",
@@ -332,6 +330,44 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
     });
+
+    // Replace the existing custom service description check with:
+    const isCustomService =
+      serviceBill.serviceType &&
+      serviceBill.serviceType.toLowerCase() === "custom";
+    const hasCustomDesc =
+      serviceBill.customServiceDescription &&
+      serviceBill.customServiceDescription.trim() !== "";
+
+    if (isCustomService && hasCustomDesc) {
+      const customDescY = columnY - 25 - serviceDetails.length * 15;
+
+      page.drawText("Custom Service Description:", {
+        x: rightColumnX + 10,
+        y: customDescY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: fontBold,
+      });
+
+      // Handle multi-line description
+      const description = serviceBill.customServiceDescription;
+      const maxCharsPerLine = 30;
+      const descLines = [];
+      for (let i = 0; i < description.length; i += maxCharsPerLine) {
+        descLines.push(description.substring(i, i + maxCharsPerLine));
+      }
+
+      descLines.forEach((line, index) => {
+        page.drawText(line, {
+          x: rightColumnX + 10,
+          y: customDescY - 15 - index * 12,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font,
+        });
+      });
+    }
 
     // Service Items Table (full width)
     const itemsStartY = columnY - 140;

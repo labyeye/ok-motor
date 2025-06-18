@@ -276,55 +276,65 @@ const ServiceBillForm = () => {
     </div>
   );
 
-  const generateServiceBillPDF = async (billData = formData, forPreview = false) => {
-  try {
-    setShowLoadingOverlay(true);
-    const token = localStorage.getItem("token");
+  const generateServiceBillPDF = async (
+    billData = formData,
+    forPreview = false
+  ) => {
+    try {
+      setShowLoadingOverlay(true);
+      const token = localStorage.getItem("token");
 
-    // First save the bill if it doesn't have an ID
-    let billId = billData._id;
-    if (!billId) {
-      const saveResponse = await axios.post(
-        `${API_BASE_URL}/service-bills`,
-        { ...billData, user: user._id },
+      // First save the bill if it doesn't have an ID
+      let billId = billData._id;
+      if (!billId) {
+        const saveResponse = await axios.post(
+          `${API_BASE_URL}/service-bills`,
+          {
+            ...billData,
+            serviceType: billData.serviceType || formData.serviceType,
+            customServiceDescription:
+              billData.customServiceDescription ||
+              formData.customServiceDescription,
+            user: user._id,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        billId = saveResponse.data.data._id;
+      }
+
+      // Get the PDF from the server
+      const pdfResponse = await axios.get(
+        `${API_BASE_URL}/service-bills/${billId}/download`,
         {
+          responseType: "blob",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            Accept: "application/pdf",
           },
         }
       );
-      billId = saveResponse.data.data._id;
-    }
 
-    // Get the PDF from the server
-    const pdfResponse = await axios.get(
-      `${API_BASE_URL}/service-bills/${billId}/download`,
-      {
-        responseType: "blob",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/pdf",
-        },
+      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+
+      if (forPreview) {
+        const url = URL.createObjectURL(pdfBlob);
+        setPreviewPdf(url);
+        setShowPreviewModal(true);
+      } else {
+        saveAs(pdfBlob, `service-bill-${billId}.pdf`);
       }
-    );
-
-    const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-
-    if (forPreview) {
-      const url = URL.createObjectURL(pdfBlob);
-      setPreviewPdf(url);
-      setShowPreviewModal(true);
-    } else {
-      saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert(`Failed to generate PDF: ${error.message}`);
+    } finally {
+      setShowLoadingOverlay(false);
     }
-  } catch (error) {
-    console.error("Error generating PDF:", error);
-    alert(`Failed to generate PDF: ${error.message}`);
-  } finally {
-    setShowLoadingOverlay(false);
-  }
-};
+  };
   const handleInput = (e) => {
     const { name, value } = e.target;
     e.target.value = value.toUpperCase();
