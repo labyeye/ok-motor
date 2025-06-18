@@ -51,7 +51,7 @@ const ServiceBillSchema = new mongoose.Schema({
   paymentMethod: {
     type: String,
     required: true,
-    enum: ["cash", "card", "upi", "online"],
+    enum: ["cash", "card", "upi", "bank transfer"],
     default: "cash"
   },
   paymentStatus: {
