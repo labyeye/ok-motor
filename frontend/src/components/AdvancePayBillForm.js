@@ -218,66 +218,55 @@ const AdvancePayBillForm = () => {
 
   // Replace the generateAdvanceBillPDF function in your AdvancePayBillForm.js with this fixed version:
 
-  const generateAdvanceBillPDF = async (
-    billData = formData,
-    forPreview = false
-  ) => {
-    try {
-      setShowLoadingOverlay(true);
-      const token = localStorage.getItem("token");
+  const generateAdvanceBillPDF = async (billData = formData, forPreview = false) => {
+  try {
+    setShowLoadingOverlay(true);
+    const token = localStorage.getItem("token");
 
-      // Validate required fields
-      if (!billData.customerName || !billData.customerPhone) {
-        alert("Please fill in required customer information");
-        return;
-      }
-
-      // Prepare data with user ID
-      const requestData = {
-        ...billData,
-        user: user._id,
-      };
-
-      // First save the bill
-      const saveResponse = await api.post("/advance-bills", requestData);
-
-      if (
-        !saveResponse.data ||
-        !saveResponse.data.data ||
-        !saveResponse.data.data._id
-      ) {
-        throw new Error("Invalid response format from server");
-      }
-
-      const billId = saveResponse.data.data._id;
-
-      if (forPreview) {
-        // For preview, get the PDF URL
-        const pdfUrl = `/api/advance-bills/pdf/advance-bill-${billId}.pdf`;
-        setPreviewPdf(pdfUrl);
-        setShowPreviewModal(true);
-      } else {
-        // For download, use the download endpoint
-        const pdfResponse = await api.get(`/advance-bills/${billId}/download`, {
-          responseType: "blob",
-        });
-
-        const pdfBlob = new Blob([pdfResponse.data], {
-          type: "application/pdf",
-        });
-        saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
-      }
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert(
-        `Failed to generate PDF: ${
-          error.response?.data?.message || error.message
-        }`
-      );
-    } finally {
-      setShowLoadingOverlay(false);
+    // Validate required fields
+    if (!billData.customerName || !billData.customerPhone) {
+      alert("Please fill in required customer information");
+      return;
     }
-  };
+
+    // Prepare data with user ID
+    const requestData = {
+      ...billData,
+      user: user._id,
+    };
+
+    // First save the bill
+    const saveResponse = await api.post("/advance-bills", requestData);
+
+    if (!saveResponse.data || !saveResponse.data.data || !saveResponse.data.data._id) {
+      throw new Error("Invalid response format from server");
+    }
+
+    const billId = saveResponse.data.data._id;
+
+    // Get the PDF for preview or download
+    const pdfResponse = await api.get(`/advance-bills/${billId}/download`, {
+      responseType: "blob",
+    });
+
+    const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+
+    if (forPreview) {
+      // Create a blob URL for preview
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setPreviewPdf(pdfUrl);
+      setShowPreviewModal(true);
+    } else {
+      // For download
+      saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+    }
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    alert(`Failed to generate PDF: ${error.response?.data?.message || error.message}`);
+  } finally {
+    setShowLoadingOverlay(false);
+  }
+};
 
   const handleLogout = () => {
     localStorage.removeItem("token");

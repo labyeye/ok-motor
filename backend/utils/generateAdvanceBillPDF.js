@@ -51,6 +51,16 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         height: 130,
       });
     }
+    if (logoImage) {
+      page.drawImage(logoImage, {
+        x: 300,
+        y: 100,
+        width: 500,
+        height: 470,
+        opacity:0.3,
+        rotate:degrees(45),
+      });
+    }
 
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 400,
@@ -330,7 +340,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     page.drawText(
       "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014",
       {
-        x: 130,
+        x: 160,
         y: footerY - 50,
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
