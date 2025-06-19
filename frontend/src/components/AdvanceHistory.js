@@ -1,4 +1,3 @@
-// ServiceHistory.js
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import {
@@ -22,61 +21,33 @@ import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
 
-
 const AdvanceHistory = () => {
   const { user } = useContext(AuthContext);
-  const [activeMenu, setActiveMenu] = useState("Service History");
+  const [activeMenu, setActiveMenu] = useState("Advance History");
   const [expandedMenus, setExpandedMenus] = useState({});
-  const [serviceBills, setServiceBills] = useState([]);
-  const [purchaseHistory, setPurchaseHistory] = useState([]);
-  const [sellHistory, setSellHistory] = useState([]);
+  const [advanceBills, setAdvanceBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [showVehicleHistory, setShowVehicleHistory] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        // Fetch service bills
-        const serviceResponse = await axios.get(
-          `https://ok-motor.onrender.com/api/service-bills?page=${currentPage}`,
+        const response = await axios.get(
+          `https://ok-motor.onrender.com/api/advance-bills?page=${currentPage}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           }
         );
-        setServiceBills(serviceResponse.data.data || serviceResponse.data);
-        setTotalPages(serviceResponse.data.totalPages || 1);
-
-        // Fetch purchase history (if needed)
-        const purchaseResponse = await axios.get(
-          `https://ok-motor.onrender.com/api/buy-letters`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        setPurchaseHistory(purchaseResponse.data.data || purchaseResponse.data);
-
-        // Fetch sell history (if needed)
-        const sellResponse = await axios.get(
-          `https://ok-motor.onrender.com/api/sell-letters`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        setSellHistory(sellResponse.data.data || sellResponse.data);
+        setAdvanceBills(response.data.data || response.data);
+        setTotalPages(response.data.totalPages || 1);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching advance bills:", error);
       } finally {
         setLoading(false);
       }
@@ -86,41 +57,20 @@ const AdvanceHistory = () => {
   }, [currentPage]);
 
   const handleSearch = (e) => {
-    const term = e.target.value;
-    setSearchTerm(term);
-
-    // If the search term is a registration number and has at least 3 characters
-    if (term.length >= 3) {
-      setShowVehicleHistory(true);
-    } else {
-      setShowVehicleHistory(false);
-    }
+    setSearchTerm(e.target.value);
   };
 
-  const getFilteredData = () => {
-    if (!searchTerm) return { purchase: [], sell: [], service: [] };
-
-    const lowerSearchTerm = searchTerm.toLowerCase();
-
-    return {
-      purchase: purchaseHistory.filter((item) =>
-        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm)
-      ),
-      sell: sellHistory.filter((item) =>
-        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm)
-      ),
-      service: serviceBills.filter((item) =>
-        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm)
-      ),
-    };
-  };
-
-  const filteredData = getFilteredData();
+  const filteredBills = searchTerm
+    ? advanceBills.filter((bill) =>
+        bill.registrationNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bill.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : advanceBills;
 
   const handleDownload = async (billId) => {
     try {
       const response = await axios.get(
-        `https://ok-motor.onrender.com/api/service-bills/${billId}/download`,
+        `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
           headers: {
@@ -132,7 +82,7 @@ const AdvanceHistory = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `service-bill-${billId}.pdf`);
+      link.setAttribute("download", `advance-bill-${billId}.pdf`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -143,16 +93,16 @@ const AdvanceHistory = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this service bill?")) {
+    if (window.confirm("Are you sure you want to delete this advance bill?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/service-bills/${id}`, {
+        await axios.delete(`https://ok-motor.onrender.com/api/advance-bills/${id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-        setServiceBills(serviceBills.filter((bill) => bill._id !== id));
+        setAdvanceBills(advanceBills.filter((bill) => bill._id !== id));
       } catch (error) {
-        console.error("Error deleting service bill:", error);
+        console.error("Error deleting advance bill:", error);
       }
     }
   };
@@ -310,11 +260,9 @@ const AdvanceHistory = () => {
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
-            <h1 style={styles.pageTitle}>Service History</h1>
+            <h1 style={styles.pageTitle}>Advance History</h1>
             <p style={styles.pageSubtitle}>
-              {showVehicleHistory
-                ? `Showing history for vehicle: ${searchTerm}`
-                : "View and manage all your service bills"}
+              View and manage all your advance bills
             </p>
           </div>
 
@@ -323,7 +271,7 @@ const AdvanceHistory = () => {
               <Search size={18} style={styles.searchIcon} />
               <input
                 type="text"
-                placeholder="Search by registration number..."
+                placeholder="Search by registration number or customer name..."
                 value={searchTerm}
                 onChange={handleSearch}
                 style={styles.searchInput}
@@ -331,10 +279,10 @@ const AdvanceHistory = () => {
             </div>
             <button
               style={styles.newBillButton}
-              onClick={() => navigate("/service/create")}
+              onClick={() => navigate("/advance/create")}
             >
               <FileText size={16} style={styles.buttonIcon} />
-              New Service Bill
+              New Advance Bill
             </button>
           </div>
 
@@ -342,165 +290,6 @@ const AdvanceHistory = () => {
             <div style={styles.loadingContainer}>
               <p>Loading data...</p>
             </div>
-          ) : showVehicleHistory ? (
-            <>
-              {/* 1. Purchase History Table - Always shown with heading */}
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '16px' }}>
-                  Purchase History
-                </h3>
-                {filteredData.purchase.length > 0 ? (
-                  <div style={styles.tableContainer}>
-                    <table style={styles.table}>
-                      <thead>
-                        <tr>
-                          <th style={styles.tableHeader}>Seller</th>
-                          <th style={styles.tableHeader}>Vehicle</th>
-                          <th style={styles.tableHeader}>Reg No.</th>
-                          <th style={styles.tableHeader}>Purchase Date</th>
-                          <th style={styles.tableHeader}>Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredData.purchase.map((item) => (
-                          <tr key={item._id} style={styles.tableRow}>
-                            <td style={styles.tableCell}>{item.sellerName}</td>
-                            <td style={styles.tableCell}>
-                              {item.vehicleBrand} {item.vehicleModel}
-                            </td>
-                            <td style={styles.tableCell}>{item.registrationNumber}</td>
-                            <td style={styles.tableCell}>
-                              {new Date(item.purchaseDate).toLocaleDateString()}
-                            </td>
-                            <td style={styles.tableCell}>
-                              ₹{item.purchaseAmount?.toFixed(2) || 0}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p style={{ color: '#64748b' }}>No purchase records found</p>
-                )}
-              </div>
-          
-              {/* 2. Sell History Table - Always shown with heading */}
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '16px' }}>
-                  Sell History
-                </h3>
-                {filteredData.sell.length > 0 ? (
-                  <div style={styles.tableContainer}>
-                    <table style={styles.table}>
-                      <thead>
-                        <tr>
-                          <th style={styles.tableHeader}>Buyer</th>
-                          <th style={styles.tableHeader}>Vehicle</th>
-                          <th style={styles.tableHeader}>Reg No.</th>
-                          <th style={styles.tableHeader}>Sell Date</th>
-                          <th style={styles.tableHeader}>Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredData.sell.map((item) => (
-                          <tr key={item._id} style={styles.tableRow}>
-                            <td style={styles.tableCell}>{item.buyerName}</td>
-                            <td style={styles.tableCell}>
-                              {item.vehicleBrand} {item.vehicleModel}
-                            </td>
-                            <td style={styles.tableCell}>{item.registrationNumber}</td>
-                            <td style={styles.tableCell}>
-                              {new Date(item.sellDate).toLocaleDateString()}
-                            </td>
-                            <td style={styles.tableCell}>
-                              ₹{item.sellAmount?.toFixed(2) || 0}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p style={{ color: '#64748b' }}>No sell records found</p>
-                )}
-              </div>
-          
-              {/* 3. Service History Table - Always shown with heading */}
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '16px' }}>
-                  Service History
-                </h3>
-                {filteredData.service.length > 0 ? (
-                  <div style={styles.tableContainer}>
-                    <table style={styles.table}>
-                      <thead>
-                        <tr>
-                          <th style={styles.tableHeader}>Customer</th>
-                          <th style={styles.tableHeader}>Vehicle</th>
-                          <th style={styles.tableHeader}>Reg No.</th>
-                          <th style={styles.tableHeader}>Amount</th>
-                          <th style={styles.tableHeader}>Date</th>
-                          <th style={styles.tableHeader}>Status</th>
-                          <th style={styles.tableHeader}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredData.service.map((bill) => (
-                          <tr key={bill._id} style={styles.tableRow}>
-                            <td style={styles.tableCell}>{bill.customerName}</td>
-                            <td style={styles.tableCell}>
-                              {bill.vehicleBrand} {bill.vehicleModel}
-                            </td>
-                            <td style={styles.tableCell}>{bill.registrationNumber}</td>
-                            <td style={styles.tableCell}>
-                              ₹{bill.grandTotal?.toFixed(2) || 0}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {new Date(bill.createdAt).toLocaleDateString()}
-                            </td>
-                            <td style={styles.tableCell}>
-                              <span
-                                style={{
-                                  ...styles.statusBadge,
-                                  ...(bill.paymentStatus === "paid"
-                                    ? styles.statusPaid
-                                    : bill.paymentStatus === "partial"
-                                    ? styles.statusPartial
-                                    : styles.statusPending),
-                                }}
-                              >
-                                {bill.paymentStatus}
-                              </span>
-                            </td>
-                            <td style={styles.tableCell}>
-                              <button
-                                onClick={() => handleDownload(bill._id)}
-                                style={styles.iconButton}
-                                title="Download"
-                              >
-                                <Download size={16} />
-                              </button>
-                              {user?.role === "admin" && (
-                                <button
-                                  onClick={() => handleDelete(bill._id)}
-                                  style={styles.iconButton}
-                                  title="Delete"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p style={{ color: '#64748b' }}>No service records found</p>
-                )}
-              </div>
-            </>
           ) : (
             <>
               <div style={styles.tableContainer}>
@@ -510,41 +299,32 @@ const AdvanceHistory = () => {
                       <th style={styles.tableHeader}>Customer</th>
                       <th style={styles.tableHeader}>Vehicle</th>
                       <th style={styles.tableHeader}>Reg No.</th>
-                      <th style={styles.tableHeader}>Amount</th>
+                      <th style={styles.tableHeader}>Total Amount</th>
+                      <th style={styles.tableHeader}>Advance Paid</th>
+                      <th style={styles.tableHeader}>Balance Due</th>
                       <th style={styles.tableHeader}>Date</th>
-                      <th style={styles.tableHeader}>Status</th>
                       <th style={styles.tableHeader}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {serviceBills.map((bill) => (
+                    {filteredBills.map((bill) => (
                       <tr key={bill._id} style={styles.tableRow}>
                         <td style={styles.tableCell}>{bill.customerName}</td>
                         <td style={styles.tableCell}>
                           {bill.vehicleBrand} {bill.vehicleModel}
                         </td>
-                        <td style={styles.tableCell}>
-                          {bill.registrationNumber}
-                        </td>
+                        <td style={styles.tableCell}>{bill.registrationNumber}</td>
                         <td style={styles.tableCell}>
                           ₹{bill.grandTotal?.toFixed(2) || 0}
                         </td>
                         <td style={styles.tableCell}>
-                          {new Date(bill.createdAt).toLocaleDateString()}
+                          ₹{bill.advancePaid?.toFixed(2) || 0}
                         </td>
                         <td style={styles.tableCell}>
-                          <span
-                            style={{
-                              ...styles.statusBadge,
-                              ...(bill.paymentStatus === "paid"
-                                ? styles.statusPaid
-                                : bill.paymentStatus === "partial"
-                                ? styles.statusPartial
-                                : styles.statusPending),
-                            }}
-                          >
-                            {bill.paymentStatus}
-                          </span>
+                          ₹{bill.balanceDue?.toFixed(2) || 0}
+                        </td>
+                        <td style={styles.tableCell}>
+                          {new Date(bill.createdAt).toLocaleDateString()}
                         </td>
                         <td style={styles.tableCell}>
                           <button

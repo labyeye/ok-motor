@@ -242,7 +242,7 @@ const AdvancePayBillForm = () => {
       };
 
       // First save the bill
-      const saveResponse = await api.post("/advance-bills", requestData);
+      const saveResponse = await api.post("https://ok-motor.onrender.com/api/advance-bills", requestData);
 
       if (
         !saveResponse.data ||
@@ -255,7 +255,7 @@ const AdvancePayBillForm = () => {
       const billId = saveResponse.data.data._id;
 
       // Get the PDF for preview or download
-      const pdfResponse = await api.get(`/advance-bills/${billId}/download`, {
+      const pdfResponse = await api.get(`https://ok-motor.onrender.com/api/advance-bills/${billId}/download`, {
         responseType: "blob",
       });
 
