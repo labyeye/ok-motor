@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 
 axios.defaults.withCredentials = true;
@@ -52,6 +52,11 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
+};
+
+// Add this custom hook to use the auth context
+export const useAuth = () => {
+  return useContext(AuthContext);
 };
 
 export default AuthContext;

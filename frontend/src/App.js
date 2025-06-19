@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider ,useAuth} from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
@@ -15,11 +15,33 @@ import StaffList from "./components/StaffList";
 import ServiceHistory from "./components/ServiceHistory";
 import AdvancePayBillForm from "./components/AdvancePayBillForm";
 import AdvanceHistory from "./components/AdvanceHistory";
+import { useEffect } from "react";
 
+function AuthHandler() {
+  const { logout } = useAuth();
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      logout();
+      // For older browsers
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [logout]);
+
+  return null;
+}
 function App() {
   return (
     <AuthProvider>
       <Router>
+        <AuthHandler/>
         <Routes>
           <Route path="/" element={<LoginPage />} />
 
