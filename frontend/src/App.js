@@ -23,7 +23,6 @@ function AuthHandler() {
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       logout();
-      // For older browsers
       e.preventDefault();
       e.returnValue = '';
     };

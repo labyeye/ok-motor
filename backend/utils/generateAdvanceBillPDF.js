@@ -320,8 +320,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     const totalAmount = Number(advanceBill.totalAmount) || 0;
     const advancePaid = Number(advanceBill.advancePaid) || 0;
     const grandTotal = Number(advanceBill.grandTotal) || totalAmount * 100;
-    const balanceDue =
-      (Number(advanceBill.balanceDue));
+    const balanceDue = Number(advanceBill.balanceDue);
 
     const paymentDetails = [
       { label: "Total Amount:", value: formatRupeeWithSymbol(totalAmount) },
@@ -353,6 +352,35 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         x: 180,
         y: paymentY - 25 - index * 15,
         size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+    });
+    const termsY = 250; // Position above the footer
+    page.drawText("TERMS AND CONDITIONS", {
+      x: 50,
+      y: termsY,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: fontBold,
+    });
+
+    const termsAndConditions = [
+      "1. This is an advance payment invoice only, not the final bill.",
+      "2. Advance payment is non-refundable if the service is cancelled by the customer.",
+      "3. Any additional work required will be charged separately.",
+      "4. Vehicle must be collected within 7 days of completion, or storage charges may apply.",
+      "5. We are not responsible for any items left in the vehicle.",
+      "6. Original invoice must be presented for vehicle collection.",
+      "7. Warranty applies only to parts replaced by us and for the specified period.",
+      "8. If advance bill generated then no refund will be given.",
+    ];
+
+    termsAndConditions.forEach((term, index) => {
+      page.drawText(term, {
+        x: 60,
+        y: termsY - 20 - index * 12,
+        size: 9,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
