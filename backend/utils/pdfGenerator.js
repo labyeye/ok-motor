@@ -241,13 +241,16 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.9, 0.9, 0.9),
     });
 
-    page.drawText("Condition: " + (serviceBill.vehicleCondition || "Excellent"), {
-      x: leftColumnX + 10,
-      y: columnY - 23,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
+    page.drawText(
+      "Condition: " + (serviceBill.vehicleCondition || "Excellent"),
+      {
+        x: leftColumnX + 10,
+        y: columnY - 23,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      }
+    );
     const vehicleDetails = [
       {
         label: "Type:",
@@ -284,6 +287,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     // Right Column - Service Information
+    // Right Column - Service Information
     page.drawText("SERVICE DETAILS", {
       x: rightColumnX,
       y: columnY,
@@ -313,6 +317,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       },
     ];
 
+    // Draw the first three service details
     serviceDetails.forEach((detail, index) => {
       page.drawText(detail.label, {
         x: rightColumnX + 10,
@@ -331,7 +336,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     });
 
-    // Replace the existing custom service description check with:
+    // Immediately after service type, add custom description if applicable
     const isCustomService =
       serviceBill.serviceType &&
       serviceBill.serviceType.toLowerCase() === "custom";
@@ -368,7 +373,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         });
       });
     }
-        // Service Items Table with pagination
+    // Service Items Table with pagination
     const itemsStartY = columnY - 140;
     const maxItemsPerPage = 15; // Adjust this number based on your item height
     let currentPage = page;
@@ -389,7 +394,13 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     // Function to draw table headers
     const drawServiceItemHeaders = (page, y) => {
-      const serviceHeaders = ["#", "Description", "Qty", "Rate Rs.", "Amount Rs."];
+      const serviceHeaders = [
+        "#",
+        "Description",
+        "Qty",
+        "Rate Rs.",
+        "Amount Rs.",
+      ];
       const serviceHeaderPositions = [60, 100, 300, 350, 450];
 
       serviceHeaders.forEach((header, index) => {
@@ -415,7 +426,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         currentPage = pdfDoc.addPage([595, 842]);
         currentY = 780; // Start near top of new page
         currentPageItems = 0;
-        
+
         // Draw headers on new page
         drawServiceItemHeaders(currentPage, currentY);
         currentY -= 20;

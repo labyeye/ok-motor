@@ -62,7 +62,8 @@ const ServiceBillSchema = new mongoose.Schema({
   },
   advancePaid: { type: Number, default: 0 },
   balanceDue: { type: Number, required: true },
-  
+    customServiceDescription: { type: String }, // Add this line
+
   // Additional Information
   issuesReported: { type: String },
   technicianNotes: { type: String },

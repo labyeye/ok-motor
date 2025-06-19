@@ -1,5 +1,4 @@
 import React, { useState, useContext } from "react";
-import { PDFDocument } from "pdf-lib";
 import { saveAs } from "file-saver";
 import {
   FileText,
@@ -63,7 +62,7 @@ const ServiceBillForm = () => {
     serviceType: "regular",
     serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
     discount: 0,
-    taxRate: 18,
+    taxRate: 0,
     paymentMethod: "cash",
     paymentStatus: "paid",
     advancePaid: 0,
@@ -79,6 +78,8 @@ const ServiceBillForm = () => {
       (sum, item) => sum + (item.quantity || 0) * (item.rate || 0),
       0
     );
+
+    // Only calculate tax if tax is enabled
     const taxAmount = data.taxEnabled
       ? ((data.taxRate || 0) / 100) * totalAmount
       : 0;
@@ -104,10 +105,14 @@ const ServiceBillForm = () => {
 
     items[index].amount = items[index].quantity * items[index].rate;
 
-    setFormData({
+    const newData = {
       ...formData,
       serviceItems: items,
-      ...calculateAmounts({ ...formData, serviceItems: items }),
+    };
+
+    setFormData({
+      ...newData,
+      ...calculateAmounts(newData),
     });
   };
 
@@ -139,9 +144,8 @@ const ServiceBillForm = () => {
       [name]: val,
     };
 
-    if (name === "discount" || name === "taxRate" || name === "advancePaid") {
-      Object.assign(newData, calculateAmounts(newData));
-    }
+    // Always recalculate amounts, but calculateAmounts will handle taxEnabled check
+    Object.assign(newData, calculateAmounts(newData));
 
     setFormData(newData);
   };
@@ -151,15 +155,19 @@ const ServiceBillForm = () => {
       setIsSaving(true);
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${API_BASE_URL}/service-bills`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      `${API_BASE_URL}/service-bills`,
+      {
+        ...formData,
+        user: user._id,
+        customServiceDescription: formData.customServiceDescription // Ensure this is included
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
       alert("Service bill saved successfully!");
       return response.data;
     } catch (error) {
@@ -387,7 +395,7 @@ const ServiceBillForm = () => {
         { name: "Advance History", path: "/advance/history" },
       ],
     },
-    
+
     // Add the conditional check here
     ...(user?.role !== "staff"
       ? [
@@ -821,7 +829,7 @@ const ServiceBillForm = () => {
                         onChange={(e) => handleServiceItemChange(index, e)}
                         style={styles.formInput}
                         min="0"
-                        step="0.01"
+                        // step="0.01"
                         required
                         maxLength={10}
                       />
@@ -877,7 +885,7 @@ const ServiceBillForm = () => {
                           const newData = {
                             ...formData,
                             taxEnabled: !formData.taxEnabled,
-                            // Reset tax rate to 18 when enabling
+                            // Reset tax rate to 18 when enabling, 0 when disabling
                             taxRate: !formData.taxEnabled ? 18 : 0,
                           };
                           setFormData({
