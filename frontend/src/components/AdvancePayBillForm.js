@@ -1,5 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
-import { PDFDocument } from "pdf-lib";
+import React, { useState, useContext, useEffect, useCallback } from "react";
 import { saveAs } from "file-saver";
 import {
   FileText,
@@ -9,7 +8,6 @@ import {
   Download,
   Calendar,
   IndianRupee,
-  AlertCircle,
   LayoutDashboard,
   ShoppingCart,
   TrendingUp,
@@ -18,8 +16,6 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
-  Plus,
-  Trash,
   Bike,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -36,6 +32,8 @@ const AdvancePayBillForm = () => {
   const [previewPdf, setPreviewPdf] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [focusedInput, setFocusedInput] = useState(null);
+
   const [formData, setFormData] = useState({
     customerName: "",
     customerPhone: "",
@@ -69,7 +67,6 @@ const AdvancePayBillForm = () => {
     withCredentials: true,
   });
 
-  // Add request interceptor to include token
   api.interceptors.request.use(
     (config) => {
       const token = localStorage.getItem("token");
@@ -94,21 +91,33 @@ const AdvancePayBillForm = () => {
     };
   };
 
-  const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    const val = type === "number" ? parseFloat(value) || 0 : value;
+  const handleChange = useCallback(
+    (e) => {
+      const { name, value, type, checked } = e.target;
 
-    const newData = {
-      ...formData,
-      [name]: val,
-    };
+      let val;
+      if (type === "checkbox") {
+        val = checked;
+      } else if (name === "kmReading") {
+        val = value.replace(/[^0-9]/g, "");
+      } else if (type === "number") {
+        val = parseFloat(value) || 0;
+      } else {
+        val = value;
+      }
 
-    if (name === "totalAmount" || name === "advancePaid") {
-      Object.assign(newData, calculateAmounts(newData));
-    }
+      const newData = {
+        ...formData,
+        [name]: val,
+      };
+      if (name === "totalAmount" || name === "advancePaid") {
+        Object.assign(newData, calculateAmounts(newData));
+      }
 
-    setFormData(newData);
-  };
+      setFormData(newData);
+    },
+    [formData]
+  );
 
   const handleInput = (e) => {
     const { name, value } = e.target;
@@ -124,33 +133,27 @@ const AdvancePayBillForm = () => {
       if (!token) {
         throw new Error("No authentication token found. Please log in again.");
       }
-
-      // Prepare the data to match exactly what the backend expects
-      // In handleSaveAndDownload, update the requestData to include calculated fields
       const requestData = {
-        customerName: formData.customerName,
-        customerPhone: formData.customerPhone,
-        customerAddress: formData.customerAddress,
-        customerEmail: formData.customerEmail,
-        vehicleType: formData.vehicleType,
-        vehicleBrand: formData.vehicleBrand,
-        vehicleModel: formData.vehicleModel,
-        registrationNumber: formData.registrationNumber,
-        chassisNumber: formData.chassisNumber,
-        engineNumber: formData.engineNumber,
-        kmReading: parseFloat(formData.kmReading) || 0,
-        serviceDate: formData.serviceDate,
-        deliveryDate: formData.deliveryDate,
-        totalAmount: parseFloat(formData.totalAmount) || 0,
-        advancePaid: parseFloat(formData.advancePaid) || 0,
-        paymentMethod: formData.paymentMethod,
-        user: user._id,
-        // Add these calculated fields
-        grandTotal: parseFloat(formData.totalAmount) || 0,
-        balanceDue:
-          (parseFloat(formData.totalAmount) || 0) -
-          (parseFloat(formData.advancePaid) || 0),
-      };
+      customerName: formData.customerName,
+      customerPhone: formData.customerPhone,
+      customerAddress: formData.customerAddress,
+      customerEmail: formData.customerEmail,
+      vehicleType: formData.vehicleType,
+      vehicleBrand: formData.vehicleBrand,
+      vehicleModel: formData.vehicleModel,
+      registrationNumber: formData.registrationNumber,
+      chassisNumber: formData.chassisNumber,
+      engineNumber: formData.engineNumber,
+      kmReading: formData.kmReading || "0",
+      serviceDate: formData.serviceDate,
+      deliveryDate: formData.deliveryDate,
+      totalAmount: formData.totalAmount || "0",
+      advancePaid: formData.advancePaid || "0",
+      paymentMethod: formData.paymentMethod,
+      user: user._id,
+      grandTotal: formData.totalAmount || "0",
+      balanceDue: (Number(formData.totalAmount || 0) - Number(formData.advancePaid || 0)).toString(),
+    };
 
       const saveResponse = await axios.post(
         `${API_BASE_URL}/advance-bills`,
@@ -218,55 +221,66 @@ const AdvancePayBillForm = () => {
 
   // Replace the generateAdvanceBillPDF function in your AdvancePayBillForm.js with this fixed version:
 
-  const generateAdvanceBillPDF = async (billData = formData, forPreview = false) => {
-  try {
-    setShowLoadingOverlay(true);
-    const token = localStorage.getItem("token");
+  const generateAdvanceBillPDF = async (
+    billData = formData,
+    forPreview = false
+  ) => {
+    try {
+      setShowLoadingOverlay(true);
+      const token = localStorage.getItem("token");
 
-    // Validate required fields
-    if (!billData.customerName || !billData.customerPhone) {
-      alert("Please fill in required customer information");
-      return;
+      // Validate required fields
+      if (!billData.customerName || !billData.customerPhone) {
+        alert("Please fill in required customer information");
+        return;
+      }
+
+      // Prepare data with user ID
+      const requestData = {
+        ...billData,
+        user: user._id,
+      };
+
+      // First save the bill
+      const saveResponse = await api.post("/advance-bills", requestData);
+
+      if (
+        !saveResponse.data ||
+        !saveResponse.data.data ||
+        !saveResponse.data.data._id
+      ) {
+        throw new Error("Invalid response format from server");
+      }
+
+      const billId = saveResponse.data.data._id;
+
+      // Get the PDF for preview or download
+      const pdfResponse = await api.get(`/advance-bills/${billId}/download`, {
+        responseType: "blob",
+      });
+
+      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+
+      if (forPreview) {
+        // Create a blob URL for preview
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        setPreviewPdf(pdfUrl);
+        setShowPreviewModal(true);
+      } else {
+        // For download
+        saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+      }
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert(
+        `Failed to generate PDF: ${
+          error.response?.data?.message || error.message
+        }`
+      );
+    } finally {
+      setShowLoadingOverlay(false);
     }
-
-    // Prepare data with user ID
-    const requestData = {
-      ...billData,
-      user: user._id,
-    };
-
-    // First save the bill
-    const saveResponse = await api.post("/advance-bills", requestData);
-
-    if (!saveResponse.data || !saveResponse.data.data || !saveResponse.data.data._id) {
-      throw new Error("Invalid response format from server");
-    }
-
-    const billId = saveResponse.data.data._id;
-
-    // Get the PDF for preview or download
-    const pdfResponse = await api.get(`/advance-bills/${billId}/download`, {
-      responseType: "blob",
-    });
-
-    const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-
-    if (forPreview) {
-      // Create a blob URL for preview
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      setPreviewPdf(pdfUrl);
-      setShowPreviewModal(true);
-    } else {
-      // For download
-      saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
-    }
-  } catch (error) {
-    console.error("Error generating PDF:", error);
-    alert(`Failed to generate PDF: ${error.response?.data?.message || error.message}`);
-  } finally {
-    setShowLoadingOverlay(false);
-  }
-};
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -338,6 +352,16 @@ const AdvancePayBillForm = () => {
       ...prev,
       [menuName]: !prev[menuName],
     }));
+  };
+  const formatRupee = (val) => {
+    if (val === undefined || val === null || val === "") return "0.00";
+    const num = parseFloat(val.toString().replace(/,/g, ""));
+    return isNaN(num)
+      ? "0.00"
+      : new Intl.NumberFormat("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(num / 100);
   };
 
   const handleMenuClick = (menuName, path) => {
@@ -467,9 +491,15 @@ const AdvancePayBillForm = () => {
                     type="text"
                     name="customerName"
                     value={formData.customerName}
+                    onFocus={() => setFocusedInput("customerName")}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "customerName"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -483,9 +513,15 @@ const AdvancePayBillForm = () => {
                     type="text"
                     name="customerPhone"
                     value={formData.customerPhone}
+                    onFocus={() => setFocusedInput("customerPhone")}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "customerPhone"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={10}
                   />
@@ -499,9 +535,15 @@ const AdvancePayBillForm = () => {
                     type="text"
                     name="customerAddress"
                     value={formData.customerAddress}
+                    onFocus={() => setFocusedInput("customerAddress")}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "customerAddress"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={80}
                   />
@@ -515,9 +557,15 @@ const AdvancePayBillForm = () => {
                     type="email"
                     name="customerEmail"
                     value={formData.customerEmail}
+                    onFocus={() => setFocusedInput("customerEmail")}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "customerEmail"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     maxLength={30}
                   />
                 </div>
@@ -556,9 +604,15 @@ const AdvancePayBillForm = () => {
                     type="text"
                     name="vehicleBrand"
                     value={formData.vehicleBrand}
+                    onFocus={() => setFocusedInput("vehicleBrand")}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "vehicleBrand"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={15}
                   />
@@ -572,10 +626,17 @@ const AdvancePayBillForm = () => {
                     type="text"
                     name="vehicleModel"
                     value={formData.vehicleModel}
+                    onFocus={() => setFocusedInput("vehicleModel")}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "vehicleModel"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
+                    maxLength={20}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -587,9 +648,15 @@ const AdvancePayBillForm = () => {
                     type="text"
                     name="registrationNumber"
                     value={formData.registrationNumber}
+                    onFocus={() => setFocusedInput("registrationNumber")}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "registrationNumber"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={15}
                   />
@@ -603,9 +670,16 @@ const AdvancePayBillForm = () => {
                     type="text"
                     name="chassisNumber"
                     value={formData.chassisNumber}
+                    onFocus={() => setFocusedInput("chassisNumber")}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "chassisNumber"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
+                    maxLength={17}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -617,9 +691,16 @@ const AdvancePayBillForm = () => {
                     type="text"
                     name="engineNumber"
                     value={formData.engineNumber}
+                    onFocus={() => setFocusedInput("engineNumber")}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "engineNumber"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
+                    maxLength={15}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -628,12 +709,31 @@ const AdvancePayBillForm = () => {
                     KM Reading || किलोमीटर पढ़ाई
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="kmReading"
-                    value={formData.kmReading}
-                    onChange={handleChange}
-                    style={styles.formInput}
-                    step="0.01"
+                    value={
+                      formData.kmReading === ""
+                        ? ""
+                        : new Intl.NumberFormat("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(Number(formData.kmReading) / 100)
+                    }
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      setFormData((prev) => ({
+                        ...prev,
+                        kmReading: rawValue,
+                      }));
+                    }}
+                    onFocus={() => setFocusedInput("kmReading")}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "kmReading"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
+                    required
                   />
                 </div>
               </div>
@@ -686,13 +786,30 @@ const AdvancePayBillForm = () => {
                     Total Amount (₹) || कुल राशि (₹)
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="totalAmount"
-                    value={formData.totalAmount}
-                    onChange={handleChange}
-                    style={styles.formInput}
-                    min="0"
-                    step="0.01"
+                    value={
+                      formData.totalAmount === ""
+                        ? ""
+                        : new Intl.NumberFormat("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(Number(formData.totalAmount) / 100)
+                    }
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      setFormData((prev) => ({
+                        ...prev,
+                        totalAmount: rawValue,
+                      }));
+                    }}
+                    onFocus={() => setFocusedInput("totalAmount")}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "totalAmount"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                   />
                 </div>
@@ -702,13 +819,30 @@ const AdvancePayBillForm = () => {
                     Advance Paid (₹) || आगामी भुगतान (₹)
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="advancePaid"
-                    value={formData.advancePaid}
-                    onChange={handleChange}
-                    style={styles.formInput}
-                    min="0"
-                    step="0.01"
+                    value={
+                      formData.advancePaid === ""
+                        ? ""
+                        : new Intl.NumberFormat("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(Number(formData.advancePaid) / 100)
+                    }
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      setFormData((prev) => ({
+                        ...prev,
+                        advancePaid: rawValue,
+                      }));
+                    }}
+                    onFocus={() => setFocusedInput("advancePaid")}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "advancePaid"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                   />
                 </div>
@@ -718,8 +852,15 @@ const AdvancePayBillForm = () => {
                     Grand Total (₹) || कुल राशि (₹)
                   </label>
                   <input
-                    type="number"
-                    value={formData.grandTotal}
+                    type="text"
+                    value={
+                      formData.totalAmount === ""
+                        ? "0.00"
+                        : new Intl.NumberFormat("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(Number(formData.totalAmount) / 100)
+                    }
                     style={styles.formInput}
                     readOnly
                   />
@@ -730,8 +871,19 @@ const AdvancePayBillForm = () => {
                     Balance Due (₹) || बैलेंस डु (₹)
                   </label>
                   <input
-                    type="number"
-                    value={formData.balanceDue}
+                    type="text"
+                    value={
+                      formData.totalAmount === "" && formData.advancePaid === ""
+                        ? "0.00"
+                        : new Intl.NumberFormat("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(
+                            (Number(formData.totalAmount || 0) -
+                              Number(formData.advancePaid || 0)) /
+                              100
+                          )
+                    }
                     style={styles.formInput}
                     readOnly
                   />
@@ -967,6 +1119,9 @@ const styles = {
   },
   nav: {
     padding: "16px 0",
+  },
+  inputFocused: {
+    backgroundColor: "yellow",
   },
   menuItem: {
     display: "flex",

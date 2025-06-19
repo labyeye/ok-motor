@@ -13,24 +13,62 @@ function formatTime12Hour(date) {
 
 const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
   try {
-    console.log('Starting PDF generation for:', advanceBill._id || 'new bill');
-    
+    console.log("Starting PDF generation for:", advanceBill._id || "new bill");
+
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([595, 842]);
 
     const font = await pdfDoc.embedFont("Helvetica");
     const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
 
-    // Try to load logo, but don't fail if it doesn't exist
+    const formatKm = (val) => {
+  if (val === undefined || val === null) return "0.00";
+  
+  // Convert to number and divide by 100 if stored in cents format
+  const num = typeof val === 'string' ? parseFloat(val.replace(/,/g, '')) : Number(val);
+  const actualKm = num / 100; // Add this division
+  
+  return isNaN(actualKm)
+    ? "0.00"
+    : new Intl.NumberFormat("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(actualKm);
+};
+
+    const formatRupee = (val) => {
+      if (val === undefined || val === null) return "0.00";
+      const num =
+        typeof val === "string"
+          ? parseFloat(val.replace(/,/g, ""))
+          : Number(val);
+      return isNaN(num)
+        ? "0.00"
+        : new Intl.NumberFormat("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(num);
+    };
+
+    const formatRupeeWithSymbol = (val) => {
+      return `Rs.${formatRupee(val)}`;
+    };
+
     let logoImage = null;
     try {
-      const logoPath = path.join(__dirname, "../../frontend/src/images/okmotorback.png");
+      const logoPath = path.join(
+        __dirname,
+        "../../frontend/src/images/okmotorback.png"
+      );
       if (fs.existsSync(logoPath)) {
         const logoBytes = fs.readFileSync(logoPath);
         logoImage = await pdfDoc.embedPng(logoBytes);
       }
     } catch (logoError) {
-      console.warn('Logo not found, continuing without logo:', logoError.message);
+      console.warn(
+        "Logo not found, continuing without logo:",
+        logoError.message
+      );
     }
 
     // Header Section
@@ -57,8 +95,8 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         y: 100,
         width: 500,
         height: 470,
-        opacity:0.3,
-        rotate:degrees(45),
+        opacity: 0.3,
+        rotate: degrees(45),
       });
     }
 
@@ -88,8 +126,11 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     });
 
     // Invoice Info
-    const invoiceNumber = advanceBill.billNumber || 
-      `ADV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, "0")}`;
+    const invoiceNumber =
+      advanceBill.billNumber ||
+      `ADV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, "0")}`;
 
     page.drawText(`Invoice Number: ${invoiceNumber}`, {
       x: 50,
@@ -101,7 +142,9 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
 
     const currentDate = new Date();
     page.drawText(
-      `Date: ${currentDate.toLocaleDateString("en-IN")} Time: ${formatTime12Hour(currentDate)}`,
+      `Date: ${currentDate.toLocaleDateString(
+        "en-IN"
+      )} Time: ${formatTime12Hour(currentDate)}`,
       {
         x: 400,
         y: 720,
@@ -182,7 +225,9 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     const vehicleDetails = [
       {
         label: "Type:",
-        value: advanceBill.vehicleType ? advanceBill.vehicleType.toUpperCase() : "N/A",
+        value: advanceBill.vehicleType
+          ? advanceBill.vehicleType.toUpperCase()
+          : "N/A",
       },
       { label: "Brand:", value: advanceBill.vehicleBrand || "N/A" },
       { label: "Model:", value: advanceBill.vehicleModel || "N/A" },
@@ -191,7 +236,9 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       { label: "Engine:", value: advanceBill.engineNumber || "N/A" },
       {
         label: "KM:",
-        value: advanceBill.kmReading ? `${advanceBill.kmReading} km` : "N/A",
+        value: advanceBill.kmReading
+          ? `${formatKm(advanceBill.kmReading)} km`
+          : "N/A",
       },
     ];
 
@@ -226,11 +273,15 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     const serviceDetails = [
       {
         label: "Service Date:",
-        value: new Date(advanceBill.serviceDate || Date.now()).toLocaleDateString(),
+        value: new Date(
+          advanceBill.serviceDate || Date.now()
+        ).toLocaleDateString("en-IN"),
       },
       {
         label: "Delivery Date:",
-        value: new Date(advanceBill.deliveryDate || Date.now() + 86400000).toLocaleDateString(),
+        value: new Date(
+          advanceBill.deliveryDate || Date.now() + 86400000
+        ).toLocaleDateString("en-IN"),
       },
     ];
 
@@ -262,20 +313,25 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    // Ensure numeric values are properly converted
-    const totalAmount = parseFloat(advanceBill.totalAmount) || 0;
-    const advancePaid = parseFloat(advanceBill.advancePaid) || 0;
-    const grandTotal = parseFloat(advanceBill.grandTotal) || totalAmount;
-    const balanceDue = parseFloat(advanceBill.balanceDue) || (grandTotal - advancePaid);
+    // Convert all amounts to numbers first
+    const totalAmount = (Number(advanceBill.totalAmount) || 0) / 100;
+    const advancePaid = (Number(advanceBill.advancePaid) || 0) / 100;
+    const grandTotal =
+      (Number(advanceBill.grandTotal) || totalAmount * 100) / 100;
+    const balanceDue =
+      (Number(advanceBill.balanceDue) || grandTotal * 100 - advancePaid * 100) /
+      100;
 
     const paymentDetails = [
-      { label: "Total Amount:", value: `Rs.${totalAmount.toFixed(2)}` },
-      { label: "Advance Paid:", value: `Rs.${advancePaid.toFixed(2)}` },
-      { label: "Grand Total:", value: `Rs.${grandTotal.toFixed(2)}` },
-      { label: "Balance Due:", value: `Rs.${balanceDue.toFixed(2)}` },
+      { label: "Total Amount:", value: formatRupeeWithSymbol(totalAmount) },
+      { label: "Advance Paid:", value: formatRupeeWithSymbol(advancePaid) },
+      { label: "Grand Total:", value: formatRupeeWithSymbol(grandTotal) },
+      { label: "Balance Due:", value: formatRupeeWithSymbol(balanceDue) },
       {
         label: "Payment Method:",
-        value: advanceBill.paymentMethod ? advanceBill.paymentMethod.toUpperCase() : "N/A",
+        value: advanceBill.paymentMethod
+          ? advanceBill.paymentMethod.toUpperCase()
+          : "N/A",
       },
     ];
 
@@ -368,5 +424,4 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
   }
 };
 
-// Fixed export - only export the function directly
 module.exports = generateAdvanceBillPDF;
