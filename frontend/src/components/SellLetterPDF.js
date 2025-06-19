@@ -1297,6 +1297,7 @@ const SellLetterForm = () => {
                         border: "1px solid red",
                       }),
                     }}
+                    maxLength={16}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1317,7 +1318,7 @@ const SellLetterForm = () => {
                       }),
                     }}
                     required
-                    maxLength={30}
+                    maxLength={19}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1338,7 +1339,7 @@ const SellLetterForm = () => {
                       }),
                     }}
                     required
-                    maxLength={30}
+                    maxLength={7}
                   />
                 </div>
                 <div style={styles.formField}>
