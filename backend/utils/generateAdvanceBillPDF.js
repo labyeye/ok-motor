@@ -314,10 +314,10 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     });
 
     // Convert all amounts to numbers first
-    const totalAmount = (Number(advanceBill.totalAmount) || 0) / 100;
-    const advancePaid = (Number(advanceBill.advancePaid) || 0) / 100;
+    const totalAmount = (Number(advanceBill.totalAmount) || 0) ;
+    const advancePaid = (Number(advanceBill.advancePaid) || 0) ;
     const grandTotal =
-      (Number(advanceBill.grandTotal) || totalAmount * 100) / 100;
+      (Number(advanceBill.grandTotal) || totalAmount * 100) ;
     const balanceDue =
       (Number(advanceBill.balanceDue) || grandTotal * 100 - advancePaid * 100) /
       100;

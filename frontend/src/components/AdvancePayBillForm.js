@@ -58,7 +58,7 @@ const AdvancePayBillForm = () => {
 
   const [previewMode, setPreviewMode] = useState(false);
   const API_BASE_URL = "https://ok-motor.onrender.com/api";
-  
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -85,83 +85,63 @@ const AdvancePayBillForm = () => {
     }
   );
 
-  // Fixed calculation function
   const calculateAmounts = (data) => {
-    // Convert string values to numbers, handling empty strings as 0
-    const totalAmount = parseFloat(data.totalAmount) || 0;
-    const advancePaid = parseFloat(data.advancePaid) || 0;
-    const discountAmount = parseFloat(data.discountAmount) || 0;
+    const total = parseFloat(data.totalAmount) || 0;
+    const discount = parseFloat(data.discountAmount) || 0;
+    const advance = parseFloat(data.advancePaid) || 0;
 
-    // Calculate grand total (total amount - discount)
-    const grandTotal = Math.max(0, totalAmount - discountAmount);
-
-    // Calculate balance due (grand total - advance paid)
-    const balanceDue = Math.max(0, grandTotal - advancePaid);
+    const grandTotal = total - discount;
+    const balanceDue = grandTotal - advance;
 
     return {
-      grandTotal: grandTotal.toString(),
-      balanceDue: balanceDue.toString(),
+      grandTotal: grandTotal.toFixed(2),
+      balanceDue: balanceDue >= 0 ? balanceDue.toFixed(2) : "0.00",
     };
   };
 
-  // Fixed input handler for amount fields
-  const handleAmountInput = (name, value) => {
-    // Remove all non-numeric characters except decimal point
-    let cleanValue = value.replace(/[^0-9.]/g, '');
-    
-    // Ensure only one decimal point
-    const parts = cleanValue.split('.');
+  const handleAmountChange = (name, value) => {
+    let cleanValue = value.replace(/[^0-9.]/g, "");
+    const parts = cleanValue.split(".");
     if (parts.length > 2) {
-      cleanValue = parts[0] + '.' + parts.slice(1).join('');
+      cleanValue = parts[0] + "." + parts.slice(1).join("");
     }
-    
-    // Limit to 2 decimal places
     if (parts.length === 2 && parts[1].length > 2) {
-      cleanValue = parts[0] + '.' + parts[1].substring(0, 2);
+      cleanValue = parts[0] + "." + parts[1].substring(0, 2);
     }
 
     return cleanValue;
   };
 
-  const handleChange = useCallback(
-    (e) => {
-      const { name, value, type, checked } = e.target;
-
-      let val;
-      if (type === "checkbox") {
-        val = checked;
-      } else if (name === "kmReading") {
-        val = value.replace(/[^0-9]/g, "");
-      } else if (
-        name === "totalAmount" ||
-        name === "advancePaid" ||
-        name === "discountAmount"
-      ) {
-        val = handleAmountInput(name, value);
-      } else {
-        val = value;
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    
+    // For numeric fields, clean the input
+    let cleanedValue = value;
+    if (['totalAmount', 'discountAmount', 'advancePaid', 'kmReading'].includes(name)) {
+      cleanedValue = value.replace(/[^0-9.]/g, "");
+      // Ensure only two decimal places
+      if (cleanedValue.includes('.')) {
+        const parts = cleanedValue.split('.');
+        if (parts[1].length > 2) {
+          cleanedValue = parts[0] + '.' + parts[1].substring(0, 2);
+        }
       }
+    }
 
-      const newData = {
-        ...formData,
-        [name]: val,
-      };
+    const updatedData = {
+      ...formData,
+      [name]: cleanedValue
+    };
 
-      // Recalculate amounts when any of these fields change
-      if (
-        name === "totalAmount" ||
-        name === "advancePaid" ||
-        name === "discountAmount"
-      ) {
-        const calculated = calculateAmounts(newData);
-        newData.grandTotal = calculated.grandTotal;
-        newData.balanceDue = calculated.balanceDue;
-      }
+    // Recalculate amounts when relevant fields change
+    if (['totalAmount', 'discountAmount', 'advancePaid'].includes(name)) {
+      const calculated = calculateAmounts(updatedData);
+      updatedData.grandTotal = calculated.grandTotal;
+      updatedData.balanceDue = calculated.balanceDue;
+    }
 
-      setFormData(newData);
-    },
-    [formData]
-  );
+    setFormData(updatedData);
+  };
 
   const handleInput = (e) => {
     const { name, value } = e.target;
@@ -178,30 +158,17 @@ const AdvancePayBillForm = () => {
         throw new Error("No authentication token found. Please log in again.");
       }
 
-      // Calculate final amounts before sending
-      const calculated = calculateAmounts(formData);
-      
+      // Prepare data with calculated amounts
       const requestData = {
-        customerName: formData.customerName,
-        customerPhone: formData.customerPhone,
-        customerAddress: formData.customerAddress,
-        customerEmail: formData.customerEmail,
-        vehicleType: formData.vehicleType,
-        vehicleBrand: formData.vehicleBrand,
-        vehicleModel: formData.vehicleModel,
-        registrationNumber: formData.registrationNumber,
-        chassisNumber: formData.chassisNumber,
-        engineNumber: formData.engineNumber,
-        kmReading: formData.kmReading || "0",
-        serviceDate: formData.serviceDate,
-        discountAmount: formData.discountAmount || "0",
-        deliveryDate: formData.deliveryDate,
-        totalAmount: formData.totalAmount || "0",
-        advancePaid: formData.advancePaid || "0",
-        paymentMethod: formData.paymentMethod,
+        ...formData,
         user: user._id,
-        grandTotal: calculated.grandTotal,
-        balanceDue: calculated.balanceDue,
+        // Convert string amounts to numbers
+        totalAmount: parseFloat(formData.totalAmount) || 0,
+        discountAmount: parseFloat(formData.discountAmount) || 0,
+        advancePaid: parseFloat(formData.advancePaid) || 0,
+        grandTotal: parseFloat(formData.grandTotal) || 0,
+        balanceDue: parseFloat(formData.balanceDue) || 0,
+        kmReading: parseFloat(formData.kmReading) || 0,
       };
 
       const saveResponse = await axios.post(
@@ -215,16 +182,13 @@ const AdvancePayBillForm = () => {
         }
       );
 
-      if (
-        !saveResponse.data ||
-        !saveResponse.data.data ||
-        !saveResponse.data.data._id
-      ) {
+      if (!saveResponse.data?.data?._id) {
         throw new Error("Invalid response format from server");
       }
 
       const billId = saveResponse.data.data._id;
 
+      // Download the PDF
       const pdfResponse = await axios.get(
         `${API_BASE_URL}/advance-bills/${billId}/download`,
         {
@@ -242,17 +206,11 @@ const AdvancePayBillForm = () => {
       alert("Advance bill saved and downloaded successfully!");
     } catch (error) {
       console.error("Error in save and download:", error);
-      let errorMessage = "Failed to save and download";
-      if (error.response) {
-        errorMessage += `: ${error.response.status} - ${
-          error.response.data?.message || JSON.stringify(error.response.data)
-        }`;
-      } else if (error.request) {
-        errorMessage += ": No response from server";
-      } else {
-        errorMessage += `: ${error.message}`;
-      }
-      alert(errorMessage);
+      alert(
+        `Failed to save and download: ${
+          error.response?.data?.message || error.message
+        }`
+      );
     } finally {
       setIsSaving(false);
     }
@@ -836,128 +794,97 @@ const AdvancePayBillForm = () => {
               </h2>
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <IndianRupee style={styles.formIcon} />
-                    Total Amount (₹) || कुल राशि (₹)
-                  </label>
-                  <input
-                    type="text"
-                    name="totalAmount"
-                    value={
-                      formData.totalAmount === ""
-                        ? ""
-                        : new Intl.NumberFormat("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(Number(formData.totalAmount) / 100)
-                    }
-                    onChange={(e) => {
-                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
-                      setFormData((prev) => ({
-                        ...prev,
-                        totalAmount: rawValue,
-                      }));
-                    }}
-                    onFocus={() => setFocusedInput("totalAmount")}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "totalAmount"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                    required
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <IndianRupee style={styles.formIcon} />
-                    Discount Amount (₹) || छूट राशि (₹)
-                  </label>
-                  <input
-                    type="text"
-                    name="discountAmount"
-                    value={
-                      formData.discountAmount === ""
-                        ? ""
-                        : new Intl.NumberFormat("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(Number(formData.discountAmount) / 100)
-                    }
-                    onChange={(e) => {
-                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
-                      setFormData((prev) => ({
-                        ...prev,
-                        discountAmount: rawValue,
-                      }));
-                    }}
-                    onFocus={() => setFocusedInput("discountAmount")}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "discountAmount"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                    required
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <IndianRupee style={styles.formIcon} />
-                    Advance Paid (₹) || आगामी भुगतान (₹)
-                  </label>
-                  <input
-                    type="text"
-                    name="advancePaid"
-                    value={
-                      formData.advancePaid === ""
-                        ? ""
-                        : new Intl.NumberFormat("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(Number(formData.advancePaid) / 100)
-                    }
-                    onChange={(e) => {
-                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
-                      setFormData((prev) => ({
-                        ...prev,
-                        advancePaid: rawValue,
-                      }));
-                    }}
-                    onFocus={() => setFocusedInput("advancePaid")}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "advancePaid"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                    required
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <IndianRupee style={styles.formIcon} />
-                    Grand Total (₹) || कुल राशि (₹)
-                  </label>
-                  <input
-                    type="text"
-                    value={formatDisplayValue(formData.grandTotal)}
-                    style={{...styles.formInput, backgroundColor: '#f1f5f9', color: '#64748b'}}
-                    readOnly
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <IndianRupee style={styles.formIcon} />
-                    Balance Due (₹) || बैलेंस डु (₹)
-                  </label>
-                  <input
-                    type="text"
-                    value={formatDisplayValue(formData.balanceDue)}
-                    style={{...styles.formInput, backgroundColor: '#f1f5f9', color: '#64748b'}}
-                    readOnly
-                  />
-                </div>
+    <label style={styles.formLabel}>
+      <IndianRupee style={styles.formIcon} />
+      Total Amount (₹) || कुल राशि (₹)
+    </label>
+    <input
+      type="text"
+      name="totalAmount"
+      value={formData.totalAmount}
+      onChange={handleChange}
+      onFocus={() => setFocusedInput("totalAmount")}
+      style={{
+        ...styles.formInput,
+        ...(focusedInput === "totalAmount" ? styles.inputFocused : {}),
+      }}
+      required
+    />
+  </div>
+
+  <div style={styles.formField}>
+    <label style={styles.formLabel}>
+      <IndianRupee style={styles.formIcon} />
+      Discount Amount (₹) || छूट राशि (₹)
+    </label>
+    <input
+      type="text"
+      name="discountAmount"
+      value={formData.discountAmount}
+      onChange={handleChange}
+      onFocus={() => setFocusedInput("discountAmount")}
+      style={{
+        ...styles.formInput,
+        ...(focusedInput === "discountAmount" ? styles.inputFocused : {}),
+      }}
+      required
+    />
+  </div>
+
+  <div style={styles.formField}>
+    <label style={styles.formLabel}>
+      <IndianRupee style={styles.formIcon} />
+      Advance Paid (₹) || आगामी भुगतान (₹)
+    </label>
+    <input
+      type="text"
+      name="advancePaid"
+      value={formData.advancePaid}
+      onChange={handleChange}
+      onFocus={() => setFocusedInput("advancePaid")}
+      style={{
+        ...styles.formInput,
+        ...(focusedInput === "advancePaid" ? styles.inputFocused : {}),
+      }}
+      required
+    />
+  </div>
+
+  <div style={styles.formField}>
+    <label style={styles.formLabel}>
+      <IndianRupee style={styles.formIcon} />
+      Grand Total (₹) || कुल राशि (₹)
+    </label>
+    <input
+      type="text"
+      name="grandTotal"
+      value={formData.grandTotal}
+      style={{
+        ...styles.formInput,
+        backgroundColor: "#f1f5f9",
+        color: "#64748b",
+      }}
+      readOnly
+    />
+  </div>
+
+  <div style={styles.formField}>
+    <label style={styles.formLabel}>
+      <IndianRupee style={styles.formIcon} />
+      Balance Due (₹) || बैलेंस डु (₹)
+    </label>
+    <input
+      type="text"
+      name="balanceDue"
+      value={formData.balanceDue}
+      style={{
+        ...styles.formInput,
+        backgroundColor: "#f1f5f9",
+        color: "#64748b",
+      }}
+      readOnly
+    />
+  </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />

@@ -4,7 +4,6 @@ const router = express.Router();
 const generateAdvanceBillPDF = require("../utils/generateAdvanceBillPDF");
 const AdvanceBill = require("../models/AdvanceBill");
 const { protect } = require("../middleware/auth");
-// Add this route to serve the saved PDF file
 router.get("/pdf/:filename", protect, async (req, res) => {
   try {
     const { filename } = req.params;
@@ -26,7 +25,6 @@ router.get("/pdf/:filename", protect, async (req, res) => {
 });
 router.post("/", protect, async (req, res) => {
   try {
-    // Validate required fields
     const requiredFields = [
       'customerName', 
       'customerPhone',
@@ -58,8 +56,8 @@ router.post("/", protect, async (req, res) => {
     const advancePaid = parseFloat(advanceBillData.advancePaid) || 0;
     
     // Calculate amounts
-    advanceBillData.grandTotal = totalAmount-discountAmount;
-    advanceBillData.balanceDue = totalAmount - advancePaid;
+    advanceBillData.grandTotal = (totalAmount - discountAmount).toFixed(2);
+    advanceBillData.balanceDue = (advanceBillData.grandTotal - advancePaid).toFixed(2);
 
     // Save to database
     const advanceBill = new AdvanceBill(advanceBillData);
