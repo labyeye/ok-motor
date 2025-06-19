@@ -261,7 +261,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       { label: "Reg No:", value: serviceBill.registrationNumber || "N/A" },
       {
         label: "KM:",
-        value: serviceBill.kmReading ? `${serviceBill.kmReading} km` : "N/A",
+        value: serviceBill.kmReading
+          ? `${Number(serviceBill.kmReading).toLocaleString()} km`
+          : "N/A",
       },
     ];
 
@@ -296,17 +298,17 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     const serviceDetails = [
       {
-  label: "Service Date:",
-  value: new Date(
-    serviceBill.serviceDate || Date.now()
-  ).toLocaleDateString("en-GB"),
-},
-{
-  label: "Delivery Date:",
-  value: new Date(
-    serviceBill.deliveryDate || Date.now() + 86400000
-  ).toLocaleDateString("en-GB"),
-},
+        label: "Service Date:",
+        value: new Date(
+          serviceBill.serviceDate || Date.now()
+        ).toLocaleDateString("en-GB"),
+      },
+      {
+        label: "Delivery Date:",
+        value: new Date(
+          serviceBill.deliveryDate || Date.now() + 86400000
+        ).toLocaleDateString("en-GB"),
+      },
 
       {
         label: "Service Type:",
