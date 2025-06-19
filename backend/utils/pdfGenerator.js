@@ -217,13 +217,11 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: font,
     });
 
-    // Create two columns for Vehicle and Service Information
     const columnY = customerY - 80;
     const leftColumnX = 50;
     const rightColumnX = 300;
     const columnWidth = 240;
 
-    // Left Column - Vehicle Information
     page.drawText("VEHICLE DETAILS", {
       x: leftColumnX,
       y: columnY,
@@ -298,17 +296,18 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     const serviceDetails = [
       {
-        label: "Service Date:",
-        value: new Date(
-          serviceBill.serviceDate || Date.now()
-        ).toLocaleDateString(),
-      },
-      {
-        label: "Delivery Date:",
-        value: new Date(
-          serviceBill.deliveryDate || Date.now() + 86400000
-        ).toLocaleDateString(),
-      },
+  label: "Service Date:",
+  value: new Date(
+    serviceBill.serviceDate || Date.now()
+  ).toLocaleDateString("en-GB"),
+},
+{
+  label: "Delivery Date:",
+  value: new Date(
+    serviceBill.deliveryDate || Date.now() + 86400000
+  ).toLocaleDateString("en-GB"),
+},
+
       {
         label: "Service Type:",
         value: serviceBill.serviceType
