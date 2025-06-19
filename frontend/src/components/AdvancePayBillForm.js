@@ -46,15 +46,19 @@ const AdvancePayBillForm = () => {
     chassisNumber: "",
     engineNumber: "",
     kmReading: "",
+    discountAmount: "",
     serviceDate: new Date().toISOString().split("T")[0],
     deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-    totalAmount: 0,
-    advancePaid: 0,
+    totalAmount: "",
+    advancePaid: "",
     paymentMethod: "cash",
+    grandTotal: "0",
+    balanceDue: "0",
   });
 
   const [previewMode, setPreviewMode] = useState(false);
   const API_BASE_URL = "https://ok-motor.onrender.com/api";
+  
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -62,6 +66,7 @@ const AdvancePayBillForm = () => {
       return;
     }
   }, [navigate]);
+
   const api = axios.create({
     baseURL: API_BASE_URL,
     withCredentials: true,
@@ -79,16 +84,43 @@ const AdvancePayBillForm = () => {
       return Promise.reject(error);
     }
   );
+
+  // Fixed calculation function
   const calculateAmounts = (data) => {
+    // Convert string values to numbers, handling empty strings as 0
     const totalAmount = parseFloat(data.totalAmount) || 0;
     const advancePaid = parseFloat(data.advancePaid) || 0;
-    const grandTotal = totalAmount;
-    const balanceDue = grandTotal - advancePaid;
+    const discountAmount = parseFloat(data.discountAmount) || 0;
+
+    // Calculate grand total (total amount - discount)
+    const grandTotal = Math.max(0, totalAmount - discountAmount);
+
+    // Calculate balance due (grand total - advance paid)
+    const balanceDue = Math.max(0, grandTotal - advancePaid);
 
     return {
-      grandTotal,
-      balanceDue,
+      grandTotal: grandTotal.toString(),
+      balanceDue: balanceDue.toString(),
     };
+  };
+
+  // Fixed input handler for amount fields
+  const handleAmountInput = (name, value) => {
+    // Remove all non-numeric characters except decimal point
+    let cleanValue = value.replace(/[^0-9.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = cleanValue.split('.');
+    if (parts.length > 2) {
+      cleanValue = parts[0] + '.' + parts.slice(1).join('');
+    }
+    
+    // Limit to 2 decimal places
+    if (parts.length === 2 && parts[1].length > 2) {
+      cleanValue = parts[0] + '.' + parts[1].substring(0, 2);
+    }
+
+    return cleanValue;
   };
 
   const handleChange = useCallback(
@@ -100,8 +132,12 @@ const AdvancePayBillForm = () => {
         val = checked;
       } else if (name === "kmReading") {
         val = value.replace(/[^0-9]/g, "");
-      } else if (type === "number") {
-        val = parseFloat(value) || 0;
+      } else if (
+        name === "totalAmount" ||
+        name === "advancePaid" ||
+        name === "discountAmount"
+      ) {
+        val = handleAmountInput(name, value);
       } else {
         val = value;
       }
@@ -110,8 +146,16 @@ const AdvancePayBillForm = () => {
         ...formData,
         [name]: val,
       };
-      if (name === "totalAmount" || name === "advancePaid") {
-        Object.assign(newData, calculateAmounts(newData));
+
+      // Recalculate amounts when any of these fields change
+      if (
+        name === "totalAmount" ||
+        name === "advancePaid" ||
+        name === "discountAmount"
+      ) {
+        const calculated = calculateAmounts(newData);
+        newData.grandTotal = calculated.grandTotal;
+        newData.balanceDue = calculated.balanceDue;
       }
 
       setFormData(newData);
@@ -133,27 +177,32 @@ const AdvancePayBillForm = () => {
       if (!token) {
         throw new Error("No authentication token found. Please log in again.");
       }
+
+      // Calculate final amounts before sending
+      const calculated = calculateAmounts(formData);
+      
       const requestData = {
-      customerName: formData.customerName,
-      customerPhone: formData.customerPhone,
-      customerAddress: formData.customerAddress,
-      customerEmail: formData.customerEmail,
-      vehicleType: formData.vehicleType,
-      vehicleBrand: formData.vehicleBrand,
-      vehicleModel: formData.vehicleModel,
-      registrationNumber: formData.registrationNumber,
-      chassisNumber: formData.chassisNumber,
-      engineNumber: formData.engineNumber,
-      kmReading: formData.kmReading || "0",
-      serviceDate: formData.serviceDate,
-      deliveryDate: formData.deliveryDate,
-      totalAmount: formData.totalAmount || "0",
-      advancePaid: formData.advancePaid || "0",
-      paymentMethod: formData.paymentMethod,
-      user: user._id,
-      grandTotal: formData.totalAmount || "0",
-      balanceDue: (Number(formData.totalAmount || 0) - Number(formData.advancePaid || 0)).toString(),
-    };
+        customerName: formData.customerName,
+        customerPhone: formData.customerPhone,
+        customerAddress: formData.customerAddress,
+        customerEmail: formData.customerEmail,
+        vehicleType: formData.vehicleType,
+        vehicleBrand: formData.vehicleBrand,
+        vehicleModel: formData.vehicleModel,
+        registrationNumber: formData.registrationNumber,
+        chassisNumber: formData.chassisNumber,
+        engineNumber: formData.engineNumber,
+        kmReading: formData.kmReading || "0",
+        serviceDate: formData.serviceDate,
+        discountAmount: formData.discountAmount || "0",
+        deliveryDate: formData.deliveryDate,
+        totalAmount: formData.totalAmount || "0",
+        advancePaid: formData.advancePaid || "0",
+        paymentMethod: formData.paymentMethod,
+        user: user._id,
+        grandTotal: calculated.grandTotal,
+        balanceDue: calculated.balanceDue,
+      };
 
       const saveResponse = await axios.post(
         `${API_BASE_URL}/advance-bills`,
@@ -219,8 +268,6 @@ const AdvancePayBillForm = () => {
     </div>
   );
 
-  // Replace the generateAdvanceBillPDF function in your AdvancePayBillForm.js with this fixed version:
-
   const generateAdvanceBillPDF = async (
     billData = formData,
     forPreview = false
@@ -235,14 +282,22 @@ const AdvancePayBillForm = () => {
         return;
       }
 
-      // Prepare data with user ID
+      // Calculate final amounts before sending
+      const calculated = calculateAmounts(billData);
+
+      // Prepare data with user ID and calculated amounts
       const requestData = {
         ...billData,
         user: user._id,
+        grandTotal: calculated.grandTotal,
+        balanceDue: calculated.balanceDue,
       };
 
       // First save the bill
-      const saveResponse = await api.post("https://ok-motor.onrender.com/api/advance-bills", requestData);
+      const saveResponse = await api.post(
+        "https://ok-motor.onrender.com/api/advance-bills",
+        requestData
+      );
 
       if (
         !saveResponse.data ||
@@ -255,9 +310,12 @@ const AdvancePayBillForm = () => {
       const billId = saveResponse.data.data._id;
 
       // Get the PDF for preview or download
-      const pdfResponse = await api.get(`https://ok-motor.onrender.com/api/advance-bills/${billId}/download`, {
-        responseType: "blob",
-      });
+      const pdfResponse = await api.get(
+        `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
+        {
+          responseType: "blob",
+        }
+      );
 
       const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
 
@@ -353,15 +411,12 @@ const AdvancePayBillForm = () => {
       [menuName]: !prev[menuName],
     }));
   };
-  const formatRupee = (val) => {
-    if (val === undefined || val === null || val === "") return "0.00";
-    const num = parseFloat(val.toString().replace(/,/g, ""));
-    return isNaN(num)
-      ? "0.00"
-      : new Intl.NumberFormat("en-IN", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(num / 100);
+
+  // Format display value for amount fields
+  const formatDisplayValue = (value) => {
+    if (!value || value === "" || value === "0") return "";
+    const num = parseFloat(value);
+    return isNaN(num) ? "" : num.toFixed(2);
   };
 
   const handleMenuClick = (menuName, path) => {
@@ -816,6 +871,39 @@ const AdvancePayBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
+                    Discount Amount (₹) || छूट राशि (₹)
+                  </label>
+                  <input
+                    type="text"
+                    name="discountAmount"
+                    value={
+                      formData.discountAmount === ""
+                        ? ""
+                        : new Intl.NumberFormat("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(Number(formData.discountAmount) / 100)
+                    }
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      setFormData((prev) => ({
+                        ...prev,
+                        discountAmount: rawValue,
+                      }));
+                    }}
+                    onFocus={() => setFocusedInput("discountAmount")}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "discountAmount"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
+                    required
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <IndianRupee style={styles.formIcon} />
                     Advance Paid (₹) || आगामी भुगतान (₹)
                   </label>
                   <input
@@ -853,15 +941,8 @@ const AdvancePayBillForm = () => {
                   </label>
                   <input
                     type="text"
-                    value={
-                      formData.totalAmount === ""
-                        ? "0.00"
-                        : new Intl.NumberFormat("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(Number(formData.totalAmount) / 100)
-                    }
-                    style={styles.formInput}
+                    value={formatDisplayValue(formData.grandTotal)}
+                    style={{...styles.formInput, backgroundColor: '#f1f5f9', color: '#64748b'}}
                     readOnly
                   />
                 </div>
@@ -872,19 +953,8 @@ const AdvancePayBillForm = () => {
                   </label>
                   <input
                     type="text"
-                    value={
-                      formData.totalAmount === "" && formData.advancePaid === ""
-                        ? "0.00"
-                        : new Intl.NumberFormat("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(
-                            (Number(formData.totalAmount || 0) -
-                              Number(formData.advancePaid || 0)) /
-                              100
-                          )
-                    }
-                    style={styles.formInput}
+                    value={formatDisplayValue(formData.balanceDue)}
+                    style={{...styles.formInput, backgroundColor: '#f1f5f9', color: '#64748b'}}
                     readOnly
                   />
                 </div>

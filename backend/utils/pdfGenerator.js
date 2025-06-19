@@ -368,43 +368,63 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         });
       });
     }
-
-    // Service Items Table (full width)
+        // Service Items Table with pagination
     const itemsStartY = columnY - 140;
-    page.drawText("SERVICE ITEMS", {
-      x: 50,
-      y: itemsStartY,
-      size: 12,
-      color: rgb(0.047, 0.098, 0.196),
-      font: fontBold,
-    });
+    const maxItemsPerPage = 15; // Adjust this number based on your item height
+    let currentPage = page;
+    let currentY = itemsStartY;
+    let currentPageItems = 0;
 
-    // Table headers
-    const serviceHeaders = [
-      "#",
-      "Description",
-      "Qty",
-      "Rate Rs.",
-      "Amount Rs.",
-    ];
-    const serviceHeaderPositions = [60, 100, 300, 350, 450];
-
-    serviceHeaders.forEach((header, index) => {
-      page.drawText(header, {
-        x: serviceHeaderPositions[index],
-        y: itemsStartY - 20,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
+    // Draw title only on first page
+    if (serviceBill.serviceItems.length > 0) {
+      currentPage.drawText("SERVICE ITEMS", {
+        x: 50,
+        y: currentY,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
         font: fontBold,
       });
-    });
+      currentY -= 20;
+    }
 
-    // Table rows
-    let yPos = itemsStartY - 40;
+    // Function to draw table headers
+    const drawServiceItemHeaders = (page, y) => {
+      const serviceHeaders = ["#", "Description", "Qty", "Rate Rs.", "Amount Rs."];
+      const serviceHeaderPositions = [60, 100, 300, 350, 450];
+
+      serviceHeaders.forEach((header, index) => {
+        page.drawText(header, {
+          x: serviceHeaderPositions[index],
+          y: y,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: fontBold,
+        });
+      });
+    };
+
+    // Draw headers on first page
+    drawServiceItemHeaders(currentPage, currentY);
+    currentY -= 20;
+
+    // Draw all service items with pagination
     serviceBill.serviceItems.forEach((item, index) => {
-      page.drawText((index + 1).toString(), {
+      // Check if we need a new page (leave 300pt space for totals/footer)
+      if (currentY < 300 && currentPageItems >= maxItemsPerPage) {
+        // Create new page
+        currentPage = pdfDoc.addPage([595, 842]);
+        currentY = 780; // Start near top of new page
+        currentPageItems = 0;
+        
+        // Draw headers on new page
+        drawServiceItemHeaders(currentPage, currentY);
+        currentY -= 20;
+      }
+
+      // Draw item number
+      currentPage.drawText((index + 1).toString(), {
         x: 60,
-        y: yPos,
+        y: currentY,
         size: 9,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
@@ -428,10 +448,11 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       }
       if (currentLine) lines.push(currentLine);
 
+      // Draw description lines
       lines.forEach((line, lineIndex) => {
-        page.drawText(line, {
+        currentPage.drawText(line, {
           x: 100,
-          y: yPos - lineIndex * 12,
+          y: currentY - lineIndex * 12,
           size: 9,
           color: rgb(0.2, 0.2, 0.2),
           font: font,
@@ -440,162 +461,170 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
       const descHeight = Math.max(lines.length * 12, 12);
 
-      page.drawText(item.quantity.toString(), {
+      // Draw quantity, rate, and amount
+      currentPage.drawText(item.quantity.toString(), {
         x: 300,
-        y: yPos,
+        y: currentY,
         size: 9,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
 
-      page.drawText(item.rate.toFixed(2), {
+      currentPage.drawText(item.rate.toFixed(2), {
         x: 350,
-        y: yPos,
+        y: currentY,
         size: 9,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
 
-      page.drawText(item.amount.toFixed(2), {
+      currentPage.drawText((item.quantity * item.rate).toFixed(2), {
         x: 450,
-        y: yPos,
+        y: currentY,
         size: 9,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
 
-      yPos -= descHeight;
+      currentY -= descHeight;
+      currentPageItems++;
     });
 
+    // Ensure we have enough space for totals and footer (about 300pt)
+    if (currentY < 300) {
+      currentPage = pdfDoc.addPage([595, 842]);
+      currentY = 700; // Start lower on new page to leave room
+    }
+
+    // Now draw all the remaining sections on the last page
     // Totals Section
-    const totalsY = yPos - 30;
-    page.drawText("Subtotal:", {
+    currentPage.drawText("Subtotal:", {
       x: 350,
-      y: totalsY,
+      y: currentY,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    page.drawText(serviceBill.totalAmount.toFixed(2), {
+    currentPage.drawText(serviceBill.totalAmount.toFixed(2), {
       x: 450,
-      y: totalsY,
+      y: currentY,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
 
     if (serviceBill.taxEnabled) {
-      page.drawText(`Tax (${serviceBill.taxRate}%):`, {
+      currentPage.drawText(`Tax (${serviceBill.taxRate}%):`, {
         x: 350,
-        y: totalsY - 20,
+        y: currentY - 20,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: fontBold,
       });
-      page.drawText(serviceBill.taxAmount.toFixed(2), {
+      currentPage.drawText(serviceBill.taxAmount.toFixed(2), {
         x: 450,
-        y: totalsY - 20,
+        y: currentY - 20,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
     }
 
-    page.drawText("Discount:", {
+    currentPage.drawText("Discount:", {
       x: 350,
-      y: totalsY - 40,
+      y: currentY - 40,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    page.drawText(serviceBill.discount.toFixed(2), {
+    currentPage.drawText(serviceBill.discount.toFixed(2), {
       x: 450,
-      y: totalsY - 40,
+      y: currentY - 40,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
 
-    page.drawText("Grand Total:", {
+    currentPage.drawText("Grand Total:", {
       x: 350,
-      y: totalsY - 60,
+      y: currentY - 60,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    page.drawText(serviceBill.grandTotal.toFixed(2), {
+    currentPage.drawText(serviceBill.grandTotal.toFixed(2), {
       x: 450,
-      y: totalsY - 60,
+      y: currentY - 60,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
 
-    page.drawText("Advance Paid:", {
+    currentPage.drawText("Advance Paid:", {
       x: 350,
-      y: totalsY - 80,
+      y: currentY - 80,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    page.drawText(serviceBill.advancePaid.toFixed(2), {
+    currentPage.drawText(serviceBill.advancePaid.toFixed(2), {
       x: 450,
-      y: totalsY - 80,
+      y: currentY - 80,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
 
-    page.drawText("Balance Due:", {
+    currentPage.drawText("Balance Due:", {
       x: 350,
-      y: totalsY - 100,
+      y: currentY - 100,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    page.drawText(serviceBill.balanceDue.toFixed(2), {
+    currentPage.drawText(serviceBill.balanceDue.toFixed(2), {
       x: 450,
-      y: totalsY - 100,
+      y: currentY - 100,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
 
     // Payment Information
-    page.drawText("Payment Method:", {
+    currentPage.drawText("Payment Method:", {
       x: 50,
-      y: totalsY,
+      y: currentY,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    page.drawText(serviceBill.paymentMethod.toUpperCase(), {
+    currentPage.drawText(serviceBill.paymentMethod.toUpperCase(), {
       x: 150,
-      y: totalsY,
+      y: currentY,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
 
-    page.drawText("Payment Status:", {
+    currentPage.drawText("Payment Status:", {
       x: 50,
-      y: totalsY - 20,
+      y: currentY - 20,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    page.drawText(serviceBill.paymentStatus.toUpperCase(), {
+    currentPage.drawText(serviceBill.paymentStatus.toUpperCase(), {
       x: 150,
-      y: totalsY - 20,
+      y: currentY - 20,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
 
     // Issues Reported
-    page.drawText("ISSUES REPORTED", {
+    currentPage.drawText("ISSUES REPORTED", {
       x: 50,
-      y: totalsY - 40,
+      y: currentY - 40,
       size: 10,
       color: rgb(0.047, 0.098, 0.196),
       font: fontBold,
@@ -608,20 +637,20 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     }
 
     issuesLines.forEach((line, index) => {
-      page.drawText(line, {
+      currentPage.drawText(line, {
         x: 150,
-        y: totalsY - 40 - index * 12,
+        y: currentY - 40 - index * 12,
         size: 9,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
     });
 
-    // Footer with Signatures (now with more space)
+    // Footer with Signatures
     const footerY = 80;
 
     // Customer Signature
-    page.drawText("Customer Signature", {
+    currentPage.drawText("Customer Signature", {
       x: 100,
       y: footerY,
       size: 10,
@@ -629,7 +658,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: font,
     });
 
-    page.drawLine({
+    currentPage.drawLine({
       start: { x: 50, y: footerY + 15 },
       end: { x: 250, y: footerY + 15 },
       thickness: 1,
@@ -637,7 +666,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     // Authorized Signatory
-    page.drawText("Authorized Signatory", {
+    currentPage.drawText("Authorized Signatory", {
       x: 350,
       y: footerY,
       size: 10,
@@ -645,7 +674,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: font,
     });
 
-    page.drawLine({
+    currentPage.drawLine({
       start: { x: 300, y: footerY + 15 },
       end: { x: 500, y: footerY + 15 },
       thickness: 1,
@@ -653,7 +682,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     // Thank you message
-    page.drawText("Thank you for your business!", {
+    currentPage.drawText("Thank you for your business!", {
       x: 220,
       y: footerY - 30,
       size: 12,
@@ -662,7 +691,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     // Company info
-    page.drawText(
+    currentPage.drawText(
       "OK MOTORS | Pillar num.53, Bailey Rd,  Raja Bazar,  Patna, Bihar 800014",
       {
         x: 130,

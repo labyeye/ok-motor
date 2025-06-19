@@ -54,10 +54,11 @@ router.post("/", protect, async (req, res) => {
 
     // Ensure numeric values
     const totalAmount = parseFloat(advanceBillData.totalAmount) || 0;
+    const discountAmount = parseFloat(advanceBillData.discountAmount) || 0;
     const advancePaid = parseFloat(advanceBillData.advancePaid) || 0;
     
     // Calculate amounts
-    advanceBillData.grandTotal = totalAmount;
+    advanceBillData.grandTotal = totalAmount-discountAmount;
     advanceBillData.balanceDue = totalAmount - advancePaid;
 
     // Save to database
