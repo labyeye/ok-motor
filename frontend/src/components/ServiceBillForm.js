@@ -1080,7 +1080,6 @@ const ServiceBillForm = () => {
                   <input
                     type="number"
                     value={(formData.totalAmount || 0).toFixed(2)}
-                    
                     style={styles.formInput}
                     readOnly
                   />

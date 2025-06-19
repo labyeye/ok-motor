@@ -259,12 +259,16 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       { label: "Brand:", value: serviceBill.vehicleBrand || "N/A" },
       { label: "Model:", value: serviceBill.vehicleModel || "N/A" },
       { label: "Reg No:", value: serviceBill.registrationNumber || "N/A" },
+      // Replace the KM reading part in the vehicleDetails array with:
       {
-  label: "KM:",
-  value: serviceBill.kmReading
-    ? `${Number(serviceBill.kmReading).toLocaleString("en-IN")} km`
-    : "N/A",
-}
+        label: "KM:",
+        value: serviceBill.kmReading
+          ? `${(Number(serviceBill.kmReading) / 100).toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })} km`
+          : "N/A",
+      },
     ];
 
     let vehicleY = columnY - 50;
@@ -296,7 +300,8 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    const serviceDetails = [
+    // Replace the serviceDetails array with:
+const serviceDetails = [
   {
     label: "Service Date:",
     value: serviceBill.serviceDate
