@@ -22,19 +22,22 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
 
     const formatKm = (val) => {
-  if (val === undefined || val === null) return "0.00";
-  
-  // Convert to number and divide by 100 if stored in cents format
-  const num = typeof val === 'string' ? parseFloat(val.replace(/,/g, '')) : Number(val);
-  const actualKm = num / 100; // Add this division
-  
-  return isNaN(actualKm)
-    ? "0.00"
-    : new Intl.NumberFormat("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(actualKm);
-};
+      if (val === undefined || val === null) return "0.00";
+
+      // Convert to number and divide by 100 if stored in cents format
+      const num =
+        typeof val === "string"
+          ? parseFloat(val.replace(/,/g, ""))
+          : Number(val);
+      const actualKm = num / 100; // Add this division
+
+      return isNaN(actualKm)
+        ? "0.00"
+        : new Intl.NumberFormat("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(actualKm);
+    };
 
     const formatRupee = (val) => {
       if (val === undefined || val === null) return "0.00";
@@ -314,16 +317,18 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     });
 
     // Convert all amounts to numbers first
-    const totalAmount = (Number(advanceBill.totalAmount) || 0) ;
-    const advancePaid = (Number(advanceBill.advancePaid) || 0) ;
-    const grandTotal =
-      (Number(advanceBill.grandTotal) || totalAmount * 100) ;
+    const totalAmount = Number(advanceBill.totalAmount) || 0;
+    const advancePaid = Number(advanceBill.advancePaid) || 0;
+    const grandTotal = Number(advanceBill.grandTotal) || totalAmount * 100;
     const balanceDue =
-      (Number(advanceBill.balanceDue) || grandTotal * 100 - advancePaid * 100) /
-      100;
+      (Number(advanceBill.balanceDue));
 
     const paymentDetails = [
       { label: "Total Amount:", value: formatRupeeWithSymbol(totalAmount) },
+      {
+        label: "Discount:",
+        value: formatRupeeWithSymbol(advanceBill.discount || 0),
+      },
       { label: "Advance Paid:", value: formatRupeeWithSymbol(advancePaid) },
       { label: "Grand Total:", value: formatRupeeWithSymbol(grandTotal) },
       { label: "Balance Due:", value: formatRupeeWithSymbol(balanceDue) },

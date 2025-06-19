@@ -15,6 +15,11 @@ const advanceBillSchema = new mongoose.Schema({
     trim: true,
     maxlength: 15
   },
+  discount: {
+    type: Number,
+    min: 0,
+    default: 0
+  },
   customerAddress: {
     type: String,
     required: true,
@@ -107,11 +112,6 @@ const advanceBillSchema = new mongoose.Schema({
     min: 0,
     default: 0
   },
-  discount: {
-    type: Number,
-    min: 0,
-    default: 0
-  },
   paymentMethod: {
     type: String,
     required: true,
@@ -146,26 +146,15 @@ const advanceBillSchema = new mongoose.Schema({
 
 // Pre-save middleware to calculate amounts
 advanceBillSchema.pre('save', function(next) {
-  if (this.isModified('totalAmount') || this.isModified('advancePaid')) {
-    this.grandTotal = this.totalAmount;
+  if (this.isModified('totalAmount') || this.isModified('advancePaid') || 
+      this.isModified('discount')) {
+    
+    // Calculate grand total with discount
+    this.grandTotal = this.totalAmount - (this.discount || 0);
     this.balanceDue = this.grandTotal - this.advancePaid;
   }
   
-  // Generate bill number if not provided
-  if (!this.billNumber) {
-    const year = new Date().getFullYear();
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
-    this.billNumber = `ADV-${year}-${random}`;
-  }
-  
-  next();
-});
-advanceBillSchema.pre('save', function(next) {
-  if (this.isModified('totalAmount') || this.isModified('advancePaid')) {
-    this.grandTotal = this.totalAmount;
-    this.balanceDue = this.grandTotal - this.advancePaid;
-  }
-  
+  // Keep the existing bill number generation
   if (!this.billNumber) {
     const year = new Date().getFullYear();
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
@@ -188,6 +177,9 @@ advanceBillSchema.virtual('formattedAdvancePaid').get(function() {
 // Virtual for formatted balance due
 advanceBillSchema.virtual('formattedBalanceDue').get(function() {
   return `₹${this.balanceDue.toFixed(2)}`;
+});
+advanceBillSchema.virtual('formattedDiscount').get(function() {
+  return `₹${this.discount.toFixed(2)}`;
 });
 
 // Ensure virtuals are included in JSON output
