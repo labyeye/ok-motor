@@ -36,6 +36,8 @@ const ServiceBillForm = () => {
   const [previewPdf, setPreviewPdf] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [focusedInput, setFocusedInput] = useState(null);
+
   const [formData, setFormData] = useState({
     taxEnabled: false,
     businessName: "",
@@ -95,49 +97,50 @@ const ServiceBillForm = () => {
     };
   };
   const handleServiceItemChange = (index, e) => {
-  const { name, value } = e.target;
-  
-  // Special handling for rate field
-  if (name === "rate") {
-    // Only allow numbers and decimal point
-    const cleanedValue = value.replace(/[^0-9.]/g, '');
-    
+    const { name, value } = e.target;
+
+    // Special handling for rate field
+    if (name === "rate") {
+      // Only allow numbers and decimal point
+      const cleanedValue = value.replace(/[^0-9.]/g, "");
+
+      const items = [...formData.serviceItems];
+      items[index] = {
+        ...items[index],
+        rate: cleanedValue,
+        amount: (parseFloat(cleanedValue) || 0) * (items[index].quantity || 1),
+      };
+
+      setFormData({
+        ...formData,
+        serviceItems: items,
+        ...calculateAmounts({
+          ...formData,
+          serviceItems: items,
+        }),
+      });
+      return;
+    }
+
+    // Normal handling for other fields
     const items = [...formData.serviceItems];
     items[index] = {
       ...items[index],
-      rate: cleanedValue,
-      amount: (parseFloat(cleanedValue) || 0) * (items[index].quantity || 1)
+      [name]: name === "quantity" ? parseFloat(value) || 1 : value,
     };
-    
+
+    items[index].amount =
+      items[index].quantity * (parseFloat(items[index].rate) || 0);
+
     setFormData({
       ...formData,
       serviceItems: items,
       ...calculateAmounts({
         ...formData,
-        serviceItems: items
+        serviceItems: items,
       }),
     });
-    return;
-  }
-  
-  // Normal handling for other fields
-  const items = [...formData.serviceItems];
-  items[index] = {
-    ...items[index],
-    [name]: name === "quantity" ? parseFloat(value) || 1 : value,
   };
-
-  items[index].amount = items[index].quantity * (parseFloat(items[index].rate) || 0);
-
-  setFormData({
-    ...formData,
-    serviceItems: items,
-    ...calculateAmounts({
-      ...formData,
-      serviceItems: items
-    }),
-  });
-};
 
   const addServiceItem = () => {
     const newItems = [
@@ -707,7 +710,14 @@ const ServiceBillForm = () => {
                     value={formData.registrationNumber}
                     onChange={handleChange}
                     onInput={handleInput}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("registrationNumber")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "registrationNumber"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={15}
                   />
@@ -735,6 +745,14 @@ const ServiceBillForm = () => {
                         kmReading: rawValue,
                       }));
                     }}
+                    onFocus={() => setFocusedInput("kmReading")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "kmReading"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     placeholder="e.g. 36,000.00"
                   />
                 </div>
@@ -758,7 +776,14 @@ const ServiceBillForm = () => {
                     name="serviceDate"
                     value={formData.serviceDate}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("serviceDate")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "serviceDate"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                   />
                 </div>
@@ -772,7 +797,14 @@ const ServiceBillForm = () => {
                     name="deliveryDate"
                     value={formData.deliveryDate}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("deliveryDate")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "deliveryDate"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                   />
                 </div>
@@ -833,10 +865,16 @@ const ServiceBillForm = () => {
                         value={item.description}
                         onChange={(e) => handleServiceItemChange(index, e)}
                         onInput={handleInput}
-                        style={styles.formInput}
+                        onFocus={() => setFocusedInput("description")}
+                        onBlur={() => setFocusedInput(null)}
+                        style={{
+                          ...styles.formInput,
+                          ...(focusedInput === "description"
+                            ? styles.inputFocused
+                            : {}),
+                        }}
                         required
                         maxLength={30}
-                        
                       />
                     </div>
                     <div style={styles.serviceItemField}>
@@ -846,7 +884,14 @@ const ServiceBillForm = () => {
                         name="rate"
                         value={item.rate}
                         onChange={(e) => handleServiceItemChange(index, e)}
-                        style={styles.formInput}
+                        onFocus={() => setFocusedInput("rate")}
+                        onBlur={() => setFocusedInput(null)}
+                        style={{
+                          ...styles.formInput,
+                          ...(focusedInput === "rate"
+                            ? styles.inputFocused
+                            : {}),
+                        }}
                         required
                         maxLength={10}
                         onKeyDown={(e) => {
@@ -877,7 +922,14 @@ const ServiceBillForm = () => {
                         name="quantity"
                         value={item.quantity}
                         onChange={(e) => handleServiceItemChange(index, e)}
-                        style={styles.formInput}
+                        onFocus={() => setFocusedInput("quantity")}
+                        onBlur={() => setFocusedInput(null)}
+                        style={{
+                          ...styles.formInput,
+                          ...(focusedInput === "quantity"
+                            ? styles.inputFocused
+                            : {}),
+                        }}
                         min="1"
                         required
                         maxLength={10}
@@ -970,7 +1022,14 @@ const ServiceBillForm = () => {
                         value={formData.businessName}
                         onChange={handleChange}
                         onInput={handleInput}
-                        style={styles.formInput}
+                        onFocus={() => setFocusedInput("businessName")}
+                        onBlur={() => setFocusedInput(null)}
+                        style={{
+                          ...styles.formInput,
+                          ...(focusedInput === "businessName"
+                            ? styles.inputFocused
+                            : {}),
+                        }}
                         maxLength={30}
                       />
                     </div>
@@ -984,7 +1043,14 @@ const ServiceBillForm = () => {
                         value={formData.businessGSTIN}
                         onChange={handleChange}
                         onInput={handleInput}
-                        style={styles.formInput}
+                        onFocus={() => setFocusedInput("businessGSTIN")}
+                        onBlur={() => setFocusedInput(null)}
+                        style={{
+                          ...styles.formInput,
+                          ...(focusedInput === "businessGSTIN"
+                            ? styles.inputFocused
+                            : {}),
+                        }}
                         maxLength={11}
                       />
                     </div>
@@ -1014,6 +1080,7 @@ const ServiceBillForm = () => {
                   <input
                     type="number"
                     value={(formData.totalAmount || 0).toFixed(2)}
+                    
                     style={styles.formInput}
                     readOnly
                   />
@@ -1028,7 +1095,14 @@ const ServiceBillForm = () => {
                     name="taxRate"
                     value={formData.taxEnabled ? formData.taxRate : 0}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("taxRate")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "taxRate"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     min="0"
                     max="100"
                     step="0.01"
@@ -1061,7 +1135,14 @@ const ServiceBillForm = () => {
                     name="discount"
                     value={formData.discount}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("kmReading")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "kmReading"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     min="0"
                     step="0.01"
                   />
@@ -1074,7 +1155,14 @@ const ServiceBillForm = () => {
                   <input
                     type="number"
                     value={formData.grandTotal.toFixed(2)}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("kmReading")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "kmReading"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     readOnly
                   />
                 </div>
@@ -1088,7 +1176,14 @@ const ServiceBillForm = () => {
                     name="advancePaid"
                     value={formData.advancePaid}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("kmReading")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "kmReading"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     min="0"
                     step="0.01"
                   />
@@ -1101,7 +1196,14 @@ const ServiceBillForm = () => {
                   <input
                     type="number"
                     value={formData.balanceDue.toFixed(2)}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("kmReading")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "kmReading"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     readOnly
                   />
                 </div>
@@ -1352,6 +1454,9 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1000,
+  },
+  inputFocused: {
+    backgroundColor: "yellow",
   },
   modalContent: {
     backgroundColor: "#ffffff",
