@@ -260,11 +260,11 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       { label: "Model:", value: serviceBill.vehicleModel || "N/A" },
       { label: "Reg No:", value: serviceBill.registrationNumber || "N/A" },
       {
-        label: "KM:",
-        value: serviceBill.kmReading
-          ? `${Number(serviceBill.kmReading).toLocaleString()} km`
-          : "N/A",
-      },
+  label: "KM:",
+  value: serviceBill.kmReading
+    ? `${Number(serviceBill.kmReading).toLocaleString("en-IN")} km`
+    : "N/A",
+}
     ];
 
     let vehicleY = columnY - 50;
@@ -297,26 +297,41 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     const serviceDetails = [
-      {
-        label: "Service Date:",
-        value: new Date(
-          serviceBill.serviceDate || Date.now()
-        ).toLocaleDateString("en-GB"),
-      },
-      {
-        label: "Delivery Date:",
-        value: new Date(
-          serviceBill.deliveryDate || Date.now() + 86400000
-        ).toLocaleDateString("en-GB"),
-      },
-
-      {
-        label: "Service Type:",
-        value: serviceBill.serviceType
-          ? serviceBill.serviceType.toUpperCase()
-          : "N/A",
-      },
-    ];
+  {
+    label: "Service Date:",
+    value: serviceBill.serviceDate
+      ? new Date(serviceBill.serviceDate).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      : new Date().toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
+  },
+  {
+    label: "Delivery Date:",
+    value: serviceBill.deliveryDate
+      ? new Date(serviceBill.deliveryDate).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      : new Date(Date.now() + 86400000).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
+  },
+  {
+    label: "Service Type:",
+    value: serviceBill.serviceType
+      ? serviceBill.serviceType.toUpperCase()
+      : "N/A",
+  },
+];
 
     // Draw the first three service details
     serviceDetails.forEach((detail, index) => {
