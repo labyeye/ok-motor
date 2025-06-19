@@ -269,6 +269,14 @@ const BuyLetterHistory = () => {
         { name: "Service History", path: "/service/history" },
       ],
     },
+    {
+      name: "Payment",
+      icon: FileText,
+      submenu: [
+        { name: "Create Advance Bill", path: "/advance/create" },
+        { name: "Advance History", path: "/advance/history" },
+      ],
+    },
     // Add the conditional check here
     ...(user?.role !== "staff"
       ? [

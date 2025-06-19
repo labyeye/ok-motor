@@ -210,6 +210,14 @@ const BikeHistory = () => {
         { name: "Service History", path: "/service/history" },
       ],
     },
+    {
+      name: "Payment",
+      icon: FileText,
+      submenu: [
+        { name: "Create Advance Bill", path: "/advance/create" },
+        { name: "Advance History", path: "/advance/history" },
+      ],
+    },
     ...(user?.role !== "staff"
       ? [
           {

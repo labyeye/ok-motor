@@ -12,6 +12,7 @@ import {
   Wrench,
   Users,
   Bike,
+  FileText,
   LogOut,
   Trash2,
   UserPlus,
@@ -104,6 +105,14 @@ const StaffList = () => {
       submenu: [
         { name: "Create Service Bill", path: "/service/create" },
         { name: "Service History", path: "/service/history" },
+      ],
+    },
+    {
+      name: "Payment",
+      icon: FileText,
+      submenu: [
+        { name: "Create Advance Bill", path: "/advance/create" },
+        { name: "Advance History", path: "/advance/history" },
       ],
     },
     // Add the conditional check here

@@ -239,6 +239,14 @@ const AdminPage = () => {
       ],
     },
     {
+      name: "Payment",
+      icon: FileText,
+      submenu: [
+        { name: "Create Advance Bill", path: "/advance/create" },
+        { name: "Advance History", path: "/advance/history" },
+      ],
+    },
+    {
       name: "Staff",
       icon: Users,
       submenu: [

@@ -13,6 +13,8 @@ import BikeHistory from "./components/BikeHistory";
 import CreateStaff from "./components/CreateStaff";
 import StaffList from "./components/StaffList";
 import ServiceHistory from "./components/ServiceHistory";
+import AdvancePayBillForm from "./components/AdvancePayBillForm";
+import AdvanceHistory from "./components/AdvanceHistory";
 
 function App() {
   return (
@@ -107,6 +109,22 @@ function App() {
             element={
               <PrivateRoute roles={["admin", "staff"]}>
                 <ServiceHistory />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/advance/create"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <AdvancePayBillForm />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/advance/history"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <AdvanceHistory />
               </PrivateRoute>
             }
           />

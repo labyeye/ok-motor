@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { PDFDocument } from "pdf-lib";
 import { saveAs } from "file-saver";
 import {
@@ -24,13 +24,12 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import logo from "../images/company.png";
-
+import logo from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 
-const ServiceBillForm = () => {
+const AdvancePayBillForm = () => {
   const { user } = useContext(AuthContext);
-  const [activeMenu, setActiveMenu] = useState("Create Service Bill");
+  const [activeMenu, setActiveMenu] = useState("Create Advance Bill");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
@@ -38,21 +37,12 @@ const ServiceBillForm = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-    taxEnabled: false,
-    businessName: "",
-    businessGSTIN: "",
-    businessAddress: "",
-    totalAmount: 0,
-    taxAmount: 0,
-    grandTotal: 0,
-    balanceDue: 0,
     customerName: "",
     customerPhone: "",
     customerAddress: "",
     customerEmail: "",
     vehicleType: "bike",
     vehicleBrand: "",
-    customServiceDescription: "",
     vehicleModel: "",
     registrationNumber: "",
     chassisNumber: "",
@@ -60,74 +50,48 @@ const ServiceBillForm = () => {
     kmReading: "",
     serviceDate: new Date().toISOString().split("T")[0],
     deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-    serviceType: "regular",
-    serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
-    discount: 0,
-    taxRate: 18,
-    paymentMethod: "cash",
-    paymentStatus: "paid",
+    totalAmount: 0,
     advancePaid: 0,
-    issuesReported: "",
-    technicianNotes: "",
-    warrantyInfo: "",
+    paymentMethod: "cash",
   });
 
   const [previewMode, setPreviewMode] = useState(false);
   const API_BASE_URL = "https://ok-motor.onrender.com/api";
-  const calculateAmounts = (data) => {
-    const totalAmount = (data.serviceItems || []).reduce(
-      (sum, item) => sum + (item.quantity || 0) * (item.rate || 0),
-      0
-    );
-    const taxAmount = data.taxEnabled
-      ? ((data.taxRate || 0) / 100) * totalAmount
-      : 0;
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+  }, [navigate]);
+  const api = axios.create({
+    baseURL: API_BASE_URL,
+    withCredentials: true,
+  });
 
-    const grandTotal = totalAmount + taxAmount - (data.discount || 0);
-    const balanceDue = grandTotal - (data.advancePaid || 0);
+  // Add request interceptor to include token
+  api.interceptors.request.use(
+    (config) => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+  const calculateAmounts = (data) => {
+    const totalAmount = parseFloat(data.totalAmount) || 0;
+    const advancePaid = parseFloat(data.advancePaid) || 0;
+    const grandTotal = totalAmount;
+    const balanceDue = grandTotal - advancePaid;
 
     return {
-      totalAmount,
-      taxAmount,
       grandTotal,
       balanceDue,
     };
-  };
-  const handleServiceItemChange = (index, e) => {
-    const { name, value } = e.target;
-    const items = [...formData.serviceItems];
-    items[index] = {
-      ...items[index],
-      [name]:
-        name === "quantity" || name === "rate" ? parseFloat(value) || 0 : value,
-    };
-
-    items[index].amount = items[index].quantity * items[index].rate;
-
-    setFormData({
-      ...formData,
-      serviceItems: items,
-      ...calculateAmounts({ ...formData, serviceItems: items }),
-    });
-  };
-
-  const addServiceItem = () => {
-    setFormData({
-      ...formData,
-      serviceItems: [
-        ...formData.serviceItems,
-        { description: "", quantity: 1, rate: 0, amount: 0 },
-      ],
-    });
-  };
-
-  const removeServiceItem = (index) => {
-    const items = formData.serviceItems.filter((_, i) => i !== index);
-    setFormData({
-      ...formData,
-      serviceItems: items,
-      ...calculateAmounts({ ...formData, serviceItems: items }),
-    });
   };
 
   const handleChange = (e) => {
@@ -139,40 +103,17 @@ const ServiceBillForm = () => {
       [name]: val,
     };
 
-    if (name === "discount" || name === "taxRate" || name === "advancePaid") {
+    if (name === "totalAmount" || name === "advancePaid") {
       Object.assign(newData, calculateAmounts(newData));
     }
 
     setFormData(newData);
   };
 
-  const saveServiceBill = async () => {
-    try {
-      setIsSaving(true);
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${API_BASE_URL}/service-bills`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      alert("Service bill saved successfully!");
-      return response.data;
-    } catch (error) {
-      console.error("Error saving service bill:", error);
-      alert(
-        `Failed to save service bill: ${
-          error.response?.data?.message || error.message
-        }`
-      );
-      throw error;
-    } finally {
-      setIsSaving(false);
-    }
+  const handleInput = (e) => {
+    const { name, value } = e.target;
+    e.target.value = value.toUpperCase();
+    handleChange(e);
   };
 
   const handleSaveAndDownload = async () => {
@@ -184,16 +125,36 @@ const ServiceBillForm = () => {
         throw new Error("No authentication token found. Please log in again.");
       }
 
-      // Include user ID in the form data
-      const formDataWithUser = {
-        ...formData,
-        user: user._id, // Assuming your AuthContext provides the user object with _id
+      // Prepare the data to match exactly what the backend expects
+      // In handleSaveAndDownload, update the requestData to include calculated fields
+      const requestData = {
+        customerName: formData.customerName,
+        customerPhone: formData.customerPhone,
+        customerAddress: formData.customerAddress,
+        customerEmail: formData.customerEmail,
+        vehicleType: formData.vehicleType,
+        vehicleBrand: formData.vehicleBrand,
+        vehicleModel: formData.vehicleModel,
+        registrationNumber: formData.registrationNumber,
+        chassisNumber: formData.chassisNumber,
+        engineNumber: formData.engineNumber,
+        kmReading: parseFloat(formData.kmReading) || 0,
+        serviceDate: formData.serviceDate,
+        deliveryDate: formData.deliveryDate,
+        totalAmount: parseFloat(formData.totalAmount) || 0,
+        advancePaid: parseFloat(formData.advancePaid) || 0,
+        paymentMethod: formData.paymentMethod,
+        user: user._id,
+        // Add these calculated fields
+        grandTotal: parseFloat(formData.totalAmount) || 0,
+        balanceDue:
+          (parseFloat(formData.totalAmount) || 0) -
+          (parseFloat(formData.advancePaid) || 0),
       };
 
-      // First save the bill
       const saveResponse = await axios.post(
-        `${API_BASE_URL}/service-bills`,
-        formDataWithUser, // Use the updated form data
+        `${API_BASE_URL}/advance-bills`,
+        requestData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -201,9 +162,6 @@ const ServiceBillForm = () => {
           },
         }
       );
-
-      // Rest of your download logic remains the same...
-      console.log("Save response:", saveResponse.data);
 
       if (
         !saveResponse.data ||
@@ -215,9 +173,8 @@ const ServiceBillForm = () => {
 
       const billId = saveResponse.data.data._id;
 
-      // Then download the PDF
       const pdfResponse = await axios.get(
-        `${API_BASE_URL}/service-bills/${billId}/download`,
+        `${API_BASE_URL}/advance-bills/${billId}/download`,
         {
           responseType: "blob",
           headers: {
@@ -227,45 +184,28 @@ const ServiceBillForm = () => {
         }
       );
 
-      if (!pdfResponse.data) {
-        throw new Error("No PDF data received from server");
-      }
-
-      // Create download link
       const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(pdfBlob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `service-bill-${billId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
+      saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
 
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      }, 100);
-
-      alert("Service bill saved and downloaded successfully!");
+      alert("Advance bill saved and downloaded successfully!");
     } catch (error) {
       console.error("Error in save and download:", error);
-
       let errorMessage = "Failed to save and download";
       if (error.response) {
         errorMessage += `: ${error.response.status} - ${
-          error.response.data?.message || "No error details"
+          error.response.data?.message || JSON.stringify(error.response.data)
         }`;
       } else if (error.request) {
         errorMessage += ": No response from server";
       } else {
         errorMessage += `: ${error.message}`;
       }
-
       alert(errorMessage);
     } finally {
       setIsSaving(false);
     }
   };
+
   const LoadingOverlay = () => (
     <div style={styles.loadingOverlay}>
       <div style={styles.loadingContent}>
@@ -276,7 +216,9 @@ const ServiceBillForm = () => {
     </div>
   );
 
-  const generateServiceBillPDF = async (
+  // Replace the generateAdvanceBillPDF function in your AdvancePayBillForm.js with this fixed version:
+
+  const generateAdvanceBillPDF = async (
     billData = formData,
     forPreview = false
   ) => {
@@ -284,62 +226,59 @@ const ServiceBillForm = () => {
       setShowLoadingOverlay(true);
       const token = localStorage.getItem("token");
 
-      // First save the bill if it doesn't have an ID
-      let billId = billData._id;
-      if (!billId) {
-        const saveResponse = await axios.post(
-          `${API_BASE_URL}/service-bills`,
-          {
-            ...billData,
-            serviceType: billData.serviceType || formData.serviceType,
-            customServiceDescription:
-              billData.customServiceDescription ||
-              formData.customServiceDescription,
-            user: user._id,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        billId = saveResponse.data.data._id;
+      // Validate required fields
+      if (!billData.customerName || !billData.customerPhone) {
+        alert("Please fill in required customer information");
+        return;
       }
 
-      // Get the PDF from the server
-      const pdfResponse = await axios.get(
-        `${API_BASE_URL}/service-bills/${billId}/download`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/pdf",
-          },
-        }
-      );
+      // Prepare data with user ID
+      const requestData = {
+        ...billData,
+        user: user._id,
+      };
 
-      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+      // First save the bill
+      const saveResponse = await api.post("/advance-bills", requestData);
+
+      if (
+        !saveResponse.data ||
+        !saveResponse.data.data ||
+        !saveResponse.data.data._id
+      ) {
+        throw new Error("Invalid response format from server");
+      }
+
+      const billId = saveResponse.data.data._id;
 
       if (forPreview) {
-        const url = URL.createObjectURL(pdfBlob);
-        setPreviewPdf(url);
+        // For preview, get the PDF URL
+        const pdfUrl = `/api/advance-bills/pdf/advance-bill-${billId}.pdf`;
+        setPreviewPdf(pdfUrl);
         setShowPreviewModal(true);
       } else {
-        saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+        // For download, use the download endpoint
+        const pdfResponse = await api.get(`/advance-bills/${billId}/download`, {
+          responseType: "blob",
+        });
+
+        const pdfBlob = new Blob([pdfResponse.data], {
+          type: "application/pdf",
+        });
+        saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
       }
     } catch (error) {
       console.error("Error generating PDF:", error);
-      alert(`Failed to generate PDF: ${error.message}`);
+      alert(
+        `Failed to generate PDF: ${
+          error.response?.data?.message || error.message
+        }`
+      );
     } finally {
       setShowLoadingOverlay(false);
     }
   };
-  const handleInput = (e) => {
-    const { name, value } = e.target;
-    e.target.value = value.toUpperCase();
-    handleChange(e);
-  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -348,7 +287,6 @@ const ServiceBillForm = () => {
     navigate("/login");
   };
 
-  // In the menuItems array (around line 250 in BuyLetterPDF.js)
   const menuItems = [
     {
       name: "Dashboard",
@@ -387,8 +325,6 @@ const ServiceBillForm = () => {
         { name: "Advance History", path: "/advance/history" },
       ],
     },
-    
-    // Add the conditional check here
     ...(user?.role !== "staff"
       ? [
           {
@@ -433,7 +369,7 @@ const ServiceBillForm = () => {
           </button>
           <div style={styles.previewActions}>
             <button
-              onClick={generateServiceBillPDF}
+              onClick={generateAdvanceBillPDF}
               style={styles.downloadButton}
             >
               <Download style={styles.buttonIcon} /> Download PDF
@@ -449,7 +385,6 @@ const ServiceBillForm = () => {
 
   return (
     <div style={styles.container}>
-      {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
           <img
@@ -472,7 +407,6 @@ const ServiceBillForm = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
-                    // Pass the path as-is (could be string or function)
                     handleMenuClick(item.name, item.path);
                   }
                 }}
@@ -519,18 +453,17 @@ const ServiceBillForm = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
-            <h1 style={styles.pageTitle}>Create Service Bill</h1>
+            <h1 style={styles.pageTitle}>Create Advance Payment Invoice</h1>
             <p style={styles.pageSubtitle}>
-              Fill in the details to generate a service bill for the vehicle
+              Fill in the details to generate an advance payment invoice for the
+              vehicle
             </p>
           </div>
 
           <form style={styles.form}>
-            {/* Customer Information */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <User style={styles.sectionIcon} /> Customer Information
@@ -602,7 +535,6 @@ const ServiceBillForm = () => {
               </div>
             </div>
 
-            {/* Vehicle Information */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <Car style={styles.sectionIcon} /> Vehicle Information
@@ -676,38 +608,52 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
-                    KM Reading || किलोमीटर पढ़ाई
+                    Chassis Number || चेसिस नंबर
                   </label>
                   <input
                     type="text"
+                    name="chassisNumber"
+                    value={formData.chassisNumber}
+                    onChange={handleChange}
+                    onInput={handleInput}
+                    style={styles.formInput}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Car style={styles.formIcon} />
+                    Engine Number || इंजन नंबर
+                  </label>
+                  <input
+                    type="text"
+                    name="engineNumber"
+                    value={formData.engineNumber}
+                    onChange={handleChange}
+                    onInput={handleInput}
+                    style={styles.formInput}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Car style={styles.formIcon} />
+                    KM Reading || किलोमीटर पढ़ाई
+                  </label>
+                  <input
+                    type="number"
                     name="kmReading"
-                    value={
-                      formData.kmReading === ""
-                        ? ""
-                        : new Intl.NumberFormat("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(Number(formData.kmReading) / 100)
-                    }
-                    onChange={(e) => {
-                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
-                      setFormData((prev) => ({
-                        ...prev,
-                        kmReading: rawValue,
-                      }));
-                    }}
-                    placeholder="e.g. 36,000.00"
+                    value={formData.kmReading}
+                    onChange={handleChange}
+                    style={styles.formInput}
+                    step="0.01"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Service Details */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
-                <Wrench style={styles.sectionIcon} /> Service Details
+                <Calendar style={styles.sectionIcon} /> Service Dates
               </h2>
-              {/* Service Details */}
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
@@ -737,277 +683,28 @@ const ServiceBillForm = () => {
                     required
                   />
                 </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Wrench style={styles.formIcon} />
-                    Service Type || सेवा का प्रकार
-                  </label>
-                  <select
-                    name="serviceType"
-                    value={formData.serviceType}
-                    onChange={handleChange}
-                    style={styles.formSelect}
-                    required
-                  >
-                    <option value="regular">Regular Service</option>
-                    <option value="premium">Premium Service</option>
-                    <option value="custom">Custom Service</option>
-                  </select>
-                </div>
-
-                {/* Add this conditional field */}
-                {formData.serviceType === "custom" && (
-                  <div style={styles.formField}>
-                    <label style={styles.formLabel}>
-                      <Wrench style={styles.formIcon} />
-                      Custom Service Description || कस्टम सेवा विवरण
-                    </label>
-                    <textarea
-                      name="customServiceDescription"
-                      value={formData.customServiceDescription}
-                      onChange={handleChange}
-                      rows={3}
-                      style={styles.formTextarea}
-                      placeholder="Describe the custom service requirements"
-                      maxLength={200}
-                    />
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* Service Items */}
-            <div style={styles.formSection}>
-              <h2 style={styles.sectionTitle}>
-                <ShoppingCart style={styles.sectionIcon} /> Service Items
-              </h2>
-              <div style={{ marginBottom: "20px" }}>
-                {formData.serviceItems.map((item, index) => (
-                  <div key={index} style={styles.serviceItemRow}>
-                    <div style={styles.serviceItemField}>
-                      <label style={styles.formLabel}>
-                        Description || विवरण
-                      </label>
-                      <input
-                        type="text"
-                        name="description"
-                        value={item.description}
-                        onChange={(e) => handleServiceItemChange(index, e)}
-                        onInput={handleInput}
-                        style={styles.formInput}
-                        required
-                        maxLength={30}
-                      />
-                    </div>
-                    <div style={styles.serviceItemField}>
-                      <label style={styles.formLabel}>Qty || मात्रा</label>
-                      <input
-                        type="number"
-                        name="quantity"
-                        value={item.quantity}
-                        onChange={(e) => handleServiceItemChange(index, e)}
-                        style={styles.formInput}
-                        min="1"
-                        required
-                        maxLength={10}
-                      />
-                    </div>
-                    <div style={styles.serviceItemField}>
-                      <label style={styles.formLabel}>Rate (₹) || दर (₹)</label>
-                      <input
-                        type="number"
-                        name="rate"
-                        value={item.rate}
-                        onChange={(e) => handleServiceItemChange(index, e)}
-                        style={styles.formInput}
-                        min="0"
-                        step="0.01"
-                        required
-                        maxLength={10}
-                      />
-                    </div>
-                    <div style={styles.serviceItemField}>
-                      <label style={styles.formLabel}>
-                        Amount (₹) || राशि (₹)
-                      </label>
-                      <input
-                        type="text"
-                        value={item.amount.toFixed(2)}
-                        style={styles.formInput}
-                        readOnly
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeServiceItem(index)}
-                      style={styles.removeItemButton}
-                    >
-                      <Trash size={16} />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addServiceItem}
-                  style={styles.addItemButton}
-                >
-                  <Plus size={16} /> Add Service Item
-                </button>
-              </div>
-            </div>
-
-            {/* Payment Information */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <IndianRupee style={styles.sectionIcon} /> Payment Information
               </h2>
               <div style={styles.formGrid}>
-                {/* Add this toggle switch at the top of the payment section */}
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Enable Tax || कर सक्षम करें
-                  </label>
-                  <div style={styles.toggleContainer}>
-                    <label style={styles.toggleSwitch}>
-                      <input
-                        type="checkbox"
-                        checked={formData.taxEnabled}
-                        onChange={() => {
-                          const newData = {
-                            ...formData,
-                            taxEnabled: !formData.taxEnabled,
-                            // Reset tax rate to 18 when enabling
-                            taxRate: !formData.taxEnabled ? 18 : 0,
-                          };
-                          setFormData({
-                            ...newData,
-                            ...calculateAmounts(newData),
-                          });
-                        }}
-                      />
-                      <span style={styles.toggleSlider}></span>
-                    </label>
-                  </div>
-                </div>
-                {formData.taxEnabled && (
-                  <>
-                    <div style={styles.formField}>
-                      <label style={styles.formLabel}>
-                        Business Name || व्यापार का नाम
-                      </label>
-                      <input
-                        type="text"
-                        name="businessName"
-                        value={formData.businessName}
-                        onChange={handleChange}
-                        onInput={handleInput}
-                        style={styles.formInput}
-                        maxLength={30}
-                      />
-                    </div>
-                    <div style={styles.formField}>
-                      <label style={styles.formLabel}>
-                        Business GSTIN || व्यापार का GSTIN
-                      </label>
-                      <input
-                        type="text"
-                        name="businessGSTIN"
-                        value={formData.businessGSTIN}
-                        onChange={handleChange}
-                        onInput={handleInput}
-                        style={styles.formInput}
-                        maxLength={11}
-                      />
-                    </div>
-                    <div style={styles.formField}>
-                      <label style={styles.formLabel}>
-                        Business Address || व्यापार का पता
-                      </label>
-                      <textarea
-                        name="businessAddress"
-                        value={formData.businessAddress}
-                        onChange={handleChange}
-                        rows={3}
-                        onInput={handleInput}
-                        style={styles.formTextarea}
-                        maxLength={100}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-              <div style={styles.formGrid}>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <IndianRupee style={styles.formIcon} />
-                    Sub Total (₹) || कुल राशि (₹)
+                    Total Amount (₹) || कुल राशि (₹)
                   </label>
                   <input
                     type="number"
-                    value={(formData.totalAmount || 0).toFixed(2)}
-                    style={styles.formInput}
-                    readOnly
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <IndianRupee style={styles.formIcon} />
-                    Tax Rate (%) || कर दर (%)
-                  </label>
-                  <input
-                    type="number"
-                    name="taxRate"
-                    value={formData.taxEnabled ? formData.taxRate : 0}
-                    onChange={handleChange}
-                    style={styles.formInput}
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    disabled={!formData.taxEnabled}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <IndianRupee style={styles.formIcon} />
-                    Tax Amount (₹) || कर राशि (₹)
-                  </label>
-                  <input
-                    type="number"
-                    value={
-                      formData.taxEnabled
-                        ? formData.taxAmount.toFixed(2)
-                        : "0.00"
-                    }
-                    style={styles.formInput}
-                    readOnly
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <IndianRupee style={styles.formIcon} />
-                    Discount (₹) || छूट (₹)
-                  </label>
-                  <input
-                    type="number"
-                    name="discount"
-                    value={formData.discount}
+                    name="totalAmount"
+                    value={formData.totalAmount}
                     onChange={handleChange}
                     style={styles.formInput}
                     min="0"
                     step="0.01"
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <IndianRupee style={styles.formIcon} />
-                    Grand Total (₹) || कुल राशि (₹)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.grandTotal.toFixed(2)}
-                    style={styles.formInput}
-                    readOnly
+                    required
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1023,6 +720,19 @@ const ServiceBillForm = () => {
                     style={styles.formInput}
                     min="0"
                     step="0.01"
+                    required
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <IndianRupee style={styles.formIcon} />
+                    Grand Total (₹) || कुल राशि (₹)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.grandTotal}
+                    style={styles.formInput}
+                    readOnly
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1032,7 +742,7 @@ const ServiceBillForm = () => {
                   </label>
                   <input
                     type="number"
-                    value={formData.balanceDue.toFixed(2)}
+                    value={formData.balanceDue}
                     style={styles.formInput}
                     readOnly
                   />
@@ -1047,6 +757,7 @@ const ServiceBillForm = () => {
                     value={formData.paymentMethod}
                     onChange={handleChange}
                     style={styles.formSelect}
+                    required
                   >
                     <option value="cash">Cash</option>
                     <option value="card">Card</option>
@@ -1054,84 +765,13 @@ const ServiceBillForm = () => {
                     <option value="bank transfer">Bank Transfer</option>
                   </select>
                 </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <IndianRupee style={styles.formIcon} />
-                    Payment Status || भुगतान की स्थिति
-                  </label>
-                  <select
-                    name="paymentStatus"
-                    value={formData.paymentStatus}
-                    onChange={handleChange}
-                    style={styles.formSelect}
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="partial">Partial</option>
-                    <option value="paid">Paid</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Additional Information */}
-            <div style={styles.formSection}>
-              <h2 style={styles.sectionTitle}>
-                <AlertCircle style={styles.sectionIcon} /> Additional
-                Information
-              </h2>
-              <div style={styles.formGrid}>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <AlertCircle style={styles.formIcon} />
-                    Issues Reported || समस्याएं रिपोर्ट की गई
-                  </label>
-                  <textarea
-                    name="issuesReported"
-                    value={formData.issuesReported}
-                    onChange={handleChange}
-                    rows={3}
-                    onInput={handleInput}
-                    style={styles.formTextarea}
-                    maxLength={100}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <AlertCircle style={styles.formIcon} />
-                    Technician Notes || तकनीकी नोट्स
-                  </label>
-                  <textarea
-                    name="technicianNotes"
-                    value={formData.technicianNotes}
-                    onChange={handleChange}
-                    rows={3}
-                    onInput={handleInput}
-                    style={styles.formTextarea}
-                    maxLength={100}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <AlertCircle style={styles.formIcon} />
-                    Warranty Information || बिक्री की विधि
-                  </label>
-                  <textarea
-                    name="warrantyInfo"
-                    value={formData.warrantyInfo}
-                    onChange={handleChange}
-                    rows={3}
-                    onInput={handleInput}
-                    style={styles.formTextarea}
-                    maxLength={100}
-                  />
-                </div>
               </div>
             </div>
 
             <div style={styles.formActions}>
               <button
                 type="button"
-                onClick={() => generateServiceBillPDF(formData, true)}
+                onClick={() => generateAdvanceBillPDF(formData, true)}
                 style={styles.previewButton}
                 disabled={isSaving}
               >
@@ -1158,7 +798,7 @@ const ServiceBillForm = () => {
               width: "800px",
             }}
           >
-            <h3 style={styles.modalTitle}>Service Bill Preview</h3>
+            <h3 style={styles.modalTitle}>Advance Payment Invoice Preview</h3>
             <div
               style={{ height: "70vh", width: "100%", marginBottom: "20px" }}
             >
@@ -1190,7 +830,7 @@ const ServiceBillForm = () => {
               <button
                 style={styles.downloadButton}
                 onClick={() => {
-                  generateServiceBillPDF(formData);
+                  generateAdvanceBillPDF(formData);
                   setShowPreviewModal(false);
                 }}
               >
@@ -1351,7 +991,6 @@ const styles = {
       backgroundColor: "#334155",
     },
   },
-
   menuItemActive: {
     backgroundColor: "#334155",
     borderRight: "3px solid #3b82f6",
@@ -1556,4 +1195,4 @@ const styles = {
   },
 };
 
-export default ServiceBillForm;
+export default AdvancePayBillForm;

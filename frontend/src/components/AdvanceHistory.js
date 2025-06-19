@@ -23,7 +23,7 @@ import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
 
 
-const ServiceHistory = () => {
+const AdvanceHistory = () => {
   const { user } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Service History");
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -885,4 +885,4 @@ const styles = {
   },
 };
 
-export default ServiceHistory;
+export default AdvanceHistory;
