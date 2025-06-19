@@ -164,6 +164,15 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       thickness: 1,
       color: rgb(0.8, 0.8, 0.8),
     });
+     page.drawRectangle({
+      x: 0,
+      y: 685,
+      width: 595,
+      height: 20,
+      color: rgb(0.9, 0.9, 0.9),
+      opacity:0.6,
+    });
+
 
     // Customer Information
     const customerY = 690;
@@ -214,6 +223,14 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
+    page.drawRectangle({
+      x: 0,
+      y: 605,
+      width: 595,
+      height: 20,
+      color: rgb(0.9, 0.9, 0.9),
+      opacity:0.6,
+    });
 
     // Vehicle Information
     const vehicleY = customerY - 80;
@@ -262,6 +279,14 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         font: font,
       });
     });
+    page.drawRectangle({
+      x: 0,
+      y: 465,
+      width: 595,
+      height: 20,
+      color: rgb(0.9, 0.9, 0.9),
+      opacity:0.6,
+    });
 
     // Service Dates
     const serviceY = vehicleY - 140;
@@ -304,6 +329,14 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
+    });
+    page.drawRectangle({
+      x: 0,
+      y: 395,
+      width: 595,
+      height: 20,
+      color: rgb(0.9, 0.9, 0.9),
+      opacity:0.6,
     });
 
     // Payment Information
@@ -356,11 +389,19 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         font: font,
       });
     });
+    page.drawRectangle({
+      x: 0,
+      y: 245,
+      width: 595,
+      height: 20,
+      color: rgb(0.9, 0.9, 0.9),
+      opacity:0.6,
+    });
     const termsY = 250; // Position above the footer
     page.drawText("TERMS AND CONDITIONS", {
       x: 50,
       y: termsY,
-      size: 12,
+      size: 15,
       color: rgb(0.047, 0.098, 0.196),
       font: fontBold,
     });
@@ -379,7 +420,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       page.drawText(term, {
         x: 60,
         y: termsY - 20 - index * 12,
-        size: 9,
+        size: 12,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
