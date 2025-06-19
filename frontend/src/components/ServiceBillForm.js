@@ -95,35 +95,66 @@ const ServiceBillForm = () => {
     };
   };
   const handleServiceItemChange = (index, e) => {
-    const { name, value } = e.target;
+  const { name, value } = e.target;
+  
+  // Special handling for rate field
+  if (name === "rate") {
+    // Only allow numbers and decimal point
+    const cleanedValue = value.replace(/[^0-9.]/g, '');
+    
     const items = [...formData.serviceItems];
     items[index] = {
       ...items[index],
-      [name]:
-        name === "quantity" || name === "rate" ? parseFloat(value) || 0 : value,
+      rate: cleanedValue,
+      amount: (parseFloat(cleanedValue) || 0) * (items[index].quantity || 1)
     };
-
-    items[index].amount = items[index].quantity * items[index].rate;
-
-    const newData = {
+    
+    setFormData({
       ...formData,
       serviceItems: items,
-    };
-
-    setFormData({
-      ...newData,
-      ...calculateAmounts(newData),
+      ...calculateAmounts({
+        ...formData,
+        serviceItems: items
+      }),
     });
+    return;
+  }
+  
+  // Normal handling for other fields
+  const items = [...formData.serviceItems];
+  items[index] = {
+    ...items[index],
+    [name]: name === "quantity" ? parseFloat(value) || 1 : value,
   };
 
+  items[index].amount = items[index].quantity * (parseFloat(items[index].rate) || 0);
+
+  setFormData({
+    ...formData,
+    serviceItems: items,
+    ...calculateAmounts({
+      ...formData,
+      serviceItems: items
+    }),
+  });
+};
+
   const addServiceItem = () => {
+    const newItems = [
+      ...formData.serviceItems,
+      { description: "", quantity: 1, rate: "0", amount: 0 },
+    ];
+
     setFormData({
       ...formData,
-      serviceItems: [
-        ...formData.serviceItems,
-        { description: "", quantity: 1, rate: 0, amount: 0 },
-      ],
+      serviceItems: newItems,
     });
+    setTimeout(() => {
+      const inputs = document.querySelectorAll('[name="description"]');
+      if (inputs.length > 0) {
+        inputs[inputs.length - 1].focus();
+      }
+    }, 0);
   };
 
   const removeServiceItem = (index) => {
@@ -155,19 +186,19 @@ const ServiceBillForm = () => {
       setIsSaving(true);
       const token = localStorage.getItem("token");
       const response = await axios.post(
-      `${API_BASE_URL}/service-bills`,
-      {
-        ...formData,
-        user: user._id,
-        customServiceDescription: formData.customServiceDescription // Ensure this is included
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+        `${API_BASE_URL}/service-bills`,
+        {
+          ...formData,
+          user: user._id,
+          customServiceDescription: formData.customServiceDescription, // Ensure this is included
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
       alert("Service bill saved successfully!");
       return response.data;
     } catch (error) {
@@ -777,7 +808,7 @@ const ServiceBillForm = () => {
                       rows={3}
                       style={styles.formTextarea}
                       placeholder="Describe the custom service requirements"
-                      maxLength={200}
+                      maxLength={100}
                     />
                   </div>
                 )}
@@ -805,8 +836,40 @@ const ServiceBillForm = () => {
                         style={styles.formInput}
                         required
                         maxLength={30}
+                        
                       />
                     </div>
+                    <div style={styles.serviceItemField}>
+                      <label style={styles.formLabel}>Rate (₹) || दर (₹)</label>
+                      <input
+                        type="text"
+                        name="rate"
+                        value={item.rate}
+                        onChange={(e) => handleServiceItemChange(index, e)}
+                        style={styles.formInput}
+                        required
+                        maxLength={10}
+                        onKeyDown={(e) => {
+                          // Allow only numbers and decimal point
+                          if (
+                            !/[0-9.]/.test(e.key) &&
+                            e.key !== "Backspace" &&
+                            e.key !== "Tab"
+                          ) {
+                            e.preventDefault();
+                          }
+                          // Move to next field on Enter
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const nextField = e.target
+                              .closest(".service-item-row")
+                              .querySelector('[name="quantity"]');
+                            if (nextField) nextField.focus();
+                          }
+                        }}
+                      />
+                    </div>
+
                     <div style={styles.serviceItemField}>
                       <label style={styles.formLabel}>Qty || मात्रा</label>
                       <input
@@ -818,22 +881,18 @@ const ServiceBillForm = () => {
                         min="1"
                         required
                         maxLength={10}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const nextField = e.target
+                              .closest(".service-item-row")
+                              .querySelector('[name="rate"]');
+                            if (nextField) nextField.focus();
+                          }
+                        }}
                       />
                     </div>
-                    <div style={styles.serviceItemField}>
-                      <label style={styles.formLabel}>Rate (₹) || दर (₹)</label>
-                      <input
-                        type="number"
-                        name="rate"
-                        value={item.rate}
-                        onChange={(e) => handleServiceItemChange(index, e)}
-                        style={styles.formInput}
-                        min="0"
-                        // step="0.01"
-                        required
-                        maxLength={10}
-                      />
-                    </div>
+
                     <div style={styles.serviceItemField}>
                       <label style={styles.formLabel}>
                         Amount (₹) || राशि (₹)
@@ -849,6 +908,7 @@ const ServiceBillForm = () => {
                       type="button"
                       onClick={() => removeServiceItem(index)}
                       style={styles.removeItemButton}
+                      tabIndex={-1} // Remove from tab order since we have keyboard shortcut
                     >
                       <Trash size={16} />
                     </button>
@@ -1414,6 +1474,49 @@ const styles = {
   },
   contentPadding: {
     padding: "32px",
+  },
+  serviceItemRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    marginBottom: "15px",
+    padding: "10px",
+    backgroundColor: "#f8fafc",
+    borderRadius: "8px",
+  },
+  serviceItemField: {
+    flex: 1,
+    minWidth: 0,
+  },
+  removeItemButton: {
+    backgroundColor: "#ef4444",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    padding: "8px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    ":hover": {
+      backgroundColor: "#dc2626",
+    },
+  },
+  addItemButton: {
+    backgroundColor: "#10b981",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    padding: "10px 15px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "5px",
+    marginTop: "10px",
+    ":hover": {
+      backgroundColor: "#059669",
+    },
   },
   header: {
     marginBottom: "32px",

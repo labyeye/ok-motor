@@ -642,15 +642,58 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     const issues = serviceBill.issuesReported || "N/A";
-    const issuesLines = [];
-    for (let i = 0; i < issues.length; i += 60) {
-      issuesLines.push(issues.substring(i, i + 60));
+    const maxCharsPerLine = 30;
+    const lineHeight = 12;
+    const startY = currentY - 40;
+
+    // Function to split text into lines with max characters, respecting word boundaries
+    function splitTextIntoLines(text, maxLength) {
+      const lines = [];
+      let currentLine = "";
+
+      // Split the text into words first
+      const words = text.split(/\s+/);
+
+      for (const word of words) {
+        if (currentLine.length + word.length <= maxLength) {
+          // Add the word to current line
+          currentLine += (currentLine.length > 0 ? " " : "") + word;
+        } else {
+          // Current line is full, push it and start a new line
+          if (currentLine.length > 0) {
+            lines.push(currentLine);
+          }
+
+          // If the word itself is longer than maxLength, split it
+          if (word.length > maxLength) {
+            // Split the long word into chunks
+            let i = 0;
+            while (i < word.length) {
+              lines.push(word.substr(i, maxLength));
+              i += maxLength;
+            }
+            currentLine = "";
+          } else {
+            currentLine = word;
+          }
+        }
+      }
+
+      // Push the last line if it's not empty
+      if (currentLine.length > 0) {
+        lines.push(currentLine);
+      }
+
+      return lines;
     }
 
+    const issuesLines = splitTextIntoLines(issues, maxCharsPerLine);
+
+    // Draw each line
     issuesLines.forEach((line, index) => {
       currentPage.drawText(line, {
         x: 150,
-        y: currentY - 40 - index * 12,
+        y: startY - index * lineHeight,
         size: 9,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
