@@ -366,14 +366,13 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     });
 
     const termsAndConditions = [
-      "1. This is an advance payment invoice only, not the final bill.",
+      "1. If advance bill generated then no refund will be given.",
       "2. Advance payment is non-refundable if the service is cancelled by the customer.",
       "3. Any additional work required will be charged separately.",
-      "4. Vehicle must be collected within 7 days of completion, or storage charges may apply.",
-      "5. We are not responsible for any items left in the vehicle.",
-      "6. Original invoice must be presented for vehicle collection.",
-      "7. Warranty applies only to parts replaced by us and for the specified period.",
-      "8. If advance bill generated then no refund will be given.",
+      "4. Vehicle must be collected within the delivery date.",
+      "5. Original invoice must be presented for vehicle collection.",
+      "6. Warranty applies only to parts replaced by us and for the specified period.",
+      "7. This is an advance payment invoice only, not the final bill.",
     ];
 
     termsAndConditions.forEach((term, index) => {
