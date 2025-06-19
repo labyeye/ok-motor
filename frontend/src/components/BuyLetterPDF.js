@@ -611,14 +611,14 @@ const BuyLetterForm = () => {
     returnpersonname: { x: 332, y: 298, size: 10 },
   };
   const formatKm = (val) => {
-    const num = parseFloat(val.toString().replace(/,/g, ""));
-    return isNaN(num)
-      ? "0.00"
-      : new Intl.NumberFormat("en-IN", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(num);
-  };
+  const num = parseFloat(val.toString().replace(/,/g, ""));
+  return isNaN(num)
+    ? "0.00"
+    : new Intl.NumberFormat("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(num / 100); // Divide by 100 here if needed
+};
   const formatAadhar = (val) =>
     val
       .replace(/\D/g, "")
