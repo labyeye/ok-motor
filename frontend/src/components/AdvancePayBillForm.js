@@ -49,7 +49,7 @@ const AdvancePayBillForm = () => {
     serviceDate: new Date().toISOString().split("T")[0],
     deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
     totalAmount: "",
-      discount: "0",
+    discount: "0",
     advancePaid: "",
     paymentMethod: "cash",
     grandTotal: "0",
@@ -86,18 +86,18 @@ const AdvancePayBillForm = () => {
   );
 
   const calculateAmounts = (data) => {
-  const total = parseFloat(data.totalAmount) || 0;
-  const advance = parseFloat(data.advancePaid) || 0;
-  const discount = parseFloat(data.discount) || 0;
+    const total = parseFloat(data.totalAmount) || 0;
+    const advance = parseFloat(data.advancePaid) || 0;
+    const discount = parseFloat(data.discount) || 0;
 
-  const grandTotal = total - discount;
-  const balanceDue = grandTotal - advance;
+    const grandTotal = total - discount;
+    const balanceDue = grandTotal - advance;
 
-  return {
-    grandTotal: grandTotal.toFixed(2),
-    balanceDue: balanceDue >= 0 ? balanceDue.toFixed(2) : "0.00",
+    return {
+      grandTotal: grandTotal.toFixed(2),
+      balanceDue: balanceDue >= 0 ? balanceDue.toFixed(2) : "0.00",
+    };
   };
-};
 
   const handleAmountChange = (name, value) => {
     let cleanValue = value.replace(/[^0-9.]/g, "");
@@ -648,7 +648,7 @@ const AdvancePayBillForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={20}
+                    maxLength={10}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -812,24 +812,25 @@ const AdvancePayBillForm = () => {
                     required
                   />
                 </div>
-                // Add this field in the Payment Information section
-<div style={styles.formField}>
-  <label style={styles.formLabel}>
-    <IndianRupee style={styles.formIcon} />
-    Discount (₹) || छूट (₹)
-  </label>
-  <input
-    type="text"
-    name="discount"
-    value={formData.discount}
-    onChange={handleChange}
-    onFocus={() => setFocusedInput("discount")}
-    style={{
-      ...styles.formInput,
-      ...(focusedInput === "discount" ? styles.inputFocused : {}),
-    }}
-  />
-</div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <IndianRupee style={styles.formIcon} />
+                    Discount (₹) || छूट (₹)
+                  </label>
+                  <input
+                    type="text"
+                    name="discount"
+                    value={formData.discount}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedInput("discount")}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "discount"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
+                  />
+                </div>
 
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>

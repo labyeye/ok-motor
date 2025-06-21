@@ -2,6 +2,7 @@
 const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
+
 function formatTime12Hour(date) {
   return date.toLocaleTimeString("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -10,10 +11,13 @@ function formatTime12Hour(date) {
     hour12: true,
   });
 }
+
 exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
   try {
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([595, 842]); // A4 size
+    const pages = []; // Array to keep track of all pages
+    let currentPage = pdfDoc.addPage([595, 842]); // A4 size
+    pages.push(currentPage);
 
     const font = await pdfDoc.embedFont("Helvetica");
     const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
@@ -26,8 +30,34 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const logoBytes = fs.readFileSync(logoPath);
     const logoImage = await pdfDoc.embedPng(logoBytes);
 
+    // Function to add watermark to a page
+    const addWatermark = (page) => {
+      page.drawImage(logoImage, {
+        x: 280,
+        y: 200,
+        width: 400,
+        height: 360,
+        opacity: 0.3,
+        rotate: degrees(45),
+      });
+    };
+
+    // Function to add page number to a page
+    const addPageNumber = (page, currentPageNum, totalPages) => {
+      page.drawText(`${currentPageNum}/${totalPages}`, {
+        x: 550,
+        y: 30,
+        size: 10,
+        color: rgb(0.5, 0.5, 0.5),
+        font: font,
+      });
+    };
+
+    // Add watermark to first page
+    addWatermark(currentPage);
+
     // Header Section
-    page.drawRectangle({
+    currentPage.drawRectangle({
       x: 0,
       y: 780,
       width: 595,
@@ -35,24 +65,14 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.047, 0.098, 0.196),
     });
 
-    page.drawImage(logoImage, {
+    currentPage.drawImage(logoImage, {
       x: 50,
       y: 744,
       width: 160,
       height: 130,
     });
 
-    // Watermark
-    page.drawImage(logoImage, {
-      x: 280,
-      y: 200,
-      width: 400,
-      height: 360,
-      opacity: 0.3,
-      rotate: degrees(45),
-    });
-
-    page.drawText("UDAYAM-BR-26-0028550", {
+    currentPage.drawText("UDAYAM-BR-26-0028550", {
       x: 400,
       y: 815,
       size: 14,
@@ -61,7 +81,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     // Title Section
-    page.drawRectangle({
+    currentPage.drawRectangle({
       x: 0,
       y: 750,
       width: 595,
@@ -69,7 +89,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.9, 0.9, 0.9),
     });
 
-    page.drawText("VEHICLE SERVICE INVOICE", {
+    currentPage.drawText("VEHICLE SERVICE INVOICE", {
       x: 180,
       y: 758,
       size: 18,
@@ -84,7 +104,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         .toString()
         .padStart(4, "0")}`;
 
-    page.drawText(`Invoice Number: ${invoiceNumber}`, {
+    currentPage.drawText(`Invoice Number: ${invoiceNumber}`, {
       x: 50,
       y: 720,
       size: 10,
@@ -93,15 +113,10 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     const currentDate = new Date();
-    page.drawText(
+    currentPage.drawText(
       `Date: ${currentDate.toLocaleDateString(
         "en-IN"
-      )} Time: ${currentDate.toLocaleTimeString("en-IN", {
-        timeZone: "Asia/Kolkata",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      })}`,
+      )} Time: ${formatTime12Hour(currentDate)}`,
       {
         x: 400,
         y: 720,
@@ -112,7 +127,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     );
 
     // Divider
-    page.drawLine({
+    currentPage.drawLine({
       start: { x: 50, y: 710 },
       end: { x: 545, y: 710 },
       thickness: 1,
@@ -121,7 +136,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     // Business Information (if enabled)
     if (serviceBill.taxEnabled) {
-      page.drawText("BUSINESS INFORMATION", {
+      currentPage.drawText("BUSINESS INFORMATION", {
         x: 50,
         y: 690,
         size: 12,
@@ -129,7 +144,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: fontBold,
       });
 
-      page.drawText(`Name: ${serviceBill.businessName || "N/A"}`, {
+      currentPage.drawText(`Name: ${serviceBill.businessName || "N/A"}`, {
         x: 60,
         y: 670,
         size: 10,
@@ -137,7 +152,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      page.drawText(`GSTIN: ${serviceBill.businessGSTIN || "N/A"}`, {
+      currentPage.drawText(`GSTIN: ${serviceBill.businessGSTIN || "N/A"}`, {
         x: 380,
         y: 670,
         size: 10,
@@ -153,7 +168,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       }
 
       addressLines.forEach((line, index) => {
-        page.drawText(index === 0 ? `Address: ${line}` : line, {
+        currentPage.drawText(index === 0 ? `Address: ${line}` : line, {
           x: index === 0 ? 60 : 100,
           y: 655 - index * 12,
           size: 10,
@@ -169,7 +184,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     }
 
     // Customer Information
-    page.drawText("CUSTOMER DETAILS", {
+    currentPage.drawText("CUSTOMER DETAILS", {
       x: 50,
       y: customerY,
       size: 12,
@@ -177,7 +192,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    page.drawText(`Name: ${serviceBill.customerName || "N/A"}`, {
+    currentPage.drawText(`Name: ${serviceBill.customerName || "N/A"}`, {
       x: 60,
       y: customerY - 25,
       size: 10,
@@ -192,7 +207,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     }
 
     customerAddressLines.forEach((line, index) => {
-      page.drawText(index === 0 ? `Address: ${line}` : line, {
+      currentPage.drawText(index === 0 ? `Address: ${line}` : line, {
         x: index === 0 ? 60 : 100,
         y: customerY - 40 - index * 12,
         size: 10,
@@ -201,7 +216,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     });
 
-    page.drawText(`Phone: ${serviceBill.customerPhone || "N/A"}`, {
+    currentPage.drawText(`Phone: ${serviceBill.customerPhone || "N/A"}`, {
       x: 350,
       y: customerY - 25,
       size: 10,
@@ -209,7 +224,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: font,
     });
 
-    page.drawText(`Email: ${serviceBill.customerEmail || "N/A"}`, {
+    currentPage.drawText(`Email: ${serviceBill.customerEmail || "N/A"}`, {
       x: 350,
       y: customerY - 40,
       size: 10,
@@ -222,7 +237,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const rightColumnX = 300;
     const columnWidth = 240;
 
-    page.drawText("VEHICLE DETAILS", {
+    currentPage.drawText("VEHICLE DETAILS", {
       x: leftColumnX,
       y: columnY,
       size: 12,
@@ -231,7 +246,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     // Vehicle condition
-    page.drawRectangle({
+    currentPage.drawRectangle({
       x: leftColumnX,
       y: columnY - 30,
       width: columnWidth,
@@ -239,7 +254,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.9, 0.9, 0.9),
     });
 
-    page.drawText(
+    currentPage.drawText(
       "Condition: " + (serviceBill.vehicleCondition || "Excellent"),
       {
         x: leftColumnX + 10,
@@ -249,6 +264,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       }
     );
+    
     const vehicleDetails = [
       {
         label: "Type:",
@@ -259,7 +275,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       { label: "Brand:", value: serviceBill.vehicleBrand || "N/A" },
       { label: "Model:", value: serviceBill.vehicleModel || "N/A" },
       { label: "Reg No:", value: serviceBill.registrationNumber || "N/A" },
-      // Replace the KM reading part in the vehicleDetails array with:
       {
         label: "KM:",
         value: serviceBill.kmReading
@@ -273,7 +288,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     let vehicleY = columnY - 50;
     vehicleDetails.forEach((detail, index) => {
-      page.drawText(detail.label, {
+      currentPage.drawText(detail.label, {
         x: leftColumnX + 10,
         y: vehicleY - index * 15,
         size: 10,
@@ -281,7 +296,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: fontBold,
       });
 
-      page.drawText(detail.value, {
+      currentPage.drawText(detail.value, {
         x: leftColumnX + 60,
         y: vehicleY - index * 15,
         size: 10,
@@ -291,8 +306,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     // Right Column - Service Information
-    // Right Column - Service Information
-    page.drawText("SERVICE DETAILS", {
+    currentPage.drawText("SERVICE DETAILS", {
       x: rightColumnX,
       y: columnY,
       size: 12,
@@ -300,47 +314,46 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    // Replace the serviceDetails array with:
-const serviceDetails = [
-  {
-    label: "Service Date:",
-    value: serviceBill.serviceDate
-      ? new Date(serviceBill.serviceDate).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        })
-      : new Date().toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
-  },
-  {
-    label: "Delivery Date:",
-    value: serviceBill.deliveryDate
-      ? new Date(serviceBill.deliveryDate).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        })
-      : new Date(Date.now() + 86400000).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
-  },
-  {
-    label: "Service Type:",
-    value: serviceBill.serviceType
-      ? serviceBill.serviceType.toUpperCase()
-      : "N/A",
-  },
-];
+    const serviceDetails = [
+      {
+        label: "Service Date:",
+        value: serviceBill.serviceDate
+          ? new Date(serviceBill.serviceDate).toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })
+          : new Date().toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+      },
+      {
+        label: "Delivery Date:",
+        value: serviceBill.deliveryDate
+          ? new Date(serviceBill.deliveryDate).toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })
+          : new Date(Date.now() + 86400000).toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+      },
+      {
+        label: "Service Type:",
+        value: serviceBill.serviceType
+          ? serviceBill.serviceType.toUpperCase()
+          : "N/A",
+      },
+    ];
 
     // Draw the first three service details
     serviceDetails.forEach((detail, index) => {
-      page.drawText(detail.label, {
+      currentPage.drawText(detail.label, {
         x: rightColumnX + 10,
         y: columnY - 25 - index * 15,
         size: 10,
@@ -348,7 +361,7 @@ const serviceDetails = [
         font: fontBold,
       });
 
-      page.drawText(detail.value, {
+      currentPage.drawText(detail.value, {
         x: rightColumnX + 90,
         y: columnY - 25 - index * 15,
         size: 10,
@@ -368,7 +381,7 @@ const serviceDetails = [
     if (isCustomService && hasCustomDesc) {
       const customDescY = columnY - 25 - serviceDetails.length * 15;
 
-      page.drawText("Custom Service Description:", {
+      currentPage.drawText("Custom Service Description:", {
         x: rightColumnX + 10,
         y: customDescY,
         size: 10,
@@ -385,7 +398,7 @@ const serviceDetails = [
       }
 
       descLines.forEach((line, index) => {
-        page.drawText(line, {
+        currentPage.drawText(line, {
           x: rightColumnX + 10,
           y: customDescY - 15 - index * 12,
           size: 10,
@@ -394,12 +407,14 @@ const serviceDetails = [
         });
       });
     }
+
     // Service Items Table with pagination
     const itemsStartY = columnY - 140;
-    const maxItemsPerPage = 15; // Adjust this number based on your item height
-    let currentPage = page;
+    const minItemsFirstPage = 25; // Minimum items to show on first page
+    const maxItemsPerPage = 25; // Items per page after first page
     let currentY = itemsStartY;
     let currentPageItems = 0;
+    let isFirstPage = true;
 
     // Draw title only on first page
     if (serviceBill.serviceItems.length > 0) {
@@ -441,10 +456,17 @@ const serviceDetails = [
 
     // Draw all service items with pagination
     serviceBill.serviceItems.forEach((item, index) => {
-      // Check if we need a new page (leave 300pt space for totals/footer)
-      if (currentY < 300 && currentPageItems >= maxItemsPerPage) {
+      // Check if we need a new page
+      const shouldCreateNewPage = 
+        (!isFirstPage && currentPageItems >= maxItemsPerPage) || 
+        (isFirstPage && currentPageItems >= minItemsFirstPage && currentY < 300);
+      
+      if (shouldCreateNewPage) {
         // Create new page
         currentPage = pdfDoc.addPage([595, 842]);
+        pages.push(currentPage);
+        addWatermark(currentPage); // Add watermark to new page
+        isFirstPage = false;
         currentY = 780; // Start near top of new page
         currentPageItems = 0;
 
@@ -525,6 +547,8 @@ const serviceDetails = [
     // Ensure we have enough space for totals and footer (about 300pt)
     if (currentY < 300) {
       currentPage = pdfDoc.addPage([595, 842]);
+      pages.push(currentPage);
+      addWatermark(currentPage); // Add watermark to new page
       currentY = 700; // Start lower on new page to leave room
     }
 
@@ -776,6 +800,12 @@ const serviceDetails = [
         font: font,
       }
     );
+
+    // Add page numbers to all pages
+    const totalPages = pages.length;
+    pages.forEach((page, index) => {
+      addPageNumber(page, index + 1, totalPages);
+    });
 
     const pdfBytes = await pdfDoc.save();
 

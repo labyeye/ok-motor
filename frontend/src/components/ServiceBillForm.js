@@ -681,7 +681,7 @@ const ServiceBillForm = () => {
                     onInput={handleInput}
                     style={styles.formInput}
                     required
-                    maxLength={15}
+                    maxLength={25}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -697,6 +697,7 @@ const ServiceBillForm = () => {
                     onInput={handleInput}
                     style={styles.formInput}
                     required
+                    maxLength={25}
                   />
                 </div>
                 <div style={styles.formField}>

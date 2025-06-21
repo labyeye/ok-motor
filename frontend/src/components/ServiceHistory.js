@@ -22,7 +22,6 @@ import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
 
-
 const ServiceHistory = () => {
   const { user } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Service History");
@@ -35,7 +34,22 @@ const ServiceHistory = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showVehicleHistory, setShowVehicleHistory] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState({});
   const navigate = useNavigate();
+  const simulateDownload = (billId) => {
+    setDownloadProgress((prev) => ({ ...prev, [billId]: 0 }));
+
+    const interval = setInterval(() => {
+      setDownloadProgress((prev) => {
+        const newProgress = Math.min(prev[billId] + 10, 90); // Only go up to 90% here
+        if (newProgress >= 90) {
+          clearInterval(interval);
+          return { ...prev, [billId]: newProgress };
+        }
+        return { ...prev, [billId]: newProgress };
+      });
+    }, 500); // Slower interval (200ms)
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -118,6 +132,8 @@ const ServiceHistory = () => {
   const filteredData = getFilteredData();
 
   const handleDownload = async (billId) => {
+    simulateDownload(billId);
+
     try {
       const response = await axios.get(
         `https://ok-motor.onrender.com/api/service-bills/${billId}/download`,
@@ -129,6 +145,9 @@ const ServiceHistory = () => {
         }
       );
 
+      // Complete the progress animation
+      setDownloadProgress((prev) => ({ ...prev, [billId]: 100 }));
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -136,9 +155,23 @@ const ServiceHistory = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      // Remove the progress after a short delay
+      setTimeout(() => {
+        setDownloadProgress((prev) => {
+          const newState = { ...prev };
+          delete newState[billId];
+          return newState;
+        });
+      }, 500);
     } catch (error) {
       console.error("Error downloading PDF:", error);
       alert("Failed to download PDF. Please try again.");
+      setDownloadProgress((prev) => {
+        const newState = { ...prev };
+        delete newState[billId];
+        return newState;
+      });
     }
   };
 
@@ -345,8 +378,14 @@ const ServiceHistory = () => {
           ) : showVehicleHistory ? (
             <>
               {/* 1. Purchase History Table - Always shown with heading */}
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '16px' }}>
+              <div style={{ marginBottom: "32px" }}>
+                <h3
+                  style={{
+                    fontSize: "1.25rem",
+                    fontWeight: "600",
+                    marginBottom: "16px",
+                  }}
+                >
                   Purchase History
                 </h3>
                 {filteredData.purchase.length > 0 ? (
@@ -368,7 +407,9 @@ const ServiceHistory = () => {
                             <td style={styles.tableCell}>
                               {item.vehicleBrand} {item.vehicleModel}
                             </td>
-                            <td style={styles.tableCell}>{item.registrationNumber}</td>
+                            <td style={styles.tableCell}>
+                              {item.registrationNumber}
+                            </td>
                             <td style={styles.tableCell}>
                               {new Date(item.purchaseDate).toLocaleDateString()}
                             </td>
@@ -381,13 +422,19 @@ const ServiceHistory = () => {
                     </table>
                   </div>
                 ) : (
-                  <p style={{ color: '#64748b' }}>No purchase records found</p>
+                  <p style={{ color: "#64748b" }}>No purchase records found</p>
                 )}
               </div>
-          
+
               {/* 2. Sell History Table - Always shown with heading */}
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '16px' }}>
+              <div style={{ marginBottom: "32px" }}>
+                <h3
+                  style={{
+                    fontSize: "1.25rem",
+                    fontWeight: "600",
+                    marginBottom: "16px",
+                  }}
+                >
                   Sell History
                 </h3>
                 {filteredData.sell.length > 0 ? (
@@ -409,7 +456,9 @@ const ServiceHistory = () => {
                             <td style={styles.tableCell}>
                               {item.vehicleBrand} {item.vehicleModel}
                             </td>
-                            <td style={styles.tableCell}>{item.registrationNumber}</td>
+                            <td style={styles.tableCell}>
+                              {item.registrationNumber}
+                            </td>
                             <td style={styles.tableCell}>
                               {new Date(item.sellDate).toLocaleDateString()}
                             </td>
@@ -422,13 +471,19 @@ const ServiceHistory = () => {
                     </table>
                   </div>
                 ) : (
-                  <p style={{ color: '#64748b' }}>No sell records found</p>
+                  <p style={{ color: "#64748b" }}>No sell records found</p>
                 )}
               </div>
-          
+
               {/* 3. Service History Table - Always shown with heading */}
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '16px' }}>
+              <div style={{ marginBottom: "32px" }}>
+                <h3
+                  style={{
+                    fontSize: "1.25rem",
+                    fontWeight: "600",
+                    marginBottom: "16px",
+                  }}
+                >
                   Service History
                 </h3>
                 {filteredData.service.length > 0 ? (
@@ -448,11 +503,15 @@ const ServiceHistory = () => {
                       <tbody>
                         {filteredData.service.map((bill) => (
                           <tr key={bill._id} style={styles.tableRow}>
-                            <td style={styles.tableCell}>{bill.customerName}</td>
+                            <td style={styles.tableCell}>
+                              {bill.customerName}
+                            </td>
                             <td style={styles.tableCell}>
                               {bill.vehicleBrand} {bill.vehicleModel}
                             </td>
-                            <td style={styles.tableCell}>{bill.registrationNumber}</td>
+                            <td style={styles.tableCell}>
+                              {bill.registrationNumber}
+                            </td>
                             <td style={styles.tableCell}>
                               ₹{bill.grandTotal?.toFixed(2) || 0}
                             </td>
@@ -478,8 +537,32 @@ const ServiceHistory = () => {
                                 onClick={() => handleDownload(bill._id)}
                                 style={styles.iconButton}
                                 title="Download"
+                                disabled={
+                                  downloadProgress[bill._id] !== undefined
+                                }
                               >
-                                <Download size={16} />
+                                {downloadProgress[bill._id] !== undefined ? (
+                                  <div
+                                    style={{
+                                      width: "60px",
+                                      height: "4px",
+                                      backgroundColor: "#e2e8f0",
+                                      borderRadius: "2px",
+                                      overflow: "hidden",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        width: `${downloadProgress[bill._id]}%`,
+                                        height: "100%",
+                                        backgroundColor: "#3b82f6",
+                                        transition: "width 0.3s ease",
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <Download size={16} />
+                                )}
                               </button>
                               {user?.role === "admin" && (
                                 <button
@@ -497,7 +580,7 @@ const ServiceHistory = () => {
                     </table>
                   </div>
                 ) : (
-                  <p style={{ color: '#64748b' }}>No service records found</p>
+                  <p style={{ color: "#64748b" }}>No service records found</p>
                 )}
               </div>
             </>
@@ -551,8 +634,30 @@ const ServiceHistory = () => {
                             onClick={() => handleDownload(bill._id)}
                             style={styles.iconButton}
                             title="Download"
+                            disabled={downloadProgress[bill._id] !== undefined}
                           >
-                            <Download size={16} />
+                            {downloadProgress[bill._id] !== undefined ? (
+                              <div
+                                style={{
+                                  width: "60px",
+                                  height: "4px",
+                                  backgroundColor: "#e2e8f0",
+                                  borderRadius: "2px",
+                                  overflow: "hidden",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: `${downloadProgress[bill._id]}%`,
+                                    height: "100%",
+                                    backgroundColor: "#3b82f6",
+                                    transition: "width 0.3s ease",
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <Download size={16} />
+                            )}
                           </button>
                           {user?.role === "admin" && (
                             <button
@@ -597,6 +702,13 @@ const ServiceHistory = () => {
           )}
         </div>
       </div>
+      {Object.entries(downloadProgress).map(([billId, progress]) => (
+        <div key={billId} style={styles.downloadProgressContainer}>
+          <div
+            style={{ ...styles.downloadProgressBar, width: `${progress}%` }}
+          />
+        </div>
+      ))}
     </div>
   );
 };
@@ -655,6 +767,20 @@ const styles = {
   menuItemContent: {
     display: "flex",
     alignItems: "center",
+  },
+  downloadProgressContainer: {
+    position: "fixed",
+    bottom: "0",
+    left: "0",
+    width: "100%",
+    height: "4px",
+    backgroundColor: "#e2e8f0",
+    zIndex: 1000,
+  },
+  downloadProgressBar: {
+    height: "100%",
+    backgroundColor: "#3b82f6",
+    transition: "width 0.3s ease",
   },
   menuIcon: {
     marginRight: "12px",
