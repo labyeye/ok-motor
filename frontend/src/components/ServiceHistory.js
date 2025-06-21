@@ -327,8 +327,6 @@ const ServiceHistory = () => {
   const handleDownload = async (billId) => {
     setIsDownloading(true);
     setDownloadProgress(0);
-
-    // Simulate progress
     await simulateProgress();
 
     try {
