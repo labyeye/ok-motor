@@ -9,7 +9,8 @@ const {
   updateSellLetter,
   deleteSellLetter,
   getMySellLetters,
-  getSellLettersByRegistration
+  getSellLettersByRegistration,
+  getVehicleDetails
 } = require('../controllers/sellLetterController');
 
 // Protect all routes
@@ -23,8 +24,7 @@ router.route('/my-letters').get(getMySellLetters); // Changed from /my-letters
 router.route('/')
   .post(createSellLetter)
   .get(getSellLetters);
-
-// Parameterized routes last
+  router.route('/vehicle-details').get(getVehicleDetails)
 router.route('/:id')
   .get(getSellLetterById)
   .put(admin,updateSellLetter)

@@ -1156,6 +1156,29 @@ const SellLetterForm = () => {
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
+  const fetchVehicleDetails = useCallback(async (registrationNumber) => {
+    try {
+      const response = await axios.get(
+        "https://ok-motor.onrender.com/api/sell-letters/vehicle-details",
+        {
+          params: { registrationNumber },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.data) {
+        setFormData((prev) => ({
+          ...prev,
+          ...response.data,
+          registrationNumber, 
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching vehicle details:", error);
+    }
+  }, []);
 
   const fillAndDownloadHindiPdf = async () => {
     try {
@@ -1481,6 +1504,16 @@ const SellLetterForm = () => {
                     value={formData.registrationNumber}
                     onChange={handleChange}
                     onInput={handleInput}
+                    onBlur={(e) => {
+                      if (e.target.value.trim() !== "") {
+                        fetchVehicleDetails(e.target.value.trim());
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && e.target.value.trim() !== "") {
+                        fetchVehicleDetails(e.target.value.trim());
+                      }
+                    }}
                     style={{
                       ...styles.formInput,
                       ...(missingFields.includes("registrationNumber") && {

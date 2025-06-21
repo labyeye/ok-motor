@@ -1,5 +1,5 @@
 const SellLetter = require("../models/SellLetter");
-
+const BuyLetter = require("../models/BuyLetter");
 // Create a new sell letter
 exports.createSellLetter = async (req, res) => {
   try {
@@ -21,6 +21,68 @@ exports.createSellLetter = async (req, res) => {
     res.status(500).json({ 
       message: "Server Error",
       error: error.message // Include the actual error message
+    });
+  }
+};
+// Add to sellLetterController.js
+exports.getVehicleDetails = async (req, res) => {
+  try {
+    const { registrationNumber } = req.query;
+    
+    if (!registrationNumber) {
+      return res.status(400).json({ 
+        message: "Registration number is required" 
+      });
+    }
+
+    // Search in both buy and sell letters
+    const [buyLetters, sellLetters] = await Promise.all([
+      BuyLetter.find({
+        registrationNumber: new RegExp(registrationNumber, "i"),
+        $or: [
+          { user: req.user.id },
+          { visibility: "staff" },
+          ...(req.user.role === "staff" || req.user.role === "admin" ? [{}] : [])
+        ]
+      }).sort({ createdAt: -1 }).limit(1),
+      
+      SellLetter.find({
+        registrationNumber: new RegExp(registrationNumber, "i"),
+        $or: [
+          { user: req.user.id },
+          { visibility: "staff" },
+          ...(req.user.role === "staff" || req.user.role === "admin" ? [{}] : [])
+        ]
+      }).sort({ createdAt: -1 }).limit(1)
+    ]);
+
+    // Prioritize buy letters (since they represent purchases)
+    const vehicleRecord = buyLetters[0] || sellLetters[0];
+    
+    if (!vehicleRecord) {
+      return res.status(404).json({ 
+        message: "No vehicle found with this registration number" 
+      });
+    }
+
+    // Extract relevant vehicle details
+    const vehicleDetails = {
+      vehicleName: vehicleRecord.vehicleName,
+      vehicleModel: vehicleRecord.vehicleModel,
+      vehicleColor: vehicleRecord.vehicleColor,
+      registrationNumber: vehicleRecord.registrationNumber,
+      chassisNumber: vehicleRecord.chassisNumber,
+      engineNumber: vehicleRecord.engineNumber,
+      vehiclekm: vehicleRecord.vehiclekm,
+      // Add any other relevant fields
+    };
+
+    res.json(vehicleDetails);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ 
+      message: "Server Error",
+      error: error.message 
     });
   }
 };
