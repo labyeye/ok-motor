@@ -170,6 +170,8 @@ const SellLetterHistory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [editingLetter, setEditingLetter] = useState(null);
   const navigate = useNavigate();
   const hindiFieldPositions = {
@@ -363,6 +365,19 @@ const SellLetterHistory = () => {
     const amountInPaise = num / 100;
     return `(${convert(amountInPaise)} Only)`;
   };
+  const simulateProgress = () => {
+    return new Promise((resolve) => {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        setDownloadProgress(Math.min(progress, 100));
+        if (progress >= 100) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 100);
+    });
+  };
   const formatKm = (val) => {
     const num = parseFloat(val.toString().replace(/,/g, ""));
     return isNaN(num)
@@ -407,9 +422,71 @@ const SellLetterHistory = () => {
     setSelectedLetter(letter);
     setShowLanguageModal(true);
   };
+  const DownloadProgressModal = ({ progress, onClose }) => {
+    return (
+      <div style={modalStyles.overlay}>
+        <div style={modalStyles.modal}>
+          <div style={modalStyles.header}>
+            <h2 style={modalStyles.title}>Generating PDF</h2>
+          </div>
+          <div style={{ padding: "24px", textAlign: "center" }}>
+            <div style={progressStyles.progressContainer}>
+              <div
+                style={{
+                  ...progressStyles.progressBar,
+                  width: `${progress}%`,
+                }}
+              ></div>
+            </div>
+            <p style={progressStyles.progressText}>{progress}% Complete</p>
+            {progress === 100 && (
+              <button
+                onClick={onClose}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#3b82f6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  marginTop: "16px",
+                }}
+              >
+                Close
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
+  const progressStyles = {
+    progressContainer: {
+      width: "100%",
+      height: "20px",
+      backgroundColor: "#e2e8f0",
+      borderRadius: "10px",
+      overflow: "hidden",
+      marginBottom: "8px",
+    },
+    progressBar: {
+      height: "100%",
+      backgroundColor: "#3b82f6",
+      transition: "width 0.3s ease",
+    },
+    progressText: {
+      fontSize: "0.875rem",
+      color: "#64748b",
+    },
+  };
   const fillAndDownloadHindiPdf = async (letter) => {
     try {
+      setIsDownloading(true);
+      setDownloadProgress(0);
+
+      // Simulate progress
+      await simulateProgress();
       const templateUrl = "/templates/sellletter.pdf";
       const existingPdfBytes = await fetch(templateUrl).then((res) =>
         res.arrayBuffer()
@@ -516,6 +593,11 @@ const SellLetterHistory = () => {
 
   const fillAndDownloadEnglishPdf = async (letter) => {
     try {
+      setIsDownloading(true);
+      setDownloadProgress(0);
+
+      // Simulate progress
+      await simulateProgress();
       const templateUrl = "/templates/englishsell.pdf";
       const existingPdfBytes = await fetch(templateUrl).then((res) =>
         res.arrayBuffer()
@@ -1420,6 +1502,12 @@ const SellLetterHistory = () => {
               </button>
             </div>
           </div>
+        )}
+        {isDownloading && (
+          <DownloadProgressModal
+            progress={downloadProgress}
+            onClose={() => setIsDownloading(false)}
+          />
         )}
         {editingLetter && (
           <EditSellLetterModal

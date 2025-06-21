@@ -195,6 +195,8 @@ const BuyLetterHistory = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [editingLetter, setEditingLetter] = useState(null);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -227,6 +229,76 @@ const BuyLetterHistory = () => {
 
     fetchBuyLetters();
   }, [currentPage]);
+  const DownloadProgressModal = ({ progress, onClose }) => {
+    return (
+      <div style={modalStyles.overlay}>
+        <div style={modalStyles.modal}>
+          <div style={modalStyles.header}>
+            <h2 style={modalStyles.title}>Generating PDF</h2>
+          </div>
+          <div style={{ padding: "24px", textAlign: "center" }}>
+            <div style={progressStyles.progressContainer}>
+              <div
+                style={{
+                  ...progressStyles.progressBar,
+                  width: `${progress}%`,
+                }}
+              ></div>
+            </div>
+            <p style={progressStyles.progressText}>{progress}% Complete</p>
+            {progress === 100 && (
+              <button
+                onClick={onClose}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#3b82f6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  marginTop: "16px",
+                }}
+              >
+                Close
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+  const progressStyles = {
+    progressContainer: {
+      width: "100%",
+      height: "20px",
+      backgroundColor: "#e2e8f0",
+      borderRadius: "10px",
+      overflow: "hidden",
+      marginBottom: "8px",
+    },
+    progressBar: {
+      height: "100%",
+      backgroundColor: "#3b82f6",
+      transition: "width 0.3s ease",
+    },
+    progressText: {
+      fontSize: "0.875rem",
+      color: "#64748b",
+    },
+  };
+  const simulateProgress = () => {
+    return new Promise((resolve) => {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        setDownloadProgress(Math.min(progress, 100));
+        if (progress >= 100) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 100);
+    });
+  };
   const formatTime = (timeString) => {
     if (!timeString) return "";
     const [hour, minute] = timeString.split(":").map(Number);
@@ -511,6 +583,13 @@ const BuyLetterHistory = () => {
 
   const downloadHindiPDF = async (letter) => {
     try {
+      setIsDownloading(true);
+      setDownloadProgress(0);
+
+      // Simulate progress
+      await simulateProgress();
+
+      // Actual download code remains the same...
       const templateUrl = "/templates/buyletter.pdf";
       const existingPdfBytes = await fetch(templateUrl).then((res) =>
         res.arrayBuffer()
@@ -591,6 +670,11 @@ const BuyLetterHistory = () => {
 
   const downloadEnglishPDF = async (letter) => {
     try {
+      setIsDownloading(true);
+      setDownloadProgress(0);
+
+      // Simulate progress
+      await simulateProgress();
       const englishTemplateUrl = "/templates/englishbuyletter.pdf";
       const existingPdfBytes = await fetch(englishTemplateUrl).then((res) =>
         res.arrayBuffer()
@@ -1313,9 +1397,9 @@ const BuyLetterHistory = () => {
                 style={{ display: "flex", gap: "16px", marginBottom: "24px" }}
               >
                 <button
-                  onClick={() => {
-                    downloadEnglishPDF(selectedLetter);
+                  onClick={async () => {
                     setShowLanguageModal(false);
+                    await downloadEnglishPDF(selectedLetter);
                   }}
                   style={{
                     flex: 1,
@@ -1334,21 +1418,21 @@ const BuyLetterHistory = () => {
                   English PDF
                 </button>
                 <button
-                  onClick={() => {
-                    downloadHindiPDF(selectedLetter);
+                  onClick={async () => {
                     setShowLanguageModal(false);
+                    await downloadHindiPDF(selectedLetter);
                   }}
                   style={{
                     flex: 1,
                     padding: "12px",
-                    backgroundColor: "#10b981",
+                    backgroundColor: "#3b82f6",
                     color: "white",
                     border: "none",
                     borderRadius: "6px",
                     cursor: "pointer",
                     fontWeight: "500",
                     ":hover": {
-                      backgroundColor: "#059669",
+                      backgroundColor: "#2563eb",
                     },
                   }}
                 >
@@ -1358,6 +1442,12 @@ const BuyLetterHistory = () => {
             </div>
           </div>
         </div>
+      )}
+      {isDownloading && (
+        <DownloadProgressModal
+          progress={downloadProgress}
+          onClose={() => setIsDownloading(false)}
+        />
       )}
 
       {editingLetter && (

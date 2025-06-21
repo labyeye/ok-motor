@@ -34,7 +34,8 @@ const ServiceHistory = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showVehicleHistory, setShowVehicleHistory] = useState(false);
-  const [downloadProgress, setDownloadProgress] = useState({});
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
   const navigate = useNavigate();
   // Add this near the top of your component with other utility functions
 
@@ -46,19 +47,18 @@ const ServiceHistory = () => {
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
-  const simulateDownload = (billId) => {
-    setDownloadProgress((prev) => ({ ...prev, [billId]: 0 }));
-
-    const interval = setInterval(() => {
-      setDownloadProgress((prev) => {
-        const newProgress = Math.min(prev[billId] + 10, 90); // Only go up to 90% here
-        if (newProgress >= 90) {
+  const simulateProgress = () => {
+    return new Promise((resolve) => {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        setDownloadProgress(Math.min(progress, 100));
+        if (progress >= 100) {
           clearInterval(interval);
-          return { ...prev, [billId]: newProgress };
+          resolve();
         }
-        return { ...prev, [billId]: newProgress };
-      });
-    }, 500); // Slower interval (200ms)
+      }, 100);
+    });
   };
 
   useEffect(() => {
@@ -141,8 +141,195 @@ const ServiceHistory = () => {
 
   const filteredData = getFilteredData();
 
+  const DownloadProgressModal = ({ progress, onClose }) => {
+    return (
+      <div style={modalStyles.overlay}>
+        <div style={modalStyles.modal}>
+          <div style={modalStyles.header}>
+            <h2 style={modalStyles.title}>Generating PDF</h2>
+          </div>
+          <div style={{ padding: "24px", textAlign: "center" }}>
+            <div style={progressStyles.progressContainer}>
+              <div
+                style={{
+                  ...progressStyles.progressBar,
+                  width: `${progress}%`,
+                }}
+              ></div>
+            </div>
+            <p style={progressStyles.progressText}>{progress}% Complete</p>
+            {progress === 100 && (
+              <button
+                onClick={onClose}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#3b82f6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  marginTop: "16px",
+                }}
+              >
+                Close
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const modalStyles = {
+    overlay: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 1000,
+    },
+    modal: {
+      backgroundColor: "#ffffff",
+      borderRadius: "8px",
+      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+      width: "80%",
+      maxWidth: "800px",
+      maxHeight: "90vh",
+      overflowY: "auto",
+    },
+    header: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "16px 24px",
+      borderBottom: "1px solid #e2e8f0",
+    },
+    title: {
+      fontSize: "1.25rem",
+      fontWeight: "600",
+      margin: 0,
+      color: "#1e293b",
+    },
+    closeButton: {
+      background: "none",
+      border: "none",
+      cursor: "pointer",
+      color: "#64748b",
+      ":hover": {
+        color: "#334155",
+      },
+    },
+    form: {
+      padding: "24px",
+    },
+    formSection: {
+      marginBottom: "24px",
+      paddingBottom: "16px",
+      borderBottom: "1px solid #e2e8f0",
+    },
+    sectionTitle: {
+      fontSize: "1rem",
+      fontWeight: "600",
+      color: "#1e293b",
+      marginBottom: "16px",
+    },
+    formGrid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+      gap: "16px",
+    },
+    formField: {
+      marginBottom: "16px",
+    },
+    formLabel: {
+      display: "block",
+      fontSize: "0.875rem",
+      fontWeight: "500",
+      color: "#334155",
+      marginBottom: "8px",
+    },
+    formInput: {
+      width: "100%",
+      padding: "8px 12px",
+      border: "1px solid #cbd5e1",
+      borderRadius: "4px",
+      fontSize: "0.875rem",
+      transition: "all 0.2s ease",
+      backgroundColor: "#f8fafc",
+      ":focus": {
+        outline: "none",
+        borderColor: "#3b82f6",
+        boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+        backgroundColor: "#ffffff",
+      },
+    },
+    formActions: {
+      display: "flex",
+      justifyContent: "flex-end",
+      gap: "16px",
+      marginTop: "24px",
+      paddingTop: "16px",
+      borderTop: "1px solid #e2e8f0",
+    },
+    saveButton: {
+      padding: "8px 16px",
+      backgroundColor: "#3b82f6",
+      color: "white",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      fontSize: "0.875rem",
+      fontWeight: "500",
+      ":hover": {
+        backgroundColor: "#2563eb",
+      },
+    },
+    cancelButton: {
+      padding: "8px 16px",
+      backgroundColor: "#e2e8f0",
+      color: "#334155",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      fontSize: "0.875rem",
+      fontWeight: "500",
+      ":hover": {
+        backgroundColor: "#cbd5e1",
+      },
+    },
+  };
+
+  const progressStyles = {
+    progressContainer: {
+      width: "100%",
+      height: "20px",
+      backgroundColor: "#e2e8f0",
+      borderRadius: "10px",
+      overflow: "hidden",
+      marginBottom: "8px",
+    },
+    progressBar: {
+      height: "100%",
+      backgroundColor: "#3b82f6",
+      transition: "width 0.3s ease",
+    },
+    progressText: {
+      fontSize: "0.875rem",
+      color: "#64748b",
+    },
+  };
+
   const handleDownload = async (billId) => {
-    simulateDownload(billId);
+    setIsDownloading(true);
+    setDownloadProgress(0);
+
+    // Simulate progress
+    await simulateProgress();
 
     try {
       const response = await axios.get(
@@ -708,6 +895,12 @@ const ServiceHistory = () => {
           )}
         </div>
       </div>
+      {isDownloading && (
+        <DownloadProgressModal
+          progress={downloadProgress}
+          onClose={() => setIsDownloading(false)}
+        />
+      )}
       {Object.entries(downloadProgress).map(([billId, progress]) => (
         <div key={billId} style={styles.downloadProgressContainer}>
           <div
