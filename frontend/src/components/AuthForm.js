@@ -139,14 +139,7 @@ const AuthForm = ({ isLogin }) => {
 
       {/* Image Section */}
       <div className="auth-image-section">
-        <div className="image-overlay">
-          <div className="overlay-content">
-            <h2 className="overlay-title">Start Your Ride</h2>
-            <p className="overlay-text">
-              Join thousands of riders in the ultimate biking experience
-            </p>
-          </div>
-        </div>
+
       </div>
 
       <style jsx>{`
@@ -418,7 +411,7 @@ const AuthForm = ({ isLogin }) => {
 
         .auth-image-section {
           flex: 1;
-          background-image: url("https://cdn.bikedekho.com/processedimages/yamaha/mt-15-2-0/source/mt-15-2-06613f885e681c.jpg");
+          background-image: url("https://ik.imagekit.io/os1mzoooe/ChatGPT%20Image%20Jun%2021,%202025,%2009_03_48%20PM.png?updatedAt=1750520039613");
           background-size: cover;
           background-position: center;
           position: relative;
