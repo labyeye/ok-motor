@@ -40,6 +40,8 @@ const SellLetterForm = () => {
   const [previewLanguage, setPreviewLanguage] = useState("hindi");
   const [selectedLanguage, setSelectedLanguage] = useState("hindi"); // default to hindi
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
   const navigate = useNavigate();
 
@@ -110,6 +112,114 @@ const SellLetterForm = () => {
       return newData;
     });
   }, []);
+  const DownloadProgressModal = ({ progress, onClose }) => {
+    return (
+      <div style={modalStyles.overlay}>
+        <div style={modalStyles.modal}>
+          <div style={modalStyles.header}>
+            <h2 style={modalStyles.title}>Generating PDF</h2>
+          </div>
+          <div style={{ padding: "24px", textAlign: "center" }}>
+            <div style={progressStyles.progressContainer}>
+              <div
+                style={{
+                  ...progressStyles.progressBar,
+                  width: `${progress}%`,
+                }}
+              ></div>
+            </div>
+            <p style={progressStyles.progressText}>{progress}% Complete</p>
+            {progress === 100 && (
+              <button
+                onClick={onClose}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#3b82f6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  marginTop: "16px",
+                }}
+              >
+                Close
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const progressStyles = {
+    progressContainer: {
+      width: "100%",
+      height: "20px",
+      backgroundColor: "#e2e8f0",
+      borderRadius: "10px",
+      overflow: "hidden",
+      marginBottom: "8px",
+    },
+    progressBar: {
+      height: "100%",
+      backgroundColor: "#3b82f6",
+      transition: "width 0.3s ease",
+    },
+    progressText: {
+      fontSize: "0.875rem",
+      color: "#64748b",
+    },
+  };
+
+  const modalStyles = {
+    overlay: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 1000,
+    },
+    modal: {
+      backgroundColor: "#ffffff",
+      borderRadius: "8px",
+      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+      width: "80%",
+      maxWidth: "800px",
+      maxHeight: "90vh",
+      overflowY: "auto",
+    },
+    header: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "16px 24px",
+      borderBottom: "1px solid #e2e8f0",
+    },
+    title: {
+      fontSize: "1.25rem",
+      fontWeight: "600",
+      margin: 0,
+      color: "#1e293b",
+    },
+  };
+  const simulateProgress = () => {
+    return new Promise((resolve) => {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        setDownloadProgress(Math.min(progress, 100));
+        if (progress >= 100) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 100);
+    });
+  };
 
   const menuItems = [
     {
@@ -1049,6 +1159,11 @@ const SellLetterForm = () => {
 
   const fillAndDownloadHindiPdf = async () => {
     try {
+      setIsDownloading(true);
+      setDownloadProgress(0);
+
+      // Simulate progress
+      await simulateProgress();
       const templateUrl = "/templates/sellletter.pdf";
       const existingPdfBytes = await fetch(templateUrl).then((res) =>
         res.arrayBuffer()
@@ -1119,6 +1234,11 @@ const SellLetterForm = () => {
 
   const fillAndDownloadEnglishPdf = async () => {
     try {
+      setIsDownloading(true);
+      setDownloadProgress(0);
+
+      // Simulate progress
+      await simulateProgress();
       const templateUrl = "/templates/englishsell.pdf";
       const existingPdfBytes = await fetch(templateUrl).then((res) =>
         res.arrayBuffer()
@@ -1841,6 +1961,12 @@ const SellLetterForm = () => {
             </div>
           </form>
         </div>
+        {isDownloading && (
+          <DownloadProgressModal
+            progress={downloadProgress}
+            onClose={() => setIsDownloading(false)}
+          />
+        )}
         {showPreviewModal && (
           <div style={styles.modalOverlay}>
             <div
