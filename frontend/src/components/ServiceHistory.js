@@ -38,15 +38,14 @@ const ServiceHistory = () => {
   const navigate = useNavigate();
   // Add this near the top of your component with other utility functions
 
-
-const formatDate = (dateString) => {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-};
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
   const simulateDownload = (billId) => {
     setDownloadProgress((prev) => ({ ...prev, [billId]: 0 }));
 
@@ -156,9 +155,6 @@ const formatDate = (dateString) => {
         }
       );
 
-      // Complete the progress animation
-      setDownloadProgress((prev) => ({ ...prev, [billId]: 100 }));
-
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -166,15 +162,6 @@ const formatDate = (dateString) => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
-      // Remove the progress after a short delay
-      setTimeout(() => {
-        setDownloadProgress((prev) => {
-          const newState = { ...prev };
-          delete newState[billId];
-          return newState;
-        });
-      }, 500);
     } catch (error) {
       console.error("Error downloading PDF:", error);
       alert("Failed to download PDF. Please try again.");
@@ -630,7 +617,7 @@ const formatDate = (dateString) => {
                             bill.grandTotal
                           )}
                         </td>
-                         <td style={styles.tableCell}>
+                        <td style={styles.tableCell}>
                           {formatDate(bill.createdAt)}
                         </td>
 

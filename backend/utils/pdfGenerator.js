@@ -61,20 +61,20 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       x: 0,
       y: 780,
       width: 595,
-      height: 80,
+      height: 120,
       color: rgb(0.047, 0.098, 0.196),
     });
 
     currentPage.drawImage(logoImage, {
       x: 50,
-      y: 744,
-      width: 160,
-      height: 130,
+      y: 748,
+      width: 140,
+      height: 110,
     });
 
     currentPage.drawText("UDAYAM-BR-26-0028550", {
       x: 400,
-      y: 815,
+      y: 800,
       size: 14,
       color: rgb(0.8, 0.8, 0.8),
       font: fontBold,
