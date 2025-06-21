@@ -64,8 +64,8 @@ const AdminPage = () => {
       setLoading(true);
       setError(null);
       const endpoint = isOwnerView
-        ? `https://ok-motor.onrender.com/api/dashboard/owner`
-        : `https://ok-motor.onrender.com/api/dashboard`;
+        ? `https://ok-motor-f24l.vercel.app//api/dashboard/owner`
+        : `https://ok-motor-f24l.vercel.app//api/dashboard`;
 
       const response = await fetch(endpoint, {
         headers: {
