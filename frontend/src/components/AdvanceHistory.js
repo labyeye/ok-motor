@@ -37,7 +37,7 @@ const AdvanceHistory = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `https://ok-motor-f24l.vercel.app/api/advance-bills?page=${currentPage}`,
+          `https://ok-motor.onrender.com/api/advance-bills?page=${currentPage}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -70,7 +70,7 @@ const AdvanceHistory = () => {
   const handleDownload = async (billId) => {
     try {
       const response = await axios.get(
-        `https://ok-motor-f24l.vercel.app/api/advance-bills/${billId}/download`,
+        `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
           headers: {
@@ -95,7 +95,7 @@ const AdvanceHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this advance bill?")) {
       try {
-        await axios.delete(`https://ok-motor-f24l.vercel.app/api/advance-bills/${id}`, {
+        await axios.delete(`https://ok-motor.onrender.com/api/advance-bills/${id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
