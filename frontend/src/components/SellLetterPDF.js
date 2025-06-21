@@ -38,6 +38,7 @@ const SellLetterForm = () => {
   const [previewPdf, setPreviewPdf] = useState(null);
   const [missingFields, setMissingFields] = useState([]);
   const [previewLanguage, setPreviewLanguage] = useState("hindi");
+  const [selectedLanguage, setSelectedLanguage] = useState("hindi"); // default to hindi
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
   const navigate = useNavigate();
@@ -490,6 +491,7 @@ const SellLetterForm = () => {
     try {
       setIsSaving(true);
 
+      // Check if letter exists first
       const existingLetter = await axios.get(
         `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
@@ -499,16 +501,22 @@ const SellLetterForm = () => {
         }
       );
 
+      let savedLetter;
       if (existingLetter.data && existingLetter.data.length > 0) {
-        setSavedLetterData(existingLetter.data[0]);
-        setShowLanguageModal(true);
+        savedLetter = existingLetter.data[0];
       } else {
-        const savedLetter = await saveToDatabase();
-        if (savedLetter) {
-          setSavedLetterData(savedLetter);
-          setShowLanguageModal(true);
-        }
+        // Save new letter if doesn't exist
+        savedLetter = await saveToDatabase();
       }
+
+      // Download based on selected language
+      if (selectedLanguage === "hindi") {
+        await fillAndDownloadHindiPdf();
+      } else {
+        await fillAndDownloadEnglishPdf();
+      }
+
+      return savedLetter;
     } catch (error) {
       console.error("Error checking/saving sell letter:", error);
       let errorMessage = "Failed to process sell letter. Please try again.";
@@ -897,7 +905,7 @@ const SellLetterForm = () => {
         font: font,
       }
     );
-    
+
     page.drawRectangle({
       x: 0,
       y: 360,
@@ -922,7 +930,7 @@ const SellLetterForm = () => {
       x: 130,
       y: 345,
       size: 17,
-      color: rgb(0,0,0),
+      color: rgb(0, 0, 0),
       fontWeight: "bold",
       font: boldFont,
     });
@@ -933,7 +941,7 @@ const SellLetterForm = () => {
       color: rgb(1, 1, 1),
       font: font,
     });
-    
+
     page.drawText("TERMS & CONDITIONS", {
       x: 50,
       y: 305,
@@ -1804,7 +1812,10 @@ const SellLetterForm = () => {
               >
                 <select
                   value={previewLanguage}
-                  onChange={(e) => setPreviewLanguage(e.target.value)}
+                  onChange={(e) => {
+                    setPreviewLanguage(e.target.value);
+                    setSelectedLanguage(e.target.value);
+                  }}
                   style={styles.formSelect}
                 >
                   <option value="hindi">Hindi Preview</option>
@@ -1830,42 +1841,6 @@ const SellLetterForm = () => {
             </div>
           </form>
         </div>
-        {showLanguageModal && (
-          <div style={styles.modalOverlay}>
-            <div style={styles.modalContent}>
-              <h3 style={styles.modalTitle}>Select PDF Language</h3>
-              <p style={styles.modalText}>
-                Choose the language for your sell letter:
-              </p>
-              <div style={styles.modalButtons}>
-                <button
-                  style={styles.englishButton}
-                  onClick={() => {
-                    fillAndDownloadEnglishPdf();
-                    setShowLanguageModal(false);
-                  }}
-                >
-                  English PDF
-                </button>
-                <button
-                  style={styles.hindiButton}
-                  onClick={() => {
-                    fillAndDownloadHindiPdf();
-                    setShowLanguageModal(false);
-                  }}
-                >
-                  Hindi PDF
-                </button>
-              </div>
-              <button
-                style={styles.modalCloseButton}
-                onClick={() => setShowLanguageModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
         {showPreviewModal && (
           <div style={styles.modalOverlay}>
             <div
@@ -1906,20 +1881,7 @@ const SellLetterForm = () => {
                   </div>
                 )}
               </div>
-              <div style={styles.modalButtons}>
-                <button
-                  style={styles.englishButton}
-                  onClick={() => handlePreviewAndDownload("english")}
-                >
-                  Download English PDF
-                </button>
-                <button
-                  style={styles.hindiButton}
-                  onClick={() => handlePreviewAndDownload("hindi")}
-                >
-                  Download Hindi PDF
-                </button>
-              </div>
+
               <button
                 style={styles.modalCloseButton}
                 onClick={() => setShowPreviewModal(false)}

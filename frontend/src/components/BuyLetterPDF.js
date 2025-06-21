@@ -45,6 +45,7 @@ const BuyLetterForm = () => {
   const navigate = useNavigate();
   const [previewPdf, setPreviewPdf] = useState(null);
   const [previewLanguage, setPreviewLanguage] = useState("hindi");
+  const [selectedLanguage, setSelectedLanguage] = useState("hindi"); // default to hindi
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
@@ -251,7 +252,6 @@ const BuyLetterForm = () => {
       setIsSaving(false);
     }
   };
-
   const handleSaveAndDownload = async () => {
     try {
       setIsDownloading(true);
@@ -265,17 +265,19 @@ const BuyLetterForm = () => {
           },
         }
       );
-
+      let savedLetter;
       if (existingLetter.data && existingLetter.data.length > 0) {
-        setSavedLetterData(existingLetter.data[0]);
-        setShowLanguageModal(true);
+        savedLetter = existingLetter.data[0];
       } else {
-        const savedLetter = await saveBuyLetter();
-        if (savedLetter) {
-          setSavedLetterData(savedLetter);
-          setShowLanguageModal(true);
-        }
+        savedLetter = await saveBuyLetter();
       }
+      if (selectedLanguage === "hindi") {
+        await fillAndDownloadHindiPdf();
+      } else {
+        await fillAndDownloadEnglishPdf();
+      }
+
+      return savedLetter;
     } catch (error) {
       console.error("Error checking/saving buy letter:", error);
       let errorMessage = "Failed to process buy letter. Please try again.";
@@ -611,14 +613,14 @@ const BuyLetterForm = () => {
     returnpersonname: { x: 332, y: 298, size: 10 },
   };
   const formatKm = (val) => {
-  const num = parseFloat(val.toString().replace(/,/g, ""));
-  return isNaN(num)
-    ? "0.00"
-    : new Intl.NumberFormat("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(num / 100); // Divide by 100 here if needed
-};
+    const num = parseFloat(val.toString().replace(/,/g, ""));
+    return isNaN(num)
+      ? "0.00"
+      : new Intl.NumberFormat("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(num / 100); // Divide by 100 here if needed
+  };
   const formatAadhar = (val) =>
     val
       .replace(/\D/g, "")
@@ -2135,7 +2137,10 @@ const BuyLetterForm = () => {
               >
                 <select
                   value={previewLanguage}
-                  onChange={(e) => setPreviewLanguage(e.target.value)}
+                  onChange={(e) => {
+                    setPreviewLanguage(e.target.value);
+                    setSelectedLanguage(e.target.value);
+                  }}
                   style={styles.formSelect}
                 >
                   <option value="hindi">Hindi Preview</option>
@@ -2161,42 +2166,7 @@ const BuyLetterForm = () => {
             </div>
           </form>
         </div>
-        {showLanguageModal && (
-          <div style={styles.modalOverlay}>
-            <div style={styles.modalContent}>
-              <h3 style={styles.modalTitle}>Select PDF Language</h3>
-              <p style={styles.modalText}>
-                Choose the language for your buy letter:
-              </p>
-              <div style={styles.modalButtons}>
-                <button
-                  style={styles.englishButton}
-                  onClick={() => {
-                    fillAndDownloadEnglishPdf();
-                    setShowLanguageModal(false);
-                  }}
-                >
-                  English PDF
-                </button>
-                <button
-                  style={styles.hindiButton}
-                  onClick={() => {
-                    fillAndDownloadHindiPdf();
-                    setShowLanguageModal(false);
-                  }}
-                >
-                  Hindi PDF
-                </button>
-              </div>
-              <button
-                style={styles.modalCloseButton}
-                onClick={() => setShowLanguageModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
+
         {showPreviewModal && (
           <div style={styles.modalOverlay}>
             <div
@@ -2237,20 +2207,7 @@ const BuyLetterForm = () => {
                   </div>
                 )}
               </div>
-              <div style={styles.modalButtons}>
-                <button
-                  style={styles.englishButton}
-                  onClick={() => handlePreviewAndDownload("english")}
-                >
-                  Download English PDF
-                </button>
-                <button
-                  style={styles.hindiButton}
-                  onClick={() => handlePreviewAndDownload("hindi")}
-                >
-                  Download Hindi PDF
-                </button>
-              </div>
+
               <button
                 style={styles.modalCloseButton}
                 onClick={() => setShowPreviewModal(false)}
