@@ -1073,6 +1073,7 @@ const SellLetterForm = () => {
       `10. OK MOTORS has recieved the money amount ${formatRupee(
         formData.saleAmount
       )} from ${formData.buyerName}.`,
+      "11. It is compulsory to get the vehicle serviced after driving 1500-1800 km otherwise guarrantee will be expired ",
     ];
 
     terms.forEach((term, index) => {

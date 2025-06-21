@@ -1066,6 +1066,7 @@ const SellLetterHistory = () => {
       `10. OK MOTORS has recieved the money amount ${formatRupee(
         letter.saleAmount
       )} from ${letter.buyerName}.`,
+      "11. It is compulsory to get the vehicle serviced after driving 1500-1800 km otherwise guarrantee will be expired ",
     ];
 
     terms.forEach((term, index) => {
@@ -1140,11 +1141,14 @@ const SellLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this sell letter?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/sell-letters/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        await axios.delete(
+          `https://ok-motor.onrender.com/api/sell-letters/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
         setSellLetters(sellLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting sell letter:", error);
