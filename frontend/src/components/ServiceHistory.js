@@ -36,6 +36,17 @@ const ServiceHistory = () => {
   const [showVehicleHistory, setShowVehicleHistory] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState({});
   const navigate = useNavigate();
+  // Add this near the top of your component with other utility functions
+
+
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
   const simulateDownload = (billId) => {
     setDownloadProgress((prev) => ({ ...prev, [billId]: 0 }));
 
@@ -604,17 +615,25 @@ const ServiceHistory = () => {
                       <tr key={bill._id} style={styles.tableRow}>
                         <td style={styles.tableCell}>{bill.customerName}</td>
                         <td style={styles.tableCell}>
-                          {bill.vehicleBrand} {bill.vehicleModel}
+                          {`${bill.vehicleBrand} ${bill.vehicleModel}`
+                            .split("\n")[0]
+                            .substring(0, 20)}
+                          {`${bill.vehicleBrand} ${bill.vehicleModel}`.length >
+                            20 && "..."}
                         </td>
                         <td style={styles.tableCell}>
                           {bill.registrationNumber}
                         </td>
                         <td style={styles.tableCell}>
-                          ₹{bill.grandTotal?.toFixed(2) || 0}
+                          ₹
+                          {new Intl.NumberFormat("en-IN").format(
+                            bill.grandTotal
+                          )}
                         </td>
-                        <td style={styles.tableCell}>
-                          {new Date(bill.createdAt).toLocaleDateString()}
+                         <td style={styles.tableCell}>
+                          {formatDate(bill.createdAt)}
                         </td>
+
                         <td style={styles.tableCell}>
                           <span
                             style={{

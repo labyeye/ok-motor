@@ -692,13 +692,13 @@ const BuyLetterHistory = () => {
       height: 130,
     });
     page.drawImage(logoImage, {
-          x: 280,
-          y: 200,
-          width: 370,
-          height: 300,
-          opacity: 0.3,
-          rotate: degrees(45)
-        });
+      x: 280,
+      y: 200,
+      width: 370,
+      height: 300,
+      opacity: 0.3,
+      rotate: degrees(45),
+    });
 
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
@@ -1059,9 +1059,7 @@ const BuyLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
-        await axios.delete(
-          `https://ok-motor.onrender.com/api/buy-letter/${id}`
-        );
+        await axios.delete(`https://ok-motor.onrender.com/api/buy-letter/${id}`);
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting buy letter:", error);
@@ -1221,12 +1219,17 @@ const BuyLetterHistory = () => {
                         <td style={styles.tableCell}>{letter.sellerName}</td>
                         <td style={styles.tableCell}>{letter.vehicleModel}</td>
                         <td style={styles.tableCell}>
-                          ({letter.registrationNumber})
+                          {letter.registrationNumber}
                         </td>
                         <td style={styles.tableCell}>{letter.buyerName}</td>
-                        <td style={styles.tableCell}>₹{letter.saleAmount}</td>
                         <td style={styles.tableCell}>
-                          {new Date(letter.createdAt).toLocaleDateString()}
+                          ₹
+                          {new Intl.NumberFormat("en-IN").format(
+                            letter.saleAmount
+                          )}
+                        </td>
+                        <td style={styles.tableCell}>
+                          {formatDate(letter.createdAt)}
                         </td>
 
                         <td style={styles.tableCell}>

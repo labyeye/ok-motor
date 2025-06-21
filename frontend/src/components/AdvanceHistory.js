@@ -31,6 +31,15 @@ const AdvanceHistory = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
+  
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
 
   useEffect(() => {
     const fetchData = async () => {
@@ -314,17 +323,26 @@ const AdvanceHistory = () => {
                           {bill.vehicleBrand} {bill.vehicleModel}
                         </td>
                         <td style={styles.tableCell}>{bill.registrationNumber}</td>
-                        <td style={styles.tableCell}>
-                          ₹{bill.grandTotal?.toFixed(2) || 0}
+                         <td style={styles.tableCell}>
+                          ₹
+                          {new Intl.NumberFormat("en-IN").format(
+                            bill.grandTotal
+                          )}
+                        </td>
+                         <td style={styles.tableCell}>
+                          ₹
+                          {new Intl.NumberFormat("en-IN").format(
+                            bill.advancePaid
+                          )}
+                        </td>
+                         <td style={styles.tableCell}>
+                          ₹
+                          {new Intl.NumberFormat("en-IN").format(
+                            bill.balanceDue
+                          )}
                         </td>
                         <td style={styles.tableCell}>
-                          ₹{bill.advancePaid?.toFixed(2) || 0}
-                        </td>
-                        <td style={styles.tableCell}>
-                          ₹{bill.balanceDue?.toFixed(2) || 0}
-                        </td>
-                        <td style={styles.tableCell}>
-                          {new Date(bill.createdAt).toLocaleDateString()}
+                          {formatDate(bill.createdAt)}
                         </td>
                         <td style={styles.tableCell}>
                           <button
