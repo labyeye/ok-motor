@@ -296,6 +296,33 @@ const AdvancePayBillForm = () => {
       setShowLoadingOverlay(false);
     }
   };
+  const fetchVehicleDetails = useCallback(async (registrationNumber) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/advance-bills/vehicle-details`,
+        {
+          params: { registrationNumber },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.data) {
+        setFormData((prev) => ({
+          ...prev,
+          vehicleBrand: response.data.vehicleName || "",
+          vehicleModel: response.data.vehicleModel || "",
+          registrationNumber: response.data.registrationNumber || "",
+          chassisNumber: response.data.chassisNumber || "",
+          engineNumber: response.data.engineNumber || "",
+          kmReading: response.data.vehiclekm || "",
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching vehicle details:", error);
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -660,9 +687,19 @@ const AdvancePayBillForm = () => {
                     type="text"
                     name="registrationNumber"
                     value={formData.registrationNumber}
-                    onFocus={() => setFocusedInput("registrationNumber")}
                     onChange={handleChange}
                     onInput={handleInput}
+                    onBlur={(e) => {
+                      if (e.target.value.trim() !== "") {
+                        fetchVehicleDetails(e.target.value.trim());
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && e.target.value.trim() !== "") {
+                        fetchVehicleDetails(e.target.value.trim());
+                      }
+                    }}
+                    onFocus={() => setFocusedInput("registrationNumber")}
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "registrationNumber"

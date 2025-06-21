@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useCallback } from "react";
 import { saveAs } from "file-saver";
 import {
   FileText,
@@ -96,6 +96,31 @@ const ServiceBillForm = () => {
       balanceDue,
     };
   };
+    const fetchVehicleDetails = useCallback(async (registrationNumber) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/advance-bills/vehicle-details`,
+        {
+          params: { registrationNumber },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.data) {
+        setFormData((prev) => ({
+          ...prev,
+          vehicleBrand: response.data.vehicleName || "",
+          vehicleModel: response.data.vehicleModel || "",
+          registrationNumber: response.data.registrationNumber || "",
+          kmReading: response.data.vehiclekm || "",
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching vehicle details:", error);
+    }
+  }, []);
   const handleServiceItemChange = (index, e) => {
     const { name, value } = e.target;
 
@@ -182,39 +207,6 @@ const ServiceBillForm = () => {
     Object.assign(newData, calculateAmounts(newData));
 
     setFormData(newData);
-  };
-
-  const saveServiceBill = async () => {
-    try {
-      setIsSaving(true);
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${API_BASE_URL}/service-bills`,
-        {
-          ...formData,
-          user: user._id,
-          customServiceDescription: formData.customServiceDescription, // Ensure this is included
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      alert("Service bill saved successfully!");
-      return response.data;
-    } catch (error) {
-      console.error("Error saving service bill:", error);
-      alert(
-        `Failed to save service bill: ${
-          error.response?.data?.message || error.message
-        }`
-      );
-      throw error;
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   const handleSaveAndDownload = async () => {
@@ -390,7 +382,6 @@ const ServiceBillForm = () => {
     navigate("/login");
   };
 
-  // In the menuItems array (around line 250 in BuyLetterPDF.js)
   const menuItems = [
     {
       name: "Dashboard",
@@ -711,8 +702,17 @@ const ServiceBillForm = () => {
                     value={formData.registrationNumber}
                     onChange={handleChange}
                     onInput={handleInput}
+                    onBlur={(e) => {
+                      if (e.target.value.trim() !== "") {
+                        fetchVehicleDetails(e.target.value.trim());
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && e.target.value.trim() !== "") {
+                        fetchVehicleDetails(e.target.value.trim());
+                      }
+                    }}
                     onFocus={() => setFocusedInput("registrationNumber")}
-                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "registrationNumber"

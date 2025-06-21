@@ -4,6 +4,8 @@ const router = express.Router();
 const generateAdvanceBillPDF = require("../utils/generateAdvanceBillPDF");
 const AdvanceBill = require("../models/AdvanceBill");
 const { protect } = require("../middleware/auth");
+const BuyLetter = require("../models/BuyLetter");
+const SellLetter = require("../models/SellLetter");
 router.get("/pdf/:filename", protect, async (req, res) => {
   try {
     const { filename } = req.params;
@@ -13,9 +15,9 @@ router.get("/pdf/:filename", protect, async (req, res) => {
       return res.status(404).json({ message: "PDF file not found" });
     }
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename=${filename}`);
-    
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename=${filename}`);
+
     const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
   } catch (error) {
@@ -23,23 +25,88 @@ router.get("/pdf/:filename", protect, async (req, res) => {
     res.status(500).json({ message: "Error serving PDF" });
   }
 });
+router.get("/vehicle-details", protect, async (req, res) => {
+  try {
+    const { registrationNumber } = req.query;
+
+    if (!registrationNumber) {
+      return res.status(400).json({
+        message: "Registration number is required",
+      });
+    }
+
+    const [buyLetters, sellLetters] = await Promise.all([
+      BuyLetter.find({
+        registrationNumber: new RegExp(registrationNumber, "i"),
+        $or: [
+          { user: req.user.id },
+          { visibility: "staff" },
+          ...(req.user.role === "staff" || req.user.role === "admin"
+            ? [{}]
+            : []),
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .limit(1),
+
+      SellLetter.find({
+        registrationNumber: new RegExp(registrationNumber, "i"),
+        $or: [
+          { user: req.user.id },
+          { visibility: "staff" },
+          ...(req.user.role === "staff" || req.user.role === "admin"
+            ? [{}]
+            : []),
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .limit(1),
+    ]);
+
+    const vehicleRecord = buyLetters[0] || sellLetters[0];
+
+    if (!vehicleRecord) {
+      return res.status(404).json({
+        message: "No vehicle found with this registration number",
+      });
+    }
+
+    const vehicleDetails = {
+      vehicleName: vehicleRecord.vehicleName || vehicleRecord.vehicleBrand,
+      vehicleModel: vehicleRecord.vehicleModel,
+      vehicleColor: vehicleRecord.vehicleColor,
+      registrationNumber: vehicleRecord.registrationNumber,
+      chassisNumber: vehicleRecord.chassisNumber,
+      engineNumber: vehicleRecord.engineNumber,
+      vehiclekm: vehicleRecord.vehiclekm || vehicleRecord.kmReading,
+    };
+
+    res.json(vehicleDetails);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+});
 router.post("/", protect, async (req, res) => {
   try {
     const requiredFields = [
-      'customerName', 
-      'customerPhone',
-      'vehicleType',
-      'vehicleBrand',
-      'registrationNumber',
-      'totalAmount'
+      "customerName",
+      "customerPhone",
+      "vehicleType",
+      "vehicleBrand",
+      "registrationNumber",
+      "totalAmount",
     ];
-    
-    const missingFields = requiredFields.filter(field => !req.body[field]);
-    
+
+    const missingFields = requiredFields.filter((field) => !req.body[field]);
+
     if (missingFields.length > 0) {
       return res.status(400).json({
         success: false,
-        message: `Missing required fields: ${missingFields.join(', ')}`
+        message: `Missing required fields: ${missingFields.join(", ")}`,
       });
     }
 
@@ -53,10 +120,12 @@ router.post("/", protect, async (req, res) => {
     // Ensure numeric values
     const totalAmount = parseFloat(advanceBillData.totalAmount) || 0;
     const advancePaid = parseFloat(advanceBillData.advancePaid) || 0;
-    
+
     // Calculate amounts
     advanceBillData.grandTotal = totalAmount.toFixed(2);
-    advanceBillData.balanceDue = (advanceBillData.grandTotal - advancePaid).toFixed(2);
+    advanceBillData.balanceDue = (
+      advanceBillData.grandTotal - advancePaid
+    ).toFixed(2);
 
     // Save to database
     const advanceBill = new AdvanceBill(advanceBillData);
@@ -79,7 +148,7 @@ router.post("/", protect, async (req, res) => {
       success: false,
       message: error.message, // Include the actual error message
       error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 });
@@ -106,7 +175,7 @@ router.get("/:id/download", protect, async (req, res) => {
       "Content-Disposition",
       `attachment; filename="advance-bill-${id}.pdf"`
     );
-    
+
     // Send the PDF buffer
     res.send(pdfBuffer);
   } catch (error) {
@@ -115,7 +184,7 @@ router.get("/:id/download", protect, async (req, res) => {
       success: false,
       message: "Failed to generate PDF",
       error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 });

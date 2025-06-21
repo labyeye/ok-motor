@@ -1172,7 +1172,7 @@ const SellLetterForm = () => {
         setFormData((prev) => ({
           ...prev,
           ...response.data,
-          registrationNumber, 
+          registrationNumber,
         }));
       }
     } catch (error) {
@@ -1442,11 +1442,13 @@ const SellLetterForm = () => {
                     name="vehicleName"
                     value={formData.vehicleName}
                     onChange={handleChange}
+                    onFocus={() => setFocusedInput("vehicleName")}
+                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("vehicleName") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "vehicleName"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                     maxLength={16}
                   />
@@ -1462,11 +1464,13 @@ const SellLetterForm = () => {
                     value={formData.vehicleModel}
                     onChange={handleChange}
                     onInput={handleInput}
+                    onFocus={() => setFocusedInput("vehicleModel")}
+                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("vehicleModel") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "vehicleModel"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                     required
                     maxLength={19}
@@ -1483,11 +1487,13 @@ const SellLetterForm = () => {
                     value={formData.vehicleColor}
                     onChange={handleChange}
                     onInput={handleInput}
+                    onFocus={() => setFocusedInput("vehicleColor")}
+                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("vehicleColor") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "vehicleColor"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                     required
                     maxLength={7}
@@ -1514,11 +1520,12 @@ const SellLetterForm = () => {
                         fetchVehicleDetails(e.target.value.trim());
                       }
                     }}
+                    onFocus={() => setFocusedInput("registrationNumber")}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("registrationNumber") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "registrationNumber"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                     required
                     maxLength={11}
@@ -1535,11 +1542,13 @@ const SellLetterForm = () => {
                     value={formData.chassisNumber}
                     onChange={handleChange}
                     onInput={handleInput}
+                    onFocus={() => setFocusedInput("chassisNumber")}
+                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("chassisNumber") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "chassisNumber"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                     required
                     maxLength={18}
@@ -1555,11 +1564,13 @@ const SellLetterForm = () => {
                     name="engineNumber"
                     value={formData.engineNumber}
                     onChange={handleChange}
+                    onFocus={() => setFocusedInput("engineNumber")}
+                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("engineNumber") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "engineNumber"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                     required
                     maxLength={15}
@@ -1588,11 +1599,13 @@ const SellLetterForm = () => {
                         vehiclekm: rawValue,
                       }));
                     }}
+                    onFocus={() => setFocusedInput("vehiclekm")}
+                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("vehiclekm") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "vehiclekm"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                     placeholder="e.g. 36,000.00"
                   />
@@ -1633,11 +1646,13 @@ const SellLetterForm = () => {
                     value={formData.buyerName}
                     onChange={handleChange}
                     onInput={handleInput}
+                    onFocus={() => setFocusedInput("buyerName")}
+                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("buyerName") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "buyerName"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                     required
                     maxLength={30}
@@ -1654,11 +1669,13 @@ const SellLetterForm = () => {
                     value={formData.buyerFatherName}
                     onChange={handleChange}
                     onInput={handleInput}
+                    onFocus={() => setFocusedInput("buyerFatherName")}
+                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("buyerFatherName") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "buyerFatherName"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                     required
                     maxLength={16}
@@ -1675,11 +1692,13 @@ const SellLetterForm = () => {
                     value={formData.buyerAddress}
                     onChange={handleChange}
                     onInput={handleInput}
+                    onFocus={() => setFocusedInput("buyerAddress")}
+                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("buyerAddress") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "buyerAddress"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                     required
                     maxLength={65}
@@ -1703,11 +1722,13 @@ const SellLetterForm = () => {
                         buyerPhone: rawValue,
                       }));
                     }}
+                    onFocus={() => setFocusedInput("buyerPhone")}
+                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("buyerPhone") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "buyerPhone"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                     maxLength={10}
                   />
@@ -1730,11 +1751,13 @@ const SellLetterForm = () => {
                         buyerPhone2: rawValue,
                       }));
                     }}
+                     onFocus={() => setFocusedInput("buyerPhone2")}
+                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("buyerPhone2") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "buyerPhone2"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                     maxLength={10}
                   />
@@ -1758,11 +1781,13 @@ const SellLetterForm = () => {
                         buyerAadhar: formatted,
                       }));
                     }}
+                     onFocus={() => setFocusedInput("buyerAadhar")}
+                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("buyerAadhar") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "buyerAadhar"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                     placeholder="1234-5678-9012"
                   />
@@ -1777,7 +1802,14 @@ const SellLetterForm = () => {
                     name="witnessName"
                     value={formData.witnessName}
                     onChange={handleChange}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("witnessName")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "witnessName"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     required
                     maxLength={30}
                   />
@@ -1799,8 +1831,16 @@ const SellLetterForm = () => {
                         ...prev,
                         witnessPhone: rawValue,
                       }));
+                      setFocusedInput("witnessPhone")
                     }}
-                    style={styles.formInput}
+                    onFocus={() => setFocusedInput("witnessPhone")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "witnessPhone"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
                     maxLength={10}
                   />
                 </div>
@@ -1862,12 +1902,15 @@ const SellLetterForm = () => {
                         ...prev,
                         saleAmount: rawValue,
                       }));
+                      setFocusedInput("saleAmount");
                     }}
+                    onFocus={() => setFocusedInput("saleAmount")}
+                    onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
-                      ...(missingFields.includes("saleAmount") && {
-                        border: "1px solid red",
-                      }),
+                      ...(focusedInput === "saleAmount"
+                        ? styles.inputFocused
+                        : {}),
                     }}
                   />
                 </div>
@@ -2440,6 +2483,9 @@ const styles = {
   buttonIcon: {
     width: "16px",
     height: "16px",
+  },
+  inputFocused: {
+    backgroundColor: "yellow",
   },
 
   // Preview Mode Styles

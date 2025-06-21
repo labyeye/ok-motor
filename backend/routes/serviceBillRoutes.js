@@ -2,13 +2,13 @@
 const express = require("express");
 const router = express.Router();
 const serviceBillController = require("../controllers/serviceBillController");
-const { protect ,admin} = require("../middleware/auth");
+const { protect, admin } = require("../middleware/auth");
 
 router
   .route("/")
   .get(protect, serviceBillController.getServiceBills)
   .post(protect, serviceBillController.createServiceBill);
-  router
+router
   .route("/by-registration")
   .get(protect, serviceBillController.getServiceBillsByRegistration);
 router
@@ -24,5 +24,9 @@ router
 router
   .route("/:id/download")
   .get(protect, serviceBillController.downloadServiceBillPDF);
+
+router
+  .route("/vehicle-details")
+  .get(protect, serviceBillController.getVehicleDetails);
 
 module.exports = router;

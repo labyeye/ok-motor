@@ -1,9 +1,57 @@
-// controllers/serviceBillController.js
 const ServiceBill = require("../models/ServiceBill");
 const { generateServiceBillPDF } = require("../utils/pdfGenerator");
 const fs = require("fs");
 const path = require("path");
+const BuyLetter = require("../models/BuyLetter");
+const SellLetter = require("../models/SellLetter");
 
+exports.getVehicleDetails = async (req, res) => {
+  try {
+    const { registrationNumber } = req.query;
+
+    if (!registrationNumber) {
+      return res.status(400).json({
+        message: "Registration number is required",
+      });
+    }
+    const regex = new RegExp(registrationNumber, "i");
+
+    const [buyLetter, sellLetter, serviceBill] = await Promise.all([
+      BuyLetter.findOne({ registrationNumber: regex })
+        .sort({ createdAt: -1 })
+        .select("vehicleName vehicleModel registrationNumber vehiclekm"),
+
+      SellLetter.findOne({ registrationNumber: regex })
+        .sort({ createdAt: -1 })
+        .select("vehicleName vehicleModel registrationNumber vehiclekm"),
+
+      ServiceBill.findOne({ registrationNumber: regex })
+        .sort({ createdAt: -1 })
+        .select("vehicleBrand vehicleModel registrationNumber kmReading"),
+    ]);
+    const vehicleRecord = buyLetter || sellLetter || serviceBill;
+
+    if (!vehicleRecord) {
+      return res.status(404).json({
+        message: "No vehicle found with this registration number",
+      });
+    }
+    const vehicleDetails = {
+      vehicleBrand: vehicleRecord.vehicleName || vehicleRecord.vehicleBrand,
+      vehicleModel: vehicleRecord.vehicleModel,
+      registrationNumber: vehicleRecord.registrationNumber,
+      kmReading: vehicleRecord.vehiclekm || vehicleRecord.kmReading,
+    };
+
+    res.json(vehicleDetails);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
 // Create a new service bill
 exports.createServiceBill = async (req, res) => {
   try {
