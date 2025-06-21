@@ -228,7 +228,7 @@ const BuyLetterForm = () => {
     try {
       setIsSaving(true);
       const response = await axios.post(
-        "https://ok-motor-f24l.vercel.app//api/buy-letter",
+        "https://ok-motor-f24l.vercel.app/api/buy-letter",
         formData
       );
       alert("Buy letter saved successfully!");
@@ -258,7 +258,7 @@ const BuyLetterForm = () => {
       setIsSaving(true);
 
       const existingLetter = await axios.get(
-        `https://ok-motor-f24l.vercel.app//api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
+        `https://ok-motor-f24l.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -451,7 +451,7 @@ const BuyLetterForm = () => {
 
       // Check if letter exists first
       const existingLetter = await axios.get(
-        `https://ok-motor-f24l.vercel.app//api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
+        `https://ok-motor-f24l.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -465,7 +465,7 @@ const BuyLetterForm = () => {
       } else {
         // Save new letter if doesn't exist
         const response = await axios.post(
-          "https://ok-motor-f24l.vercel.app//api/buy-letter",
+          "https://ok-motor-f24l.vercel.app/api/buy-letter",
           formData
         );
         savedLetterData = response.data;
@@ -641,7 +641,7 @@ const BuyLetterForm = () => {
 
       // Check if letter exists first
       const existingLetter = await axios.get(
-        `https://ok-motor-f24l.vercel.app//api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
+        `https://ok-motor-f24l.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -654,7 +654,7 @@ const BuyLetterForm = () => {
         savedLetterData = existingLetter.data[0];
       } else {
         const response = await axios.post(
-          "https://ok-motor-f24l.vercel.app//api/buy-letter",
+          "https://ok-motor-f24l.vercel.app/api/buy-letter",
           formData
         );
         savedLetterData = response.data;

@@ -57,7 +57,7 @@ const AdvancePayBillForm = () => {
   });
 
   const [previewMode, setPreviewMode] = useState(false);
-  const API_BASE_URL = "https://ok-motor-f24l.vercel.app//api";
+  const API_BASE_URL = "https://ok-motor-f24l.vercel.app/api";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -252,7 +252,7 @@ const AdvancePayBillForm = () => {
 
       // First save the bill
       const saveResponse = await api.post(
-        "https://ok-motor-f24l.vercel.app//api/advance-bills",
+        "https://ok-motor-f24l.vercel.app/api/advance-bills",
         requestData
       );
 
@@ -268,7 +268,7 @@ const AdvancePayBillForm = () => {
 
       // Get the PDF for preview or download
       const pdfResponse = await api.get(
-        `https://ok-motor-f24l.vercel.app//api/advance-bills/${billId}/download`,
+        `https://ok-motor-f24l.vercel.app/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
         }
