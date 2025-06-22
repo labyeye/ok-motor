@@ -397,42 +397,15 @@ const AuthForm = ({ isLogin }) => {
           font-size: 0.875rem;
         }
 
-        .auth-link {
-          color: #7c3aed;
-          text-decoration: none;
-          font-weight: 600;
-          transition: all 0.3s ease;
-        }
-
-        .auth-link:hover {
-          color: #5b21b6;
-          text-decoration: underline;
-        }
 
         .auth-image-section {
           flex: 1;
-          background-image: url("https://ik.imagekit.io/os1mzoooe/ChatGPT%20Image%20Jun%2021,%202025,%2009_03_48%20PM.png?updatedAt=1750520039613");
-          background-size: cover;
+          background-image: url("https://ik.imagekit.io/os1mzoooe/ChatGPT%20Image%20Jun%2022,%202025,%2001_51_38%20PM.png?updatedAt=1750580522377");
+          background-size: contain;
           background-position: center;
           position: relative;
           display: none;
         }
-
-        .image-overlay {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(
-            135deg,
-            rgba(124, 58, 237, 0.8),
-            rgba(59, 130, 246, 0.6)
-          );
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          color: white;
-        }
-
         .overlay-content {
           max-width: 400px;
           padding: 2rem;
