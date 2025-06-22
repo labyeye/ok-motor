@@ -323,7 +323,7 @@ const BuyLetterForm = () => {
 
     const [hour, minute] = timeString.split(":").map(Number);
 
-    const hours12 = hour % 12 || 12; 
+    const hours12 = hour % 12 || 12;
     const ampm = hour >= 12 ? "PM" : "AM";
 
     const formattedHours = String(hours12).padStart(2, "0");
@@ -1181,7 +1181,7 @@ const BuyLetterForm = () => {
       y: 575,
       width: 495,
       height: 20,
-      opacity:0.3,
+      opacity: 0.3,
       color: rgb(0.9, 0.9, 0.9),
     });
     page.drawText("Condition: " + (formData.vehicleCondition || "N/A"), {
