@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Bike } from "lucide-react";
 import logo from '../images/company.png';
+
 const AuthForm = ({ isLogin }) => {
   const navigate = useNavigate();
   const { user, login, loading: authLoading } = useContext(AuthContext);
@@ -52,13 +53,12 @@ const AuthForm = ({ isLogin }) => {
   if (authLoading) return <div>Loading...</div>;
   return (
     <div className="auth-container">
-      <div className="auth-form-section">
+      <div className="auth-form-container">
         <div className="auth-content">
           <div className="auth-header">
             <div className="brand-logo">
               <img src={logo} alt="logo" className="brand-icon" />
             </div>
-            <h1 className="auth-title">Welcome OK MOTORS</h1>
           </div>
           {error && (
             <div className="auth-error">
@@ -83,7 +83,6 @@ const AuthForm = ({ isLogin }) => {
                 required
                 className="form-input"
               />
-              <label className="input-label">Email Address</label>
             </div>
 
             {/* Password Field */}
@@ -104,7 +103,6 @@ const AuthForm = ({ isLogin }) => {
                 minLength="6"
                 className="form-input"
               />
-              <label className="input-label">Password</label>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -132,14 +130,7 @@ const AuthForm = ({ isLogin }) => {
               )}
             </button>
           </div>
-
-          {/* Footer */}
         </div>
-      </div>
-
-      {/* Image Section */}
-      <div className="auth-image-section">
-
       </div>
 
       <style jsx>{`
@@ -147,40 +138,42 @@ const AuthForm = ({ isLogin }) => {
           display: flex;
           min-height: 100vh;
           font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .auth-form-section {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 2rem;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(10px);
+          background-image: url("https://ik.imagekit.io/os1mzoooe/ChatGPT%20Image%20Jun%2022,%202025,%2001_51_38%20PM.png?updatedAt=1750580522377");
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
           position: relative;
         }
 
-        .auth-form-section::before {
+        .auth-container::before {
           content: "";
           position: absolute;
           top: 0;
           left: 0;
           right: 0;
           bottom: 0;
-          background: linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.1) 0%,
-            rgba(255, 255, 255, 0.05) 100%
-          );
-          pointer-events: none;
+          background: rgba(0, 0, 0, 0.3);
+        }
+
+        .auth-form-container {
+          position: relative;
+          z-index: 2;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
         }
 
         .auth-content {
           width: 100%;
           max-width: 420px;
-          z-index: 1;
-          position: relative;
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border-radius: 1rem;
+          padding: 2.5rem;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .auth-header {
@@ -197,45 +190,32 @@ const AuthForm = ({ isLogin }) => {
         }
 
         .brand-icon {
-          width: 20.5rem;
-          height: 15.5rem;
+          width: 24.5rem;
+          height: 16.5rem;
           color: #7c3aed;
-        }
-
-        .brand-text {
-          font-size: 1.75rem;
-          font-weight: 700;
-          background: linear-gradient(135deg, #7c3aed, #3b82f6);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
         }
 
         .auth-title {
           font-size: 2rem;
           font-weight: 700;
-          color: #1f2937;
+          color: white;
           margin-bottom: 0.5rem;
           letter-spacing: -0.025em;
-        }
-
-        .auth-subtitle {
-          color: #6b7280;
-          font-size: 1rem;
-          line-height: 1.5;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .auth-error {
           margin-bottom: 1.5rem;
           padding: 1rem;
-          background: linear-gradient(135deg, #fef2f2, #fee2e2);
-          border: 1px solid #fecaca;
+          background: rgba(239, 68, 68, 0.2);
+          border: 1px solid rgba(239, 68, 68, 0.3);
           border-radius: 0.75rem;
           animation: slideIn 0.3s ease-out;
+          backdrop-filter: blur(5px);
         }
 
         .error-content {
-          color: #dc2626;
+          color: white;
           font-size: 0.875rem;
           font-weight: 500;
         }
@@ -256,19 +236,24 @@ const AuthForm = ({ isLogin }) => {
           width: 100%;
           padding: 1rem 1rem 1rem 3rem;
           font-size: 1rem;
-          border: 2px solid #e5e7eb;
+          border: 2px solid rgba(255, 255, 255, 0.3);
           border-radius: 0.75rem;
-          background: rgba(255, 255, 255, 0.8);
-          backdrop-filter: blur(10px);
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(5px);
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           box-sizing: border-box;
+          color: white;
         }
 
         .form-input:focus {
           outline: none;
-          border-color: #7c3aed;
-          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-          background: rgba(255, 255, 255, 0.95);
+          border-color: rgba(124, 58, 237, 0.8);
+          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+          background: rgba(255, 255, 255, 0.25);
+        }
+
+        .form-input::placeholder {
+          color: rgba(255, 255, 255, 0.6);
         }
 
         .input-icon {
@@ -278,14 +263,14 @@ const AuthForm = ({ isLogin }) => {
           transform: translateY(-50%);
           width: 1.25rem;
           height: 1.25rem;
-          color: #9ca3af;
+          color: rgba(0, 0, 0, 0.7);
           transition: color 0.3s ease;
           z-index: 1;
         }
 
         .input-group.focused .input-icon,
         .input-group.filled .input-icon {
-          color: #7c3aed;
+          color: white;
         }
 
         .input-label {
@@ -293,7 +278,7 @@ const AuthForm = ({ isLogin }) => {
           left: 3rem;
           top: 50%;
           transform: translateY(-50%);
-          color: #9ca3af;
+          color: rgba(255, 255, 255, 0.7);
           font-size: 1rem;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           pointer-events: none;
@@ -305,8 +290,8 @@ const AuthForm = ({ isLogin }) => {
           top: 0;
           left: 0.75rem;
           font-size: 0.75rem;
-          color: #7c3aed;
-          background: rgba(255, 255, 255, 0.9);
+          color: white;
+          background: rgba(124, 58, 237, 0.5);
           padding: 0 0.5rem;
           border-radius: 0.25rem;
         }
@@ -318,7 +303,7 @@ const AuthForm = ({ isLogin }) => {
           transform: translateY(-50%);
           background: none;
           border: none;
-          color: #9ca3af;
+          color: rgba(255, 255, 255, 0.7);
           cursor: pointer;
           transition: color 0.3s ease;
           padding: 0.25rem;
@@ -326,14 +311,14 @@ const AuthForm = ({ isLogin }) => {
         }
 
         .password-toggle:hover {
-          color: #7c3aed;
+          color: white;
         }
 
         .submit-button {
           position: relative;
           width: 100%;
           padding: 1rem 1.5rem;
-          background: linear-gradient(135deg, #7c3aed, #3b82f6);
+          background: linear-gradient(135deg, rgba(124, 58, 237, 0.9), rgba(59, 130, 246, 0.9));
           color: white;
           border: none;
           font-size: 1rem;
@@ -346,6 +331,8 @@ const AuthForm = ({ isLogin }) => {
           justify-content: center;
           gap: 0.5rem;
           overflow: hidden;
+          backdrop-filter: blur(5px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .submit-button:hover:not(:disabled) {
@@ -391,39 +378,6 @@ const AuthForm = ({ isLogin }) => {
           animation: spin 1s linear infinite;
         }
 
-        .auth-footer {
-          text-align: center;
-          color: #6b7280;
-          font-size: 0.875rem;
-        }
-
-
-        .auth-image-section {
-          flex: 1;
-          background-image: url("https://ik.imagekit.io/os1mzoooe/ChatGPT%20Image%20Jun%2022,%202025,%2001_51_38%20PM.png?updatedAt=1750580522377");
-          background-size: contain;
-          background-position: center;
-          position: relative;
-          display: none;
-        }
-        .overlay-content {
-          max-width: 400px;
-          padding: 2rem;
-        }
-
-        .overlay-title {
-          font-size: 2.5rem;
-          font-weight: 700;
-          margin-bottom: 1rem;
-          letter-spacing: -0.025em;
-        }
-
-        .overlay-text {
-          font-size: 1.125rem;
-          line-height: 1.6;
-          opacity: 0.9;
-        }
-
         @keyframes slideIn {
           from {
             opacity: 0;
@@ -442,50 +396,13 @@ const AuthForm = ({ isLogin }) => {
         }
 
         /* Mobile Responsive */
-        @media (min-width: 768px) {
-          .auth-image-section {
-            display: flex;
-          }
-
-          .auth-form-section {
-            background: white;
-          }
-
-          .auth-form-section::before {
-            display: none;
-          }
-        }
-
         @media (max-width: 767px) {
-          .auth-container {
-            flex-direction: column;
-          }
-
-          .auth-form-section {
-            min-height: 100vh;
+          .auth-content {
             padding: 1.5rem;
           }
 
           .auth-title {
             font-size: 1.75rem;
-          }
-
-          .overlay-title {
-            font-size: 2rem;
-          }
-
-          .overlay-text {
-            font-size: 1rem;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .auth-form-section {
-            padding: 1rem;
-          }
-
-          .auth-content {
-            max-width: 100%;
           }
 
           .form-input {
@@ -507,6 +424,17 @@ const AuthForm = ({ isLogin }) => {
           .input-group.focused .input-label,
           .input-group.filled .input-label {
             font-size: 0.6875rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .auth-content {
+            padding: 1rem;
+          }
+
+          .brand-icon {
+            width: 16rem;
+            height: 12rem;
           }
         }
       `}</style>
