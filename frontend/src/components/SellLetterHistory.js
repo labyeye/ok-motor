@@ -397,21 +397,21 @@ const SellLetterHistory = () => {
           maximumFractionDigits: 2,
         }).format(num / 100)}`;
   };
-  const formatTime = (timeString) => {
-    if (!timeString) return "";
+   const formatTime = (timeString) => {
+  if (!timeString) return "";
 
-    const [hour, minute] = timeString.split(":").map(Number);
+  const [hour, minute] = timeString.split(":").map(Number);
+  
+  // Convert to 12-hour format with leading zeros and proper AM/PM
+  const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
+  const ampm = hour >= 12 ? "PM" : "AM";
+  
+  // Add leading zero to hours and minutes if needed
+  const formattedHours = String(hours12).padStart(2, "0");
+  const formattedMinutes = String(minute).padStart(2, "0");
 
-    // Convert to 12-hour format with leading zeros and proper AM/PM
-    const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
-    const ampm = hour >= 12 ? "PM" : "AM";
-
-    // Add leading zero to hours and minutes if needed
-    const formattedHours = String(hours12).padStart(2, "0");
-    const formattedMinutes = String(minute).padStart(2, "0");
-
-    return `${formattedHours}:${formattedMinutes} ${ampm}`;
-  };
+  return `${formattedHours}:${formattedMinutes} ${ampm}`;
+};
   const filteredLetters = sellLetters.filter(
     (letter) =>
       letter.vehicleName.toLowerCase().includes(searchTerm.toLowerCase()) ||

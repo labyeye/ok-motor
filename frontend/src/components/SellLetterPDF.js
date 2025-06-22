@@ -512,18 +512,21 @@ const SellLetterForm = () => {
           maximumFractionDigits: 2,
         }).format(num / 100)}`;
   };
-  const formatTime = (timeString) => {
-    if (!timeString) return "";
-    const [hour, minute] = timeString.split(":").map(Number);
-    const date = new Date();
-    date.setHours(hour);
-    date.setMinutes(minute);
-    return date.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+   const formatTime = (timeString) => {
+  if (!timeString) return "";
+
+  const [hour, minute] = timeString.split(":").map(Number);
+  
+  // Convert to 12-hour format with leading zeros and proper AM/PM
+  const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
+  const ampm = hour >= 12 ? "PM" : "AM";
+  
+  // Add leading zero to hours and minutes if needed
+  const formattedHours = String(hours12).padStart(2, "0");
+  const formattedMinutes = String(minute).padStart(2, "0");
+
+  return `${formattedHours}:${formattedMinutes} ${ampm}`;
+};
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
