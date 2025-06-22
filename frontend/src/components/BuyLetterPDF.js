@@ -1024,9 +1024,9 @@ const BuyLetterForm = () => {
 
     page.drawImage(logoImage, {
       x: 50,
-      y: 744,
-      width: 160,
-      height: 130,
+      y: 745,
+      width: 150,
+      height: 120,
     });
 
     page.drawImage(logoImage, {
@@ -1040,7 +1040,7 @@ const BuyLetterForm = () => {
 
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
-      y: 805,
+      y: 803,
       size: 18,
       color: rgb(1, 1, 1),
       font: font,
