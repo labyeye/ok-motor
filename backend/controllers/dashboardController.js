@@ -90,12 +90,14 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
       .limit(limit)
       .select("sellerName saleDate saleAmount registrationNumber")
       .lean()
-      .then(docs => docs.map(doc => ({
-        name: doc.sellerName,
-        date: doc.saleDate,
-        amount: doc.saleAmount,
-        vehicle: doc.registrationNumber
-      })));
+      .then((docs) =>
+        docs.map((doc) => ({
+          name: doc.sellerName,
+          date: doc.saleDate,
+          amount: doc.saleAmount,
+          vehicle: doc.registrationNumber,
+        }))
+      );
   } else if (model.modelName === "SellLetter") {
     return model
       .find(matchCriteria)
@@ -103,26 +105,32 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
       .limit(limit)
       .select("buyerName saleDate saleAmount registrationNumber")
       .lean()
-      .then(docs => docs.map(doc => ({
-        name: doc.buyerName,
-        date: doc.saleDate,
-        amount: doc.saleAmount,
-        vehicle: doc.registrationNumber
-      })));
+      .then((docs) =>
+        docs.map((doc) => ({
+          name: doc.buyerName,
+          date: doc.saleDate,
+          amount: doc.saleAmount,
+          vehicle: doc.registrationNumber,
+        }))
+      );
   } else if (model.modelName === "ServiceBill") {
     return model
       .find(matchCriteria)
       .sort({ serviceDate: -1, createdAt: -1 })
       .limit(limit)
-      .select("customerName serviceDate grandTotal registrationNumber serviceType")
+      .select(
+        "customerName serviceDate grandTotal registrationNumber serviceType"
+      )
       .lean()
-      .then(docs => docs.map(doc => ({
-        name: doc.customerName,
-        date: doc.serviceDate,
-        amount: doc.grandTotal,
-        vehicle: doc.registrationNumber,
-        serviceType: doc.serviceType
-      })));
+      .then((docs) =>
+        docs.map((doc) => ({
+          name: doc.customerName,
+          date: doc.serviceDate,
+          amount: doc.grandTotal,
+          vehicle: doc.registrationNumber,
+          serviceType: doc.serviceType,
+        }))
+      );
   } else if (model.modelName === "AdvanceBill") {
     return model
       .find(matchCriteria)
@@ -130,12 +138,14 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
       .limit(limit)
       .select("customerName serviceDate advancePaid registrationNumber")
       .lean()
-      .then(docs => docs.map(doc => ({
-        name: doc.customerName,
-        date: doc.serviceDate,
-        amount: doc.advancePaid,
-        vehicle: doc.registrationNumber
-      })));
+      .then((docs) =>
+        docs.map((doc) => ({
+          name: doc.customerName,
+          date: doc.serviceDate,
+          amount: doc.advancePaid,
+          vehicle: doc.registrationNumber,
+        }))
+      );
   }
 
   return model
