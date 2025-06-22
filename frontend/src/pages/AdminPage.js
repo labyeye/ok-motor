@@ -74,6 +74,7 @@ const AdminPage = () => {
       fetchDashboardData();
     }
   }, [user, activeMenu]);
+  
 
   const fetchDashboardData = async () => {
     try {
