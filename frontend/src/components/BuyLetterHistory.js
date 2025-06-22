@@ -300,16 +300,20 @@ const BuyLetterHistory = () => {
     });
   };
   const formatTime = (timeString) => {
-    if (!timeString) return "";
-    const [hour, minute] = timeString.split(":").map(Number);
-    let hours = hour % 12;
-    hours = hours ? hours : 12;
-    const ampm = hour >= 12 ? "PM" : "AM";
+  if (!timeString) return "";
 
-    const minutes = minute.toString().padStart(2, "0");
+  const [hour, minute] = timeString.split(":").map(Number);
+  
+  // Convert to 12-hour format with leading zeros and proper AM/PM
+  const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
+  const ampm = hour >= 12 ? "PM" : "AM";
+  
+  // Add leading zero to hours and minutes if needed
+  const formattedHours = String(hours12).padStart(2, "0");
+  const formattedMinutes = String(minute).padStart(2, "0");
 
-    return `${hours}:${minutes} ${ampm}`;
-  };
+  return `${formattedHours}:${formattedMinutes} ${ampm}`;
+};
 
   const menuItems = [
     {

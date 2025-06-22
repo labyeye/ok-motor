@@ -1193,10 +1193,21 @@ const SellLetterForm = () => {
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      function formatTime(timeString) {
-        if (!timeString) return "";
-        return timeString.slice(0, 5);
-      }
+      const formatTime = (timeString) => {
+  if (!timeString) return "";
+
+  const [hour, minute] = timeString.split(":").map(Number);
+  
+  // Convert to 12-hour format with leading zeros and proper AM/PM
+  const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
+  const ampm = hour >= 12 ? "PM" : "AM";
+  
+  // Add leading zero to hours and minutes if needed
+  const formattedHours = String(hours12).padStart(2, "0");
+  const formattedMinutes = String(minute).padStart(2, "0");
+
+  return `${formattedHours}:${formattedMinutes} ${ampm}`;
+};
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
 

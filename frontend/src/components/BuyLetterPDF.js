@@ -323,15 +323,13 @@ const BuyLetterForm = () => {
 
     const [hour, minute] = timeString.split(":").map(Number);
 
-    const date = new Date();
-    date.setHours(hour);
-    date.setMinutes(minute);
-    let hours = hour % 12;
-    hours = hours ? hours : 12;
+    const hours12 = hour % 12 || 12; 
     const ampm = hour >= 12 ? "PM" : "AM";
-    const minutes = minute.toString().padStart(2, "0");
 
-    return `${hours}:${minutes} ${ampm}`;
+    const formattedHours = String(hours12).padStart(2, "0");
+    const formattedMinutes = String(minute).padStart(2, "0");
+
+    return `${formattedHours}:${formattedMinutes} ${ampm}`;
   };
 
   const saveBuyLetter = async () => {
@@ -1033,9 +1031,9 @@ const BuyLetterForm = () => {
 
     page.drawImage(logoImage, {
       x: 280,
-      y: 200,
-      width: 370,
-      height: 300,
+      y: 150,
+      width: 470,
+      height: 400,
       opacity: 0.3,
       rotate: degrees(45),
     });
@@ -1183,6 +1181,7 @@ const BuyLetterForm = () => {
       y: 575,
       width: 495,
       height: 20,
+      opacity:0.3,
       color: rgb(0.9, 0.9, 0.9),
     });
     page.drawText("Condition: " + (formData.vehicleCondition || "N/A"), {
