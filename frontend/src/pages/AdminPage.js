@@ -888,6 +888,10 @@ const AdminPage = () => {
           height: 490px;
           width: 1550px;
           object-fit: cover;
+          margin-bottom: -0.5rem;
+          margin-left: -1rem;
+          margin-top: -0.5rem;
+          margin-right: -1rem;
         }
 
         /* Dashboard Cards */
