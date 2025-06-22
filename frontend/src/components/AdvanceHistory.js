@@ -22,7 +22,8 @@ import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
 
 const AdvanceHistory = () => {
-  const { user } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
+
   const [activeMenu, setActiveMenu] = useState("Advance History");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [advanceBills, setAdvanceBills] = useState([]);
@@ -321,10 +322,7 @@ const formatDate = (dateString) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
+    logout();
     navigate("/login");
   };
 

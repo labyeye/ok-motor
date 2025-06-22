@@ -34,7 +34,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
 const BuyLetterForm = () => {
-  const { user } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [savedLetterData, setSavedLetterData] = useState(null);
@@ -504,10 +504,7 @@ const BuyLetterForm = () => {
     }));
   };
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
+ logout();
     navigate("/login");
   };
 

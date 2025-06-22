@@ -160,7 +160,8 @@ const EditSellLetterModal = ({ letter, onClose, onSave }) => {
 };
 
 const SellLetterHistory = () => {
-  const { user } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
+
   const [activeMenu, setActiveMenu] = useState("Sell Letter History");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [showLanguageModal, setShowLanguageModal] = useState(false);
@@ -1163,10 +1164,7 @@ const SellLetterHistory = () => {
     setEditingLetter(letter);
   };
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
+    logout();
     navigate("/login");
   };
   const handleSaveEdit = async (updatedLetter) => {

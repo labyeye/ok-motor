@@ -21,7 +21,8 @@ import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
 
 const BikeHistory = () => {
-  const { user } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
+
   const [activeMenu, setActiveMenu] = useState("Bike History");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -238,10 +239,7 @@ const BikeHistory = () => {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
+    logout();
     navigate("/login");
   };
   const toggleMenu = (menuName) => {

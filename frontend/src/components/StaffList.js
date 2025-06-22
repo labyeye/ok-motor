@@ -22,7 +22,8 @@ import logo from '../images/company.png';
 
 const StaffList = () => {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
+
 
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -135,10 +136,7 @@ const StaffList = () => {
     },
   ];
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
+    logout();
     navigate("/login");
   };
 

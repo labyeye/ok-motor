@@ -28,7 +28,8 @@ import logo from "../images/company.png";
 import AuthContext from "../context/AuthContext";
 
 const ServiceBillForm = () => {
-  const { user } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
+
   const [activeMenu, setActiveMenu] = useState("Create Service Bill");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
@@ -375,10 +376,7 @@ const ServiceBillForm = () => {
     handleChange(e);
   };
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
+    logout();
     navigate("/login");
   };
 

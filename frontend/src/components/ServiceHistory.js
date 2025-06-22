@@ -23,7 +23,8 @@ import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
 
 const ServiceHistory = () => {
-  const { user } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
+
   const [activeMenu, setActiveMenu] = useState("Service History");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [serviceBills, setServiceBills] = useState([]);
@@ -374,10 +375,7 @@ const ServiceHistory = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
+    logout();
     navigate("/login");
   };
 

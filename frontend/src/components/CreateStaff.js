@@ -22,7 +22,8 @@ import logo from '../images/company.png';
 const CreateStaff = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
+
 
   const [formData, setFormData] = useState({
     name: "",
@@ -71,10 +72,7 @@ const CreateStaff = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
+    logout();
     navigate("/login");
   };
 

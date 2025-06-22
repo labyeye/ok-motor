@@ -183,7 +183,8 @@ const EditBuyLetterModal = ({ letter, onClose, onSave }) => {
 };
 
 const BuyLetterHistory = () => {
-  const { user } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
+
   const [activeMenu, setActiveMenu] = useState("Buy Letter History");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
@@ -394,10 +395,7 @@ const BuyLetterHistory = () => {
     navigate(actualPath);
   };
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
+    logout();
     navigate("/login");
   };
   const englishFieldPositions = {

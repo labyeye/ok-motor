@@ -4,7 +4,8 @@ import AuthContext from '../context/AuthContext';
 import AuthForm from '../components/AuthForm';
 
 const LoginPage = () => {
-  const { user } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
+
   const navigate = useNavigate();
 
   console.log('User in LoginPage:', user); // Add this for debugging

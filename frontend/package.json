@@ -13,6 +13,7 @@
     "file-saver": "^2.0.5",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.511.0",
     "next": "^15.1.8",
     "pdf-lib": "^1.17.1",

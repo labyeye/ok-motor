@@ -30,7 +30,8 @@ import logo1 from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 
 const SellLetterForm = () => {
-  const { user } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
+
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [savedLetterData, setSavedLetterData] = useState(null);
   const [activeMenu, setActiveMenu] = useState("Create Sell Letter");
@@ -1353,10 +1354,7 @@ const SellLetterForm = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
+    logout();
     navigate("/login");
   };
 

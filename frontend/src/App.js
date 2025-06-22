@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { AuthProvider ,useAuth} from "./context/AuthContext";
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
@@ -15,35 +15,55 @@ import StaffList from "./components/StaffList";
 import ServiceHistory from "./components/ServiceHistory";
 import AdvancePayBillForm from "./components/AdvancePayBillForm";
 import AdvanceHistory from "./components/AdvanceHistory";
-import { useEffect } from "react";
 
-function AuthHandler() {
-  const { logout } = useAuth();
+// Component to handle root route redirection
+const RootRedirect = () => {
+  const { user, loading, isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      logout();
-      e.preventDefault();
-      e.returnValue = '';
-    };
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        backgroundColor: '#f3f4f6'
+      }}>
+        <div style={{
+          width: '50px',
+          height: '50px',
+          border: '5px solid #e5e7eb',
+          borderTop: '5px solid #3b82f6',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <style>
+          {`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}
+        </style>
+      </div>
+    );
+  }
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [logout]);
+  // Redirect based on user role
+  const redirectPath = user?.role === 'admin' ? '/admin' : '/staff';
+  return <Navigate to={redirectPath} replace />;
+};
 
-  return null;
-}
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <AuthHandler/>
         <Routes>
-          <Route path="/" element={<LoginPage />} />
-
+          <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<LoginPage />} />
           <Route
             path="/admin"
@@ -149,7 +169,6 @@ function App() {
               </PrivateRoute>
             }
           />
-          
         </Routes>
       </Router>
     </AuthProvider>

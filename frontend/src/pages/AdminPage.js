@@ -885,13 +885,10 @@ const AdminPage = () => {
         }
 
         .banner-logo {
-          height: 490px;
-          width: 1550px;
+          height: 900px;
+          width: 100%;
           object-fit: cover;
-          margin-bottom: -0.5rem;
-          margin-left: -1rem;
-          margin-top: -0.5rem;
-          margin-right: -1rem;
+          object-position: center -400px; /* Moves image up = crops top */
         }
 
         /* Dashboard Cards */

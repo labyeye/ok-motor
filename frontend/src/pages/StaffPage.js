@@ -19,7 +19,8 @@ import logo from "../images/company.png";
 import AuthContext from "../context/AuthContext";
 
 const StaffPage = () => {
-  const { user } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
+
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [dashboardData, setDashboardData] = useState({
@@ -104,10 +105,7 @@ const StaffPage = () => {
     navigate(actualPath);
   };
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
+    logout();
     navigate("/login");
   };
   // In the menuItems array (around line 250 in BuyLetterPDF.js)
