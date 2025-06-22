@@ -155,7 +155,7 @@ const CreateStaff = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-           <img src={logo} alt="logo" style={{width: '12.5rem', height: '7.5rem', color: '#7c3aed'}} />
+           <img src={logo} alt="logo" style={{width: '14.5rem', height: '10.5rem', color: '#7c3aed'}} />
           <p style={styles.sidebarSubtitle}>Welcome, {user?.role === 'admin' ? 'OK MOTORS' : 'OK MOTORS'}</p>
         </div>
 

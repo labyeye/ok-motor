@@ -7,9 +7,9 @@ const {
 } = require('../controllers/dashboardController');
 
 // Regular admin dashboard
-router.route('/').get(protect, getDashboardStats);
+router.route('/stats').get(protect, getDashboardStats);
 
 // Owner-specific dashboard
-router.route('/owner').get(protect, getOwnerDashboardStats);
+router.route('/owner-stats').get(protect, getOwnerDashboardStats);
 
 module.exports = router;

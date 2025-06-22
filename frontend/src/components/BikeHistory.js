@@ -262,7 +262,7 @@ const BikeHistory = () => {
     <div style={styles.container}>
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-           <img src={logo} alt="logo" style={{width: '12.5rem', height: '7.5rem', color: '#7c3aed'}} />
+           <img src={logo} alt="logo" style={{width: '14.5rem', height: '10.5rem', color: '#7c3aed'}} />
           <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
         </div>
 

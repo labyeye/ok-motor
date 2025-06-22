@@ -387,7 +387,7 @@ const StaffPage = () => {
           <img
             src={logo}
             alt="logo"
-            style={{ width: "7.5rem", height: "7.5rem", color: "#7c3aed" }}
+            style={{ width: "10.5rem", height: "10.5rem", color: "#7c3aed" }}
           />
           <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
         </div>

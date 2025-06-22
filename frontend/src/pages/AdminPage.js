@@ -31,8 +31,9 @@ import {
   ArcElement,
 } from "chart.js";
 import logo from "../images/company.png";
-import logo1 from "../images/okmotor.png";
+import logo1 from "../images/dash.png";
 import AuthContext from "../context/AuthContext";
+import axios from "axios";
 
 // Register ChartJS components
 ChartJS.register(
@@ -46,7 +47,7 @@ ChartJS.register(
 );
 
 const AdminPage = () => {
-  const { user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [dashboardData, setDashboardData] = useState({
@@ -62,77 +63,55 @@ const AdminPage = () => {
       service: [],
       advance: [],
     },
-    monthlyData: [
-      { month: "Jan", buy: 10, sell: 8, profit: 20000 },
-      { month: "Feb", buy: 12, sell: 10, profit: 25000 },
-      { month: "Mar", buy: 15, sell: 12, profit: 30000 },
-      { month: "Apr", buy: 8, sell: 7, profit: 15000 },
-      { month: "May", buy: 14, sell: 12, profit: 28000 },
-      { month: "Jun", buy: 16, sell: 14, profit: 32000 },
-    ],
+    monthlyData: [],
   });
   const [loading, setLoading] = useState(true);
-  const [isOwnerView, setIsOwnerView] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (activeMenu === "Dashboard") {
+    if (user && activeMenu === "Dashboard") {
       fetchDashboardData();
     }
-  }, [activeMenu, isOwnerView]);
+  }, [user, activeMenu]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
-      // Simulate API call with timeout
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Use mock data since API might not be available
-      const mockData = {
-        totalBuyLetters: 75,
-        totalSellLetters: 63,
-        totalBuyValue: 12500000,
-        totalSellValue: 15000000,
-        profit: 2500000,
-        ownerName: user?.name || "Admin",
-        recentTransactions: {
-          buy: [
-            { bikeNumber: "KA01AB1234", customerName: "Ramesh Kumar", date: "2023-06-15", amount: 185000 },
-            { bikeNumber: "KA02CD5678", customerName: "Suresh Patel", date: "2023-06-14", amount: 165000 },
-            { bikeNumber: "KA03EF9012", customerName: "Amit Sharma", date: "2023-06-12", amount: 195000 },
-          ],
-          sell: [
-            { bikeNumber: "KA01AB1234", customerName: "Vikram Singh", date: "2023-06-10", amount: 210000 },
-            { bikeNumber: "KA04GH3456", customerName: "Neha Gupta", date: "2023-06-08", amount: 225000 },
-            { bikeNumber: "KA05IJ6789", customerName: "Priya Reddy", date: "2023-06-05", amount: 195000 },
-          ],
-          service: [
-            { bikeNumber: "KA06KL0123", serviceType: "Full Service", date: "2023-06-18", amount: 3500 },
-            { bikeNumber: "KA07MN4567", serviceType: "Oil Change", date: "2023-06-17", amount: 1200 },
-            { bikeNumber: "KA08OP8901", serviceType: "Tyre Replacement", date: "2023-06-16", amount: 4500 },
-          ],
-          advance: [
-            { bikeNumber: "KA09QR2345", customerName: "Anil Mehta", date: "2023-06-20", amount: 50000 },
-            { bikeNumber: "KA10ST6789", customerName: "Sunil Rao", date: "2023-06-19", amount: 30000 },
-          ],
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const endpoint =
+        user?.role === "admin"
+          ? "https://ok-motor.onrender.com/api/dashboard/stats"
+          : "https://ok-motor.onrender.com/api/dashboard/owner-stats";
+
+      const response = await axios.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        monthlyData: [
-          { month: "Jan", buy: 10, sell: 8, profit: 20000 },
-          { month: "Feb", buy: 12, sell: 10, profit: 25000 },
-          { month: "Mar", buy: 15, sell: 12, profit: 30000 },
-          { month: "Apr", buy: 8, sell: 7, profit: 15000 },
-          { month: "May", buy: 14, sell: 12, profit: 28000 },
-          { month: "Jun", buy: 16, sell: 14, profit: 32000 },
-        ],
-      };
-      
-      setDashboardData(mockData);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      setError("Failed to load dashboard data. Using sample data.");
-      // Even if there's an error, we'll use the initial mock data
+      });
+
+      setDashboardData({
+        ...response.data.data,
+        ownerName: user?.name || "Admin",
+      });
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+      setError(
+        err.response?.data?.message ||
+          "Failed to load dashboard data. Please try again."
+      );
+      if (err.response?.status === 401) {
+        // Handle unauthorized error (token expired or invalid)
+        logout();
+        navigate("/login");
+      }
     } finally {
       setLoading(false);
     }
@@ -154,10 +133,6 @@ const AdminPage = () => {
     return new Date(dateString).toLocaleDateString("en-IN", options);
   };
 
-  const toggleOwnerView = () => {
-    setIsOwnerView(!isOwnerView);
-  };
-
   const toggleMenu = (menuName) => {
     setExpandedMenus((prev) => ({
       ...prev,
@@ -172,29 +147,25 @@ const AdminPage = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
+    logout();
     navigate("/login");
   };
 
-  // Chart data configuration
   const monthlyChartData = {
-    labels: dashboardData.monthlyData?.map((item) => item.month) || [],
-    datasets: [
-      {
-        label: "Buy Letters",
-        data: dashboardData.monthlyData?.map((item) => item.buy) || [],
-        backgroundColor: "#3b82f6",
-      },
-      {
-        label: "Sell Letters",
-        data: dashboardData.monthlyData?.map((item) => item.sell) || [],
-        backgroundColor: "#10b981",
-      },
-    ],
-  };
+  labels: dashboardData.monthlyData?.map((item) => item.month) || [],
+  datasets: [
+    {
+      label: "Buy Amount",
+      data: dashboardData.monthlyData?.map((item) => item.buyAmount) || [],
+      backgroundColor: "rgba(59, 130, 246, 0.7)",
+    },
+    {
+      label: "Sell Amount",
+      data: dashboardData.monthlyData?.map((item) => item.sellAmount) || [],
+      backgroundColor: "rgba(16, 185, 129, 0.7)",
+    },
+  ],
+};
 
   const profitChartData = {
     labels: dashboardData.monthlyData?.map((item) => item.month) || [],
@@ -202,7 +173,7 @@ const AdminPage = () => {
       {
         label: "Profit",
         data: dashboardData.monthlyData?.map((item) => item.profit) || [],
-        backgroundColor: "#10b981",
+        backgroundColor: "rgba(16, 185, 129, 0.7)",
       },
     ],
   };
@@ -216,8 +187,16 @@ const AdminPage = () => {
           dashboardData.totalSellLetters || 0,
           dashboardData.recentTransactions?.service?.length || 0,
         ],
-        backgroundColor: ["#3b82f6", "#10b981", "#f59e0b"],
-        borderColor: ["#2563eb", "#059669", "#d97706"],
+        backgroundColor: [
+          "rgba(59, 130, 246, 0.7)",
+          "rgba(16, 185, 129, 0.7)",
+          "rgba(245, 158, 11, 0.7)",
+        ],
+        borderColor: [
+          "rgba(37, 99, 235, 1)",
+          "rgba(5, 150, 105, 1)",
+          "rgba(217, 119, 6, 1)",
+        ],
         borderWidth: 1,
       },
     ],
@@ -228,6 +207,9 @@ const AdminPage = () => {
     plugins: {
       legend: {
         position: "top",
+        labels: {
+          color: "#ffffff",
+        },
       },
       title: {
         display: true,
@@ -327,43 +309,29 @@ const AdminPage = () => {
   ];
 
   const DashboardCards = () => (
-    <div style={styles.cardsGrid}>
+    <div className="cards-grid">
       {loading ? (
         Array(4)
           .fill()
           .map((_, index) => (
             <div
               key={index}
-              style={{
-                ...styles.card,
-                borderLeft: `4px solid ${
-                  ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b"][index]
-                }`,
-                opacity: 0.7,
-              }}
+              className={`card shimmer ${
+                ["blue", "green", "purple", "amber"][index]
+              }`}
             >
-              <div style={styles.cardContent}>
+              <div className="card-content">
                 <div>
-                  <p style={styles.cardLabel}>Loading...</p>
-                  <p style={styles.cardValue}>-</p>
+                  <p className="card-label">Loading...</p>
+                  <p className="card-value">-</p>
                 </div>
-                <div
-                  style={{
-                    ...styles.cardIcon,
-                    backgroundColor: [
-                      "#dbeafe",
-                      "#d1fae5",
-                      "#ede9fe",
-                      "#fef3c7",
-                    ][index],
-                  }}
-                >
+                <div className="card-icon">
                   {
                     [
-                      <FileText size={32} color="#2563eb" />,
-                      <TrendingUp size={32} color="#059669" />,
-                      <ShoppingCart size={32} color="#7c3aed" />,
-                      <Target size={32} color="#d97706" />,
+                      <FileText />,
+                      <TrendingUp />,
+                      <ShoppingCart />,
+                      <Target />,
                     ][index]
                   }
                 </div>
@@ -371,94 +339,66 @@ const AdminPage = () => {
             </div>
           ))
       ) : error ? (
-        <div
-          style={{
-            ...styles.card,
-            gridColumn: "1 / -1",
-            textAlign: "center",
-            padding: "20px",
-          }}
-        >
-          <p style={{ color: "#ef4444" }}>{error}</p>
-          <button
-            onClick={fetchDashboardData}
-            style={{
-              backgroundColor: "#3b82f6",
-              color: "white",
-              border: "none",
-              padding: "8px 16px",
-              borderRadius: "4px",
-              marginTop: "10px",
-              cursor: "pointer",
-            }}
-          >
+        <div className="card error-card">
+          <p>{error}</p>
+          <button onClick={fetchDashboardData} className="retry-button">
             Retry
           </button>
         </div>
       ) : (
         <>
-          <div style={{ ...styles.card, borderLeft: "4px solid #3b82f6" }}>
-            <div style={styles.cardContent}>
+          <div className="card blue">
+            <div className="card-content">
               <div>
-                <p style={styles.cardLabel}>
-                  {isOwnerView ? "My Purchases" : "Total Buy Letters"}
-                </p>
-                <p style={styles.cardValue}>{dashboardData.totalBuyLetters}</p>
+                <p className="card-label">Total Buy Letters</p>
+                <p className="card-value">{dashboardData.totalBuyLetters}</p>
               </div>
-              <div style={{ ...styles.cardIcon, backgroundColor: "#dbeafe" }}>
-                <FileText size={32} color="#2563eb" />
+              <div className="card-icon">
+                <FileText />
               </div>
             </div>
           </div>
 
-          <div style={{ ...styles.card, borderLeft: "4px solid #10b981" }}>
-            <div style={styles.cardContent}>
+          <div className="card green">
+            <div className="card-content">
               <div>
-                <p style={styles.cardLabel}>
-                  {isOwnerView ? "My Sales" : "Total Sell Letters"}
-                </p>
-                <p style={styles.cardValue}>{dashboardData.totalSellLetters}</p>
+                <p className="card-label">Total Sell Letters</p>
+                <p className="card-value">{dashboardData.totalSellLetters}</p>
               </div>
-              <div style={{ ...styles.cardIcon, backgroundColor: "#d1fae5" }}>
-                <TrendingUp size={32} color="#059669" />
+              <div className="card-icon">
+                <TrendingUp />
               </div>
             </div>
           </div>
 
-          <div style={{ ...styles.card, borderLeft: "4px solid #8b5cf6" }}>
-            <div style={styles.cardContent}>
+          <div className="card purple">
+            <div className="card-content">
               <div>
-                <p style={styles.cardLabel}>
-                  {isOwnerView ? "My Purchase Value" : "Total Purchase Value"}
-                </p>
-                <p style={{ ...styles.cardValue, fontSize: "1.5rem" }}>
+                <p className="card-label">Total Purchase Value</p>
+                <p className="card-value currency">
                   {formatCurrency(dashboardData.totalBuyValue)}
                 </p>
               </div>
-              <div style={{ ...styles.cardIcon, backgroundColor: "#ede9fe" }}>
-                <ShoppingCart size={32} color="#7c3aed" />
+              <div className="card-icon">
+                <ShoppingCart />
               </div>
             </div>
           </div>
 
-          <div style={{ ...styles.card, borderLeft: "4px solid #f59e0b" }}>
-            <div style={styles.cardContent}>
+          <div className="card amber">
+            <div className="card-content">
               <div>
-                <p style={styles.cardLabel}>
-                  {isOwnerView ? "My Net Profit" : "Total Profit"}
-                </p>
+                <p className="card-label">Total Profit</p>
                 <p
-                  style={{
-                    ...styles.cardValue,
-                    fontSize: "1.5rem",
-                    color: dashboardData.profit >= 0 ? "#059669" : "#dc2626",
-                  }}
+                  className={`card-value currency ${
+                    dashboardData.profit >= 0 ? "positive" : "negative"
+                  }`}
                 >
                   {formatCurrency(dashboardData.profit)}
                 </p>
               </div>
-              <div style={{ ...styles.cardIcon, backgroundColor: "#fef3c7" }}>
-                <Target size={32} color="#d97706" />
+              <div className="card-icon">
+                <Target />
               </div>
             </div>
           </div>
@@ -468,89 +408,47 @@ const AdminPage = () => {
   );
 
   const RevenueCard = () => (
-    <div style={styles.revenueCard}>
-      <h3 style={styles.revenueTitle}>
-        {isOwnerView ? "My Financial Summary" : "Business Revenue Overview"}
-      </h3>
+    <div className="revenue-card">
+      <h3 className="revenue-title">Business Revenue Overview</h3>
       {loading ? (
-        <div style={styles.revenueGrid}>
+        <div className="revenue-grid">
           {Array(3)
             .fill()
             .map((_, index) => (
-              <div key={index} style={styles.revenueItem}>
-                <p style={styles.revenueLabel}>Loading...</p>
-                <p
-                  style={{
-                    ...styles.revenueValue,
-                    color: ["#dc2626", "#059669", "#2563eb"][index],
-                  }}
-                >
-                  -
-                </p>
+              <div key={index} className="revenue-item shimmer">
+                <p className="revenue-label">Loading...</p>
+                <p className="revenue-value">-</p>
               </div>
             ))}
         </div>
       ) : error ? (
-        <div style={{ textAlign: "center", padding: "20px" }}>
-          <p style={{ color: "#ef4444" }}>{error}</p>
+        <div className="error-message">
+          <p>{error}</p>
         </div>
       ) : (
-        <div style={styles.revenueGrid}>
-          <div style={styles.revenueItem}>
-            <p style={styles.revenueLabel}>
-              {isOwnerView ? "My Total Purchases" : "Total Business Purchases"}
-            </p>
-            <p style={{ ...styles.revenueValue, color: "#dc2626" }}>
+        <div className="revenue-grid">
+          <div className="revenue-item">
+            <p className="revenue-label">Total Business Purchases</p>
+            <p className="revenue-value negative">
               {formatCurrency(dashboardData.totalBuyValue)}
-              {isOwnerView && (
-                <span
-                  style={{
-                    fontSize: "0.875rem",
-                    color: "#6b7280",
-                    display: "block",
-                  }}
-                >
-                  ({dashboardData.totalBuyLetters} transactions)
-                </span>
-              )}
             </p>
           </div>
-          <div style={styles.revenueItem}>
-            <p style={styles.revenueLabel}>
-              {isOwnerView ? "My Total Sales" : "Total Business Sales"}
-            </p>
-            <p style={{ ...styles.revenueValue, color: "#059669" }}>
+          <div className="revenue-item">
+            <p className="revenue-label">Total Business Sales</p>
+            <p className="revenue-value positive">
               {formatCurrency(dashboardData.totalSellValue)}
-              {isOwnerView && (
-                <span
-                  style={{
-                    fontSize: "0.875rem",
-                    color: "#6b7280",
-                    display: "block",
-                  }}
-                >
-                  ({dashboardData.totalSellLetters} transactions)
-                </span>
-              )}
             </p>
           </div>
-          <div style={styles.revenueItem}>
-            <p style={styles.revenueLabel}>Net Profit/Loss</p>
+          <div className="revenue-item">
+            <p className="revenue-label">Net Profit/Loss</p>
             <p
-              style={{
-                ...styles.revenueValue,
-                color: dashboardData.profit >= 0 ? "#2563eb" : "#dc2626",
-              }}
+              className={`revenue-value ${
+                dashboardData.profit >= 0 ? "positive" : "negative"
+              }`}
             >
               {formatCurrency(dashboardData.profit)}
               {dashboardData.totalBuyValue > 0 && (
-                <span
-                  style={{
-                    fontSize: "0.875rem",
-                    color: dashboardData.profit >= 0 ? "#059669" : "#dc2626",
-                    display: "block",
-                  }}
-                >
+                <span className="profit-percentage">
                   {dashboardData.profit >= 0 ? "Profit" : "Loss"}:{" "}
                   {Math.abs(
                     (dashboardData.profit / dashboardData.totalBuyValue) * 100
@@ -568,24 +466,14 @@ const AdminPage = () => {
   const ChartsSection = () => {
     if (loading) {
       return (
-        <div style={styles.chartsContainer}>
+        <div className="charts-container">
           {Array(3)
             .fill()
             .map((_, index) => (
-              <div key={index} style={styles.chartCard}>
-                <h3 style={styles.chartTitle}>Loading...</h3>
-                <div
-                  style={{
-                    ...styles.chartWrapper,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <RefreshCw
-                    size={24}
-                    style={{ animation: "spin 1s linear infinite" }}
-                  />
+              <div key={index} className="chart-card shimmer">
+                <h3 className="chart-title">Loading...</h3>
+                <div className="chart-wrapper">
+                  <RefreshCw className="spinner" />
                 </div>
               </div>
             ))}
@@ -595,358 +483,194 @@ const AdminPage = () => {
 
     if (error) {
       return (
-        <div style={styles.chartsContainer}>
-          <div
-            style={{
-              ...styles.chartCard,
-              gridColumn: "1 / -1",
-              textAlign: "center",
-            }}
-          >
-            <p style={{ color: "#ef4444" }}>{error}</p>
+        <div className="charts-container">
+          <div className="chart-card error">
+            <p>{error}</p>
           </div>
         </div>
       );
     }
 
     return (
-      <div style={styles.chartsContainer}>
-        {/* <div style={styles.chartCard}>
-          <h3 style={styles.chartTitle}>Monthly Transactions</h3>
-          <div style={styles.chartWrapper}>
+      <div className="charts-container">
+        <div className="chart-card">
+          <h3 className="chart-title">Monthly Transactions</h3>
+          <div className="chart-wrapper">
             {dashboardData.monthlyData?.length > 0 ? (
               <Bar data={monthlyChartData} options={chartOptions} />
             ) : (
-              <p
-                style={{
-                  textAlign: "center",
-                  color: "#ffffff",
-                  padding: "20px",
-                }}
-              >
-                No transaction data available
-              </p>
+              <p className="no-data">No transaction data available</p>
             )}
           </div>
         </div>
 
-        <div style={styles.chartCard}>
-          <h3 style={styles.chartTitle}>Monthly Profit</h3>
-          <div style={styles.chartWrapper}>
+        <div className="chart-card">
+          <h3 className="chart-title">Monthly Profit</h3>
+          <div className="chart-wrapper">
             {dashboardData.monthlyData?.length > 0 ? (
               <Bar data={profitChartData} options={chartOptions} />
             ) : (
-              <p
-                style={{
-                  textAlign: "center",
-                  color: "#ffffff",
-                  padding: "20px",
-                }}
-              >
-                No profit data available
-              </p>
+              <p className="no-data">No profit data available</p>
             )}
           </div>
         </div>
 
-        <div style={styles.chartCard}>
-          <h3 style={styles.chartTitle}>Transaction Types</h3>
-          <div style={styles.chartWrapper}>
+        <div className="chart-card">
+          <h3 className="chart-title">Transaction Types</h3>
+          <div className="chart-wrapper">
             <Pie data={transactionTypeData} options={pieOptions} />
           </div>
-        </div> */}
+        </div>
       </div>
     );
   };
+const RecentTransactions = () => {
+  const renderTransactionList = (transactions) => {
+    if (loading) {
+      return Array(3)
+        .fill()
+        .map((_, index) => (
+          <div key={index} className="transaction-item shimmer">
+            <div className="transaction-info">
+              <p className="transaction-bike">Loading...</p>
+              <p className="transaction-customer">-</p>
+            </div>
+            <div className="transaction-details">
+              <p className="transaction-date">-</p>
+              <p className="transaction-amount">-</p>
+            </div>
+          </div>
+        ));
+    }
 
-  const RecentTransactions = () => (
-    <div style={styles.transactionsContainer}>
-      {/* Recent Buy Transactions */}
-      <div style={styles.transactionCard}>
-        <h3 style={styles.transactionTitle}>
-          <ShoppingCart size={18} style={{ marginRight: "8px" }} />
+    if (error) {
+      return <p className="error-message">{error}</p>;
+    }
+
+    if (!transactions || transactions.length === 0) {
+      return <p className="no-data">No recent transactions</p>;
+    }
+
+    return transactions.map((transaction, index) => (
+      <div key={index} className="transaction-item">
+        <div className="transaction-info">
+          <p className="transaction-bike">{transaction.vehicle || "-"}</p>
+          <p className="transaction-customer">
+            {transaction.name} {transaction.serviceType ? `(${transaction.serviceType})` : ''}
+          </p>
+        </div>
+        <div className="transaction-details">
+          <p className="transaction-date">{formatDate(transaction.date)}</p>
+          <p className="transaction-amount">
+            {formatCurrency(transaction.amount)}
+          </p>
+        </div>
+      </div>
+    ));
+  };
+
+  return (
+    <div className="transactions-container">
+      <div className="transaction-card">
+        <h3 className="transaction-title">
+          <ShoppingCart size={18} />
           Recent Purchases
         </h3>
-        <div style={styles.transactionList}>
-          {loading ? (
-            Array(3)
-              .fill()
-              .map((_, index) => (
-                <div key={index} style={styles.transactionItem}>
-                  <div style={styles.transactionInfo}>
-                    <p style={styles.transactionBike}>Loading...</p>
-                    <p style={styles.transactionCustomer}>-</p>
-                  </div>
-                  <div style={styles.transactionDetails}>
-                    <p style={styles.transactionDate}>-</p>
-                    <p style={styles.transactionAmount}>-</p>
-                  </div>
-                </div>
-              ))
-          ) : error ? (
-            <p style={{ color: "#ef4444", textAlign: "center" }}>{error}</p>
-          ) : dashboardData.recentTransactions.buy?.length > 0 ? (
-            dashboardData.recentTransactions.buy.map((transaction, index) => (
-              <div key={index} style={styles.transactionItem}>
-                <div style={styles.transactionInfo}>
-                  <p style={styles.transactionBike}>{transaction.bikeNumber}</p>
-                  <p style={styles.transactionCustomer}>
-                    {transaction.customerName}
-                  </p>
-                </div>
-                <div style={styles.transactionDetails}>
-                  <p style={styles.transactionDate}>
-                    {formatDate(transaction.date)}
-                  </p>
-                  <p style={styles.transactionAmount}>
-                    {formatCurrency(transaction.amount)}
-                  </p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p style={{ color: "#6b7280", textAlign: "center" }}>
-              No recent purchases
-            </p>
-          )}
+        <div className="transaction-list">
+          {renderTransactionList(dashboardData.recentTransactions?.buy)}
         </div>
       </div>
 
-      {/* Recent Sell Transactions */}
-      <div style={styles.transactionCard}>
-        <h3 style={styles.transactionTitle}>
-          <TrendingUp size={18} style={{ marginRight: "8px" }} />
+      <div className="transaction-card">
+        <h3 className="transaction-title">
+          <TrendingUp size={18} />
           Recent Sales
         </h3>
-        <div style={styles.transactionList}>
-          {loading ? (
-            Array(3)
-              .fill()
-              .map((_, index) => (
-                <div key={index} style={styles.transactionItem}>
-                  <div style={styles.transactionInfo}>
-                    <p style={styles.transactionBike}>Loading...</p>
-                    <p style={styles.transactionCustomer}>-</p>
-                  </div>
-                  <div style={styles.transactionDetails}>
-                    <p style={styles.transactionDate}>-</p>
-                    <p style={styles.transactionAmount}>-</p>
-                  </div>
-                </div>
-              ))
-          ) : error ? (
-            <p style={{ color: "#ef4444", textAlign: "center" }}>{error}</p>
-          ) : dashboardData.recentTransactions.sell?.length > 0 ? (
-            dashboardData.recentTransactions.sell.map((transaction, index) => (
-              <div key={index} style={styles.transactionItem}>
-                <div style={styles.transactionInfo}>
-                  <p style={styles.transactionBike}>{transaction.bikeNumber}</p>
-                  <p style={styles.transactionCustomer}>
-                    {transaction.customerName}
-                  </p>
-                </div>
-                <div style={styles.transactionDetails}>
-                  <p style={styles.transactionDate}>
-                    {formatDate(transaction.date)}
-                  </p>
-                  <p style={styles.transactionAmount}>
-                    {formatCurrency(transaction.amount)}
-                  </p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p style={{ color: "#6b7280", textAlign: "center" }}>
-              No recent sales
-            </p>
-          )}
+        <div className="transaction-list">
+          {renderTransactionList(dashboardData.recentTransactions?.sell)}
         </div>
       </div>
 
-      {/* Recent Service Transactions */}
-      <div style={styles.transactionCard}>
-        <h3 style={styles.transactionTitle}>
-          <Wrench size={18} style={{ marginRight: "8px" }} />
+      <div className="transaction-card">
+        <h3 className="transaction-title">
+          <Wrench size={18} />
           Recent Services
         </h3>
-        <div style={styles.transactionList}>
-          {loading ? (
-            Array(3)
-              .fill()
-              .map((_, index) => (
-                <div key={index} style={styles.transactionItem}>
-                  <div style={styles.transactionInfo}>
-                    <p style={styles.transactionBike}>Loading...</p>
-                    <p style={styles.transactionService}>-</p>
-                  </div>
-                  <div style={styles.transactionDetails}>
-                    <p style={styles.transactionDate}>-</p>
-                    <p style={styles.transactionAmount}>-</p>
-                  </div>
-                </div>
-              ))
-          ) : error ? (
-            <p style={{ color: "#ef4444", textAlign: "center" }}>{error}</p>
-          ) : dashboardData.recentTransactions.service?.length > 0 ? (
-            dashboardData.recentTransactions.service.map((transaction, index) => (
-              <div key={index} style={styles.transactionItem}>
-                <div style={styles.transactionInfo}>
-                  <p style={styles.transactionBike}>{transaction.bikeNumber}</p>
-                  <p style={styles.transactionService}>
-                    {transaction.serviceType}
-                  </p>
-                </div>
-                <div style={styles.transactionDetails}>
-                  <p style={styles.transactionDate}>
-                    {formatDate(transaction.date)}
-                  </p>
-                  <p style={styles.transactionAmount}>
-                    {formatCurrency(transaction.amount)}
-                  </p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p style={{ color: "#6b7280", textAlign: "center" }}>
-              No recent services
-            </p>
-          )}
+        <div className="transaction-list">
+          {renderTransactionList(dashboardData.recentTransactions?.service)}
         </div>
       </div>
 
-      {/* Recent Advance Payments */}
-      <div style={styles.transactionCard}>
-        <h3 style={styles.transactionTitle}>
-          <FileText size={18} style={{ marginRight: "8px" }} />
+      <div className="transaction-card">
+        <h3 className="transaction-title">
+          <FileText size={18} />
           Recent Advances
         </h3>
-        <div style={styles.transactionList}>
-          {loading ? (
-            Array(2)
-              .fill()
-              .map((_, index) => (
-                <div key={index} style={styles.transactionItem}>
-                  <div style={styles.transactionInfo}>
-                    <p style={styles.transactionBike}>Loading...</p>
-                    <p style={styles.transactionCustomer}>-</p>
-                  </div>
-                  <div style={styles.transactionDetails}>
-                    <p style={styles.transactionDate}>-</p>
-                    <p style={styles.transactionAmount}>-</p>
-                  </div>
-                </div>
-              ))
-          ) : error ? (
-            <p style={{ color: "#ef4444", textAlign: "center" }}>{error}</p>
-          ) : dashboardData.recentTransactions.advance?.length > 0 ? (
-            dashboardData.recentTransactions.advance.map((transaction, index) => (
-              <div key={index} style={styles.transactionItem}>
-                <div style={styles.transactionInfo}>
-                  <p style={styles.transactionBike}>{transaction.bikeNumber}</p>
-                  <p style={styles.transactionCustomer}>
-                    {transaction.customerName}
-                  </p>
-                </div>
-                <div style={styles.transactionDetails}>
-                  <p style={styles.transactionDate}>
-                    {formatDate(transaction.date)}
-                  </p>
-                  <p style={styles.transactionAmount}>
-                    {formatCurrency(transaction.amount)}
-                  </p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p style={{ color: "#6b7280", textAlign: "center" }}>
-              No recent advances
-            </p>
-          )}
+        <div className="transaction-list">
+          {renderTransactionList(dashboardData.recentTransactions?.advance)}
         </div>
       </div>
     </div>
   );
+};
 
-  const SocialMediaLinks = () => (
-    <div style={styles.socialMediaCard}>
-      <h3 style={styles.socialMediaTitle}>Connect With Us</h3>
-      <div style={styles.socialMediaGrid}>
-        <a
-          href="https://www.facebook.com/share/1XMJ48wtei/"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={styles.socialMediaLink}
+
+  const QuickActions = () => (
+    <div className="quick-actions-card">
+      <h3 className="quick-actions-title">Quick Actions</h3>
+      <div className="quick-actions-grid">
+        <button
+          className="quick-action-button blue"
+          onClick={() => navigate("/buy/create")}
         >
-          <div style={styles.socialMediaItem}>
-            <Facebook size={24} color="#3b5998" />
-            <span style={styles.socialMediaText}>Facebook</span>
-          </div>
-        </a>
-        <a
-          href="https://www.instagram.com/ok_motors_patna?utm_source=qr&igsh=MXdiYzU1NDZ6ankxZw=="
-          target="_blank"
-          rel="noopener noreferrer"
-          style={styles.socialMediaLink}
+          <ShoppingCart size={24} />
+          <p className="quick-action-title">Create Buy Letter</p>
+          <p className="quick-action-subtitle">Add new purchase</p>
+        </button>
+        <button
+          className="quick-action-button green"
+          onClick={() => navigate("/sell/create")}
         >
-          <div style={styles.socialMediaItem}>
-            <Instagram size={24} color="#E1306C" />
-            <span style={styles.socialMediaText}>Instagram</span>
-          </div>
-        </a>
-        <a
-          href="https://wa.me/c/917280012222"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={styles.socialMediaLink}
+          <TrendingUp size={24} />
+          <p className="quick-action-title">Create Sell Letter</p>
+          <p className="quick-action-subtitle">Record new sale</p>
+        </button>
+        <button
+          className="quick-action-button purple"
+          onClick={() => navigate("/service/create")}
         >
-          <div style={styles.socialMediaItem}>
-            <MessageCircle size={24} color="#25D366" />
-            <span style={styles.socialMediaText}>WhatsApp</span>
-          </div>
-        </a>
-        <a
-          href="tel:+919876543210"
-          style={styles.socialMediaLink}
+          <Wrench size={24} />
+          <p className="quick-action-title">Service Bill</p>
+          <p className="quick-action-subtitle">Create service record</p>
+        </button>
+        <button
+          className="quick-action-button amber"
+          onClick={() => navigate("/staff/create")}
         >
-          <div style={styles.socialMediaItem}>
-            <Phone size={24} color="#34B7F1" />
-            <span style={styles.socialMediaText}>Call Us</span>
-          </div>
-        </a>
-        <a
-          href="mailto:contact@okmotors.com"
-          style={styles.socialMediaLink}
-        >
-          <div style={styles.socialMediaItem}>
-            <Mail size={24} color="#D44638" />
-            <span style={styles.socialMediaText}>Email</span>
-          </div>
-        </a>
+          <Users size={24} />
+          <p className="quick-action-title">Add Staff</p>
+          <p className="quick-action-subtitle">Register new staff</p>
+        </button>
       </div>
     </div>
   );
 
   return (
-    <div style={styles.container}>
+    <div className="admin-container">
       {/* Sidebar */}
-      <div style={styles.sidebar}>
-        <div style={styles.sidebarHeader}>
-          <img
-            src={logo}
-            alt="logo"
-            style={{ width: "12.5rem", height: "7.5rem", color: "#7c3aed" }}
-          />
-          <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
+      <div className="sidebar">
+        <div className="sidebar-header">
+          <img src={logo} alt="logo" className="brand-logo" />
+          <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
         </div>
 
-        <nav style={styles.nav}>
+        <nav className="nav">
           {menuItems.map((item) => (
             <div key={item.name}>
               <div
-                style={{
-                  ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                }}
+                className={`menu-item ${
+                  activeMenu === item.name ? "active" : ""
+                }`}
                 onClick={() => {
                   if (item.submenu) {
                     toggleMenu(item.name);
@@ -955,9 +679,9 @@ const AdminPage = () => {
                   }
                 }}
               >
-                <div style={styles.menuItemContent}>
-                  <item.icon size={20} style={styles.menuIcon} />
-                  <span style={styles.menuText}>{item.name}</span>
+                <div className="menu-item-content">
+                  <item.icon size={20} className="menu-icon" />
+                  <span className="menu-text">{item.name}</span>
                 </div>
                 {item.submenu &&
                   (expandedMenus[item.name] ? (
@@ -968,11 +692,11 @@ const AdminPage = () => {
               </div>
 
               {item.submenu && expandedMenus[item.name] && (
-                <div style={styles.submenu}>
+                <div className="submenu">
                   {item.submenu.map((subItem) => (
                     <div
                       key={subItem.name}
-                      style={styles.submenuItem}
+                      className="submenu-item"
                       onClick={() =>
                         handleMenuClick(subItem.name, subItem.path)
                       }
@@ -985,28 +709,18 @@ const AdminPage = () => {
             </div>
           ))}
 
-          <div style={styles.logoutButton} onClick={handleLogout}>
-            <LogOut size={20} style={styles.menuIcon} />
-            <span style={styles.menuText}>Logout</span>
+          <div className="logout-button" onClick={handleLogout}>
+            <LogOut size={20} className="menu-icon" />
+            <span className="menu-text">Logout</span>
           </div>
         </nav>
       </div>
 
       {/* Main Content */}
-      <div style={styles.mainContent}>
-        <div style={styles.contentPadding}>
-          <div style={styles.banner}>
-            <img src={logo1} alt="Company Logo" style={styles.bannerLogo} />
-            <div style={styles.bannerText}></div>
-          </div>
-          <div style={styles.header}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            ></div>
+      <div className="main-content">
+        <div className="content-padding">
+          <div className="banner">
+            <img src={logo1} alt="Company Logo" className="banner-logo" />
           </div>
 
           {activeMenu === "Dashboard" && (
@@ -1015,85 +729,14 @@ const AdminPage = () => {
               <RevenueCard />
               <ChartsSection />
               <RecentTransactions />
-              <SocialMediaLinks />
-              {!loading && !error && (
-                <div style={styles.quickActionsCard}>
-                  <h3 style={styles.quickActionsTitle}>Quick Actions</h3>
-                  <div style={styles.quickActionsGrid}>
-                    <button
-                      style={{
-                        ...styles.quickActionButton,
-                        backgroundColor: "#eff6ff",
-                      }}
-                      onClick={() => navigate("/buy/create")}
-                    >
-                      <ShoppingCart
-                        size={24}
-                        color="#2563eb"
-                        style={styles.quickActionIcon}
-                      />
-                      <p style={styles.quickActionTitle}>Create Buy Letter</p>
-                      <p style={styles.quickActionSubtitle}>Add new purchase</p>
-                    </button>
-                    <button
-                      style={{
-                        ...styles.quickActionButton,
-                        backgroundColor: "#f0fdf4",
-                      }}
-                      onClick={() => navigate("/sell/create")}
-                    >
-                      <TrendingUp
-                        size={24}
-                        color="#059669"
-                        style={styles.quickActionIcon}
-                      />
-                      <p style={styles.quickActionTitle}>Create Sell Letter</p>
-                      <p style={styles.quickActionSubtitle}>Record new sale</p>
-                    </button>
-                    <button
-                      style={{
-                        ...styles.quickActionButton,
-                        backgroundColor: "#faf5ff",
-                      }}
-                      onClick={() => navigate("/service/create")}
-                    >
-                      <Wrench
-                        size={24}
-                        color="#7c3aed"
-                        style={styles.quickActionIcon}
-                      />
-                      <p style={styles.quickActionTitle}>Service Bill</p>
-                      <p style={styles.quickActionSubtitle}>
-                        Create service record
-                      </p>
-                    </button>
-                    <button
-                      style={{
-                        ...styles.quickActionButton,
-                        backgroundColor: "#fffbeb",
-                      }}
-                      onClick={() => navigate("/staff/create")}
-                    >
-                      <Users
-                        size={24}
-                        color="#d97706"
-                        style={styles.quickActionIcon}
-                      />
-                      <p style={styles.quickActionTitle}>Add Staff</p>
-                      <p style={styles.quickActionSubtitle}>
-                        Register new staff
-                      </p>
-                    </button>
-                  </div>
-                </div>
-              )}
+              {!loading && !error && <QuickActions />}
             </>
           )}
 
           {activeMenu !== "Dashboard" && (
-            <div style={styles.placeholderCard}>
-              <h2 style={styles.placeholderTitle}>{activeMenu}</h2>
-              <p style={styles.placeholderText}>
+            <div className="placeholder-card">
+              <h2>{activeMenu}</h2>
+              <p>
                 This section is under development. Content for {activeMenu} will
                 be implemented here.
               </p>
@@ -1101,422 +744,692 @@ const AdminPage = () => {
           )}
         </div>
       </div>
+
+      <style jsx>{`
+        .admin-container {
+          display: flex;
+          min-height: 100vh;
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          background-color: #f3f4f6;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+          width: 280px;
+          background: rgba(30, 41, 59, 0.9);
+          backdrop-filter: blur(10px);
+          color: #f8fafc;
+          position: sticky;
+          top: 0;
+          height: 100vh;
+          border-right: 1px solid rgba(255, 255, 255, 0.1);
+          z-index: 10;
+        }
+
+        .sidebar-header {
+          padding: 1.5rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          text-align: center;
+        }
+
+        .brand-logo {
+          width: 14.5rem;
+          height: 10.5rem;
+          margin-bottom: 1rem;
+        }
+
+        .sidebar-subtitle {
+          font-size: 0.875rem;
+          color: #94a3b8;
+          margin: 0;
+        }
+
+        .nav {
+          padding: 1rem 0;
+        }
+
+        .menu-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.75rem 1.5rem;
+          cursor: pointer;
+          color: #e2e8f0;
+          transition: all 0.3s ease;
+        }
+
+        .menu-item:hover {
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .menu-item.active {
+          background: rgba(59, 130, 246, 0.2);
+          border-right: 3px solid #3b82f6;
+          color: #ffffff;
+        }
+
+        .menu-item-content {
+          display: flex;
+          align-items: center;
+        }
+
+        .menu-icon {
+          margin-right: 0.75rem;
+          color: #94a3b8;
+        }
+
+        .menu-item.active .menu-icon {
+          color: #ffffff;
+        }
+
+        .menu-text {
+          font-size: 0.9375rem;
+          font-weight: 500;
+        }
+
+        .submenu {
+          background: rgba(26, 32, 44, 0.7);
+        }
+
+        .submenu-item {
+          padding: 0.625rem 1.5rem 0.625rem 4rem;
+          cursor: pointer;
+          color: #cbd5e1;
+          font-size: 0.875rem;
+          transition: all 0.2s ease;
+        }
+
+        .submenu-item:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: #ffffff;
+        }
+
+        .logout-button {
+          display: flex;
+          align-items: center;
+          padding: 0.75rem 1.5rem;
+          cursor: pointer;
+          color: #f87171;
+          margin-top: 1rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.2s ease;
+        }
+
+        .logout-button:hover {
+          background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Main Content Styles */
+        .main-content {
+          flex: 1;
+          overflow-y: auto;
+        }
+
+        .content-padding {
+          padding: 2rem;
+        }
+
+        .banner {
+          background-color: #1e293b;
+          padding: 1.25rem 2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 1.5rem;
+          border-radius: 0.75rem;
+        }
+
+        .banner-logo {
+          height: 490px;
+          width: 1550px;
+          object-fit: cover;
+        }
+
+        /* Dashboard Cards */
+        .cards-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .card {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(10px);
+          border-radius: 0.75rem;
+          padding: 1.5rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          transition: transform 0.2s, box-shadow 0.2s;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card.blue {
+          border-left: 4px solid #3b82f6;
+        }
+
+        .card.green {
+          border-left: 4px solid #10b981;
+        }
+
+        .card.purple {
+          border-left: 4px solid #8b5cf6;
+        }
+
+        .card.amber {
+          border-left: 4px solid #f59e0b;
+        }
+
+        .card-content {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .card-label {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #6b7280;
+          margin: 0;
+        }
+
+        .card-value {
+          font-size: 1.875rem;
+          font-weight: bold;
+          color: #1f2937;
+          margin: 0.25rem 0 0 0;
+        }
+
+        .card-value.currency {
+          font-size: 1.5rem;
+        }
+
+        .card-value.positive {
+          color: #10b981;
+        }
+
+        .card-value.negative {
+          color: #ef4444;
+        }
+
+        .card-icon {
+          padding: 0.75rem;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .card.blue .card-icon {
+          background-color: #dbeafe;
+        }
+
+        .card.green .card-icon {
+          background-color: #d1fae5;
+        }
+
+        .card.purple .card-icon {
+          background-color: #ede9fe;
+        }
+
+        .card.amber .card-icon {
+          background-color: #fef3c7;
+        }
+
+        /* Revenue Card */
+        .revenue-card {
+          background: rgba(30, 41, 59, 0.9);
+          backdrop-filter: blur(10px);
+          border-radius: 0.75rem;
+          padding: 1.5rem;
+          margin-bottom: 1.5rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .revenue-title {
+          font-size: 1.125rem;
+          font-weight: 600;
+          color: #ffffff;
+          margin: 0 0 1rem 0;
+        }
+
+        .revenue-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1rem;
+        }
+
+        .revenue-item {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 0.5rem;
+          padding: 1rem;
+          text-align: center;
+          transition: transform 0.2s;
+        }
+
+        .revenue-item:hover {
+          transform: translateY(-2px);
+          background: rgba(255, 255, 255, 0.15);
+        }
+
+        .revenue-label {
+          font-size: 0.875rem;
+          color: #e2e8f0;
+          margin: 0;
+        }
+
+        .revenue-value {
+          font-size: 1.25rem;
+          font-weight: bold;
+          margin: 0.25rem 0 0 0;
+        }
+
+        .revenue-value.positive {
+          color: #10b981;
+        }
+
+        .revenue-value.negative {
+          color: #ef4444;
+        }
+
+        .profit-percentage {
+          font-size: 0.875rem;
+          display: block;
+          margin-top: 0.25rem;
+        }
+
+        /* Charts */
+        .charts-container {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .chart-card {
+          background: rgba(30, 41, 59, 0.9);
+          backdrop-filter: blur(10px);
+          border-radius: 0.75rem;
+          padding: 1.5rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+          font-size: 1.125rem;
+          font-weight: 600;
+          color: #ffffff;
+          margin: 0 0 1rem 0;
+        }
+
+        .chart-wrapper {
+          height: 300px;
+          width: 100%;
+        }
+
+        .no-data {
+          color: #ffffff;
+          text-align: center;
+          padding: 1.25rem;
+          opacity: 0.7;
+        }
+
+        /* Transactions */
+        .transactions-container {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .transaction-card {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(10px);
+          border-radius: 0.75rem;
+          padding: 1.5rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .transaction-title {
+          font-size: 1.125rem;
+          font-weight: 600;
+          color: #1f2937;
+          margin: 0 0 1rem 0;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .transaction-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .transaction-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.75rem;
+          background: rgba(249, 250, 251, 0.7);
+          border-radius: 0.5rem;
+          transition: all 0.2s;
+        }
+
+        .transaction-item:hover {
+          background: rgba(243, 244, 246, 0.9);
+        }
+
+        .transaction-info {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .transaction-bike {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #1f2937;
+          margin: 0;
+        }
+
+        .transaction-customer,
+        .transaction-service {
+          font-size: 0.75rem;
+          color: #6b7280;
+          margin: 0.125rem 0 0 0;
+        }
+
+        .transaction-details {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+        }
+
+        .transaction-date {
+          font-size: 0.75rem;
+          color: #6b7280;
+          margin: 0;
+        }
+
+        .transaction-amount {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #1f2937;
+          margin: 0.125rem 0 0 0;
+        }
+
+        /* Social Media */
+        .social-media-card {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(10px);
+          border-radius: 0.75rem;
+          padding: 1.5rem;
+          margin-bottom: 2rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .social-media-title {
+          font-size: 1.125rem;
+          font-weight: 600;
+          color: #1f2937;
+          margin: 0 0 1rem 0;
+        }
+
+        .social-media-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 1rem;
+        }
+
+        .social-media-link {
+          text-decoration: none;
+        }
+
+        .social-media-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem;
+          background: rgba(249, 250, 251, 0.7);
+          border-radius: 0.5rem;
+          transition: all 0.2s;
+        }
+
+        .social-media-item:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          background: rgba(243, 244, 246, 0.9);
+        }
+
+        .social-media-item span {
+          margin-top: 0.5rem;
+          color: #1f2937;
+          font-weight: 500;
+        }
+
+        /* Quick Actions */
+        .quick-actions-card {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(10px);
+          border-radius: 0.75rem;
+          padding: 1.5rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-actions-title {
+          font-size: 1.125rem;
+          font-weight: 600;
+          color: #1f2937;
+          margin: 0 0 1rem 0;
+        }
+
+        .quick-actions-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1rem;
+        }
+
+        .quick-action-button {
+          padding: 1rem;
+          border-radius: 0.5rem;
+          border: none;
+          cursor: pointer;
+          text-align: left;
+          transition: transform 0.2s;
+          background: rgba(249, 250, 251, 0.7);
+          display: flex;
+          flex-direction: column;
+        }
+
+        .quick-action-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-action-button.blue {
+          background: rgba(219, 234, 254, 0.7);
+        }
+
+        .quick-action-button.green {
+          background: rgba(209, 250, 229, 0.7);
+        }
+
+        .quick-action-button.purple {
+          background: rgba(237, 233, 254, 0.7);
+        }
+
+        .quick-action-button.amber {
+          background: rgba(254, 243, 199, 0.7);
+        }
+
+        .quick-action-title {
+          font-weight: 500;
+          color: #1f2937;
+          margin: 0.5rem 0 0 0;
+        }
+
+        .quick-action-subtitle {
+          font-size: 0.875rem;
+          color: #6b7280;
+          margin: 0.25rem 0 0 0;
+        }
+
+        /* Placeholder Card */
+        .placeholder-card {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(10px);
+          border-radius: 0.75rem;
+          padding: 2rem;
+          text-align: center;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .placeholder-card h2 {
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: #1f2937;
+          margin: 0 0 1rem 0;
+        }
+
+        .placeholder-card p {
+          color: #6b7280;
+          margin: 0;
+        }
+
+        /* Error States */
+        .error-card {
+          grid-column: 1 / -1;
+          text-align: center;
+          color: #ef4444;
+        }
+
+        .error-message {
+          color: #ef4444;
+          text-align: center;
+        }
+
+        .retry-button {
+          background-color: #3b82f6;
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 0.25rem;
+          margin-top: 0.5rem;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        .retry-button:hover {
+          background-color: #2563eb;
+        }
+
+        /* Loading States */
+        .shimmer {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .shimmer::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent
+          );
+          animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+
+        .spinner {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1024px) {
+          .sidebar {
+            width: 240px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .admin-container {
+            flex-direction: column;
+          }
+
+          .sidebar {
+            width: 100%;
+            height: auto;
+            position: relative;
+          }
+
+          .content-padding {
+            padding: 1rem;
+          }
+
+          .banner-logo {
+            height: 240px;
+            width: 320px;
+          }
+
+          .charts-container {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .cards-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .revenue-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .transactions-container {
+            grid-template-columns: 1fr;
+          }
+
+          .social-media-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
+          .quick-actions-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .banner-logo {
+            height: 180px;
+            width: 240px;
+          }
+        }
+      `}</style>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    display: "flex",
-    height: "100vh",
-    backgroundColor: "#f3f4f6",
-    fontFamily: "Arial, sans-serif",
-  },
-  sidebar: {
-    width: "280px",
-    backgroundColor: "#1e293b",
-    color: "#f8fafc",
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-    position: "sticky",
-    top: 0,
-    height: "100vh",
-    backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
-  },
-  sidebarHeader: {
-    padding: "24px",
-    borderBottom: "1px solid #334155",
-  },
-  sidebarTitle: {
-    fontSize: "1.25rem",
-    fontWeight: "600",
-    color: "#ffffff",
-    margin: 0,
-  },
-  sidebarSubtitle: {
-    fontSize: "0.875rem",
-    color: "#94a3b8",
-    margin: "4px 0 0 0",
-  },
-  nav: {
-    padding: "16px 0",
-  },
-  menuItem: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "12px 24px",
-    cursor: "pointer",
-    color: "#e2e8f0",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-    ":hover": {
-      backgroundColor: "#334155",
-    },
-  },
-  menuItemActive: {
-    backgroundColor: "#334155",
-    borderRight: "3px solid #3b82f6",
-    color: "#ffffff",
-  },
-  menuItemContent: {
-    display: "flex",
-    alignItems: "center",
-  },
-  menuIcon: {
-    marginRight: "12px",
-    color: "#94a3b8",
-  },
-  menuText: {
-    fontSize: "0.9375rem",
-    fontWeight: "500",
-  },
-  submenu: {
-    backgroundColor: "#1a2536",
-  },
-  submenuItem: {
-    padding: "10px 24px 10px 64px",
-    cursor: "pointer",
-    color: "#cbd5e1",
-    fontSize: "0.875rem",
-    transition: "all 0.2s ease",
-    ":hover": {
-      backgroundColor: "#2d3748",
-    },
-  },
-  submenuItemActive: {
-    backgroundColor: "#2d3748",
-    color: "#ffffff",
-  },
-  logoutButton: {
-    display: "flex",
-    alignItems: "center",
-    padding: "12px 24px",
-    cursor: "pointer",
-    color: "#f87171",
-    marginTop: "16px",
-    borderTop: "1px solid #334155",
-    transition: "all 0.2s ease",
-    ":hover": {
-      backgroundColor: "#7f1d1d20",
-    },
-  },
-  mainContent: {
-    flex: 1,
-    overflow: "auto",
-    display: "flex",
-    flexDirection: "column",
-  },
-  contentPadding: {
-    padding: "32px",
-  },
-  header: {
-    marginBottom: "32px",
-  },
-  pageTitle: {
-    fontSize: "1.875rem",
-    fontWeight: "bold",
-    color: "#1f2937",
-    margin: 0,
-  },
-  pageSubtitle: {
-    color: "#6b7280",
-    marginTop: "8px",
-    margin: "8px 0 0 0",
-  },
-  cardsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-    gap: "24px",
-    marginBottom: "32px",
-  },
-  card: {
-    backgroundColor: "#ffffff",
-    borderRadius: "12px",
-    boxShadow:
-      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-    padding: "24px",
-    transition: "transform 0.2s",
-    ":hover": {
-      transform: "translateY(-2px)",
-    },
-  },
-  cardContent: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  cardLabel: {
-    fontSize: "0.875rem",
-    fontWeight: "500",
-    color: "#6b7280",
-    margin: 0,
-  },
-  cardValue: {
-    fontSize: "1.875rem",
-    fontWeight: "bold",
-    color: "#1f2937",
-    margin: "4px 0 0 0",
-  },
-  cardIcon: {
-    padding: "12px",
-    borderRadius: "50%",
-  },
-  revenueCard: {
-    backgroundColor: "#1e293b",
-    borderRadius: "12px",
-    boxShadow:
-      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-    padding: "24px",
-    marginBottom: "24px",
-  },
-  revenueTitle: {
-    fontSize: "1.125rem",
-    fontWeight: "600",
-    color: "#ffffff",
-    marginBottom: "16px",
-    margin: "0 0 16px 0",
-  },
-  revenueGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-    gap: "16px",
-  },
-  revenueItem: {
-    textAlign: "center",
-    padding: "16px",
-    backgroundColor: "#f9fafb",
-    borderRadius: "8px",
-    transition: "transform 0.2s",
-    ":hover": {
-      transform: "translateY(-2px)",
-    },
-  },
-  revenueLabel: {
-    fontSize: "0.875rem",
-    color: "#6b7280",
-    margin: 0,
-  },
-  revenueValue: {
-    fontSize: "1.25rem",
-    fontWeight: "bold",
-    margin: "4px 0 0 0",
-  },
-  banner: {
-    backgroundColor: "#1e293b",
-    color: "white",
-    padding: "20px 32px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "20px",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-    marginBottom: "24px",
-  },
-  bannerLogo: {
-    height: "340px",
-    width: "450px",
-  },
-  chartsContainer: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
-    gap: "24px",
-    marginBottom: "32px",
-  },
-  chartCard: {
-    backgroundColor: "#1e293b",
-    borderRadius: "12px",
-    boxShadow:
-      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-    padding: "24px",
-  },
-  chartTitle: {
-    fontSize: "1.125rem",
-    fontWeight: "600",
-    color: "#ffffff",
-    margin: "0 0 16px 0",
-  },
-  chartWrapper: {
-    height: "300px",
-    width: "100%",
-  },
-  transactionsContainer: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-    gap: "24px",
-    marginBottom: "32px",
-  },
-  transactionCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: "12px",
-    boxShadow:
-      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-    padding: "24px",
-  },
-  transactionTitle: {
-    fontSize: "1.125rem",
-    fontWeight: "600",
-    color: "#1f2937",
-    margin: "0 0 16px 0",
-    display: "flex",
-    alignItems: "center",
-  },
-  transactionList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-  },
-  transactionItem: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "12px",
-    backgroundColor: "#f9fafb",
-    borderRadius: "8px",
-    transition: "all 0.2s",
-    ":hover": {
-      backgroundColor: "#f3f4f6",
-    },
-  },
-  transactionInfo: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  transactionBike: {
-    fontSize: "0.875rem",
-    fontWeight: "500",
-    color: "#1f2937",
-    margin: 0,
-  },
-  transactionCustomer: {
-    fontSize: "0.75rem",
-    color: "#6b7280",
-    margin: "2px 0 0 0",
-  },
-  transactionService: {
-    fontSize: "0.75rem",
-    color: "#6b7280",
-    fontStyle: "italic",
-    margin: "2px 0 0 0",
-  },
-  transactionDetails: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-end",
-  },
-  transactionDate: {
-    fontSize: "0.75rem",
-    color: "#6b7280",
-    margin: 0,
-  },
-  transactionAmount: {
-    fontSize: "0.875rem",
-    fontWeight: "500",
-    color: "#1f2937",
-    margin: "2px 0 0 0",
-  },
-  quickActionsCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: "12px",
-    boxShadow:
-      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-    padding: "24px",
-  },
-  quickActionsTitle: {
-    fontSize: "1.125rem",
-    fontWeight: "600",
-    color: "#1f2937",
-    marginBottom: "16px",
-    margin: "0 0 16px 0",
-  },
-  quickActionsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-    gap: "16px",
-  },
-  quickActionButton: {
-    padding: "16px",
-    borderRadius: "8px",
-    border: "none",
-    cursor: "pointer",
-    textAlign: "left",
-    transition: "transform 0.2s",
-    ":hover": {
-      transform: "translateY(-2px)",
-    },
-  },
-  quickActionIcon: {
-    marginBottom: "8px",
-  },
-  quickActionTitle: {
-    fontWeight: "500",
-    color: "#1f2937",
-    margin: 0,
-  },
-  quickActionSubtitle: {
-    fontSize: "0.875rem",
-    color: "#6b7280",
-    margin: "4px 0 0 0",
-  },
-  placeholderCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: "12px",
-    boxShadow:
-      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-    padding: "32px",
-    textAlign: "center",
-  },
-  placeholderTitle: {
-    fontSize: "1.5rem",
-    fontWeight: "600",
-    color: "#1f2937",
-    marginBottom: "16px",
-    margin: "0 0 16px 0",
-  },
-  placeholderText: {
-    color: "#6b7280",
-    margin: 0,
-  },
-  socialMediaCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: "12px",
-    boxShadow:
-      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-    padding: "24px",
-    marginBottom: "32px",
-  },
-  socialMediaTitle: {
-    fontSize: "1.125rem",
-    fontWeight: "600",
-    color: "#1f2937",
-    marginBottom: "16px",
-    margin: "0 0 16px 0",
-  },
-  socialMediaGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-    gap: "16px",
-  },
-  socialMediaLink: {
-    textDecoration: "none",
-  },
-  socialMediaItem: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "16px",
-    backgroundColor: "#f9fafb",
-    borderRadius: "8px",
-    transition: "all 0.2s",
-    ":hover": {
-      transform: "translateY(-2px)",
-      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-    },
-  },
-  socialMediaText: {
-    marginTop: "8px",
-    color: "#1f2937",
-    fontWeight: "500",
-  },
 };
 
 export default AdminPage;

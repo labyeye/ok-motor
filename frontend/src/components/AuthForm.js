@@ -238,7 +238,7 @@ const AuthForm = ({ isLogin }) => {
           font-size: 1rem;
           border: 2px solid rgba(255, 255, 255, 0.3);
           border-radius: 0.75rem;
-          background: rgba(255, 255, 255, 0.15);
+          background: rgba(199, 199, 199, 0.15);
           backdrop-filter: blur(5px);
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           box-sizing: border-box;
@@ -259,7 +259,7 @@ const AuthForm = ({ isLogin }) => {
         .input-icon {
           position: absolute;
           left: 1rem;
-          top: 50%;
+          top: 40%;
           transform: translateY(-50%);
           width: 1.25rem;
           height: 1.25rem;
@@ -270,7 +270,7 @@ const AuthForm = ({ isLogin }) => {
 
         .input-group.focused .input-icon,
         .input-group.filled .input-icon {
-          color: white;
+          color: black;
         }
 
         .input-label {
