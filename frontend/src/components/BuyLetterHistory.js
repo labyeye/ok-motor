@@ -1180,11 +1180,19 @@ const BuyLetterHistory = () => {
     <div style={styles.container}>
       {/* Sidebar */}
       <div style={styles.sidebar}>
-        <div style={styles.sidebarHeader}>
+         <div style={styles.sidebarHeader}>
           <img
             src={logo}
             alt="logo"
-            style={{ width: "14.5rem", height: "10.5rem", color: "#7c3aed" }}
+            style={{
+              width: "100%",
+              maxWidth: "25rem",
+              height: "13rem",
+              objectFit: "cover", // match CSS
+              objectPosition: "center",
+              display: "block",
+              margin: "0 auto 1rem auto",
+            }}
           />
           <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
         </div>

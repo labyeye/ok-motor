@@ -152,20 +152,20 @@ const AdminPage = () => {
   };
 
   const monthlyChartData = {
-  labels: dashboardData.monthlyData?.map((item) => item.month) || [],
-  datasets: [
-    {
-      label: "Buy Amount",
-      data: dashboardData.monthlyData?.map((item) => item.buyAmount) || [],
-      backgroundColor: "rgba(59, 130, 246, 0.7)",
-    },
-    {
-      label: "Sell Amount",
-      data: dashboardData.monthlyData?.map((item) => item.sellAmount) || [],
-      backgroundColor: "rgba(16, 185, 129, 0.7)",
-    },
-  ],
-};
+    labels: dashboardData.monthlyData?.map((item) => item.month) || [],
+    datasets: [
+      {
+        label: "Buy Amount",
+        data: dashboardData.monthlyData?.map((item) => item.buyAmount) || [],
+        backgroundColor: "rgba(59, 130, 246, 0.7)",
+      },
+      {
+        label: "Sell Amount",
+        data: dashboardData.monthlyData?.map((item) => item.sellAmount) || [],
+        backgroundColor: "rgba(16, 185, 129, 0.7)",
+      },
+    ],
+  };
 
   const profitChartData = {
     labels: dashboardData.monthlyData?.map((item) => item.month) || [],
@@ -524,96 +524,96 @@ const AdminPage = () => {
       </div>
     );
   };
-const RecentTransactions = () => {
-  const renderTransactionList = (transactions) => {
-    if (loading) {
-      return Array(3)
-        .fill()
-        .map((_, index) => (
-          <div key={index} className="transaction-item shimmer">
-            <div className="transaction-info">
-              <p className="transaction-bike">Loading...</p>
-              <p className="transaction-customer">-</p>
+  const RecentTransactions = () => {
+    const renderTransactionList = (transactions) => {
+      if (loading) {
+        return Array(3)
+          .fill()
+          .map((_, index) => (
+            <div key={index} className="transaction-item shimmer">
+              <div className="transaction-info">
+                <p className="transaction-bike">Loading...</p>
+                <p className="transaction-customer">-</p>
+              </div>
+              <div className="transaction-details">
+                <p className="transaction-date">-</p>
+                <p className="transaction-amount">-</p>
+              </div>
             </div>
-            <div className="transaction-details">
-              <p className="transaction-date">-</p>
-              <p className="transaction-amount">-</p>
-            </div>
+          ));
+      }
+
+      if (error) {
+        return <p className="error-message">{error}</p>;
+      }
+
+      if (!transactions || transactions.length === 0) {
+        return <p className="no-data">No recent transactions</p>;
+      }
+
+      return transactions.map((transaction, index) => (
+        <div key={index} className="transaction-item">
+          <div className="transaction-info">
+            <p className="transaction-bike">{transaction.vehicle || "-"}</p>
+            <p className="transaction-customer">
+              {transaction.name}{" "}
+              {transaction.serviceType ? `(${transaction.serviceType})` : ""}
+            </p>
           </div>
-        ));
-    }
-
-    if (error) {
-      return <p className="error-message">{error}</p>;
-    }
-
-    if (!transactions || transactions.length === 0) {
-      return <p className="no-data">No recent transactions</p>;
-    }
-
-    return transactions.map((transaction, index) => (
-      <div key={index} className="transaction-item">
-        <div className="transaction-info">
-          <p className="transaction-bike">{transaction.vehicle || "-"}</p>
-          <p className="transaction-customer">
-            {transaction.name} {transaction.serviceType ? `(${transaction.serviceType})` : ''}
-          </p>
+          <div className="transaction-details">
+            <p className="transaction-date">{formatDate(transaction.date)}</p>
+            <p className="transaction-amount">
+              {formatCurrency(transaction.amount)}
+            </p>
+          </div>
         </div>
-        <div className="transaction-details">
-          <p className="transaction-date">{formatDate(transaction.date)}</p>
-          <p className="transaction-amount">
-            {formatCurrency(transaction.amount)}
-          </p>
+      ));
+    };
+
+    return (
+      <div className="transactions-container">
+        <div className="transaction-card">
+          <h3 className="transaction-title">
+            <ShoppingCart size={18} />
+            Recent Purchases
+          </h3>
+          <div className="transaction-list">
+            {renderTransactionList(dashboardData.recentTransactions?.buy)}
+          </div>
+        </div>
+
+        <div className="transaction-card">
+          <h3 className="transaction-title">
+            <TrendingUp size={18} />
+            Recent Sales
+          </h3>
+          <div className="transaction-list">
+            {renderTransactionList(dashboardData.recentTransactions?.sell)}
+          </div>
+        </div>
+
+        <div className="transaction-card">
+          <h3 className="transaction-title">
+            <Wrench size={18} />
+            Recent Services
+          </h3>
+          <div className="transaction-list">
+            {renderTransactionList(dashboardData.recentTransactions?.service)}
+          </div>
+        </div>
+
+        <div className="transaction-card">
+          <h3 className="transaction-title">
+            <FileText size={18} />
+            Recent Advances
+          </h3>
+          <div className="transaction-list">
+            {renderTransactionList(dashboardData.recentTransactions?.advance)}
+          </div>
         </div>
       </div>
-    ));
+    );
   };
-
-  return (
-    <div className="transactions-container">
-      <div className="transaction-card">
-        <h3 className="transaction-title">
-          <ShoppingCart size={18} />
-          Recent Purchases
-        </h3>
-        <div className="transaction-list">
-          {renderTransactionList(dashboardData.recentTransactions?.buy)}
-        </div>
-      </div>
-
-      <div className="transaction-card">
-        <h3 className="transaction-title">
-          <TrendingUp size={18} />
-          Recent Sales
-        </h3>
-        <div className="transaction-list">
-          {renderTransactionList(dashboardData.recentTransactions?.sell)}
-        </div>
-      </div>
-
-      <div className="transaction-card">
-        <h3 className="transaction-title">
-          <Wrench size={18} />
-          Recent Services
-        </h3>
-        <div className="transaction-list">
-          {renderTransactionList(dashboardData.recentTransactions?.service)}
-        </div>
-      </div>
-
-      <div className="transaction-card">
-        <h3 className="transaction-title">
-          <FileText size={18} />
-          Recent Advances
-        </h3>
-        <div className="transaction-list">
-          {renderTransactionList(dashboardData.recentTransactions?.advance)}
-        </div>
-      </div>
-    </div>
-  );
-};
-
 
   const QuickActions = () => (
     <div className="quick-actions-card">
@@ -727,8 +727,9 @@ const RecentTransactions = () => {
             <>
               <DashboardCards />
               <RevenueCard />
-              <ChartsSection />
               <RecentTransactions />
+              <ChartsSection />
+
               {!loading && !error && <QuickActions />}
             </>
           )}
@@ -773,9 +774,13 @@ const RecentTransactions = () => {
         }
 
         .brand-logo {
-          width: 14.5rem;
-          height: 10.5rem;
-          margin-bottom: 1rem;
+          width: 100%;
+          max-width: 25rem; /* Adjust as needed */
+          height: 13rem; /* Adjust for height */
+          object-fit: cover; /* or 'cover' if you want to crop edges */
+          object-position: center; /* centers the image content */
+          display: block;
+          margin: 0 auto 1rem auto;
         }
 
         .sidebar-subtitle {

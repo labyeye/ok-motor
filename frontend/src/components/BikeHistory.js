@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
-import logo from '../images/company.png';
+import logo from "../images/company.png";
 
 const BikeHistory = () => {
   const { user } = useContext(AuthContext);
@@ -262,10 +262,21 @@ const BikeHistory = () => {
     <div style={styles.container}>
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-           <img src={logo} alt="logo" style={{width: '14.5rem', height: '10.5rem', color: '#7c3aed'}} />
+          <img
+            src={logo}
+            alt="logo"
+            style={{
+              width: "100%",
+              maxWidth: "25rem",
+              height: "13rem",
+              objectFit: "cover", // match CSS
+              objectPosition: "center",
+              display: "block",
+              margin: "0 auto 1rem auto",
+            }}
+          />
           <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
         </div>
-
         <nav style={styles.nav}>
           {menuItems.map((item) => (
             <div key={item.name}>
