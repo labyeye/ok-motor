@@ -2,14 +2,19 @@ const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
 
-function formatTime12Hour(date) {
-  return date.toLocaleTimeString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
+const formatTime12Hour = (timeString) => {
+    if (!timeString) return "";
+
+    const [hour, minute] = timeString.split(":").map(Number);
+
+    const hours12 = hour % 12 || 12;
+    const ampm = hour >= 12 ? "PM" : "AM";
+
+    const formattedHours = String(hours12).padStart(2, "0");
+    const formattedMinutes = String(minute).padStart(2, "0");
+
+    return `${formattedHours}:${formattedMinutes} ${ampm}`;
+  };
 
 const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
   try {
