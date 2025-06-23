@@ -886,10 +886,10 @@ const AdminPage = () => {
         }
 
         .banner-logo {
-          height: 900px;
+          height: 500px;
           width: 100%;
           object-fit: cover;
-          object-position: center -400px; /* Moves image up = crops top */
+          object-position: center -150px; /* Moves image up = crops top */
         }
 
         /* Dashboard Cards */
