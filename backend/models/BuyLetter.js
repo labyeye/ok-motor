@@ -53,7 +53,7 @@ const BuyLetterSchema = new mongoose.Schema({
   paymentMethod: {
     type: String,
     required: true,
-    enum: ["cash", "upi", "bankTransfer", "other"],
+    enum: ["cash", "upi", "bankTransfer", "loan"],
   },
   todayDate: { type: Date },
   todayTime: { type: String },

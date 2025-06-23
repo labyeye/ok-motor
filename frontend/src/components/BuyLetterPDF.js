@@ -1282,7 +1282,7 @@ const BuyLetterForm = () => {
       cash: "CASH",
       upi: "UPI",
       bankTransfer: "BANK TRANSFER",
-      other: "OTHER",
+      other: "Other",
     };
 
     page.drawText(

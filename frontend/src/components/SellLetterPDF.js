@@ -981,7 +981,7 @@ const SellLetterForm = () => {
       cash: "CASH",
       upi: "UPI",
       bankTransfer: "BANK TRANSFER",
-      other: "OTHER",
+      soldloan: "Loan",
     };
 
     page.drawText(
@@ -1949,7 +1949,7 @@ const SellLetterForm = () => {
                     <option value="cash">Cash</option>
                     <option value="check">Upi</option>
                     <option value="bankTransfer">Bank Transfer</option>
-                    <option value="other">Other</option>
+                    <option value="soldloan">Sold on Loan</option>
                   </select>
                 </div>
                 <div style={styles.formField}>

@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Bike } from "lucide-react";
-import logo from '../images/company.png';
+import logo from "../images/company.png";
 
 const AuthForm = ({ isLogin }) => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const AuthForm = ({ isLogin }) => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { email, password} = formData;
+  const { email, password } = formData;
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -168,12 +168,12 @@ const AuthForm = ({ isLogin }) => {
         .auth-content {
           width: 100%;
           max-width: 420px;
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(10px);
+          background: rgba(255, 255, 255, 0.01);
+          backdrop-filter: blur(7px);
           border-radius: 1rem;
           padding: 2.5rem;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.03);
         }
 
         .auth-header {
@@ -318,7 +318,11 @@ const AuthForm = ({ isLogin }) => {
           position: relative;
           width: 100%;
           padding: 1rem 1.5rem;
-          background: linear-gradient(135deg, rgba(124, 58, 237, 0.9), rgba(59, 130, 246, 0.9));
+          background: linear-gradient(
+            135deg,
+            rgba(124, 58, 237, 0.9),
+            rgba(59, 130, 246, 0.9)
+          );
           color: white;
           border: none;
           font-size: 1rem;

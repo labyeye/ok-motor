@@ -974,7 +974,7 @@ const SellLetterHistory = () => {
       cash: "CASH",
       upi: "UPI",
       bankTransfer: "BANK TRANSFER",
-      other: "OTHER",
+      soldloan: "LOAN",
     };
 
     page.drawText(
