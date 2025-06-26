@@ -28,7 +28,7 @@ import logo from "../images/company.png";
 import AuthContext from "../context/AuthContext";
 
 const ServiceBillForm = () => {
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   const [activeMenu, setActiveMenu] = useState("Create Service Bill");
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -97,7 +97,7 @@ const ServiceBillForm = () => {
       balanceDue,
     };
   };
-    const fetchVehicleDetails = useCallback(async (registrationNumber) => {
+  const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
       const response = await axios.get(
         `${API_BASE_URL}/advance-bills/vehicle-details`,
@@ -209,9 +209,39 @@ const ServiceBillForm = () => {
 
     setFormData(newData);
   };
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.customerName)
+      errors.customerName = "Customer name is required";
+    if (!formData.customerPhone)
+      errors.customerPhone = "Customer phone is required";
+    if (!formData.customerAddress)
+      errors.customerAddress = "Customer address is required";
+    if (!formData.vehicleBrand)
+      errors.vehicleBrand = "Vehicle brand is required";
+    if (!formData.vehicleModel)
+      errors.vehicleModel = "Vehicle model is required";
+    if (!formData.registrationNumber)
+      errors.registrationNumber = "Registration number is required";
 
+    // Validate service items
+    formData.serviceItems.forEach((item, index) => {
+      if (!item.description)
+        errors[`serviceItems[${index}].description`] =
+          "Description is required";
+      if (!item.rate || isNaN(item.rate))
+        errors[`serviceItems[${index}].rate`] = "Valid rate is required";
+    });
+
+    return Object.keys(errors).length === 0 ? null : errors;
+  };
   const handleSaveAndDownload = async () => {
     try {
+      const errors = validateForm();
+      if (errors) {
+        alert("Please fix the form errors before submitting");
+        return;
+      }
       setIsSaving(true);
       const token = localStorage.getItem("token");
 
@@ -284,21 +314,21 @@ const ServiceBillForm = () => {
       alert("Service bill saved and downloaded successfully!");
     } catch (error) {
       console.error("Error in save and download:", error);
-
       let errorMessage = "Failed to save and download";
-      if (error.response) {
-        errorMessage += `: ${error.response.status} - ${
-          error.response.data?.message || "No error details"
-        }`;
-      } else if (error.request) {
-        errorMessage += ": No response from server";
-      } else {
-        errorMessage += `: ${error.message}`;
-      }
 
+      if (error.response) {
+        if (error.response.data?.errors) {
+          // Handle validation errors from server
+          errorMessage = Object.values(error.response.data.errors)
+            .map((err) => err.message)
+            .join("\n");
+        } else {
+          errorMessage += `: ${error.response.status} - ${
+            error.response.data?.message || "No error details"
+          }`;
+        }
+      }
       alert(errorMessage);
-    } finally {
-      setIsSaving(false);
     }
   };
   const LoadingOverlay = () => (
@@ -482,7 +512,7 @@ const ServiceBillForm = () => {
     <div style={styles.container}>
       {/* Sidebar */}
       <div style={styles.sidebar}>
-         <div style={styles.sidebarHeader}>
+        <div style={styles.sidebarHeader}>
           <img
             src={logo}
             alt="logo"
