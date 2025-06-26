@@ -4,18 +4,50 @@ const fs = require("fs");
 const path = require("path");
 
 const formatTime12Hour = (timeString) => {
+  try {
     if (!timeString) return "";
-
-    const [hour, minute] = timeString.split(":").map(Number);
-
-    const hours12 = hour % 12 || 12;
-    const ampm = hour >= 12 ? "PM" : "AM";
-
-    const formattedHours = String(hours12).padStart(2, "0");
-    const formattedMinutes = String(minute).padStart(2, "0");
-
-    return `${formattedHours}:${formattedMinutes} ${ampm}`;
-  };
+    
+    // Handle Date objects
+    if (timeString instanceof Date) {
+      const hours = timeString.getHours();
+      const minutes = timeString.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const hours12 = hours % 12 || 12;
+      return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
+    }
+    
+    // Handle string inputs
+    if (typeof timeString === 'string') {
+      // Check if it's already in 12-hour format
+      if (timeString.includes('AM') || timeString.includes('PM')) {
+        return timeString;
+      }
+      
+      // Handle ISO format or HH:MM format
+      const date = new Date(timeString);
+      if (!isNaN(date.getTime())) {
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const hours12 = hours % 12 || 12;
+        return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
+      }
+      
+      // Handle simple HH:MM strings
+      const [hour, minute] = timeString.split(':').map(Number);
+      if (!isNaN(hour)) {
+        const hours12 = hour % 12 || 12;
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        return `${String(hours12).padStart(2, '0')}:${String(minute || 0).padStart(2, '0')} ${ampm}`;
+      }
+    }
+    
+    return "";
+  } catch (error) {
+    console.error("Error formatting time:", error);
+    return "";
+  }
+};
 
 
 exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {

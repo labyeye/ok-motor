@@ -236,101 +236,79 @@ const ServiceBillForm = () => {
     return Object.keys(errors).length === 0 ? null : errors;
   };
   const handleSaveAndDownload = async () => {
-    try {
-      const errors = validateForm();
-      if (errors) {
-        alert("Please fix the form errors before submitting");
-        return;
-      }
-      setIsSaving(true);
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        throw new Error("No authentication token found. Please log in again.");
-      }
-
-      // Include user ID in the form data
-      const formDataWithUser = {
-        ...formData,
-        user: user._id, // Assuming your AuthContext provides the user object with _id
-      };
-
-      // First save the bill
-      const saveResponse = await axios.post(
-        `${API_BASE_URL}/service-bills`,
-        formDataWithUser, // Use the updated form data
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      // Rest of your download logic remains the same...
-      console.log("Save response:", saveResponse.data);
-
-      if (
-        !saveResponse.data ||
-        !saveResponse.data.data ||
-        !saveResponse.data.data._id
-      ) {
-        throw new Error("Invalid response format from server");
-      }
-
-      const billId = saveResponse.data.data._id;
-
-      // Then download the PDF
-      const pdfResponse = await axios.get(
-        `${API_BASE_URL}/service-bills/${billId}/download`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/pdf",
-          },
-        }
-      );
-
-      if (!pdfResponse.data) {
-        throw new Error("No PDF data received from server");
-      }
-
-      // Create download link
-      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(pdfBlob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `service-bill-${billId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      }, 100);
-
-      alert("Service bill saved and downloaded successfully!");
-    } catch (error) {
-      console.error("Error in save and download:", error);
-      let errorMessage = "Failed to save and download";
-
-      if (error.response) {
-        if (error.response.data?.errors) {
-          // Handle validation errors from server
-          errorMessage = Object.values(error.response.data.errors)
-            .map((err) => err.message)
-            .join("\n");
-        } else {
-          errorMessage += `: ${error.response.status} - ${
-            error.response.data?.message || "No error details"
-          }`;
-        }
-      }
-      alert(errorMessage);
+  try {
+    const errors = validateForm();
+    if (errors) {
+      alert("Please fix the form errors before submitting");
+      return;
     }
-  };
+    setIsSaving(true);
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("No authentication token found. Please log in again.");
+    }
+
+    // Format dates properly before sending
+    const formDataWithUser = {
+      ...formData,
+      serviceDate: new Date(formData.serviceDate).toISOString(),
+      deliveryDate: new Date(formData.deliveryDate).toISOString(),
+      user: user._id,
+    };
+
+    // First save the bill
+    const saveResponse = await axios.post(
+      `${API_BASE_URL}/service-bills`,
+      formDataWithUser,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // Rest of the function remains the same...
+    if (!saveResponse.data || !saveResponse.data.data || !saveResponse.data.data._id) {
+      throw new Error("Invalid response format from server");
+    }
+
+    const billId = saveResponse.data.data._id;
+
+    // Then download the PDF
+    const pdfResponse = await axios.get(
+      `${API_BASE_URL}/service-bills/${billId}/download`,
+      {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/pdf",
+        },
+      }
+    );
+
+    // Rest of the download logic...
+  } catch (error) {
+    console.error("Error in save and download:", error);
+    let errorMessage = "Failed to save and download";
+
+    if (error.response) {
+      if (error.response.data?.errors) {
+        errorMessage = Object.values(error.response.data.errors)
+          .map((err) => err.message)
+          .join("\n");
+      } else {
+        errorMessage += `: ${error.response.status} - ${
+          error.response.data?.message || "No error details"
+        }`;
+      }
+    }
+    alert(errorMessage);
+  } finally {
+    setIsSaving(false);
+  }
+};
   const LoadingOverlay = () => (
     <div style={styles.loadingOverlay}>
       <div style={styles.loadingContent}>
@@ -341,65 +319,66 @@ const ServiceBillForm = () => {
     </div>
   );
 
-  const generateServiceBillPDF = async (
-    billData = formData,
-    forPreview = false
-  ) => {
-    try {
-      setShowLoadingOverlay(true);
-      const token = localStorage.getItem("token");
+  const generateServiceBillPDF = async (billData = formData, forPreview = false) => {
+  try {
+    setShowLoadingOverlay(true);
+    const token = localStorage.getItem("token");
 
-      // First save the bill if it doesn't have an ID
-      let billId = billData._id;
-      if (!billId) {
-        const saveResponse = await axios.post(
-          `${API_BASE_URL}/service-bills`,
-          {
-            ...billData,
-            serviceType: billData.serviceType || formData.serviceType,
-            customServiceDescription:
-              billData.customServiceDescription ||
-              formData.customServiceDescription,
-            user: user._id,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        billId = saveResponse.data.data._id;
-      }
+    // Format dates properly before sending
+    const formattedBillData = {
+      ...billData,
+      serviceDate: new Date(billData.serviceDate).toISOString(),
+      deliveryDate: new Date(billData.deliveryDate).toISOString(),
+      serviceType: billData.serviceType || formData.serviceType,
+      customServiceDescription: 
+        billData.customServiceDescription || formData.customServiceDescription,
+      user: user._id,
+    };
 
-      // Get the PDF from the server
-      const pdfResponse = await axios.get(
-        `${API_BASE_URL}/service-bills/${billId}/download`,
+    // First save the bill if it doesn't have an ID
+    let billId = billData._id;
+    if (!billId) {
+      const saveResponse = await axios.post(
+        `${API_BASE_URL}/service-bills`,
+        formattedBillData,
         {
-          responseType: "blob",
           headers: {
             Authorization: `Bearer ${token}`,
-            Accept: "application/pdf",
+            "Content-Type": "application/json",
           },
         }
       );
-
-      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-
-      if (forPreview) {
-        const url = URL.createObjectURL(pdfBlob);
-        setPreviewPdf(url);
-        setShowPreviewModal(true);
-      } else {
-        saveAs(pdfBlob, `service-bill-${billId}.pdf`);
-      }
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert(`Failed to generate PDF: ${error.message}`);
-    } finally {
-      setShowLoadingOverlay(false);
+      billId = saveResponse.data.data._id;
     }
-  };
+
+    // Rest of the function remains the same...
+    const pdfResponse = await axios.get(
+      `${API_BASE_URL}/service-bills/${billId}/download`,
+      {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/pdf",
+        },
+      }
+    );
+
+    const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+
+    if (forPreview) {
+      const url = URL.createObjectURL(pdfBlob);
+      setPreviewPdf(url);
+      setShowPreviewModal(true);
+    } else {
+      saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+    }
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    alert(`Failed to generate PDF: ${error.message}`);
+  } finally {
+    setShowLoadingOverlay(false);
+  }
+};
   const handleInput = (e) => {
     const { name, value } = e.target;
     e.target.value = value.toUpperCase();
