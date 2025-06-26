@@ -125,9 +125,7 @@ const ServiceBillForm = () => {
   const handleServiceItemChange = (index, e) => {
     const { name, value } = e.target;
 
-    // Special handling for rate field
     if (name === "rate") {
-      // Only allow numbers and decimal point
       const cleanedValue = value.replace(/[^0-9.]/g, "");
 
       const items = [...formData.serviceItems];
@@ -211,104 +209,131 @@ const ServiceBillForm = () => {
   };
   const validateForm = () => {
     const errors = {};
-    if (!formData.customerName)
+
+    // Required fields
+    if (!formData.customerName.trim())
       errors.customerName = "Customer name is required";
-    if (!formData.customerPhone)
+    if (!formData.customerPhone.trim())
       errors.customerPhone = "Customer phone is required";
-    if (!formData.customerAddress)
+    if (!formData.customerAddress.trim())
       errors.customerAddress = "Customer address is required";
-    if (!formData.vehicleBrand)
+    if (!formData.vehicleBrand.trim())
       errors.vehicleBrand = "Vehicle brand is required";
-    if (!formData.vehicleModel)
+    if (!formData.vehicleModel.trim())
       errors.vehicleModel = "Vehicle model is required";
-    if (!formData.registrationNumber)
+    if (!formData.registrationNumber.trim())
       errors.registrationNumber = "Registration number is required";
+
+    // Validate phone number format
+    if (formData.customerPhone && !/^\d{10}$/.test(formData.customerPhone)) {
+      errors.customerPhone = "Phone number must be 10 digits";
+    }
 
     // Validate service items
     formData.serviceItems.forEach((item, index) => {
-      if (!item.description)
+      if (!item.description.trim()) {
         errors[`serviceItems[${index}].description`] =
           "Description is required";
-      if (!item.rate || isNaN(item.rate))
+      }
+      if (!item.rate || isNaN(item.rate) || Number(item.rate) <= 0) {
         errors[`serviceItems[${index}].rate`] = "Valid rate is required";
+      }
+      if (
+        !item.quantity ||
+        isNaN(item.quantity) ||
+        Number(item.quantity) <= 0
+      ) {
+        errors[`serviceItems[${index}].quantity`] =
+          "Valid quantity is required";
+      }
     });
 
     return Object.keys(errors).length === 0 ? null : errors;
   };
   const handleSaveAndDownload = async () => {
-  try {
-    const errors = validateForm();
-    if (errors) {
-      alert("Please fix the form errors before submitting");
-      return;
-    }
-    setIsSaving(true);
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      throw new Error("No authentication token found. Please log in again.");
-    }
-
-    // Format dates properly before sending
-    const formDataWithUser = {
-      ...formData,
-      serviceDate: new Date(formData.serviceDate).toISOString(),
-      deliveryDate: new Date(formData.deliveryDate).toISOString(),
-      user: user._id,
-    };
-
-    // First save the bill
-    const saveResponse = await axios.post(
-      `${API_BASE_URL}/service-bills`,
-      formDataWithUser,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+    try {
+      const errors = validateForm();
+      if (errors) {
+        alert("Please fix the form errors before submitting");
+        return;
       }
-    );
+      setIsSaving(true);
+      const token = localStorage.getItem("token");
 
-    // Rest of the function remains the same...
-    if (!saveResponse.data || !saveResponse.data.data || !saveResponse.data.data._id) {
-      throw new Error("Invalid response format from server");
-    }
-
-    const billId = saveResponse.data.data._id;
-
-    // Then download the PDF
-    const pdfResponse = await axios.get(
-      `${API_BASE_URL}/service-bills/${billId}/download`,
-      {
-        responseType: "blob",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/pdf",
-        },
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
       }
-    );
 
-    // Rest of the download logic...
-  } catch (error) {
-    console.error("Error in save and download:", error);
-    let errorMessage = "Failed to save and download";
+      // Format dates properly before sending
+      const formDataWithUser = {
+        ...formData,
+        serviceDate: new Date(formData.serviceDate).toISOString(),
+        deliveryDate: new Date(formData.deliveryDate).toISOString(),
+        user: user._id,
+      };
 
-    if (error.response) {
-      if (error.response.data?.errors) {
-        errorMessage = Object.values(error.response.data.errors)
-          .map((err) => err.message)
-          .join("\n");
+      // First save the bill
+      const saveResponse = await axios.post(
+        `${API_BASE_URL}/service-bills`,
+        formDataWithUser,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (
+        !saveResponse.data ||
+        !saveResponse.data.data ||
+        !saveResponse.data.data._id
+      ) {
+        throw new Error("Invalid response format from server");
+      }
+
+      const billId = saveResponse.data.data._id;
+
+      // Then download the PDF
+      const pdfResponse = await axios.get(
+        `${API_BASE_URL}/service-bills/${billId}/download`,
+        {
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/pdf",
+          },
+        }
+      );
+
+      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+      saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+    } catch (error) {
+      console.error("Error in save and download:", error);
+      let errorMessage = "Failed to save and download";
+
+      if (error.response) {
+        // Handle validation errors from server
+        if (error.response.data?.errors) {
+          errorMessage = Object.values(error.response.data.errors)
+            .map((err) => err.message)
+            .join("\n");
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        } else {
+          errorMessage = `Server error: ${error.response.status}`;
+        }
+      } else if (error.request) {
+        errorMessage = "No response received from server";
       } else {
-        errorMessage += `: ${error.response.status} - ${
-          error.response.data?.message || "No error details"
-        }`;
+        errorMessage = error.message || "Unknown error occurred";
       }
+
+      alert(errorMessage);
+    } finally {
+      setIsSaving(false);
     }
-    alert(errorMessage);
-  } finally {
-    setIsSaving(false);
-  }
-};
+  };
   const LoadingOverlay = () => (
     <div style={styles.loadingOverlay}>
       <div style={styles.loadingContent}>
@@ -319,66 +344,82 @@ const ServiceBillForm = () => {
     </div>
   );
 
-  const generateServiceBillPDF = async (billData = formData, forPreview = false) => {
-  try {
-    setShowLoadingOverlay(true);
-    const token = localStorage.getItem("token");
+  const generateServiceBillPDF = async (
+    billData = formData,
+    forPreview = false
+  ) => {
+    try {
+      setShowLoadingOverlay(true);
+      const token = localStorage.getItem("token");
 
-    // Format dates properly before sending
-    const formattedBillData = {
-      ...billData,
-      serviceDate: new Date(billData.serviceDate).toISOString(),
-      deliveryDate: new Date(billData.deliveryDate).toISOString(),
-      serviceType: billData.serviceType || formData.serviceType,
-      customServiceDescription: 
-        billData.customServiceDescription || formData.customServiceDescription,
-      user: user._id,
-    };
+      // Format dates properly before sending
+      const formattedBillData = {
+        ...billData,
+        serviceDate: new Date(billData.serviceDate).toISOString(),
+        deliveryDate: new Date(billData.deliveryDate).toISOString(),
+        serviceType: billData.serviceType || formData.serviceType,
+        customServiceDescription:
+          billData.customServiceDescription ||
+          formData.customServiceDescription,
+        user: user._id,
+      };
 
-    // First save the bill if it doesn't have an ID
-    let billId = billData._id;
-    if (!billId) {
-      const saveResponse = await axios.post(
-        `${API_BASE_URL}/service-bills`,
-        formattedBillData,
+      // First save the bill if it doesn't have an ID
+      let billId = billData._id;
+      if (!billId) {
+        const saveResponse = await axios.post(
+          `${API_BASE_URL}/service-bills`,
+          formattedBillData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!saveResponse.data?.data?._id) {
+          throw new Error("Failed to save bill before generating PDF");
+        }
+
+        billId = saveResponse.data.data._id;
+      }
+
+      const pdfResponse = await axios.get(
+        `${API_BASE_URL}/service-bills/${billId}/download`,
         {
+          responseType: "blob",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            Accept: "application/pdf",
           },
         }
       );
-      billId = saveResponse.data.data._id;
-    }
 
-    // Rest of the function remains the same...
-    const pdfResponse = await axios.get(
-      `${API_BASE_URL}/service-bills/${billId}/download`,
-      {
-        responseType: "blob",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/pdf",
-        },
+      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+
+      if (forPreview) {
+        const url = URL.createObjectURL(pdfBlob);
+        setPreviewPdf(url);
+        setShowPreviewModal(true);
+      } else {
+        saveAs(pdfBlob, `service-bill-${billId}.pdf`);
       }
-    );
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      let errorMessage = "Failed to generate PDF";
 
-    const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+      if (error.response) {
+        errorMessage = error.response.data?.message || "Server error occurred";
+      } else {
+        errorMessage = error.message || "Unknown error occurred";
+      }
 
-    if (forPreview) {
-      const url = URL.createObjectURL(pdfBlob);
-      setPreviewPdf(url);
-      setShowPreviewModal(true);
-    } else {
-      saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+      alert(errorMessage);
+    } finally {
+      setShowLoadingOverlay(false);
     }
-  } catch (error) {
-    console.error("Error generating PDF:", error);
-    alert(`Failed to generate PDF: ${error.message}`);
-  } finally {
-    setShowLoadingOverlay(false);
-  }
-};
+  };
   const handleInput = (e) => {
     const { name, value } = e.target;
     e.target.value = value.toUpperCase();
