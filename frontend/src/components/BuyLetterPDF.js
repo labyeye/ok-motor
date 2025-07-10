@@ -4,7 +4,6 @@ import {
   rgb,
   StandardFonts,
   degrees,
-  rotateDegrees,
 } from "pdf-lib";
 import { saveAs } from "file-saver";
 import {
@@ -36,8 +35,6 @@ import AuthContext from "../context/AuthContext";
 const BuyLetterForm = () => {
   const { user,logout } = useContext(AuthContext);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-  const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const [savedLetterData, setSavedLetterData] = useState(null);
   const [activeMenu, setActiveMenu] = useState("Create Buy Letter");
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -587,8 +584,6 @@ const BuyLetterForm = () => {
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-
-      const logoUrl = logo1;
 
       const firstPage = pdfDoc.getPages()[0];
 

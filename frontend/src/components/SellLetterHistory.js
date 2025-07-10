@@ -501,10 +501,6 @@ const SellLetterHistory = () => {
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
-      function formatTime(timeString) {
-        if (!timeString) return "";
-        return timeString.slice(0, 5);
-      }
 
       const formattedLetter = {
         ...letter,
@@ -611,12 +607,6 @@ const SellLetterHistory = () => {
       // Create vehicle invoice page
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
-
-      function formatTime(timeString) {
-        if (!timeString) return "";
-        return timeString.slice(0, 5);
-      }
-
       const formattedLetter = {
         ...letter,
         buyerName1: letter.buyerName,

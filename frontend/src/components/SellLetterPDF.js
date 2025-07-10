@@ -31,9 +31,6 @@ import AuthContext from "../context/AuthContext";
 
 const SellLetterForm = () => {
   const { user,logout } = useContext(AuthContext);
-
-  const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const [savedLetterData, setSavedLetterData] = useState(null);
   const [activeMenu, setActiveMenu] = useState("Create Sell Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [previewPdf, setPreviewPdf] = useState(null);
@@ -383,15 +380,6 @@ const SellLetterForm = () => {
       alert("Failed to generate preview. Please try again.");
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handlePreviewAndDownload = async (language) => {
-    setShowPreviewModal(false);
-    if (language === "hindi") {
-      await fillAndDownloadHindiPdf();
-    } else {
-      await fillAndDownloadEnglishPdf();
     }
   };
   const formatIndianAmountInWords = (amount) => {
@@ -1149,7 +1137,7 @@ const SellLetterForm = () => {
     );
   };
   const handleInput = (e) => {
-    const { name, value } = e.target;
+    const {value } = e.target;
     e.target.value = value.toUpperCase();
     handleChange(e);
   };
@@ -1283,11 +1271,6 @@ const SellLetterForm = () => {
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const logoUrl = logo1;
-
-      const firstPage = pdfDoc.getPages()[0];
-      // ✅ JUST BEFORE drawing the logo (logo1)
-
       function formatTime(timeString) {
         if (!timeString) return "";
         return timeString.slice(0, 5);

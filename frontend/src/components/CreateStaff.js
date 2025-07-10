@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   User,
@@ -21,7 +21,6 @@ import logo from '../images/company.png';
 
 const CreateStaff = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user,logout } = useContext(AuthContext);
 
 

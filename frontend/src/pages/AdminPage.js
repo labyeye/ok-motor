@@ -12,11 +12,6 @@ import {
   Target,
   RefreshCw,
   Bike,
-  Facebook,
-  Instagram,
-  MessageCircle,
-  Phone,
-  Mail,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";

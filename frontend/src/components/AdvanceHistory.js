@@ -12,9 +12,7 @@ import {
   FileText,
   Search,
   Download,
-  Edit,
   Trash2,
-  X,
   Bike,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";

@@ -184,7 +184,6 @@ const EditBuyLetterModal = ({ letter, onClose, onSave }) => {
 
 const BuyLetterHistory = () => {
   const { user,logout } = useContext(AuthContext);
-
   const [activeMenu, setActiveMenu] = useState("Buy Letter History");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
@@ -597,14 +596,6 @@ const BuyLetterHistory = () => {
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-
-      // Load and embed company logo (updated positioning)
-      const logoUrl = logo1;
-
-      const firstPage = pdfDoc.getPages()[0];
-
-      // Get first page and add logo (matching BuyLetterPDF.js positioning)
-
       // Format all data for PDF
       const formattedData = {
         ...letter,
@@ -622,7 +613,6 @@ const BuyLetterHistory = () => {
         saleDate: formatDate(letter.saleDate),
         saleTime: formatTime(letter.saleTime),
         todayDate: formatDate(letter.todayDate),
-        todayDate1: formatDate(letter.todayDate),
         saleAmount: formatRupee(letter.saleAmount),
         vehiclekm: formatKm(letter.vehiclekm),
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
@@ -682,10 +672,6 @@ const BuyLetterHistory = () => {
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const logoUrl = logo1;
-
-      const firstPage = pdfDoc.getPages()[0];
-
       const formattedData = {
         ...letter,
         buyerName1: letter.buyerName,

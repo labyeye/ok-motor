@@ -100,19 +100,6 @@ const AdvancePayBillForm = () => {
     };
   };
 
-  const handleAmountChange = (name, value) => {
-    let cleanValue = value.replace(/[^0-9.]/g, "");
-    const parts = cleanValue.split(".");
-    if (parts.length > 2) {
-      cleanValue = parts[0] + "." + parts.slice(1).join("");
-    }
-    if (parts.length === 2 && parts[1].length > 2) {
-      cleanValue = parts[0] + "." + parts[1].substring(0, 2);
-    }
-
-    return cleanValue;
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -145,7 +132,7 @@ const AdvancePayBillForm = () => {
   };
 
   const handleInput = (e) => {
-    const { name, value } = e.target;
+    const {value } = e.target;
     e.target.value = value.toUpperCase();
     handleChange(e);
   };
@@ -232,7 +219,6 @@ const AdvancePayBillForm = () => {
   ) => {
     try {
       setShowLoadingOverlay(true);
-      const token = localStorage.getItem("token");
 
       // Validate required fields
       if (!billData.customerName || !billData.customerPhone) {
@@ -392,13 +378,6 @@ const AdvancePayBillForm = () => {
       ...prev,
       [menuName]: !prev[menuName],
     }));
-  };
-
-  // Format display value for amount fields
-  const formatDisplayValue = (value) => {
-    if (!value || value === "" || value === "0") return "";
-    const num = parseFloat(value);
-    return isNaN(num) ? "" : num.toFixed(2);
   };
 
   const handleMenuClick = (menuName, path) => {
