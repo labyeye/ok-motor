@@ -15,19 +15,22 @@ import {
   Bike,
   ArrowUpRight,
   ArrowDownLeft,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
 
 const BikeHistory = () => {
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   const [activeMenu, setActiveMenu] = useState("Bike History");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [bikeHistory, setBikeHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [showPdfModal, setShowPdfModal] = useState(false);
   const navigate = useNavigate();
 
   const fetchBikeHistory = async () => {
@@ -120,6 +123,35 @@ const BikeHistory = () => {
       setLoading(false);
     }
   };
+
+  const fetchPdf = async (id, type) => {
+    try {
+      let endpoint = "";
+      if (type === "buy") {
+        endpoint = `https://ok-motor.onrender.com/api/buy-letter/pdf/${id}`;
+      } else if (type === "sell") {
+        endpoint = `https://ok-motor.onrender.com/api/sell-letters/pdf/${id}`;
+      } else if (type === "service") {
+        endpoint = `https://ok-motor.onrender.com/api/service-bills/pdf/${id}`;
+      }
+
+      const response = await axios.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        responseType: "blob",
+      });
+
+      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setPdfUrl(pdfUrl);
+      setShowPdfModal(true);
+    } catch (error) {
+      console.error("Error fetching PDF:", error);
+      alert("Failed to load PDF document");
+    }
+  };
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (searchTerm.trim().length > 0) {
@@ -131,6 +163,14 @@ const BikeHistory = () => {
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
+
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [pdfUrl]);
 
   const getActionIcon = (type) => {
     switch (type) {
@@ -176,7 +216,7 @@ const BikeHistory = () => {
       return `Sold to ${item.buyerName}`;
     }
     if (item.type === "service") {
-      return `Service: ${item.serviceType} (${item.serviceItems.length} items)`;
+      return `Service: ${item.serviceType} (${item.serviceItems?.length || 0} items)`;
     }
     return "";
   };
@@ -267,7 +307,7 @@ const BikeHistory = () => {
               width: "100%",
               maxWidth: "25rem",
               height: "13rem",
-              objectFit: "cover", // match CSS
+              objectFit: "cover",
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
@@ -398,6 +438,8 @@ const BikeHistory = () => {
                           day: "2-digit",
                           month: "2-digit",
                           year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </td>
                       <td style={styles.tableCell}>
@@ -418,17 +460,13 @@ const BikeHistory = () => {
                       <td style={styles.tableCell}>
                         <button
                           onClick={() => {
-                            if (item.type === "buy") {
-                              navigate(`/buy/history/${item._id}`);
-                            } else if (item.type === "sell") {
-                              navigate(`/sell/history/${item._id}`);
-                            } else if (item.type === "service") {
-                              navigate(`/service/history/${item._id}`);
+                            if (item.type === "buy" || item.type === "sell" || item.type === "service") {
+                              fetchPdf(item._id, item.type);
                             }
                           }}
                           style={styles.viewButton}
                         >
-                          View
+                          View PDF
                         </button>
                       </td>
                     </tr>
@@ -439,6 +477,33 @@ const BikeHistory = () => {
           )}
         </div>
       </div>
+
+      {/* PDF Preview Modal */}
+      {showPdfModal && (
+        <div style={styles.pdfModalOverlay}>
+          <div style={styles.pdfModalContainer}>
+            <div style={styles.pdfModalHeader}>
+              <h3>Document Preview</h3>
+              <button
+                onClick={() => {
+                  setShowPdfModal(false);
+                  URL.revokeObjectURL(pdfUrl);
+                }}
+                style={styles.pdfModalCloseButton}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div style={styles.pdfModalContent}>
+              <iframe
+                src={pdfUrl}
+                style={styles.pdfIframe}
+                title="PDF Preview"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -640,24 +705,6 @@ const styles = {
     borderRadius: "8px",
     backgroundColor: "#f8fafc",
   },
-  verifiedBadge: {
-    display: "inline-block",
-    padding: "4px 8px",
-    backgroundColor: "#dcfce7",
-    color: "#166534",
-    borderRadius: "12px",
-    fontSize: "0.75rem",
-    fontWeight: "500",
-  },
-  unverifiedBadge: {
-    display: "inline-block",
-    padding: "4px 8px",
-    backgroundColor: "#fee2e2",
-    color: "#991b1b",
-    borderRadius: "12px",
-    fontSize: "0.75rem",
-    fontWeight: "500",
-  },
   viewButton: {
     padding: "6px 12px",
     backgroundColor: "#3b82f6",
@@ -671,6 +718,55 @@ const styles = {
     ":hover": {
       backgroundColor: "#2563eb",
     },
+  },
+  // PDF Modal Styles
+  pdfModalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  pdfModalContainer: {
+    backgroundColor: "white",
+    borderRadius: "8px",
+    width: "80%",
+    height: "80%",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+  },
+  pdfModalHeader: {
+    padding: "16px",
+    backgroundColor: "#f1f5f9",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottom: "1px solid #e2e8f0",
+  },
+  pdfModalCloseButton: {
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    color: "#64748b",
+    ":hover": {
+      color: "#334155",
+    },
+  },
+  pdfModalContent: {
+    flex: 1,
+    padding: "0",
+    overflow: "hidden",
+  },
+  pdfIframe: {
+    width: "100%",
+    height: "100%",
+    border: "none",
   },
 };
 
