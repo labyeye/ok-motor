@@ -4,20 +4,25 @@ import AuthContext from '../context/AuthContext';
 import AuthForm from '../components/AuthForm';
 
 const LoginPage = () => {
-  const { user,logout } = useContext(AuthContext);
-
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
-
-  console.log('User in LoginPage:', user); // Add this for debugging
+  const [showLogin, setShowLogin] = useState(true);
 
   if (user) {
-    navigate(user.role === 'admin' ? '/admin' : '/staff', { replace: true });
+    navigate(user.role === 'admin' ? '/admin' : '/staff');
     return null;
   }
 
   return (
     <div>
-      <AuthForm isLogin={true} />
+      {showLogin ? (
+        <AuthForm isLogin={true} />
+      ) : (
+        <AuthForm isLogin={false} />
+      )}
+      <button onClick={() => setShowLogin(!showLogin)}>
+        {showLogin ? 'Need to register?' : 'Already have an account?'}
+      </button>
     </div>
   );
 };
