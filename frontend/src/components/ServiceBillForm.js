@@ -763,12 +763,7 @@ const ServiceBillForm = () => {
                     type="text"
                     name="kmReading"
                     value={
-                      formData.kmReading === ""
-                        ? ""
-                        : new Intl.NumberFormat("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(Number(formData.kmReading) / 100)
+                      formData.kmReading 
                     }
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");

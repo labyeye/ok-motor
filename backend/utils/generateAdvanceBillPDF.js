@@ -2,19 +2,32 @@ const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
 
-const formatTime12Hour = (timeString) => {
-    if (!timeString) return "";
+const formatTime12Hour = (timeInput) => {
+  if (!timeInput) return "";
+  
+  let hours, minutes;
+  
+  if (typeof timeInput === 'string') {
+    // Handle string input (HH:MM format)
+    const [h, m] = timeInput.split(":").map(Number);
+    hours = h;
+    minutes = m;
+  } else if (timeInput instanceof Date) {
+    // Handle Date object
+    hours = timeInput.getHours();
+    minutes = timeInput.getMinutes();
+  } else {
+    return "";
+  }
 
-    const [hour, minute] = timeString.split(":").map(Number);
+  const hours12 = hours % 12 || 12;
+  const ampm = hours >= 12 ? "PM" : "AM";
 
-    const hours12 = hour % 12 || 12;
-    const ampm = hour >= 12 ? "PM" : "AM";
+  const formattedHours = String(hours12).padStart(2, "0");
+  const formattedMinutes = String(minutes).padStart(2, "0");
 
-    const formattedHours = String(hours12).padStart(2, "0");
-    const formattedMinutes = String(minute).padStart(2, "0");
-
-    return `${formattedHours}:${formattedMinutes} ${ampm}`;
-  };
+  return `${formattedHours}:${formattedMinutes} ${ampm}`;
+};
 
 const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
   try {

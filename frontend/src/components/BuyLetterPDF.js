@@ -1,10 +1,5 @@
 import React, { useState, useCallback, useContext } from "react";
-import {
-  PDFDocument,
-  rgb,
-  StandardFonts,
-  degrees,
-} from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { saveAs } from "file-saver";
 import {
   FileText,
@@ -33,7 +28,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
 const BuyLetterForm = () => {
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Create Buy Letter");
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
@@ -501,7 +496,7 @@ const BuyLetterForm = () => {
     }));
   };
   const handleLogout = () => {
- logout();
+    logout();
     navigate("/login");
   };
 
@@ -722,7 +717,7 @@ const BuyLetterForm = () => {
       : new Intl.NumberFormat("en-IN", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
-        }).format(num / 100); // Divide by 100 here if needed
+        }).format(num); // Remove division by 100
   };
   const formatAadhar = (val) =>
     val
@@ -1857,30 +1852,33 @@ const BuyLetterForm = () => {
                   <input
                     type="text"
                     name="vehiclekm"
-                    value={
-                      formData.vehiclekm === ""
-                        ? ""
-                        : new Intl.NumberFormat("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(Number(formData.vehiclekm) / 100)
-                    }
+                    value={formData.vehiclekm}
                     onChange={(e) => {
-                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      const rawValue = e.target.value.replace(/[^0-9.]/g, "");
+                      // Update the form data with the raw value
                       setFormData((prev) => ({
                         ...prev,
                         vehiclekm: rawValue,
                       }));
                     }}
                     onFocus={() => setFocusedInput("vehiclekm")}
-                    onBlur={() => setFocusedInput(null)}
+                    onBlur={() => {
+                      // Format the value on blur if it's not empty
+                      if (formData.vehiclekm !== "") {
+                        const formatted = new Intl.NumberFormat("en-IN", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }).format(Number(formData.vehiclekm));
+                      }
+                      setFocusedInput(null);
+                    }}
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "vehiclekm"
                         ? styles.inputFocused
                         : {}),
                     }}
-                    placeholder="e.g. 36,000.00"
+                    placeholder="e.g. 1,200.00"
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2110,14 +2108,7 @@ const BuyLetterForm = () => {
                   <input
                     type="text"
                     name="saleAmount"
-                    value={
-                      formData.saleAmount === ""
-                        ? ""
-                        : new Intl.NumberFormat("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(Number(formData.saleAmount) / 100)
-                    }
+                    value={formData.saleAmount}
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");
                       setFormData((prev) => ({

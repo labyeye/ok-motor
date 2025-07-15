@@ -24,7 +24,7 @@ import logo from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 
 const AdvancePayBillForm = () => {
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   const [activeMenu, setActiveMenu] = useState("Create Advance Bill");
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -103,11 +103,9 @@ const AdvancePayBillForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // For numeric fields, clean the input
     let cleanedValue = value;
     if (["totalAmount", "advancePaid", "kmReading"].includes(name)) {
       cleanedValue = value.replace(/[^0-9.]/g, "");
-      // Ensure only two decimal places
       if (cleanedValue.includes(".")) {
         const parts = cleanedValue.split(".");
         if (parts[1].length > 2) {
@@ -120,8 +118,6 @@ const AdvancePayBillForm = () => {
       ...formData,
       [name]: cleanedValue,
     };
-
-    // Recalculate amounts when relevant fields change
     if (["totalAmount", "advancePaid"].includes(name)) {
       const calculated = calculateAmounts(updatedData);
       updatedData.grandTotal = calculated.grandTotal;
@@ -132,7 +128,7 @@ const AdvancePayBillForm = () => {
   };
 
   const handleInput = (e) => {
-    const {value } = e.target;
+    const { value } = e.target;
     e.target.value = value.toUpperCase();
     handleChange(e);
   };
@@ -145,12 +141,9 @@ const AdvancePayBillForm = () => {
       if (!token) {
         throw new Error("No authentication token found. Please log in again.");
       }
-
-      // Prepare data with calculated amounts
       const requestData = {
         ...formData,
         user: user._id,
-        // Convert string amounts to numbers
         totalAmount: parseFloat(formData.totalAmount) || 0,
         advancePaid: parseFloat(formData.advancePaid) || 0,
         grandTotal: parseFloat(formData.grandTotal) || 0,
@@ -174,8 +167,6 @@ const AdvancePayBillForm = () => {
       }
 
       const billId = saveResponse.data.data._id;
-
-      // Download the PDF
       const pdfResponse = await axios.get(
         `${API_BASE_URL}/advance-bills/${billId}/download`,
         {
@@ -415,7 +406,7 @@ const AdvancePayBillForm = () => {
   return (
     <div style={styles.container}>
       <div style={styles.sidebar}>
-         <div style={styles.sidebarHeader}>
+        <div style={styles.sidebarHeader}>
           <img
             src={logo}
             alt="logo"
@@ -745,14 +736,7 @@ const AdvancePayBillForm = () => {
                   <input
                     type="text"
                     name="kmReading"
-                    value={
-                      formData.kmReading === ""
-                        ? ""
-                        : new Intl.NumberFormat("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(Number(formData.kmReading) / 100)
-                    }
+                    value={formData.kmReading}
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");
                       setFormData((prev) => ({

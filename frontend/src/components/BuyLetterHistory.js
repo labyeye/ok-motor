@@ -183,7 +183,7 @@ const EditBuyLetterModal = ({ letter, onClose, onSave }) => {
 };
 
 const BuyLetterHistory = () => {
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Buy Letter History");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
@@ -300,20 +300,20 @@ const BuyLetterHistory = () => {
     });
   };
   const formatTime = (timeString) => {
-  if (!timeString) return "";
+    if (!timeString) return "";
 
-  const [hour, minute] = timeString.split(":").map(Number);
-  
-  // Convert to 12-hour format with leading zeros and proper AM/PM
-  const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
-  const ampm = hour >= 12 ? "PM" : "AM";
-  
-  // Add leading zero to hours and minutes if needed
-  const formattedHours = String(hours12).padStart(2, "0");
-  const formattedMinutes = String(minute).padStart(2, "0");
+    const [hour, minute] = timeString.split(":").map(Number);
 
-  return `${formattedHours}:${formattedMinutes} ${ampm}`;
-};
+    // Convert to 12-hour format with leading zeros and proper AM/PM
+    const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
+    const ampm = hour >= 12 ? "PM" : "AM";
+
+    // Add leading zero to hours and minutes if needed
+    const formattedHours = String(hours12).padStart(2, "0");
+    const formattedMinutes = String(minute).padStart(2, "0");
+
+    return `${formattedHours}:${formattedMinutes} ${ampm}`;
+  };
 
   const menuItems = [
     {
@@ -1131,7 +1131,9 @@ const BuyLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/buy-letter/${id}`);
+        await axios.delete(
+          `https://ok-motor.onrender.com/api/buy-letter/${id}`
+        );
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting buy letter:", error);
@@ -1164,7 +1166,7 @@ const BuyLetterHistory = () => {
     <div style={styles.container}>
       {/* Sidebar */}
       <div style={styles.sidebar}>
-         <div style={styles.sidebarHeader}>
+        <div style={styles.sidebarHeader}>
           <img
             src={logo}
             alt="logo"

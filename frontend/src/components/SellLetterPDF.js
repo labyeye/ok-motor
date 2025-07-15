@@ -1589,12 +1589,7 @@ const SellLetterForm = () => {
                     type="text"
                     name="vehiclekm"
                     value={
-                      formData.vehiclekm === ""
-                        ? ""
-                        : new Intl.NumberFormat("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(Number(formData.vehiclekm) / 100)
+                      formData.vehiclekm 
                     }
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");

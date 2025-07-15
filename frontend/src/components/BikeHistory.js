@@ -456,19 +456,6 @@ const BikeHistory = () => {
                       </td>
                       <td style={styles.tableCell}>{getAmount(item)}</td>
                       <td style={styles.tableCell}>{getDetails(item)}</td>
-
-                      <td style={styles.tableCell}>
-                        <button
-                          onClick={() => {
-                            if (item.type === "buy" || item.type === "sell" || item.type === "service") {
-                              fetchPdf(item._id, item.type);
-                            }
-                          }}
-                          style={styles.viewButton}
-                        >
-                          View PDF
-                        </button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
