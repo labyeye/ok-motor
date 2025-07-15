@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import LoginPage from "./pages/LoginPage";
@@ -16,27 +21,30 @@ import ServiceHistory from "./components/ServiceHistory";
 import AdvancePayBillForm from "./components/AdvancePayBillForm";
 import AdvanceHistory from "./components/AdvanceHistory";
 
-// Component to handle root route redirection
 const RootRedirect = () => {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        backgroundColor: '#f3f4f6'
-      }}>
-        <div style={{
-          width: '50px',
-          height: '50px',
-          border: '5px solid #e5e7eb',
-          borderTop: '5px solid #3b82f6',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          backgroundColor: "#f3f4f6",
+        }}
+      >
+        <div
+          style={{
+            width: "50px",
+            height: "50px",
+            border: "5px solid #e5e7eb",
+            borderTop: "5px solid #3b82f6",
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite",
+          }}
+        ></div>
         <style>
           {`
             @keyframes spin {
@@ -49,12 +57,13 @@ const RootRedirect = () => {
     );
   }
 
-  if (!isAuthenticated) {
+  // If not authenticated, redirect to login
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Redirect based on user role
-  const redirectPath = user?.role === 'admin' ? '/admin' : '/staff';
+  // If authenticated, redirect based on role
+  const redirectPath = user.role === "admin" ? "/admin" : "/staff";
   return <Navigate to={redirectPath} replace />;
 };
 

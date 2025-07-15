@@ -13,20 +13,25 @@ export const AuthProvider = ({ children }) => {
     checkUserLoggedIn();
   }, []);
 
-  const checkUserLoggedIn = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        const res = await axios.get('https://ok-motor.onrender.com/api/auth/me');
-        setUser(res.data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  
+const checkUserLoggedIn = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      const res = await axios.get('https://ok-motor.onrender.com/api/auth/me');
+      setUser(res.data);
+    } else {
+      setUser(null); // Explicitly set user to null if no token
     }
-  };
+  } catch (err) {
+    console.error(err);
+    localStorage.removeItem('token'); // Clear invalid token
+    setUser(null); // Explicitly set user to null on error
+  } finally {
+    setLoading(false);
+  }
+};
 
   const login = async (email, password) => {
     try {
