@@ -514,7 +514,7 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #334155",
+    borderBottom: "1px solid #1e293b",
   },
   sidebarTitle: {
     fontSize: "1.25rem",
@@ -539,11 +539,11 @@ const styles = {
     color: "#e2e8f0",
     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
     ":hover": {
-      backgroundColor: "#334155",
+      backgroundColor: "#1e293b",
     },
   },
   menuItemActive: {
-    backgroundColor: "#334155",
+    backgroundColor: "#1e293b",
     borderRight: "3px solid #3b82f6",
     color: "#ffffff",
   },
@@ -583,7 +583,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #334155",
+    borderTop: "1px solid #1e293b",
     transition: "all 0.2s ease",
     ":hover": {
       backgroundColor: "#7f1d1d20",
@@ -659,7 +659,7 @@ const styles = {
     padding: "12px 16px",
     textAlign: "left",
     backgroundColor: "#f1f5f9",
-    color: "#334155",
+    color: "#1e293b",
     fontSize: "0.875rem",
     fontWeight: "600",
     borderBottom: "1px solid #e2e8f0",
@@ -673,7 +673,7 @@ const styles = {
   tableCell: {
     padding: "12px 16px",
     fontSize: "0.875rem",
-    color: "#334155",
+    color: "#1e293b",
   },
   loadingContainer: {
     display: "flex",
@@ -742,7 +742,7 @@ const styles = {
     cursor: "pointer",
     color: "#64748b",
     ":hover": {
-      color: "#334155",
+      color: "#1e293b",
     },
   },
   pdfModalContent: {

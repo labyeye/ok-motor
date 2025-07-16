@@ -2117,7 +2117,7 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #334155",
+    borderBottom: "1px solid #1e293b",
   },
   sidebarTitle: {
     fontSize: "1.25rem",
@@ -2142,11 +2142,11 @@ const styles = {
     color: "#e2e8f0",
     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
     ":hover": {
-      backgroundColor: "#334155",
+      backgroundColor: "#1e293b",
     },
   },
   menuItemActive: {
-    backgroundColor: "#334155",
+    backgroundColor: "#1e293b",
     borderRight: "3px solid #3b82f6",
     color: "#ffffff",
   },
@@ -2186,7 +2186,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #334155",
+    borderTop: "1px solid #1e293b",
     transition: "all 0.2s ease",
     ":hover": {
       backgroundColor: "#7f1d1d20",
@@ -2333,7 +2333,7 @@ const styles = {
     gap: "8px",
     fontSize: "0.875rem",
     fontWeight: "500",
-    color: "#334155",
+    color: "#1e293b",
     marginBottom: "8px",
   },
   formIcon: {
@@ -2433,7 +2433,7 @@ const styles = {
     gap: "8px",
     fontSize: "0.875rem",
     fontWeight: "500",
-    color: "#334155",
+    color: "#1e293b",
     cursor: "pointer",
   },
 
@@ -2450,7 +2450,7 @@ const styles = {
     gap: "8px",
     padding: "10px 20px",
     backgroundColor: "#ffffff",
-    color: "#334155",
+    color: "#1e293b",
     border: "1px solid #cbd5e1",
     borderRadius: "8px",
     fontSize: "0.875rem",

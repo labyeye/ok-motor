@@ -753,7 +753,7 @@ const AdminPage = () => {
         /* Sidebar Styles */
         .sidebar {
           width: 280px;
-          background: rgba(30, 41, 59, 0.9);
+          background: #1e293b;
           backdrop-filter: blur(10px);
           color: #f8fafc;
           position: sticky;
@@ -985,7 +985,7 @@ const AdminPage = () => {
 
         /* Revenue Card */
         .revenue-card {
-          background: rgba(30, 41, 59, 0.9);
+          background: #1e293b;
           backdrop-filter: blur(10px);
           border-radius: 0.75rem;
           padding: 1.5rem;
@@ -1054,7 +1054,7 @@ const AdminPage = () => {
         }
 
         .chart-card {
-          background: rgba(30, 41, 59, 0.9);
+          background: #1e293b;
           backdrop-filter: blur(10px);
           border-radius: 0.75rem;
           padding: 1.5rem;
