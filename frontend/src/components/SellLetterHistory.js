@@ -363,7 +363,7 @@ const SellLetterHistory = () => {
       return result.trim();
     };
 
-    const amountInPaise = num / 100;
+    const amountInPaise = num;
     return `(${convert(amountInPaise)} Only)`;
   };
   const simulateProgress = () => {
@@ -386,7 +386,7 @@ const SellLetterHistory = () => {
       : new Intl.NumberFormat("en-IN", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
-        }).format(num / 100);
+        }).format(num);
   };
 
   const formatRupee = (val) => {
@@ -396,7 +396,7 @@ const SellLetterHistory = () => {
       : `${new Intl.NumberFormat("en-IN", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
-        }).format(num / 100)}`;
+        }).format(num)}`;
   };
    const formatTime = (timeString) => {
   if (!timeString) return "";

@@ -973,17 +973,7 @@ const AdvancePayBillForm = () => {
                 </div>
               )}
             </div>
-            <div style={styles.modalButtons}>
-              <button
-                style={styles.downloadButton}
-                onClick={() => {
-                  generateAdvanceBillPDF(formData);
-                  setShowPreviewModal(false);
-                }}
-              >
-                Download PDF
-              </button>
-            </div>
+            
             <button
               style={styles.modalCloseButton}
               onClick={() => setShowPreviewModal(false)}

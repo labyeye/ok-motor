@@ -30,7 +30,7 @@ import logo1 from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 
 const SellLetterForm = () => {
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Create Sell Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [previewPdf, setPreviewPdf] = useState(null);
@@ -472,7 +472,7 @@ const SellLetterForm = () => {
       return result.trim();
     };
 
-    const amountInPaise = num / 100;
+    const amountInPaise = num;
     return `(${convert(amountInPaise)} Only)`;
   };
 
@@ -489,7 +489,7 @@ const SellLetterForm = () => {
       : new Intl.NumberFormat("en-IN", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
-        }).format(num / 100);
+        }).format(num);
   };
 
   const formatRupee = (val) => {
@@ -499,23 +499,23 @@ const SellLetterForm = () => {
       : `${new Intl.NumberFormat("en-IN", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
-        }).format(num / 100)}`;
+        }).format(num)}`;
   };
-   const formatTime = (timeString) => {
-  if (!timeString) return "";
+  const formatTime = (timeString) => {
+    if (!timeString) return "";
 
-  const [hour, minute] = timeString.split(":").map(Number);
-  
-  // Convert to 12-hour format with leading zeros and proper AM/PM
-  const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
-  const ampm = hour >= 12 ? "PM" : "AM";
-  
-  // Add leading zero to hours and minutes if needed
-  const formattedHours = String(hours12).padStart(2, "0");
-  const formattedMinutes = String(minute).padStart(2, "0");
+    const [hour, minute] = timeString.split(":").map(Number);
 
-  return `${formattedHours}:${formattedMinutes} ${ampm}`;
-};
+    // Convert to 12-hour format with leading zeros and proper AM/PM
+    const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
+    const ampm = hour >= 12 ? "PM" : "AM";
+
+    // Add leading zero to hours and minutes if needed
+    const formattedHours = String(hours12).padStart(2, "0");
+    const formattedMinutes = String(minute).padStart(2, "0");
+
+    return `${formattedHours}:${formattedMinutes} ${ampm}`;
+  };
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
@@ -1137,7 +1137,7 @@ const SellLetterForm = () => {
     );
   };
   const handleInput = (e) => {
-    const {value } = e.target;
+    const { value } = e.target;
     e.target.value = value.toUpperCase();
     handleChange(e);
   };
@@ -1186,20 +1186,20 @@ const SellLetterForm = () => {
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const formatTime = (timeString) => {
-  if (!timeString) return "";
+        if (!timeString) return "";
 
-  const [hour, minute] = timeString.split(":").map(Number);
-  
-  // Convert to 12-hour format with leading zeros and proper AM/PM
-  const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
-  const ampm = hour >= 12 ? "PM" : "AM";
-  
-  // Add leading zero to hours and minutes if needed
-  const formattedHours = String(hours12).padStart(2, "0");
-  const formattedMinutes = String(minute).padStart(2, "0");
+        const [hour, minute] = timeString.split(":").map(Number);
 
-  return `${formattedHours}:${formattedMinutes} ${ampm}`;
-};
+        // Convert to 12-hour format with leading zeros and proper AM/PM
+        const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
+        const ampm = hour >= 12 ? "PM" : "AM";
+
+        // Add leading zero to hours and minutes if needed
+        const formattedHours = String(hours12).padStart(2, "0");
+        const formattedMinutes = String(minute).padStart(2, "0");
+
+        return `${formattedHours}:${formattedMinutes} ${ampm}`;
+      };
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
@@ -1284,7 +1284,7 @@ const SellLetterForm = () => {
         buyerName2: formData.buyerName,
         saleAmount: formData.saleAmount,
         amountInWords: formatIndianAmountInWords(formData.saleAmount),
-        vehiclekm: formData.vehiclekm,
+        vehiclekm: formatKm(formData.vehiclekm),
         saleDate: formatDate(formData.saleDate),
         saleTime: formatTime(formData.saleTime),
         todayDate: formatDate(formData.todayDate || new Date()),
@@ -1345,7 +1345,7 @@ const SellLetterForm = () => {
     <div style={styles.container}>
       {/* Sidebar */}
       <div style={styles.sidebar}>
-         <div style={styles.sidebarHeader}>
+        <div style={styles.sidebarHeader}>
           <img
             src={logo}
             alt="logo"
@@ -1588,9 +1588,7 @@ const SellLetterForm = () => {
                   <input
                     type="text"
                     name="vehiclekm"
-                    value={
-                      formData.vehiclekm 
-                    }
+                    value={formData.vehiclekm}
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");
                       setFormData((prev) => ({
@@ -1750,7 +1748,7 @@ const SellLetterForm = () => {
                         buyerPhone2: rawValue,
                       }));
                     }}
-                     onFocus={() => setFocusedInput("buyerPhone2")}
+                    onFocus={() => setFocusedInput("buyerPhone2")}
                     onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
@@ -1780,7 +1778,7 @@ const SellLetterForm = () => {
                         buyerAadhar: formatted,
                       }));
                     }}
-                     onFocus={() => setFocusedInput("buyerAadhar")}
+                    onFocus={() => setFocusedInput("buyerAadhar")}
                     onBlur={() => setFocusedInput(null)}
                     style={{
                       ...styles.formInput,
@@ -1830,7 +1828,7 @@ const SellLetterForm = () => {
                         ...prev,
                         witnessPhone: rawValue,
                       }));
-                      setFocusedInput("witnessPhone")
+                      setFocusedInput("witnessPhone");
                     }}
                     onFocus={() => setFocusedInput("witnessPhone")}
                     onBlur={() => setFocusedInput(null)}
@@ -1887,21 +1885,13 @@ const SellLetterForm = () => {
                   <input
                     type="text"
                     name="saleAmount"
-                    value={
-                      formData.saleAmount === ""
-                        ? ""
-                        : new Intl.NumberFormat("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(Number(formData.saleAmount) / 100)
-                    }
+                    value={formData.saleAmount}
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");
                       setFormData((prev) => ({
                         ...prev,
                         saleAmount: rawValue,
                       }));
-                      setFocusedInput("saleAmount");
                     }}
                     onFocus={() => setFocusedInput("saleAmount")}
                     onBlur={() => setFocusedInput(null)}

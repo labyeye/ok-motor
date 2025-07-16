@@ -251,64 +251,64 @@ const ServiceBillForm = () => {
     return Object.keys(errors).length === 0 ? null : errors;
   };
   const handleSaveAndDownload = async () => {
-  if (isSaving) return; // Prevent multiple clicks
-  setIsSaving(true);
-  
-  try {
-    const errors = validateForm();
-    if (errors) {
-      alert("Please fix the form errors before submitting");
-      return;
-    }
+    if (isSaving) return; // Prevent multiple clicks
+    setIsSaving(true);
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      throw new Error("No authentication token found. Please log in again.");
-    }
-
-    const formDataWithUser = {
-      ...formData,
-      serviceDate: new Date(formData.serviceDate).toISOString(),
-      deliveryDate: new Date(formData.deliveryDate).toISOString(),
-      user: user._id,
-    };
-
-    const saveResponse = await axios.post(
-      `${API_BASE_URL}/service-bills`,
-      formDataWithUser,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+    try {
+      const errors = validateForm();
+      if (errors) {
+        alert("Please fix the form errors before submitting");
+        return;
       }
-    );
 
-    if (!saveResponse.data?.data?._id) {
-      throw new Error("Invalid response format from server");
-    }
-
-    const billId = saveResponse.data.data._id;
-    const pdfResponse = await axios.get(
-      `${API_BASE_URL}/service-bills/${billId}/download`,
-      {
-        responseType: "blob",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/pdf",
-        },
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
       }
-    );
 
-    const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-    saveAs(pdfBlob, `service-bill-${billId}.pdf`);
-  } catch (error) {
-    console.error("Error in save and download:", error);
-    // Error handling...
-  } finally {
-    setIsSaving(false);
-  }
-};
+      const formDataWithUser = {
+        ...formData,
+        serviceDate: new Date(formData.serviceDate).toISOString(),
+        deliveryDate: new Date(formData.deliveryDate).toISOString(),
+        user: user._id,
+      };
+
+      const saveResponse = await axios.post(
+        `${API_BASE_URL}/service-bills`,
+        formDataWithUser,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!saveResponse.data?.data?._id) {
+        throw new Error("Invalid response format from server");
+      }
+
+      const billId = saveResponse.data.data._id;
+      const pdfResponse = await axios.get(
+        `${API_BASE_URL}/service-bills/${billId}/download`,
+        {
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/pdf",
+          },
+        }
+      );
+
+      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+      saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+    } catch (error) {
+      console.error("Error in save and download:", error);
+      // Error handling...
+    } finally {
+      setIsSaving(false);
+    }
+  };
   const LoadingOverlay = () => (
     <div style={styles.loadingOverlay}>
       <div style={styles.loadingContent}>
@@ -762,9 +762,7 @@ const ServiceBillForm = () => {
                   <input
                     type="text"
                     name="kmReading"
-                    value={
-                      formData.kmReading 
-                    }
+                    value={formData.kmReading}
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9]/g, "");
                       setFormData((prev) => ({
@@ -1382,17 +1380,7 @@ const ServiceBillForm = () => {
                 </div>
               )}
             </div>
-            <div style={styles.modalButtons}>
-              <button
-                style={styles.downloadButton}
-                onClick={() => {
-                  generateServiceBillPDF(formData);
-                  setShowPreviewModal(false);
-                }}
-              >
-                Download PDF
-              </button>
-            </div>
+
             <button
               style={styles.modalCloseButton}
               onClick={() => setShowPreviewModal(false)}

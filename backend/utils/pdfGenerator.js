@@ -316,7 +316,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       {
         label: "KM:",
         value: serviceBill.kmReading
-          ? `${(Number(serviceBill.kmReading) / 100).toLocaleString("en-IN", {
+          ? `${(Number(serviceBill.kmReading)).toLocaleString("en-IN", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })} km`

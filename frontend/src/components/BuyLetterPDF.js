@@ -298,7 +298,7 @@ const BuyLetterForm = () => {
       return result.trim();
     };
 
-    const amountInPaise = num / 100;
+    const amountInPaise = num;
     return `(${convert(amountInPaise)} Only)`;
   };
 
@@ -725,14 +725,15 @@ const BuyLetterForm = () => {
       .match(/.{1,4}/g)
       ?.join("-") || "";
   const formatRupee = (val) => {
-    const num = parseFloat(val.toString().replace(/,/g, ""));
-    return isNaN(num)
-      ? "0.00"
-      : `${new Intl.NumberFormat("en-IN", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(num / 100)}`;
-  };
+  const num = parseFloat(val.toString().replace(/,/g, ""));
+  return isNaN(num)
+    ? "0.00"
+    : `${new Intl.NumberFormat("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(num)}`;
+};
+
 
   const fillAndDownloadEnglishPdf = async () => {
     try {

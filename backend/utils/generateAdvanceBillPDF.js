@@ -47,7 +47,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         typeof val === "string"
           ? parseFloat(val.replace(/,/g, ""))
           : Number(val);
-      const actualKm = num / 100; // Add this division
+      const actualKm = num; // Add this division
 
       return isNaN(actualKm)
         ? "0.00"
