@@ -13,7 +13,7 @@ const cors = require("cors");
 const app = express();
 connectDB();
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: "https://ok-motor.vercel.app",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
