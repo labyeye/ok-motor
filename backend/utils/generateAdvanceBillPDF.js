@@ -23,7 +23,6 @@ const formatTime12Hour = (timeString) => {
         return timeString;
       }
       
-      // Handle ISO format or HH:MM format
       const date = new Date(timeString);
       if (!isNaN(date.getTime())) {
         const hours = date.getHours();
@@ -33,7 +32,6 @@ const formatTime12Hour = (timeString) => {
         return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
       }
       
-      // Handle simple HH:MM strings
       const [hour, minute] = timeString.split(':').map(Number);
       if (!isNaN(hour)) {
         const hours12 = hour % 12 || 12;
