@@ -2,6 +2,7 @@ const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
 
+
 const formatTime12Hour = (timeString) => {
   try {
     if (!timeString) return "";
@@ -32,16 +33,12 @@ const formatTime12Hour = (timeString) => {
         return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
       }
       
-      // Handle simple HH:MM strings (only if it's in the expected format)
-      if (/^\d{1,2}:\d{2}$/.test(timeString)) {
-        const [hourStr, minuteStr] = timeString.split(':');
-        const hour = parseInt(hourStr, 10);
-        const minute = parseInt(minuteStr, 10);
-        if (!isNaN(hour) && !isNaN(minute)) {
-          const hours12 = hour % 12 || 12;
-          const ampm = hour >= 12 ? 'PM' : 'AM';
-          return `${String(hours12).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${ampm}`;
-        }
+      // Handle simple HH:MM strings
+      const [hour, minute] = timeString.split(':').map(Number);
+      if (!isNaN(hour)) {
+        const hours12 = hour % 12 || 12;
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        return `${String(hours12).padStart(2, '0')}:${String(minute || 0).padStart(2, '0')} ${ampm}`;
       }
     }
     
