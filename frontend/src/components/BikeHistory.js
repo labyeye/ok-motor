@@ -32,38 +32,46 @@ const BikeHistory = () => {
   const [pdfUrl, setPdfUrl] = useState("");
   const [showPdfModal, setShowPdfModal] = useState(false);
   const navigate = useNavigate();
-
   const fetchBikeHistory = async () => {
     if (!searchTerm.trim()) return;
 
     try {
       setLoading(true);
-      const [buyLetters, sellLetters, serviceBills] = await Promise.all([
-        axios.get(
-          `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        ),
-        axios.get(
-          `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        ),
-        axios.get(
-          `https://ok-motor.onrender.com/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        ),
-      ]);
+      const [buyLetters, sellLetters, serviceBills, advanceBills] =
+        await Promise.all([
+          axios.get(
+            `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          ),
+          axios.get(
+            `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          ),
+          axios.get(
+            `https://ok-motor.onrender.com/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          ),
+          axios.get(
+            `https://ok-motor.onrender.com/api/advance-bills/by-registration?registrationNumber=${searchTerm}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          ),
+        ]);
 
       // Handle potential errors in individual requests
       const buyData =
@@ -86,11 +94,18 @@ const BikeHistory = () => {
             ? serviceBills.data
             : []
           : [];
+      const advanceData =
+        advanceBills.status === 200
+          ? Array.isArray(advanceBills.data)
+            ? advanceBills.data
+            : []
+          : [];
 
       if (
         buyData.length === 0 &&
         sellData.length === 0 &&
-        serviceData.length === 0
+        serviceData.length === 0 &&
+        advanceData.length === 0
       ) {
         setBikeHistory([]);
         return;
@@ -111,6 +126,11 @@ const BikeHistory = () => {
           ...item,
           type: "service",
           date: item.serviceDate || item.createdAt,
+        })),
+        ...advanceData.map((item) => ({
+          ...item,
+          type: "advance",
+          date: item.createdAt,
         })),
       ];
 
@@ -171,7 +191,6 @@ const BikeHistory = () => {
       }
     };
   }, [pdfUrl]);
-
   const getActionIcon = (type) => {
     switch (type) {
       case "buy":
@@ -180,6 +199,8 @@ const BikeHistory = () => {
         return <ArrowUpRight size={16} color="#ef4444" />;
       case "service":
         return <Wrench size={16} color="#10b981" />;
+      case "advance":
+        return <FileText size={16} color="#f59e0b" />;
       default:
         return <FileText size={16} />;
     }
@@ -193,6 +214,8 @@ const BikeHistory = () => {
         return "Sold";
       case "service":
         return "Serviced";
+      case "advance":
+        return "Advance Payment";
       default:
         return "Activity";
     }
@@ -205,6 +228,9 @@ const BikeHistory = () => {
     if (item.type === "service") {
       return `₹${item.grandTotal}`;
     }
+    if (item.type === "advance") {
+      return `₹${item.advancePaid}`;
+    }
     return "";
   };
 
@@ -216,7 +242,12 @@ const BikeHistory = () => {
       return `Sold to ${item.buyerName}`;
     }
     if (item.type === "service") {
-      return `Service: ${item.serviceType} (${item.serviceItems?.length || 0} items)`;
+      return `Service: ${item.serviceType} (${
+        item.serviceItems?.length || 0
+      } items)`;
+    }
+    if (item.type === "advance") {
+      return `Advance payment by ${item.customerName}`;
     }
     return "";
   };

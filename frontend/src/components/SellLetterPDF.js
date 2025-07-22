@@ -1915,7 +1915,7 @@ const SellLetterForm = () => {
                     style={styles.formSelect}
                   >
                     <option value="cash">Cash</option>
-                    <option value="check">Upi</option>
+                    <option value="upi">Upi</option>
                     <option value="bankTransfer">Bank Transfer</option>
                     <option value="soldloan">Sold on Loan</option>
                   </select>

@@ -25,6 +25,35 @@ router.get("/pdf/:filename", protect, async (req, res) => {
     res.status(500).json({ message: "Error serving PDF" });
   }
 });
+// Add this route to advanceBillRoutes.js
+router.get("/by-registration", protect, async (req, res) => {
+  try {
+    const { registrationNumber } = req.query;
+
+    if (!registrationNumber) {
+      return res.status(400).json({
+        message: "Registration number is required",
+      });
+    }
+
+    const advanceBills = await AdvanceBill.find({
+      registrationNumber: new RegExp(registrationNumber, "i"),
+      $or: [
+        { user: req.user.id },
+        { visibility: "staff" },
+        ...(req.user.role === "staff" || req.user.role === "admin" ? [{}] : []),
+      ],
+    }).sort({ createdAt: -1 });
+
+    res.json(advanceBills);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+});
 router.get("/vehicle-details", protect, async (req, res) => {
   try {
     const { registrationNumber } = req.query;
