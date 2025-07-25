@@ -361,9 +361,7 @@ const ServiceHistory = () => {
     if (window.confirm("Are you sure you want to delete this service bill?")) {
       try {
         await axios.delete(`https://ok-motor.onrender.com/api/service-bills/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+         
         });
         setServiceBills(serviceBills.filter((bill) => bill._id !== id));
       } catch (error) {

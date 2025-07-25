@@ -296,14 +296,6 @@ exports.deleteServiceBill = async (req, res) => {
       });
     }
 
-    // Delete associated PDF file if it exists
-    if (serviceBill.pdfUrl) {
-      const filePath = path.join(__dirname, "../", serviceBill.pdfUrl);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    }
-
     res.status(200).json({
       success: true,
       data: {},

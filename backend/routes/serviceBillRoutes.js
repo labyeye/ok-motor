@@ -15,7 +15,7 @@ router
   .route("/:id")
   .get(protect, serviceBillController.getServiceBill)
   .put(admin, serviceBillController.updateServiceBill)
-  .delete(admin, serviceBillController.deleteServiceBill);
+  .delete(protect, serviceBillController.deleteServiceBill);
 
 router
   .route("/:id/pdf")
