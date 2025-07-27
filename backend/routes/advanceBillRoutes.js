@@ -6,6 +6,8 @@ const AdvanceBill = require("../models/AdvanceBill");
 const { protect } = require("../middleware/auth");
 const BuyLetter = require("../models/BuyLetter");
 const SellLetter = require("../models/SellLetter");
+const path = require("path");
+const fs = require("fs");
 router.get("/pdf/:filename", protect, async (req, res) => {
   try {
     const { filename } = req.params;
@@ -115,6 +117,41 @@ router.get("/vehicle-details", protect, async (req, res) => {
     console.error(error);
     res.status(500).json({
       message: "Server Error",
+      error: error.message,
+    });
+  }
+});
+// Delete advance bill
+router.delete("/:id", protect, async (req, res) => {
+  try {
+    const advanceBill = await AdvanceBill.findById(req.params.id);
+
+    if (!advanceBill) {
+      return res.status(404).json({
+        success: false,
+        message: "Advance bill not found",
+      });
+    }
+
+    // Check if user is authorized to delete (either owner or admin)
+    if (advanceBill.user.toString() !== req.user.id && req.user.role !== "admin") {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized to delete this advance bill",
+      });
+    }
+
+    await AdvanceBill.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Advance bill deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting advance bill:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete advance bill",
       error: error.message,
     });
   }
