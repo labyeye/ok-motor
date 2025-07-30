@@ -23,9 +23,9 @@ import {
 } from "lucide-react";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
+import httpClient from "../utils/offlineHttpClient";
 
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import AuthContext from "../context/AuthContext";
 const BuyLetterForm = () => {
   const { user, logout } = useContext(AuthContext);
@@ -327,10 +327,7 @@ const BuyLetterForm = () => {
   const saveBuyLetter = async () => {
     try {
       setIsSaving(true);
-      const response = await axios.post(
-        "https://ok-motor.onrender.com/api/buy-letter",
-        formData
-      );
+      const response = await httpClient.post("/buy-letter", formData);
       alert("Buy letter saved successfully!");
       return response.data;
     } catch (error) {
@@ -356,13 +353,8 @@ const BuyLetterForm = () => {
       setIsDownloading(true);
       setIsSaving(true);
 
-      const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+      const existingLetter = await httpClient.get(
+        `/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
       );
       let savedLetter;
       if (existingLetter.data && existingLetter.data.length > 0) {
@@ -552,13 +544,8 @@ const BuyLetterForm = () => {
       setIsSaving(true);
 
       // Check if letter exists first
-      const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+      const existingLetter = await httpClient.get(
+        `/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
       );
 
       let savedLetterData;
@@ -566,10 +553,7 @@ const BuyLetterForm = () => {
         savedLetterData = existingLetter.data[0];
       } else {
         // Save new letter if doesn't exist
-        const response = await axios.post(
-          "https://ok-motor.onrender.com/api/buy-letter",
-          formData
-        );
+        const response = await httpClient.post("/buy-letter", formData);
         savedLetterData = response.data;
       }
 
@@ -725,15 +709,14 @@ const BuyLetterForm = () => {
       .match(/.{1,4}/g)
       ?.join("-") || "";
   const formatRupee = (val) => {
-  const num = parseFloat(val.toString().replace(/,/g, ""));
-  return isNaN(num)
-    ? "0.00"
-    : `${new Intl.NumberFormat("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(num)}`;
-};
-
+    const num = parseFloat(val.toString().replace(/,/g, ""));
+    return isNaN(num)
+      ? "0.00"
+      : `${new Intl.NumberFormat("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(num)}`;
+  };
 
   const fillAndDownloadEnglishPdf = async () => {
     try {
@@ -745,23 +728,15 @@ const BuyLetterForm = () => {
       setIsSaving(true);
 
       // Check if letter exists first
-      const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+      const existingLetter = await httpClient.get(
+        `/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
       );
 
       let savedLetterData;
       if (existingLetter.data && existingLetter.data.length > 0) {
         savedLetterData = existingLetter.data[0];
       } else {
-        const response = await axios.post(
-          "https://ok-motor.onrender.com/api/buy-letter",
-          formData
-        );
+        const response = await httpClient.post("/buy-letter", formData);
         savedLetterData = response.data;
       }
 

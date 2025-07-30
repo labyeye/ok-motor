@@ -22,8 +22,9 @@ import {
   Bike,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import logo from "../images/company.png";
+import httpClient from "../utils/offlineHttpClient";
+import offlineSyncManager from "../utils/offlineSyncManager";
 
 import AuthContext from "../context/AuthContext";
 
@@ -99,15 +100,9 @@ const ServiceBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/advance-bills/vehicle-details`,
-        {
-          params: { registrationNumber },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const response = await httpClient.get(`/advance-bills/vehicle-details`, {
+        params: { registrationNumber },
+      });
 
       if (response.data) {
         setFormData((prev) => ({
@@ -273,38 +268,119 @@ const ServiceBillForm = () => {
         user: user._id,
       };
 
-      const saveResponse = await axios.post(
-        `${API_BASE_URL}/service-bills`,
-        formDataWithUser,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // Check if online
+      if (navigator.onLine) {
+        // Online: direct API call
+        const saveResponse = await httpClient.post(
+          `/service-bills`,
+          formDataWithUser
+        );
 
-      if (!saveResponse.data?.data?._id) {
-        throw new Error("Invalid response format from server");
+        if (!saveResponse.data?.data?._id) {
+          throw new Error("Invalid response format from server");
+        }
+
+        const billId = saveResponse.data.data._id;
+        const pdfResponse = await httpClient.get(
+          `/service-bills/${billId}/download`,
+          {
+            responseType: "blob",
+            headers: {
+              Accept: "application/pdf",
+            },
+          }
+        );
+
+        const pdfBlob = new Blob([pdfResponse.data], {
+          type: "application/pdf",
+        });
+        saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+
+        alert("Service bill saved and downloaded successfully!");
+      } else {
+        // Offline: queue for sync
+        await offlineSyncManager.queueFormSubmission({
+          type: "service-bill",
+          endpoint: "/service-bills",
+          method: "POST",
+          data: formDataWithUser,
+          userFriendlyName: `Service Bill for ${formDataWithUser.vehicleNumber}`,
+          onSuccess: (response) => {
+            console.log("Service bill synced successfully:", response);
+            // Optionally download PDF when online
+            if (response.data?._id) {
+              // Could trigger PDF download here if needed
+            }
+          },
+          onError: (error) => {
+            console.error("Failed to sync service bill:", error);
+          },
+        });
+
+        alert(
+          "You're offline. Service bill has been saved locally and will be synced when you reconnect to the internet."
+        );
+
+        // Reset form for offline submission
+        setFormData({
+          taxEnabled: false,
+          businessName: "",
+          businessGSTIN: "",
+          businessAddress: "",
+          totalAmount: 0,
+          taxAmount: 0,
+          grandTotal: 0,
+          balanceDue: 0,
+          customerName: "",
+          customerNumber: "",
+          customerAddress: "",
+          customerGSTIN: "",
+          vehicleNumber: "",
+          vehicleModel: "",
+          vehicleType: "",
+          kmReading: "",
+          engineNumber: "",
+          chassisNumber: "",
+          serviceDate: new Date().toISOString().split("T")[0],
+          deliveryDate: new Date().toISOString().split("T")[0],
+          services: [],
+          purchasedItems: [],
+        });
       }
-
-      const billId = saveResponse.data.data._id;
-      const pdfResponse = await axios.get(
-        `${API_BASE_URL}/service-bills/${billId}/download`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/pdf",
-          },
-        }
-      );
-
-      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-      saveAs(pdfBlob, `service-bill-${billId}.pdf`);
     } catch (error) {
       console.error("Error in save and download:", error);
-      // Error handling...
+
+      if (
+        error.message.includes("offline") ||
+        error.message.includes("network")
+      ) {
+        // Network error - try to queue for offline sync
+        try {
+          const formDataWithUser = {
+            ...formData,
+            serviceDate: new Date(formData.serviceDate).toISOString(),
+            deliveryDate: new Date(formData.deliveryDate).toISOString(),
+            user: user._id,
+          };
+
+          await offlineSyncManager.queueFormSubmission({
+            type: "service-bill",
+            endpoint: "/service-bills",
+            method: "POST",
+            data: formDataWithUser,
+            userFriendlyName: `Service Bill for ${formDataWithUser.vehicleNumber}`,
+          });
+
+          alert(
+            "Connection failed. Service bill has been saved locally and will be synced when you reconnect."
+          );
+        } catch (queueError) {
+          console.error("Failed to queue form for offline sync:", queueError);
+          alert("Failed to save service bill. Please try again.");
+        }
+      } else {
+        alert(`Error: ${error.message || "Failed to save service bill"}`);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -342,15 +418,9 @@ const ServiceBillForm = () => {
       // First save the bill if it doesn't have an ID
       let billId = billData._id;
       if (!billId) {
-        const saveResponse = await axios.post(
-          `${API_BASE_URL}/service-bills`,
-          formattedBillData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
+        const saveResponse = await httpClient.post(
+          `/service-bills`,
+          formattedBillData
         );
 
         if (!saveResponse.data?.data?._id) {
@@ -360,12 +430,11 @@ const ServiceBillForm = () => {
         billId = saveResponse.data.data._id;
       }
 
-      const pdfResponse = await axios.get(
-        `${API_BASE_URL}/service-bills/${billId}/download`,
+      const pdfResponse = await httpClient.get(
+        `/service-bills/${billId}/download`,
         {
           responseType: "blob",
           headers: {
-            Authorization: `Bearer ${token}`,
             Accept: "application/pdf",
           },
         }

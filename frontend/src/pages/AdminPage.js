@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -28,7 +28,8 @@ import {
 import logo from "../images/company.png";
 import logo1 from "../images/dash.png";
 import AuthContext from "../context/AuthContext";
-import axios from "axios";
+import OfflineBanner from "../components/OfflineBanner";
+import httpClient from "../utils/offlineHttpClient";
 
 // Register ChartJS components
 ChartJS.register(
@@ -64,17 +65,42 @@ const AdminPage = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // Load cached data on initial mount if offline
   useEffect(() => {
-    if (user && activeMenu === "Dashboard") {
-      fetchDashboardData();
+    if (!navigator.onLine) {
+      const cachedDashboard = localStorage.getItem("cachedDashboard");
+      if (cachedDashboard) {
+        try {
+          const dashboardData = JSON.parse(cachedDashboard);
+          console.log("Loading cached admin dashboard data on mount");
+          setDashboardData(dashboardData);
+          setLoading(false);
+          // Don't set error when we successfully load cached data
+          // The OfflineBanner will handle showing offline status
+        } catch (parseError) {
+          console.error(
+            "Error parsing cached dashboard data on mount:",
+            parseError
+          );
+          setError("Failed to load cached data");
+        }
+      } else {
+        setError("No cached data available offline");
+        setLoading(false);
+      }
     }
-  }, [user, activeMenu]);
-  
+  }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
+      // Don't show loading if we're offline and have cached data
+      const cachedDashboard = localStorage.getItem("cachedDashboard");
+      const hasCache = cachedDashboard && !navigator.onLine;
+
+      if (!hasCache) {
+        setLoading(true);
+        setError(null);
+      }
 
       const token = localStorage.getItem("token");
       if (!token) {
@@ -83,35 +109,73 @@ const AdminPage = () => {
 
       const endpoint =
         user?.role === "admin"
-          ? "https://ok-motor.onrender.com/api/dashboard/stats"
-          : "https://ok-motor.onrender.com/api/dashboard/owner-stats";
+          ? "/api/dashboard/stats"
+          : "/api/dashboard/owner-stats";
 
-      const response = await axios.get(endpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      console.log("Fetching dashboard data...");
+      const response = await httpClient.get(endpoint);
 
-      setDashboardData({
+      console.log("Dashboard data received:", response.data);
+      const dashboardDataToSet = {
         ...response.data.data,
         ownerName: user?.name || "Admin",
-      });
+      };
+
+      setDashboardData(dashboardDataToSet);
+
+      // Cache dashboard data for offline use
+      localStorage.setItem(
+        "cachedDashboard",
+        JSON.stringify(dashboardDataToSet)
+      );
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
-      setError(
-        err.response?.data?.message ||
-          "Failed to load dashboard data. Please try again."
-      );
-      if (err.response?.status === 401) {
-        // Handle unauthorized error (token expired or invalid)
-        logout();
-        navigate("/login");
+
+      // Handle offline scenarios better
+      if (
+        !navigator.onLine ||
+        err.message === "Request queued for when online"
+      ) {
+        // If offline, try to load cached dashboard data
+        const cachedDashboard = localStorage.getItem("cachedDashboard");
+        if (cachedDashboard) {
+          try {
+            const dashboardData = JSON.parse(cachedDashboard);
+            console.log("Using cached dashboard data");
+            setDashboardData(dashboardData);
+            // Don't set error when we successfully load cached data
+            // The OfflineBanner will handle showing offline status
+          } catch (parseError) {
+            console.error("Error parsing cached dashboard data:", parseError);
+            setError("Failed to load cached data");
+          }
+        } else {
+          setError(
+            "No cached data available. Connect to internet to load dashboard."
+          );
+        }
+      } else {
+        setError(
+          err.response?.data?.message ||
+            "Failed to load dashboard data. Please try again."
+        );
+
+        // Only logout on 401 when online
+        if (err.response?.status === 401 && navigator.onLine) {
+          logout();
+          navigate("/login");
+        }
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.role, logout, navigate]); // Add dependencies for useCallback
+
+  useEffect(() => {
+    if (user && activeMenu === "Dashboard") {
+      fetchDashboardData();
+    }
+  }, [user, activeMenu, fetchDashboardData]); // Now fetchDashboardData is stable
 
   const formatCurrency = (amount) => {
     if (isNaN(amount)) return "₹0";
@@ -715,6 +779,7 @@ const AdminPage = () => {
       {/* Main Content */}
       <div className="main-content">
         <div className="content-padding">
+          <OfflineBanner />
           <div className="banner">
             <img src={logo1} alt="Company Logo" className="banner-logo" />
           </div>

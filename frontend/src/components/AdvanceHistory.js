@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -18,9 +18,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
+import OfflineBanner from "../components/OfflineBanner";
 
 const AdvanceHistory = () => {
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   const [activeMenu, setActiveMenu] = useState("Advance History");
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -29,35 +30,49 @@ const AdvanceHistory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-    const [downloadProgress, setDownloadProgress] = useState(0);
-    const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
   const navigate = useNavigate();
-  
-const formatDate = (dateString) => {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-};
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
-          `https://ok-motor.onrender.com/api/advance-bills?page=${currentPage}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+
+        // Try to load cached data first
+        const cachedAdvanceBills = localStorage.getItem("cachedAdvanceHistory");
+        if (cachedAdvanceBills) {
+          setAdvanceBills(JSON.parse(cachedAdvanceBills));
+        }
+
+        const response = await httpClient.get(
+          `/advance-bills?page=${currentPage}`
         );
-        setAdvanceBills(response.data.data || response.data);
+        const advanceBillsData = response.data.data || response.data;
+        setAdvanceBills(advanceBillsData);
         setTotalPages(response.data.totalPages || 1);
+
+        // Cache the advance bills data
+        localStorage.setItem(
+          "cachedAdvanceHistory",
+          JSON.stringify(advanceBillsData)
+        );
       } catch (error) {
         console.error("Error fetching advance bills:", error);
+        // If we're offline and have cached data, use that
+        const cachedAdvanceBills = localStorage.getItem("cachedAdvanceHistory");
+        if (cachedAdvanceBills && advanceBills.length === 0) {
+          setAdvanceBills(JSON.parse(cachedAdvanceBills));
+        }
       } finally {
         setLoading(false);
       }
@@ -69,7 +84,7 @@ const formatDate = (dateString) => {
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
-    const simulateProgress = () => {
+  const simulateProgress = () => {
     return new Promise((resolve) => {
       let progress = 0;
       const interval = setInterval(() => {
@@ -83,7 +98,6 @@ const formatDate = (dateString) => {
     });
   };
 
-  
   const DownloadProgressModal = ({ progress, onClose }) => {
     return (
       <div style={modalStyles.overlay}>
@@ -268,26 +282,26 @@ const formatDate = (dateString) => {
   };
 
   const filteredBills = searchTerm
-    ? advanceBills.filter((bill) =>
-        bill.registrationNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        bill.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
+    ? advanceBills.filter(
+        (bill) =>
+          bill.registrationNumber
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          bill.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : advanceBills;
 
   const handleDownload = async (billId) => {
     try {
-          setIsDownloading(true);
-    setDownloadProgress(0);
+      setIsDownloading(true);
+      setDownloadProgress(0);
 
-    // Simulate progress
-    await simulateProgress();
-      const response = await axios.get(
-        `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
+      // Simulate progress
+      await simulateProgress();
+      const response = await httpClient.get(
+        `/advance-bills/${billId}/download`,
         {
           responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
         }
       );
 
@@ -307,12 +321,17 @@ const formatDate = (dateString) => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this advance bill?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/advance-bills/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        await httpClient.delete(`/advance-bills/${id}`);
         setAdvanceBills(advanceBills.filter((bill) => bill._id !== id));
+
+        // Update cached data
+        const updatedAdvanceBills = advanceBills.filter(
+          (bill) => bill._id !== id
+        );
+        localStorage.setItem(
+          "cachedAdvanceHistory",
+          JSON.stringify(updatedAdvanceBills)
+        );
       } catch (error) {
         console.error("Error deleting advance bill:", error);
       }
@@ -395,221 +414,226 @@ const formatDate = (dateString) => {
   };
 
   return (
-    <div style={styles.container}>
-      {/* Sidebar */}
-      <div style={styles.sidebar}>
-         <div style={styles.sidebarHeader}>
-          <img
-            src={logo}
-            alt="logo"
-            style={{
-              width: "100%",
-              maxWidth: "25rem",
-              height: "13rem",
-              objectFit: "cover", // match CSS
-              objectPosition: "center",
-              display: "block",
-              margin: "0 auto 1rem auto",
-            }}
-          />
-          <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
-        </div>
-
-        <nav style={styles.nav}>
-          {menuItems.map((item) => (
-            <div key={item.name}>
-              <div
-                style={{
-                  ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                }}
-                onClick={() => {
-                  if (item.submenu) {
-                    toggleMenu(item.name);
-                  } else {
-                    handleMenuClick(item.name, item.path);
-                  }
-                }}
-              >
-                <div style={styles.menuItemContent}>
-                  <item.icon size={20} style={styles.menuIcon} />
-                  <span style={styles.menuText}>{item.name}</span>
-                </div>
-                {item.submenu &&
-                  (expandedMenus[item.name] ? (
-                    <ChevronDown size={16} />
-                  ) : (
-                    <ChevronRight size={16} />
-                  ))}
-              </div>
-
-              {item.submenu && expandedMenus[item.name] && (
-                <div style={styles.submenu}>
-                  {item.submenu.map((subItem) => (
-                    <div
-                      key={subItem.name}
-                      style={{
-                        ...styles.submenuItem,
-                        ...(activeMenu === subItem.name
-                          ? styles.submenuItemActive
-                          : {}),
-                      }}
-                      onClick={() =>
-                        handleMenuClick(subItem.name, subItem.path)
-                      }
-                    >
-                      {subItem.name}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-
-          <div style={styles.logoutButton} onClick={handleLogout}>
-            <LogOut size={20} style={styles.menuIcon} />
-            <span style={styles.menuText}>Logout</span>
-          </div>
-        </nav>
-      </div>
-
-      {/* Main Content */}
-      <div style={styles.mainContent}>
-        <div style={styles.contentPadding}>
-          <div style={styles.header}>
-            <h1 style={styles.pageTitle}>Advance History</h1>
-            <p style={styles.pageSubtitle}>
-              View and manage all your advance bills
-            </p>
+    <>
+      <OfflineBanner />
+      <div style={styles.container}>
+        {/* Sidebar */}
+        <div style={styles.sidebar}>
+          <div style={styles.sidebarHeader}>
+            <img
+              src={logo}
+              alt="logo"
+              style={{
+                width: "100%",
+                maxWidth: "25rem",
+                height: "13rem",
+                objectFit: "cover", // match CSS
+                objectPosition: "center",
+                display: "block",
+                margin: "0 auto 1rem auto",
+              }}
+            />
+            <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
           </div>
 
-          <div style={styles.searchContainer}>
-            <div style={styles.searchInputContainer}>
-              <Search size={18} style={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Search by registration number or customer name..."
-                value={searchTerm}
-                onChange={handleSearch}
-                style={styles.searchInput}
-              />
-            </div>
-            <button
-              style={styles.newBillButton}
-              onClick={() => navigate("/advance/create")}
-            >
-              <FileText size={16} style={styles.buttonIcon} />
-              New Advance Bill
-            </button>
-          </div>
-
-          {loading ? (
-            <div style={styles.loadingContainer}>
-              <p>Loading data...</p>
-            </div>
-          ) : (
-            <>
-              <div style={styles.tableContainer}>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th style={styles.tableHeader}>Customer</th>
-                      <th style={styles.tableHeader}>Vehicle</th>
-                      <th style={styles.tableHeader}>Reg No.</th>
-                      <th style={styles.tableHeader}>Total Amount</th>
-                      <th style={styles.tableHeader}>Advance Paid</th>
-                      <th style={styles.tableHeader}>Balance Due</th>
-                      <th style={styles.tableHeader}>Date</th>
-                      <th style={styles.tableHeader}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredBills.map((bill) => (
-                      <tr key={bill._id} style={styles.tableRow}>
-                        <td style={styles.tableCell}>{bill.customerName}</td>
-                        <td style={styles.tableCell}>
-                          {bill.vehicleBrand} {bill.vehicleModel}
-                        </td>
-                        <td style={styles.tableCell}>{bill.registrationNumber}</td>
-                         <td style={styles.tableCell}>
-                          ₹
-                          {new Intl.NumberFormat("en-IN").format(
-                            bill.grandTotal
-                          )}
-                        </td>
-                         <td style={styles.tableCell}>
-                          ₹
-                          {new Intl.NumberFormat("en-IN").format(
-                            bill.advancePaid
-                          )}
-                        </td>
-                         <td style={styles.tableCell}>
-                          ₹
-                          {new Intl.NumberFormat("en-IN").format(
-                            bill.balanceDue
-                          )}
-                        </td>
-                        <td style={styles.tableCell}>
-                          {formatDate(bill.createdAt)}
-                        </td>
-                        <td style={styles.tableCell}>
-                          <button
-                            onClick={() => handleDownload(bill._id)}
-                            style={styles.iconButton}
-                            title="Download"
-                          >
-                            <Download size={16} />
-                          </button>
-                          {user?.role === "admin" && (
-                            <button
-                              onClick={() => handleDelete(bill._id)}
-                              style={styles.iconButton}
-                              title="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </td>
-                      </tr>
+          <nav style={styles.nav}>
+            {menuItems.map((item) => (
+              <div key={item.name}>
+                <div
+                  style={{
+                    ...styles.menuItem,
+                    ...(activeMenu === item.name ? styles.menuItemActive : {}),
+                  }}
+                  onClick={() => {
+                    if (item.submenu) {
+                      toggleMenu(item.name);
+                    } else {
+                      handleMenuClick(item.name, item.path);
+                    }
+                  }}
+                >
+                  <div style={styles.menuItemContent}>
+                    <item.icon size={20} style={styles.menuIcon} />
+                    <span style={styles.menuText}>{item.name}</span>
+                  </div>
+                  {item.submenu &&
+                    (expandedMenus[item.name] ? (
+                      <ChevronDown size={16} />
+                    ) : (
+                      <ChevronRight size={16} />
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                </div>
 
-              <div style={styles.pagination}>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  style={styles.paginationButton}
-                >
-                  Previous
-                </button>
-                <span style={styles.pageInfo}>
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                  style={styles.paginationButton}
-                >
-                  Next
-                </button>
+                {item.submenu && expandedMenus[item.name] && (
+                  <div style={styles.submenu}>
+                    {item.submenu.map((subItem) => (
+                      <div
+                        key={subItem.name}
+                        style={{
+                          ...styles.submenuItem,
+                          ...(activeMenu === subItem.name
+                            ? styles.submenuItemActive
+                            : {}),
+                        }}
+                        onClick={() =>
+                          handleMenuClick(subItem.name, subItem.path)
+                        }
+                      >
+                        {subItem.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </>
-          )}
+            ))}
+
+            <div style={styles.logoutButton} onClick={handleLogout}>
+              <LogOut size={20} style={styles.menuIcon} />
+              <span style={styles.menuText}>Logout</span>
+            </div>
+          </nav>
         </div>
+
+        {/* Main Content */}
+        <div style={styles.mainContent}>
+          <div style={styles.contentPadding}>
+            <div style={styles.header}>
+              <h1 style={styles.pageTitle}>Advance History</h1>
+              <p style={styles.pageSubtitle}>
+                View and manage all your advance bills
+              </p>
+            </div>
+
+            <div style={styles.searchContainer}>
+              <div style={styles.searchInputContainer}>
+                <Search size={18} style={styles.searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Search by registration number or customer name..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  style={styles.searchInput}
+                />
+              </div>
+              <button
+                style={styles.newBillButton}
+                onClick={() => navigate("/advance/create")}
+              >
+                <FileText size={16} style={styles.buttonIcon} />
+                New Advance Bill
+              </button>
+            </div>
+
+            {loading ? (
+              <div style={styles.loadingContainer}>
+                <p>Loading data...</p>
+              </div>
+            ) : (
+              <>
+                <div style={styles.tableContainer}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.tableHeader}>Customer</th>
+                        <th style={styles.tableHeader}>Vehicle</th>
+                        <th style={styles.tableHeader}>Reg No.</th>
+                        <th style={styles.tableHeader}>Total Amount</th>
+                        <th style={styles.tableHeader}>Advance Paid</th>
+                        <th style={styles.tableHeader}>Balance Due</th>
+                        <th style={styles.tableHeader}>Date</th>
+                        <th style={styles.tableHeader}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredBills.map((bill) => (
+                        <tr key={bill._id} style={styles.tableRow}>
+                          <td style={styles.tableCell}>{bill.customerName}</td>
+                          <td style={styles.tableCell}>
+                            {bill.vehicleBrand} {bill.vehicleModel}
+                          </td>
+                          <td style={styles.tableCell}>
+                            {bill.registrationNumber}
+                          </td>
+                          <td style={styles.tableCell}>
+                            ₹
+                            {new Intl.NumberFormat("en-IN").format(
+                              bill.grandTotal
+                            )}
+                          </td>
+                          <td style={styles.tableCell}>
+                            ₹
+                            {new Intl.NumberFormat("en-IN").format(
+                              bill.advancePaid
+                            )}
+                          </td>
+                          <td style={styles.tableCell}>
+                            ₹
+                            {new Intl.NumberFormat("en-IN").format(
+                              bill.balanceDue
+                            )}
+                          </td>
+                          <td style={styles.tableCell}>
+                            {formatDate(bill.createdAt)}
+                          </td>
+                          <td style={styles.tableCell}>
+                            <button
+                              onClick={() => handleDownload(bill._id)}
+                              style={styles.iconButton}
+                              title="Download"
+                            >
+                              <Download size={16} />
+                            </button>
+                            {user?.role === "admin" && (
+                              <button
+                                onClick={() => handleDelete(bill._id)}
+                                style={styles.iconButton}
+                                title="Delete"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={styles.pagination}>
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    disabled={currentPage === 1}
+                    style={styles.paginationButton}
+                  >
+                    Previous
+                  </button>
+                  <span style={styles.pageInfo}>
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                    style={styles.paginationButton}
+                  >
+                    Next
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        {isDownloading && (
+          <DownloadProgressModal
+            progress={downloadProgress}
+            onClose={() => setIsDownloading(false)}
+          />
+        )}
       </div>
-      {isDownloading && (
-        <DownloadProgressModal
-          progress={downloadProgress}
-          onClose={() => setIsDownloading(false)}
-        />
-      )}
-    </div>
+    </>
   );
 };
 const styles = {

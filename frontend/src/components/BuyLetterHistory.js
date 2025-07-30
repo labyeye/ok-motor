@@ -1,7 +1,7 @@
 // BuyLetterHistory.js
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -22,6 +22,7 @@ import {
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
+import OfflineBanner from "../components/OfflineBanner";
 
 import AuthContext from "../context/AuthContext";
 
@@ -206,22 +207,64 @@ const BuyLetterHistory = () => {
     return `${day}/${month}/${year}`;
   };
   useEffect(() => {
+    // Load cached data on initial mount if offline
+    if (!navigator.onLine) {
+      const cachedBuyLetters = localStorage.getItem("cachedBuyLetters");
+      if (cachedBuyLetters) {
+        try {
+          const buyLettersData = JSON.parse(cachedBuyLetters);
+          console.log("Loading cached buy letters data on mount");
+          setBuyLetters(buyLettersData.buyLetters || []);
+          setTotalPages(buyLettersData.pages || 1);
+          setLoading(false);
+        } catch (parseError) {
+          console.error("Error parsing cached buy letters data:", parseError);
+        }
+      }
+    }
+
     const fetchBuyLetters = async () => {
       try {
-        setLoading(true);
-        const response = await axios.get(
-          `https://ok-motor.onrender.com/api/buy-letter?page=${currentPage}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+        // Don't show loading if we're offline and have cached data
+        const cachedBuyLetters = localStorage.getItem("cachedBuyLetters");
+        const hasCache = cachedBuyLetters && !navigator.onLine;
+
+        if (!hasCache) {
+          setLoading(true);
+        }
+
+        const response = await httpClient.get(
+          `/api/buy-letter?page=${currentPage}`
         );
         console.log("API Response:", response.data);
         setBuyLetters(response.data.buyLetters);
         setTotalPages(response.data.pages);
+
+        // Cache buy letters data for offline use
+        localStorage.setItem("cachedBuyLetters", JSON.stringify(response.data));
       } catch (error) {
         console.error("Error details:", error.response?.data || error.message);
+
+        // Handle offline scenarios
+        if (
+          !navigator.onLine ||
+          error.message === "Request queued for when online"
+        ) {
+          const cachedBuyLetters = localStorage.getItem("cachedBuyLetters");
+          if (cachedBuyLetters) {
+            try {
+              const buyLettersData = JSON.parse(cachedBuyLetters);
+              console.log("Using cached buy letters data");
+              setBuyLetters(buyLettersData.buyLetters || []);
+              setTotalPages(buyLettersData.pages || 1);
+            } catch (parseError) {
+              console.error(
+                "Error parsing cached buy letters data:",
+                parseError
+              );
+            }
+          }
+        }
       } finally {
         setLoading(false);
       }
@@ -1131,9 +1174,7 @@ const BuyLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
-        await axios.delete(
-          `https://ok-motor.onrender.com/api/buy-letter/${id}`
-        );
+        await httpClient.delete(`/api/buy-letter/${id}`);
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting buy letter:", error);
@@ -1147,8 +1188,8 @@ const BuyLetterHistory = () => {
 
   const handleSaveEdit = async (updatedLetter) => {
     try {
-      const response = await axios.put(
-        `https://ok-motor.onrender.com/api/buy-letter/${updatedLetter._id}`,
+      const response = await httpClient.put(
+        `/api/buy-letter/${updatedLetter._id}`,
         updatedLetter
       );
       setBuyLetters(
@@ -1245,6 +1286,7 @@ const BuyLetterHistory = () => {
       {/* Main Content */}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
+          <OfflineBanner />
           <div style={styles.header}>
             <h1 style={styles.pageTitle}>Buy Letter History</h1>
             <p style={styles.pageSubtitle}>

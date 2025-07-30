@@ -19,8 +19,9 @@ import {
   Bike,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import logo from "../images/okmotorback.png";
+import httpClient from "../utils/offlineHttpClient";
+import offlineSyncManager from "../utils/offlineSyncManager";
 import AuthContext from "../context/AuthContext";
 
 const AdvancePayBillForm = () => {
@@ -67,24 +68,6 @@ const AdvancePayBillForm = () => {
       return;
     }
   }, [navigate]);
-
-  const api = axios.create({
-    baseURL: API_BASE_URL,
-    withCredentials: true,
-  });
-
-  api.interceptors.request.use(
-    (config) => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
-    }
-  );
 
   const calculateAmounts = (data) => {
     const total = parseFloat(data.totalAmount) || 0;
@@ -141,6 +124,7 @@ const AdvancePayBillForm = () => {
       if (!token) {
         throw new Error("No authentication token found. Please log in again.");
       }
+
       const requestData = {
         ...formData,
         user: user._id,
@@ -151,44 +135,115 @@ const AdvancePayBillForm = () => {
         kmReading: parseFloat(formData.kmReading) || 0,
       };
 
-      const saveResponse = await axios.post(
-        `${API_BASE_URL}/advance-bills`,
-        requestData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // Check if online
+      if (navigator.onLine) {
+        // Online: direct API call
+        const saveResponse = await httpClient.post(
+          `/advance-bills`,
+          requestData
+        );
 
-      if (!saveResponse.data?.data?._id) {
-        throw new Error("Invalid response format from server");
+        if (!saveResponse.data?.data?._id) {
+          throw new Error("Invalid response format from server");
+        }
+
+        const billId = saveResponse.data.data._id;
+        const pdfResponse = await httpClient.get(
+          `/advance-bills/${billId}/download`,
+          {
+            responseType: "blob",
+            headers: {
+              Accept: "application/pdf",
+            },
+          }
+        );
+
+        const pdfBlob = new Blob([pdfResponse.data], {
+          type: "application/pdf",
+        });
+        saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+
+        alert("Advance bill saved and downloaded successfully!");
+      } else {
+        // Offline: queue for sync
+        await offlineSyncManager.queueFormSubmission({
+          type: "advance-bill",
+          endpoint: "/advance-bills",
+          method: "POST",
+          data: requestData,
+          userFriendlyName: `Advance Bill for ${requestData.vehicleNumber}`,
+          onSuccess: (response) => {
+            console.log("Advance bill synced successfully:", response);
+          },
+          onError: (error) => {
+            console.error("Failed to sync advance bill:", error);
+          },
+        });
+
+        alert(
+          "You're offline. Advance bill has been saved locally and will be synced when you reconnect to the internet."
+        );
+
+        // Reset form for offline submission
+        setFormData({
+          customerName: "",
+          customerNumber: "",
+          customerAddress: "",
+          vehicleNumber: "",
+          vehicleName: "",
+          vehicleModel: "",
+          vehicleType: "",
+          vehiclekm: "",
+          engineNumber: "",
+          chassisNumber: "",
+          workDescription: "",
+          totalAmount: "",
+          advancePaid: "",
+          grandTotal: "",
+          balanceDue: "",
+        });
       }
-
-      const billId = saveResponse.data.data._id;
-      const pdfResponse = await axios.get(
-        `${API_BASE_URL}/advance-bills/${billId}/download`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/pdf",
-          },
-        }
-      );
-
-      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-      saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
-
-      alert("Advance bill saved and downloaded successfully!");
     } catch (error) {
       console.error("Error in save and download:", error);
-      alert(
-        `Failed to save and download: ${
-          error.response?.data?.message || error.message
-        }`
-      );
+
+      if (
+        error.message.includes("offline") ||
+        error.message.includes("network")
+      ) {
+        // Network error - try to queue for offline sync
+        try {
+          const requestData = {
+            ...formData,
+            user: user._id,
+            totalAmount: parseFloat(formData.totalAmount) || 0,
+            advancePaid: parseFloat(formData.advancePaid) || 0,
+            grandTotal: parseFloat(formData.grandTotal) || 0,
+            balanceDue: parseFloat(formData.balanceDue) || 0,
+            kmReading: parseFloat(formData.kmReading) || 0,
+          };
+
+          await offlineSyncManager.queueFormSubmission({
+            type: "advance-bill",
+            endpoint: "/advance-bills",
+            method: "POST",
+            data: requestData,
+            userFriendlyName: `Advance Bill for ${requestData.vehicleNumber}`,
+          });
+
+          alert(
+            "Connection failed. Advance bill has been saved locally and will be synced when you reconnect."
+          );
+        } catch (queueError) {
+          console.error("Failed to queue form for offline sync:", queueError);
+          alert("Failed to save advance bill. Please try again.");
+        }
+      } else {
+        alert(
+          `Failed to save and download: ${
+            error.response?.data?.message || error.message
+          }`
+        );
+      }
     } finally {
       setIsSaving(false);
     }
@@ -229,10 +284,7 @@ const AdvancePayBillForm = () => {
       };
 
       // First save the bill
-      const saveResponse = await api.post(
-        "https://ok-motor.onrender.com/api/advance-bills",
-        requestData
-      );
+      const saveResponse = await httpClient.post("/advance-bills", requestData);
 
       if (
         !saveResponse.data ||
@@ -245,8 +297,8 @@ const AdvancePayBillForm = () => {
       const billId = saveResponse.data.data._id;
 
       // Get the PDF for preview or download
-      const pdfResponse = await api.get(
-        `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
+      const pdfResponse = await httpClient.get(
+        `/advance-bills/${billId}/download`,
         {
           responseType: "blob",
         }
@@ -276,15 +328,9 @@ const AdvancePayBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/advance-bills/vehicle-details`,
-        {
-          params: { registrationNumber },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const response = await httpClient.get(`/advance-bills/vehicle-details`, {
+        params: { registrationNumber },
+      });
 
       if (response.data) {
         setFormData((prev) => ({
@@ -973,7 +1019,7 @@ const AdvancePayBillForm = () => {
                 </div>
               )}
             </div>
-            
+
             <button
               style={styles.modalCloseButton}
               onClick={() => setShowPreviewModal(false)}

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useContext } from "react";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import {
   User,
   FileSignature,
@@ -554,16 +554,7 @@ const SellLetterForm = () => {
         return false;
       }
 
-      const response = await axios.post(
-        "https://ok-motor.onrender.com/api/sell-letters",
-        formData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const response = await httpClient.post("/sell-letters", formData);
 
       if (response.data) {
         alert("Sell letter saved successfully!");
@@ -594,13 +585,8 @@ const SellLetterForm = () => {
       setIsSaving(true);
 
       // Check if letter exists first
-      const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+      const existingLetter = await httpClient.get(
+        `/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`
       );
 
       let savedLetter;
@@ -1151,15 +1137,9 @@ const SellLetterForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const response = await axios.get(
-        "https://ok-motor.onrender.com/api/sell-letters/vehicle-details",
-        {
-          params: { registrationNumber },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const response = await httpClient.get("/sell-letters/vehicle-details", {
+        params: { registrationNumber },
+      });
 
       if (response.data) {
         setFormData((prev) => ({

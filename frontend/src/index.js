@@ -1,10 +1,16 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
+import swManager from "./utils/serviceWorkerManager";
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+// Register service worker
+if (process.env.NODE_ENV === "production") {
+  swManager.register().catch(console.error);
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <App />

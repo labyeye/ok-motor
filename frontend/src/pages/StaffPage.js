@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -15,11 +15,12 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "../images/company.png";
-
+import OfflineBanner from "../components/OfflineBanner";
 import AuthContext from "../context/AuthContext";
+import httpClient from "../utils/offlineHttpClient";
 
 const StaffPage = () => {
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -35,47 +36,81 @@ const StaffPage = () => {
   const [isOwnerView, setIsOwnerView] = useState(false);
   const navigate = useNavigate();
 
+  // Load cached data on initial mount if offline
+  useEffect(() => {
+    if (!navigator.onLine) {
+      const cachedDashboard = localStorage.getItem("cachedStaffDashboard");
+      if (cachedDashboard) {
+        try {
+          const dashboardData = JSON.parse(cachedDashboard);
+          console.log("Loading cached staff dashboard data on mount");
+          setDashboardData(dashboardData);
+          setLoading(false);
+        } catch (parseError) {
+          console.error(
+            "Error parsing cached dashboard data on mount:",
+            parseError
+          );
+        }
+      }
+    }
+  }, []);
+
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      // Don't show loading if we're offline and have cached data
+      const cachedDashboard = localStorage.getItem("cachedStaffDashboard");
+      const hasCache = cachedDashboard && !navigator.onLine;
+
+      if (!hasCache) {
+        setLoading(true);
+      }
+
+      const endpoint = isOwnerView ? "/api/dashboard/owner" : "/api/dashboard";
+
+      console.log("Fetching staff dashboard data...");
+      const response = await httpClient.get(endpoint);
+
+      console.log("Staff dashboard data received:", response.data);
+      const dashboardDataToSet = response.data.data;
+
+      setDashboardData(dashboardDataToSet);
+
+      // Cache dashboard data for offline use
+      localStorage.setItem(
+        "cachedStaffDashboard",
+        JSON.stringify(dashboardDataToSet)
+      );
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+
+      // Handle offline scenarios
+      if (
+        !navigator.onLine ||
+        error.message === "Request queued for when online"
+      ) {
+        // If offline, try to load cached dashboard data
+        const cachedDashboard = localStorage.getItem("cachedStaffDashboard");
+        if (cachedDashboard) {
+          try {
+            const dashboardData = JSON.parse(cachedDashboard);
+            console.log("Using cached staff dashboard data");
+            setDashboardData(dashboardData);
+          } catch (parseError) {
+            console.error("Error parsing cached dashboard data:", parseError);
+          }
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [isOwnerView]); // Add dependencies for useCallback
+
   useEffect(() => {
     if (activeMenu === "Dashboard") {
       fetchDashboardData();
     }
-  }, [activeMenu, isOwnerView]);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const endpoint = isOwnerView
-        ? `https://ok-motor.onrender.com/api/dashboard/owner`
-        : `https://ok-motor.onrender.com/api/dashboard`;
-
-      const response = await fetch(endpoint, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch dashboard data");
-      }
-
-      const data = await response.json();
-      setDashboardData(data.data);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      // Fallback data if API fails
-      // setDashboardData({
-      //   totalBuyLetters: 145,
-      //   totalSellLetters: 128,
-      //   totalBuyValue: 2450000,
-      //   totalSellValue: 2890000,
-      //   profit: 440000,
-      //   ownerName: user.name,
-      // });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [activeMenu, fetchDashboardData]); // Use stable fetchDashboardData
 
   const formatCurrency = (amount) => {
     if (isNaN(amount)) return "₹0";
@@ -447,6 +482,7 @@ const StaffPage = () => {
       {/* Main Content */}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
+          <OfflineBanner />
           <div style={styles.header}>
             <div
               style={{

@@ -1,6 +1,6 @@
 // BikeHistory.js
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -20,6 +20,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
+import OfflineBanner from "../components/OfflineBanner";
 
 const BikeHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -35,41 +36,30 @@ const BikeHistory = () => {
   const fetchBikeHistory = async () => {
     if (!searchTerm.trim()) return;
 
+    const cacheKey = `cachedVehicleHistory_${searchTerm}`;
+
     try {
       setLoading(true);
+
+      // Try to load cached data first
+      const cachedData = localStorage.getItem(cacheKey);
+      if (cachedData) {
+        setBikeHistory(JSON.parse(cachedData));
+      }
+
       const [buyLetters, sellLetters, serviceBills, advanceBills] =
         await Promise.all([
-          axios.get(
-            `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
+          httpClient.get(
+            `/buy-letter/by-registration?registrationNumber=${searchTerm}`
           ),
-          axios.get(
-            `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
+          httpClient.get(
+            `/sell-letters/by-registration?registrationNumber=${searchTerm}`
           ),
-          axios.get(
-            `https://ok-motor.onrender.com/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
+          httpClient.get(
+            `/service-bills/by-registration?registrationNumber=${searchTerm}`
           ),
-          axios.get(
-            `https://ok-motor.onrender.com/api/advance-bills/by-registration?registrationNumber=${searchTerm}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
+          httpClient.get(
+            `/advance-bills/by-registration?registrationNumber=${searchTerm}`
           ),
         ]);
 
@@ -98,6 +88,8 @@ const BikeHistory = () => {
         advanceBills.status === 200
           ? Array.isArray(advanceBills.data)
             ? advanceBills.data
+            : Array.isArray(advanceBills.data.data)
+            ? advanceBills.data.data
             : []
           : [];
 
@@ -136,9 +128,18 @@ const BikeHistory = () => {
 
       combinedData.sort((a, b) => new Date(b.date) - new Date(a.date));
       setBikeHistory(combinedData);
+
+      // Cache the vehicle history data
+      localStorage.setItem(cacheKey, JSON.stringify(combinedData));
     } catch (error) {
       console.error("Error fetching bike history:", error);
-      setBikeHistory([]);
+      // If we're offline and have cached data, use that
+      const cachedData = localStorage.getItem(cacheKey);
+      if (cachedData && bikeHistory.length === 0) {
+        setBikeHistory(JSON.parse(cachedData));
+      } else {
+        setBikeHistory([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -148,17 +149,14 @@ const BikeHistory = () => {
     try {
       let endpoint = "";
       if (type === "buy") {
-        endpoint = `https://ok-motor.onrender.com/api/buy-letter/pdf/${id}`;
+        endpoint = `/buy-letter/pdf/${id}`;
       } else if (type === "sell") {
-        endpoint = `https://ok-motor.onrender.com/api/sell-letters/pdf/${id}`;
+        endpoint = `/sell-letters/pdf/${id}`;
       } else if (type === "service") {
-        endpoint = `https://ok-motor.onrender.com/api/service-bills/pdf/${id}`;
+        endpoint = `/service-bills/pdf/${id}`;
       }
 
-      const response = await axios.get(endpoint, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+      const response = await httpClient.get(endpoint, {
         responseType: "blob",
       });
 
@@ -328,201 +326,205 @@ const BikeHistory = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.sidebar}>
-        <div style={styles.sidebarHeader}>
-          <img
-            src={logo}
-            alt="logo"
-            style={{
-              width: "100%",
-              maxWidth: "25rem",
-              height: "13rem",
-              objectFit: "cover",
-              objectPosition: "center",
-              display: "block",
-              margin: "0 auto 1rem auto",
-            }}
-          />
-          <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
-        </div>
-        <nav style={styles.nav}>
-          {menuItems.map((item) => (
-            <div key={item.name}>
-              <div
-                style={{
-                  ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                }}
-                onClick={() => {
-                  if (item.submenu) {
-                    toggleMenu(item.name);
-                  } else {
-                    // Pass the path as-is (could be string or function)
-                    handleMenuClick(item.name, item.path);
-                  }
-                }}
-              >
-                <div style={styles.menuItemContent}>
-                  <item.icon size={20} style={styles.menuIcon} />
-                  <span style={styles.menuText}>{item.name}</span>
+    <>
+      <OfflineBanner />
+      <div style={styles.container}>
+        <div style={styles.sidebar}>
+          <div style={styles.sidebarHeader}>
+            <img
+              src={logo}
+              alt="logo"
+              style={{
+                width: "100%",
+                maxWidth: "25rem",
+                height: "13rem",
+                objectFit: "cover",
+                objectPosition: "center",
+                display: "block",
+                margin: "0 auto 1rem auto",
+              }}
+            />
+            <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
+          </div>
+          <nav style={styles.nav}>
+            {menuItems.map((item) => (
+              <div key={item.name}>
+                <div
+                  style={{
+                    ...styles.menuItem,
+                    ...(activeMenu === item.name ? styles.menuItemActive : {}),
+                  }}
+                  onClick={() => {
+                    if (item.submenu) {
+                      toggleMenu(item.name);
+                    } else {
+                      // Pass the path as-is (could be string or function)
+                      handleMenuClick(item.name, item.path);
+                    }
+                  }}
+                >
+                  <div style={styles.menuItemContent}>
+                    <item.icon size={20} style={styles.menuIcon} />
+                    <span style={styles.menuText}>{item.name}</span>
+                  </div>
+                  {item.submenu &&
+                    (expandedMenus[item.name] ? (
+                      <ChevronDown size={16} />
+                    ) : (
+                      <ChevronRight size={16} />
+                    ))}
                 </div>
-                {item.submenu &&
-                  (expandedMenus[item.name] ? (
-                    <ChevronDown size={16} />
-                  ) : (
-                    <ChevronRight size={16} />
-                  ))}
+
+                {item.submenu && expandedMenus[item.name] && (
+                  <div style={styles.submenu}>
+                    {item.submenu.map((subItem) => (
+                      <div
+                        key={subItem.name}
+                        style={{
+                          ...styles.submenuItem,
+                          ...(activeMenu === subItem.name
+                            ? styles.submenuItemActive
+                            : {}),
+                        }}
+                        onClick={() =>
+                          handleMenuClick(subItem.name, subItem.path)
+                        }
+                      >
+                        {subItem.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+            ))}
 
-              {item.submenu && expandedMenus[item.name] && (
-                <div style={styles.submenu}>
-                  {item.submenu.map((subItem) => (
-                    <div
-                      key={subItem.name}
-                      style={{
-                        ...styles.submenuItem,
-                        ...(activeMenu === subItem.name
-                          ? styles.submenuItemActive
-                          : {}),
-                      }}
-                      onClick={() =>
-                        handleMenuClick(subItem.name, subItem.path)
-                      }
-                    >
-                      {subItem.name}
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div style={styles.logoutButton} onClick={handleLogout}>
+              <LogOut size={20} style={styles.menuIcon} />
+              <span style={styles.menuText}>Logout</span>
             </div>
-          ))}
+          </nav>
+        </div>
 
-          <div style={styles.logoutButton} onClick={handleLogout}>
-            <LogOut size={20} style={styles.menuIcon} />
-            <span style={styles.menuText}>Logout</span>
-          </div>
-        </nav>
-      </div>
-
-      <div style={styles.mainContent}>
-        <div style={styles.contentPadding}>
-          <div style={styles.header}>
-            <h1 style={styles.pageTitle}>Bike History</h1>
-            <p style={styles.pageSubtitle}>
-              Track all activities for a specific bike
-            </p>
-          </div>
-
-          <div style={styles.searchContainer}>
-            <div style={styles.searchInputContainer}>
-              <Search size={18} style={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Enter bike registration number..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={styles.searchInput}
-              />
+        <div style={styles.mainContent}>
+          <div style={styles.contentPadding}>
+            <div style={styles.header}>
+              <h1 style={styles.pageTitle}>Bike History</h1>
+              <p style={styles.pageSubtitle}>
+                Track all activities for a specific bike
+              </p>
             </div>
-          </div>
 
-          {loading ? (
-            <div style={styles.loadingContainer}>
-              <p>Loading vehicle history...</p>
+            <div style={styles.searchContainer}>
+              <div style={styles.searchInputContainer}>
+                <Search size={18} style={styles.searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Enter bike registration number..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={styles.searchInput}
+                />
+              </div>
             </div>
-          ) : bikeHistory.length === 0 ? (
-            <div style={styles.emptyState}>
-              {searchTerm ? (
-                <div>
-                  <p>No history found for bike: {searchTerm}</p>
-                  {user?.role === "staff" && (
-                    <p style={{ color: "#64748b", marginTop: "8px" }}>
-                      Note: You may only see records marked as visible to staff
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p>Enter a bike registration number to search</p>
-              )}
-            </div>
-          ) : (
-            <div style={styles.tableContainer}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={styles.tableHeader}>Date & Time</th>
-                    <th style={styles.tableHeader}>Action</th>
-                    <th style={styles.tableHeader}>Amount</th>
-                    <th style={styles.tableHeader}>Details</th>
-                    <th style={styles.tableHeader}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bikeHistory.map((item) => (
-                    <tr
-                      key={`${item.type}-${item._id}`}
-                      style={styles.tableRow}
-                    >
-                      <td style={styles.tableCell}>
-                        {new Date(item.date).toLocaleString("en-IN", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-                      <td style={styles.tableCell}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
-                        >
-                          {getActionIcon(item.type)}
-                          {getActionLabel(item.type)}
-                        </div>
-                      </td>
-                      <td style={styles.tableCell}>{getAmount(item)}</td>
-                      <td style={styles.tableCell}>{getDetails(item)}</td>
+
+            {loading ? (
+              <div style={styles.loadingContainer}>
+                <p>Loading vehicle history...</p>
+              </div>
+            ) : bikeHistory.length === 0 ? (
+              <div style={styles.emptyState}>
+                {searchTerm ? (
+                  <div>
+                    <p>No history found for bike: {searchTerm}</p>
+                    {user?.role === "staff" && (
+                      <p style={{ color: "#64748b", marginTop: "8px" }}>
+                        Note: You may only see records marked as visible to
+                        staff
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p>Enter a bike registration number to search</p>
+                )}
+              </div>
+            ) : (
+              <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.tableHeader}>Date & Time</th>
+                      <th style={styles.tableHeader}>Action</th>
+                      <th style={styles.tableHeader}>Amount</th>
+                      <th style={styles.tableHeader}>Details</th>
+                      <th style={styles.tableHeader}>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* PDF Preview Modal */}
-      {showPdfModal && (
-        <div style={styles.pdfModalOverlay}>
-          <div style={styles.pdfModalContainer}>
-            <div style={styles.pdfModalHeader}>
-              <h3>Document Preview</h3>
-              <button
-                onClick={() => {
-                  setShowPdfModal(false);
-                  URL.revokeObjectURL(pdfUrl);
-                }}
-                style={styles.pdfModalCloseButton}
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div style={styles.pdfModalContent}>
-              <iframe
-                src={pdfUrl}
-                style={styles.pdfIframe}
-                title="PDF Preview"
-              />
-            </div>
+                  </thead>
+                  <tbody>
+                    {bikeHistory.map((item) => (
+                      <tr
+                        key={`${item.type}-${item._id}`}
+                        style={styles.tableRow}
+                      >
+                        <td style={styles.tableCell}>
+                          {new Date(item.date).toLocaleString("en-IN", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </td>
+                        <td style={styles.tableCell}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            {getActionIcon(item.type)}
+                            {getActionLabel(item.type)}
+                          </div>
+                        </td>
+                        <td style={styles.tableCell}>{getAmount(item)}</td>
+                        <td style={styles.tableCell}>{getDetails(item)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
-      )}
-    </div>
+
+        {/* PDF Preview Modal */}
+        {showPdfModal && (
+          <div style={styles.pdfModalOverlay}>
+            <div style={styles.pdfModalContainer}>
+              <div style={styles.pdfModalHeader}>
+                <h3>Document Preview</h3>
+                <button
+                  onClick={() => {
+                    setShowPdfModal(false);
+                    URL.revokeObjectURL(pdfUrl);
+                  }}
+                  style={styles.pdfModalCloseButton}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div style={styles.pdfModalContent}>
+                <iframe
+                  src={pdfUrl}
+                  style={styles.pdfIframe}
+                  title="PDF Preview"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 
