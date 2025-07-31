@@ -1,17 +1,22 @@
 import axios from "axios";
 import swManager from "./serviceWorkerManager";
+import config from "../config/environment";
 
 // Enhanced axios client with offline support
 class OfflineHttpClient {
   constructor() {
     this.client = axios.create({
-      baseURL: "https://ok-motor.onrender.com",
-      timeout: 10000,
+      baseURL: config.FULL_API_URL,
+      timeout: config.API_TIMEOUT,
       withCredentials: true,
     });
 
     this.setupInterceptors();
     this.offlineQueue = [];
+
+    if (config.DEBUG) {
+      console.log("HTTP Client initialized with baseURL:", config.FULL_API_URL);
+    }
   }
 
   setupInterceptors() {

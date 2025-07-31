@@ -2,6 +2,14 @@ const CACHE_NAME = "ok-motor-v1";
 const STATIC_CACHE = "ok-motor-static-v1";
 const API_CACHE = "ok-motor-api-v1";
 
+// Detect environment
+const isProduction =
+  self.location.hostname !== "localhost" &&
+  self.location.hostname !== "127.0.0.1";
+const API_BASE_URL = isProduction
+  ? "https://ok-motor.onrender.com/api"
+  : "http://localhost:2500/api";
+
 // Assets to cache immediately
 const STATIC_ASSETS = [
   "/",
@@ -13,15 +21,15 @@ const STATIC_ASSETS = [
   "/logo512.png",
 ];
 
-// API endpoints to cache
+// API endpoints to cache (relative paths)
 const API_ENDPOINTS = [
-  "/api/auth/me",
-  "/api/dashboard",
-  "/api/buy-letters",
-  "/api/sell-letters",
-  "/api/service-bills",
-  "/api/advance-bills",
-  "/api/users",
+  "/auth/me",
+  "/dashboard",
+  "/buy-letters",
+  "/sell-letters",
+  "/service-bills",
+  "/advance-bills",
+  "/users",
 ];
 
 // Install event - cache static assets
@@ -63,11 +71,14 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Handle API requests
-  if (
+  // Handle API requests - check for both production and development
+  const isApiRequest =
+    url.pathname.startsWith("/api/") ||
     url.origin === "https://ok-motor.onrender.com" ||
-    url.pathname.startsWith("/api/")
-  ) {
+    (url.origin === "http://localhost:2500" &&
+      url.pathname.startsWith("/api/"));
+
+  if (isApiRequest) {
     event.respondWith(handleApiRequest(request));
     return;
   }

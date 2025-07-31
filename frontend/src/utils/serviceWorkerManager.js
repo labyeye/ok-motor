@@ -10,7 +10,11 @@ class ServiceWorkerManager {
   async register() {
     if ("serviceWorker" in navigator) {
       try {
-        const registration = await navigator.serviceWorker.register("/sw.js");
+        // Use process.env.PUBLIC_URL for correct path in production
+        const swPath = process.env.PUBLIC_URL
+          ? `${process.env.PUBLIC_URL}/sw.js`
+          : "/sw.js";
+        const registration = await navigator.serviceWorker.register(swPath);
         console.log("Service Worker registered successfully:", registration);
 
         // Listen for updates
