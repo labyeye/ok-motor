@@ -14,7 +14,7 @@ const getApiUrl = () => {
   
   // For development or when no env var is set
   if (!isProduction || isLocalhost) {
-    return "http://localhost:2500";
+    return "https://ok-motor.onrender.com";
   }
   
   // Default production URL

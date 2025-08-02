@@ -15,7 +15,7 @@
    cd frontend
    cp .env.example .env
    ```
-2. Update `.env` with your local backend URL (usually `http://localhost:2500`)
+2. Update `.env` with your local backend URL (usually `https://ok-motor.onrender.com`)
 
 ### Production Environment
 The `.env.production` file contains production defaults, but Vercel environment variables will override these.

@@ -14,7 +14,7 @@ const app = express();
 connectDB();
 // Dynamic CORS configuration for different environments
 const getAllowedOrigins = () => {
-  const origins = ["http://localhost:3000"]; // Always allow local development
+  const origins = ["https://ok-motor.vercel.app"]; // Always allow local development
   
   // Add production origins
   if (process.env.FRONTEND_URL) {
