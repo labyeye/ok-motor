@@ -5,16 +5,27 @@ const isLocalhost =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1";
 
-export const config = {
-  API_BASE_URL:
-    isProduction && !isLocalhost
-      ? "https://ok-motor.onrender.com/api"
-      : "https://ok-motor.onrender.com/api",
+// Get API URL from environment variables or use defaults
+const getApiUrl = () => {
+  // For production deployments, use environment variable if available
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // For development or when no env var is set
+  if (!isProduction || isLocalhost) {
+    return "http://localhost:2500";
+  }
+  
+  // Default production URL
+  return "https://ok-motor.onrender.com";
+};
 
-  FULL_API_URL:
-    isProduction && !isLocalhost
-      ? "https://ok-motor.onrender.com"
-      : "https://ok-motor.onrender.com",
+const API_BASE_URL = getApiUrl();
+
+export const config = {
+  API_BASE_URL: `${API_BASE_URL}/api`,
+  FULL_API_URL: API_BASE_URL,
 
   SW_URL: "/sw.js",
 

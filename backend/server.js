@@ -12,8 +12,23 @@ const { protect } = require("./middleware/auth");
 const cors = require("cors");
 const app = express();
 connectDB();
+// Dynamic CORS configuration for different environments
+const getAllowedOrigins = () => {
+  const origins = ["http://localhost:3000"]; // Always allow local development
+  
+  // Add production origins
+  if (process.env.FRONTEND_URL) {
+    origins.push(process.env.FRONTEND_URL);
+  }
+  
+  // Default production origins
+  origins.push("https://ok-motor.vercel.app");
+  
+  return origins;
+};
+
 const corsOptions = {
-  origin: "https://ok-motor.vercel.app",
+  origin: getAllowedOrigins(),
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,

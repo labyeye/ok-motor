@@ -31,7 +31,8 @@
     "build:prod": "REACT_APP_ENV=production react-scripts build",
     "build:dev": "REACT_APP_ENV=development react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy-test": "node deploy-test.js"
   },
   "eslintConfig": {
     "extends": [
