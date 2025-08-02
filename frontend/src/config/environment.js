@@ -9,12 +9,12 @@ export const config = {
   API_BASE_URL:
     isProduction && !isLocalhost
       ? "https://ok-motor.onrender.com/api"
-      : "http://localhost:2500/api",
+      : "https://ok-motor.onrender.com/api",
 
   FULL_API_URL:
     isProduction && !isLocalhost
       ? "https://ok-motor.onrender.com"
-      : "http://localhost:2500",
+      : "https://ok-motor.onrender.com",
 
   SW_URL: "/sw.js",
 

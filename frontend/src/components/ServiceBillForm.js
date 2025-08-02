@@ -100,7 +100,7 @@ const ServiceBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const response = await httpClient.get(`/advance-bills/vehicle-details`, {
+      const response = await httpClient.get(`/api/advance-bills/vehicle-details`, {
         params: { registrationNumber },
       });
 
@@ -272,7 +272,7 @@ const ServiceBillForm = () => {
       if (navigator.onLine) {
         // Online: direct API call
         const saveResponse = await httpClient.post(
-          `/service-bills`,
+          `/api/service-bills`,
           formDataWithUser
         );
 
@@ -282,7 +282,7 @@ const ServiceBillForm = () => {
 
         const billId = saveResponse.data.data._id;
         const pdfResponse = await httpClient.get(
-          `/service-bills/${billId}/download`,
+          `/api/service-bills/${billId}/download`,
           {
             responseType: "blob",
             headers: {
@@ -419,7 +419,7 @@ const ServiceBillForm = () => {
       let billId = billData._id;
       if (!billId) {
         const saveResponse = await httpClient.post(
-          `/service-bills`,
+          `/api/service-bills`,
           formattedBillData
         );
 
@@ -431,7 +431,7 @@ const ServiceBillForm = () => {
       }
 
       const pdfResponse = await httpClient.get(
-        `/service-bills/${billId}/download`,
+        `/api/service-bills/${billId}/download`,
         {
           responseType: "blob",
           headers: {

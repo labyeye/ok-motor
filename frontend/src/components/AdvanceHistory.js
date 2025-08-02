@@ -55,7 +55,7 @@ const AdvanceHistory = () => {
         }
 
         const response = await httpClient.get(
-          `/advance-bills?page=${currentPage}`
+          `/api/advance-bills?page=${currentPage}`
         );
         const advanceBillsData = response.data.data || response.data;
         setAdvanceBills(advanceBillsData);
@@ -299,7 +299,7 @@ const AdvanceHistory = () => {
       // Simulate progress
       await simulateProgress();
       const response = await httpClient.get(
-        `/advance-bills/${billId}/download`,
+        `/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
         }
@@ -321,7 +321,7 @@ const AdvanceHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this advance bill?")) {
       try {
-        await httpClient.delete(`/advance-bills/${id}`);
+        await httpClient.delete(`/api/advance-bills/${id}`);
         setAdvanceBills(advanceBills.filter((bill) => bill._id !== id));
 
         // Update cached data

@@ -139,7 +139,7 @@ const AdvancePayBillForm = () => {
       if (navigator.onLine) {
         // Online: direct API call
         const saveResponse = await httpClient.post(
-          `/advance-bills`,
+          `/api/advance-bills`,
           requestData
         );
 
@@ -149,7 +149,7 @@ const AdvancePayBillForm = () => {
 
         const billId = saveResponse.data.data._id;
         const pdfResponse = await httpClient.get(
-          `/advance-bills/${billId}/download`,
+          `/api/advance-bills/${billId}/download`,
           {
             responseType: "blob",
             headers: {
@@ -224,7 +224,7 @@ const AdvancePayBillForm = () => {
 
           await offlineSyncManager.queueFormSubmission({
             type: "advance-bill",
-            endpoint: "/advance-bills",
+            endpoint: "/api/advance-bills",
             method: "POST",
             data: requestData,
             userFriendlyName: `Advance Bill for ${requestData.vehicleNumber}`,
@@ -284,7 +284,7 @@ const AdvancePayBillForm = () => {
       };
 
       // First save the bill
-      const saveResponse = await httpClient.post("/advance-bills", requestData);
+      const saveResponse = await httpClient.post("/api/advance-bills", requestData);
 
       if (
         !saveResponse.data ||
@@ -298,7 +298,7 @@ const AdvancePayBillForm = () => {
 
       // Get the PDF for preview or download
       const pdfResponse = await httpClient.get(
-        `/advance-bills/${billId}/download`,
+        `/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
         }
@@ -328,7 +328,7 @@ const AdvancePayBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const response = await httpClient.get(`/advance-bills/vehicle-details`, {
+      const response = await httpClient.get(`/api/advance-bills/vehicle-details`, {
         params: { registrationNumber },
       });
 

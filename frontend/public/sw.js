@@ -8,7 +8,7 @@ const isProduction =
   self.location.hostname !== "127.0.0.1";
 const API_BASE_URL = isProduction
   ? "https://ok-motor.onrender.com/api"
-  : "http://localhost:2500/api";
+  : "https://ok-motor.onrender.com/api";
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
@@ -75,7 +75,7 @@ self.addEventListener("fetch", (event) => {
   const isApiRequest =
     url.pathname.startsWith("/api/") ||
     url.origin === "https://ok-motor.onrender.com" ||
-    (url.origin === "http://localhost:2500" &&
+    (url.origin === "https://ok-motor.onrender.com" &&
       url.pathname.startsWith("/api/"));
 
   if (isApiRequest) {

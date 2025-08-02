@@ -85,7 +85,7 @@ const ServiceHistory = () => {
 
         // Fetch service bills
         const serviceResponse = await httpClient.get(
-          `/service-bills?page=${currentPage}`
+          `/api/service-bills?page=${currentPage}`
         );
         const serviceBillsData =
           serviceResponse.data.data || serviceResponse.data;
@@ -99,7 +99,7 @@ const ServiceHistory = () => {
         );
 
         // Fetch purchase history (if needed)
-        const purchaseResponse = await httpClient.get(`/buy-letters`);
+        const purchaseResponse = await httpClient.get(`/api/buy-letters`);
         const purchaseData =
           purchaseResponse.data.data || purchaseResponse.data;
         setPurchaseHistory(purchaseData);
@@ -111,7 +111,7 @@ const ServiceHistory = () => {
         );
 
         // Fetch sell history (if needed)
-        const sellResponse = await httpClient.get(`/sell-letters`);
+        const sellResponse = await httpClient.get(`/api/sell-letters`);
         const sellData = sellResponse.data.data || sellResponse.data;
         setSellHistory(sellData);
 
@@ -365,7 +365,7 @@ const ServiceHistory = () => {
 
     try {
       const response = await httpClient.get(
-        `/service-bills/${billId}/download`,
+        `/api/service-bills/${billId}/download`,
         {
           responseType: "blob",
         }
@@ -392,7 +392,7 @@ const ServiceHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this service bill?")) {
       try {
-        await httpClient.delete(`/service-bills/${id}`);
+        await httpClient.delete(`/api/service-bills/${id}`);
         setServiceBills(serviceBills.filter((bill) => bill._id !== id));
 
         // Update cached data

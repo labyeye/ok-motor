@@ -50,16 +50,16 @@ const BikeHistory = () => {
       const [buyLetters, sellLetters, serviceBills, advanceBills] =
         await Promise.all([
           httpClient.get(
-            `/buy-letter/by-registration?registrationNumber=${searchTerm}`
+            `/api/buy-letter/by-registration?registrationNumber=${searchTerm}`
           ),
           httpClient.get(
-            `/sell-letters/by-registration?registrationNumber=${searchTerm}`
+            `/api/sell-letters/by-registration?registrationNumber=${searchTerm}`
           ),
           httpClient.get(
-            `/service-bills/by-registration?registrationNumber=${searchTerm}`
+            `/api/service-bills/by-registration?registrationNumber=${searchTerm}`
           ),
           httpClient.get(
-            `/advance-bills/by-registration?registrationNumber=${searchTerm}`
+            `/api/advance-bills/by-registration?registrationNumber=${searchTerm}`
           ),
         ]);
 
@@ -149,11 +149,11 @@ const BikeHistory = () => {
     try {
       let endpoint = "";
       if (type === "buy") {
-        endpoint = `/buy-letter/pdf/${id}`;
+        endpoint = `/api/buy-letter/pdf/${id}`;
       } else if (type === "sell") {
-        endpoint = `/sell-letters/pdf/${id}`;
+        endpoint = `/api/sell-letters/pdf/${id}`;
       } else if (type === "service") {
-        endpoint = `/service-bills/pdf/${id}`;
+        endpoint = `/api/service-bills/pdf/${id}`;
       }
 
       const response = await httpClient.get(endpoint, {
