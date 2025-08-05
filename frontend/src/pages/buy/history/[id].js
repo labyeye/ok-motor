@@ -1,7 +1,7 @@
 // pages/buy/history/[id].js
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import BuyLetterPDF from "../../../components/BuyLetterPDF";
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import BuyLetterPDF from '../../../components/BuyLetterPDF';
 
 export default function BuyLetterDetailPage() {
   const router = useRouter();
@@ -13,15 +13,13 @@ export default function BuyLetterDetailPage() {
     if (id) {
       const fetchLetter = async () => {
         try {
-          const response = await fetch(
-            `https://ok-motor.onrender.com/api/buy-letter/${id}`
-          );
+          const response = await fetch(`https://ok-motor.onrender.com/api/buy-letter/${id}`);
           if (response.ok) {
             const data = await response.json();
             setLetterData(data);
           }
         } catch (error) {
-          console.error("Error fetching letter:", error);
+          console.error('Error fetching letter:', error);
         } finally {
           setLoading(false);
         }

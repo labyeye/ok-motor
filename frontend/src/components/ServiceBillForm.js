@@ -22,9 +22,8 @@ import {
   Bike,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import logo from "../images/company.png";
-import httpClient from "../utils/offlineHttpClient";
-import offlineSyncManager from "../utils/offlineSyncManager";
 
 import AuthContext from "../context/AuthContext";
 
@@ -100,9 +99,21 @@ const ServiceBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
+<<<<<<< HEAD
       const response = await httpClient.get(`/api/advance-bills/vehicle-details`, {
         params: { registrationNumber },
       });
+=======
+      const response = await axios.get(
+        `${API_BASE_URL}/advance-bills/vehicle-details`,
+        {
+          params: { registrationNumber },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+>>>>>>> parent of c453b97 (add offline feature)
 
       if (response.data) {
         setFormData((prev) => ({
@@ -268,6 +279,7 @@ const ServiceBillForm = () => {
         user: user._id,
       };
 
+<<<<<<< HEAD
       // Check if online
       if (navigator.onLine) {
         // Online: direct API call
@@ -278,8 +290,20 @@ const ServiceBillForm = () => {
 
         if (!saveResponse.data?.data?._id) {
           throw new Error("Invalid response format from server");
+=======
+      const saveResponse = await axios.post(
+        `${API_BASE_URL}/service-bills`,
+        formDataWithUser,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+>>>>>>> parent of c453b97 (add offline feature)
         }
+      );
 
+<<<<<<< HEAD
         const billId = saveResponse.data.data._id;
         const pdfResponse = await httpClient.get(
           `/api/service-bills/${billId}/download`,
@@ -346,41 +370,29 @@ const ServiceBillForm = () => {
           services: [],
           purchasedItems: [],
         });
+=======
+      if (!saveResponse.data?.data?._id) {
+        throw new Error("Invalid response format from server");
+>>>>>>> parent of c453b97 (add offline feature)
       }
+
+      const billId = saveResponse.data.data._id;
+      const pdfResponse = await axios.get(
+        `${API_BASE_URL}/service-bills/${billId}/download`,
+        {
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/pdf",
+          },
+        }
+      );
+
+      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+      saveAs(pdfBlob, `service-bill-${billId}.pdf`);
     } catch (error) {
       console.error("Error in save and download:", error);
-
-      if (
-        error.message.includes("offline") ||
-        error.message.includes("network")
-      ) {
-        // Network error - try to queue for offline sync
-        try {
-          const formDataWithUser = {
-            ...formData,
-            serviceDate: new Date(formData.serviceDate).toISOString(),
-            deliveryDate: new Date(formData.deliveryDate).toISOString(),
-            user: user._id,
-          };
-
-          await offlineSyncManager.queueFormSubmission({
-            type: "service-bill",
-            endpoint: "/service-bills",
-            method: "POST",
-            data: formDataWithUser,
-            userFriendlyName: `Service Bill for ${formDataWithUser.vehicleNumber}`,
-          });
-
-          alert(
-            "Connection failed. Service bill has been saved locally and will be synced when you reconnect."
-          );
-        } catch (queueError) {
-          console.error("Failed to queue form for offline sync:", queueError);
-          alert("Failed to save service bill. Please try again.");
-        }
-      } else {
-        alert(`Error: ${error.message || "Failed to save service bill"}`);
-      }
+      // Error handling...
     } finally {
       setIsSaving(false);
     }
@@ -418,9 +430,21 @@ const ServiceBillForm = () => {
       // First save the bill if it doesn't have an ID
       let billId = billData._id;
       if (!billId) {
+<<<<<<< HEAD
         const saveResponse = await httpClient.post(
           `/api/service-bills`,
           formattedBillData
+=======
+        const saveResponse = await axios.post(
+          `${API_BASE_URL}/service-bills`,
+          formattedBillData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+>>>>>>> parent of c453b97 (add offline feature)
         );
 
         if (!saveResponse.data?.data?._id) {
@@ -430,11 +454,17 @@ const ServiceBillForm = () => {
         billId = saveResponse.data.data._id;
       }
 
+<<<<<<< HEAD
       const pdfResponse = await httpClient.get(
         `/api/service-bills/${billId}/download`,
+=======
+      const pdfResponse = await axios.get(
+        `${API_BASE_URL}/service-bills/${billId}/download`,
+>>>>>>> parent of c453b97 (add offline feature)
         {
           responseType: "blob",
           headers: {
+            Authorization: `Bearer ${token}`,
             Accept: "application/pdf",
           },
         }

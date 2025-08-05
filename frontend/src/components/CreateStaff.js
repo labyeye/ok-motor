@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import httpClient from "../utils/offlineHttpClient";
+import axios from "axios";
 import {
   User,
   Mail,
@@ -17,11 +17,12 @@ import {
   LogOut,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
-import logo from "../images/company.png";
+import logo from '../images/company.png';
 
 const CreateStaff = () => {
   const navigate = useNavigate();
-  const { user, logout } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
+
 
   const [formData, setFormData] = useState({
     name: "",
@@ -51,7 +52,10 @@ const CreateStaff = () => {
     setError(null);
 
     try {
-      const response = await httpClient.post("/api/users", formData);
+      const response = await axios.post(
+        "https://ok-motor.onrender.com/api/users",
+        formData
+      );
       setSuccess(true);
       setTimeout(() => {
         navigate("/staff/list");
@@ -82,7 +86,7 @@ const CreateStaff = () => {
   // Handle menu clicks
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    const actualPath = typeof path === "function" ? path(user?.role) : path;
+    const actualPath = typeof path === 'function' ? path(user?.role) : path;
     navigate(actualPath);
   };
 
@@ -148,14 +152,8 @@ const CreateStaff = () => {
       {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <img
-            src={logo}
-            alt="logo"
-            style={{ width: "14.5rem", height: "10.5rem", color: "#7c3aed" }}
-          />
-          <p style={styles.sidebarSubtitle}>
-            Welcome, {user?.role === "admin" ? "OK MOTORS" : "OK MOTORS"}
-          </p>
+           <img src={logo} alt="logo" style={{width: '14.5rem', height: '10.5rem', color: '#7c3aed'}} />
+          <p style={styles.sidebarSubtitle}>Welcome, {user?.role === 'admin' ? 'OK MOTORS' : 'OK MOTORS'}</p>
         </div>
 
         <nav style={styles.nav}>
@@ -164,11 +162,9 @@ const CreateStaff = () => {
               <div
                 style={{
                   ...styles.menuItem,
-                  ...(activeMenu === item.name ||
-                  (item.submenu &&
-                    item.submenu.some((subItem) => activeMenu === subItem.name))
-                    ? styles.menuItemActive
-                    : {}),
+                  ...(activeMenu === item.name || 
+                      (item.submenu && item.submenu.some(subItem => activeMenu === subItem.name)) 
+                      ? styles.menuItemActive : {}),
                 }}
                 onClick={() => {
                   if (item.submenu) {
@@ -182,12 +178,13 @@ const CreateStaff = () => {
                   <item.icon size={20} style={styles.menuIcon} />
                   <span style={styles.menuText}>{item.name}</span>
                 </div>
-                {item.submenu &&
-                  (expandedMenus[item.name] ? (
+                {item.submenu && (
+                  expandedMenus[item.name] ? (
                     <ChevronDown size={16} />
                   ) : (
                     <ChevronRight size={16} />
-                  ))}
+                  )
+                )}
               </div>
 
               {item.submenu && expandedMenus[item.name] && (
@@ -197,13 +194,9 @@ const CreateStaff = () => {
                       key={subItem.name}
                       style={{
                         ...styles.submenuItem,
-                        ...(activeMenu === subItem.name
-                          ? styles.submenuItemActive
-                          : {}),
+                        ...(activeMenu === subItem.name ? styles.submenuItemActive : {}),
                       }}
-                      onClick={() =>
-                        handleMenuClick(subItem.name, subItem.path)
-                      }
+                      onClick={() => handleMenuClick(subItem.name, subItem.path)}
                     >
                       {subItem.name}
                     </div>

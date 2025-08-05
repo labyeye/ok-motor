@@ -6,8 +6,6 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
-import OfflineIndicator from "./components/OfflineIndicator";
-import OfflineSyncStatus from "./components/OfflineSyncStatus";
 import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
 import StaffPage from "./pages/StaffPage";
@@ -73,8 +71,6 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <OfflineIndicator />
-        <OfflineSyncStatus />
         <Routes>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<LoginPage />} />

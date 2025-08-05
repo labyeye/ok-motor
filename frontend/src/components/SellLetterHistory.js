@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import httpClient from "../utils/offlineHttpClient";
+import axios from "axios";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -21,7 +21,6 @@ import { useNavigate } from "react-router-dom";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
-import OfflineBanner from "../components/OfflineBanner";
 
 import AuthContext from "../context/AuthContext";
 
@@ -161,7 +160,7 @@ const EditSellLetterModal = ({ letter, onClose, onSave }) => {
 };
 
 const SellLetterHistory = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
 
   const [activeMenu, setActiveMenu] = useState("Sell Letter History");
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -242,64 +241,22 @@ const SellLetterHistory = () => {
     return `${day}/${month}/${year}`;
   };
   useEffect(() => {
-    // Load cached data on initial mount if offline
-    if (!navigator.onLine) {
-      const cachedSellLetters = localStorage.getItem("cachedSellLetters");
-      if (cachedSellLetters) {
-        try {
-          const sellLettersData = JSON.parse(cachedSellLetters);
-          console.log("Loading cached sell letters data on mount");
-          setSellLetters(sellLettersData || []);
-          setLoading(false);
-        } catch (parseError) {
-          console.error("Error parsing cached sell letters data:", parseError);
-        }
-      }
-    }
-
     const fetchSellLetters = async () => {
       try {
-        // Don't show loading if we're offline and have cached data
-        const cachedSellLetters = localStorage.getItem("cachedSellLetters");
-        const hasCache = cachedSellLetters && !navigator.onLine;
-
-        if (!hasCache) {
-          setLoading(true);
-        }
-
-        const response = await httpClient.get(
-          `/api/sell-letters/my-letters?page=${currentPage}`
+        setLoading(true);
+        const response = await axios.get(
+          `https://ok-motor.onrender.com/api/sell-letters/my-letters?page=${currentPage}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
         );
         setSellLetters(response.data);
-        setTotalPages(1);
 
-        // Cache sell letters data for offline use
-        localStorage.setItem(
-          "cachedSellLetters",
-          JSON.stringify(response.data)
-        );
+        setTotalPages(1);
       } catch (error) {
         console.error("Error fetching sell letters:", error);
-
-        // Handle offline scenarios
-        if (
-          !navigator.onLine ||
-          error.message === "Request queued for when online"
-        ) {
-          const cachedSellLetters = localStorage.getItem("cachedSellLetters");
-          if (cachedSellLetters) {
-            try {
-              const sellLettersData = JSON.parse(cachedSellLetters);
-              console.log("Using cached sell letters data");
-              setSellLetters(sellLettersData || []);
-            } catch (parseError) {
-              console.error(
-                "Error parsing cached sell letters data:",
-                parseError
-              );
-            }
-          }
-        }
       } finally {
         setLoading(false);
       }
@@ -441,21 +398,21 @@ const SellLetterHistory = () => {
           maximumFractionDigits: 2,
         }).format(num)}`;
   };
-  const formatTime = (timeString) => {
-    if (!timeString) return "";
+   const formatTime = (timeString) => {
+  if (!timeString) return "";
 
-    const [hour, minute] = timeString.split(":").map(Number);
+  const [hour, minute] = timeString.split(":").map(Number);
+  
+  // Convert to 12-hour format with leading zeros and proper AM/PM
+  const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
+  const ampm = hour >= 12 ? "PM" : "AM";
+  
+  // Add leading zero to hours and minutes if needed
+  const formattedHours = String(hours12).padStart(2, "0");
+  const formattedMinutes = String(minute).padStart(2, "0");
 
-    // Convert to 12-hour format with leading zeros and proper AM/PM
-    const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
-    const ampm = hour >= 12 ? "PM" : "AM";
-
-    // Add leading zero to hours and minutes if needed
-    const formattedHours = String(hours12).padStart(2, "0");
-    const formattedMinutes = String(minute).padStart(2, "0");
-
-    return `${formattedHours}:${formattedMinutes} ${ampm}`;
-  };
+  return `${formattedHours}:${formattedMinutes} ${ampm}`;
+};
   const filteredLetters = sellLetters.filter(
     (letter) =>
       letter.vehicleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -543,6 +500,7 @@ const SellLetterHistory = () => {
       // Create vehicle invoice page
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+
 
       const formattedLetter = {
         ...letter,
@@ -1177,7 +1135,14 @@ const SellLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this sell letter?")) {
       try {
-        await httpClient.delete(`/api/sell-letters/${id}`);
+        await axios.delete(
+          `https://ok-motor.onrender.com/api/sell-letters/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
         setSellLetters(sellLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting sell letter:", error);
@@ -1194,9 +1159,14 @@ const SellLetterHistory = () => {
   };
   const handleSaveEdit = async (updatedLetter) => {
     try {
-      const response = await httpClient.put(
-        `/api/sell-letters/${updatedLetter._id}`,
-        updatedLetter
+      const response = await axios.put(
+        `https://ok-motor.onrender.com/api/sell-letters/${updatedLetter._id}`,
+        updatedLetter,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
       );
       setSellLetters(
         sellLetters.map((letter) =>
@@ -1283,7 +1253,7 @@ const SellLetterHistory = () => {
     <div style={styles.container}>
       {/* Sidebar - same as SellLetterForm */}
       <div style={styles.sidebar}>
-        <div style={styles.sidebarHeader}>
+         <div style={styles.sidebarHeader}>
           <img
             src={logo}
             alt="logo"
@@ -1362,7 +1332,6 @@ const SellLetterHistory = () => {
       {/* Main Content */}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
-          <OfflineBanner />
           <div style={styles.header}>
             <h1 style={styles.pageTitle}>Sell Letter History</h1>
             <p style={styles.pageSubtitle}>

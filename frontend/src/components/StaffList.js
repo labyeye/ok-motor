@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 
 import { useNavigate } from "react-router-dom";
-import httpClient from "../utils/offlineHttpClient";
+import axios from "axios";
 import {
   User,
   ChevronDown,
@@ -18,12 +18,12 @@ import {
   UserPlus,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
-import logo from "../images/company.png";
-import OfflineBanner from "../components/OfflineBanner";
+import logo from '../images/company.png';
 
 const StaffList = () => {
   const navigate = useNavigate();
-  const { user, logout } = useContext(AuthContext);
+  const { user,logout } = useContext(AuthContext);
+
 
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,28 +34,13 @@ const StaffList = () => {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        // Try to load cached data first
-        const cachedStaff = localStorage.getItem("cachedStaffList");
-        if (cachedStaff) {
-          setStaff(JSON.parse(cachedStaff));
-        }
-
-        const response = await httpClient.get("/api/users");
+        const response = await axios.get("https://ok-motor.onrender.com/api/users");
         setStaff(response.data);
-
-        // Cache the staff data
-        localStorage.setItem("cachedStaffList", JSON.stringify(response.data));
       } catch (err) {
         setError(
           err.response?.data?.message ||
             "Failed to fetch staff. Please try again."
         );
-        // If we're offline and have cached data, use that
-        const cachedStaff = localStorage.getItem("cachedStaffList");
-        if (cachedStaff && staff.length === 0) {
-          setStaff(JSON.parse(cachedStaff));
-          setError(null); // Clear error if we have cached data
-        }
       } finally {
         setLoading(false);
       }
@@ -67,12 +52,8 @@ const StaffList = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this staff member?")) {
       try {
-        await httpClient.delete(`/api/users/${id}`);
-        const updatedStaff = staff.filter((user) => user._id !== id);
-        setStaff(updatedStaff);
-
-        // Update cached data
-        localStorage.setItem("cachedStaffList", JSON.stringify(updatedStaff));
+        await axios.delete(`https://ok-motor.onrender.com/api/users/${id}`);
+        setStaff(staff.filter((user) => user._id !== id));
       } catch (err) {
         setError(
           err.response?.data?.message ||
@@ -92,7 +73,7 @@ const StaffList = () => {
   // Handle menu clicks
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    const actualPath = typeof path === "function" ? path(user?.role) : path;
+    const actualPath = typeof path === 'function' ? path(user?.role) : path;
     navigate(actualPath);
   };
 
@@ -160,174 +141,167 @@ const StaffList = () => {
   };
 
   return (
-    <>
-      <OfflineBanner />
-      <div style={styles.container}>
-        {/* Sidebar */}
-        <div style={styles.sidebar}>
-          <div style={styles.sidebarHeader}>
-            <img
-              src={logo}
-              alt="logo"
-              style={{ width: "14.5rem", height: "10.5rem", color: "#7c3aed" }}
-            />
-            <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
-          </div>
-
-          <nav style={styles.nav}>
-            {menuItems.map((item) => (
-              <div key={item.name}>
-                <div
-                  style={{
-                    ...styles.menuItem,
-                    ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                  }}
-                  onClick={() => {
-                    if (item.submenu) {
-                      toggleMenu(item.name);
-                    } else {
-                      // Pass the path as-is (could be string or function)
-                      handleMenuClick(item.name, item.path);
-                    }
-                  }}
-                >
-                  <div style={styles.menuItemContent}>
-                    <item.icon size={20} style={styles.menuIcon} />
-                    <span style={styles.menuText}>{item.name}</span>
-                  </div>
-                  {item.submenu &&
-                    (expandedMenus[item.name] ? (
-                      <ChevronDown size={16} />
-                    ) : (
-                      <ChevronRight size={16} />
-                    ))}
-                </div>
-
-                {item.submenu && expandedMenus[item.name] && (
-                  <div style={styles.submenu}>
-                    {item.submenu.map((subItem) => (
-                      <div
-                        key={subItem.name}
-                        style={{
-                          ...styles.submenuItem,
-                          ...(activeMenu === subItem.name
-                            ? styles.submenuItemActive
-                            : {}),
-                        }}
-                        onClick={() =>
-                          handleMenuClick(subItem.name, subItem.path)
-                        }
-                      >
-                        {subItem.name}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-
-            <div style={styles.logoutButton} onClick={handleLogout}>
-              <LogOut size={20} style={styles.menuIcon} />
-              <span style={styles.menuText}>Logout</span>
-            </div>
-          </nav>
+    <div style={styles.container}>
+      {/* Sidebar */}
+      <div style={styles.sidebar}>
+        <div style={styles.sidebarHeader}>
+           <img src={logo} alt="logo" style={{width: '14.5rem', height: '10.5rem', color: '#7c3aed'}} />
+          <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
         </div>
 
-        {/* Main Content */}
-        <div style={styles.mainContent}>
-          <div style={styles.contentPadding}>
-            <div style={styles.header}>
-              <div style={styles.headerRow}>
-                <div>
-                  <h1 style={styles.pageTitle}>Staff Members</h1>
-                  <p style={styles.pageSubtitle}>
-                    View and manage all staff accounts
-                  </p>
+        <nav style={styles.nav}>
+          {menuItems.map((item) => (
+            <div key={item.name}>
+    <div
+      style={{
+        ...styles.menuItem,
+        ...(activeMenu === item.name ? styles.menuItemActive : {}),
+      }}
+      onClick={() => {
+        if (item.submenu) {
+          toggleMenu(item.name);
+        } else {
+          // Pass the path as-is (could be string or function)
+          handleMenuClick(item.name, item.path);
+        }
+      }}
+    >
+                <div style={styles.menuItemContent}>
+                  <item.icon size={20} style={styles.menuIcon} />
+                  <span style={styles.menuText}>{item.name}</span>
                 </div>
-                <button
-                  style={styles.addButton}
-                  onClick={() => navigate("/staff/create")}
-                >
-                  <UserPlus size={18} style={{ marginRight: "8px" }} />
-                  Add Staff
-                </button>
+                {item.submenu &&
+                  (expandedMenus[item.name] ? (
+                    <ChevronDown size={16} />
+                  ) : (
+                    <ChevronRight size={16} />
+                  ))}
               </div>
+
+              {item.submenu && expandedMenus[item.name] && (
+                <div style={styles.submenu}>
+                  {item.submenu.map((subItem) => (
+                    <div
+                      key={subItem.name}
+                      style={{
+                        ...styles.submenuItem,
+                        ...(activeMenu === subItem.name
+                          ? styles.submenuItemActive
+                          : {}),
+                      }}
+                      onClick={() =>
+                        handleMenuClick(subItem.name, subItem.path)
+                      }
+                    >
+                      {subItem.name}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+          ))}
 
-            {error && <div style={styles.errorAlert}>{error}</div>}
-
-            {loading ? (
-              <div style={styles.loading}>Loading staff members...</div>
-            ) : (
-              <div style={styles.tableContainer}>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th style={styles.th}>Name</th>
-                      <th style={styles.th}>Email</th>
-                      <th style={styles.th}>Role</th>
-                      <th style={styles.th}>Status</th>
-                      <th style={styles.th}>Created At</th>
-                      <th style={styles.th}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {staff.map((user) => (
-                      <tr key={user._id}>
-                        <td style={styles.td}>
-                          <div style={styles.userCell}>
-                            <User size={16} style={styles.userIcon} />
-                            {user.name}
-                          </div>
-                        </td>
-                        <td style={styles.td}>{user.email}</td>
-                        <td style={styles.td}>
-                          <span
-                            style={{
-                              ...styles.roleBadge,
-                              ...(user.role === "admin"
-                                ? styles.adminBadge
-                                : styles.staffBadge),
-                            }}
-                          >
-                            {user.role}
-                          </span>
-                        </td>
-                        <td style={styles.td}>
-                          <span
-                            style={{
-                              ...styles.statusBadge,
-                              ...(user.status === "active"
-                                ? styles.activeBadge
-                                : styles.inactiveBadge),
-                            }}
-                          >
-                            {user.status}
-                          </span>
-                        </td>
-                        <td style={styles.td}>
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </td>
-                        <td style={styles.td}>
-                          <div style={styles.actions}>
-                            <button
-                              style={styles.deleteButton}
-                              onClick={() => handleDelete(user._id)}
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+          <div style={styles.logoutButton} onClick={handleLogout}>
+            <LogOut size={20} style={styles.menuIcon} />
+            <span style={styles.menuText}>Logout</span>
           </div>
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div style={styles.mainContent}>
+        <div style={styles.contentPadding}>
+          <div style={styles.header}>
+            <div style={styles.headerRow}>
+              <div>
+                <h1 style={styles.pageTitle}>Staff Members</h1>
+                <p style={styles.pageSubtitle}>
+                  View and manage all staff accounts
+                </p>
+              </div>
+              <button
+                style={styles.addButton}
+                onClick={() => navigate("/staff/create")}
+              >
+                <UserPlus size={18} style={{ marginRight: "8px" }} />
+                Add Staff
+              </button>
+            </div>
+          </div>
+
+          {error && <div style={styles.errorAlert}>{error}</div>}
+
+          {loading ? (
+            <div style={styles.loading}>Loading staff members...</div>
+          ) : (
+            <div style={styles.tableContainer}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>Name</th>
+                    <th style={styles.th}>Email</th>
+                    <th style={styles.th}>Role</th>
+                    <th style={styles.th}>Status</th>
+                    <th style={styles.th}>Created At</th>
+                    <th style={styles.th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staff.map((user) => (
+                    <tr key={user._id}>
+                      <td style={styles.td}>
+                        <div style={styles.userCell}>
+                          <User size={16} style={styles.userIcon} />
+                          {user.name}
+                        </div>
+                      </td>
+                      <td style={styles.td}>{user.email}</td>
+                      <td style={styles.td}>
+                        <span
+                          style={{
+                            ...styles.roleBadge,
+                            ...(user.role === "admin"
+                              ? styles.adminBadge
+                              : styles.staffBadge),
+                          }}
+                        >
+                          {user.role}
+                        </span>
+                      </td>
+                      <td style={styles.td}>
+                        <span
+                          style={{
+                            ...styles.statusBadge,
+                            ...(user.status === "active"
+                              ? styles.activeBadge
+                              : styles.inactiveBadge),
+                          }}
+                        >
+                          {user.status}
+                        </span>
+                      </td>
+                      <td style={styles.td}>
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </td>
+                      <td style={styles.td}>
+                        <div style={styles.actions}>
+                          <button
+                            style={styles.deleteButton}
+                            onClick={() => handleDelete(user._id)}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
