@@ -66,25 +66,16 @@ const ServiceHistory = () => {
         setLoading(true);
 
         // Fetch service bills
-<<<<<<< HEAD
         const serviceResponse = await httpClient.get(
-          `/api/service-bills?page=${currentPage}`
-=======
-        const serviceResponse = await axios.get(
-          `https://ok-motor.onrender.com/api/service-bills?page=${currentPage}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
->>>>>>> parent of c453b97 (add offline feature)
+          `/service-bills?page=${currentPage}`
         );
-        setServiceBills(serviceResponse.data.data || serviceResponse.data);
+        const serviceBillsData =
+          serviceResponse.data.data || serviceResponse.data;
+        setServiceBills(serviceBillsData);
         setTotalPages(serviceResponse.data.totalPages || 1);
 
         // Fetch purchase history (if needed)
-<<<<<<< HEAD
-        const purchaseResponse = await httpClient.get(`/api/buy-letters`);
+        const purchaseResponse = await httpClient.get(`/buy-letters`);
         const purchaseData =
           purchaseResponse.data.data || purchaseResponse.data;
         setPurchaseHistory(purchaseData);
@@ -93,37 +84,15 @@ const ServiceHistory = () => {
         localStorage.setItem(
           "cachedPurchaseHistory",
           JSON.stringify(purchaseData)
-=======
-        const purchaseResponse = await axios.get(
-          `https://ok-motor.onrender.com/api/buy-letters`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
->>>>>>> parent of c453b97 (add offline feature)
         );
-        setPurchaseHistory(purchaseResponse.data.data || purchaseResponse.data);
 
         // Fetch sell history (if needed)
-<<<<<<< HEAD
-        const sellResponse = await httpClient.get(`/api/sell-letters`);
+        const sellResponse = await httpClient.get(`/sell-letters`);
         const sellData = sellResponse.data.data || sellResponse.data;
         setSellHistory(sellData);
 
         // Cache the sell history data
         localStorage.setItem("cachedSellHistory", JSON.stringify(sellData));
-=======
-        const sellResponse = await axios.get(
-          `https://ok-motor.onrender.com/api/sell-letters`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        setSellHistory(sellResponse.data.data || sellResponse.data);
->>>>>>> parent of c453b97 (add offline feature)
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -355,13 +324,8 @@ const ServiceHistory = () => {
     await simulateProgress();
 
     try {
-<<<<<<< HEAD
       const response = await httpClient.get(
-        `/api/service-bills/${billId}/download`,
-=======
-      const response = await axios.get(
-        `https://ok-motor.onrender.com/api/service-bills/${billId}/download`,
->>>>>>> parent of c453b97 (add offline feature)
+        `/service-bills/${billId}/download`,
         {
           responseType: "blob",
           headers: {
@@ -391,14 +355,17 @@ const ServiceHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this service bill?")) {
       try {
-<<<<<<< HEAD
-        await httpClient.delete(`/api/service-bills/${id}`);
-=======
-        await axios.delete(`https://ok-motor.onrender.com/api/service-bills/${id}`, {
-         
-        });
->>>>>>> parent of c453b97 (add offline feature)
+        await httpClient.delete(`/service-bills/${id}`);
         setServiceBills(serviceBills.filter((bill) => bill._id !== id));
+
+        // Update cached data
+        const updatedServiceBills = serviceBills.filter(
+          (bill) => bill._id !== id
+        );
+        localStorage.setItem(
+          "cachedServiceHistory",
+          JSON.stringify(updatedServiceBills)
+        );
       } catch (error) {
         console.error("Error deleting service bill:", error);
       }

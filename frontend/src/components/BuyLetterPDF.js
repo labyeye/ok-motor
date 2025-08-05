@@ -327,14 +327,7 @@ const BuyLetterForm = () => {
   const saveBuyLetter = async () => {
     try {
       setIsSaving(true);
-<<<<<<< HEAD
-      const response = await httpClient.post("/api/buy-letter", formData);
-=======
-      const response = await axios.post(
-        "https://ok-motor.onrender.com/api/buy-letter",
-        formData
-      );
->>>>>>> parent of c453b97 (add offline feature)
+      const response = await httpClient.post("/buy-letter", formData);
       alert("Buy letter saved successfully!");
       return response.data;
     } catch (error) {
@@ -360,18 +353,8 @@ const BuyLetterForm = () => {
       setIsDownloading(true);
       setIsSaving(true);
 
-<<<<<<< HEAD
       const existingLetter = await httpClient.get(
-        `/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
-=======
-      const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
->>>>>>> parent of c453b97 (add offline feature)
+        `/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
       );
       let savedLetter;
       if (existingLetter.data && existingLetter.data.length > 0) {
@@ -561,18 +544,8 @@ const BuyLetterForm = () => {
       setIsSaving(true);
 
       // Check if letter exists first
-<<<<<<< HEAD
       const existingLetter = await httpClient.get(
-        `/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
-=======
-      const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
->>>>>>> parent of c453b97 (add offline feature)
+        `/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
       );
 
       let savedLetterData;
@@ -580,14 +553,7 @@ const BuyLetterForm = () => {
         savedLetterData = existingLetter.data[0];
       } else {
         // Save new letter if doesn't exist
-<<<<<<< HEAD
-        const response = await httpClient.post("/api/buy-letter", formData);
-=======
-        const response = await axios.post(
-          "https://ok-motor.onrender.com/api/buy-letter",
-          formData
-        );
->>>>>>> parent of c453b97 (add offline feature)
+        const response = await httpClient.post("/buy-letter", formData);
         savedLetterData = response.data;
       }
 
@@ -763,32 +729,15 @@ const BuyLetterForm = () => {
       setIsSaving(true);
 
       // Check if letter exists first
-<<<<<<< HEAD
       const existingLetter = await httpClient.get(
-        `/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
-=======
-      const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
->>>>>>> parent of c453b97 (add offline feature)
+        `/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
       );
 
       let savedLetterData;
       if (existingLetter.data && existingLetter.data.length > 0) {
         savedLetterData = existingLetter.data[0];
       } else {
-<<<<<<< HEAD
-        const response = await httpClient.post("/api/buy-letter", formData);
-=======
-        const response = await axios.post(
-          "https://ok-motor.onrender.com/api/buy-letter",
-          formData
-        );
->>>>>>> parent of c453b97 (add offline feature)
+        const response = await httpClient.post("/buy-letter", formData);
         savedLetterData = response.data;
       }
 

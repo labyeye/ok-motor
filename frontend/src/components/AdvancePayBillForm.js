@@ -151,34 +151,21 @@ const AdvancePayBillForm = () => {
         kmReading: parseFloat(formData.kmReading) || 0,
       };
 
-<<<<<<< HEAD
       // Check if online
       if (navigator.onLine) {
         // Online: direct API call
         const saveResponse = await httpClient.post(
-          `/api/advance-bills`,
+          `/advance-bills`,
           requestData
         );
 
         if (!saveResponse.data?.data?._id) {
           throw new Error("Invalid response format from server");
-=======
-      const saveResponse = await axios.post(
-        `${API_BASE_URL}/advance-bills`,
-        requestData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
->>>>>>> parent of c453b97 (add offline feature)
         }
-      );
 
-<<<<<<< HEAD
         const billId = saveResponse.data.data._id;
         const pdfResponse = await httpClient.get(
-          `/api/advance-bills/${billId}/download`,
+          `/advance-bills/${billId}/download`,
           {
             responseType: "blob",
             headers: {
@@ -187,10 +174,8 @@ const AdvancePayBillForm = () => {
           }
         );
 
-        const pdfBlob = new Blob([pdfResponse.data], {
-          type: "application/pdf",
-        });
-        saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+      saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
 
         alert("Advance bill saved and downloaded successfully!");
       } else {
@@ -231,31 +216,9 @@ const AdvancePayBillForm = () => {
           grandTotal: "",
           balanceDue: "",
         });
-=======
-      if (!saveResponse.data?.data?._id) {
-        throw new Error("Invalid response format from server");
->>>>>>> parent of c453b97 (add offline feature)
       }
-
-      const billId = saveResponse.data.data._id;
-      const pdfResponse = await axios.get(
-        `${API_BASE_URL}/advance-bills/${billId}/download`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/pdf",
-          },
-        }
-      );
-
-      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-      saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
-
-      alert("Advance bill saved and downloaded successfully!");
     } catch (error) {
       console.error("Error in save and download:", error);
-<<<<<<< HEAD
 
       if (
         error.message.includes("offline") ||
@@ -275,7 +238,7 @@ const AdvancePayBillForm = () => {
 
           await offlineSyncManager.queueFormSubmission({
             type: "advance-bill",
-            endpoint: "/api/advance-bills",
+            endpoint: "/advance-bills",
             method: "POST",
             data: requestData,
             userFriendlyName: `Advance Bill for ${requestData.vehicleNumber}`,
@@ -295,13 +258,6 @@ const AdvancePayBillForm = () => {
           }`
         );
       }
-=======
-      alert(
-        `Failed to save and download: ${
-          error.response?.data?.message || error.message
-        }`
-      );
->>>>>>> parent of c453b97 (add offline feature)
     } finally {
       setIsSaving(false);
     }
@@ -342,14 +298,7 @@ const AdvancePayBillForm = () => {
       };
 
       // First save the bill
-<<<<<<< HEAD
-      const saveResponse = await httpClient.post("/api/advance-bills", requestData);
-=======
-      const saveResponse = await api.post(
-        "https://ok-motor.onrender.com/api/advance-bills",
-        requestData
-      );
->>>>>>> parent of c453b97 (add offline feature)
+      const saveResponse = await httpClient.post("/advance-bills", requestData);
 
       if (
         !saveResponse.data ||
@@ -362,13 +311,8 @@ const AdvancePayBillForm = () => {
       const billId = saveResponse.data.data._id;
 
       // Get the PDF for preview or download
-<<<<<<< HEAD
       const pdfResponse = await httpClient.get(
-        `/api/advance-bills/${billId}/download`,
-=======
-      const pdfResponse = await api.get(
-        `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
->>>>>>> parent of c453b97 (add offline feature)
+        `/advance-bills/${billId}/download`,
         {
           responseType: "blob",
         }
@@ -398,21 +342,9 @@ const AdvancePayBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-<<<<<<< HEAD
-      const response = await httpClient.get(`/api/advance-bills/vehicle-details`, {
+      const response = await httpClient.get(`/advance-bills/vehicle-details`, {
         params: { registrationNumber },
       });
-=======
-      const response = await axios.get(
-        `${API_BASE_URL}/advance-bills/vehicle-details`,
-        {
-          params: { registrationNumber },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
->>>>>>> parent of c453b97 (add offline feature)
 
       if (response.data) {
         setFormData((prev) => ({

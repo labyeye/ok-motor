@@ -46,7 +46,6 @@ const formatDate = (dateString) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-<<<<<<< HEAD
 
         // Try to load cached data first
         const cachedAdvanceBills = localStorage.getItem("cachedAdvanceHistory");
@@ -55,18 +54,10 @@ const formatDate = (dateString) => {
         }
 
         const response = await httpClient.get(
-          `/api/advance-bills?page=${currentPage}`
-=======
-        const response = await axios.get(
-          `https://ok-motor.onrender.com/api/advance-bills?page=${currentPage}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
->>>>>>> parent of c453b97 (add offline feature)
+          `/advance-bills?page=${currentPage}`
         );
-        setAdvanceBills(response.data.data || response.data);
+        const advanceBillsData = response.data.data || response.data;
+        setAdvanceBills(advanceBillsData);
         setTotalPages(response.data.totalPages || 1);
       } catch (error) {
         console.error("Error fetching advance bills:", error);
@@ -291,17 +282,10 @@ const formatDate = (dateString) => {
           setIsDownloading(true);
     setDownloadProgress(0);
 
-<<<<<<< HEAD
       // Simulate progress
       await simulateProgress();
       const response = await httpClient.get(
-        `/api/advance-bills/${billId}/download`,
-=======
-    // Simulate progress
-    await simulateProgress();
-      const response = await axios.get(
-        `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
->>>>>>> parent of c453b97 (add offline feature)
+        `/advance-bills/${billId}/download`,
         {
           responseType: "blob",
           headers: {
@@ -326,15 +310,7 @@ const formatDate = (dateString) => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this advance bill?")) {
       try {
-<<<<<<< HEAD
-        await httpClient.delete(`/api/advance-bills/${id}`);
-=======
-        await axios.delete(`https://ok-motor.onrender.com/api/advance-bills/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
->>>>>>> parent of c453b97 (add offline feature)
+        await httpClient.delete(`/advance-bills/${id}`);
         setAdvanceBills(advanceBills.filter((bill) => bill._id !== id));
       } catch (error) {
         console.error("Error deleting advance bill:", error);

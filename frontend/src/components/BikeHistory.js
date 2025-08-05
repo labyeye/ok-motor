@@ -39,51 +39,17 @@ const BikeHistory = () => {
       setLoading(true);
       const [buyLetters, sellLetters, serviceBills, advanceBills] =
         await Promise.all([
-<<<<<<< HEAD
           httpClient.get(
-            `/api/buy-letter/by-registration?registrationNumber=${searchTerm}`
-          ),
-          httpClient.get(
-            `/api/sell-letters/by-registration?registrationNumber=${searchTerm}`
+            `/buy-letter/by-registration?registrationNumber=${searchTerm}`
           ),
           httpClient.get(
-            `/api/service-bills/by-registration?registrationNumber=${searchTerm}`
+            `/sell-letters/by-registration?registrationNumber=${searchTerm}`
           ),
           httpClient.get(
-            `/api/advance-bills/by-registration?registrationNumber=${searchTerm}`
-=======
-          axios.get(
-            `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
+            `/service-bills/by-registration?registrationNumber=${searchTerm}`
           ),
-          axios.get(
-            `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
-          ),
-          axios.get(
-            `https://ok-motor.onrender.com/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
-          ),
-          axios.get(
-            `https://ok-motor.onrender.com/api/advance-bills/by-registration?registrationNumber=${searchTerm}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
->>>>>>> parent of c453b97 (add offline feature)
+          httpClient.get(
+            `/advance-bills/by-registration?registrationNumber=${searchTerm}`
           ),
         ]);
 
@@ -162,19 +128,11 @@ const BikeHistory = () => {
     try {
       let endpoint = "";
       if (type === "buy") {
-<<<<<<< HEAD
-        endpoint = `/api/buy-letter/pdf/${id}`;
-      } else if (type === "sell") {
-        endpoint = `/api/sell-letters/pdf/${id}`;
-      } else if (type === "service") {
-        endpoint = `/api/service-bills/pdf/${id}`;
-=======
-        endpoint = `https://ok-motor.onrender.com/api/buy-letter/pdf/${id}`;
+        endpoint = `/buy-letter/pdf/${id}`;
       } else if (type === "sell") {
         endpoint = `https://ok-motor.onrender.com/api/sell-letters/pdf/${id}`;
       } else if (type === "service") {
-        endpoint = `https://ok-motor.onrender.com/api/service-bills/pdf/${id}`;
->>>>>>> parent of c453b97 (add offline feature)
+        endpoint = `/service-bills/pdf/${id}`;
       }
 
       const response = await axios.get(endpoint, {
