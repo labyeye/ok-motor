@@ -1,7 +1,7 @@
 // BuyLetterHistory.js
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -209,11 +209,10 @@ const BuyLetterHistory = () => {
     const fetchBuyLetters = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
+        const response = await httpClient.get(
           `https://ok-motor.onrender.com/api/buy-letter?page=${currentPage}`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           }
         );
@@ -1131,7 +1130,7 @@ const BuyLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
-        await axios.delete(
+        await httpClient.delete(
           `https://ok-motor.onrender.com/api/buy-letter/${id}`
         );
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
@@ -1147,7 +1146,7 @@ const BuyLetterHistory = () => {
 
   const handleSaveEdit = async (updatedLetter) => {
     try {
-      const response = await axios.put(
+      const response = await httpClient.put(
         `https://ok-motor.onrender.com/api/buy-letter/${updatedLetter._id}`,
         updatedLetter
       );

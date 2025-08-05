@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import {
   User,
   Mail,
@@ -52,7 +52,7 @@ const CreateStaff = () => {
     setError(null);
 
     try {
-      const response = await axios.post(
+      const response = await httpClient.post(
         "https://ok-motor.onrender.com/api/users",
         formData
       );

@@ -19,7 +19,7 @@ import {
   Bike,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import logo from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 
@@ -34,6 +34,21 @@ const AdvancePayBillForm = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const [formData, setFormData] = useState({
     customerName: "",
@@ -58,7 +73,6 @@ const AdvancePayBillForm = () => {
   });
 
   const [previewMode, setPreviewMode] = useState(false);
-  const API_BASE_URL = "https://ok-motor.onrender.com/api";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -68,23 +82,8 @@ const AdvancePayBillForm = () => {
     }
   }, [navigate]);
 
-  const api = axios.create({
-    baseURL: API_BASE_URL,
-    withCredentials: true,
-  });
-
-  api.interceptors.request.use(
-    (config) => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
-    }
-  );
+  // Remove the axios.create since we're using httpClient now
+  // httpClient handles authentication automatically
 
   const calculateAmounts = (data) => {
     const total = parseFloat(data.totalAmount) || 0;
@@ -151,12 +150,11 @@ const AdvancePayBillForm = () => {
         kmReading: parseFloat(formData.kmReading) || 0,
       };
 
-      const saveResponse = await axios.post(
-        `${API_BASE_URL}/advance-bills`,
+      const saveResponse = await httpClient.post(
+        "https://ok-motor.onrender.com/api/advance-bills",
         requestData,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -167,12 +165,11 @@ const AdvancePayBillForm = () => {
       }
 
       const billId = saveResponse.data.data._id;
-      const pdfResponse = await axios.get(
-        `${API_BASE_URL}/advance-bills/${billId}/download`,
+      const pdfResponse = await httpClient.get(
+        `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
           headers: {
-            Authorization: `Bearer ${token}`,
             Accept: "application/pdf",
           },
         }
@@ -229,7 +226,7 @@ const AdvancePayBillForm = () => {
       };
 
       // First save the bill
-      const saveResponse = await api.post(
+      const saveResponse = await httpClient.post(
         "https://ok-motor.onrender.com/api/advance-bills",
         requestData
       );
@@ -245,7 +242,7 @@ const AdvancePayBillForm = () => {
       const billId = saveResponse.data.data._id;
 
       // Get the PDF for preview or download
-      const pdfResponse = await api.get(
+      const pdfResponse = await httpClient.get(
         `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
@@ -276,13 +273,10 @@ const AdvancePayBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/advance-bills/vehicle-details`,
+      const response = await httpClient.get(
+        "https://ok-motor.onrender.com/api/advance-bills/vehicle-details",
         {
           params: { registrationNumber },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
         }
       );
 
@@ -484,11 +478,35 @@ const AdvancePayBillForm = () => {
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
-            <h1 style={styles.pageTitle}>Create Advance Payment Invoice</h1>
-            <p style={styles.pageSubtitle}>
-              Fill in the details to generate an advance payment invoice for the
-              vehicle
-            </p>
+            <div style={styles.headerTop}>
+              <div>
+                <h1 style={styles.pageTitle}>Create Advance Payment Invoice</h1>
+                <p style={styles.pageSubtitle}>
+                  Fill in the details to generate an advance payment invoice for the
+                  vehicle
+                </p>
+              </div>
+              
+              {/* Online/Offline Status Indicator */}
+              <div style={styles.statusIndicator}>
+                <div style={{
+                  ...styles.statusDot,
+                  backgroundColor: isOnline ? '#10b981' : '#ef4444'
+                }}>
+                </div>
+                <span style={{
+                  ...styles.statusText,
+                  color: isOnline ? '#10b981' : '#ef4444'
+                }}>
+                  {isOnline ? 'Online' : 'Offline'}
+                </span>
+                {!isOnline && httpClient.getQueueStatus().count > 0 && (
+                  <span style={styles.queueCount}>
+                    {httpClient.getQueueStatus().count} queued
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
           <form style={styles.form}>
@@ -1050,6 +1068,11 @@ const styles = {
     "50%": { transform: "rotate(180deg)" },
     "100%": { transform: "rotate(360deg)" },
   },
+  "@keyframes pulse": {
+    "0%": { opacity: 1 },
+    "50%": { opacity: 0.5 },
+    "100%": { opacity: 1 },
+  },
   modalOverlay: {
     position: "fixed",
     top: 0,
@@ -1188,6 +1211,38 @@ const styles = {
   },
   header: {
     marginBottom: "32px",
+  },
+  headerTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  statusIndicator: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "8px 12px",
+    backgroundColor: "#f8fafc",
+    borderRadius: "8px",
+    border: "1px solid #e2e8f0",
+    marginTop: "8px",
+  },
+  statusDot: {
+    width: "8px",
+    height: "8px",
+    borderRadius: "50%",
+    animation: "pulse 2s infinite",
+  },
+  statusText: {
+    fontSize: "0.875rem",
+    fontWeight: "500",
+  },
+  queueCount: {
+    fontSize: "0.75rem",
+    color: "#64748b",
+    backgroundColor: "#f1f5f9",
+    padding: "2px 6px",
+    borderRadius: "4px",
   },
   pageTitle: {
     fontSize: "1.875rem",

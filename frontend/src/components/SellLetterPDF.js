@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useContext } from "react";
+import React, { useState, useCallback, useContext, useEffect } from "react";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import {
   User,
   FileSignature,
@@ -41,6 +41,7 @@ const SellLetterForm = () => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -88,6 +89,94 @@ const SellLetterForm = () => {
     note: "",
   });
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Handle online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Load draft data on mount
+  useEffect(() => {
+    try {
+      const savedDraft = localStorage.getItem('sellLetterDraft');
+      if (savedDraft) {
+        const draftData = JSON.parse(savedDraft);
+        setFormData(prev => ({ ...prev, ...draftData }));
+        console.log('Loaded draft data from localStorage');
+      }
+    } catch (error) {
+      console.error('Failed to load draft:', error);
+      localStorage.removeItem('sellLetterDraft');
+    }
+  }, []);
+
+  // Clear form and draft
+  const clearForm = () => {
+    if (window.confirm('Are you sure you want to clear all form data?')) {
+      const defaultFormData = {
+        vehicleName: "",
+        vehicleModel: "",
+        vehicleColor: "",
+        registrationNumber: "",
+        chassisNumber: "",
+        engineNumber: "",
+        vehiclekm: "",
+        buyerName: "",
+        buyerFatherName: "",
+        buyerAddress: "",
+        buyerPhone: "",
+        buyerPhone2: "",
+        buyerAadhar: "",
+        buyerName1: "",
+        buyerName2: "",
+        vehicleCondition: "running",
+        saleDate: new Date().toISOString().split("T")[0],
+        saleTime: new Date().toLocaleTimeString("en-GB", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        saleAmount: "",
+        todayDate: new Date().toISOString().split("T")[0],
+        todayTime: new Date().toLocaleTimeString("en-GB", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        previousDate: new Date().toISOString().split("T")[0],
+        previousTime: new Date().toLocaleTimeString("en-GB", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        paymentMethod: "cash",
+        sellerphone: "9876543210",
+        selleraadhar: "764465626571",
+        witnessName: "",
+        witnessPhone: "",
+        documentsVerified: true,
+        note: "",
+      };
+      
+      setFormData(defaultFormData);
+      
+      try {
+        localStorage.removeItem('sellLetterDraft');
+      } catch (error) {
+        console.error('Failed to clear draft:', error);
+      }
+    }
+  };
+  
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
 
@@ -105,6 +194,13 @@ const SellLetterForm = () => {
       }
       if (name === "todayTime") {
         newData.previousTime = value;
+      }
+
+      // Auto-save to localStorage for offline persistence
+      try {
+        localStorage.setItem('sellLetterDraft', JSON.stringify(newData));
+      } catch (error) {
+        console.error('Failed to save draft:', error);
       }
 
       return newData;
@@ -554,23 +650,31 @@ const SellLetterForm = () => {
         return false;
       }
 
-      const response = await axios.post(
-        "https://ok-motor.onrender.com/api/sell-letters",
-        formData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const response = await httpClient.post("https://ok-motor.onrender.com/api/sell-letters", formData);
 
       if (response.data) {
-        alert("Sell letter saved successfully!");
+        if (response.data._cached) {
+          alert("Sell letter queued for saving when online!");
+        } else {
+          alert("Sell letter saved successfully!");
+          // Clear draft after successful save
+          try {
+            localStorage.removeItem('sellLetterDraft');
+          } catch (error) {
+            console.error('Failed to clear draft:', error);
+          }
+        }
         return true;
       }
     } catch (error) {
       console.error("Error saving sell letter:", error);
+      
+      // Handle offline case
+      if (error.message === "Request queued for when online") {
+        alert("No internet connection. Sell letter will be saved when connection is restored.");
+        return true; // Allow download to proceed
+      }
+      
       if (error.response) {
         // Handle server validation errors
         if (error.response.data.errors) {
@@ -594,13 +698,8 @@ const SellLetterForm = () => {
       setIsSaving(true);
 
       // Check if letter exists first
-      const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+      const existingLetter = await httpClient.get(
+        `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`
       );
 
       let savedLetter;
@@ -622,6 +721,18 @@ const SellLetterForm = () => {
     } catch (error) {
       console.error("Error checking/saving sell letter:", error);
       let errorMessage = "Failed to process sell letter. Please try again.";
+
+      // Handle offline case
+      if (error.message === "Request queued for when online") {
+        alert("No internet connection. Data will be saved when connection is restored. PDF will still be generated.");
+        // Allow PDF generation to continue even when offline
+        if (selectedLanguage === "hindi") {
+          await fillAndDownloadHindiPdf();
+        } else {
+          await fillAndDownloadEnglishPdf();
+        }
+        return;
+      }
 
       if (error.response) {
         errorMessage = error.response.data.message || errorMessage;
@@ -1151,14 +1262,8 @@ const SellLetterForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const response = await axios.get(
-        "https://ok-motor.onrender.com/api/sell-letters/vehicle-details",
-        {
-          params: { registrationNumber },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+      const response = await httpClient.get(
+        `https://ok-motor.onrender.com/api/sell-letters/vehicle-details?registrationNumber=${registrationNumber}`
       );
 
       if (response.data) {
@@ -1167,9 +1272,16 @@ const SellLetterForm = () => {
           ...response.data,
           registrationNumber,
         }));
+        
+        if (response.data._cached) {
+          console.log("Using cached vehicle details");
+        }
       }
     } catch (error) {
       console.error("Error fetching vehicle details:", error);
+      if (error.message === "Request queued for when online") {
+        console.log("Vehicle details will be fetched when online");
+      }
     }
   }, []);
 
@@ -1425,10 +1537,47 @@ const SellLetterForm = () => {
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
-            <h1 style={styles.pageTitle}>Create Sell Letter</h1>
-            <p style={styles.pageSubtitle}>
-              Fill in the details to generate a vehicle purchase agreement
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <h1 style={styles.pageTitle}>Create Sell Letter</h1>
+                <p style={styles.pageSubtitle}>
+                  Fill in the details to generate a vehicle purchase agreement
+                </p>
+              </div>
+              {!isOnline && (
+                <div style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#fef3cd',
+                  color: '#856404',
+                  borderRadius: '4px',
+                  border: '1px solid #ffeaa7',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  ⚠️ Offline Mode - Data will sync when connected
+                  <button
+                    onClick={() => {
+                      const queueStatus = httpClient.getQueueStatus();
+                      alert(`Queued requests: ${queueStatus.count}`);
+                    }}
+                    style={{
+                      background: 'none',
+                      border: '1px solid #856404',
+                      color: '#856404',
+                      padding: '2px 8px',
+                      borderRadius: '3px',
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    View Queue ({httpClient.getQueueStatus().count})
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           <form className="form" style={styles.form}>
@@ -2014,6 +2163,18 @@ const SellLetterForm = () => {
                 >
                   <FileText style={styles.buttonIcon} /> Preview
                 </button>
+                <button
+                  type="button"
+                  onClick={clearForm}
+                  style={{
+                    ...styles.previewButton,
+                    backgroundColor: '#dc3545',
+                    color: 'white'
+                  }}
+                  disabled={isSaving}
+                >
+                  <AlertCircle style={styles.buttonIcon} /> Clear Form
+                </button>
               </div>
               <button
                 type="button"
@@ -2021,7 +2182,8 @@ const SellLetterForm = () => {
                 style={styles.downloadButton}
                 disabled={isSaving}
               >
-                <Download style={styles.buttonIcon} /> Save & Download
+                <Download style={styles.buttonIcon} /> 
+                {isOnline ? 'Save & Download' : 'Download (Will Save When Online)'}
               </button>
             </div>
           </form>

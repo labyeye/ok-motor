@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import {
   User,
   ChevronDown,
@@ -34,7 +34,7 @@ const StaffList = () => {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const response = await axios.get("https://ok-motor.onrender.com/api/users");
+        const response = await httpClient.get("https://ok-motor.onrender.com/api/users");
         setStaff(response.data);
       } catch (err) {
         setError(
@@ -52,7 +52,7 @@ const StaffList = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this staff member?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/users/${id}`);
+        await httpClient.delete(`https://ok-motor.onrender.com/api/users/${id}`);
         setStaff(staff.filter((user) => user._id !== id));
       } catch (err) {
         setError(

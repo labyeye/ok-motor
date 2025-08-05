@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -244,11 +244,10 @@ const SellLetterHistory = () => {
     const fetchSellLetters = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
+        const response = await httpClient.get(
           `https://ok-motor.onrender.com/api/sell-letters/my-letters?page=${currentPage}`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           }
         );
@@ -1135,11 +1134,10 @@ const SellLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this sell letter?")) {
       try {
-        await axios.delete(
+        await httpClient.delete(
           `https://ok-motor.onrender.com/api/sell-letters/${id}`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           }
         );
@@ -1159,12 +1157,11 @@ const SellLetterHistory = () => {
   };
   const handleSaveEdit = async (updatedLetter) => {
     try {
-      const response = await axios.put(
+      const response = await httpClient.put(
         `https://ok-motor.onrender.com/api/sell-letters/${updatedLetter._id}`,
         updatedLetter,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );

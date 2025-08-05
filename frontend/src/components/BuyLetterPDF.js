@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext } from "react";
+import React, { useState, useCallback, useContext, useEffect } from "react";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { saveAs } from "file-saver";
 import {
@@ -25,7 +25,7 @@ import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
 
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import AuthContext from "../context/AuthContext";
 const BuyLetterForm = () => {
   const { user, logout } = useContext(AuthContext);
@@ -42,6 +42,21 @@ const BuyLetterForm = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const [formData, setFormData] = useState({
     sellerName: "",
@@ -327,7 +342,7 @@ const BuyLetterForm = () => {
   const saveBuyLetter = async () => {
     try {
       setIsSaving(true);
-      const response = await axios.post(
+      const response = await httpClient.post(
         "https://ok-motor.onrender.com/api/buy-letter",
         formData
       );
@@ -356,13 +371,8 @@ const BuyLetterForm = () => {
       setIsDownloading(true);
       setIsSaving(true);
 
-      const existingLetter = await axios.get(
-        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+      const existingLetter = await httpClient.get(
+        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
       );
       let savedLetter;
       if (existingLetter.data && existingLetter.data.length > 0) {
@@ -552,11 +562,10 @@ const BuyLetterForm = () => {
       setIsSaving(true);
 
       // Check if letter exists first
-      const existingLetter = await axios.get(
+      const existingLetter = await httpClient.get(
         `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
@@ -566,7 +575,7 @@ const BuyLetterForm = () => {
         savedLetterData = existingLetter.data[0];
       } else {
         // Save new letter if doesn't exist
-        const response = await axios.post(
+        const response = await httpClient.post(
           "https://ok-motor.onrender.com/api/buy-letter",
           formData
         );
@@ -745,11 +754,10 @@ const BuyLetterForm = () => {
       setIsSaving(true);
 
       // Check if letter exists first
-      const existingLetter = await axios.get(
+      const existingLetter = await httpClient.get(
         `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
@@ -758,7 +766,7 @@ const BuyLetterForm = () => {
       if (existingLetter.data && existingLetter.data.length > 0) {
         savedLetterData = existingLetter.data[0];
       } else {
-        const response = await axios.post(
+        const response = await httpClient.post(
           "https://ok-motor.onrender.com/api/buy-letter",
           formData
         );
@@ -1472,10 +1480,34 @@ const BuyLetterForm = () => {
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
-            <h1 style={styles.pageTitle}>Create Buy Letter</h1>
-            <p style={styles.pageSubtitle}>
-              Fill in the details to generate a vehicle purchase agreement
-            </p>
+            <div style={styles.headerTop}>
+              <div>
+                <h1 style={styles.pageTitle}>Create Buy Letter</h1>
+                <p style={styles.pageSubtitle}>
+                  Fill in the details to generate a vehicle purchase agreement
+                </p>
+              </div>
+              
+              {/* Online/Offline Status Indicator */}
+              <div style={styles.statusIndicator}>
+                <div style={{
+                  ...styles.statusDot,
+                  backgroundColor: isOnline ? '#10b981' : '#ef4444'
+                }}>
+                </div>
+                <span style={{
+                  ...styles.statusText,
+                  color: isOnline ? '#10b981' : '#ef4444'
+                }}>
+                  {isOnline ? 'Online' : 'Offline'}
+                </span>
+                {!isOnline && httpClient.getQueueStatus().count > 0 && (
+                  <span style={styles.queueCount}>
+                    {httpClient.getQueueStatus().count} queued
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
           <form className="form" style={styles.form}>

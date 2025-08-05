@@ -1,6 +1,6 @@
 // ServiceHistory.js
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -66,36 +66,21 @@ const ServiceHistory = () => {
         setLoading(true);
 
         // Fetch service bills
-        const serviceResponse = await axios.get(
-          `https://ok-motor.onrender.com/api/service-bills?page=${currentPage}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+        const serviceResponse = await httpClient.get(
+          `https://ok-motor.onrender.com/api/service-bills?page=${currentPage}`
         );
         setServiceBills(serviceResponse.data.data || serviceResponse.data);
         setTotalPages(serviceResponse.data.totalPages || 1);
 
         // Fetch purchase history (if needed)
-        const purchaseResponse = await axios.get(
-          `https://ok-motor.onrender.com/api/buy-letters`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+        const purchaseResponse = await httpClient.get(
+          `https://ok-motor.onrender.com/api/buy-letters`
         );
         setPurchaseHistory(purchaseResponse.data.data || purchaseResponse.data);
 
         // Fetch sell history (if needed)
-        const sellResponse = await axios.get(
-          `https://ok-motor.onrender.com/api/sell-letters`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+        const sellResponse = await httpClient.get(
+          `https://ok-motor.onrender.com/api/sell-letters`
         );
         setSellHistory(sellResponse.data.data || sellResponse.data);
       } catch (error) {
@@ -329,13 +314,10 @@ const ServiceHistory = () => {
     await simulateProgress();
 
     try {
-      const response = await axios.get(
+      const response = await httpClient.get(
         `https://ok-motor.onrender.com/api/service-bills/${billId}/download`,
         {
           responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
         }
       );
 
@@ -360,9 +342,7 @@ const ServiceHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this service bill?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/service-bills/${id}`, {
-         
-        });
+        await httpClient.delete(`https://ok-motor.onrender.com/api/service-bills/${id}`);
         setServiceBills(serviceBills.filter((bill) => bill._id !== id));
       } catch (error) {
         console.error("Error deleting service bill:", error);

@@ -22,7 +22,7 @@ import {
   Bike,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import logo from "../images/company.png";
 
 import AuthContext from "../context/AuthContext";
@@ -99,12 +99,11 @@ const ServiceBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const response = await axios.get(
+      const response = await httpClient.get(
         `${API_BASE_URL}/advance-bills/vehicle-details`,
         {
           params: { registrationNumber },
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
@@ -273,7 +272,7 @@ const ServiceBillForm = () => {
         user: user._id,
       };
 
-      const saveResponse = await axios.post(
+      const saveResponse = await httpClient.post(
         `${API_BASE_URL}/service-bills`,
         formDataWithUser,
         {
@@ -289,7 +288,7 @@ const ServiceBillForm = () => {
       }
 
       const billId = saveResponse.data.data._id;
-      const pdfResponse = await axios.get(
+      const pdfResponse = await httpClient.get(
         `${API_BASE_URL}/service-bills/${billId}/download`,
         {
           responseType: "blob",
@@ -342,7 +341,7 @@ const ServiceBillForm = () => {
       // First save the bill if it doesn't have an ID
       let billId = billData._id;
       if (!billId) {
-        const saveResponse = await axios.post(
+        const saveResponse = await httpClient.post(
           `${API_BASE_URL}/service-bills`,
           formattedBillData,
           {
@@ -360,7 +359,7 @@ const ServiceBillForm = () => {
         billId = saveResponse.data.data._id;
       }
 
-      const pdfResponse = await axios.get(
+      const pdfResponse = await httpClient.get(
         `${API_BASE_URL}/service-bills/${billId}/download`,
         {
           responseType: "blob",

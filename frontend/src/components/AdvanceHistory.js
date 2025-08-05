@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import httpClient from "../utils/offlineHttpClient";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -46,11 +46,10 @@ const formatDate = (dateString) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
+        const response = await httpClient.get(
           `https://ok-motor.onrender.com/api/advance-bills?page=${currentPage}`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           }
         );
@@ -281,12 +280,11 @@ const formatDate = (dateString) => {
 
     // Simulate progress
     await simulateProgress();
-      const response = await axios.get(
+      const response = await httpClient.get(
         `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
@@ -307,9 +305,8 @@ const formatDate = (dateString) => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this advance bill?")) {
       try {
-        await axios.delete(`https://ok-motor.onrender.com/api/advance-bills/${id}`, {
+        await httpClient.delete(`https://ok-motor.onrender.com/api/advance-bills/${id}`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
         setAdvanceBills(advanceBills.filter((bill) => bill._id !== id));

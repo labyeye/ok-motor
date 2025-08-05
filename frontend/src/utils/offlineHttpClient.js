@@ -48,7 +48,7 @@ class OfflineHttpClient {
           response.data._timestamp = Date.now();
 
           // Cache user data from /api/auth/me responses
-          if (response.config.url.includes("/api/auth/me")) {
+          if (response.config.url.includes("https://ok-motor.onrender.com/api/auth/me")) {
             localStorage.setItem("cachedUser", JSON.stringify(response.data));
           }
         }

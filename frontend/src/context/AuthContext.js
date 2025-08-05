@@ -1,7 +1,5 @@
 import { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-
-axios.defaults.withCredentials = true;
+import httpClient from '../utils/offlineHttpClient';
 
 const AuthContext = createContext();
 
@@ -18,16 +16,31 @@ const checkUserLoggedIn = async () => {
   try {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      const res = await axios.get('https://ok-motor.onrender.com/api/auth/me');
+      const res = await httpClient.get('https://ok-motor.onrender.com/api/auth/me');
       setUser(res.data);
     } else {
       setUser(null); // Explicitly set user to null if no token
     }
   } catch (err) {
     console.error(err);
-    localStorage.removeItem('token'); // Clear invalid token
-    setUser(null); // Explicitly set user to null on error
+    
+    // Check if we have cached user data
+    const cachedUser = localStorage.getItem('cachedUser');
+    if (cachedUser) {
+      try {
+        const userData = JSON.parse(cachedUser);
+        setUser({ ...userData, _offline: true });
+        console.log('Using cached user data for offline mode');
+      } catch (parseError) {
+        console.error('Failed to parse cached user data:', parseError);
+        localStorage.removeItem('cachedUser');
+        localStorage.removeItem('token');
+        setUser(null);
+      }
+    } else {
+      localStorage.removeItem('token'); // Clear invalid token
+      setUser(null); // Explicitly set user to null on error
+    }
   } finally {
     setLoading(false);
   }
@@ -35,9 +48,8 @@ const checkUserLoggedIn = async () => {
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post('https://ok-motor.onrender.com/api/auth/login', { email, password });
+      const res = await httpClient.post('https://ok-motor.onrender.com/api/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
       setUser(res.data);
       return res.data;
     } catch (error) {
@@ -48,7 +60,7 @@ const checkUserLoggedIn = async () => {
 
   const logout = () => {
     localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+    localStorage.removeItem('cachedUser');
     setUser(null);
   };
 
