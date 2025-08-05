@@ -39,17 +39,37 @@ const BikeHistory = () => {
       setLoading(true);
       const [buyLetters, sellLetters, serviceBills, advanceBills] =
         await Promise.all([
-          httpClient.get(
-            `/buy-letter/by-registration?registrationNumber=${searchTerm}`
+          axios.get(
+            `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
           ),
-          httpClient.get(
-            `/sell-letters/by-registration?registrationNumber=${searchTerm}`
+          axios.get(
+            `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
           ),
-          httpClient.get(
-            `/service-bills/by-registration?registrationNumber=${searchTerm}`
+          axios.get(
+            `https://ok-motor.onrender.com/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
           ),
-          httpClient.get(
-            `/advance-bills/by-registration?registrationNumber=${searchTerm}`
+          axios.get(
+            `https://ok-motor.onrender.com/api/advance-bills/by-registration?registrationNumber=${searchTerm}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
           ),
         ]);
 
@@ -128,11 +148,11 @@ const BikeHistory = () => {
     try {
       let endpoint = "";
       if (type === "buy") {
-        endpoint = `/buy-letter/pdf/${id}`;
+        endpoint = `https://ok-motor.onrender.com/api/buy-letter/pdf/${id}`;
       } else if (type === "sell") {
         endpoint = `https://ok-motor.onrender.com/api/sell-letters/pdf/${id}`;
       } else if (type === "service") {
-        endpoint = `/service-bills/pdf/${id}`;
+        endpoint = `https://ok-motor.onrender.com/api/service-bills/pdf/${id}`;
       }
 
       const response = await axios.get(endpoint, {
