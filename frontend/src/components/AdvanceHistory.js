@@ -677,13 +677,7 @@ const formatDate = (dateString) => {
                           >
                             <Download size={16} />
                           </button>
-                          <button
-                            onClick={() => handleAlternativeDownload(bill._id)}
-                            style={{...styles.iconButton, backgroundColor: '#fef3c7'}}
-                            title="Alternative Download (if main fails)"
-                          >
-                            <FileText size={16} />
-                          </button>
+                          
                           {user?.role === "admin" && (
                             <button
                               onClick={() => handleDelete(bill._id)}
