@@ -381,6 +381,8 @@ const formatDate = (dateString) => {
         navigate('/login');
       } else if (error.response?.status === 403) {
         alert("You don't have permission to download this file.");
+      } else if (error.response?.status === 404) {
+        alert("Advance bill not found or PDF could not be generated. Please try again or contact support.");
       } else if (error.response?.status === 503) {
         alert("Server is temporarily unavailable. Please try again in a few minutes.");
       } else if (error.response?.status === 502 || error.response?.status === 504) {
@@ -607,13 +609,7 @@ const formatDate = (dateString) => {
               />
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                style={{...styles.newBillButton, backgroundColor: '#f59e0b'}}
-                onClick={checkServerStatus}
-                title="Check Server Status"
-              >
-                Server Status
-              </button>
+              
               <button
                 style={styles.newBillButton}
                 onClick={() => navigate("/advance/create")}

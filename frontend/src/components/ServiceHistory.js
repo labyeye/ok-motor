@@ -605,20 +605,7 @@ const ServiceHistory = () => {
               />
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                style={{...styles.newBillButton, backgroundColor: '#10b981'}}
-                onClick={testAuth}
-                title="Test Authentication"
-              >
-                Test Auth
-              </button>
-              <button
-                style={{...styles.newBillButton, backgroundColor: '#f59e0b'}}
-                onClick={checkServerStatus}
-                title="Check Server Status"
-              >
-                Server Status
-              </button>
+              
               <button
                 style={styles.newBillButton}
                 onClick={() => navigate("/service/create")}
