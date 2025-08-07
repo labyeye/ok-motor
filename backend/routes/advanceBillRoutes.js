@@ -8,6 +8,35 @@ const BuyLetter = require("../models/BuyLetter");
 const SellLetter = require("../models/SellLetter");
 const path = require("path");
 const fs = require("fs");
+
+// Preview route (doesn't save to database)
+router.post("/preview", protect, async (req, res) => {
+  try {
+    const advanceBillData = req.body;
+    
+    // Create a temporary advance bill object (not saved to database)
+    const tempAdvanceBill = {
+      ...advanceBillData,
+      _id: "preview", // Temporary ID for preview
+    };
+
+    // Generate PDF directly without saving to database
+    const pdfBuffer = await generateAdvanceBillPDF(tempAdvanceBill, true); // true indicates return buffer
+
+    // Send PDF directly as response
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename=advance-bill-preview.pdf');
+    res.send(pdfBuffer);
+    
+  } catch (error) {
+    console.error("Error generating preview PDF:", error);
+    res.status(500).json({ 
+      message: "Error generating preview PDF",
+      error: error.message 
+    });
+  }
+});
+
 router.get("/pdf/:filename", protect, async (req, res) => {
   try {
     const { filename } = req.params;

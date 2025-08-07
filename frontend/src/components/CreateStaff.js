@@ -52,19 +52,41 @@ const CreateStaff = () => {
     setError(null);
 
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError("You are not authenticated. Please login again.");
+        logout();
+        navigate('/login');
+        return;
+      }
+
       const response = await httpClient.post(
         "https://ok-motor.onrender.com/api/users",
-        formData
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       setSuccess(true);
       setTimeout(() => {
         navigate("/staff/list");
       }, 1500);
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to create staff. Please try again."
-      );
+      // Handle authentication errors
+      if (err.response?.status === 401) {
+        setError("Your session has expired. Please login again.");
+        logout();
+        navigate('/login');
+      } else if (err.response?.status === 403) {
+        setError("You don't have permission to create staff members.");
+      } else {
+        setError(
+          err.response?.data?.message ||
+            "Failed to create staff. Please try again."
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }

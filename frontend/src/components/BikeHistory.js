@@ -772,33 +772,6 @@ const BikeHistory = () => {
       font: font,
     });
 
-    // Dealer Information (if available)
-    if (letter.dealername || letter.dealeraddress) {
-      page.drawText("DEALER DETAILS", {
-        x: 40,
-        y: 220,
-        size: 12,
-        color: rgb(0.047, 0.098, 0.196),
-        font: boldFont,
-      });
-
-      page.drawText(`Dealer Name: ${letter.dealername || "N/A"}`, {
-        x: 60,
-        y: 195,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      });
-
-      page.drawText(`Dealer Address: ${letter.dealeraddress || "N/A"}`, {
-        x: 300,
-        y: 195,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      });
-    }
-
     // Additional Notes
     if (letter.note) {
       page.drawText("ADDITIONAL NOTES", {
@@ -1271,33 +1244,6 @@ const BikeHistory = () => {
         font: font,
       });
     });
-
-    // Witness Information section
-    if (letter.witnessName || letter.witnessPhone) {
-      page.drawText("WITNESS DETAILS", {
-        x: 40,
-        y: 120,
-        size: 12,
-        color: rgb(0.047, 0.098, 0.196),
-        font: boldFont,
-      });
-
-      page.drawText(`Witness Name: ${letter.witnessName || "N/A"}`, {
-        x: 60,
-        y: 95,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      });
-
-      page.drawText(`Witness Phone: ${letter.witnessPhone || "N/A"}`, {
-        x: 300,
-        y: 95,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      });
-    }
 
     // Additional Notes
     if (letter.note) {

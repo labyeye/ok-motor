@@ -7,6 +7,12 @@ router
   .route("/")
   .get(protect, serviceBillController.getServiceBills)
   .post(protect, serviceBillController.createServiceBill);
+
+// Preview route (doesn't save to database)
+router
+  .route("/preview")
+  .post(protect, serviceBillController.previewServiceBillPDF);
+
 router
   .route("/by-registration")
   .get(protect, serviceBillController.getServiceBillsByRegistration);

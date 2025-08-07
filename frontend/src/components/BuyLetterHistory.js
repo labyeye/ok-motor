@@ -1130,12 +1130,36 @@ const BuyLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          alert("You are not authenticated. Please login again.");
+          logout();
+          navigate('/login');
+          return;
+        }
+
         await httpClient.delete(
-          `https://ok-motor.onrender.com/api/buy-letter/${id}`
+          `https://ok-motor.onrender.com/api/buy-letter/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting buy letter:", error);
+        
+        // Handle authentication errors
+        if (error.response?.status === 401) {
+          alert("Your session has expired. Please login again.");
+          logout();
+          navigate('/login');
+        } else if (error.response?.status === 403) {
+          alert("You don't have permission to delete this item.");
+        } else {
+          alert(`Failed to delete: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+        }
       }
     }
   };
@@ -1146,9 +1170,22 @@ const BuyLetterHistory = () => {
 
   const handleSaveEdit = async (updatedLetter) => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert("You are not authenticated. Please login again.");
+        logout();
+        navigate('/login');
+        return;
+      }
+
       const response = await httpClient.put(
         `https://ok-motor.onrender.com/api/buy-letter/${updatedLetter._id}`,
-        updatedLetter
+        updatedLetter,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       setBuyLetters(
         buyLetters.map((letter) =>
@@ -1158,6 +1195,17 @@ const BuyLetterHistory = () => {
       setEditingLetter(null);
     } catch (error) {
       console.error("Error updating buy letter:", error);
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        alert("Your session has expired. Please login again.");
+        logout();
+        navigate('/login');
+      } else if (error.response?.status === 403) {
+        alert("You don't have permission to edit this item.");
+      } else {
+        alert(`Failed to update: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+      }
     }
   };
 

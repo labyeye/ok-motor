@@ -154,6 +154,35 @@ exports.getServiceBillsByRegistration = async (req, res) => {
     });
   }
 };
+
+// Preview service bill PDF without saving to database
+exports.previewServiceBillPDF = async (req, res) => {
+  try {
+    const serviceBillData = req.body;
+    
+    // Create a temporary service bill object (not saved to database)
+    const tempServiceBill = {
+      ...serviceBillData,
+      _id: "preview", // Temporary ID for preview
+    };
+
+    // Generate PDF directly without saving to database
+    const pdfBuffer = await generateServiceBillPDF(tempServiceBill, true); // true indicates return buffer
+
+    // Send PDF directly as response
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename=service-bill-preview.pdf');
+    res.send(pdfBuffer);
+    
+  } catch (error) {
+    console.error("Error generating preview PDF:", error);
+    res.status(500).json({ 
+      message: "Error generating preview PDF",
+      error: error.message 
+    });
+  }
+};
+
 // Add this to your serviceBillController.js
 exports.downloadServiceBillPDF = async (req, res) => {
   try {

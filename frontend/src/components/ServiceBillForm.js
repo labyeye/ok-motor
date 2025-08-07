@@ -262,7 +262,10 @@ const ServiceBillForm = () => {
 
       const token = localStorage.getItem("token");
       if (!token) {
-        throw new Error("No authentication token found. Please log in again.");
+        alert("Authentication required. Please login again.");
+        logout();
+        navigate('/login');
+        return;
       }
 
       const formDataWithUser = {
@@ -301,9 +304,29 @@ const ServiceBillForm = () => {
 
       const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
       saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+      
+      // Show success message and optionally reset form
+      alert("Service bill saved and downloaded successfully!");
+      
     } catch (error) {
       console.error("Error in save and download:", error);
-      // Error handling...
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        alert("Your session has expired. Please login again.");
+        logout();
+        navigate('/login');
+        return;
+      }
+      
+      let errorMessage = "Failed to save and download";
+      if (error.response) {
+        errorMessage = error.response.data?.message || "Server error occurred";
+      } else {
+        errorMessage = error.message || "Unknown error occurred";
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -326,6 +349,13 @@ const ServiceBillForm = () => {
       setShowLoadingOverlay(true);
       const token = localStorage.getItem("token");
 
+      if (!token) {
+        alert("Authentication required. Please login again.");
+        logout();
+        navigate('/login');
+        return;
+      }
+
       // Format dates properly before sending
       const formattedBillData = {
         ...billData,
@@ -338,9 +368,26 @@ const ServiceBillForm = () => {
         user: user._id,
       };
 
-      // First save the bill if it doesn't have an ID
-      let billId = billData._id;
-      if (!billId) {
+      if (forPreview) {
+        // For preview, generate PDF without saving to database
+        const previewResponse = await httpClient.post(
+          `${API_BASE_URL}/service-bills/preview`,
+          formattedBillData,
+          {
+            responseType: "blob",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const pdfBlob = new Blob([previewResponse.data], { type: "application/pdf" });
+        const url = URL.createObjectURL(pdfBlob);
+        setPreviewPdf(url);
+        setShowPreviewModal(true);
+      } else {
+        // For download, save the bill first
         const saveResponse = await httpClient.post(
           `${API_BASE_URL}/service-bills`,
           formattedBillData,
@@ -356,33 +403,33 @@ const ServiceBillForm = () => {
           throw new Error("Failed to save bill before generating PDF");
         }
 
-        billId = saveResponse.data.data._id;
-      }
+        const billId = saveResponse.data.data._id;
+        const pdfResponse = await httpClient.get(
+          `${API_BASE_URL}/service-bills/${billId}/download`,
+          {
+            responseType: "blob",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/pdf",
+            },
+          }
+        );
 
-      const pdfResponse = await httpClient.get(
-        `${API_BASE_URL}/service-bills/${billId}/download`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/pdf",
-          },
-        }
-      );
-
-      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-
-      if (forPreview) {
-        const url = URL.createObjectURL(pdfBlob);
-        setPreviewPdf(url);
-        setShowPreviewModal(true);
-      } else {
+        const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
         saveAs(pdfBlob, `service-bill-${billId}.pdf`);
       }
     } catch (error) {
       console.error("Error generating PDF:", error);
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        alert("Your session has expired. Please login again.");
+        logout();
+        navigate('/login');
+        return;
+      }
+      
       let errorMessage = "Failed to generate PDF";
-
       if (error.response) {
         errorMessage = error.response.data?.message || "Server error occurred";
       } else {

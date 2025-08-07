@@ -308,12 +308,44 @@ const ServiceHistory = () => {
     },
   };
 
+  // Add this debug function to test authentication
+  const testAuth = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Testing authentication...');
+      console.log('Token exists:', !!token);
+      console.log('Token preview:', token ? `${token.substring(0, 20)}...` : 'No token');
+      
+      const response = await httpClient.get('https://ok-motor.onrender.com/api/auth/me');
+      console.log('Auth test successful:', response.data);
+    } catch (error) {
+      console.error('Auth test failed:', error);
+      console.error('Error details:', error.response?.data);
+    }
+  };
+
   const handleDownload = async (billId) => {
     setIsDownloading(true);
     setDownloadProgress(0);
     await simulateProgress();
 
     try {
+      // Check if user is authenticated
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert("You are not authenticated. Please login again.");
+        logout();
+        navigate('/login');
+        return;
+      }
+
+      // Test authentication first
+      await testAuth();
+
+      // Debug: Log token info
+      console.log('Token exists:', !!token);
+      console.log('User:', user);
+
       const response = await httpClient.get(
         `https://ok-motor.onrender.com/api/service-bills/${billId}/download`,
         {
@@ -330,12 +362,26 @@ const ServiceHistory = () => {
       document.body.removeChild(link);
     } catch (error) {
       console.error("Error downloading PDF:", error);
-      alert("Failed to download PDF. Please try again.");
+      console.error("Error response:", error.response);
+      
+      // Handle specific authentication errors
+      if (error.response?.status === 401) {
+        alert("Your session has expired. Please login again.");
+        logout();
+        navigate('/login');
+      } else if (error.response?.status === 403) {
+        alert("You don't have permission to download this file.");
+      } else {
+        alert(`Failed to download PDF: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+      }
+      
       setDownloadProgress((prev) => {
         const newState = { ...prev };
         delete newState[billId];
         return newState;
       });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -527,13 +573,22 @@ const ServiceHistory = () => {
                 style={styles.searchInput}
               />
             </div>
-            <button
-              style={styles.newBillButton}
-              onClick={() => navigate("/service/create")}
-            >
-              <FileText size={16} style={styles.buttonIcon} />
-              New Service Bill
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                style={{...styles.newBillButton, backgroundColor: '#10b981'}}
+                onClick={testAuth}
+                title="Test Authentication"
+              >
+                Test Auth
+              </button>
+              <button
+                style={styles.newBillButton}
+                onClick={() => navigate("/service/create")}
+              >
+                <FileText size={16} style={styles.buttonIcon} />
+                New Service Bill
+              </button>
+            </div>
           </div>
 
           {loading ? (

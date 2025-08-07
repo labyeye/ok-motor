@@ -275,16 +275,27 @@ const formatDate = (dateString) => {
 
   const handleDownload = async (billId) => {
     try {
-          setIsDownloading(true);
-    setDownloadProgress(0);
+      setIsDownloading(true);
+      setDownloadProgress(0);
 
-    // Simulate progress
-    await simulateProgress();
+      // Check authentication
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert("You are not authenticated. Please login again.");
+        logout();
+        navigate('/login');
+        return;
+      }
+
+      // Simulate progress
+      await simulateProgress();
+      
       const response = await httpClient.get(
         `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
           headers: {
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -298,20 +309,52 @@ const formatDate = (dateString) => {
       document.body.removeChild(link);
     } catch (error) {
       console.error("Error downloading PDF:", error);
-      alert("Failed to download PDF. Please try again.");
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        alert("Your session has expired. Please login again.");
+        logout();
+        navigate('/login');
+      } else if (error.response?.status === 403) {
+        alert("You don't have permission to download this file.");
+      } else {
+        alert(`Failed to download PDF: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+      }
+    } finally {
+      setIsDownloading(false);
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this advance bill?")) {
       try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          alert("You are not authenticated. Please login again.");
+          logout();
+          navigate('/login');
+          return;
+        }
+
         await httpClient.delete(`https://ok-motor.onrender.com/api/advance-bills/${id}`, {
           headers: {
+            Authorization: `Bearer ${token}`,
           },
         });
         setAdvanceBills(advanceBills.filter((bill) => bill._id !== id));
       } catch (error) {
         console.error("Error deleting advance bill:", error);
+        
+        // Handle authentication errors
+        if (error.response?.status === 401) {
+          alert("Your session has expired. Please login again.");
+          logout();
+          navigate('/login');
+        } else if (error.response?.status === 403) {
+          alert("You don't have permission to delete this file.");
+        } else {
+          alert(`Failed to delete: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+        }
       }
     }
   };

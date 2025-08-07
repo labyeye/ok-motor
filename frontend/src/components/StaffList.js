@@ -52,13 +52,34 @@ const StaffList = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this staff member?")) {
       try {
-        await httpClient.delete(`https://ok-motor.onrender.com/api/users/${id}`);
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError("You are not authenticated. Please login again.");
+          logout();
+          navigate('/login');
+          return;
+        }
+
+        await httpClient.delete(`https://ok-motor.onrender.com/api/users/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setStaff(staff.filter((user) => user._id !== id));
       } catch (err) {
-        setError(
-          err.response?.data?.message ||
-            "Failed to delete staff. Please try again."
-        );
+        // Handle authentication errors
+        if (err.response?.status === 401) {
+          setError("Your session has expired. Please login again.");
+          logout();
+          navigate('/login');
+        } else if (err.response?.status === 403) {
+          setError("You don't have permission to delete staff members.");
+        } else {
+          setError(
+            err.response?.data?.message ||
+              "Failed to delete staff. Please try again."
+          );
+        }
       }
     }
   };

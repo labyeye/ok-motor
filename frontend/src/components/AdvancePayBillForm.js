@@ -138,8 +138,12 @@ const AdvancePayBillForm = () => {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        throw new Error("No authentication token found. Please log in again.");
+        alert("You are not authenticated. Please login again.");
+        logout();
+        navigate('/login');
+        return;
       }
+
       const requestData = {
         ...formData,
         user: user._id,
@@ -155,6 +159,7 @@ const AdvancePayBillForm = () => {
         requestData,
         {
           headers: {
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -170,6 +175,7 @@ const AdvancePayBillForm = () => {
         {
           responseType: "blob",
           headers: {
+            Authorization: `Bearer ${token}`,
             Accept: "application/pdf",
           },
         }
@@ -181,11 +187,21 @@ const AdvancePayBillForm = () => {
       alert("Advance bill saved and downloaded successfully!");
     } catch (error) {
       console.error("Error in save and download:", error);
-      alert(
-        `Failed to save and download: ${
-          error.response?.data?.message || error.message
-        }`
-      );
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        alert("Your session has expired. Please login again.");
+        logout();
+        navigate('/login');
+      } else if (error.response?.status === 403) {
+        alert("You don't have permission to create advance bills.");
+      } else {
+        alert(
+          `Failed to save and download: ${
+            error.response?.data?.message || error.message
+          }`
+        );
+      }
     } finally {
       setIsSaving(false);
     }
@@ -214,6 +230,14 @@ const AdvancePayBillForm = () => {
         return;
       }
 
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You are not authenticated. Please login again.");
+        logout();
+        navigate('/login');
+        return;
+      }
+
       // Calculate final amounts before sending
       const calculated = calculateAmounts(billData);
 
@@ -225,48 +249,74 @@ const AdvancePayBillForm = () => {
         balanceDue: calculated.balanceDue,
       };
 
-      // First save the bill
-      const saveResponse = await httpClient.post(
-        "https://ok-motor.onrender.com/api/advance-bills",
-        requestData
-      );
-
-      if (
-        !saveResponse.data ||
-        !saveResponse.data.data ||
-        !saveResponse.data.data._id
-      ) {
-        throw new Error("Invalid response format from server");
-      }
-
-      const billId = saveResponse.data.data._id;
-
-      // Get the PDF for preview or download
-      const pdfResponse = await httpClient.get(
-        `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
-        {
-          responseType: "blob",
-        }
-      );
-
-      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-
       if (forPreview) {
-        // Create a blob URL for preview
+        // For preview, use a preview endpoint that doesn't save data
+        const previewResponse = await httpClient.post(
+          "https://ok-motor.onrender.com/api/advance-bills/preview",
+          requestData,
+          {
+            responseType: "blob",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const pdfBlob = new Blob([previewResponse.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
         setPreviewPdf(pdfUrl);
         setShowPreviewModal(true);
       } else {
-        // For download
+        // For download, save the bill first
+        const saveResponse = await httpClient.post(
+          "https://ok-motor.onrender.com/api/advance-bills",
+          requestData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!saveResponse.data?.data?._id) {
+          throw new Error("Invalid response format from server");
+        }
+
+        const billId = saveResponse.data.data._id;
+
+        // Get the PDF for download
+        const pdfResponse = await httpClient.get(
+          `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
+          {
+            responseType: "blob",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
         saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
       }
     } catch (error) {
       console.error("Error generating PDF:", error);
-      alert(
-        `Failed to generate PDF: ${
-          error.response?.data?.message || error.message
-        }`
-      );
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        alert("Your session has expired. Please login again.");
+        logout();
+        navigate('/login');
+      } else if (error.response?.status === 403) {
+        alert("You don't have permission to create advance bills.");
+      } else {
+        alert(
+          `Failed to generate PDF: ${
+            error.response?.data?.message || error.message
+          }`
+        );
+      }
     } finally {
       setShowLoadingOverlay(false);
     }
