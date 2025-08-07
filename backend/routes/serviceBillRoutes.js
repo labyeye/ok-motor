@@ -16,19 +16,22 @@ router
 router
   .route("/by-registration")
   .get(protect, serviceBillController.getServiceBillsByRegistration);
+
+// Add more specific routes before the generic /:id route
+router
+  .route("/:id/pdf")
+  .get(protect, serviceBillController.generateServiceBillPDF);
+
+router
+  .route("/:id/download")
+  .get(protect, serviceBillController.downloadServiceBillPDF);
+
+// Generic /:id route should come last
 router
   .route("/:id")
   .get(protect, serviceBillController.getServiceBill)
   .put(admin, serviceBillController.updateServiceBill)
   .delete(protect, serviceBillController.deleteServiceBill);
-
-router
-  .route("/:id/pdf")
-  .get(protect, serviceBillController.generateServiceBillPDF);
-// In serviceBillRoutes.js, add a new route
-router
-  .route("/:id/download")
-  .get(protect, serviceBillController.downloadServiceBillPDF);
 
 router
   .route("/vehicle-details")

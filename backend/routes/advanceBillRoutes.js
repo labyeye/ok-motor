@@ -248,11 +248,21 @@ router.post("/", protect, async (req, res) => {
   }
 });
 
-// Download advance bill PDF
+// Specific routes must come before generic /:id route to avoid conflicts
+
+// Download advance bill PDF (specific route)
 router.get("/:id/download", protect, async (req, res) => {
   try {
     const { id } = req.params;
-    const advanceBill = await AdvanceBill.findById(id);
+    const advanceBill = await AdvanceBill.findOne({
+      _id: id,
+      $or: [
+        { user: req.user.id }, // Records created by the current user
+        { visibility: 'staff' }, // Or records marked as visible to staff
+        // Or if staff/admin should see all records:
+        ...(req.user.role === 'staff' || req.user.role === 'admin' ? [{}] : [])
+      ]
+    });
 
     if (!advanceBill) {
       return res.status(404).json({
@@ -283,6 +293,7 @@ router.get("/:id/download", protect, async (req, res) => {
     });
   }
 });
+
 // Get all advance bills
 router.get("/", protect, async (req, res) => {
   try {
@@ -304,7 +315,7 @@ router.get("/", protect, async (req, res) => {
   }
 });
 
-// Get single advance bill
+// Generic /:id route (must come after specific routes like /:id/download)
 router.get("/:id", protect, async (req, res) => {
   try {
     const advanceBill = await AdvanceBill.findById(req.params.id);

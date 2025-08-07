@@ -14,24 +14,37 @@ const app = express();
 connectDB();
 // Dynamic CORS configuration for different environments
 const getAllowedOrigins = () => {
-  const origins = ["https://ok-motor.vercel.app"]; // Always allow local development
+  const origins = [
+    "http://localhost:3000", // Local development
+    "http://127.0.0.1:3000", // Local development
+    "https://ok-motor.vercel.app" // Production
+  ];
   
-  // Add production origins
+  // Add production origins from environment
   if (process.env.FRONTEND_URL) {
     origins.push(process.env.FRONTEND_URL);
   }
-  
-  // Default production origins
-  origins.push("https://ok-motor.vercel.app");
   
   return origins;
 };
 
 const corsOptions = {
-  origin: getAllowedOrigins(),
+  origin: (origin, callback) => {
+    const allowedOrigins = getAllowedOrigins();
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "Cache-Control"],
   credentials: true,
+  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 app.use(express.json());
 app.use(cors(corsOptions));
