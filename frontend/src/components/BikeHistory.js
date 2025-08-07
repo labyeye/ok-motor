@@ -747,31 +747,6 @@ const BikeHistory = () => {
       });
     });
 
-    // Witness Information section
-    page.drawText("WITNESS DETAILS", {
-      x: 40,
-      y: 270,
-      size: 12,
-      color: rgb(0.047, 0.098, 0.196),
-      font: boldFont,
-    });
-
-    page.drawText(`Witness Name: ${letter.witnessname || "N/A"}`, {
-      x: 60,
-      y: 245,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
-
-    page.drawText(`Witness Phone: ${letter.witnessphone || "N/A"}`, {
-      x: 300,
-      y: 245,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
-
     // Additional Notes
     if (letter.note) {
       page.drawText("ADDITIONAL NOTES", {
@@ -958,8 +933,8 @@ const BikeHistory = () => {
       font: font,
     });
     page.drawText(`Time: ${formatTime(letter.saleTime)}`, {
-      x: 450,
-      y: 700,
+      x: 530,
+      y: 720,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,

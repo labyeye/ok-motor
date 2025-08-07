@@ -44,6 +44,10 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/service-bills", serviceBillRoutes);
 app.use("/api/advance-bills", advanceBillRoutes);
 
-const PORT = 2500;
+// Use PORT from environment variable (Render sets this automatically)
+const PORT = process.env.PORT || 2500;
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
+

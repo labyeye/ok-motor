@@ -324,6 +324,28 @@ const ServiceHistory = () => {
     }
   };
 
+  // Add server status checker
+  const checkServerStatus = async () => {
+    try {
+      console.log('Checking server status...');
+      const response = await httpClient.get('https://ok-motor.onrender.com/api/auth/me', {
+        timeout: 5000
+      });
+      alert(`✅ Server is running! Status: ${response.status}\nYour account: ${response.data.name} (${response.data.role})`);
+    } catch (error) {
+      console.error('Server status check failed:', error);
+      if (error.code === 'ECONNABORTED') {
+        alert('❌ Server timeout - Server is taking too long to respond');
+      } else if (error.response?.status === 503) {
+        alert('❌ Server unavailable (503) - Backend service is down or restarting');
+      } else if (error.response?.status === 502) {
+        alert('❌ Bad Gateway (502) - Server deployment issue');
+      } else {
+        alert(`❌ Server error: ${error.response?.status || 'Network error'}\n${error.message}`);
+      }
+    }
+  };
+
   const handleDownload = async (billId) => {
     setIsDownloading(true);
     setDownloadProgress(0);
@@ -350,6 +372,7 @@ const ServiceHistory = () => {
         `https://ok-motor.onrender.com/api/service-bills/${billId}/download`,
         {
           responseType: "blob",
+          timeout: 30000, // 30 second timeout
         }
       );
 
@@ -364,15 +387,21 @@ const ServiceHistory = () => {
       console.error("Error downloading PDF:", error);
       console.error("Error response:", error.response);
       
-      // Handle specific authentication errors
+      // Handle specific errors
       if (error.response?.status === 401) {
         alert("Your session has expired. Please login again.");
         logout();
         navigate('/login');
       } else if (error.response?.status === 403) {
         alert("You don't have permission to download this file.");
+      } else if (error.response?.status === 503) {
+        alert("Server is temporarily unavailable. Please try again in a few minutes or contact support if the issue persists.");
+      } else if (error.response?.status === 502 || error.response?.status === 504) {
+        alert("Server is experiencing issues. Please try again later.");
+      } else if (error.code === 'ECONNABORTED' || error.code === 'NETWORK_ERROR') {
+        alert("Connection timeout. Please check your internet connection and try again.");
       } else {
-        alert(`Failed to download PDF: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+        alert(`Failed to download PDF: ${error.response?.data?.message || error.message || 'Server temporarily unavailable'}`);
       }
       
       setDownloadProgress((prev) => {
@@ -580,6 +609,13 @@ const ServiceHistory = () => {
                 title="Test Authentication"
               >
                 Test Auth
+              </button>
+              <button
+                style={{...styles.newBillButton, backgroundColor: '#f59e0b'}}
+                onClick={checkServerStatus}
+                title="Check Server Status"
+              >
+                Server Status
               </button>
               <button
                 style={styles.newBillButton}

@@ -71,6 +71,15 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Skip service worker for download endpoints (PDFs)
+  if (url.pathname.includes('/download') || 
+      url.pathname.includes('/pdf') || 
+      request.headers.get('Accept')?.includes('application/pdf') ||
+      request.url.includes('responseType=blob')) {
+    // Let download requests go directly to network without service worker interference
+    return;
+  }
+
   // Handle API requests - check for both production and development
   const isApiRequest =
     url.pathname.startsWith("/api/") ||
@@ -102,6 +111,14 @@ self.addEventListener("fetch", (event) => {
 async function handleApiRequest(request) {
   const cache = await caches.open(API_CACHE);
   const url = new URL(request.url);
+
+  // Skip caching for download/PDF endpoints
+  if (url.pathname.includes('/download') || 
+      url.pathname.includes('/pdf') ||
+      request.headers.get('Accept')?.includes('application/pdf')) {
+    // Pass through directly to network without caching
+    return fetch(request);
+  }
 
   try {
     // Try network first for fresh data
