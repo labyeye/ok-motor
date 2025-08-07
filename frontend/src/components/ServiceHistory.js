@@ -394,6 +394,8 @@ const ServiceHistory = () => {
         navigate('/login');
       } else if (error.response?.status === 403) {
         alert("You don't have permission to download this file.");
+      } else if (error.response?.status === 404) {
+        alert("Service bill not found or PDF could not be generated. Please try again or contact support.");
       } else if (error.response?.status === 503) {
         alert("Server is temporarily unavailable. Please try again in a few minutes or contact support if the issue persists.");
       } else if (error.response?.status === 502 || error.response?.status === 504) {

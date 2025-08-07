@@ -186,25 +186,38 @@ exports.previewServiceBillPDF = async (req, res) => {
 // Add this to your serviceBillController.js
 exports.downloadServiceBillPDF = async (req, res) => {
   try {
-    const billId = req.params.id;
-    const filePath = path.join(__dirname, '../uploads/service-bills', `service-bill-${billId}.pdf`);
+    const serviceBill = await ServiceBill.findOne({
+      _id: req.params.id,
+      $or: [
+        { user: req.user.id }, // Records created by the current user
+        { visibility: 'staff' }, // Or records marked as visible to staff
+        // Or if staff should see all records for the registration number:
+        ...(req.user.role === 'staff' ? [{}] : []) // Staff can see all matching registration numbers
+      ]
+    });
 
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: "PDF file not found" });
+    if (!serviceBill) {
+      return res.status(404).json({
+        success: false,
+        message: "Service bill not found",
+      });
     }
 
-    // Set headers and send file
+    // Generate PDF directly from service bill data
+    const pdfBuffer = await generateServiceBillPDF(serviceBill, true); // true indicates return buffer
+
+    // Send PDF directly as response
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=service-bill-${billId}.pdf`);
-    
-    // Create read stream and pipe to response
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
+    res.setHeader('Content-Disposition', `attachment; filename=service-bill-${serviceBill.billNumber || serviceBill._id}.pdf`);
+    res.send(pdfBuffer);
     
   } catch (error) {
     console.error("Error downloading PDF:", error);
-    res.status(500).json({ message: "Error downloading PDF" });
+    res.status(500).json({ 
+      success: false,
+      message: "Error generating PDF",
+      error: error.message 
+    });
   }
 };
 // Get single service bill
