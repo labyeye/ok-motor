@@ -37,6 +37,49 @@ router.post("/preview", protect, async (req, res) => {
   }
 });
 
+// PDF preview for existing advance bill (similar to service bills)
+router.get("/:id/pdf", protect, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const advanceBill = await AdvanceBill.findOne({
+      _id: id,
+      $or: [
+        { user: req.user.id }, // Records created by the current user
+        { visibility: 'staff' }, // Or records marked as visible to staff
+        // Or if staff/admin should see all records:
+        ...(req.user.role === 'staff' || req.user.role === 'admin' ? [{}] : [])
+      ]
+    });
+
+    if (!advanceBill) {
+      return res.status(404).json({
+        success: false,
+        message: "Advance bill not found",
+      });
+    }
+
+    // Generate PDF buffer for preview
+    const pdfBuffer = await generateAdvanceBillPDF(advanceBill, true);
+
+    // Set headers for PDF preview (inline display)
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="advance-bill-preview-${id}.pdf"`
+    );
+
+    // Send the PDF buffer
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("Error generating PDF preview:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate PDF preview",
+      error: error.message,
+    });
+  }
+});
+
 router.get("/pdf/:filename", protect, async (req, res) => {
   try {
     const { filename } = req.params;

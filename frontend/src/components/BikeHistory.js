@@ -1410,22 +1410,177 @@ const BikeHistory = () => {
     }
   };
 
+  // Preview PDF functions for buy and sell letters
+  const previewBuyLetterPDF = async (letter) => {
+    try {
+      const templateUrl = "/templates/buyletter.pdf";
+      const existingPdfBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      
+      const formattedData = {
+        ...letter,
+        buyerName1: letter.buyerName,
+        buyerName2: letter.buyerName,
+        sellerName1: letter.sellerName,
+        sellerFatherName1: letter.sellerFatherName,
+        buyerFatherName1: letter.buyerFatherName,
+        buyerCurrentAddress1: letter.buyerCurrentAddress,
+        todayDate1: formatDate(letter.todayDate),
+        todayTime: formatTime(letter.todayTime),
+        todayTime1: formatTime(letter.todayTime),
+        saleDate: formatDate(letter.saleDate),
+        saleTime: formatTime(letter.saleTime),
+        todayDate: formatDate(letter.todayDate),
+        saleAmount: formatRupee(letter.saleAmount),
+        vehiclekm: formatKm(letter.vehiclekm),
+        amountInWords: formatIndianAmountInWords(letter.saleAmount),
+        // Additional fields from BuyLetter model
+        dealername: letter.dealername || "",
+        dealeraddress: letter.dealeraddress || "",
+        selleraadhar: letter.selleraadhar || "",
+        sellerpan: letter.sellerpan || "",
+        selleraadharphone: letter.selleraadharphone || "",
+        selleraadharphone2: letter.selleraadharphone2 || "",
+        witnessname: letter.witnessname || "",
+        witnessphone: letter.witnessphone || "",
+        returnpersonname: letter.returnpersonname || "",
+        note: letter.note || "",
+      };
+
+      // Fill all form fields
+      for (const [fieldName, position] of Object.entries(buyLetterFieldPositions)) {
+        if (formattedData[fieldName]) {
+          pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        }
+      }
+
+      // Add amount in words after sale amount
+      const saleAmountText = formattedData.saleAmount || "";
+      const saleAmountWidth = saleAmountText.length * (buyLetterFieldPositions.saleAmount.size / 2);
+      const amountInWordsX = buyLetterFieldPositions.saleAmount.x + saleAmountWidth + 1.4 * (buyLetterFieldPositions.saleAmount.size / 2);
+
+      pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
+        x: amountInWordsX,
+        y: buyLetterFieldPositions.saleAmount.y,
+        size: buyLetterFieldPositions.saleAmount.size,
+        color: rgb(0, 0, 0),
+      });
+
+      // Add invoice page for buy letters
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      
+      // Show in modal instead of downloading
+      setPdfUrl(url);
+      setShowPdfModal(true);
+    } catch (error) {
+      console.error("Error generating buy letter PDF preview:", error);
+      alert("Failed to generate buy letter PDF preview");
+    }
+  };
+
+  const previewSellLetterPDF = async (letter) => {
+    try {
+      const templateUrl = "/templates/sellletter.pdf";
+      const existingPdfBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      
+      const formattedData = {
+        ...letter,
+        buyerName1: letter.buyerName,
+        buyerName2: letter.buyerName,
+        saleDate: formatDate(letter.saleDate),
+        saleTime: formatTime12Hour(letter.saleTime),
+        vehiclekm: formatKm(letter.vehiclekm),
+        todayDate: formatDate(letter.todayDate || new Date()),
+        todayTime: formatTime12Hour(letter.todayTime || "12:00"),
+        previousDate: formatDate(letter.previousDate || letter.todayDate || new Date()),
+        previousTime: formatTime12Hour(letter.previousTime || letter.todayTime || "12:00"),
+        amountInWords: formatIndianAmountInWords(letter.saleAmount),
+        saleAmount: formatRupee(letter.saleAmount),
+        // Additional fields from SellLetter model
+        buyerPhone: letter.buyerPhone || "",
+        buyerPhone2: letter.buyerPhone2 || "",
+        buyerAadhar: letter.buyerAadhar || "",
+        witnessName: letter.witnessName || "",
+        witnessPhone: letter.witnessPhone || "",
+        note: letter.note || "",
+      };
+
+      // Fill all form fields
+      for (const [fieldName, position] of Object.entries(sellLetterFieldPositions)) {
+        if (formattedData[fieldName]) {
+          pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        }
+      }
+
+      // Add amount in words after sale amount
+      if (formattedData.saleAmount && formattedData.amountInWords) {
+        const page = pdfDoc.getPages()[0];
+        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+        const saleText = `${formattedData.saleAmount}`;
+        const xBase = sellLetterFieldPositions.saleAmount.x;
+        const yBase = sellLetterFieldPositions.saleAmount.y;
+
+        // Draw Amount in Words right next to it
+        const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
+        page.drawText(formattedData.amountInWords, {
+          x: xBase + saleTextWidth + 8, // 8px padding
+          y: yBase,
+          size: 10,
+          color: rgb(0, 0, 0),
+          font,
+        });
+      }
+
+      // Add invoice page for sell letters
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoiceForSell(invoicePage, pdfDoc, letter);
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      
+      // Show in modal instead of downloading
+      setPdfUrl(url);
+      setShowPdfModal(true);
+    } catch (error) {
+      console.error("Error generating sell letter PDF preview:", error);
+      alert("Failed to generate sell letter PDF preview");
+    }
+  };
+
   const fetchPdf = async (id, type) => {
     try {
       if (type === "buy") {
-        // For buy letters, find the letter data and generate PDF
+        // For buy letters, find the letter data and generate PDF preview
         const letter = bikeHistory.find(item => item._id === id && item.type === "buy");
         if (letter) {
-          await downloadBuyLetterPDF(letter);
+          await previewBuyLetterPDF(letter);
         } else {
           alert("Buy letter data not found");
         }
         return;
       } else if (type === "sell") {
-        // For sell letters, find the letter data and generate PDF
+        // For sell letters, find the letter data and generate PDF preview
         const letter = bikeHistory.find(item => item._id === id && item.type === "sell");
         if (letter) {
-          await downloadSellLetterPDF(letter);
+          await previewSellLetterPDF(letter);
         } else {
           alert("Sell letter data not found");
         }
@@ -1440,7 +1595,7 @@ const BikeHistory = () => {
         setPdfUrl(pdfUrl);
         setShowPdfModal(true);
       } else if (type === "advance") {
-        const endpoint = `https://ok-motor.onrender.com/api/advance-bills/${id}/download`;
+        const endpoint = `https://ok-motor.onrender.com/api/advance-bills/${id}/pdf`;
         const response = await httpClient.get(endpoint, {
           responseType: "blob",
         });
