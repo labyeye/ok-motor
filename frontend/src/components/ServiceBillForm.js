@@ -517,7 +517,7 @@ const ServiceBillForm = () => {
         return;
       }
 
-      // Format dates properly before sending
+      // Format dates properly before sending and ensure numeric fields are numbers
       const formattedBillData = {
         ...billData,
         serviceDate: new Date(billData.serviceDate).toISOString(),
@@ -527,7 +527,33 @@ const ServiceBillForm = () => {
           billData.customServiceDescription ||
           formData.customServiceDescription,
         user: user._id,
+        // Ensure all numeric fields are numbers
+        totalAmount: parseFloat(billData.totalAmount) || 0,
+        taxAmount: parseFloat(billData.taxAmount) || 0,
+        discount: parseFloat(billData.discount) || 0,
+        grandTotal: parseFloat(billData.grandTotal) || 0,
+        advancePaid: parseFloat(billData.advancePaid) || 0,
+        balanceDue: parseFloat(billData.balanceDue) || 0,
+        taxRate: parseFloat(billData.taxRate) || 0,
+        // Ensure service items have proper numeric values
+        serviceItems: billData.serviceItems.map(item => ({
+          ...item,
+          quantity: parseFloat(item.quantity) || 0,
+          rate: parseFloat(item.rate) || 0
+        }))
       };
+
+      // Log the formatted data for debugging
+      console.log("Formatted bill data for API:", {
+        serviceItemsCount: formattedBillData.serviceItems.length,
+        sampleItem: formattedBillData.serviceItems[0],
+        numericFields: {
+          totalAmount: formattedBillData.totalAmount,
+          taxAmount: formattedBillData.taxAmount,
+          discount: formattedBillData.discount,
+          grandTotal: formattedBillData.grandTotal
+        }
+      });
 
       if (forPreview) {
         // For preview, generate PDF without saving to database

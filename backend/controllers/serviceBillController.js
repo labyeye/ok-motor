@@ -203,7 +203,13 @@ exports.previewServiceBillPDF = async (req, res) => {
     console.log("Generating PDF with data:", {
       customerName: tempServiceBill.customerName,
       serviceItemsCount: tempServiceBill.serviceItems?.length,
-      totalAmount: tempServiceBill.totalAmount
+      totalAmount: tempServiceBill.totalAmount,
+      serviceItemsSample: tempServiceBill.serviceItems?.slice(0, 2).map(item => ({
+        description: item.description,
+        quantity: item.quantity,
+        rate: item.rate,
+        rateType: typeof item.rate
+      }))
     });
 
     // Generate PDF directly without saving to database

@@ -52,6 +52,34 @@ const formatTime12Hour = (timeString) => {
 
 exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
   try {
+    // Validate input parameters
+    if (!serviceBill || typeof serviceBill !== 'object') {
+      throw new Error('Invalid serviceBill parameter: must be an object');
+    }
+    
+    if (!serviceBill.serviceItems || !Array.isArray(serviceBill.serviceItems)) {
+      throw new Error('Invalid serviceBill: serviceItems must be an array');
+    }
+    
+    // Ensure all numeric fields are numbers
+    const validatedServiceBill = {
+      ...serviceBill,
+      totalAmount: parseFloat(serviceBill.totalAmount) || 0,
+      taxAmount: parseFloat(serviceBill.taxAmount) || 0,
+      discount: parseFloat(serviceBill.discount) || 0,
+      grandTotal: parseFloat(serviceBill.grandTotal) || 0,
+      advancePaid: parseFloat(serviceBill.advancePaid) || 0,
+      balanceDue: parseFloat(serviceBill.balanceDue) || 0,
+      taxRate: parseFloat(serviceBill.taxRate) || 0,
+      serviceItems: serviceBill.serviceItems.map(item => ({
+        ...item,
+        quantity: parseFloat(item.quantity) || 0,
+        rate: parseFloat(item.rate) || 0
+      }))
+    };
+    
+    // Use validated data
+    serviceBill = validatedServiceBill;
     const pdfDoc = await PDFDocument.create();
     const pages = []; // Array to keep track of all pages
     let currentPage = pdfDoc.addPage([595, 842]); // A4 size

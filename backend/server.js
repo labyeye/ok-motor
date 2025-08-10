@@ -100,6 +100,21 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/service-bills", serviceBillRoutes);
 app.use("/api/advance-bills", advanceBillRoutes);
 
+// Public root route
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "OK Motor Backend API",
+    status: "Running",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    endpoints: {
+      health: "/health",
+      test: "/test",
+      api: "/api"
+    }
+  });
+});
+
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.json({ 

@@ -2,6 +2,11 @@ const CACHE_NAME = "ok-motor-v1";
 const STATIC_CACHE = "ok-motor-static-v1";
 const API_CACHE = "ok-motor-api-v1";
 
+// IMPORTANT: This service worker has been updated to prevent 503 errors
+// from interfering with your Render backend API calls.
+// Critical API endpoints (service-bills, buy-letters, etc.) now bypass
+// service worker caching to ensure direct communication with your backend.
+
 // Detect environment
 const isProduction =
   self.location.hostname !== "localhost" &&
@@ -120,6 +125,26 @@ async function handleApiRequest(request) {
     return fetch(request);
   }
 
+  // For critical API endpoints, always try network first and don't interfere
+  if (url.pathname.includes("/api/service-bills") || 
+      url.pathname.includes("/api/advance-bills") ||
+      url.pathname.includes("/api/buy-letter") ||
+      url.pathname.includes("/api/sell-letters")) {
+    console.log("Critical API endpoint, trying network directly");
+    try {
+      const response = await fetch(request);
+      if (response.ok) {
+        // Cache successful responses for offline use
+        const responseClone = response.clone();
+        await cache.put(request, responseClone);
+      }
+      return response;
+    } catch (error) {
+      console.log("Critical API endpoint failed, letting error propagate");
+      throw error; // Let the actual error propagate to the app
+    }
+  }
+
   try {
     // Try network first for fresh data
     const networkResponse = await fetch(request);
@@ -195,15 +220,29 @@ async function handleApiRequest(request) {
       });
     }
 
-    // No cache available, return offline response
+    // No cache available, let the request fail naturally instead of returning 503
+    // This prevents the service worker from interfering with actual API errors
+    console.log("No cached data available, letting request fail naturally");
+    
+    // For critical API endpoints, don't interfere - let them fail naturally
+    if (url.pathname.includes("/api/service-bills") || 
+        url.pathname.includes("/api/advance-bills") ||
+        url.pathname.includes("/api/buy-letter") ||
+        url.pathname.includes("/api/sell-letters")) {
+      console.log("Critical API endpoint, letting request fail naturally");
+      throw new Error("No cached data available for critical endpoint");
+    }
+    
+    // For non-critical endpoints, return a more helpful offline response
     return new Response(
       JSON.stringify({
         error: "Offline",
         message: "No network connection and no cached data available",
+        cached: false
       }),
       {
-        status: 503,
-        statusText: "Service Unavailable",
+        status: 200, // Use 200 instead of 503 to avoid confusion
+        statusText: "OK",
         headers: { "Content-Type": "application/json" },
       }
     );
