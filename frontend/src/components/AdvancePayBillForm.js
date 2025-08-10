@@ -68,6 +68,7 @@ const AdvancePayBillForm = () => {
     discount: "0",
     advancePaid: "",
     paymentMethod: "cash",
+    note: "",
     grandTotal: "0",
     balanceDue: "0",
   });
@@ -992,6 +993,20 @@ const AdvancePayBillForm = () => {
                     <option value="upi">UPI</option>
                     <option value="bank transfer">Bank Transfer</option>
                   </select>
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <IndianRupee style={styles.formIcon} />
+                    Note || टिप्पणी
+                  </label>
+                  <textarea
+                    name="note"
+                    value={formData.note}
+                    onChange={handleChange}
+                    style={styles.formTextarea}
+                    placeholder="Add any notes or remarks"
+                    maxLength={500}
+                  />
                 </div>
               </div>
             </div>

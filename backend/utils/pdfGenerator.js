@@ -117,21 +117,34 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     // Load logo
     const logoPath = path.join(
       __dirname,
-      "../../frontend/src/images/okmotorback.png"
+      "../frontend/src/images/okmotorback.png"
     );
-    const logoBytes = fs.readFileSync(logoPath);
-    const logoImage = await pdfDoc.embedPng(logoBytes);
+    console.log("Logo path:", logoPath);
+    console.log("Logo path exists:", fs.existsSync(logoPath));
+    
+    let logoImage;
+    try {
+      const logoBytes = fs.readFileSync(logoPath);
+      logoImage = await pdfDoc.embedPng(logoBytes);
+      console.log("Logo loaded successfully");
+    } catch (logoError) {
+      console.error("Error loading logo:", logoError);
+      // Continue without logo if it fails to load
+      logoImage = null;
+    }
 
     // Function to add watermark to a page
     const addWatermark = (page) => {
-      page.drawImage(logoImage, {
-        x: 280,
-        y: 200,
-        width: 400,
-        height: 360,
-        opacity: 0.3,
-        rotate: degrees(45),
-      });
+      if (logoImage) {
+        page.drawImage(logoImage, {
+          x: 280,
+          y: 200,
+          width: 400,
+          height: 360,
+          opacity: 0.3,
+          rotate: degrees(45),
+        });
+      }
     };
 
     // Function to add page number to a page
@@ -157,12 +170,14 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.047, 0.098, 0.196),
     });
 
-    currentPage.drawImage(logoImage, {
-      x: 50,
-      y: 748,
-      width: 140,
-      height: 110,
-    });
+    if (logoImage) {
+      currentPage.drawImage(logoImage, {
+        x: 50,
+        y: 748,
+        width: 140,
+        height: 110,
+      });
+    }
 
     currentPage.drawText("UDAYAM-BR-26-0028550", {
       x: 400,
@@ -928,8 +943,10 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     const pdfBytes = await pdfDoc.save();
-
+    console.log("PDF saved, bytes length:", pdfBytes.length);
+    
     if (returnBuffer) {
+      console.log("Returning buffer for download/preview");
       return Buffer.from(pdfBytes);
     } else {
       const uploadDir = path.join(__dirname, "../uploads/service-bills");

@@ -433,14 +433,67 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       color: rgb(0.9, 0.9, 0.9),
       opacity:0.6,
     });
-    const termsY = 250; // Position above the footer
-    page.drawText("TERMS AND CONDITIONS", {
-      x: 50,
-      y: termsY,
-      size: 15,
-      color: rgb(0.047, 0.098, 0.196),
-      font: fontBold,
-    });
+
+    // Note Section (if note exists)
+    if (advanceBill.note && advanceBill.note.trim()) {
+      const noteY = 250;
+      page.drawText("NOTE", {
+        x: 50,
+        y: noteY,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold,
+      });
+
+      // Split note into lines if it's too long
+      const noteText = advanceBill.note.trim();
+      const maxLineLength = 60;
+      const noteLines = [];
+      
+      for (let i = 0; i < noteText.length; i += maxLineLength) {
+        noteLines.push(noteText.substring(i, i + maxLineLength));
+      }
+
+      noteLines.forEach((line, index) => {
+        page.drawText(line, {
+          x: 60,
+          y: noteY - 20 - index * 12,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font,
+        });
+      });
+
+      // Adjust terms position based on note length
+      const termsY = noteY - 20 - (noteLines.length * 12) - 20;
+      
+      page.drawRectangle({
+        x: 0,
+        y: termsY + 20,
+        width: 595,
+        height: 20,
+        color: rgb(0.9, 0.9, 0.9),
+        opacity:0.6,
+      });
+      
+      page.drawText("TERMS AND CONDITIONS", {
+        x: 50,
+        y: termsY,
+        size: 15,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold,
+      });
+    } else {
+      // If no note, keep original terms position
+      const termsY = 250;
+      page.drawText("TERMS AND CONDITIONS", {
+        x: 50,
+        y: termsY,
+        size: 15,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold,
+      });
+    }
 
     const termsAndConditions = [
       "1. If advance bill generated then no refund will be given.",

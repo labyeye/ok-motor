@@ -118,6 +118,11 @@ const advanceBillSchema = new mongoose.Schema({
     enum: ['cash', 'card', 'upi', 'bank transfer'],
     lowercase: true
   },
+  note: {
+    type: String,
+    trim: true,
+    maxlength: 500
+  },
   pdfUrl: { type: String },
 
   // Bill Information
