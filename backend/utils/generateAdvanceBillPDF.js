@@ -471,7 +471,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       
       page.drawRectangle({
         x: 0,
-        y: termsY + 20,
+        y: termsY - 5,
         width: 595,
         height: 20,
         color: rgb(0.9, 0.9, 0.9),
@@ -513,6 +513,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       "5. Original invoice must be presented for vehicle collection.",
       "6. Warranty applies only to parts replaced by us and for the specified period.",
       "7. This is an advance payment invoice only, not the final bill.",
+      "8. Paper Work (Insaurance, Pollution etc.) will be charged separately."
     ];
 
     termsAndConditions.forEach((term, index) => {

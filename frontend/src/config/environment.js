@@ -14,7 +14,7 @@ const getApiUrl = () => {
   
   // For development or when running locally, use local backend
   if (isLocalhost) {
-    return "http://localhost:10000";
+    return "https://ok-motor.onrender.com";
   }
   
   // For production, use the deployed backend

@@ -14,7 +14,7 @@ const getMonthlyData = async (model, matchCriteria = {}) => {
   if (model.modelName === "BuyLetter" || model.modelName === "SellLetter") {
     amountField = "$saleAmount";
   } else if (model.modelName === "ServiceBill") {
-    amountField = "$grandTotal";
+    amountField = "$grandTotal"; // Fixed: using grandTotal for service bills
   } else if (model.modelName === "AdvanceBill") {
     amountField = "$advancePaid";
   } else {
@@ -159,8 +159,8 @@ exports.getOwnerDashboardStats = async (req, res) => {
   try {
     const ownerId = req.user.id;
 
-    // Get counts and amounts for buy letters (purchases)
-    const [buyStats, sellStats, serviceStats, monthlyBuyData, monthlySellData] =
+    // Get counts and amounts for buy letters (purchases), sell letters, and service bills
+    const [buyStats, sellStats, serviceStats, monthlyBuyData, monthlySellData, monthlyServiceData] =
       await Promise.all([
         BuyLetter.aggregate([
           { $match: { user: mongoose.Types.ObjectId(ownerId) } },
@@ -188,12 +188,13 @@ exports.getOwnerDashboardStats = async (req, res) => {
             $group: {
               _id: null,
               count: { $sum: 1 },
-              totalAmount: { $sum: "$amount" },
+              totalAmount: { $sum: "$grandTotal" }, // Fixed: using grandTotal
             },
           },
         ]),
         getMonthlyData(BuyLetter, { user: mongoose.Types.ObjectId(ownerId) }),
         getMonthlyData(SellLetter, { user: mongoose.Types.ObjectId(ownerId) }),
+        getMonthlyData(Service, { user: mongoose.Types.ObjectId(ownerId) }),
       ]);
 
     // Get recent transactions
@@ -219,21 +220,25 @@ exports.getOwnerDashboardStats = async (req, res) => {
       ...new Set([
         ...monthlyBuyData.map((item) => item.month),
         ...monthlySellData.map((item) => item.month),
+        ...monthlyServiceData.map((item) => item.month),
       ]),
     ];
 
     months.forEach((month) => {
       const buyMonth = monthlyBuyData.find((item) => item.month === month);
       const sellMonth = monthlySellData.find((item) => item.month === month);
+      const serviceMonth = monthlyServiceData.find((item) => item.month === month);
 
       // For the profit calculation in monthly data
       monthlyData.push({
         month,
         buy: buyMonth ? buyMonth.count : 0,
         sell: sellMonth ? sellMonth.count : 0,
+        service: serviceMonth ? serviceMonth.count : 0,
         buyAmount: buyMonth ? buyMonth.totalAmount : 0,
         sellAmount: sellMonth ? sellMonth.totalAmount : 0,
-        profit: (sellMonth?.totalAmount || 0) - (buyMonth?.totalAmount || 0),
+        serviceAmount: serviceMonth ? serviceMonth.totalAmount : 0,
+        profit: (sellMonth?.totalAmount || 0) + (serviceMonth?.totalAmount || 0) - (buyMonth?.totalAmount || 0),
       });
     });
 
@@ -242,18 +247,27 @@ exports.getOwnerDashboardStats = async (req, res) => {
     const totalSellLetters = sellStats.length > 0 ? sellStats[0].count : 0;
     const totalSellValue = sellStats.length > 0 ? sellStats[0].totalAmount : 0;
     const totalServices = serviceStats.length > 0 ? serviceStats[0].count : 0;
-    const totalServiceValue =
-      serviceStats.length > 0 ? serviceStats[0].totalAmount : 0;
-    const profit = totalSellValue + totalServiceValue - totalBuyValue;
+    const totalServiceValue = serviceStats.length > 0 ? serviceStats[0].totalAmount : 0;
+    
+    // Calculate detailed revenue breakdown
+    const totalRevenue = totalSellValue + totalServiceValue;
+    const totalExpenses = totalBuyValue;
+    const profit = totalRevenue - totalExpenses;
+    const profitPercentage = totalExpenses > 0 ? (profit / totalExpenses) * 100 : 0;
 
     res.status(200).json({
       success: true,
       data: {
         totalBuyLetters,
         totalSellLetters,
+        totalServices,
         totalBuyValue,
         totalSellValue,
+        totalServiceValue,
+        totalRevenue,
+        totalExpenses,
         profit,
+        profitPercentage,
         ownerName: req.user.name,
         recentTransactions: {
           buy: recentBuy,
@@ -275,7 +289,7 @@ exports.getOwnerDashboardStats = async (req, res) => {
 
 exports.getDashboardStats = async (req, res) => {
   try {
-    const [buyStats, sellStats, serviceStats, monthlyBuyData, monthlySellData] =
+    const [buyStats, sellStats, serviceStats, monthlyBuyData, monthlySellData, monthlyServiceData] =
       await Promise.all([
         BuyLetter.aggregate([
           {
@@ -300,12 +314,13 @@ exports.getDashboardStats = async (req, res) => {
             $group: {
               _id: null,
               count: { $sum: 1 },
-              totalValue: { $sum: "$amount" },
+              totalValue: { $sum: "$grandTotal" }, // Fixed: using grandTotal
             },
           },
         ]),
         getMonthlyData(BuyLetter),
         getMonthlyData(SellLetter),
+        getMonthlyData(Service),
       ]);
 
     // Get recent transactions
@@ -323,18 +338,24 @@ exports.getDashboardStats = async (req, res) => {
       ...new Set([
         ...monthlyBuyData.map((item) => item.month),
         ...monthlySellData.map((item) => item.month),
+        ...monthlyServiceData.map((item) => item.month),
       ]),
     ];
 
     months.forEach((month) => {
       const buyMonth = monthlyBuyData.find((item) => item.month === month);
       const sellMonth = monthlySellData.find((item) => item.month === month);
+      const serviceMonth = monthlyServiceData.find((item) => item.month === month);
 
       monthlyData.push({
         month,
         buy: buyMonth ? buyMonth.count : 0,
         sell: sellMonth ? sellMonth.count : 0,
-        profit: (sellMonth?.totalAmount || 0) - (buyMonth?.totalAmount || 0),
+        service: serviceMonth ? serviceMonth.count : 0,
+        buyAmount: buyMonth ? buyMonth.totalAmount : 0,
+        sellAmount: sellMonth ? sellMonth.totalAmount : 0,
+        serviceAmount: serviceMonth ? serviceMonth.totalAmount : 0,
+        profit: (sellMonth?.totalAmount || 0) + (serviceMonth?.totalAmount || 0) - (buyMonth?.totalAmount || 0),
       });
     });
 
@@ -343,18 +364,27 @@ exports.getDashboardStats = async (req, res) => {
     const totalSellLetters = sellStats.length > 0 ? sellStats[0].count : 0;
     const totalSellValue = sellStats.length > 0 ? sellStats[0].totalValue : 0;
     const totalServices = serviceStats.length > 0 ? serviceStats[0].count : 0;
-    const totalServiceValue =
-      serviceStats.length > 0 ? serviceStats[0].totalValue : 0;
-    const profit = totalSellValue + totalServiceValue - totalBuyValue;
+    const totalServiceValue = serviceStats.length > 0 ? serviceStats[0].totalValue : 0;
+    
+    // Calculate detailed revenue breakdown
+    const totalRevenue = totalSellValue + totalServiceValue;
+    const totalExpenses = totalBuyValue;
+    const profit = totalRevenue - totalExpenses;
+    const profitPercentage = totalExpenses > 0 ? (profit / totalExpenses) * 100 : 0;
 
     res.status(200).json({
       success: true,
       data: {
         totalBuyLetters,
         totalSellLetters,
+        totalServices,
         totalBuyValue,
         totalSellValue,
+        totalServiceValue,
+        totalRevenue,
+        totalExpenses,
         profit,
+        profitPercentage,
         recentTransactions: {
           buy: recentBuy,
           sell: recentSell,

@@ -48,9 +48,14 @@ const AdminPage = () => {
   const [dashboardData, setDashboardData] = useState({
     totalBuyLetters: 0,
     totalSellLetters: 0,
+    totalServices: 0,
     totalBuyValue: 0,
     totalSellValue: 0,
+    totalServiceValue: 0,
+    totalRevenue: 0,
+    totalExpenses: 0,
     profit: 0,
+    profitPercentage: 0,
     ownerName: user?.name || "",
     recentTransactions: {
       buy: [],
@@ -151,14 +156,22 @@ const AdminPage = () => {
     labels: dashboardData.monthlyData?.map((item) => item.month) || [],
     datasets: [
       {
-        label: "Buy Amount",
+        label: "Buy Amount (Expenses)",
         data: dashboardData.monthlyData?.map((item) => item.buyAmount) || [],
-        backgroundColor: "rgba(59, 130, 246, 0.7)",
+        backgroundColor: "rgba(239, 68, 68, 0.7)",
+        borderColor: "rgba(239, 68, 68, 1)",
       },
       {
-        label: "Sell Amount",
+        label: "Sell Amount (Revenue)",
         data: dashboardData.monthlyData?.map((item) => item.sellAmount) || [],
         backgroundColor: "rgba(16, 185, 129, 0.7)",
+        borderColor: "rgba(16, 185, 129, 1)",
+      },
+      {
+        label: "Service Amount (Revenue)",
+        data: dashboardData.monthlyData?.map((item) => item.serviceAmount) || [],
+        backgroundColor: "rgba(245, 158, 11, 0.7)",
+        borderColor: "rgba(245, 158, 11, 1)",
       },
     ],
   };
@@ -181,15 +194,15 @@ const AdminPage = () => {
         data: [
           dashboardData.totalBuyLetters || 0,
           dashboardData.totalSellLetters || 0,
-          dashboardData.recentTransactions?.service?.length || 0,
+          dashboardData.totalServices || 0,
         ],
         backgroundColor: [
-          "rgba(59, 130, 246, 0.7)",
+          "rgba(239, 68, 68, 0.7)",
           "rgba(16, 185, 129, 0.7)",
           "rgba(245, 158, 11, 0.7)",
         ],
         borderColor: [
-          "rgba(37, 99, 235, 1)",
+          "rgba(239, 68, 68, 1)",
           "rgba(5, 150, 105, 1)",
           "rgba(217, 119, 6, 1)",
         ],
@@ -346,11 +359,11 @@ const AdminPage = () => {
           <div className="card blue">
             <div className="card-content">
               <div>
-                <p className="card-label">Total Buy Letters</p>
-                <p className="card-value">{dashboardData.totalBuyLetters}</p>
+                <p className="card-label">Total Services</p>
+                <p className="card-value">{dashboardData.totalServices}</p>
               </div>
               <div className="card-icon">
-                <FileText />
+                <Wrench />
               </div>
             </div>
           </div>
@@ -358,8 +371,10 @@ const AdminPage = () => {
           <div className="card green">
             <div className="card-content">
               <div>
-                <p className="card-label">Total Sell Letters</p>
-                <p className="card-value">{dashboardData.totalSellLetters}</p>
+                <p className="card-label">Total Revenue</p>
+                <p className="card-value currency positive">
+                  {formatCurrency(dashboardData.totalRevenue)}
+                </p>
               </div>
               <div className="card-icon">
                 <TrendingUp />
@@ -370,9 +385,9 @@ const AdminPage = () => {
           <div className="card purple">
             <div className="card-content">
               <div>
-                <p className="card-label">Total Purchase Value</p>
-                <p className="card-value currency">
-                  {formatCurrency(dashboardData.totalBuyValue)}
+                <p className="card-label">Total Expenses</p>
+                <p className="card-value currency negative">
+                  {formatCurrency(dashboardData.totalExpenses)}
                 </p>
               </div>
               <div className="card-icon">
@@ -384,7 +399,7 @@ const AdminPage = () => {
           <div className="card amber">
             <div className="card-content">
               <div>
-                <p className="card-label">Total Profit</p>
+                <p className="card-label">Net Profit</p>
                 <p
                   className={`card-value currency ${
                     dashboardData.profit >= 0 ? "positive" : "negative"
@@ -408,7 +423,7 @@ const AdminPage = () => {
       <h3 className="revenue-title">Business Revenue Overview</h3>
       {loading ? (
         <div className="revenue-grid">
-          {Array(3)
+          {Array(4)
             .fill()
             .map((_, index) => (
               <div key={index} className="revenue-item shimmer">
@@ -424,16 +439,31 @@ const AdminPage = () => {
       ) : (
         <div className="revenue-grid">
           <div className="revenue-item">
-            <p className="revenue-label">Total Business Purchases</p>
-            <p className="revenue-value negative">
-              {formatCurrency(dashboardData.totalBuyValue)}
+            <p className="revenue-label">Total Revenue from Service</p>
+            <p className="revenue-value positive">
+              {formatCurrency(dashboardData.totalServiceValue)}
             </p>
+            <small className="revenue-detail">
+              {dashboardData.totalServices} services completed
+            </small>
           </div>
           <div className="revenue-item">
-            <p className="revenue-label">Total Business Sales</p>
+            <p className="revenue-label">Total Revenue from Sales</p>
             <p className="revenue-value positive">
               {formatCurrency(dashboardData.totalSellValue)}
             </p>
+            <small className="revenue-detail">
+              {dashboardData.totalSellLetters} vehicles sold
+            </small>
+          </div>
+          <div className="revenue-item">
+            <p className="revenue-label">Total Expenses from Purchases</p>
+            <p className="revenue-value negative">
+              {formatCurrency(dashboardData.totalBuyValue)}
+            </p>
+            <small className="revenue-detail">
+              {dashboardData.totalBuyLetters} vehicles purchased
+            </small>
           </div>
           <div className="revenue-item">
             <p className="revenue-label">Net Profit/Loss</p>
@@ -443,16 +473,50 @@ const AdminPage = () => {
               }`}
             >
               {formatCurrency(dashboardData.profit)}
-              {dashboardData.totalBuyValue > 0 && (
-                <span className="profit-percentage">
-                  {dashboardData.profit >= 0 ? "Profit" : "Loss"}:{" "}
-                  {Math.abs(
-                    (dashboardData.profit / dashboardData.totalBuyValue) * 100
-                  ).toFixed(2)}
-                  %
-                </span>
-              )}
             </p>
+            <small className="revenue-detail">
+              {dashboardData.profit >= 0 ? "Profit" : "Loss"}: {Math.abs(dashboardData.profitPercentage).toFixed(2)}%
+            </small>
+          </div>
+        </div>
+      )}
+      
+      {/* Additional Revenue Summary */}
+      {!loading && !error && (
+        <div className="revenue-summary">
+          <div className="summary-row">
+            <div className="summary-item">
+              <span className="summary-label">Total Revenue:</span>
+              <span className="summary-value positive">
+                {formatCurrency(dashboardData.totalRevenue)}
+              </span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Total Expenses:</span>
+              <span className="summary-value negative">
+                {formatCurrency(dashboardData.totalExpenses)}
+              </span>
+            </div>
+          </div>
+          <div className="summary-breakdown">
+            <div className="breakdown-item">
+              <span className="breakdown-label">Service Revenue:</span>
+              <span className="breakdown-value positive">
+                {formatCurrency(dashboardData.totalServiceValue)}
+              </span>
+            </div>
+            <div className="breakdown-item">
+              <span className="breakdown-label">Sales Revenue:</span>
+              <span className="breakdown-value positive">
+                {formatCurrency(dashboardData.totalSellValue)}
+              </span>
+            </div>
+            <div className="breakdown-item">
+              <span className="breakdown-label">Purchase Expenses:</span>
+              <span className="breakdown-value negative">
+                {formatCurrency(dashboardData.totalBuyValue)}
+              </span>
+            </div>
           </div>
         </div>
       )}
@@ -463,7 +527,7 @@ const AdminPage = () => {
     if (loading) {
       return (
         <div className="charts-container">
-          {Array(3)
+          {Array(4)
             .fill()
             .map((_, index) => (
               <div key={index} className="chart-card shimmer">
@@ -515,6 +579,36 @@ const AdminPage = () => {
           <h3 className="chart-title">Transaction Types</h3>
           <div className="chart-wrapper">
             <Pie data={transactionTypeData} options={pieOptions} />
+          </div>
+        </div>
+
+        <div className="chart-card">
+          <h3 className="chart-title">Revenue Breakdown</h3>
+          <div className="chart-wrapper">
+            <Pie 
+              data={{
+                labels: ["Service Revenue", "Sales Revenue", "Purchase Expenses"],
+                datasets: [{
+                  data: [
+                    dashboardData.totalServiceValue || 0,
+                    dashboardData.totalSellValue || 0,
+                    dashboardData.totalBuyValue || 0
+                  ],
+                  backgroundColor: [
+                    "rgba(245, 158, 11, 0.7)",
+                    "rgba(16, 185, 129, 0.7)",
+                    "rgba(239, 68, 68, 0.7)"
+                  ],
+                  borderColor: [
+                    "rgba(217, 119, 6, 1)",
+                    "rgba(5, 150, 105, 1)",
+                    "rgba(239, 68, 68, 1)"
+                  ],
+                  borderWidth: 1
+                }]
+              }} 
+              options={pieOptions} 
+            />
           </div>
         </div>
       </div>
@@ -951,6 +1045,14 @@ const AdminPage = () => {
           font-size: 1.5rem;
         }
 
+        .card-value.currency.positive {
+          color: #10b981;
+        }
+
+        .card-value.currency.negative {
+          color: #ef4444;
+        }
+
         .card-value.positive {
           color: #10b981;
         }
@@ -1036,6 +1138,88 @@ const AdminPage = () => {
         }
 
         .revenue-value.negative {
+          color: #ef4444;
+        }
+
+        .revenue-detail {
+          font-size: 0.75rem;
+          color: #94a3b8;
+          margin-top: 0.25rem;
+          display: block;
+        }
+
+        .revenue-summary {
+          margin-top: 1.5rem;
+          padding-top: 1.5rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .summary-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 1rem;
+          gap: 1rem;
+        }
+
+        .summary-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          flex: 1;
+        }
+
+        .summary-label {
+          font-size: 0.875rem;
+          color: #e2e8f0;
+          margin-bottom: 0.5rem;
+        }
+
+        .summary-value {
+          font-size: 1.125rem;
+          font-weight: 600;
+        }
+
+        .summary-value.positive {
+          color: #10b981;
+        }
+
+        .summary-value.negative {
+          color: #ef4444;
+        }
+
+        .summary-breakdown {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 1rem;
+          margin-top: 1rem;
+        }
+
+        .breakdown-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 0.5rem;
+          padding: 0.75rem;
+        }
+
+        .breakdown-label {
+          font-size: 0.75rem;
+          color: #94a3b8;
+          margin-bottom: 0.25rem;
+          text-align: center;
+        }
+
+        .breakdown-value {
+          font-size: 1rem;
+          font-weight: 600;
+        }
+
+        .breakdown-value.positive {
+          color: #10b981;
+        }
+
+        .breakdown-value.negative {
           color: #ef4444;
         }
 
