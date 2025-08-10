@@ -24,7 +24,8 @@ router.route('/my-letters').get(getMySellLetters); // Changed from /my-letters
 router.route('/')
   .post(createSellLetter)
   .get(getSellLetters);
-  router.route('/vehicle-details').get(getVehicleDetails)
+
+router.route('/vehicle-details').get(getVehicleDetails)
 router.route('/:id')
   .get(getSellLetterById)
   .put(admin,updateSellLetter)
