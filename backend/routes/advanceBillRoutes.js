@@ -12,6 +12,11 @@ const fs = require("fs");
 // Preview route (doesn't save to database)
 router.post("/preview", protect, async (req, res) => {
   try {
+    console.log("Generating advance bill preview PDF...");
+    console.log("User making request:", req.user.email);
+    console.log("Request body keys:", Object.keys(req.body));
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    
     const advanceBillData = req.body;
     
     // Create a temporary advance bill object (not saved to database)
@@ -23,16 +28,26 @@ router.post("/preview", protect, async (req, res) => {
     // Generate PDF directly without saving to database
     const pdfBuffer = await generateAdvanceBillPDF(tempAdvanceBill, true); // true indicates return buffer
 
+    console.log("PDF generated successfully, buffer size:", pdfBuffer.length);
+    console.log("PDF buffer type:", typeof pdfBuffer);
+    console.log("PDF buffer constructor:", pdfBuffer.constructor.name);
+
     // Send PDF directly as response
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'inline; filename=advance-bill-preview.pdf');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    console.log("Advance bill preview PDF generated successfully");
     res.send(pdfBuffer);
     
   } catch (error) {
     console.error("Error generating preview PDF:", error);
+    console.error("Error stack:", error.stack);
     res.status(500).json({ 
       message: "Error generating preview PDF",
-      error: error.message 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });

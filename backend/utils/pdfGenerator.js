@@ -904,7 +904,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const pdfBytes = await pdfDoc.save();
 
     if (returnBuffer) {
-      return pdfBytes;
+      return Buffer.from(pdfBytes);
     } else {
       const uploadDir = path.join(__dirname, "../uploads/service-bills");
       if (!fs.existsSync(uploadDir)) {

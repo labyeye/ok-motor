@@ -164,6 +164,7 @@ exports.previewServiceBillPDF = async (req, res) => {
   console.log("Generating preview PDF...");
   console.log("User making request:", req.user.email);
   console.log("Request body keys:", Object.keys(req.body));
+  console.log("Request body:", JSON.stringify(req.body, null, 2));
   
   try {
     const serviceBillData = req.body;
@@ -216,6 +217,8 @@ exports.previewServiceBillPDF = async (req, res) => {
     const pdfBuffer = await generateServiceBillPDF(tempServiceBill, true); // true indicates return buffer
 
     console.log("PDF generated successfully, buffer size:", pdfBuffer.length);
+    console.log("PDF buffer type:", typeof pdfBuffer);
+    console.log("PDF buffer constructor:", pdfBuffer.constructor.name);
 
     // Send PDF directly as response
     res.setHeader('Content-Type', 'application/pdf');

@@ -117,10 +117,13 @@ async function handleApiRequest(request) {
   const cache = await caches.open(API_CACHE);
   const url = new URL(request.url);
 
+  console.log(`Service Worker handling ${request.method} request to: ${url.pathname}`);
+
   // Skip caching for download/PDF endpoints
   if (url.pathname.includes('/download') || 
       url.pathname.includes('/pdf') ||
       request.headers.get('Accept')?.includes('application/pdf')) {
+    console.log('PDF endpoint detected, passing through to network');
     // Pass through directly to network without caching
     return fetch(request);
   }
@@ -130,17 +133,23 @@ async function handleApiRequest(request) {
       url.pathname.includes("/api/advance-bills") ||
       url.pathname.includes("/api/buy-letter") ||
       url.pathname.includes("/api/sell-letters")) {
-    console.log("Critical API endpoint, trying network directly");
+    console.log("Critical API endpoint detected:", url.pathname);
+    console.log("Request method:", request.method);
     try {
+      console.log("Making network request to critical endpoint...");
       const response = await fetch(request);
-      if (response.ok) {
+      console.log("Critical endpoint response status:", response.status);
+      // Only cache GET requests, not POST/PUT/DELETE
+      if (response.ok && request.method === 'GET') {
+        console.log("Caching successful GET response for critical endpoint");
         // Cache successful responses for offline use
         const responseClone = response.clone();
         await cache.put(request, responseClone);
       }
       return response;
     } catch (error) {
-      console.log("Critical API endpoint failed, letting error propagate");
+      console.log("Critical API endpoint failed:", error.message);
+      console.log("Letting error propagate to app");
       throw error; // Let the actual error propagate to the app
     }
   }
@@ -150,27 +159,30 @@ async function handleApiRequest(request) {
     const networkResponse = await fetch(request);
 
     if (networkResponse.ok) {
-      // Clone and cache the response
-      const responseClone = networkResponse.clone();
+      // Only cache GET requests, not POST/PUT/DELETE
+      if (request.method === 'GET') {
+        // Clone and cache the response
+        const responseClone = networkResponse.clone();
 
-      // For auth/me endpoint, also store in localStorage for offline access
-      if (url.pathname.includes("/api/auth/me")) {
-        try {
-          const userData = await networkResponse.clone().json();
-          self.clients.matchAll().then((clients) => {
-            clients.forEach((client) => {
-              client.postMessage({
-                type: "CACHE_AUTH_DATA",
-                userData: userData,
+        // For auth/me endpoint, also store in localStorage for offline access
+        if (url.pathname.includes("/api/auth/me")) {
+          try {
+            const userData = await networkResponse.clone().json();
+            self.clients.matchAll().then((clients) => {
+              clients.forEach((client) => {
+                client.postMessage({
+                  type: "CACHE_AUTH_DATA",
+                  userData: userData,
+                });
               });
             });
-          });
-        } catch (error) {
-          console.log("Failed to cache auth data:", error);
+          } catch (error) {
+            console.log("Failed to cache auth data:", error);
+          }
         }
-      }
 
-      await cache.put(request, responseClone);
+        await cache.put(request, responseClone);
+      }
 
       // Add timestamp for cache validation
       const response = networkResponse.clone();
