@@ -175,9 +175,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       console.log("Drawing header logo at x:50, y:748, size:180x150");
       currentPage.drawImage(logoImage, {
         x: 50,
-        y: 748,
-        width: 180,
-        height: 150,
+        y: 740,
+        width: 170,
+        height: 140,
       });
       console.log("Header logo drawn successfully");
     } else {
