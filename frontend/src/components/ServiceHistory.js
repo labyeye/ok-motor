@@ -19,6 +19,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
+import config from "../config/environment";
 
 const ServiceHistory = () => {
   const { user,logout } = useContext(AuthContext);
