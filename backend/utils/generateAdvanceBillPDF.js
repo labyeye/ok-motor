@@ -435,6 +435,8 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     });
 
     // Note Section (if note exists)
+    let termsY = 250; // Default position
+    
     if (advanceBill.note && advanceBill.note.trim()) {
       const noteY = 250;
       page.drawText("NOTE", {
@@ -465,7 +467,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       });
 
       // Adjust terms position based on note length
-      const termsY = noteY - 20 - (noteLines.length * 12) - 20;
+      termsY = noteY - 20 - (noteLines.length * 12) - 20;
       
       page.drawRectangle({
         x: 0,
@@ -485,7 +487,15 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       });
     } else {
       // If no note, keep original terms position
-      const termsY = 250;
+      page.drawRectangle({
+        x: 0,
+        y: termsY + 20,
+        width: 595,
+        height: 20,
+        color: rgb(0.9, 0.9, 0.9),
+        opacity:0.6,
+      });
+      
       page.drawText("TERMS AND CONDITIONS", {
         x: 50,
         y: termsY,
