@@ -1,8 +1,6 @@
 const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
-
-// Import the logo image
 const logoPath = path.join(__dirname, "../../frontend/src/images/okmotorback.png");
 
 
@@ -229,7 +227,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
 
     const customerAddress = advanceBill.customerAddress || "N/A";
     const customerAddressLines = [];
-    for (let i = 0; i < customerAddress.length; i += 30) {
+    for (let i = 0; i < customerAddress.length; i += 45) {
       customerAddressLines.push(customerAddress.substring(i, i + 30));
     }
 
@@ -325,7 +323,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
 
     // Service Dates
     const serviceY = vehicleY - 140;
-    page.drawText("SERVICE DATES", {
+    page.drawText("ADVANCE PAYMENT DATES", {
       x: 50,
       y: serviceY,
       size: 12,
@@ -333,41 +331,46 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    const serviceDetails = [
-      {
-        label: "Service Date:",
-        value: new Date(
-          advanceBill.serviceDate || Date.now()
-        ).toLocaleDateString("en-IN"),
-      },
-      {
-        label: "Delivery Date:",
-        value: new Date(
-          advanceBill.deliveryDate || Date.now() + 86400000
-        ).toLocaleDateString("en-IN"),
-      },
-    ];
+    // Service Date
+    page.drawText("Advance Payment Date:", {
+      x: 60,
+      y: serviceY - 25,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: fontBold,
+    });
 
-    serviceDetails.forEach((detail, index) => {
-      page.drawText(detail.label, {
-        x: 60,
-        y: serviceY - 25 - index * 15,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: fontBold,
-      });
+    page.drawText(new Date(
+      advanceBill.serviceDate || Date.now()
+    ).toLocaleDateString("en-IN"), {
+      x: 180,
+      y: serviceY - 25,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
 
-      page.drawText(detail.value, {
-        x: 150,
-        y: serviceY - 25 - index * 15,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      });
+    // Delivery Date on the same row
+    page.drawText("Delivery Date:", {
+      x: 350,
+      y: serviceY - 25,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: fontBold,
+    });
+
+    page.drawText(new Date(
+      advanceBill.deliveryDate || Date.now() + 86400000
+    ).toLocaleDateString("en-IN"), {
+      x: 420,
+      y: serviceY - 25,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
     });
     page.drawRectangle({
       x: 0,
-      y: 395,
+      y: 415,
       width: 595,
       height: 20,
       color: rgb(0.9, 0.9, 0.9),
@@ -375,7 +378,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     });
 
     // Payment Information
-    const paymentY = serviceY - 70;
+    const paymentY = serviceY - 50;
     page.drawText("PAYMENT INFORMATION", {
       x: 50,
       y: paymentY,
@@ -410,7 +413,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     paymentDetails.forEach((detail, index) => {
       page.drawText(detail.label, {
         x: 60,
-        y: paymentY - 25 - index * 15,
+        y: paymentY - 20 - index * 15,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: fontBold,
@@ -426,7 +429,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     });
     page.drawRectangle({
       x: 0,
-      y: 245,
+      y: 285,
       width: 595,
       height: 20,
       color: rgb(0.9, 0.9, 0.9),
@@ -437,7 +440,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     let termsY = 250; // Default position
     
     if (advanceBill.note && advanceBill.note.trim()) {
-      const noteY = 250;
+      const noteY = 290;
       page.drawText("NOTE", {
         x: 50,
         y: noteY,
@@ -448,7 +451,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
 
       // Split note into lines if it's too long
       const noteText = advanceBill.note.trim();
-      const maxLineLength = 60;
+      const maxLineLength = 160;
       const noteLines = [];
       
       for (let i = 0; i < noteText.length; i += maxLineLength) {
@@ -519,14 +522,14 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       page.drawText(term, {
         x: 60,
         y: termsY - 20 - index * 12,
-        size: 12,
+        size: 9,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
     });
 
     // Footer with Signatures
-    const footerY = 80;
+    const footerY = 60;
     page.drawText("Customer Signature", {
       x: 100,
       y: footerY,
