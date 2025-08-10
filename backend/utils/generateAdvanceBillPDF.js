@@ -94,6 +94,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       return `Rs.${formatRupee(val)}`;
     };
 
+    // Optimize logo loading - only load once and reuse
     let logoImage = null;
     try {
       if (fs.existsSync(logoPath)) {
@@ -107,11 +108,16 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       );
     }
 
+    // Pre-calculate common values for better performance
+    const pageWidth = 595;
+    const pageHeight = 842;
+    const margin = 50;
+
     // Header Section
     page.drawRectangle({
       x: 0,
       y: 780,
-      width: 595,
+      width: pageWidth,
       height: 80,
       color: rgb(0.047, 0.098, 0.196),
     });
@@ -148,7 +154,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     page.drawRectangle({
       x: 0,
       y: 750,
-      width: 595,
+      width: pageWidth,
       height: 30,
       color: rgb(0.9, 0.9, 0.9),
     });
@@ -176,11 +182,14 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       font: font,
     });
 
+    // Get current date in IST (Indian Standard Time)
     const currentDate = new Date();
+    const istDate = new Date(currentDate.getTime() + (5.5 * 60 * 60 * 1000)); // Add 5.5 hours for IST
+    
     page.drawText(
-      `Date: ${currentDate.toLocaleDateString(
+      `Date: ${istDate.toLocaleDateString(
         "en-IN"
-      )} Time: ${formatTime12Hour(currentDate)}`,
+      )} Time: ${formatTime12Hour(istDate)}`,
       {
         x: 400,
         y: 720,

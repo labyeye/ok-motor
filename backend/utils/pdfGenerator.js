@@ -115,18 +115,16 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
 
     // Load logo
-    const logoPath = path.join(
-      __dirname,
-      "../frontend/src/images/okmotorback.png"
-    );
+    const logoPath = path.join(__dirname, "../../frontend/src/images/okmotorback.png");
     console.log("Logo path:", logoPath);
     console.log("Logo path exists:", fs.existsSync(logoPath));
     
     let logoImage;
     try {
       const logoBytes = fs.readFileSync(logoPath);
+      console.log("Logo bytes loaded, size:", logoBytes.length);
       logoImage = await pdfDoc.embedPng(logoBytes);
-      console.log("Logo loaded successfully");
+      console.log("Logo embedded successfully, logoImage object:", !!logoImage);
     } catch (logoError) {
       console.error("Error loading logo:", logoError);
       // Continue without logo if it fails to load
@@ -136,14 +134,17 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     // Function to add watermark to a page
     const addWatermark = (page) => {
       if (logoImage) {
+        console.log("Drawing watermark logo at x:280, y:200, size:450x400");
         page.drawImage(logoImage, {
           x: 280,
           y: 200,
-          width: 400,
-          height: 360,
-          opacity: 0.3,
+          width: 450,
+          height: 400,
+          opacity: 0.4,
           rotate: degrees(45),
         });
+      } else {
+        console.log("No logo image available for watermark");
       }
     };
 
@@ -171,12 +172,16 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     if (logoImage) {
+      console.log("Drawing header logo at x:50, y:748, size:180x150");
       currentPage.drawImage(logoImage, {
         x: 50,
         y: 748,
-        width: 140,
-        height: 110,
+        width: 180,
+        height: 150,
       });
+      console.log("Header logo drawn successfully");
+    } else {
+      console.log("No logo image available for header");
     }
 
     currentPage.drawText("UDAYAM-BR-26-0028550", {

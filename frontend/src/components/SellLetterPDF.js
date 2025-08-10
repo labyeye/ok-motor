@@ -211,6 +211,13 @@ const SellLetterForm = () => {
       <div style={modalStyles.overlay}>
         <div style={modalStyles.modal}>
           <div style={modalStyles.header}>
+            <div style={modalStyles.logoContainer}>
+              <img 
+                src={logo1} 
+                alt="OK Motor Logo" 
+                style={modalStyles.logo}
+              />
+            </div>
             <h2 style={modalStyles.title}>Generating PDF</h2>
           </div>
           <div style={{ padding: "24px", textAlign: "center" }}>
@@ -299,6 +306,14 @@ const SellLetterForm = () => {
       fontWeight: "600",
       margin: 0,
       color: "#1e293b",
+    },
+    logoContainer: {
+      marginRight: "16px",
+    },
+    logo: {
+      width: "180px",
+      height: "220px",
+      objectFit: "contain",
     },
   };
   const simulateProgress = () => {
