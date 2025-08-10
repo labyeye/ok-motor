@@ -12,12 +12,12 @@ const getApiUrl = () => {
     return process.env.REACT_APP_API_URL;
   }
   
-  // For development or when no env var is set
-  if (!isProduction || isLocalhost) {
-    return "https://ok-motor.onrender.com";
+  // For development or when running locally, use local backend
+  if (isLocalhost) {
+    return "http://localhost:10000";
   }
   
-  // Default production URL
+  // For production, use the deployed backend
   return "https://ok-motor.onrender.com";
 };
 

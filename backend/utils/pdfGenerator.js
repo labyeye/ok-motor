@@ -493,7 +493,18 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     currentY -= 20;
 
     // Draw all service items with pagination
+    // Ensure serviceItems is an array and has valid items
+    if (!Array.isArray(serviceBill.serviceItems)) {
+      console.warn('serviceItems is not an array:', serviceBill.serviceItems);
+      return;
+    }
+    
     serviceBill.serviceItems.forEach((item, index) => {
+      // Ensure item has required properties
+      if (!item || typeof item !== 'object') {
+        console.warn('Invalid service item at index', index, ':', item);
+        return;
+      }
       // Check if we need a new page
       const shouldCreateNewPage = 
         (!isFirstPage && currentPageItems >= maxItemsPerPage) || 
@@ -562,7 +573,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      currentPage.drawText(item.rate.toFixed(2), {
+      // Ensure rate is a number and handle potential string values
+      const rate = parseFloat(item.rate) || 0;
+      currentPage.drawText(rate.toFixed(2), {
         x: 350,
         y: currentY,
         size: 9,
@@ -570,7 +583,10 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      currentPage.drawText((item.quantity * item.rate).toFixed(2), {
+      // Ensure quantity is a number and calculate amount
+      const quantity = parseFloat(item.quantity) || 0;
+      const amount = quantity * rate;
+      currentPage.drawText(amount.toFixed(2), {
         x: 450,
         y: currentY,
         size: 9,
@@ -599,7 +615,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    currentPage.drawText(serviceBill.totalAmount.toFixed(2), {
+    // Ensure totalAmount is a number
+    const totalAmount = parseFloat(serviceBill.totalAmount) || 0;
+    currentPage.drawText(totalAmount.toFixed(2), {
       x: 450,
       y: currentY,
       size: 10,
@@ -615,7 +633,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         color: rgb(0.2, 0.2, 0.2),
         font: fontBold,
       });
-      currentPage.drawText(serviceBill.taxAmount.toFixed(2), {
+      // Ensure taxAmount is a number
+      const taxAmount = parseFloat(serviceBill.taxAmount) || 0;
+      currentPage.drawText(taxAmount.toFixed(2), {
         x: 450,
         y: currentY - 20,
         size: 10,
@@ -631,7 +651,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    currentPage.drawText(serviceBill.discount.toFixed(2), {
+    // Ensure discount is a number
+    const discount = parseFloat(serviceBill.discount) || 0;
+    currentPage.drawText(discount.toFixed(2), {
       x: 450,
       y: currentY - 40,
       size: 10,
@@ -646,7 +668,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    currentPage.drawText(serviceBill.grandTotal.toFixed(2), {
+    // Ensure grandTotal is a number
+    const grandTotal = parseFloat(serviceBill.grandTotal) || 0;
+    currentPage.drawText(grandTotal.toFixed(2), {
       x: 450,
       y: currentY - 60,
       size: 10,
@@ -661,7 +685,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    currentPage.drawText(serviceBill.advancePaid.toFixed(2), {
+    // Ensure advancePaid is a number
+    const advancePaid = parseFloat(serviceBill.advancePaid) || 0;
+    currentPage.drawText(advancePaid.toFixed(2), {
       x: 450,
       y: currentY - 80,
       size: 10,
@@ -676,7 +702,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    currentPage.drawText(serviceBill.balanceDue.toFixed(2), {
+    // Ensure balanceDue is a number
+    const balanceDue = parseFloat(serviceBill.balanceDue) || 0;
+    currentPage.drawText(balanceDue.toFixed(2), {
       x: 450,
       y: currentY - 100,
       size: 10,

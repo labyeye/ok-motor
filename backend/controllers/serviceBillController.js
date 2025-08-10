@@ -180,9 +180,24 @@ exports.previewServiceBillPDF = async (req, res) => {
     }
     
     // Create a temporary service bill object (not saved to database)
+    // Ensure all numeric fields are properly converted
     const tempServiceBill = {
       ...serviceBillData,
       _id: "preview", // Temporary ID for preview
+      // Convert numeric fields to ensure they're numbers
+      totalAmount: parseFloat(serviceBillData.totalAmount) || 0,
+      taxAmount: parseFloat(serviceBillData.taxAmount) || 0,
+      discount: parseFloat(serviceBillData.discount) || 0,
+      grandTotal: parseFloat(serviceBillData.grandTotal) || 0,
+      advancePaid: parseFloat(serviceBillData.advancePaid) || 0,
+      balanceDue: parseFloat(serviceBillData.balanceDue) || 0,
+      taxRate: parseFloat(serviceBillData.taxRate) || 0,
+      // Ensure service items have proper numeric values
+      serviceItems: serviceBillData.serviceItems.map(item => ({
+        ...item,
+        quantity: parseFloat(item.quantity) || 0,
+        rate: parseFloat(item.rate) || 0
+      }))
     };
 
     console.log("Generating PDF with data:", {
