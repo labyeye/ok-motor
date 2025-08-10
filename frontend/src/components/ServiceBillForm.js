@@ -557,6 +557,9 @@ const ServiceBillForm = () => {
 
       if (forPreview) {
         // For preview, generate PDF without saving to database
+        console.log("Making service bill preview request to:", `${API_BASE_URL}/service-bills/preview`);
+        console.log("Request data:", formattedBillData);
+        
         const previewResponse = await retryRequest(() =>
           httpClient.post(
             `${API_BASE_URL}/service-bills/preview`,
@@ -571,6 +574,10 @@ const ServiceBillForm = () => {
             }
           )
         );
+
+        console.log("Service bill preview response received:", previewResponse);
+        console.log("Response data type:", typeof previewResponse.data);
+        console.log("Response data length:", previewResponse.data?.length || 'N/A');
 
         const pdfBlob = new Blob([previewResponse.data], { type: "application/pdf" });
         const url = URL.createObjectURL(pdfBlob);

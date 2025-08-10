@@ -251,22 +251,35 @@ const AdvancePayBillForm = () => {
 
       if (forPreview) {
         // For preview, use a preview endpoint that doesn't save data
-        const previewResponse = await httpClient.post(
-          "https://ok-motor.onrender.com/api/advance-bills/preview",
-          requestData,
-          {
-            responseType: "blob",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        try {
+          console.log("Making preview request to:", "https://ok-motor.onrender.com/api/advance-bills/preview");
+          console.log("Request data:", requestData);
+          
+          const previewResponse = await httpClient.post(
+            "https://ok-motor.onrender.com/api/advance-bills/preview",
+            requestData,
+            {
+              responseType: "blob",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
 
-        const pdfBlob = new Blob([previewResponse.data], { type: "application/pdf" });
-        const pdfUrl = URL.createObjectURL(pdfBlob);
-        setPreviewPdf(pdfUrl);
-        setShowPreviewModal(true);
+          console.log("Preview response received:", previewResponse);
+          console.log("Response data type:", typeof previewResponse.data);
+          console.log("Response data length:", previewResponse.data?.length || 'N/A');
+
+          const pdfBlob = new Blob([previewResponse.data], { type: "application/pdf" });
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          setPreviewPdf(pdfUrl);
+          setShowPreviewModal(true);
+        } catch (previewError) {
+          console.error("Preview request failed:", previewError);
+          console.error("Preview error response:", previewError.response);
+          throw previewError;
+        }
       } else {
         // For download, save the bill first
         const saveResponse = await httpClient.post(

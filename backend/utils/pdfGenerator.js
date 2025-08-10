@@ -52,6 +52,14 @@ const formatTime12Hour = (timeString) => {
 
 exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
   try {
+    console.log("Starting PDF generation for service bill:", serviceBill._id || 'preview');
+    console.log("Service bill data keys:", Object.keys(serviceBill));
+    console.log("Service items:", serviceBill.serviceItems);
+    console.log("Payment method:", serviceBill.paymentMethod);
+    console.log("Payment status:", serviceBill.paymentStatus);
+    console.log("Vehicle type:", serviceBill.vehicleType);
+    console.log("Service type:", serviceBill.serviceType);
+    
     // Validate input parameters
     if (!serviceBill || typeof serviceBill !== 'object') {
       throw new Error('Invalid serviceBill parameter: must be an object');
@@ -80,6 +88,24 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     
     // Use validated data
     serviceBill = validatedServiceBill;
+    
+    // Ensure required string fields have default values to prevent toUpperCase() errors
+    serviceBill.paymentMethod = serviceBill.paymentMethod || 'cash';
+    serviceBill.paymentStatus = serviceBill.paymentStatus || 'pending';
+    serviceBill.vehicleType = serviceBill.vehicleType || 'bike';
+    serviceBill.serviceType = serviceBill.serviceType || 'regular';
+    serviceBill.customerName = serviceBill.customerName || 'N/A';
+    serviceBill.customerPhone = serviceBill.customerPhone || 'N/A';
+    serviceBill.customerAddress = serviceBill.customerAddress || 'N/A';
+    serviceBill.registrationNumber = serviceBill.registrationNumber || 'N/A';
+    serviceBill.vehicleBrand = serviceBill.vehicleBrand || 'N/A';
+    serviceBill.vehicleModel = serviceBill.vehicleModel || 'N/A';
+    
+    console.log("After validation - Payment method:", serviceBill.paymentMethod);
+    console.log("After validation - Payment status:", serviceBill.paymentStatus);
+    console.log("After validation - Vehicle type:", serviceBill.vehicleType);
+    console.log("After validation - Service type:", serviceBill.serviceType);
+    
     const pdfDoc = await PDFDocument.create();
     const pages = []; // Array to keep track of all pages
     let currentPage = pdfDoc.addPage([595, 842]); // A4 size
@@ -335,7 +361,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       {
         label: "Type:",
         value: serviceBill.vehicleType
-          ? serviceBill.vehicleType.toUpperCase()
+          ? (serviceBill.vehicleType || 'BIKE').toUpperCase()
           : "N/A",
       },
       { label: "Brand:", value: serviceBill.vehicleBrand || "N/A" },
@@ -412,7 +438,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       {
         label: "Service Type:",
         value: serviceBill.serviceType
-          ? serviceBill.serviceType.toUpperCase()
+          ? (serviceBill.serviceType || 'REGULAR').toUpperCase()
           : "N/A",
       },
     ];
@@ -748,7 +774,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    currentPage.drawText(serviceBill.paymentMethod.toUpperCase(), {
+    currentPage.drawText((serviceBill.paymentMethod || 'CASH').toUpperCase(), {
       x: 150,
       y: currentY,
       size: 10,
@@ -763,7 +789,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.2, 0.2, 0.2),
       font: fontBold,
     });
-    currentPage.drawText(serviceBill.paymentStatus.toUpperCase(), {
+    currentPage.drawText((serviceBill.paymentStatus || 'PENDING').toUpperCase(), {
       x: 150,
       y: currentY - 20,
       size: 10,
