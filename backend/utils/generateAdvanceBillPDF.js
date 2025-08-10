@@ -2,6 +2,9 @@ const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
 
+// Import the logo image
+const logoPath = path.join(__dirname, "../../frontend/src/images/okmotorback.png");
+
 
 const formatTime12Hour = (timeString) => {
   try {
@@ -95,10 +98,6 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
 
     let logoImage = null;
     try {
-      const logoPath = path.join(
-        __dirname,
-        "../../frontend/src/images/okmotorback.png"
-      );
       if (fs.existsSync(logoPath)) {
         const logoBytes = fs.readFileSync(logoPath);
         logoImage = await pdfDoc.embedPng(logoBytes);
