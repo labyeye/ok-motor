@@ -74,7 +74,7 @@ const ServiceHistory = () => {
 
         // Fetch purchase history (if needed)
         const purchaseResponse = await httpClient.get(
-          `https://ok-motor.onrender.com/api/buy-letters`
+          `${config.API_BASE_URL}/buy-letter`
         );
         setPurchaseHistory(purchaseResponse.data.data || purchaseResponse.data);
 

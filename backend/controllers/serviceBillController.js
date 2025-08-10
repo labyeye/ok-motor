@@ -168,14 +168,33 @@ exports.previewServiceBillPDF = async (req, res) => {
   try {
     const serviceBillData = req.body;
     
+    // Validate required fields
+    if (!serviceBillData.customerName || !serviceBillData.serviceItems) {
+      console.log("Missing required fields:", {
+        customerName: !!serviceBillData.customerName,
+        serviceItems: !!serviceBillData.serviceItems
+      });
+      return res.status(400).json({
+        message: "Missing required fields: customerName and serviceItems are required"
+      });
+    }
+    
     // Create a temporary service bill object (not saved to database)
     const tempServiceBill = {
       ...serviceBillData,
       _id: "preview", // Temporary ID for preview
     };
 
+    console.log("Generating PDF with data:", {
+      customerName: tempServiceBill.customerName,
+      serviceItemsCount: tempServiceBill.serviceItems?.length,
+      totalAmount: tempServiceBill.totalAmount
+    });
+
     // Generate PDF directly without saving to database
     const pdfBuffer = await generateServiceBillPDF(tempServiceBill, true); // true indicates return buffer
+
+    console.log("PDF generated successfully, buffer size:", pdfBuffer.length);
 
     // Send PDF directly as response
     res.setHeader('Content-Type', 'application/pdf');
@@ -188,9 +207,13 @@ exports.previewServiceBillPDF = async (req, res) => {
     
   } catch (error) {
     console.error("Error generating preview PDF:", error);
+    console.error("Error stack:", error.stack);
+    
+    // Send a more detailed error response
     res.status(500).json({ 
       message: "Error generating preview PDF",
-      error: error.message 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
