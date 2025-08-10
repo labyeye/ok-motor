@@ -38,6 +38,8 @@ const ServiceBillForm = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const [formData, setFormData] = useState({
     taxEnabled: false,
@@ -252,6 +254,8 @@ const ServiceBillForm = () => {
   const handleSaveAndDownload = async () => {
     if (isSaving) return; // Prevent multiple clicks
     setIsSaving(true);
+    setIsDownloading(true);
+    setDownloadProgress(0);
 
     try {
       const errors = validateForm();
@@ -268,6 +272,9 @@ const ServiceBillForm = () => {
         return;
       }
 
+      // Start progress simulation
+      const progressPromise = simulateProgress();
+
       const formDataWithUser = {
         ...formData,
         serviceDate: new Date(formData.serviceDate).toISOString(),
@@ -275,15 +282,18 @@ const ServiceBillForm = () => {
         user: user._id,
       };
 
-      const saveResponse = await httpClient.post(
-        `${API_BASE_URL}/service-bills`,
-        formDataWithUser,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+      const saveResponse = await retryRequest(() =>
+        httpClient.post(
+          `${API_BASE_URL}/service-bills`,
+          formDataWithUser,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            timeout: 30000, // 30 second timeout
+          }
+        )
       );
 
       if (!saveResponse.data?.data?._id) {
@@ -291,16 +301,22 @@ const ServiceBillForm = () => {
       }
 
       const billId = saveResponse.data.data._id;
-      const pdfResponse = await httpClient.get(
-        `${API_BASE_URL}/service-bills/${billId}/download`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/pdf",
-          },
-        }
+      const pdfResponse = await retryRequest(() =>
+        httpClient.get(
+          `${API_BASE_URL}/service-bills/${billId}/download`,
+          {
+            responseType: "blob",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/pdf",
+            },
+            timeout: 30000, // 30 second timeout
+          }
+        )
       );
+
+      // Wait for progress to complete
+      await progressPromise;
 
       const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
       saveAs(pdfBlob, `service-bill-${billId}.pdf`);
@@ -319,9 +335,17 @@ const ServiceBillForm = () => {
         return;
       }
       
+      // Handle 503 Service Unavailable
+      if (error.response?.status === 503) {
+        alert("Server is temporarily unavailable. Please try again in a few moments. If the problem persists, the server might be restarting.");
+        return;
+      }
+      
       let errorMessage = "Failed to save and download";
       if (error.response) {
         errorMessage = error.response.data?.message || "Server error occurred";
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = "Request timed out. Please try again.";
       } else {
         errorMessage = error.message || "Unknown error occurred";
       }
@@ -329,6 +353,8 @@ const ServiceBillForm = () => {
       alert(errorMessage);
     } finally {
       setIsSaving(false);
+      setIsDownloading(false);
+      setDownloadProgress(0);
     }
   };
   const LoadingOverlay = () => (
@@ -341,6 +367,138 @@ const ServiceBillForm = () => {
     </div>
   );
 
+  const DownloadProgressModal = ({ progress, onClose }) => {
+    return (
+      <div style={modalStyles.overlay}>
+        <div style={modalStyles.modal}>
+          <div style={modalStyles.header}>
+            <h2 style={modalStyles.title}>Generating Service Bill PDF</h2>
+          </div>
+          <div style={{ padding: "24px", textAlign: "center" }}>
+            <div style={progressStyles.progressContainer}>
+              <div
+                style={{
+                  ...progressStyles.progressBar,
+                  width: `${progress}%`,
+                }}
+              ></div>
+            </div>
+            <p style={progressStyles.progressText}>{progress}% Complete</p>
+            {progress === 100 && (
+              <button
+                onClick={onClose}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#3b82f6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  marginTop: "16px",
+                }}
+              >
+                Close
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const progressStyles = {
+    progressContainer: {
+      width: "100%",
+      height: "20px",
+      backgroundColor: "#e2e8f0",
+      borderRadius: "10px",
+      overflow: "hidden",
+      marginBottom: "8px",
+    },
+    progressBar: {
+      height: "100%",
+      backgroundColor: "#3b82f6",
+      transition: "width 0.3s ease",
+    },
+    progressText: {
+      fontSize: "0.875rem",
+      color: "#64748b",
+    },
+  };
+
+  const modalStyles = {
+    overlay: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 1000,
+    },
+    modal: {
+      backgroundColor: "#ffffff",
+      borderRadius: "8px",
+      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+      width: "80%",
+      maxWidth: "800px",
+      maxHeight: "90vh",
+      overflowY: "auto",
+    },
+    header: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "16px 24px",
+      borderBottom: "1px solid #e2e8f0",
+    },
+    title: {
+      fontSize: "1.25rem",
+      fontWeight: "600",
+      margin: 0,
+      color: "#1e293b",
+    },
+  };
+
+  const simulateProgress = () => {
+    return new Promise((resolve) => {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        setDownloadProgress(Math.min(progress, 100));
+        if (progress >= 100) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 100);
+    });
+  };
+
+  // Retry mechanism for failed requests
+  const retryRequest = async (requestFn, maxRetries = 3, delay = 1000) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await requestFn();
+      } catch (error) {
+        if (attempt === maxRetries) {
+          throw error;
+        }
+        
+        // Only retry on 503 errors or network errors
+        if (error.response?.status === 503 || error.code === 'ECONNABORTED' || !error.response) {
+          console.log(`Attempt ${attempt} failed, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay *= 2; // Exponential backoff
+        } else {
+          throw error;
+        }
+      }
+    }
+  };
+
   const generateServiceBillPDF = async (
     billData = formData,
     forPreview = false
@@ -348,6 +506,9 @@ const ServiceBillForm = () => {
     try {
       setShowLoadingOverlay(true);
       const token = localStorage.getItem("token");
+
+      console.log("Generating PDF - Token present:", !!token);
+      console.log("Generating PDF - Token preview:", token ? token.substring(0, 20) + '...' : 'No token');
 
       if (!token) {
         alert("Authentication required. Please login again.");
@@ -370,16 +531,19 @@ const ServiceBillForm = () => {
 
       if (forPreview) {
         // For preview, generate PDF without saving to database
-        const previewResponse = await httpClient.post(
-          `${API_BASE_URL}/service-bills/preview`,
-          formattedBillData,
-          {
-            responseType: "blob",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
+        const previewResponse = await retryRequest(() =>
+          httpClient.post(
+            `${API_BASE_URL}/service-bills/preview`,
+            formattedBillData,
+            {
+              responseType: "blob",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              timeout: 30000, // 30 second timeout
+            }
+          )
         );
 
         const pdfBlob = new Blob([previewResponse.data], { type: "application/pdf" });
@@ -388,15 +552,18 @@ const ServiceBillForm = () => {
         setShowPreviewModal(true);
       } else {
         // For download, save the bill first
-        const saveResponse = await httpClient.post(
-          `${API_BASE_URL}/service-bills`,
-          formattedBillData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
+        const saveResponse = await retryRequest(() =>
+          httpClient.post(
+            `${API_BASE_URL}/service-bills`,
+            formattedBillData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              timeout: 30000, // 30 second timeout
+            }
+          )
         );
 
         if (!saveResponse.data?.data?._id) {
@@ -404,15 +571,18 @@ const ServiceBillForm = () => {
         }
 
         const billId = saveResponse.data.data._id;
-        const pdfResponse = await httpClient.get(
-          `${API_BASE_URL}/service-bills/${billId}/download`,
-          {
-            responseType: "blob",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/pdf",
-            },
-          }
+        const pdfResponse = await retryRequest(() =>
+          httpClient.get(
+            `${API_BASE_URL}/service-bills/${billId}/download`,
+            {
+              responseType: "blob",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/pdf",
+              },
+              timeout: 30000, // 30 second timeout
+            }
+          )
         );
 
         const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
@@ -429,9 +599,17 @@ const ServiceBillForm = () => {
         return;
       }
       
+      // Handle 503 Service Unavailable
+      if (error.response?.status === 503) {
+        alert("Server is temporarily unavailable. Please try again in a few moments. If the problem persists, the server might be restarting.");
+        return;
+      }
+      
       let errorMessage = "Failed to generate PDF";
       if (error.response) {
         errorMessage = error.response.data?.message || "Server error occurred";
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = "Request timed out. Please try again.";
       } else {
         errorMessage = error.message || "Unknown error occurred";
       }
@@ -1437,6 +1615,15 @@ const ServiceBillForm = () => {
         </div>
       )}
       {showLoadingOverlay && <LoadingOverlay />}
+      {isDownloading && (
+        <DownloadProgressModal
+          progress={downloadProgress}
+          onClose={() => {
+            setIsDownloading(false);
+            setDownloadProgress(0);
+          }}
+        />
+      )}
     </div>
   );
 };

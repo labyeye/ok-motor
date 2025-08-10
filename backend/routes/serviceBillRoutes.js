@@ -3,6 +3,19 @@ const router = express.Router();
 const serviceBillController = require("../controllers/serviceBillController");
 const { protect, admin } = require("../middleware/auth");
 
+// Debug endpoint - no authentication required
+router.get("/debug", (req, res) => {
+  res.json({ 
+    message: "Service bill API is working", 
+    timestamp: new Date().toISOString(),
+    headers: {
+      authorization: req.headers.authorization ? 'Present' : 'Missing',
+      'content-type': req.headers['content-type'],
+      'user-agent': req.headers['user-agent']?.substring(0, 50) + '...'
+    }
+  });
+});
+
 router
   .route("/")
   .get(protect, serviceBillController.getServiceBills)

@@ -54,6 +54,7 @@ exports.getVehicleDetails = async (req, res) => {
 };
 // Create a new service bill
 exports.createServiceBill = async (req, res) => {
+  console.log("Creating service bill...");
   try {
     const { serviceItems, ...otherData } = req.body;
 
@@ -73,28 +74,31 @@ exports.createServiceBill = async (req, res) => {
       taxAmount,
       grandTotal,
       balanceDue,
-      $or: [
-        { user: req.user.id }, // Records created by the current user
-        { visibility: 'staff' }, // Or records marked as visible to staff
-        // Or if staff should see all records for the registration number:
-        ...(req.user.role === 'staff' ? [{}] : []) // Staff can see all matching registration numbers
-      ],
+      user: req.user.id,
     };
 
     const serviceBill = new ServiceBill(serviceBillData);
     await serviceBill.save();
-    // In serviceBillController.js, update the createServiceBill function
-    const { pdfUrl, filePath } = await generateServiceBillPDF(serviceBill);
-    serviceBill.pdfUrl = pdfUrl;
-    serviceBill.pdfPath = filePath; // Store the file path if needed
-    await serviceBill.save();
 
+    // Generate PDF asynchronously to avoid blocking the response
+    try {
+      const { pdfUrl, filePath } = await generateServiceBillPDF(serviceBill);
+      serviceBill.pdfUrl = pdfUrl;
+      serviceBill.pdfPath = filePath;
+      await serviceBill.save();
+    } catch (pdfError) {
+      console.error("PDF generation failed:", pdfError);
+      // Don't fail the entire request if PDF generation fails
+    }
+
+    console.log("Service bill created successfully:", serviceBill._id);
     res.status(201).json({
       success: true,
       data: serviceBill,
     });
   } catch (error) {
-    res.status(400).json({
+    console.error("Error creating service bill:", error);
+    res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -157,6 +161,10 @@ exports.getServiceBillsByRegistration = async (req, res) => {
 
 // Preview service bill PDF without saving to database
 exports.previewServiceBillPDF = async (req, res) => {
+  console.log("Generating preview PDF...");
+  console.log("User making request:", req.user.email);
+  console.log("Request body keys:", Object.keys(req.body));
+  
   try {
     const serviceBillData = req.body;
     
@@ -172,6 +180,10 @@ exports.previewServiceBillPDF = async (req, res) => {
     // Send PDF directly as response
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'inline; filename=service-bill-preview.pdf');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    console.log("Preview PDF generated successfully");
     res.send(pdfBuffer);
     
   } catch (error) {
@@ -185,16 +197,11 @@ exports.previewServiceBillPDF = async (req, res) => {
 
 // Add this to your serviceBillController.js
 exports.downloadServiceBillPDF = async (req, res) => {
+  console.log("Downloading service bill PDF for ID:", req.params.id);
+  console.log("User making request:", req.user.email);
+  
   try {
-    const serviceBill = await ServiceBill.findOne({
-      _id: req.params.id,
-      $or: [
-        { user: req.user.id }, // Records created by the current user
-        { visibility: 'staff' }, // Or records marked as visible to staff
-        // Or if staff should see all records for the registration number:
-        ...(req.user.role === 'staff' ? [{}] : []) // Staff can see all matching registration numbers
-      ]
-    });
+    const serviceBill = await ServiceBill.findOne({ _id: req.params.id, user: req.user.id });
 
     if (!serviceBill) {
       return res.status(404).json({
@@ -209,6 +216,10 @@ exports.downloadServiceBillPDF = async (req, res) => {
     // Send PDF directly as response
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=service-bill-${serviceBill.billNumber || serviceBill._id}.pdf`);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    console.log("Download PDF generated successfully");
     res.send(pdfBuffer);
     
   } catch (error) {
