@@ -252,111 +252,116 @@ const ServiceBillForm = () => {
     return Object.keys(errors).length === 0 ? null : errors;
   };
   const handleSaveAndDownload = async () => {
-    if (isSaving) return; // Prevent multiple clicks
-    setIsSaving(true);
-    setIsDownloading(true);
-    setDownloadProgress(0);
+  if (isSaving) return;
+  setIsSaving(true);
+  setIsDownloading(true);
+  setDownloadProgress(0);
 
-    try {
-      const errors = validateForm();
-      if (errors) {
-        alert("Please fix the form errors before submitting");
-        return;
-      }
-
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Authentication required. Please login again.");
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      // Start progress simulation
-      const progressPromise = simulateProgress();
-
-      const formDataWithUser = {
-        ...formData,
-        serviceDate: new Date(formData.serviceDate).toISOString(),
-        deliveryDate: new Date(formData.deliveryDate).toISOString(),
-        user: user._id,
-      };
-
-      const saveResponse = await retryRequest(() =>
-        httpClient.post(
-          `${API_BASE_URL}/service-bills`,
-          formDataWithUser,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            timeout: 30000, // 30 second timeout
-          }
-        )
-      );
-
-      if (!saveResponse.data?.data?._id) {
-        throw new Error("Invalid response format from server");
-      }
-
-      const billId = saveResponse.data.data._id;
-      const pdfResponse = await retryRequest(() =>
-        httpClient.get(
-          `${API_BASE_URL}/service-bills/${billId}/pdf`,
-          {
-            responseType: "blob",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/pdf",
-            },
-            timeout: 30000, // 30 second timeout
-          }
-        )
-      );
-
-      // Wait for progress to complete
-      await progressPromise;
-
-      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-      saveAs(pdfBlob, `service-bill-${billId}.pdf`);
-      
-      // Show success message and optionally reset form
-      alert("Service bill saved and downloaded successfully!");
-      
-    } catch (error) {
-      console.error("Error in save and download:", error);
-      
-      // Handle authentication errors
-      if (error.response?.status === 401) {
-        alert("Your session has expired. Please login again.");
-        logout();
-        navigate('/login');
-        return;
-      }
-      
-      // Handle 503 Service Unavailable
-      if (error.response?.status === 503) {
-        alert("Server is temporarily unavailable. Please try again in a few moments. If the problem persists, the server might be restarting.");
-        return;
-      }
-      
-      let errorMessage = "Failed to save and download";
-      if (error.response) {
-        errorMessage = error.response.data?.message || "Server error occurred";
-      } else if (error.code === 'ECONNABORTED') {
-        errorMessage = "Request timed out. Please try again.";
-      } else {
-        errorMessage = error.message || "Unknown error occurred";
-      }
-      
-      alert(errorMessage);
-    } finally {
-      setIsSaving(false);
-      setIsDownloading(false);
-      setDownloadProgress(0);
+  try {
+    const errors = validateForm();
+    if (errors) {
+      alert("Please fix the form errors before submitting");
+      return;
     }
-  };
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Authentication required. Please login again.");
+      logout();
+      navigate('/login');
+      return;
+    }
+
+    // Format dates and ensure numeric fields
+    const formattedData = {
+      ...formData,
+      serviceDate: new Date(formData.serviceDate).toISOString(),
+      deliveryDate: new Date(formData.deliveryDate).toISOString(),
+      serviceItems: formData.serviceItems.map(item => ({
+        ...item,
+        quantity: parseFloat(item.quantity) || 0,
+        rate: parseFloat(item.rate) || 0
+      })),
+      user: user._id
+    };
+
+    // Start progress simulation
+    const progressPromise = simulateProgress();
+
+    // First save the bill
+    const saveResponse = await retryRequest(() =>
+      httpClient.post(
+        `${API_BASE_URL}/service-bills`,
+        formattedData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 30000,
+        }
+      )
+    );
+
+    if (!saveResponse.data?.data?._id) {
+      throw new Error("Invalid response format from server");
+    }
+
+    const billId = saveResponse.data.data._id;
+    
+    // Then download the PDF
+    const pdfResponse = await retryRequest(() =>
+      httpClient.get(
+        `${API_BASE_URL}/service-bills/${billId}/download`,
+        {
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/pdf",
+          },
+          timeout: 30000,
+        }
+      )
+    );
+
+    await progressPromise;
+
+    const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+    saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+    
+    alert("Service bill saved and downloaded successfully!");
+    
+  } catch (error) {
+    console.error("Error in save and download:", error);
+    
+    if (error.response?.status === 401) {
+      alert("Your session has expired. Please login again.");
+      logout();
+      navigate('/login');
+      return;
+    }
+    
+    if (error.response?.status === 503) {
+      alert("Server is temporarily unavailable. Please try again later.");
+      return;
+    }
+    
+    let errorMessage = "Failed to save and download";
+    if (error.response) {
+      errorMessage = error.response.data?.message || "Server error occurred";
+    } else if (error.code === 'ECONNABORTED') {
+      errorMessage = "Request timed out. Please try again.";
+    } else {
+      errorMessage = error.message || "Unknown error occurred";
+    }
+    
+    alert(errorMessage);
+  } finally {
+    setIsSaving(false);
+    setIsDownloading(false);
+    setDownloadProgress(0);
+  }
+};
   const LoadingOverlay = () => (
     <div style={styles.loadingOverlay}>
       <div style={styles.loadingContent}>

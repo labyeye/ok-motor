@@ -262,7 +262,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: fontBold,
       });
 
-      currentPage.drawText(`Name: ${serviceBill.businessName || "N/A"}`, {
+      currentPage.drawText(`Name: ${serviceBill.businessName}`, {
         x: 60,
         y: 670,
         size: 10,
@@ -270,7 +270,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      currentPage.drawText(`GSTIN: ${serviceBill.businessGSTIN || "N/A"}`, {
+      currentPage.drawText(`GSTIN: ${serviceBill.businessGSTIN}`, {
         x: 380,
         y: 670,
         size: 10,
@@ -278,7 +278,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      const address = serviceBill.businessAddress || "N/A";
+      const address = serviceBill.businessAddress;
       const maxCharsPerLine = 30;
       const addressLines = [];
       for (let i = 0; i < address.length; i += maxCharsPerLine) {
@@ -310,7 +310,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    currentPage.drawText(`Name: ${serviceBill.customerName || "N/A"}`, {
+    currentPage.drawText(`Name: ${serviceBill.customerName}`, {
       x: 60,
       y: customerY - 25,
       size: 10,
@@ -318,7 +318,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: font,
     });
 
-    const customerAddress = serviceBill.customerAddress || "N/A";
+    const customerAddress = serviceBill.customerAddress;
     const customerAddressLines = [];
     for (let i = 0; i < customerAddress.length; i += 30) {
       customerAddressLines.push(customerAddress.substring(i, i + 30));
@@ -334,7 +334,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     });
 
-    currentPage.drawText(`Phone: ${serviceBill.customerPhone || "N/A"}`, {
+    currentPage.drawText(`Phone: ${serviceBill.customerPhone}`, {
       x: 350,
       y: customerY - 25,
       size: 10,
@@ -342,7 +342,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: font,
     });
 
-    currentPage.drawText(`Email: ${serviceBill.customerEmail || "N/A"}`, {
+    currentPage.drawText(`Email: ${serviceBill.customerEmail}`, {
       x: 350,
       y: customerY - 40,
       size: 10,
@@ -390,9 +390,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
           ? (serviceBill.vehicleType || 'BIKE').toUpperCase()
           : "N/A",
       },
-      { label: "Brand:", value: serviceBill.vehicleBrand || "N/A" },
-      { label: "Model:", value: serviceBill.vehicleModel || "N/A" },
-      { label: "Reg No:", value: serviceBill.registrationNumber || "N/A" },
+      { label: "Brand:", value: serviceBill.vehicleBrand },
+      { label: "Model:", value: serviceBill.vehicleModel },
+      { label: "Reg No:", value: serviceBill.registrationNumber },
       {
         label: "KM:",
         value: serviceBill.kmReading
@@ -614,7 +614,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
 
       // Handle description wrapping
-      const description = item.description || "N/A";
+      const description = item.description;
       const maxWidth = 180;
       const lines = [];
       let currentLine = "";
@@ -832,7 +832,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    const issues = serviceBill.issuesReported || "N/A";
+    const issues = serviceBill.issuesReported;
     const maxCharsPerLine = 30;
     const lineHeight = 12;
     const startY = currentY - 40;
