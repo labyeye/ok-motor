@@ -89,22 +89,28 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     // Use validated data
     serviceBill = validatedServiceBill;
     
-    // Ensure required string fields have default values to prevent toUpperCase() errors
-    serviceBill.paymentMethod = serviceBill.paymentMethod || 'cash';
-    serviceBill.paymentStatus = serviceBill.paymentStatus || 'pending';
-    serviceBill.vehicleType = serviceBill.vehicleType || 'bike';
-    serviceBill.serviceType = serviceBill.serviceType || 'regular';
-    serviceBill.customerName = serviceBill.customerName || 'N/A';
-    serviceBill.customerPhone = serviceBill.customerPhone || 'N/A';
-    serviceBill.customerAddress = serviceBill.customerAddress || 'N/A';
-    serviceBill.registrationNumber = serviceBill.registrationNumber || 'N/A';
-    serviceBill.vehicleBrand = serviceBill.vehicleBrand || 'N/A';
-    serviceBill.vehicleModel = serviceBill.vehicleModel || 'N/A';
+    // Ensure required string fields have values but don't override existing values
+    const defaultServiceBill = {
+      paymentMethod: 'cash',
+      paymentStatus: 'pending',
+      vehicleType: 'bike',
+      serviceType: 'regular',
+      customerName: '',
+      customerPhone: '',
+      customerAddress: '',
+      registrationNumber: '',
+      vehicleBrand: '',
+      vehicleModel: '',
+      ...serviceBill  // This ensures existing values are not overridden
+    };
     
-    console.log("After validation - Payment method:", serviceBill.paymentMethod);
-    console.log("After validation - Payment status:", serviceBill.paymentStatus);
-    console.log("After validation - Vehicle type:", serviceBill.vehicleType);
-    console.log("After validation - Service type:", serviceBill.serviceType);
+    console.log("After validation - Payment method:", defaultServiceBill.paymentMethod);
+    console.log("After validation - Payment status:", defaultServiceBill.paymentStatus);
+    console.log("After validation - Vehicle type:", defaultServiceBill.vehicleType);
+    console.log("After validation - Service type:", defaultServiceBill.serviceType);
+    
+    // Update serviceBill with the defaulted values
+    serviceBill = defaultServiceBill;
     
     const pdfDoc = await PDFDocument.create();
     const pages = []; // Array to keep track of all pages

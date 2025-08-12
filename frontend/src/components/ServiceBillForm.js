@@ -303,7 +303,7 @@ const ServiceBillForm = () => {
       const billId = saveResponse.data.data._id;
       const pdfResponse = await retryRequest(() =>
         httpClient.get(
-          `${API_BASE_URL}/service-bills/${billId}/download`,
+          `${API_BASE_URL}/service-bills/${billId}/pdf`,
           {
             responseType: "blob",
             headers: {

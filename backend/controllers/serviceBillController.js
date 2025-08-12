@@ -57,15 +57,27 @@ exports.createServiceBill = async (req, res) => {
   console.log("Creating service bill...");
   try {
     const { serviceItems, ...otherData } = req.body;
+    
+    console.log("Received service bill data:", JSON.stringify({ serviceItems, ...otherData }, null, 2));
+
+    // Validate required fields
+    const requiredFields = ['customerName', 'customerPhone', 'customerAddress', 'vehicleBrand', 'vehicleModel', 'registrationNumber'];
+    const missingFields = requiredFields.filter(field => !otherData[field]);
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      });
+    }
 
     // Calculate amounts
     const totalAmount = serviceItems.reduce(
-      (sum, item) => sum + item.quantity * item.rate,
+      (sum, item) => sum + (parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0),
       0
     );
-    const taxAmount = (otherData.taxRate / 100) * totalAmount;
-    const grandTotal = totalAmount + taxAmount - (otherData.discount || 0);
-    const balanceDue = grandTotal - (otherData.advancePaid || 0);
+    const taxAmount = ((parseFloat(otherData.taxRate) || 0) / 100) * totalAmount;
+    const grandTotal = totalAmount + taxAmount - (parseFloat(otherData.discount) || 0);
+    const balanceDue = grandTotal - (parseFloat(otherData.advancePaid) || 0);
 
     const serviceBillData = {
       ...otherData,
