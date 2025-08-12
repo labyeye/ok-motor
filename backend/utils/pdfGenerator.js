@@ -87,7 +87,8 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       serviceItems: serviceBill.serviceItems.map(item => ({
         ...item,
         quantity: parseFloat(item.quantity) || 0,
-        rate: parseFloat(item.rate) || 0
+        rate: parseFloat(item.rate) || 0,
+        amount: parseFloat(item.amount) || 0
       }))
     };
     
@@ -669,9 +670,8 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      // Ensure quantity is a number and calculate amount
-      const quantity = parseFloat(item.quantity) || 0;
-      const amount = quantity * rate;
+      // Use the actual amount field instead of calculating from rate * quantity
+      const amount = parseFloat(item.amount) || 0;
       currentPage.drawText(amount.toFixed(2), {
         x: 450,
         y: currentY,

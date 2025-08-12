@@ -80,7 +80,7 @@ const ServiceBillForm = () => {
   const API_BASE_URL = "https://ok-motor.onrender.com/api";
   const calculateAmounts = (data) => {
     const totalAmount = (data.serviceItems || []).reduce(
-      (sum, item) => sum + (item.quantity || 0) * (item.rate || 0),
+      (sum, item) => sum + (parseFloat(item.amount) || 0),
       0
     );
 
@@ -133,7 +133,27 @@ const ServiceBillForm = () => {
       items[index] = {
         ...items[index],
         rate: cleanedValue,
-        amount: (parseFloat(cleanedValue) || 0) * (items[index].quantity || 1),
+        // Don't auto-calculate amount when rate changes
+      };
+
+      setFormData({
+        ...formData,
+        serviceItems: items,
+        ...calculateAmounts({
+          ...formData,
+          serviceItems: items,
+        }),
+      });
+      return;
+    }
+
+    if (name === "amount") {
+      const cleanedValue = value.replace(/[^0-9.]/g, "");
+
+      const items = [...formData.serviceItems];
+      items[index] = {
+        ...items[index],
+        amount: parseFloat(cleanedValue) || 0,
       };
 
       setFormData({
@@ -154,9 +174,7 @@ const ServiceBillForm = () => {
       [name]: name === "quantity" ? parseFloat(value) || 1 : value,
     };
 
-    items[index].amount =
-      items[index].quantity * (parseFloat(items[index].rate) || 0);
-
+    // Don't auto-calculate amount for quantity changes either
     setFormData({
       ...formData,
       serviceItems: items,
@@ -1253,9 +1271,37 @@ const ServiceBillForm = () => {
                       </label>
                       <input
                         type="text"
-                        value={item.amount.toFixed(2)}
-                        style={styles.formInput}
-                        readOnly
+                        name="amount"
+                        value={item.amount}
+                        onChange={(e) => handleServiceItemChange(index, e)}
+                        onFocus={() => setFocusedInput("amount")}
+                        onBlur={() => setFocusedInput(null)}
+                        style={{
+                          ...styles.formInput,
+                          ...(focusedInput === "amount"
+                            ? styles.inputFocused
+                            : {}),
+                        }}
+                        required
+                        maxLength={10}
+                        onKeyDown={(e) => {
+                          // Allow only numbers and decimal point
+                          if (
+                            !/[0-9.]/.test(e.key) &&
+                            e.key !== "Backspace" &&
+                            e.key !== "Tab"
+                          ) {
+                            e.preventDefault();
+                          }
+                          // Move to next field on Enter
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const nextField = e.target
+                              .closest(".service-item-row")
+                              .querySelector('[name="description"]');
+                            if (nextField) nextField.focus();
+                          }
+                        }}
                       />
                     </div>
                     <button

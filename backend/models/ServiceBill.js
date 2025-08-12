@@ -90,7 +90,7 @@ ServiceBillSchema.pre("save", async function(next) {
     
     // Calculate amounts if service items are modified
     if (this.isModified('serviceItems') || this.isModified('discount') || this.isModified('taxRate')) {
-      this.totalAmount = this.serviceItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+      this.totalAmount = this.serviceItems.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
       this.taxAmount = (this.taxRate / 100) * this.totalAmount;
       this.grandTotal = this.totalAmount + this.taxAmount - (this.discount || 0);
       this.balanceDue = this.grandTotal - (this.advancePaid || 0);
