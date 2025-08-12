@@ -699,7 +699,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       y: currentY,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
-      font: fontBold,
+      font: font,
     });
     // Ensure totalAmount is a number
     const totalAmount = parseFloat(serviceBill.totalAmount) || 0;
@@ -717,7 +717,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         y: currentY - 20,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
-        font: fontBold,
+        font: font,
       });
       // Ensure taxAmount is a number
       const taxAmount = parseFloat(serviceBill.taxAmount) || 0;
@@ -730,16 +730,24 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     }
 
-    currentPage.drawText("Discount:", {
+    // Calculate discount based on type
+    let discountAmount = 0;
+    let discountLabel = "Discount:";
+    if (serviceBill.discountType === "percentage") {
+      discountAmount = ((serviceBill.discountPercentage || 0) / 100) * totalAmount;
+      discountLabel = `Discount (${serviceBill.discountPercentage || 0}%):`;
+    } else {
+      discountAmount = parseFloat(serviceBill.discount) || 0;
+    }
+    
+    currentPage.drawText(discountLabel, {
       x: 350,
       y: currentY - 40,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
-      font: fontBold,
+      font: font,
     });
-    // Ensure discount is a number
-    const discount = parseFloat(serviceBill.discount) || 0;
-    currentPage.drawText(discount.toFixed(2), {
+    currentPage.drawText(discountAmount.toFixed(2), {
       x: 450,
       y: currentY - 40,
       size: 10,
@@ -747,35 +755,18 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: font,
     });
 
-    currentPage.drawText("Grand Total:", {
-      x: 350,
-      y: currentY - 60,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: fontBold,
-    });
-    // Ensure grandTotal is a number
-    const grandTotal = parseFloat(serviceBill.grandTotal) || 0;
-    currentPage.drawText(grandTotal.toFixed(2), {
-      x: 450,
-      y: currentY - 60,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: fontBold,
-    });
-
     currentPage.drawText("Advance Paid:", {
       x: 350,
-      y: currentY - 80,
+      y: currentY - 60,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
-      font: fontBold,
+      font: font,
     });
     // Ensure advancePaid is a number
     const advancePaid = parseFloat(serviceBill.advancePaid) || 0;
     currentPage.drawText(advancePaid.toFixed(2), {
       x: 450,
-      y: currentY - 80,
+      y: currentY - 60,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
@@ -783,19 +774,19 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     currentPage.drawText("Balance Due:", {
       x: 350,
-      y: currentY - 100,
+      y: currentY - 80,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
-      font: fontBold,
+      font: font,
     });
     // Ensure balanceDue is a number
     const balanceDue = parseFloat(serviceBill.balanceDue) || 0;
     currentPage.drawText(balanceDue.toFixed(2), {
       x: 450,
-      y: currentY - 100,
+      y: currentY - 80,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
-      font: fontBold,
+      font: font,
     });
 
     // Payment Information
@@ -895,6 +886,73 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
+    });
+
+    // Technical Notes
+    const technicianNotes = serviceBill.technicianNotes || "";
+    const technicianNotesLines = splitTextIntoLines(technicianNotes, maxCharsPerLine);
+    
+    if (technicianNotesLines.length > 0) {
+      currentPage.drawText("TECHNICAL NOTES", {
+        x: 50,
+        y: startY - (issuesLines.length * lineHeight) - 60,
+        size: 10,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold,
+      });
+
+      technicianNotesLines.forEach((line, index) => {
+        currentPage.drawText(line, {
+          x: 150,
+          y: startY - (issuesLines.length * lineHeight) - 60 - (index + 1) * lineHeight,
+          size: 9,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font,
+        });
+      });
+    }
+
+    // Warranty Information
+    const warrantyInfo = serviceBill.warrantyInfo || "";
+    const warrantyInfoLines = splitTextIntoLines(warrantyInfo, maxCharsPerLine);
+    
+    if (warrantyInfoLines.length > 0) {
+      const warrantyStartY = startY - (issuesLines.length * lineHeight) - (technicianNotesLines.length > 0 ? (technicianNotesLines.length * lineHeight + 60) : 0) - 60;
+      
+      currentPage.drawText("WARRANTY INFORMATION", {
+        x: 50,
+        y: warrantyStartY,
+        size: 10,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold,
+      });
+
+      warrantyInfoLines.forEach((line, index) => {
+        currentPage.drawText(line, {
+          x: 150,
+          y: warrantyStartY - (index + 1) * lineHeight,
+          size: 9,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font,
+        });
+      });
+    }
+
+    // Grand Total at the very end
+    const grandTotal = parseFloat(serviceBill.grandTotal) || 0;
+    currentPage.drawText("GRAND TOTAL:", {
+      x: 350,
+      y: 310,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: fontBold,
+    });
+    currentPage.drawText(grandTotal.toFixed(2), {
+      x: 450,
+      y: 310,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: fontBold,
     });
 
     // Footer with Signatures

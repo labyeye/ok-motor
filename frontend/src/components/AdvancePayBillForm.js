@@ -66,13 +66,13 @@ const AdvancePayBillForm = () => {
     kmReading: "",
     serviceDate: new Date().toISOString().split("T")[0],
     deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-    totalAmount: "",
+    totalAmount: "0.00",
     discount: "0",
-    advancePaid: "",
+    advancePaid: "0.00",
     paymentMethod: "cash",
     note: "",
-    grandTotal: "0",
-    balanceDue: "0",
+    grandTotal: "0.00",
+    balanceDue: "0.00",
   });
 
   const [previewMode, setPreviewMode] = useState(false);
@@ -89,8 +89,9 @@ const AdvancePayBillForm = () => {
   // httpClient handles authentication automatically
 
   const calculateAmounts = (data) => {
-    const total = parseFloat(data.totalAmount) || 0;
-    const advance = parseFloat(data.advancePaid) || 0;
+    // Handle formatted values with commas and progressive formatting
+    const total = parseFloat(String(data.totalAmount).replace(/,/g, '')) || 0;
+    const advance = parseFloat(String(data.advancePaid).replace(/,/g, '')) || 0;
     const discount = parseFloat(data.discount) || 0;
 
     const grandTotal = total - discount;
@@ -105,9 +106,16 @@ const AdvancePayBillForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    // For amount fields, allow only numbers and dot, but do not format aggressively
     let cleanedValue = value;
     if (["totalAmount", "advancePaid", "kmReading"].includes(name)) {
       cleanedValue = value.replace(/[^0-9.]/g, "");
+      // Only allow one dot
+      const dotCount = (cleanedValue.match(/\./g) || []).length;
+      if (dotCount > 1) {
+        cleanedValue = cleanedValue.replace(/\.(?=.*\.)/, "");
+      }
+      // Limit to 2 decimal places
       if (cleanedValue.includes(".")) {
         const parts = cleanedValue.split(".");
         if (parts[1].length > 2) {
@@ -129,10 +137,22 @@ const AdvancePayBillForm = () => {
     setFormData(updatedData);
   };
 
-  const handleInput = (e) => {
-    const { value } = e.target;
-    e.target.value = value.toUpperCase();
-    handleChange(e);
+  // Optionally, you can format onBlur for amount fields
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    if (["totalAmount", "advancePaid"].includes(name)) {
+      let numericValue = parseFloat(value.replace(/,/g, ""));
+      if (isNaN(numericValue)) numericValue = 0;
+      const formattedValue = numericValue.toFixed(2);
+      const updatedData = {
+        ...formData,
+        [name]: formattedValue,
+      };
+      const calculated = calculateAmounts(updatedData);
+      updatedData.grandTotal = calculated.grandTotal;
+      updatedData.balanceDue = calculated.balanceDue;
+      setFormData(updatedData);
+    }
   };
 
   const handleSaveAndDownload = async () => {
@@ -157,8 +177,8 @@ const AdvancePayBillForm = () => {
       const requestData = {
         ...formData,
         user: user._id,
-        totalAmount: parseFloat(formData.totalAmount) || 0,
-        advancePaid: parseFloat(formData.advancePaid) || 0,
+        totalAmount: parseFloat(String(formData.totalAmount).replace(/,/g, '')) || 0,
+        advancePaid: parseFloat(String(formData.advancePaid).replace(/,/g, '')) || 0,
         grandTotal: parseFloat(formData.grandTotal) || 0,
         balanceDue: parseFloat(formData.balanceDue) || 0,
         kmReading: parseFloat(formData.kmReading) || 0,
@@ -729,7 +749,7 @@ const AdvancePayBillForm = () => {
                     value={formData.customerName}
                     onFocus={() => setFocusedInput("customerName")}
                     onChange={handleChange}
-                    onInput={handleInput}
+                    // ...existing code...
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "customerName"
@@ -751,7 +771,7 @@ const AdvancePayBillForm = () => {
                     value={formData.customerPhone}
                     onFocus={() => setFocusedInput("customerPhone")}
                     onChange={handleChange}
-                    onInput={handleInput}
+                    // ...existing code...
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "customerPhone"
@@ -773,7 +793,7 @@ const AdvancePayBillForm = () => {
                     value={formData.customerAddress}
                     onFocus={() => setFocusedInput("customerAddress")}
                     onChange={handleChange}
-                    onInput={handleInput}
+                    // ...existing code...
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "customerAddress"
@@ -795,7 +815,7 @@ const AdvancePayBillForm = () => {
                     value={formData.customerEmail}
                     onFocus={() => setFocusedInput("customerEmail")}
                     onChange={handleChange}
-                    onInput={handleInput}
+                    // ...existing code...
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "customerEmail"
@@ -842,7 +862,7 @@ const AdvancePayBillForm = () => {
                     value={formData.vehicleBrand}
                     onFocus={() => setFocusedInput("vehicleBrand")}
                     onChange={handleChange}
-                    onInput={handleInput}
+                    // ...existing code...
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "vehicleBrand"
@@ -864,7 +884,7 @@ const AdvancePayBillForm = () => {
                     value={formData.vehicleModel}
                     onFocus={() => setFocusedInput("vehicleModel")}
                     onChange={handleChange}
-                    onInput={handleInput}
+                    // ...existing code...
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "vehicleModel"
@@ -885,7 +905,7 @@ const AdvancePayBillForm = () => {
                     name="registrationNumber"
                     value={formData.registrationNumber}
                     onChange={handleChange}
-                    onInput={handleInput}
+                    // ...existing code...
                     onBlur={(e) => {
                       if (e.target.value.trim() !== "") {
                         fetchVehicleDetails(e.target.value.trim());
@@ -918,7 +938,7 @@ const AdvancePayBillForm = () => {
                     value={formData.chassisNumber}
                     onFocus={() => setFocusedInput("chassisNumber")}
                     onChange={handleChange}
-                    onInput={handleInput}
+                    // ...existing code...
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "chassisNumber"
@@ -939,7 +959,7 @@ const AdvancePayBillForm = () => {
                     value={formData.engineNumber}
                     onFocus={() => setFocusedInput("engineNumber")}
                     onChange={handleChange}
-                    onInput={handleInput}
+                    // ...existing code...
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "engineNumber"
@@ -980,13 +1000,13 @@ const AdvancePayBillForm = () => {
 
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
-                <Calendar style={styles.sectionIcon} /> Service Dates
+                <Calendar style={styles.sectionIcon} /> Booking Dates
               </h2>
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Calendar style={styles.formIcon} />
-                    Service Date || सेवा की तिथि
+                    Booking Date || आगामी बुकिंग की तिथि
                   </label>
                   <input
                     type="date"
@@ -1029,7 +1049,13 @@ const AdvancePayBillForm = () => {
                     name="totalAmount"
                     value={formData.totalAmount}
                     onChange={handleChange}
-                    onFocus={() => setFocusedInput("totalAmount")}
+                    onBlur={handleBlur}
+                    onFocus={e => {
+                      setFocusedInput("totalAmount");
+                      if (formData.totalAmount === "0.00") {
+                        setFormData({ ...formData, totalAmount: "" });
+                      }
+                    }}
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "totalAmount"
@@ -1069,7 +1095,13 @@ const AdvancePayBillForm = () => {
                     name="advancePaid"
                     value={formData.advancePaid}
                     onChange={handleChange}
-                    onFocus={() => setFocusedInput("advancePaid")}
+                    onBlur={handleBlur}
+                    onFocus={e => {
+                      setFocusedInput("advancePaid");
+                      if (formData.advancePaid === "0.00") {
+                        setFormData({ ...formData, advancePaid: "" });
+                      }
+                    }}
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "advancePaid"

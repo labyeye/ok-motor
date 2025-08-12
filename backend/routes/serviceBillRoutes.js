@@ -26,6 +26,11 @@ router
   .route("/preview")
   .post(protect, serviceBillController.previewServiceBillPDF);
 
+// Generate PDF buffer route (for offline use)
+router
+  .route("/generate-pdf")
+  .post(protect, serviceBillController.generatePDFBuffer);
+
 router
   .route("/by-registration")
   .get(protect, serviceBillController.getServiceBillsByRegistration);

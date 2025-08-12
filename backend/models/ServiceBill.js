@@ -39,6 +39,8 @@ const ServiceBillSchema = new mongoose.Schema({
   ],
   totalAmount: { type: Number, required: true },
   discount: { type: Number, default: 0 },
+  discountType: { type: String, enum: ["fixed", "percentage"], default: "fixed" },
+  discountPercentage: { type: Number, default: 0 },
   taxEnabled: { type: Boolean, default: false }, // New field for tax toggle
   businessName: { type: String }, // New field
   businessGSTIN: { type: String }, // New field
@@ -89,10 +91,19 @@ ServiceBillSchema.pre("save", async function(next) {
     this.billNumber = `SRV-${new Date().getFullYear()}-${(count + 1).toString().padStart(5, '0')}`;
     
     // Calculate amounts if service items are modified
-    if (this.isModified('serviceItems') || this.isModified('discount') || this.isModified('taxRate')) {
+    if (this.isModified('serviceItems') || this.isModified('discount') || this.isModified('discountPercentage') || this.isModified('discountType') || this.isModified('taxRate')) {
       this.totalAmount = this.serviceItems.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
       this.taxAmount = (this.taxRate / 100) * this.totalAmount;
-      this.grandTotal = this.totalAmount + this.taxAmount - (this.discount || 0);
+      
+      // Calculate discount based on type
+      let discountAmount = 0;
+      if (this.discountType === "percentage") {
+        discountAmount = (this.discountPercentage / 100) * this.totalAmount;
+      } else {
+        discountAmount = this.discount || 0;
+      }
+      
+      this.grandTotal = this.totalAmount + this.taxAmount - discountAmount;
       this.balanceDue = this.grandTotal - (this.advancePaid || 0);
     }
   }

@@ -455,3 +455,35 @@ exports.generateServiceBillPDF = async (req, res) => {
     });
   }
 };
+
+// Generate PDF buffer for offline use
+exports.generatePDFBuffer = async (req, res) => {
+  try {
+    const serviceBillData = req.body;
+    
+    // Validate required fields
+    if (!serviceBillData.serviceItems || !Array.isArray(serviceBillData.serviceItems)) {
+      return res.status(400).json({
+        success: false,
+        message: "Service items are required and must be an array"
+      });
+    }
+
+    // Generate PDF buffer without saving to database
+    const pdfBuffer = await generateServiceBillPDF(serviceBillData, true);
+
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename=service-bill-${Date.now()}.pdf`,
+    });
+
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("Error generating PDF buffer:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error generating PDF",
+      error: error.message
+    });
+  }
+};
