@@ -60,6 +60,11 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     console.log("Vehicle type:", serviceBill.vehicleType);
     console.log("Service type:", serviceBill.serviceType);
     
+    // If a Mongoose document was passed, convert to a plain object
+    if (serviceBill && typeof serviceBill.toObject === 'function') {
+      serviceBill = serviceBill.toObject();
+    }
+
     // Validate input parameters
     if (!serviceBill || typeof serviceBill !== 'object') {
       throw new Error('Invalid serviceBill parameter: must be an object');
@@ -253,7 +258,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     // Business Information (if enabled)
-    if (serviceBill.taxEnabled) {
+    if (Boolean(serviceBill.taxEnabled)) {
       currentPage.drawText("BUSINESS INFORMATION", {
         x: 50,
         y: 690,
@@ -262,7 +267,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: fontBold,
       });
 
-      currentPage.drawText(`Name: ${serviceBill.businessName}`, {
+       currentPage.drawText(`Name: ${serviceBill.businessName || "N/A"}`, {
         x: 60,
         y: 670,
         size: 10,
@@ -270,7 +275,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      currentPage.drawText(`GSTIN: ${serviceBill.businessGSTIN}`, {
+       currentPage.drawText(`GSTIN: ${serviceBill.businessGSTIN || "N/A"}`, {
         x: 380,
         y: 670,
         size: 10,
@@ -278,7 +283,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      const address = serviceBill.businessAddress;
+       const address = serviceBill.businessAddress || "";
       const maxCharsPerLine = 30;
       const addressLines = [];
       for (let i = 0; i < address.length; i += maxCharsPerLine) {
@@ -310,7 +315,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    currentPage.drawText(`Name: ${serviceBill.customerName}`, {
+    currentPage.drawText(`Name: ${serviceBill.customerName || "N/A"}`, {
       x: 60,
       y: customerY - 25,
       size: 10,
@@ -318,7 +323,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: font,
     });
 
-    const customerAddress = serviceBill.customerAddress;
+    const customerAddress = serviceBill.customerAddress || "";
     const customerAddressLines = [];
     for (let i = 0; i < customerAddress.length; i += 30) {
       customerAddressLines.push(customerAddress.substring(i, i + 30));
@@ -334,7 +339,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     });
 
-    currentPage.drawText(`Phone: ${serviceBill.customerPhone}`, {
+    currentPage.drawText(`Phone: ${serviceBill.customerPhone || "N/A"}`, {
       x: 350,
       y: customerY - 25,
       size: 10,
@@ -342,7 +347,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: font,
     });
 
-    currentPage.drawText(`Email: ${serviceBill.customerEmail}`, {
+    currentPage.drawText(`Email: ${serviceBill.customerEmail || "N/A"}`, {
       x: 350,
       y: customerY - 40,
       size: 10,
@@ -386,21 +391,22 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const vehicleDetails = [
       {
         label: "Type:",
-        value: serviceBill.vehicleType
-          ? (serviceBill.vehicleType || 'BIKE').toUpperCase()
+        value: (serviceBill.vehicleType ?? "").toString().trim()
+          ? (serviceBill.vehicleType).toString().toUpperCase()
           : "N/A",
       },
-      { label: "Brand:", value: serviceBill.vehicleBrand },
-      { label: "Model:", value: serviceBill.vehicleModel },
-      { label: "Reg No:", value: serviceBill.registrationNumber },
+      { label: "Brand:", value: (serviceBill.vehicleBrand ?? "N/A") },
+      { label: "Model:", value: (serviceBill.vehicleModel ?? "N/A") },
+      { label: "Reg No:", value: (serviceBill.registrationNumber ?? "N/A") },
       {
         label: "KM:",
-        value: serviceBill.kmReading
-          ? `${(Number(serviceBill.kmReading)).toLocaleString("en-IN", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })} km`
-          : "N/A",
+        value:
+          serviceBill.kmReading !== undefined && serviceBill.kmReading !== null
+            ? `${Number(serviceBill.kmReading).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })} km`
+            : "N/A",
       },
     ];
 
@@ -463,8 +469,8 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       },
       {
         label: "Service Type:",
-        value: serviceBill.serviceType
-          ? (serviceBill.serviceType || 'REGULAR').toUpperCase()
+        value: (serviceBill.serviceType ?? "").toString().trim()
+          ? (serviceBill.serviceType).toString().toUpperCase()
           : "N/A",
       },
     ];
@@ -832,7 +838,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    const issues = serviceBill.issuesReported;
+    const issues = serviceBill.issuesReported || "";
     const maxCharsPerLine = 30;
     const lineHeight = 12;
     const startY = currentY - 40;
