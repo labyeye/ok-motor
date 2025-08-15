@@ -77,7 +77,10 @@ const ServiceBillSchema = new mongoose.Schema({
     ref: "User", 
     required: true 
   },
-  
+
+  // Visibility for staff access
+  visibility: { type: String, enum: ['admin', 'staff', 'all'], default: 'staff' },
+
   // PDF generation info
   pdfUrl: { type: String },
   billNumber: { type: String, unique: true },

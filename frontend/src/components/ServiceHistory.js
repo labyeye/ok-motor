@@ -644,6 +644,7 @@ const ServiceHistory = () => {
                           <th style={styles.tableHeader}>Reg No.</th>
                           <th style={styles.tableHeader}>Purchase Date</th>
                           <th style={styles.tableHeader}>Amount</th>
+                          <th style={styles.tableHeader}>Created By</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -661,6 +662,9 @@ const ServiceHistory = () => {
                             </td>
                             <td style={styles.tableCell}>
                               ₹{item.purchaseAmount?.toFixed(2) || 0}
+                            </td>
+                            <td style={styles.tableCell}>
+                              {item.user && item.user.role === 'admin' ? 'admin' : (item.user && item.user.name ? item.user.name : '')}
                             </td>
                           </tr>
                         ))}
@@ -693,6 +697,7 @@ const ServiceHistory = () => {
                           <th style={styles.tableHeader}>Reg No.</th>
                           <th style={styles.tableHeader}>Sell Date</th>
                           <th style={styles.tableHeader}>Amount</th>
+                          <th style={styles.tableHeader}>Created By</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -710,6 +715,9 @@ const ServiceHistory = () => {
                             </td>
                             <td style={styles.tableCell}>
                               ₹{item.sellAmount?.toFixed(2) || 0}
+                            </td>
+                            <td style={styles.tableCell}>
+                              {item.user && item.user.role === 'admin' ? 'admin' : (item.user && item.user.name ? item.user.name : '')}
                             </td>
                           </tr>
                         ))}
@@ -742,6 +750,7 @@ const ServiceHistory = () => {
                           <th style={styles.tableHeader}>Reg No.</th>
                           <th style={styles.tableHeader}>Amount</th>
                           <th style={styles.tableHeader}>Date</th>
+                          <th style={styles.tableHeader}>Created By</th>
                           <th style={styles.tableHeader}>Status</th>
                           <th style={styles.tableHeader}>Actions</th>
                         </tr>
@@ -763,6 +772,9 @@ const ServiceHistory = () => {
                             </td>
                             <td style={styles.tableCell}>
                               {new Date(bill.createdAt).toLocaleDateString()}
+                            </td>
+                            <td style={styles.tableCell}>
+                              {bill.user && bill.user.role === 'admin' ? 'admin' : (bill.user && bill.user.name ? bill.user.name : '')}
                             </td>
                             <td style={styles.tableCell}>
                               <span
@@ -842,6 +854,7 @@ const ServiceHistory = () => {
                       <th style={styles.tableHeader}>Amount</th>
                       <th style={styles.tableHeader}>Date</th>
                       <th style={styles.tableHeader}>Status</th>
+                      <th style={styles.tableHeader}>Created By</th>
                       <th style={styles.tableHeader}>Actions</th>
                     </tr>
                   </thead>
@@ -883,6 +896,9 @@ const ServiceHistory = () => {
                             {bill.paymentStatus}
                           </span>
                         </td>
+                        <td style={styles.tableCell}>
+                              {bill.user && bill.user.role === 'admin' ? 'admin' : (bill.user && bill.user.name ? bill.user.name : '')}
+                            </td>
                         <td style={styles.tableCell}>
                           <button
                             onClick={() => handleDownload(bill._id)}

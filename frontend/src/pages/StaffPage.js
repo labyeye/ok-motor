@@ -44,9 +44,9 @@ const StaffPage = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const endpoint = isOwnerView
-        ? `https://ok-motor.onrender.com/api/dashboard/owner`
-        : `https://ok-motor.onrender.com/api/dashboard`;
+        const endpoint = isOwnerView
+          ? `https://ok-motor.onrender.com/api/dashboard/owner`
+          : `https://ok-motor.onrender.com/api/dashboard/stats`;
 
       const response = await fetch(endpoint, {
         headers: {
@@ -203,8 +203,8 @@ const StaffPage = () => {
                     [
                       <FileText size={32} color="#2563eb" />,
                       <TrendingUp size={32} color="#059669" />,
-                      <ShoppingCart size={32} color="#7c3aed" />,
-                      <Target size={32} color="#d97706" />,
+                      <Wrench size={32} color="#7c3aed" />,
+                      <FileText size={32} color="#d97706" />,
                     ][index]
                   }
                 </div>
@@ -216,9 +216,7 @@ const StaffPage = () => {
           <div style={{ ...styles.card, borderLeft: "4px solid #3b82f6" }}>
             <div style={styles.cardContent}>
               <div>
-                <p style={styles.cardLabel}>
-                  {isOwnerView ? "My Purchases" : "Total Buy Letters"}
-                </p>
+                <p style={styles.cardLabel}>Total Buy Letters</p>
                 <p style={styles.cardValue}>{dashboardData.totalBuyLetters}</p>
               </div>
               <div style={{ ...styles.cardIcon, backgroundColor: "#dbeafe" }}>
@@ -230,9 +228,7 @@ const StaffPage = () => {
           <div style={{ ...styles.card, borderLeft: "4px solid #10b981" }}>
             <div style={styles.cardContent}>
               <div>
-                <p style={styles.cardLabel}>
-                  {isOwnerView ? "My Sales" : "Total Sell Letters"}
-                </p>
+                <p style={styles.cardLabel}>Total Sell Letters</p>
                 <p style={styles.cardValue}>{dashboardData.totalSellLetters}</p>
               </div>
               <div style={{ ...styles.cardIcon, backgroundColor: "#d1fae5" }}>
@@ -244,15 +240,11 @@ const StaffPage = () => {
           <div style={{ ...styles.card, borderLeft: "4px solid #8b5cf6" }}>
             <div style={styles.cardContent}>
               <div>
-                <p style={styles.cardLabel}>
-                  {isOwnerView ? "My Purchase Value" : "Total Purchase Value"}
-                </p>
-                <p style={{ ...styles.cardValue, fontSize: "1.5rem" }}>
-                  {formatCurrency(dashboardData.totalBuyValue)}
-                </p>
+                <p style={styles.cardLabel}>Total Services</p>
+                <p style={styles.cardValue}>{dashboardData.totalServices}</p>
               </div>
               <div style={{ ...styles.cardIcon, backgroundColor: "#ede9fe" }}>
-                <ShoppingCart size={32} color="#7c3aed" />
+                <Wrench size={32} color="#7c3aed" />
               </div>
             </div>
           </div>
@@ -260,21 +252,11 @@ const StaffPage = () => {
           <div style={{ ...styles.card, borderLeft: "4px solid #f59e0b" }}>
             <div style={styles.cardContent}>
               <div>
-                <p style={styles.cardLabel}>
-                  {isOwnerView ? "My Net Profit" : "Total Profit"}
-                </p>
-                <p
-                  style={{
-                    ...styles.cardValue,
-                    fontSize: "1.5rem",
-                    color: dashboardData.profit >= 0 ? "#059669" : "#dc2626",
-                  }}
-                >
-                  {formatCurrency(dashboardData.profit)}
-                </p>
+                <p style={styles.cardLabel}>Total Advance Bills</p>
+                <p style={styles.cardValue}>{dashboardData.totalAdvanceBills || 0}</p>
               </div>
               <div style={{ ...styles.cardIcon, backgroundColor: "#fef3c7" }}>
-                <Target size={32} color="#d97706" />
+                <FileText size={32} color="#d97706" />
               </div>
             </div>
           </div>

@@ -132,7 +132,9 @@ router.get("/by-registration", protect, async (req, res) => {
         { visibility: "staff" },
         ...(req.user.role === "staff" || req.user.role === "admin" ? [{}] : []),
       ],
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .populate('user', 'name role');
 
     res.json(advanceBills);
   } catch (error) {
@@ -355,9 +357,13 @@ router.get("/:id/download", protect, async (req, res) => {
 // Get all advance bills
 router.get("/", protect, async (req, res) => {
   try {
-    const advanceBills = await AdvanceBill.find({
-      user: req.user.id || req.user._id,
-    }).sort({ createdAt: -1 });
+    // Staff and admin can see all bills, others only their own
+    const query = (req.user.role === 'staff' || req.user.role === 'admin')
+      ? {}
+      : { user: req.user.id || req.user._id };
+    const advanceBills = await AdvanceBill.find(query)
+      .sort({ createdAt: -1 })
+      .populate('user', 'name role');
 
     res.json({
       success: true,
@@ -368,12 +374,9 @@ router.get("/", protect, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch advance bills",
-      error: error.message,
     });
   }
 });
-
-// Generic /:id route (must come after specific routes like /:id/download)
 router.get("/:id", protect, async (req, res) => {
   try {
     const advanceBill = await AdvanceBill.findById(req.params.id);

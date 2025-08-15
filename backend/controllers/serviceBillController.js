@@ -120,14 +120,13 @@ exports.createServiceBill = async (req, res) => {
 // Get all service bills
 exports.getServiceBills = async (req, res) => {
   try {
-    const serviceBills = await ServiceBill.find({ $or: [
-      { user: req.user.id }, // Records created by the current user
-      { visibility: 'staff' }, // Or records marked as visible to staff
-      // Or if staff should see all records for the registration number:
-      ...(req.user.role === 'staff' ? [{}] : []) // Staff can see all matching registration numbers
-    ] }).sort({
-      createdAt: -1,
-    });
+    // Staff and admin can see all bills, others only their own
+    const query = (req.user.role === 'staff' || req.user.role === 'admin')
+      ? {}
+      : { user: req.user.id };
+    const serviceBills = await ServiceBill.find(query)
+      .sort({ createdAt: -1 })
+      .populate('user', 'name role');
 
     res.status(200).json({
       success: true,
@@ -152,12 +151,13 @@ exports.getServiceBillsByRegistration = async (req, res) => {
     const serviceBills = await ServiceBill.find({ 
       registrationNumber: new RegExp(registrationNumber, 'i'),
       $or: [
-        { user: req.user.id }, // Records created by the current user
-        { visibility: 'staff' }, // Or records marked as visible to staff
-        // Or if staff should see all records for the registration number:
-        ...(req.user.role === 'staff' ? [{}] : []) // Staff can see all matching registration numbers
+        { user: req.user.id },
+        { visibility: 'staff' },
+        ...(req.user.role === 'staff' ? [{}] : [])
       ]
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .populate('user', 'name role');
 
     res.status(200).json({
       success: true,
@@ -260,7 +260,17 @@ exports.downloadServiceBillPDF = async (req, res) => {
   console.log("User making request:", req.user.email);
   
   try {
-    const serviceBill = await ServiceBill.findOne({ _id: req.params.id, user: req.user.id });
+    // Allow admin to download any bill, staff to download their own or bills with visibility 'staff'
+    let query = { _id: req.params.id };
+    if (req.user.role === 'admin' || req.user.role === 'staff') {
+      // Admin and staff can download any bill
+      // No extra filter
+    } else {
+      // Other users: only their own bills
+      query.user = req.user.id;
+    }
+
+    const serviceBill = await ServiceBill.findOne(query);
 
     if (!serviceBill) {
       return res.status(404).json({

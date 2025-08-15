@@ -46,7 +46,8 @@ exports.getBuyLetters = async (req, res) => {
     const buyLetters = await BuyLetter.find(conditions)
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .populate('user', 'name role');
 
     const total = await BuyLetter.countDocuments(conditions);
 

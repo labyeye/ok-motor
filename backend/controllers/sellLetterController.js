@@ -90,9 +90,10 @@ exports.getVehicleDetails = async (req, res) => {
 exports.getSellLetters = async (req, res) => {
   try {
     // You might want to add filtering options here
-    const sellLetters = await SellLetter.find()
+        const sellLetters = await SellLetter.find()
       .sort({ createdAt: -1 })
-      .select("-__v");
+      .select("-__v")
+      .populate('user', 'name role');
     res.json(sellLetters);
   } catch (error) {
     console.error(error);
@@ -114,10 +115,11 @@ exports.getSellLettersByRegistration = async (req, res) => {
       $or: [
         { user: req.user.id }, // Records created by the current user
         { visibility: "staff" }, // Or records marked as visible to staff
-        // Or if staff should see all records for the registration number:
         ...(req.user.role === "staff" ? [{}] : []), // Staff can see all matching registration numbers
       ],
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .populate('user', 'name role');
 
     res.json(sellLetters);
   } catch (error) {
@@ -131,12 +133,12 @@ exports.getMySellLetters = async (req, res) => {
       $or: [
         { user: req.user.id }, // Records created by the current user
         { visibility: "staff" }, // Or records marked as visible to staff
-        // Or if staff should see all records for the registration number:
         ...(req.user.role === "staff" ? [{}] : []), // Staff can see all matching registration numbers
       ],
     })
       .sort({ createdAt: -1 })
-      .select("-__v");
+      .select("-__v")
+      .populate('user', 'name role');
     res.json(sellLetters);
   } catch (error) {
     console.error(error);

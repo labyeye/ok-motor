@@ -1339,6 +1339,7 @@ const BuyLetterHistory = () => {
                       <th style={styles.tableHeader}>Buyer Name</th>
                       <th style={styles.tableHeader}>Sale Amount</th>
                       <th style={styles.tableHeader}>Date</th>
+                      <th style={styles.tableHeader}>Created By</th>
                       <th style={styles.tableHeader}>Actions</th>
                     </tr>
                   </thead>
@@ -1360,7 +1361,9 @@ const BuyLetterHistory = () => {
                         <td style={styles.tableCell}>
                           {formatDate(letter.createdAt)}
                         </td>
-
+                        <td style={styles.tableCell}>
+                          {letter.user && letter.user.role === 'admin' ? 'admin' : (letter.user && letter.user.name ? letter.user.name : '')}
+                        </td>
                         <td style={styles.tableCell}>
                           <button
                             onClick={() => handleDownload(letter)}

@@ -637,6 +637,7 @@ const formatDate = (dateString) => {
                       <th style={styles.tableHeader}>Advance Paid</th>
                       <th style={styles.tableHeader}>Balance Due</th>
                       <th style={styles.tableHeader}>Date</th>
+                      <th style={styles.tableHeader}>Created By</th>
                       <th style={styles.tableHeader}>Actions</th>
                     </tr>
                   </thead>
@@ -668,6 +669,9 @@ const formatDate = (dateString) => {
                         </td>
                         <td style={styles.tableCell}>
                           {formatDate(bill.createdAt)}
+                        </td>
+                        <td style={styles.tableCell}>
+                          {bill.user && bill.user.role === 'admin' ? 'admin' : (bill.user && bill.user.name ? bill.user.name : '')}
                         </td>
                         <td style={styles.tableCell}>
                           <button
