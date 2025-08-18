@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
+import offlineManager from "../utils/offlineManager";
+import { OFFLINE_KEYS } from "../utils/offlineSync";
 import httpClient from "../utils/offlineHttpClient";
 import {
   LayoutDashboard,
@@ -44,24 +46,29 @@ const formatDate = (dateString) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await httpClient.get(
-          `https://ok-motor.onrender.com/api/advance-bills?page=${currentPage}`,
-          {
-            headers: {
-            },
+      setLoading(true);
+      if (offlineManager.getOnlineStatus()) {
+        try {
+          const response = await httpClient.get(
+            `/api/advance-bills?page=${currentPage}`,
+            { headers: {} }
+          );
+          setAdvanceBills(response.data);
+          offlineManager.saveToStorage(OFFLINE_KEYS.advance, response.data);
+          // Save token for offline login
+          const token = localStorage.getItem("token");
+          if (token) {
+            localStorage.setItem("offline_token", token);
           }
-        );
-        setAdvanceBills(response.data.data || response.data);
-        setTotalPages(response.data.totalPages || 1);
-      } catch (error) {
-        console.error("Error fetching advance bills:", error);
-      } finally {
-        setLoading(false);
+        } catch (error) {
+          setAdvanceBills(offlineManager.loadFromStorage(OFFLINE_KEYS.advance, []));
+        }
+      } else {
+        setAdvanceBills(offlineManager.loadFromStorage(OFFLINE_KEYS.advance, []));
       }
+      setLoading(false);
     };
-
+    fetchData();
     fetchData();
   }, [currentPage]);
 
