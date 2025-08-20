@@ -52,29 +52,20 @@ const formatTime12Hour = (timeString) => {
 
 exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
   try {
-    console.log("Starting PDF generation for service bill:", serviceBill._id || 'preview');
-    console.log("Service bill data keys:", Object.keys(serviceBill));
-    console.log("Service items:", serviceBill.serviceItems);
-    console.log("Payment method:", serviceBill.paymentMethod);
-    console.log("Payment status:", serviceBill.paymentStatus);
-    console.log("Vehicle type:", serviceBill.vehicleType);
-    console.log("Service type:", serviceBill.serviceType);
-    
-    // If a Mongoose document was passed, convert to a plain object
+    // Defensive: convert Mongoose doc to plain object
     if (serviceBill && typeof serviceBill.toObject === 'function') {
       serviceBill = serviceBill.toObject();
     }
 
-    // Validate input parameters
+    // Validate input
     if (!serviceBill || typeof serviceBill !== 'object') {
       throw new Error('Invalid serviceBill parameter: must be an object');
     }
-    
     if (!serviceBill.serviceItems || !Array.isArray(serviceBill.serviceItems)) {
       throw new Error('Invalid serviceBill: serviceItems must be an array');
     }
-    
-    // Ensure all numeric fields are numbers
+
+    // Parse all numeric fields safely
     const validatedServiceBill = {
       ...serviceBill,
       totalAmount: parseFloat(serviceBill.totalAmount) || 0,
@@ -91,36 +82,24 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         amount: parseFloat(item.amount) || 0
       }))
     };
-    
-    // Use validated data
     serviceBill = validatedServiceBill;
-    
-    // Ensure required string fields have values but don't override existing values
-    const defaultServiceBill = {
-      paymentMethod: 'cash',
-      paymentStatus: 'pending',
-      vehicleType: 'bike',
-      serviceType: 'regular',
-      customerName: '',
-      customerPhone: '',
-      customerAddress: '',
-      registrationNumber: '',
-      vehicleBrand: '',
-      vehicleModel: '',
-      ...serviceBill  // This ensures existing values are not overridden
-    };
-    
-    console.log("After validation - Payment method:", defaultServiceBill.paymentMethod);
-    console.log("After validation - Payment status:", defaultServiceBill.paymentStatus);
-    console.log("After validation - Vehicle type:", defaultServiceBill.vehicleType);
-    console.log("After validation - Service type:", defaultServiceBill.serviceType);
-    
-    // Update serviceBill with the defaulted values
-    serviceBill = defaultServiceBill;
-    
+
+    // Set defaults for missing string fields
+    serviceBill.paymentMethod = serviceBill.paymentMethod || 'cash';
+    serviceBill.paymentStatus = serviceBill.paymentStatus || 'pending';
+    serviceBill.vehicleType = serviceBill.vehicleType || 'bike';
+    serviceBill.serviceType = serviceBill.serviceType || 'regular';
+    serviceBill.customerName = serviceBill.customerName || '';
+    serviceBill.customerPhone = serviceBill.customerPhone || '';
+    serviceBill.customerAddress = serviceBill.customerAddress || '';
+    serviceBill.registrationNumber = serviceBill.registrationNumber || '';
+    serviceBill.vehicleBrand = serviceBill.vehicleBrand || '';
+    serviceBill.vehicleModel = serviceBill.vehicleModel || '';
+
+    // PDF generation
     const pdfDoc = await PDFDocument.create();
-    const pages = []; // Array to keep track of all pages
-    let currentPage = pdfDoc.addPage([595, 842]); // A4 size
+    const pages = [];
+    let currentPage = pdfDoc.addPage([595, 842]);
     pages.push(currentPage);
 
     const font = await pdfDoc.embedFont("Helvetica");
@@ -128,18 +107,12 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     // Load logo
     const logoPath = path.join(__dirname, "../../frontend/src/images/okmotorback.png");
-    console.log("Logo path:", logoPath);
-    console.log("Logo path exists:", fs.existsSync(logoPath));
-    
     let logoImage;
     try {
       const logoBytes = fs.readFileSync(logoPath);
-      console.log("Logo bytes loaded, size:", logoBytes.length);
       logoImage = await pdfDoc.embedPng(logoBytes);
-      console.log("Logo embedded successfully, logoImage object:", !!logoImage);
     } catch (logoError) {
-      console.error("Error loading logo:", logoError);
-      // Continue without logo if it fails to load
+      console.error("Error loading logo for PDF:", logoError);
       logoImage = null;
     }
 
@@ -942,14 +915,14 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const grandTotal = parseFloat(serviceBill.grandTotal) || 0;
     currentPage.drawText("GRAND TOTAL:", {
       x: 350,
-      y: 310,
+      y: 270,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: fontBold,
     });
     currentPage.drawText(grandTotal.toFixed(2), {
       x: 450,
-      y: 310,
+      y: 270,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: fontBold,

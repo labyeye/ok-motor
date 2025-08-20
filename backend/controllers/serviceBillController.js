@@ -325,13 +325,12 @@ exports.getServiceBill = async (req, res) => {
 // Update service bill
 exports.updateServiceBill = async (req, res) => {
   try {
+    // Allow staff and admin to update their own bills
+    let query = { _id: req.params.id };
     if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: "Not authorized to update service bills" });
+      query.user = req.user._id;
     }
-    let serviceBill = await ServiceBill.findOne({
-      _id: req.params.id,
-      user: req.user._id,
-    });
+    let serviceBill = await ServiceBill.findOne(query);
 
     if (!serviceBill) {
       return res.status(404).json({

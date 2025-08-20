@@ -836,7 +836,7 @@ const AdminPage = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .admin-container {
           display: flex;
           min-height: 100vh;

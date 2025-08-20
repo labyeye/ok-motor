@@ -15,6 +15,7 @@ import {
   Download,
   Trash2,
   Bike,
+  Pencil,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -433,6 +434,10 @@ const ServiceHistory = () => {
     navigate("/login");
   };
 
+  const handleEdit = (bill) => {
+    navigate("/service/create", { state: { bill } });
+  };
+
   const menuItems = [
     {
       name: "Dashboard",
@@ -811,13 +816,22 @@ const ServiceHistory = () => {
                                 )}
                               </button>
                               {user?.role === "admin" && (
-                                <button
-                                  onClick={() => handleDelete(bill._id)}
-                                  style={styles.iconButton}
-                                  title="Delete"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => handleEdit(bill)}
+                                    style={styles.iconButton}
+                                    title="Edit"
+                                  >
+                                    <Pencil size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(bill._id)}
+                                    style={styles.iconButton}
+                                    title="Delete"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </>
                               )}
                             </td>
                           </tr>
@@ -914,13 +928,22 @@ const ServiceHistory = () => {
                             )}
                           </button>
                           {user?.role === "admin" && (
-                            <button
-                              onClick={() => handleDelete(bill._id)}
-                              style={styles.iconButton}
-                              title="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            <>
+                              <button
+                                onClick={() => handleEdit(bill)}
+                                style={styles.iconButton}
+                                title="Edit"
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(bill._id)}
+                                style={styles.iconButton}
+                                title="Delete"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
                           )}
                         </td>
                       </tr>

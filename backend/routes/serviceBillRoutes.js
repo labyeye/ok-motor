@@ -48,7 +48,7 @@ router
 router
   .route("/:id")
   .get(protect, serviceBillController.getServiceBill)
-  .put(admin, serviceBillController.updateServiceBill)
+  .put(protect, serviceBillController.updateServiceBill)
   .delete(protect, serviceBillController.deleteServiceBill);
 
 router

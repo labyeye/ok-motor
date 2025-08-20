@@ -22,7 +22,7 @@ import {
   Trash,
   Bike,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import httpClient from "../utils/offlineHttpClient";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
@@ -34,6 +34,7 @@ const ServiceBillForm = () => {
   const [activeMenu, setActiveMenu] = useState("Create Service Bill");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
+  const location = useLocation();
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [previewPdf, setPreviewPdf] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -119,8 +120,7 @@ const ServiceBillForm = () => {
         `${API_BASE_URL}/advance-bills/vehicle-details`,
         {
           params: { registrationNumber },
-          headers: {
-          },
+          headers: {},
         }
       );
 
@@ -286,13 +286,17 @@ const ServiceBillForm = () => {
 
   // Load data from localStorage on component mount
   useEffect(() => {
-    const savedData = offlineManager.loadFromStorage('serviceBillFormData');
-    if (savedData) {
-      setFormData(savedData);
+    if (location.state && location.state.bill) {
+      setFormData((prev) => ({ ...prev, ...location.state.bill }));
+    } else {
+      const savedData = offlineManager.loadFromStorage("serviceBillFormData");
+      if (savedData) {
+        setFormData(savedData);
+      }
     }
 
     // Load offline queue
-    const savedQueue = offlineManager.getQueue('serviceBillOfflineQueue');
+    const savedQueue = offlineManager.getQueue("serviceBillOfflineQueue");
     setOfflineQueue(savedQueue);
 
     // Set up online/offline listeners
@@ -305,23 +309,23 @@ const ServiceBillForm = () => {
       setIsOnline(false);
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
   // Save form data to localStorage whenever it changes
   useEffect(() => {
-    offlineManager.saveToStorage('serviceBillFormData', formData);
+    offlineManager.saveToStorage("serviceBillFormData", formData);
   }, [formData]);
 
   // Save offline queue to localStorage whenever it changes
   useEffect(() => {
-    offlineManager.saveToStorage('serviceBillOfflineQueue', offlineQueue);
+    offlineManager.saveToStorage("serviceBillOfflineQueue", offlineQueue);
   }, [offlineQueue]);
 
   // Function to sync offline data when coming back online
@@ -329,18 +333,22 @@ const ServiceBillForm = () => {
     const endpoints = {
       create: `${API_BASE_URL}/service-bills`,
       update: `${API_BASE_URL}/service-bills`,
-      delete: `${API_BASE_URL}/service-bills`
+      delete: `${API_BASE_URL}/service-bills`,
     };
 
     setIsSyncing(true);
-    
+
     try {
-      await offlineManager.syncOfflineData(httpClient, 'serviceBillOfflineQueue', endpoints);
+      await offlineManager.syncOfflineData(
+        httpClient,
+        "serviceBillOfflineQueue",
+        endpoints
+      );
       // Update local state after sync
-      const updatedQueue = offlineManager.getQueue('serviceBillOfflineQueue');
+      const updatedQueue = offlineManager.getQueue("serviceBillOfflineQueue");
       setOfflineQueue(updatedQueue);
     } catch (error) {
-      console.error('Error during sync:', error);
+      console.error("Error during sync:", error);
     } finally {
       setIsSyncing(false);
     }
@@ -351,32 +359,36 @@ const ServiceBillForm = () => {
     const queueItem = {
       type,
       data,
-      id: id || Date.now().toString()
+      id: id || Date.now().toString(),
     };
-    
-    offlineManager.addToQueue('serviceBillOfflineQueue', queueItem);
-    const updatedQueue = offlineManager.getQueue('serviceBillOfflineQueue');
+
+    offlineManager.addToQueue("serviceBillOfflineQueue", queueItem);
+    const updatedQueue = offlineManager.getQueue("serviceBillOfflineQueue");
     setOfflineQueue(updatedQueue);
   };
 
   // Function to generate PDF buffer for offline use
   const generatePDFBuffer = async (data) => {
     try {
-      const response = await httpClient.post('/service-bills/generate-pdf', data, {
-        responseType: 'arraybuffer'
-      });
+      const response = await httpClient.post(
+        "/service-bills/generate-pdf",
+        data,
+        {
+          responseType: "arraybuffer",
+        }
+      );
       return response.data;
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error("Error generating PDF:", error);
       throw error;
     }
   };
 
   // Function to download PDF from buffer
   const downloadPDFFromBuffer = (buffer, filename) => {
-    const blob = new Blob([buffer], { type: 'application/pdf' });
+    const blob = new Blob([buffer], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
@@ -403,7 +415,7 @@ const ServiceBillForm = () => {
       if (!token) {
         alert("Authentication required. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
@@ -412,36 +424,22 @@ const ServiceBillForm = () => {
         ...formData,
         serviceDate: new Date(formData.serviceDate).toISOString(),
         deliveryDate: new Date(formData.deliveryDate).toISOString(),
-        serviceItems: formData.serviceItems.map(item => ({
+        serviceItems: formData.serviceItems.map((item) => ({
           ...item,
           quantity: parseFloat(item.quantity) || 0,
-          rate: parseFloat(item.rate) || 0
+          rate: parseFloat(item.rate) || 0,
         })),
-        user: user._id
+        user: user._id,
       };
 
       // Start progress simulation
-      const progressPromise = simulateProgress();
-
-      // Generate PDF first (works offline)
-      const pdfBuffer = await generatePDFBuffer(formattedData);
-      
-      // Create filename
-      const timestamp = new Date().toISOString().split('T')[0];
-      const filename = `service-bill-${timestamp}-${Date.now()}.pdf`;
-      
-      // Download PDF
-      downloadPDFFromBuffer(pdfBuffer, filename);
-      
-      // Wait for progress to complete
-      await progressPromise;
-      
-      // Save to database (online) or queue (offline)
       if (isOnline) {
         try {
-          const saveResponse = await retryRequest(() =>
-            httpClient.post(
-              `${API_BASE_URL}/service-bills`,
+          let billId;
+          if (formData._id) {
+            // Update existing bill
+            const updateResponse = await httpClient.put(
+              `${API_BASE_URL}/service-bills/${formData._id}`,
               formattedData,
               {
                 headers: {
@@ -450,33 +448,48 @@ const ServiceBillForm = () => {
                 },
                 timeout: 30000,
               }
-            )
-          );
-
-          if (!saveResponse.data?.data?._id) {
-            throw new Error("Invalid response format from server");
-          }
-
-          const billId = saveResponse.data.data._id;
-          const pdfResponse = await retryRequest(() =>
-            httpClient.get(
-              `${API_BASE_URL}/service-bills/${billId}/download`,
-              {
-                responseType: "blob",
+            );
+            billId = updateResponse.data?.data?._id || formData._id;
+            if (!updateResponse.data?.success) {
+              throw new Error(
+                updateResponse.data?.message || "Failed to update service bill"
+              );
+            }
+          } else {
+            const saveResponse = await retryRequest(() =>
+              httpClient.post(`${API_BASE_URL}/service-bills`, formattedData, {
                 headers: {
                   Authorization: `Bearer ${token}`,
-                  Accept: "application/pdf",
+                  "Content-Type": "application/json",
                 },
                 timeout: 30000,
-              }
-            )
+              })
+            );
+            if (!saveResponse.data?.data?._id) {
+              throw new Error("Invalid response format from server");
+            }
+            billId = saveResponse.data.data._id;
+          }
+
+          // Download PDF after save/update
+          const pdfResponse = await retryRequest(() =>
+            httpClient.get(`${API_BASE_URL}/service-bills/${billId}/download`, {
+              responseType: "blob",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/pdf",
+              },
+              timeout: 30000, // 30 second timeout
+            })
           );
 
-          const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+          const pdfBlob = new Blob([pdfResponse.data], {
+            type: "application/pdf",
+          });
           saveAs(pdfBlob, `service-bill-${billId}.pdf`);
-          
+
           alert("Service bill saved and downloaded successfully!");
-          
+
           // Clear form after successful save
           setFormData({
             taxEnabled: false,
@@ -500,9 +513,13 @@ const ServiceBillForm = () => {
             engineNumber: "",
             kmReading: "",
             serviceDate: new Date().toISOString().split("T")[0],
-            deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+            deliveryDate: new Date(Date.now() + 86400000)
+              .toISOString()
+              .split("T")[0],
             serviceType: "regular",
-            serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
+            serviceItems: [
+              { description: "", quantity: 1, rate: 0, amount: 0 },
+            ],
             discount: 0,
             taxRate: 0,
             paymentMethod: "cash",
@@ -512,34 +529,38 @@ const ServiceBillForm = () => {
             technicianNotes: "",
             warrantyInfo: "",
           });
-          
+
           // Clear localStorage
-          offlineManager.removeFromStorage('serviceBillFormData');
-          
+          offlineManager.removeFromStorage("serviceBillFormData");
         } catch (error) {
-          console.error("Error in save and download:", error);
-          
+          console.error(
+            "Error in save and download:",
+            error,
+            error.response?.data
+          );
+
           if (error.response?.status === 401) {
             alert("Your session has expired. Please login again.");
             logout();
-            navigate('/login');
+            navigate("/login");
             return;
           }
-          
+
           if (error.response?.status === 503) {
             alert("Server is temporarily unavailable. Please try again later.");
             return;
           }
-          
+
           let errorMessage = "Failed to save and download";
           if (error.response) {
-            errorMessage = error.response.data?.message || "Server error occurred";
-          } else if (error.code === 'ECONNABORTED') {
+            errorMessage =
+              error.response.data?.message || "Server error occurred";
+          } else if (error.code === "ECONNABORTED") {
             errorMessage = "Request timed out. Please try again.";
           } else {
             errorMessage = error.message || "Unknown error occurred";
           }
-          
+
           alert(errorMessage);
         } finally {
           setIsSaving(false);
@@ -548,13 +569,12 @@ const ServiceBillForm = () => {
         }
       } else {
         // Add to offline queue
-        addToOfflineQueue('save', formattedData, formData._id); // Assuming formData has _id if it's an update
-        alert('You are offline. Data will be saved when you come back online.');
+        addToOfflineQueue("save", formattedData, formData._id); // Assuming formData has _id if it's an update
+        alert("You are offline. Data will be saved when you come back online.");
       }
-      
     } catch (error) {
       console.error("Error in handleSaveAndDownload:", error);
-      alert('Error generating PDF. Please try again.');
+      alert("Error generating PDF. Please try again.");
     } finally {
       setIsSaving(false);
       setIsDownloading(false);
@@ -577,11 +597,7 @@ const ServiceBillForm = () => {
         <div style={modalStyles.modal}>
           <div style={modalStyles.header}>
             <div style={modalStyles.logoContainer}>
-              <img 
-                src={logo1} 
-                alt="OK Motor Logo" 
-                style={modalStyles.logo}
-              />
+              <img src={logo1} alt="OK Motor Logo" style={modalStyles.logo} />
             </div>
             <h2 style={modalStyles.title}>Generating Service Bill PDF</h2>
           </div>
@@ -705,11 +721,15 @@ const ServiceBillForm = () => {
         if (attempt === maxRetries) {
           throw error;
         }
-        
+
         // Only retry on 503 errors or network errors
-        if (error.response?.status === 503 || error.code === 'ECONNABORTED' || !error.response) {
+        if (
+          error.response?.status === 503 ||
+          error.code === "ECONNABORTED" ||
+          !error.response
+        ) {
           console.log(`Attempt ${attempt} failed, retrying in ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
           delay *= 2; // Exponential backoff
         } else {
           throw error;
@@ -727,12 +747,15 @@ const ServiceBillForm = () => {
       const token = localStorage.getItem("token");
 
       console.log("Generating PDF - Token present:", !!token);
-      console.log("Generating PDF - Token preview:", token ? token.substring(0, 20) + '...' : 'No token');
+      console.log(
+        "Generating PDF - Token preview:",
+        token ? token.substring(0, 20) + "..." : "No token"
+      );
 
       if (!token) {
         alert("Authentication required. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
@@ -755,11 +778,11 @@ const ServiceBillForm = () => {
         balanceDue: parseFloat(billData.balanceDue) || 0,
         taxRate: parseFloat(billData.taxRate) || 0,
         // Ensure service items have proper numeric values
-        serviceItems: billData.serviceItems.map(item => ({
+        serviceItems: billData.serviceItems.map((item) => ({
           ...item,
           quantity: parseFloat(item.quantity) || 0,
-          rate: parseFloat(item.rate) || 0
-        }))
+          rate: parseFloat(item.rate) || 0,
+        })),
       };
 
       // Log the formatted data for debugging
@@ -770,15 +793,18 @@ const ServiceBillForm = () => {
           totalAmount: formattedBillData.totalAmount,
           taxAmount: formattedBillData.taxAmount,
           discount: formattedBillData.discount,
-          grandTotal: formattedBillData.grandTotal
-        }
+          grandTotal: formattedBillData.grandTotal,
+        },
       });
 
       if (forPreview) {
         // For preview, generate PDF without saving to database
-        console.log("Making service bill preview request to:", `${API_BASE_URL}/service-bills/preview`);
+        console.log(
+          "Making service bill preview request to:",
+          `${API_BASE_URL}/service-bills/preview`
+        );
         console.log("Request data:", formattedBillData);
-        
+
         const previewResponse = await retryRequest(() =>
           httpClient.post(
             `${API_BASE_URL}/service-bills/preview`,
@@ -796,26 +822,27 @@ const ServiceBillForm = () => {
 
         console.log("Service bill preview response received:", previewResponse);
         console.log("Response data type:", typeof previewResponse.data);
-        console.log("Response data length:", previewResponse.data?.length || 'N/A');
+        console.log(
+          "Response data length:",
+          previewResponse.data?.length || "N/A"
+        );
 
-        const pdfBlob = new Blob([previewResponse.data], { type: "application/pdf" });
+        const pdfBlob = new Blob([previewResponse.data], {
+          type: "application/pdf",
+        });
         const url = URL.createObjectURL(pdfBlob);
         setPreviewPdf(url);
         setShowPreviewModal(true);
       } else {
         // For download, save the bill first
         const saveResponse = await retryRequest(() =>
-          httpClient.post(
-            `${API_BASE_URL}/service-bills`,
-            formattedBillData,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              timeout: 30000, // 30 second timeout
-            }
-          )
+          httpClient.post(`${API_BASE_URL}/service-bills`, formattedBillData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            timeout: 30000, // 30 second timeout
+          })
         );
 
         if (!saveResponse.data?.data?._id) {
@@ -824,43 +851,44 @@ const ServiceBillForm = () => {
 
         const billId = saveResponse.data.data._id;
         const pdfResponse = await retryRequest(() =>
-          httpClient.get(
-            `${API_BASE_URL}/service-bills/${billId}/download`,
-            {
-              responseType: "blob",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: "application/pdf",
-              },
-              timeout: 30000, // 30 second timeout
-            }
-          )
+          httpClient.get(`${API_BASE_URL}/service-bills/${billId}/download`, {
+            responseType: "blob",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/pdf",
+            },
+            timeout: 30000, // 30 second timeout
+          })
         );
 
-        const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+        const pdfBlob = new Blob([pdfResponse.data], {
+          type: "application/pdf",
+        });
         saveAs(pdfBlob, `service-bill-${billId}.pdf`);
       }
     } catch (error) {
       console.error("Error generating PDF:", error);
-      
+
       // Handle authentication errors
       if (error.response?.status === 401) {
         alert("Your session has expired. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
         return;
       }
-      
+
       // Handle 503 Service Unavailable
       if (error.response?.status === 503) {
-        alert("Server is temporarily unavailable. Please try again in a few moments. If the problem persists, the server might be restarting.");
+        alert(
+          "Server is temporarily unavailable. Please try again in a few moments. If the problem persists, the server might be restarting."
+        );
         return;
       }
-      
+
       let errorMessage = "Failed to generate PDF";
       if (error.response) {
         errorMessage = error.response.data?.message || "Server error occurred";
-      } else if (error.code === 'ECONNABORTED') {
+      } else if (error.code === "ECONNABORTED") {
         errorMessage = "Request timed out. Please try again.";
       } else {
         errorMessage = error.message || "Unknown error occurred";
@@ -1664,19 +1692,33 @@ const ServiceBillForm = () => {
                     onChange={handleChange}
                     style={styles.formSelect}
                   >
-                    <option value="fixed">Fixed Amount (₹) || निश्चित राशि (₹)</option>
-                    <option value="percentage">Percentage (%) || प्रतिशत (%)</option>
+                    <option value="fixed">
+                      Fixed Amount (₹) || निश्चित राशि (₹)
+                    </option>
+                    <option value="percentage">
+                      Percentage (%) || प्रतिशत (%)
+                    </option>
                   </select>
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    {formData.discountType === "percentage" ? "Discount (%) || छूट (%)" : "Discount (₹) || छूट (₹)"}
+                    {formData.discountType === "percentage"
+                      ? "Discount (%) || छूट (%)"
+                      : "Discount (₹) || छूट (₹)"}
                   </label>
                   <input
                     type="number"
-                    name={formData.discountType === "percentage" ? "discountPercentage" : "discount"}
-                    value={formData.discountType === "percentage" ? formData.discountPercentage : formData.discount}
+                    name={
+                      formData.discountType === "percentage"
+                        ? "discountPercentage"
+                        : "discount"
+                    }
+                    value={
+                      formData.discountType === "percentage"
+                        ? formData.discountPercentage
+                        : formData.discount
+                    }
                     onChange={handleChange}
                     onFocus={() => setFocusedInput("discount")}
                     onBlur={() => setFocusedInput(null)}
@@ -1687,8 +1729,12 @@ const ServiceBillForm = () => {
                         : {}),
                     }}
                     min="0"
-                    step={formData.discountType === "percentage" ? "0.01" : "0.01"}
-                    max={formData.discountType === "percentage" ? "100" : undefined}
+                    step={
+                      formData.discountType === "percentage" ? "0.01" : "0.01"
+                    }
+                    max={
+                      formData.discountType === "percentage" ? "100" : undefined
+                    }
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1845,26 +1891,26 @@ const ServiceBillForm = () => {
             <div style={styles.formActions}>
               {/* Offline/Online Status Indicators */}
               <div style={styles.statusContainer}>
-                <div style={{
-                  ...styles.statusIndicator,
-                  backgroundColor: isOnline ? '#4CAF50' : '#f44336'
-                }}>
-                  {isOnline ? '🟢 Online' : '🔴 Offline'}
+                <div
+                  style={{
+                    ...styles.statusIndicator,
+                    backgroundColor: isOnline ? "#4CAF50" : "#f44336",
+                  }}
+                >
+                  {isOnline ? "🟢 Online" : "🔴 Offline"}
                 </div>
-                
+
                 {isSyncing && (
-                  <div style={styles.syncIndicator}>
-                    🔄 Syncing...
-                  </div>
+                  <div style={styles.syncIndicator}>🔄 Syncing...</div>
                 )}
-                
+
                 {offlineQueue.length > 0 && (
                   <div style={styles.queueIndicator}>
                     📋 {offlineQueue.length} pending
                   </div>
                 )}
               </div>
-              
+
               <div style={styles.buttonContainer}>
                 <button
                   type="button"
@@ -1880,8 +1926,8 @@ const ServiceBillForm = () => {
                   style={styles.downloadButton}
                   disabled={isSaving}
                 >
-                  <Download style={styles.buttonIcon} /> 
-                  {isOnline ? 'Save & Download' : 'Download (Save When Online)'}
+                  <Download style={styles.buttonIcon} />
+                  {isOnline ? "Save & Download" : "Download (Save When Online)"}
                 </button>
               </div>
             </div>
@@ -2216,10 +2262,7 @@ const styles = {
     marginBottom: "40px",
     paddingBottom: "24px",
     borderBottom: "1px solid #e2e8f0",
-    ":last-child": {
-      borderBottom: "none",
-      marginBottom: "0",
-    },
+    // Removed unsupported pseudo-selector
   },
   sectionTitle: {
     fontSize: "1.25rem",
