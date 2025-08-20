@@ -20,6 +20,7 @@ import StaffList from "./components/StaffList";
 import ServiceHistory from "./components/ServiceHistory";
 import AdvancePayBillForm from "./components/AdvancePayBillForm";
 import AdvanceHistory from "./components/AdvanceHistory";
+import { useState,useEffect } from "react";
 
 const RootRedirect = () => {
   const { user, loading } = useAuth();
@@ -68,8 +69,35 @@ const RootRedirect = () => {
 };
 
 function App() {
+   const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
   return (
     <AuthProvider>
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          padding: "8px 16px",
+          background: isOnline ? "#4caf50" : "#f44336",
+          color: "#fff",
+          zIndex: 1000,
+          borderRadius: "0 0 0 8px",
+          fontWeight: "bold",
+        }}
+      >
+        {isOnline ? "Online" : "Offline"}
+      </div>
       <Router>
         <Routes>
           <Route path="/" element={<RootRedirect />} />

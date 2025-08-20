@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useContext } from "react";
 import httpClient from "../utils/offlineHttpClient";
 import {
@@ -21,8 +22,10 @@ import { useNavigate } from "react-router-dom";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
-
 import AuthContext from "../context/AuthContext";
+import offlineManager from "../utils/offlineManager";
+
+const OFFLINE_KEYS = { sell: "SellLetterOfflineQueue" };
 
 const EditSellLetterModal = ({ letter, onClose, onSave }) => {
   const [formData, setFormData] = useState(letter);
@@ -242,26 +245,32 @@ const SellLetterHistory = () => {
   };
   useEffect(() => {
     const fetchSellLetters = async () => {
-      try {
-        setLoading(true);
-        const response = await httpClient.get(
-          `https://ok-motor.onrender.com/api/sell-letters/my-letters?page=${currentPage}`,
-          {
-            headers: {
-            },
+      setLoading(true);
+      if (offlineManager.getOnlineStatus()) {
+        try {
+          const response = await httpClient.get(
+            `https://ok-motor.onrender.com/api/sell-letters/my-letters?page=${currentPage}`,
+            { headers: {} }
+          );
+          setSellLetters(response.data);
+          offlineManager.saveToStorage(OFFLINE_KEYS.sell, response.data);
+          // Save token for offline login
+          const token = localStorage.getItem("token");
+          if (token) {
+            localStorage.setItem("offline_token", token);
           }
-        );
-        setSellLetters(response.data);
-
-        setTotalPages(1);
-      } catch (error) {
-        console.error("Error fetching sell letters:", error);
-      } finally {
-        setLoading(false);
+        } catch (error) {
+          setSellLetters(offlineManager.loadFromStorage(OFFLINE_KEYS.sell, []));
+        }
+      } else {
+        setSellLetters(offlineManager.loadFromStorage(OFFLINE_KEYS.sell, []));
       }
+      setTotalPages(1);
+      setLoading(false);
     };
-
     fetchSellLetters();
+    window.addEventListener("online", fetchSellLetters);
+    return () => window.removeEventListener("online", fetchSellLetters);
   }, [currentPage]);
   const formatTime12Hour = (timeString) => {
     if (!timeString) return "";
@@ -1427,6 +1436,7 @@ const SellLetterHistory = () => {
                       <th style={styles.tableHeader}>Vehicle Reg No</th>
                       <th style={styles.tableHeader}>Amount</th>
                       <th style={styles.tableHeader}>Date</th>
+                      <th style={styles.tableHeader}>Created By</th>
                       <th style={styles.tableHeader}>Actions</th>
                     </tr>
                   </thead>
@@ -1447,7 +1457,9 @@ const SellLetterHistory = () => {
                         <td style={styles.tableCell}>
                           {formatDate(letter.createdAt)}
                         </td>
-
+                        <td style={styles.tableCell}>
+                          {letter.user && letter.user.role === 'admin' ? 'admin' : (letter.user && letter.user.name ? letter.user.name : '')}
+                        </td>
                         <td style={styles.tableCell}>
                           <button
                             onClick={() => handleDownload(letter)}

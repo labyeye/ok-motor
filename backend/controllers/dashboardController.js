@@ -157,13 +157,16 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
 };
 exports.getOwnerDashboardStats = async (req, res) => {
   try {
-    const ownerId = req.user.id;
+    // Staff and admin see all, others only their own
+    const isPrivileged = req.user.role === 'staff' || req.user.role === 'admin';
+    const buyMatch = isPrivileged ? {} : { user: mongoose.Types.ObjectId(req.user.id) };
+    const sellMatch = isPrivileged ? {} : { user: mongoose.Types.ObjectId(req.user.id) };
+    const serviceMatch = isPrivileged ? {} : { user: mongoose.Types.ObjectId(req.user.id) };
 
-    // Get counts and amounts for buy letters (purchases), sell letters, and service bills
     const [buyStats, sellStats, serviceStats, monthlyBuyData, monthlySellData, monthlyServiceData] =
       await Promise.all([
         BuyLetter.aggregate([
-          { $match: { user: mongoose.Types.ObjectId(ownerId) } },
+          { $match: buyMatch },
           {
             $group: {
               _id: null,
@@ -173,7 +176,7 @@ exports.getOwnerDashboardStats = async (req, res) => {
           },
         ]),
         SellLetter.aggregate([
-          { $match: { user: mongoose.Types.ObjectId(ownerId) } },
+          { $match: sellMatch },
           {
             $group: {
               _id: null,
@@ -183,18 +186,18 @@ exports.getOwnerDashboardStats = async (req, res) => {
           },
         ]),
         Service.aggregate([
-          { $match: { user: mongoose.Types.ObjectId(ownerId) } },
+          { $match: serviceMatch },
           {
             $group: {
               _id: null,
               count: { $sum: 1 },
-              totalAmount: { $sum: "$grandTotal" }, // Fixed: using grandTotal
+              totalAmount: { $sum: "$grandTotal" },
             },
           },
         ]),
-        getMonthlyData(BuyLetter, { user: mongoose.Types.ObjectId(ownerId) }),
-        getMonthlyData(SellLetter, { user: mongoose.Types.ObjectId(ownerId) }),
-        getMonthlyData(Service, { user: mongoose.Types.ObjectId(ownerId) }),
+        getMonthlyData(BuyLetter, buyMatch),
+        getMonthlyData(SellLetter, sellMatch),
+        getMonthlyData(Service, serviceMatch),
       ]);
 
     // Get recent transactions
@@ -372,28 +375,43 @@ exports.getDashboardStats = async (req, res) => {
     const profit = totalRevenue - totalExpenses;
     const profitPercentage = totalExpenses > 0 ? (profit / totalExpenses) * 100 : 0;
 
-    res.status(200).json({
-      success: true,
-      data: {
-        totalBuyLetters,
-        totalSellLetters,
-        totalServices,
-        totalBuyValue,
-        totalSellValue,
-        totalServiceValue,
-        totalRevenue,
-        totalExpenses,
-        profit,
-        profitPercentage,
-        recentTransactions: {
-          buy: recentBuy,
-          sell: recentSell,
-          service: recentService,
-          advance: recentAdvance,
+    if (req.user.role === 'staff') {
+      // Staff only sees counts
+      res.status(200).json({
+        success: true,
+        data: {
+          totalBuyLetters,
+          totalSellLetters,
+          totalServices,
+          totalAdvanceBills: recentAdvance.length, // Count of advance bills
         },
-        monthlyData,
-      },
-    });
+      });
+    } else {
+      // Admin/owner sees full stats
+      res.status(200).json({
+        success: true,
+        data: {
+          totalBuyLetters,
+          totalSellLetters,
+          totalServices,
+          totalBuyValue,
+          totalSellValue,
+          totalServiceValue,
+          totalRevenue,
+          totalExpenses,
+          profit,
+          profitPercentage,
+          ownerName: req.user?.name || '',
+          recentTransactions: {
+            buy: recentBuy,
+            sell: recentSell,
+            service: recentService,
+            advance: recentAdvance,
+          },
+          monthlyData,
+        },
+      });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({

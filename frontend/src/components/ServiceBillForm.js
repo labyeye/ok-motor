@@ -370,13 +370,9 @@ const ServiceBillForm = () => {
   // Function to generate PDF buffer for offline use
   const generatePDFBuffer = async (data) => {
     try {
-      const response = await httpClient.post(
-        "/service-bills/generate-pdf",
-        data,
-        {
-          responseType: "arraybuffer",
-        }
-      );
+      const response = await httpClient.post(`${API_BASE_URL}/service-bills/generate-pdf`, data, {
+        responseType: 'arraybuffer'
+      });
       return response.data;
     } catch (error) {
       console.error("Error generating PDF:", error);
