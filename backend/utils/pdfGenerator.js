@@ -657,150 +657,156 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       currentPageItems++;
     });
 
-    // Ensure we have enough space for totals and footer (about 300pt)
-    if (currentY < 300) {
-      currentPage = pdfDoc.addPage([595, 842]);
-      pages.push(currentPage);
-      addWatermark(currentPage); // Add watermark to new page
-      currentY = 700; // Start lower on new page to leave room
-    }
+      // Ensure we have enough space for totals and footer (about 300pt)
+      if (currentY < 300) {
+        currentPage = pdfDoc.addPage([595, 842]);
+        pages.push(currentPage);
+        addWatermark(currentPage); // Add watermark to new page
+        currentY = 700; // Start lower on new page to leave room
+      }
 
-    // Now draw all the remaining sections on the last page
-    // Totals Section
-    currentPage.drawText("Subtotal:", {
-      x: 350,
-      y: currentY,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
-    // Ensure totalAmount is a number
-    const totalAmount = parseFloat(serviceBill.totalAmount) || 0;
-    currentPage.drawText(totalAmount.toFixed(2), {
-      x: 450,
-      y: currentY,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
+      // Use dynamic Y position for all totals and subsequent sections
+      let sectionY = currentY;
 
-    if (serviceBill.taxEnabled) {
-      currentPage.drawText(`Tax (${serviceBill.taxRate}%):`, {
+      // Totals Section
+      currentPage.drawText("Subtotal:", {
         x: 350,
-        y: currentY - 20,
+        y: sectionY,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
-      // Ensure taxAmount is a number
-      const taxAmount = parseFloat(serviceBill.taxAmount) || 0;
-      currentPage.drawText(taxAmount.toFixed(2), {
+      const totalAmount = parseFloat(serviceBill.totalAmount) || 0;
+      currentPage.drawText(totalAmount.toFixed(2), {
         x: 450,
-        y: currentY - 20,
+        y: sectionY,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
-    }
 
-    // Calculate discount based on type
-    let discountAmount = 0;
-    let discountLabel = "Discount:";
-    if (serviceBill.discountType === "percentage") {
-      discountAmount = ((serviceBill.discountPercentage || 0) / 100) * totalAmount;
-      discountLabel = `Discount (${serviceBill.discountPercentage || 0}%):`;
-    } else {
-      discountAmount = parseFloat(serviceBill.discount) || 0;
-    }
-    
-    currentPage.drawText(discountLabel, {
-      x: 350,
-      y: currentY - 40,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
-    currentPage.drawText(discountAmount.toFixed(2), {
-      x: 450,
-      y: currentY - 40,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
+      sectionY -= 20;
+      if (serviceBill.taxEnabled) {
+        currentPage.drawText(`Tax (${serviceBill.taxRate}%):`, {
+          x: 350,
+          y: sectionY,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font,
+        });
+        const taxAmount = parseFloat(serviceBill.taxAmount) || 0;
+        currentPage.drawText(taxAmount.toFixed(2), {
+          x: 450,
+          y: sectionY,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font,
+        });
+        sectionY -= 20;
+      }
 
-    currentPage.drawText("Advance Paid:", {
-      x: 350,
-      y: currentY - 60,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
-    // Ensure advancePaid is a number
-    const advancePaid = parseFloat(serviceBill.advancePaid) || 0;
-    currentPage.drawText(advancePaid.toFixed(2), {
-      x: 450,
-      y: currentY - 60,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
+      // Discount
+      let discountAmount = 0;
+      let discountLabel = "Discount:";
+      if (serviceBill.discountType === "percentage") {
+        discountAmount = ((serviceBill.discountPercentage || 0) / 100) * totalAmount;
+        discountLabel = `Discount (${serviceBill.discountPercentage || 0}%):`;
+      } else {
+        discountAmount = parseFloat(serviceBill.discount) || 0;
+      }
+      currentPage.drawText(discountLabel, {
+        x: 350,
+        y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+      currentPage.drawText(discountAmount.toFixed(2), {
+        x: 450,
+        y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+      sectionY -= 20;
 
-    currentPage.drawText("Balance Due:", {
-      x: 350,
-      y: currentY - 80,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
-    // Ensure balanceDue is a number
-    const balanceDue = parseFloat(serviceBill.balanceDue) || 0;
-    currentPage.drawText(balanceDue.toFixed(2), {
-      x: 450,
-      y: currentY - 80,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
+      // Advance Paid
+      currentPage.drawText("Advance Paid:", {
+        x: 350,
+        y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+      const advancePaid = parseFloat(serviceBill.advancePaid) || 0;
+      currentPage.drawText(advancePaid.toFixed(2), {
+        x: 450,
+        y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+      sectionY -= 20;
 
-    // Payment Information
-    currentPage.drawText("Payment Method:", {
-      x: 50,
-      y: currentY,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: fontBold,
-    });
-    currentPage.drawText((serviceBill.paymentMethod || 'CASH').toUpperCase(), {
-      x: 150,
-      y: currentY,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
+      // Balance Due
+      currentPage.drawText("Balance Due:", {
+        x: 350,
+        y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+      const balanceDue = parseFloat(serviceBill.balanceDue) || 0;
+      currentPage.drawText(balanceDue.toFixed(2), {
+        x: 450,
+        y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+      sectionY -= 40;
 
-    currentPage.drawText("Payment Status:", {
-      x: 50,
-      y: currentY - 20,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: fontBold,
-    });
-    currentPage.drawText((serviceBill.paymentStatus || 'PENDING').toUpperCase(), {
-      x: 150,
-      y: currentY - 20,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
+      // Payment Information
+      currentPage.drawText("Payment Method:", {
+        x: 50,
+        y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: fontBold,
+      });
+      currentPage.drawText((serviceBill.paymentMethod || 'CASH').toUpperCase(), {
+        x: 150,
+        y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+      sectionY -= 20;
 
-    // Issues Reported
-    currentPage.drawText("ISSUES REPORTED", {
-      x: 50,
-      y: currentY - 40,
-      size: 10,
-      color: rgb(0.047, 0.098, 0.196),
-      font: fontBold,
-    });
+      currentPage.drawText("Payment Status:", {
+        x: 50,
+        y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: fontBold,
+      });
+      currentPage.drawText((serviceBill.paymentStatus || 'PENDING').toUpperCase(), {
+        x: 150,
+        y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+      sectionY -= 20;
+
+      // Issues Reported
+      currentPage.drawText("ISSUES REPORTED", {
+        x: 50,
+        y: sectionY,
+        size: 10,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold,
+      });
 
     const issues = serviceBill.issuesReported || "";
     const maxCharsPerLine = 30;

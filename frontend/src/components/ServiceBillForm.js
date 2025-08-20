@@ -287,7 +287,20 @@ const ServiceBillForm = () => {
   // Load data from localStorage on component mount
   useEffect(() => {
     if (location.state && location.state.bill) {
-      setFormData((prev) => ({ ...prev, ...location.state.bill }));
+      const bill = location.state.bill;
+      // Convert date fields to YYYY-MM-DD for input type="date"
+      const formatDate = (date) => {
+        if (!date) return "";
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return "";
+        return d.toISOString().split("T")[0];
+      };
+      setFormData((prev) => ({
+        ...prev,
+        ...bill,
+        serviceDate: formatDate(bill.serviceDate),
+        deliveryDate: formatDate(bill.deliveryDate),
+      }));
     } else {
       const savedData = offlineManager.loadFromStorage("serviceBillFormData");
       if (savedData) {
