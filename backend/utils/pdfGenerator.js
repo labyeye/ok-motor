@@ -6,42 +6,50 @@ const path = require("path");
 const formatTime12Hour = (timeString) => {
   try {
     if (!timeString) return "";
-    
+
     // Handle Date objects
     if (timeString instanceof Date) {
       const hours = timeString.getHours();
       const minutes = timeString.getMinutes();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const ampm = hours >= 12 ? "PM" : "AM";
       const hours12 = hours % 12 || 12;
-      return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
+      return `${String(hours12).padStart(2, "0")}:${String(minutes).padStart(
+        2,
+        "0"
+      )} ${ampm}`;
     }
-    
+
     // Handle string inputs
-    if (typeof timeString === 'string') {
+    if (typeof timeString === "string") {
       // Check if it's already in 12-hour format
-      if (timeString.includes('AM') || timeString.includes('PM')) {
+      if (timeString.includes("AM") || timeString.includes("PM")) {
         return timeString;
       }
-      
+
       // Handle ISO format or HH:MM format
       const date = new Date(timeString);
       if (!isNaN(date.getTime())) {
         const hours = date.getHours();
         const minutes = date.getMinutes();
-        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const ampm = hours >= 12 ? "PM" : "AM";
         const hours12 = hours % 12 || 12;
-        return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
+        return `${String(hours12).padStart(2, "0")}:${String(minutes).padStart(
+          2,
+          "0"
+        )} ${ampm}`;
       }
-      
+
       // Handle simple HH:MM strings
-      const [hour, minute] = timeString.split(':').map(Number);
+      const [hour, minute] = timeString.split(":").map(Number);
       if (!isNaN(hour)) {
         const hours12 = hour % 12 || 12;
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        return `${String(hours12).padStart(2, '0')}:${String(minute || 0).padStart(2, '0')} ${ampm}`;
+        const ampm = hour >= 12 ? "PM" : "AM";
+        return `${String(hours12).padStart(2, "0")}:${String(
+          minute || 0
+        ).padStart(2, "0")} ${ampm}`;
       }
     }
-    
+
     return "";
   } catch (error) {
     console.error("Error formatting time:", error);
@@ -49,20 +57,19 @@ const formatTime12Hour = (timeString) => {
   }
 };
 
-
 exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
   try {
     // Defensive: convert Mongoose doc to plain object
-    if (serviceBill && typeof serviceBill.toObject === 'function') {
+    if (serviceBill && typeof serviceBill.toObject === "function") {
       serviceBill = serviceBill.toObject();
     }
 
     // Validate input
-    if (!serviceBill || typeof serviceBill !== 'object') {
-      throw new Error('Invalid serviceBill parameter: must be an object');
+    if (!serviceBill || typeof serviceBill !== "object") {
+      throw new Error("Invalid serviceBill parameter: must be an object");
     }
     if (!serviceBill.serviceItems || !Array.isArray(serviceBill.serviceItems)) {
-      throw new Error('Invalid serviceBill: serviceItems must be an array');
+      throw new Error("Invalid serviceBill: serviceItems must be an array");
     }
 
     // Parse all numeric fields safely
@@ -75,26 +82,26 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       advancePaid: parseFloat(serviceBill.advancePaid) || 0,
       balanceDue: parseFloat(serviceBill.balanceDue) || 0,
       taxRate: parseFloat(serviceBill.taxRate) || 0,
-      serviceItems: serviceBill.serviceItems.map(item => ({
+      serviceItems: serviceBill.serviceItems.map((item) => ({
         ...item,
         quantity: parseFloat(item.quantity) || 0,
         rate: parseFloat(item.rate) || 0,
-        amount: parseFloat(item.amount) || 0
-      }))
+        amount: parseFloat(item.amount) || 0,
+      })),
     };
     serviceBill = validatedServiceBill;
 
     // Set defaults for missing string fields
-    serviceBill.paymentMethod = serviceBill.paymentMethod || 'cash';
-    serviceBill.paymentStatus = serviceBill.paymentStatus || 'pending';
-    serviceBill.vehicleType = serviceBill.vehicleType || 'bike';
-    serviceBill.serviceType = serviceBill.serviceType || 'regular';
-    serviceBill.customerName = serviceBill.customerName || '';
-    serviceBill.customerPhone = serviceBill.customerPhone || '';
-    serviceBill.customerAddress = serviceBill.customerAddress || '';
-    serviceBill.registrationNumber = serviceBill.registrationNumber || '';
-    serviceBill.vehicleBrand = serviceBill.vehicleBrand || '';
-    serviceBill.vehicleModel = serviceBill.vehicleModel || '';
+    serviceBill.paymentMethod = serviceBill.paymentMethod || "cash";
+    serviceBill.paymentStatus = serviceBill.paymentStatus || "pending";
+    serviceBill.vehicleType = serviceBill.vehicleType || "bike";
+    serviceBill.serviceType = serviceBill.serviceType || "regular";
+    serviceBill.customerName = serviceBill.customerName || "";
+    serviceBill.customerPhone = serviceBill.customerPhone || "";
+    serviceBill.customerAddress = serviceBill.customerAddress || "";
+    serviceBill.registrationNumber = serviceBill.registrationNumber || "";
+    serviceBill.vehicleBrand = serviceBill.vehicleBrand || "";
+    serviceBill.vehicleModel = serviceBill.vehicleModel || "";
 
     // PDF generation
     const pdfDoc = await PDFDocument.create();
@@ -106,7 +113,10 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
 
     // Load logo
-    const logoPath = path.join(__dirname, "../../frontend/src/images/okmotorback.png");
+    const logoPath = path.join(
+      __dirname,
+      "../../frontend/src/images/okmotorback.png"
+    );
     let logoImage;
     try {
       const logoBytes = fs.readFileSync(logoPath);
@@ -241,7 +251,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: fontBold,
       });
 
-       currentPage.drawText(`Name: ${serviceBill.businessName || "N/A"}`, {
+      currentPage.drawText(`Name: ${serviceBill.businessName || "N/A"}`, {
         x: 60,
         y: 670,
         size: 10,
@@ -249,7 +259,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-       currentPage.drawText(`GSTIN: ${serviceBill.businessGSTIN || "N/A"}`, {
+      currentPage.drawText(`GSTIN: ${serviceBill.businessGSTIN || "N/A"}`, {
         x: 380,
         y: 670,
         size: 10,
@@ -257,7 +267,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-       const address = serviceBill.businessAddress || "";
+      const address = serviceBill.businessAddress || "";
       const maxCharsPerLine = 30;
       const addressLines = [];
       for (let i = 0; i < address.length; i += maxCharsPerLine) {
@@ -361,17 +371,17 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       }
     );
-    
+
     const vehicleDetails = [
       {
         label: "Type:",
         value: (serviceBill.vehicleType ?? "").toString().trim()
-          ? (serviceBill.vehicleType).toString().toUpperCase()
+          ? serviceBill.vehicleType.toString().toUpperCase()
           : "N/A",
       },
-      { label: "Brand:", value: (serviceBill.vehicleBrand ?? "N/A") },
-      { label: "Model:", value: (serviceBill.vehicleModel ?? "N/A") },
-      { label: "Reg No:", value: (serviceBill.registrationNumber ?? "N/A") },
+      { label: "Brand:", value: serviceBill.vehicleBrand ?? "N/A" },
+      { label: "Model:", value: serviceBill.vehicleModel ?? "N/A" },
+      { label: "Reg No:", value: serviceBill.registrationNumber ?? "N/A" },
       {
         label: "KM:",
         value:
@@ -444,7 +454,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       {
         label: "Service Type:",
         value: (serviceBill.serviceType ?? "").toString().trim()
-          ? (serviceBill.serviceType).toString().toUpperCase()
+          ? serviceBill.serviceType.toString().toUpperCase()
           : "N/A",
       },
     ];
@@ -555,21 +565,23 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     // Draw all service items with pagination
     // Ensure serviceItems is an array and has valid items
     if (!Array.isArray(serviceBill.serviceItems)) {
-      console.warn('serviceItems is not an array:', serviceBill.serviceItems);
+      console.warn("serviceItems is not an array:", serviceBill.serviceItems);
       return;
     }
-    
+
     serviceBill.serviceItems.forEach((item, index) => {
       // Ensure item has required properties
-      if (!item || typeof item !== 'object') {
-        console.warn('Invalid service item at index', index, ':', item);
+      if (!item || typeof item !== "object") {
+        console.warn("Invalid service item at index", index, ":", item);
         return;
       }
       // Check if we need a new page
-      const shouldCreateNewPage = 
-        (!isFirstPage && currentPageItems >= maxItemsPerPage) || 
-        (isFirstPage && currentPageItems >= minItemsFirstPage && currentY < 300);
-      
+      const shouldCreateNewPage =
+        (!isFirstPage && currentPageItems >= maxItemsPerPage) ||
+        (isFirstPage &&
+          currentPageItems >= minItemsFirstPage &&
+          currentY < 300);
+
       if (shouldCreateNewPage) {
         // Create new page
         currentPage = pdfDoc.addPage([595, 842]);
@@ -657,71 +669,45 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       currentPageItems++;
     });
 
-      // Ensure we have enough space for totals and footer (about 300pt)
-      if (currentY < 300) {
-        currentPage = pdfDoc.addPage([595, 842]);
-        pages.push(currentPage);
-        addWatermark(currentPage); // Add watermark to new page
-        currentY = 700; // Start lower on new page to leave room
-      }
+    // Ensure we have enough space for totals and footer (about 300pt)
+    if (currentY < 300) {
+      currentPage = pdfDoc.addPage([595, 842]);
+      pages.push(currentPage);
+      addWatermark(currentPage); // Add watermark to new page
+      currentY = 700; // Start lower on new page to leave room
+    }
 
-      // Use dynamic Y position for all totals and subsequent sections
-      let sectionY = currentY;
+    // Use dynamic Y position for all totals and subsequent sections
+    let sectionY = currentY;
 
-      // Totals Section
-      currentPage.drawText("Subtotal:", {
+    // Totals Section
+    currentPage.drawText("Subtotal:", {
+      x: 350,
+      y: sectionY,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+    const totalAmount = parseFloat(serviceBill.totalAmount) || 0;
+    currentPage.drawText(totalAmount.toFixed(2), {
+      x: 450,
+      y: sectionY,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    sectionY -= 20;
+    if (serviceBill.taxEnabled) {
+      currentPage.drawText(`Tax (${serviceBill.taxRate}%):`, {
         x: 350,
         y: sectionY,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
       });
-      const totalAmount = parseFloat(serviceBill.totalAmount) || 0;
-      currentPage.drawText(totalAmount.toFixed(2), {
-        x: 450,
-        y: sectionY,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      });
-
-      sectionY -= 20;
-      if (serviceBill.taxEnabled) {
-        currentPage.drawText(`Tax (${serviceBill.taxRate}%):`, {
-          x: 350,
-          y: sectionY,
-          size: 10,
-          color: rgb(0.2, 0.2, 0.2),
-          font: font,
-        });
-        const taxAmount = parseFloat(serviceBill.taxAmount) || 0;
-        currentPage.drawText(taxAmount.toFixed(2), {
-          x: 450,
-          y: sectionY,
-          size: 10,
-          color: rgb(0.2, 0.2, 0.2),
-          font: font,
-        });
-        sectionY -= 20;
-      }
-
-      // Discount
-      let discountAmount = 0;
-      let discountLabel = "Discount:";
-      if (serviceBill.discountType === "percentage") {
-        discountAmount = ((serviceBill.discountPercentage || 0) / 100) * totalAmount;
-        discountLabel = `Discount (${serviceBill.discountPercentage || 0}%):`;
-      } else {
-        discountAmount = parseFloat(serviceBill.discount) || 0;
-      }
-      currentPage.drawText(discountLabel, {
-        x: 350,
-        y: sectionY,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      });
-      currentPage.drawText(discountAmount.toFixed(2), {
+      const taxAmount = parseFloat(serviceBill.taxAmount) || 0;
+      currentPage.drawText(taxAmount.toFixed(2), {
         x: 450,
         y: sectionY,
         size: 10,
@@ -729,84 +715,130 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
       sectionY -= 20;
+    }
 
-      // Advance Paid
-      currentPage.drawText("Advance Paid:", {
-        x: 350,
-        y: sectionY,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      });
-      const advancePaid = parseFloat(serviceBill.advancePaid) || 0;
-      currentPage.drawText(advancePaid.toFixed(2), {
-        x: 450,
-        y: sectionY,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      });
-      sectionY -= 20;
+    // Discount
+    let discountAmount = 0;
+    let discountLabel = "Discount:";
+    if (serviceBill.discountType === "percentage") {
+      discountAmount =
+        ((serviceBill.discountPercentage || 0) / 100) * totalAmount;
+      discountLabel = `Discount (${serviceBill.discountPercentage || 0}%):`;
+    } else {
+      discountAmount = parseFloat(serviceBill.discount) || 0;
+    }
+    currentPage.drawText(discountLabel, {
+      x: 350,
+      y: sectionY,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+    currentPage.drawText(discountAmount.toFixed(2), {
+      x: 450,
+      y: sectionY,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+    sectionY -= 20;
 
-      // Balance Due
-      currentPage.drawText("Balance Due:", {
-        x: 350,
-        y: sectionY,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      });
-      const balanceDue = parseFloat(serviceBill.balanceDue) || 0;
-      currentPage.drawText(balanceDue.toFixed(2), {
-        x: 450,
-        y: sectionY,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      });
-      sectionY -= 40;
+    // Advance Paid
+    currentPage.drawText("Advance Paid:", {
+      x: 350,
+      y: sectionY,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+    const advancePaid = parseFloat(serviceBill.advancePaid) || 0;
+    currentPage.drawText(advancePaid.toFixed(2), {
+      x: 450,
+      y: sectionY,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+    sectionY -= 20;
 
-      // Payment Information
-      currentPage.drawText("Payment Method:", {
-        x: 50,
-        y: sectionY,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: fontBold,
-      });
-      currentPage.drawText((serviceBill.paymentMethod || 'CASH').toUpperCase(), {
+    // Balance Due
+    currentPage.drawText("Balance Due:", {
+      x: 350,
+      y: sectionY,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+    const balanceDue = parseFloat(serviceBill.balanceDue) || 0;
+    currentPage.drawText(balanceDue.toFixed(2), {
+      x: 450,
+      y: sectionY,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+    sectionY -= 40;
+
+    // Payment Information
+    currentPage.drawText("Payment Method:", {
+      x: 50,
+      y: sectionY,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: fontBold,
+    });
+    currentPage.drawText((serviceBill.paymentMethod || "CASH").toUpperCase(), {
+      x: 150,
+      y: sectionY,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+    sectionY -= 20;
+
+    currentPage.drawText("Payment Status:", {
+      x: 50,
+      y: sectionY,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: fontBold,
+    });
+    currentPage.drawText(
+      (serviceBill.paymentStatus || "PENDING").toUpperCase(),
+      {
         x: 150,
         y: sectionY,
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      });
-      sectionY -= 20;
+      }
+    );
+    sectionY -= 20;
+    const grandTotal = parseFloat(serviceBill.grandTotal) || 0;
+    currentPage.drawText("GRAND TOTAL:", {
+      x: 50,
+      y: sectionY,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: fontBold,
+    });
+    currentPage.drawText(grandTotal.toFixed(2), {
+      x: 150,
+      y: sectionY,
+      size: 12,
+      color: rgb(0.047, 0.098, 0.196),
+      font: fontBold,
+    });
+    sectionY=-20;
 
-      currentPage.drawText("Payment Status:", {
-        x: 50,
-        y: sectionY,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: fontBold,
-      });
-      currentPage.drawText((serviceBill.paymentStatus || 'PENDING').toUpperCase(), {
-        x: 150,
-        y: sectionY,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      });
-      sectionY -= 20;
-
-      // Issues Reported
-      currentPage.drawText("ISSUES REPORTED", {
-        x: 50,
-        y: sectionY,
-        size: 10,
-        color: rgb(0.047, 0.098, 0.196),
-        font: fontBold,
-      });
+    // Issues Reported
+    currentPage.drawText("ISSUES REPORTED", {
+      x: 50,
+      y: sectionY,
+      size: 10,
+      color: rgb(0.047, 0.098, 0.196),
+      font: fontBold,
+    });
 
     const issues = serviceBill.issuesReported || "";
     const maxCharsPerLine = 30;
@@ -869,12 +901,15 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     // Technical Notes
     const technicianNotes = serviceBill.technicianNotes || "";
-    const technicianNotesLines = splitTextIntoLines(technicianNotes, maxCharsPerLine);
-    
+    const technicianNotesLines = splitTextIntoLines(
+      technicianNotes,
+      maxCharsPerLine
+    );
+
     if (technicianNotesLines.length > 0) {
       currentPage.drawText("TECHNICAL NOTES", {
         x: 50,
-        y: startY - (issuesLines.length * lineHeight) - 60,
+        y: startY - issuesLines.length * lineHeight - 60,
         size: 10,
         color: rgb(0.047, 0.098, 0.196),
         font: fontBold,
@@ -883,7 +918,11 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       technicianNotesLines.forEach((line, index) => {
         currentPage.drawText(line, {
           x: 150,
-          y: startY - (issuesLines.length * lineHeight) - 60 - (index + 1) * lineHeight,
+          y:
+            startY -
+            issuesLines.length * lineHeight -
+            60 -
+            (index + 1) * lineHeight,
           size: 9,
           color: rgb(0.2, 0.2, 0.2),
           font: font,
@@ -894,10 +933,16 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     // Warranty Information
     const warrantyInfo = serviceBill.warrantyInfo || "";
     const warrantyInfoLines = splitTextIntoLines(warrantyInfo, maxCharsPerLine);
-    
+
     if (warrantyInfoLines.length > 0) {
-      const warrantyStartY = startY - (issuesLines.length * lineHeight) - (technicianNotesLines.length > 0 ? (technicianNotesLines.length * lineHeight + 60) : 0) - 60;
-      
+      const warrantyStartY =
+        startY -
+        issuesLines.length * lineHeight -
+        (technicianNotesLines.length > 0
+          ? technicianNotesLines.length * lineHeight + 60
+          : 0) -
+        60;
+
       currentPage.drawText("WARRANTY INFORMATION", {
         x: 50,
         y: warrantyStartY,
@@ -918,21 +963,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     }
 
     // Grand Total at the very end
-    const grandTotal = parseFloat(serviceBill.grandTotal) || 0;
-    currentPage.drawText("GRAND TOTAL:", {
-      x: 350,
-      y: 270,
-      size: 12,
-      color: rgb(0.047, 0.098, 0.196),
-      font: fontBold,
-    });
-    currentPage.drawText(grandTotal.toFixed(2), {
-      x: 450,
-      y: 270,
-      size: 12,
-      color: rgb(0.047, 0.098, 0.196),
-      font: fontBold,
-    });
 
     // Footer with Signatures
     const footerY = 80;
@@ -998,7 +1028,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     const pdfBytes = await pdfDoc.save();
     console.log("PDF saved, bytes length:", pdfBytes.length);
-    
+
     if (returnBuffer) {
       console.log("Returning buffer for download/preview");
       return Buffer.from(pdfBytes);
