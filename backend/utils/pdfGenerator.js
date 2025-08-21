@@ -816,14 +816,14 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     sectionY -= 20;
     const grandTotal = parseFloat(serviceBill.grandTotal) || 0;
     currentPage.drawText("GRAND TOTAL:", {
-      x: 50,
+      x: 350,
       y: sectionY,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: fontBold,
     });
     currentPage.drawText(grandTotal.toFixed(2), {
-      x: 150,
+      x: 450,
       y: sectionY,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
