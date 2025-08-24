@@ -68,6 +68,18 @@ self.addEventListener("activate", (event) => {
         );
       })
       .then(() => self.clients.claim())
+      .then(() => {
+        // Notify all clients that a new service worker has taken control
+        return self.clients.matchAll().then((clients) => {
+          clients.forEach((client) => {
+            try {
+              client.postMessage({ type: 'SW_UPDATED' });
+            } catch (err) {
+              console.log('Failed to post message to client:', err);
+            }
+          });
+        });
+      })
   );
 });
 
@@ -77,32 +89,38 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   // Skip service worker for download endpoints (PDFs)
-  if (url.pathname.includes('/download') || 
-      url.pathname.includes('/pdf') || 
-      request.headers.get('Accept')?.includes('application/pdf') ||
-      request.url.includes('responseType=blob')) {
+  if (
+    url.pathname.includes('/download') ||
+    url.pathname.includes('/pdf') ||
+    request.headers.get('Accept')?.includes('application/pdf') ||
+    request.url.includes('responseType=blob')
+  ) {
     // Let download requests go directly to network without service worker interference
     return;
   }
 
   // Handle API requests - check for both production and development
   const isApiRequest =
-    url.pathname.startsWith("/api/") ||
-    url.origin === "https://ok-motor.onrender.com" ||
-    (url.origin === "https://ok-motor.onrender.com" &&
-      url.pathname.startsWith("/api/"));
+    url.pathname.startsWith('/api/') ||
+    url.origin === 'https://ok-motor.onrender.com' ||
+    (url.origin === 'https://ok-motor.onrender.com' && url.pathname.startsWith('/api/'));
 
   if (isApiRequest) {
     event.respondWith(handleApiRequest(request));
     return;
   }
 
-  // Handle static assets
+  // Navigation / Document requests (index.html) should be network-first
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(handleNavigationRequest(request));
+    return;
+  }
+
+  // Handle static assets (scripts, styles, images) with cache-first
   if (
-    request.destination === "document" ||
-    request.destination === "script" ||
-    request.destination === "style" ||
-    request.destination === "image"
+    request.destination === 'script' ||
+    request.destination === 'style' ||
+    request.destination === 'image'
   ) {
     event.respondWith(handleStaticRequest(request));
     return;
@@ -111,6 +129,31 @@ self.addEventListener("fetch", (event) => {
   // Default: network first, cache fallback
   event.respondWith(fetch(request).catch(() => caches.match(request)));
 });
+
+// Network-first strategy for navigation requests to avoid serving stale index.html
+async function handleNavigationRequest(request) {
+  const cache = await caches.open(STATIC_CACHE);
+  try {
+    const networkResponse = await fetch(request);
+    // If network returns ok, optionally update cache for offline use
+    if (networkResponse && networkResponse.ok) {
+      // Cache the navigation response under '/' so fallback works offline
+      try {
+        const clone = networkResponse.clone();
+        await cache.put('/', clone);
+      } catch (err) {
+        // Ignore cache put errors
+      }
+      return networkResponse;
+    }
+    throw new Error('Network response not ok');
+  } catch (error) {
+    // Network failed — try to return the cached index.html
+    const cached = await cache.match('/') || (await cache.match('/index.html'));
+    if (cached) return cached;
+    return new Response('Offline', { status: 503 });
+  }
+}
 
 // Handle API requests with cache-first strategy
 async function handleApiRequest(request) {

@@ -102,6 +102,8 @@ app.use("/api/advance-bills", advanceBillRoutes);
 
 // Public root route
 app.get("/", (req, res) => {
+  // Ensure index.html is not aggressively cached by browsers/proxies
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.json({ 
     message: "OK Motor Backend API",
     status: "Running",

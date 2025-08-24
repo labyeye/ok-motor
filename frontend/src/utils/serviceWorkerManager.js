@@ -66,6 +66,10 @@ class ServiceWorkerManager {
       case "SYNC_SUCCESS":
         this.notifyCallbacks("SYNC_SUCCESS", data.action);
         break;
+      case "SW_UPDATED":
+        // Notify clients that a new SW has activated and taken control
+        this.notifyCallbacks("SW_UPDATED");
+        break;
       case "CACHE_UPDATED":
         this.notifyCallbacks("CACHE_UPDATED");
         break;

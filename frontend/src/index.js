@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import swManager from './utils/serviceWorkerManager';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -10,6 +11,22 @@ root.render(
     <App />
   </React.StrictMode>
 );
+
+// Register service worker and listen for updates
+(async function registerSW() {
+  try {
+    await swManager.register();
+    swManager.addCallback(({ type }) => {
+      if (type === 'SW_UPDATED' || type === 'UPDATE_AVAILABLE') {
+        console.log('New app version detected, reloading...');
+        // Clear caches and reload to fetch latest assets
+        swManager.clearCache().then(() => window.location.reload(true));
+      }
+    });
+  } catch (err) {
+    console.warn('Service worker not registered or manager failed:', err);
+  }
+})();
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
