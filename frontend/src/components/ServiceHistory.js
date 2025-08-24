@@ -309,8 +309,6 @@ const ServiceHistory = () => {
       color: "#64748b",
     },
   };
-
-  // Add this debug function to test authentication
   const testAuth = async () => {
     try {
       const token = localStorage.getItem('token');

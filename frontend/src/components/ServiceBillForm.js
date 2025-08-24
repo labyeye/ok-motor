@@ -144,10 +144,15 @@ const ServiceBillForm = () => {
       const cleanedValue = value.replace(/[^0-9.]/g, "");
 
       const items = [...formData.serviceItems];
+      const qty = parseFloat(items[index].quantity) || 1;
+      const rateNum = parseFloat(cleanedValue) || 0;
+      const newAmount = parseFloat((rateNum * qty).toFixed(2));
+
       items[index] = {
         ...items[index],
         rate: cleanedValue,
-        // Don't auto-calculate amount when rate changes
+        // Auto-fill amount based on rate * quantity, but keep amount editable
+        amount: newAmount,
       };
 
       setFormData({
@@ -158,6 +163,7 @@ const ServiceBillForm = () => {
           serviceItems: items,
         }),
       });
+
       return;
     }
 
@@ -201,8 +207,8 @@ const ServiceBillForm = () => {
 
   const addServiceItem = () => {
     const newItems = [
-      ...formData.serviceItems,
-      { description: "", quantity: 1, rate: "0", amount: 0 },
+  ...formData.serviceItems,
+  { description: "", quantity: 1, rate: 0, amount: 0 },
     ];
 
     setFormData({
