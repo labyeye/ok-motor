@@ -70,18 +70,39 @@ exports.createServiceBill = async (req, res) => {
       });
     }
 
-    // Calculate amounts
-    const totalAmount = serviceItems.reduce(
-      (sum, item) => sum + (parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0),
-      0
-    );
+    // Calculate amounts. Use item.amount when provided (actual charged amount),
+    // otherwise fall back to rate * quantity so discounts can be represented.
+    const totalAmount = serviceItems.reduce((sum, item) => {
+      const qty = parseFloat(item.quantity) || 0;
+      const rate = parseFloat(item.rate) || 0;
+      const amount = (item.amount !== undefined && item.amount !== null && item.amount !== "")
+        ? parseFloat(item.amount) || 0
+        : rate * qty;
+      return sum + amount;
+    }, 0);
     const taxAmount = ((parseFloat(otherData.taxRate) || 0) / 100) * totalAmount;
     const grandTotal = totalAmount + taxAmount - (parseFloat(otherData.discount) || 0);
     const balanceDue = grandTotal - (parseFloat(otherData.advancePaid) || 0);
 
+    // Ensure service items have an amount field when not provided so downstream
+    // consumers (PDF, UI) can rely on a concrete value.
+    const normalizedServiceItems = serviceItems.map(item => {
+      const qty = parseFloat(item.quantity) || 0;
+      const rate = parseFloat(item.rate) || 0;
+      const amount = (item.amount !== undefined && item.amount !== null && item.amount !== "")
+        ? parseFloat(item.amount) || 0
+        : rate * qty;
+      return {
+        ...item,
+        quantity: qty,
+        rate: rate,
+        amount: amount,
+      };
+    });
+
     const serviceBillData = {
       ...otherData,
-      serviceItems,
+      serviceItems: normalizedServiceItems,
       totalAmount,
       taxAmount,
       grandTotal,
@@ -192,7 +213,7 @@ exports.previewServiceBillPDF = async (req, res) => {
       });
     }
     
-    // Create a temporary service bill object (not saved to database)
+  // Create a temporary service bill object (not saved to database)
     // Ensure all numeric fields are properly converted
     const tempServiceBill = {
       ...serviceBillData,
@@ -205,12 +226,20 @@ exports.previewServiceBillPDF = async (req, res) => {
       advancePaid: parseFloat(serviceBillData.advancePaid) || 0,
       balanceDue: parseFloat(serviceBillData.balanceDue) || 0,
       taxRate: parseFloat(serviceBillData.taxRate) || 0,
-      // Ensure service items have proper numeric values
-      serviceItems: serviceBillData.serviceItems.map(item => ({
-        ...item,
-        quantity: parseFloat(item.quantity) || 0,
-        rate: parseFloat(item.rate) || 0
-      }))
+      // Ensure service items have proper numeric values and an amount field
+      serviceItems: serviceBillData.serviceItems.map(item => {
+        const quantity = parseFloat(item.quantity) || 0;
+        const rate = parseFloat(item.rate) || 0;
+        const amount = (item.amount !== undefined && item.amount !== null && item.amount !== "")
+          ? parseFloat(item.amount) || 0
+          : rate * quantity;
+        return {
+          ...item,
+          quantity,
+          rate,
+          amount,
+        };
+      })
     };
 
     console.log("Generating PDF with data:", {
@@ -359,10 +388,14 @@ exports.updateServiceBill = async (req, res) => {
       req.body.taxRate ||
       req.body.advancePaid
     ) {
-      serviceBill.totalAmount = serviceBill.serviceItems.reduce(
-        (sum, item) => sum + item.quantity * item.rate,
-        0
-      );
+      serviceBill.totalAmount = serviceBill.serviceItems.reduce((sum, item) => {
+        const qty = parseFloat(item.quantity) || 0;
+        const rate = parseFloat(item.rate) || 0;
+        const amount = (item.amount !== undefined && item.amount !== null && item.amount !== "")
+          ? parseFloat(item.amount) || 0
+          : rate * qty;
+        return sum + amount;
+      }, 0);
       serviceBill.taxAmount =
         (serviceBill.taxRate / 100) * serviceBill.totalAmount;
       serviceBill.grandTotal =

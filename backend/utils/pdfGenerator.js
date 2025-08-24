@@ -82,12 +82,19 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       advancePaid: parseFloat(serviceBill.advancePaid) || 0,
       balanceDue: parseFloat(serviceBill.balanceDue) || 0,
       taxRate: parseFloat(serviceBill.taxRate) || 0,
-      serviceItems: serviceBill.serviceItems.map((item) => ({
-        ...item,
-        quantity: parseFloat(item.quantity) || 0,
-        rate: parseFloat(item.rate) || 0,
-        amount: parseFloat(item.amount) || 0,
-      })),
+      serviceItems: serviceBill.serviceItems.map((item) => {
+        const quantity = parseFloat(item.quantity) || 0;
+        const rate = parseFloat(item.rate) || 0;
+        const amount = (item.amount !== undefined && item.amount !== null && item.amount !== "")
+          ? parseFloat(item.amount) || 0
+          : rate * quantity;
+        return {
+          ...item,
+          quantity,
+          rate,
+          amount,
+        };
+      }),
     };
     serviceBill = validatedServiceBill;
 
@@ -536,16 +543,11 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       currentY -= 20;
     }
 
-    // Function to draw table headers
+    // Function to draw table headers (added Discount column)
     const drawServiceItemHeaders = (page, y) => {
-      const serviceHeaders = [
-        "#",
-        "Description",
-        "Qty",
-        "Rate Rs.",
-        "Amount Rs.",
-      ];
-      const serviceHeaderPositions = [60, 100, 300, 350, 450];
+      const serviceHeaders = ["#", "Description", "Qty", "Rate Rs.", "Disc Rs.", "Amount Rs."];
+      // positions: index, desc, qty, rate, discount, amount
+      const serviceHeaderPositions = [60, 100, 300, 350, 400, 470];
 
       serviceHeaders.forEach((header, index) => {
         page.drawText(header, {
@@ -636,7 +638,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
       const descHeight = Math.max(lines.length * 12, 12);
 
-      // Draw quantity, rate, and amount
+      // Draw quantity, rate, discount and amount
       currentPage.drawText(item.quantity.toString(), {
         x: 300,
         y: currentY,
@@ -655,10 +657,24 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      // Use the actual amount field instead of calculating from rate * quantity
+      // Compute amount (already validated earlier) and per-unit charged amount
       const amount = parseFloat(item.amount) || 0;
+      const qty = parseFloat(item.quantity) || 0;
+      const perUnitAmount = qty > 0 ? amount / qty : rate;
+      // Discount per unit = rate - perUnitAmount (how much less than rate we charged)
+      const discountPerUnit = rate - perUnitAmount;
+
+      // Draw discount per unit
+      currentPage.drawText(discountPerUnit.toFixed(2), {
+        x: 400,
+        y: currentY,
+        size: 9,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      });
+
       currentPage.drawText(amount.toFixed(2), {
-        x: 450,
+        x: 470,
         y: currentY,
         size: 9,
         color: rgb(0.2, 0.2, 0.2),
