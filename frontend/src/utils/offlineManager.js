@@ -1,8 +1,40 @@
 // Offline Manager Utility
+import httpClient from './offlineHttpClient';
+
+// Known queue -> API endpoints mapping
+const QUEUE_ENDPOINTS = {
+  advanceBillOfflineQueue: {
+    create: 'https://ok-motor.onrender.com/api/advance-bills',
+    update: 'https://ok-motor.onrender.com/api/advance-bills',
+    delete: 'https://ok-motor.onrender.com/api/advance-bills',
+  },
+  serviceBillOfflineQueue: {
+    create: 'https://ok-motor.onrender.com/api/service-bills',
+    update: 'https://ok-motor.onrender.com/api/service-bills',
+    delete: 'https://ok-motor.onrender.com/api/service-bills',
+  },
+  sellLetterOfflineQueue: {
+    create: 'https://ok-motor.onrender.com/api/sell-letters',
+    update: 'https://ok-motor.onrender.com/api/sell-letters',
+    delete: 'https://ok-motor.onrender.com/api/sell-letters',
+  },
+  buyLetterOfflineQueue: {
+    create: 'https://ok-motor.onrender.com/api/buy-letter',
+    update: 'https://ok-motor.onrender.com/api/buy-letter',
+    delete: 'https://ok-motor.onrender.com/api/buy-letter',
+  },
+};
+
 class OfflineManager {
   constructor() {
     this.isOnline = navigator.onLine;
     this.setupEventListeners();
+
+    // Attempt sync at startup if online
+    if (this.isOnline) {
+      // fire-and-forget
+      this.syncAllQueues();
+    }
   }
 
   setupEventListeners() {
@@ -19,7 +51,8 @@ class OfflineManager {
 
   onOnline() {
     console.log('🟢 Back online - syncing data...');
-    this.syncOfflineData();
+  // Sync all known queues
+  this.syncAllQueues();
   }
 
   onOffline() {
@@ -62,10 +95,33 @@ class OfflineManager {
   // Add item to offline queue
   addToQueue(queueName, item) {
     const queue = this.loadFromStorage(queueName, []);
+    // Deduplicate by type + data signature (JSON)
+    try {
+      // Compute a stable signature ignoring ephemeral fields that can differ between attempts
+      const stripEphemeral = (obj) => {
+        if (!obj || typeof obj !== 'object') return obj;
+        const copy = { ...obj };
+        // Remove common ephemeral fields
+        ['timestamp', 'filename', 'id', '_id', 'createdAt', 'updatedAt'].forEach(k => delete copy[k]);
+        return copy;
+      };
+      const newDataSig = JSON.stringify(stripEphemeral(item.data || {}));
+      const existing = queue.find(q => q.type === item.type && JSON.stringify(stripEphemeral(q.data || {})) === newDataSig);
+      if (existing) {
+        // update timestamp and return existing id
+        existing.timestamp = new Date().toISOString();
+        this.saveToStorage(queueName, queue);
+        return existing.id;
+      }
+    } catch (err) {
+      // If stringify fails, fall back to blind push
+      console.warn('Failed to compute signature for dedupe', err);
+    }
+
     const queueItem = {
       id: item.id || Date.now().toString(),
       ...item,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
     queue.push(queueItem);
     this.saveToStorage(queueName, queue);
@@ -81,6 +137,13 @@ class OfflineManager {
   removeFromQueue(queueName, itemId) {
     const queue = this.getQueue(queueName);
     const filteredQueue = queue.filter(item => item.id !== itemId);
+    this.saveToStorage(queueName, filteredQueue);
+  }
+
+  // Remove items from queue matching a predicate function
+  removeFromQueueBy(queueName, predicateFn) {
+    const queue = this.getQueue(queueName);
+    const filteredQueue = queue.filter(item => !predicateFn(item));
     this.saveToStorage(queueName, filteredQueue);
   }
 
@@ -107,16 +170,22 @@ class OfflineManager {
     for (const item of queue) {
       try {
         let response;
+    // Attach token if present
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const config = { headers };
         
         switch (item.type) {
           case 'save':
-            response = await httpClient.post(endpoints.create, item.data);
+          case 'create':
+            // alias 'create' to 'save' for historical reasons
+            response = await httpClient.post(endpoints.create, item.data, config);
             break;
           case 'update':
-            response = await httpClient.put(`${endpoints.update}/${item.id}`, item.data);
+      response = await httpClient.put(`${endpoints.update}/${item.id}`, item.data, config);
             break;
           case 'delete':
-            response = await httpClient.delete(`${endpoints.delete}/${item.id}`);
+      response = await httpClient.delete(`${endpoints.delete}/${item.id}`, config);
             break;
           default:
             console.warn('Unknown queue item type:', item.type);
@@ -136,6 +205,19 @@ class OfflineManager {
     }
 
     console.log('🔄 Sync completed');
+  }
+
+  // Sync all configured queues
+  async syncAllQueues() {
+    const queueNames = Object.keys(QUEUE_ENDPOINTS);
+    for (const q of queueNames) {
+      try {
+        const endpoints = QUEUE_ENDPOINTS[q];
+        await this.syncOfflineData(httpClient, q, endpoints);
+      } catch (err) {
+        console.error('Failed to sync queue', q, err);
+      }
+    }
   }
 
   // Check if we're online

@@ -2,6 +2,7 @@ import React, { useState, useCallback, useContext, useEffect } from "react";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
 import httpClient from "../utils/offlineHttpClient";
+import offlineManager from "../utils/offlineManager";
 import {
   User,
   FileSignature,
@@ -42,6 +43,8 @@ const SellLetterForm = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [offlineQueue, setOfflineQueue] = useState([]);
+  const [isSyncing, setIsSyncing] = useState(false);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -92,7 +95,10 @@ const SellLetterForm = () => {
   
   // Handle online/offline status
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
+    const handleOnline = () => {
+      setIsOnline(true);
+      syncOfflineData();
+    };
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
@@ -103,6 +109,28 @@ const SellLetterForm = () => {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Load saved data on component mount
+  useEffect(() => {
+    const savedData = offlineManager.loadFromStorage("sellLetterFormData");
+    if (savedData) {
+      setFormData(savedData);
+    }
+
+    // Load offline queue
+    const savedQueue = offlineManager.getQueue("sellLetterOfflineQueue");
+    setOfflineQueue(savedQueue);
+  }, []);
+
+  // Save form data whenever it changes
+  useEffect(() => {
+    offlineManager.saveToStorage("sellLetterFormData", formData);
+  }, [formData]);
+
+  // Save offline queue to localStorage whenever it changes
+  useEffect(() => {
+    offlineManager.saveToStorage("sellLetterOfflineQueue", offlineQueue);
+  }, [offlineQueue]);
 
   // Load draft data on mount
   useEffect(() => {
@@ -708,11 +736,103 @@ const SellLetterForm = () => {
       setIsSaving(false);
     }
   };
+
+  // Sync offline data when back online
+  const syncOfflineData = async () => {
+    if (!isOnline) return;
+
+    setIsSyncing(true);
+    try {
+      await offlineManager.syncOfflineData(
+        httpClient,
+        "sellLetterOfflineQueue",
+        {
+          create: "https://ok-motor.onrender.com/api/sell-letters",
+          update: "https://ok-motor.onrender.com/api/sell-letters",
+          delete: "https://ok-motor.onrender.com/api/sell-letters"
+        }
+      );
+
+      // Reload queue after sync
+      const updatedQueue = offlineManager.getQueue("sellLetterOfflineQueue");
+      setOfflineQueue(updatedQueue);
+
+      if (updatedQueue.length === 0) {
+        alert("All offline data synced successfully!");
+      }
+    } catch (error) {
+      console.error("Error syncing offline data:", error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Function to generate PDF buffer for offline use
+  const generatePDFBuffer = async (data, language = "hindi") => {
+    try {
+      const response = await httpClient.post(
+        `https://ok-motor.onrender.com/api/sell-letters/generate-pdf?language=${language}`,
+        data,
+        {
+          responseType: 'arraybuffer'
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      throw error;
+    }
+  };
+
+  // Function to download PDF from buffer
+  const downloadPDFFromBuffer = (buffer, filename) => {
+    const blob = new Blob([buffer], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleSaveAndDownload = async () => {
     try {
       setIsSaving(true);
 
-      // Check if letter exists first
+      if (!isOnline) {
+        // Offline mode - generate PDF using server endpoint and queue data for sync
+        try {
+          // Generate PDF buffer using server endpoint
+          const pdfBuffer = await generatePDFBuffer(formData, selectedLanguage);
+
+          // Download the PDF
+          const filename = `vehicle_sell_agreement_${formData.registrationNumber || "document"}.pdf`;
+          downloadPDFFromBuffer(pdfBuffer, filename);
+
+          // Queue the data for later sync
+          const queueItem = {
+            type: "save",
+            data: formData,
+            language: selectedLanguage,
+            timestamp: new Date().toISOString()
+          };
+
+          offlineManager.addToQueue("sellLetterOfflineQueue", queueItem);
+          const updatedQueue = offlineManager.getQueue("sellLetterOfflineQueue");
+          setOfflineQueue(updatedQueue);
+
+          alert("Sell letter PDF downloaded. Data will sync when online.");
+          return;
+        } catch (pdfError) {
+          console.error("Error generating offline PDF:", pdfError);
+          alert("Failed to generate PDF offline. Please try again.");
+          return;
+        }
+      }
+
+      // Online mode - normal operation
       const existingLetter = await httpClient.get(
         `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`
       );
@@ -736,18 +856,6 @@ const SellLetterForm = () => {
     } catch (error) {
       console.error("Error checking/saving sell letter:", error);
       let errorMessage = "Failed to process sell letter. Please try again.";
-
-      // Handle offline case
-      if (error.message === "Request queued for when online") {
-        alert("No internet connection. Data will be saved when connection is restored. PDF will still be generated.");
-        // Allow PDF generation to continue even when offline
-        if (selectedLanguage === "hindi") {
-          await fillAndDownloadHindiPdf();
-        } else {
-          await fillAndDownloadEnglishPdf();
-        }
-        return;
-      }
 
       if (error.response) {
         errorMessage = error.response.data.message || errorMessage;
@@ -1573,24 +1681,45 @@ const SellLetterForm = () => {
                   gap: '8px'
                 }}>
                   ⚠️ Offline Mode - Data will sync when connected
-                  <button
-                    onClick={() => {
-                      const queueStatus = httpClient.getQueueStatus();
-                      alert(`Queued requests: ${queueStatus.count}`);
-                    }}
-                    style={{
-                      background: 'none',
-                      border: '1px solid #856404',
-                      color: '#856404',
-                      padding: '2px 8px',
-                      borderRadius: '3px',
-                      fontSize: '12px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    View Queue ({httpClient.getQueueStatus().count})
-                  </button>
+                  <span style={{
+                    fontSize: '12px',
+                    backgroundColor: '#f59e0b',
+                    color: 'white',
+                    padding: '2px 6px',
+                    borderRadius: '10px'
+                  }}>
+                    {offlineQueue.length} queued
+                  </span>
                 </div>
+              )}
+              {isOnline && offlineQueue.length > 0 && (
+                <button
+                  onClick={syncOfflineData}
+                  disabled={isSyncing}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  {isSyncing ? 'Syncing...' : 'Sync Data'}
+                  <span style={{
+                    fontSize: '12px',
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    padding: '2px 6px',
+                    borderRadius: '10px'
+                  }}>
+                    {offlineQueue.length}
+                  </span>
+                </button>
               )}
             </div>
           </div>

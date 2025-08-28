@@ -30,7 +30,7 @@ async function testEndpoint(url) {
       });
     });
     
-    req.setTimeout(10000, () => {
+    req.setTimeout(50000, () => {
       req.destroy();
       resolve({
         url,

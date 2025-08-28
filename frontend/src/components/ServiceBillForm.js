@@ -1,6 +1,7 @@
 import React, { useState, useContext, useCallback, useEffect } from "react";
 import { saveAs } from "file-saver";
 import offlineManager from "../utils/offlineManager";
+import { generateServiceClientPDF } from "../utils/generateServiceClientPDF";
 import {
   FileText,
   ArrowLeft,
@@ -396,6 +397,30 @@ const ServiceBillForm = () => {
     } catch (error) {
       console.error("Error generating PDF:", error);
       throw error;
+    }
+  };
+
+  // Wrapper to prefer server-side PDF but fallback to client-side when offline
+  const getPDFBuffer = async (data) => {
+    if (!isOnline) {
+      return await generatePDFBufferClient(data);
+    }
+    try {
+      return await generatePDFBuffer(data);
+    } catch (err) {
+      console.warn('Server PDF generation failed, falling back to client generator', err);
+      return await generatePDFBufferClient(data);
+    }
+  };
+
+  // Client-side PDF fallback
+  const generatePDFBufferClient = async (data) => {
+    try {
+      const bytes = await generateServiceClientPDF(data);
+      return bytes;
+    } catch (err) {
+      console.error('Client-side PDF generation failed:', err);
+      throw err;
     }
   };
 

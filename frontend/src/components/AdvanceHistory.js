@@ -424,7 +424,20 @@ const formatDate = (dateString) => {
             Authorization: `Bearer ${token}`,
           },
         });
+        // Remove from UI
         setAdvanceBills(advanceBills.filter((bill) => bill._id !== id));
+
+        // Also remove any queued offline items that reference this bill
+        const deletedBill = advanceBills.find(b => b._id === id);
+        const registrationNumber = deletedBill?.registrationNumber;
+        // Remove by _id
+        offlineManager.removeFromQueueBy('advanceBillOfflineQueue', (item) => {
+          try {
+            if (item.data && (item.data._id === id || item.data.id === id)) return true;
+            if (registrationNumber && item.data && item.data.registrationNumber === registrationNumber) return true;
+          } catch (e) { /* ignore */ }
+          return false;
+        });
       } catch (error) {
         console.error("Error deleting advance bill:", error);
         

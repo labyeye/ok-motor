@@ -50,6 +50,12 @@ const checkUserLoggedIn = async () => {
     try {
       const res = await httpClient.post('https://ok-motor.onrender.com/api/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
+      // Cache user data for offline use after restart
+      try {
+        localStorage.setItem('cachedUser', JSON.stringify(res.data));
+      } catch (err) {
+        console.warn('Failed to store cachedUser for offline use:', err);
+      }
       setUser(res.data);
       return res.data;
     } catch (error) {

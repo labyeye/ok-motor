@@ -310,6 +310,38 @@ router.post("/", protect, async (req, res) => {
 
 // Specific routes must come before generic /:id route to avoid conflicts
 
+// Generate PDF buffer route (for offline use)
+router.post("/generate-pdf", protect, async (req, res) => {
+  try {
+    const advanceBillData = req.body;
+    
+    // Validate required fields
+    if (!advanceBillData) {
+      return res.status(400).json({
+        success: false,
+        message: "Advance bill data is required"
+      });
+    }
+
+    // Generate PDF buffer without saving to database
+    const pdfBuffer = await generateAdvanceBillPDF(advanceBillData, true);
+
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename=advance-bill-${Date.now()}.pdf`,
+    });
+
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("Error generating PDF buffer:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error generating PDF",
+      error: error.message
+    });
+  }
+});
+
 // Download advance bill PDF (specific route)
 router.get("/:id/download", protect, async (req, res) => {
   try {

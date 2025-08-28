@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import httpClient from "../utils/offlineHttpClient";
+import offlineManager from "../utils/offlineManager";
+import { generateAdvanceClientPDF } from "../utils/generateAdvanceClientPDF";
 import logo from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 import logo1 from "../images/okmotorback.png";
@@ -37,22 +39,9 @@ const AdvancePayBillForm = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
-
-  // Monitor online/offline status
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  const [formData, setFormData] = useState({
+  const [offlineQueue, setOfflineQueue] = useState([]);
+  const [isSyncing, setIsSyncing] = useState(false);
+const [formData, setFormData] = useState({
     customerName: "",
     customerPhone: "",
     customerAddress: "",
@@ -75,6 +64,46 @@ const AdvancePayBillForm = () => {
     balanceDue: "0.00",
   });
 
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      syncOfflineData();
+    };
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Load saved data on component mount
+  useEffect(() => {
+    const savedData = offlineManager.loadFromStorage("advanceBillFormData");
+    if (savedData) {
+      setFormData(savedData);
+    }
+
+    // Load offline queue
+    const savedQueue = offlineManager.getQueue("advanceBillOfflineQueue");
+    setOfflineQueue(savedQueue);
+  }, []);
+
+  // Save form data whenever it changes
+  useEffect(() => {
+    offlineManager.saveToStorage("advanceBillFormData", formData);
+  }, [formData]);
+
+  // Save offline queue to localStorage whenever it changes
+  useEffect(() => {
+    offlineManager.saveToStorage("advanceBillOfflineQueue", offlineQueue);
+  }, [offlineQueue]);
+
+  
   const [previewMode, setPreviewMode] = useState(false);
 
   useEffect(() => {
@@ -155,6 +184,66 @@ const AdvancePayBillForm = () => {
     }
   };
 
+  // Sync offline data when back online
+  const syncOfflineData = async () => {
+    if (!isOnline) return;
+
+    setIsSyncing(true);
+    try {
+      await offlineManager.syncOfflineData(
+        httpClient,
+        "advanceBillOfflineQueue",
+        {
+          create: "https://ok-motor.onrender.com/api/advance-bills",
+          update: "https://ok-motor.onrender.com/api/advance-bills",
+          delete: "https://ok-motor.onrender.com/api/advance-bills"
+        }
+      );
+
+      // Reload queue after sync
+      const updatedQueue = offlineManager.getQueue("advanceBillOfflineQueue");
+      setOfflineQueue(updatedQueue);
+
+      if (updatedQueue.length === 0) {
+        alert("All offline data synced successfully!");
+      }
+    } catch (error) {
+      console.error("Error syncing offline data:", error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Function to generate PDF buffer for offline use
+  const generatePDFBuffer = async (data) => {
+    try {
+      const response = await httpClient.post(
+        `https://ok-motor.onrender.com/api/advance-bills/generate-pdf`,
+        data,
+        {
+          responseType: 'arraybuffer'
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      throw error;
+    }
+  };
+
+  // Function to download PDF from buffer
+  const downloadPDFFromBuffer = (buffer, filename) => {
+    const blob = new Blob([buffer], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleSaveAndDownload = async () => {
     if (isSaving) return; // Prevent multiple clicks
     setIsSaving(true);
@@ -184,40 +273,81 @@ const AdvancePayBillForm = () => {
         kmReading: parseFloat(formData.kmReading) || 0,
       };
 
-      const saveResponse = await httpClient.post(
-        "https://ok-motor.onrender.com/api/advance-bills",
-        requestData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      if (!isOnline) {
+        // Offline mode: Generate PDF and queue data for later sync
+        try {
+          // Try server PDF generation first; if it fails, use client generator
+          let pdfBuffer;
+          try {
+            pdfBuffer = await generatePDFBuffer(requestData);
+          } catch (serverErr) {
+            console.warn('Server PDF generation failed, using client generator:', serverErr);
+            const bytes = await generateAdvanceClientPDF(requestData);
+            pdfBuffer = bytes;
+          }
+          
+          // Download PDF
+          const filename = `advance-bill-${Date.now()}.pdf`;
+          downloadPDFFromBuffer(pdfBuffer, filename);
 
-      if (!saveResponse.data?.data?._id) {
-        throw new Error("Invalid response format from server");
+          // Queue data for sync when back online
+          const queueItem = {
+            id: Date.now().toString(),
+            type: 'create',
+            data: requestData,
+            timestamp: new Date().toISOString(),
+            filename: filename
+          };
+
+          offlineManager.addToQueue("advanceBillOfflineQueue", queueItem);
+          const updatedQueue = offlineManager.getQueue("advanceBillOfflineQueue");
+          setOfflineQueue(updatedQueue);
+
+          // Wait for progress to complete
+          await progressPromise;
+
+          alert("Advance bill saved offline and PDF downloaded! Data will sync when you're back online.");
+        } catch (pdfError) {
+          console.error("Error generating PDF offline:", pdfError);
+          alert("Failed to generate PDF offline. Please check your connection and try again.");
+        }
+      } else {
+        // Online mode: Normal save and download
+        const saveResponse = await httpClient.post(
+          "https://ok-motor.onrender.com/api/advance-bills",
+          requestData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!saveResponse.data?.data?._id) {
+          throw new Error("Invalid response format from server");
+        }
+
+        const billId = saveResponse.data.data._id;
+        const pdfResponse = await httpClient.get(
+          `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
+          {
+            responseType: "blob",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/pdf",
+            },
+          }
+        );
+
+        // Wait for progress to complete
+        await progressPromise;
+
+        const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+        saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+
+        alert("Advance bill saved and downloaded successfully!");
       }
-
-      const billId = saveResponse.data.data._id;
-      const pdfResponse = await httpClient.get(
-        `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/pdf",
-          },
-        }
-      );
-
-      // Wait for progress to complete
-      await progressPromise;
-
-      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-      saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
-
-      alert("Advance bill saved and downloaded successfully!");
     } catch (error) {
       console.error("Error in save and download:", error);
       

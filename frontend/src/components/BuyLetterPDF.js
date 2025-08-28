@@ -27,6 +27,7 @@ import logo1 from "../images/okmotorback.png";
 import { useNavigate } from "react-router-dom";
 import httpClient from "../utils/offlineHttpClient";
 import AuthContext from "../context/AuthContext";
+import offlineManager from "../utils/offlineManager";
 const BuyLetterForm = () => {
   const { user, logout } = useContext(AuthContext);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
@@ -43,21 +44,8 @@ const BuyLetterForm = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-
-  // Monitor online/offline status
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
+  const [offlineQueue, setOfflineQueue] = useState([]);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [formData, setFormData] = useState({
     sellerName: "",
     sellerFatherName: "",
@@ -106,6 +94,46 @@ const BuyLetterForm = () => {
     returnpersonname: "",
     note: "",
   });
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      syncOfflineData();
+    };
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Load saved data on component mount
+  useEffect(() => {
+    const savedData = offlineManager.loadFromStorage("buyLetterFormData");
+    if (savedData) {
+      setFormData(savedData);
+    }
+
+    // Load offline queue
+    const savedQueue = offlineManager.getQueue("buyLetterOfflineQueue");
+    setOfflineQueue(savedQueue);
+  }, []);
+
+  // Save form data whenever it changes
+  useEffect(() => {
+    offlineManager.saveToStorage("buyLetterFormData", formData);
+  }, [formData]);
+
+  // Save offline queue to localStorage whenever it changes
+  useEffect(() => {
+    offlineManager.saveToStorage("buyLetterOfflineQueue", offlineQueue);
+  }, [offlineQueue]);
+
+  
   const LoadingOverlay = () => (
     <div style={styles.loadingOverlay}>
       <div style={styles.loadingContent}>
@@ -381,11 +409,221 @@ const BuyLetterForm = () => {
       setIsSaving(false);
     }
   };
+
+  // Sync offline data when back online
+  const syncOfflineData = async () => {
+    if (!isOnline) return;
+
+    setIsSyncing(true);
+    try {
+      await offlineManager.syncOfflineData(
+        httpClient,
+        "buyLetterOfflineQueue",
+        {
+          create: "https://ok-motor.onrender.com/api/buy-letter",
+          update: "https://ok-motor.onrender.com/api/buy-letter",
+          delete: "https://ok-motor.onrender.com/api/buy-letter"
+        }
+      );
+
+      // Reload queue after sync
+      const updatedQueue = offlineManager.getQueue("buyLetterOfflineQueue");
+      setOfflineQueue(updatedQueue);
+
+      if (updatedQueue.length === 0) {
+        alert("All offline data synced successfully!");
+      }
+    } catch (error) {
+      console.error("Error syncing offline data:", error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Function to generate PDF buffer for offline use
+  const generatePDFBuffer = async (data, language = "hindi") => {
+    try {
+      const response = await httpClient.post(
+        `https://ok-motor.onrender.com/api/buy-letter/generate-pdf?language=${language}`,
+        data,
+        {
+          responseType: 'arraybuffer',
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.warn("Server PDF generation failed, falling back to local generator:", error?.message || error);
+      // Fallback: generate PDF locally using the same template logic
+      try {
+        const localBytes = await generateLocalPdfBytes(language);
+        return localBytes;
+      } catch (localErr) {
+        console.error("Local PDF generation also failed:", localErr);
+        throw error; // throw original error to preserve semantics
+      }
+    }
+  };
+
+  // Local PDF bytes generator (used as fallback when server generation is unavailable)
+  const generateLocalPdfBytes = async (language = "hindi") => {
+    try {
+      const templateUrl = language === "hindi" ? "/templates/buyletter.pdf" : "/templates/englishbuyletter.pdf";
+      const existingPdfBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+      // Try to embed the same logo used by server template so offline PDF looks identical
+      let embeddedLogo = null;
+      try {
+        const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
+        embeddedLogo = await pdfDoc.embedPng(logoBytes);
+      } catch (logoErr) {
+        // ignore logo embedding errors
+        console.warn('Could not embed logo for local PDF fallback:', logoErr);
+      }
+
+      const positions = language === "hindi" ? fieldPositions : englishFieldPositions;
+      const firstPage = pdfDoc.getPages()[0];
+
+      // If we have an embedded logo, draw a faint watermark on the first page to match server output
+      if (embeddedLogo) {
+        try {
+          firstPage.drawImage(embeddedLogo, {
+            x: 200,
+            y: 120,
+            width: 300,
+            height: 300,
+            opacity: 0.12,
+            rotate: degrees(45),
+          });
+        } catch (e) {
+          // some environments might not support rotate; draw without rotate
+          try {
+            firstPage.drawImage(embeddedLogo, { x: 200, y: 120, width: 300, height: 300, opacity: 0.12 });
+          } catch (e2) {
+            // ignore
+          }
+        }
+      }
+
+      const formattedData = {
+        ...formData,
+        saleDate: formatDate(formData.saleDate),
+        todayDate: formatDate(formData.todayDate),
+        todayDate1: formatDate(formData.todayDate),
+        todayTime: formatTime(formData.todayTime),
+        todayTime1: formatTime(formData.todayTime),
+        saleTime: formatTime(formData.saleTime),
+        saleAmount: formatRupee(formData.saleAmount),
+        vehiclekm: formatKm(formData.vehiclekm),
+        amountInWords: formatIndianAmountInWords(
+          formData.saleAmount ? formData.saleAmount.toString().replace(/\D/g, "") : "0"
+        ),
+      };
+
+      for (const [fieldName, position] of Object.entries(positions)) {
+        if (fieldName === "selleraadharphone" && formattedData.selleraadharphone) {
+          const combinedPhones = `${formattedData.selleraadharphone}${formattedData.selleraadharphone2 ? ` , ${formattedData.selleraadharphone2}` : ""}`;
+          firstPage.drawText(combinedPhones, {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        } else if (fieldName !== "selleraadharphone2" && formattedData[fieldName]) {
+          firstPage.drawText(String(formattedData[fieldName]), {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        }
+      }
+
+      // Add amount in words
+      const saleAmountText = formattedData.saleAmount || "";
+      const saleAmountWidth = saleAmountText.length * (positions.saleAmount.size / 2);
+      const amountInWordsX = positions.saleAmount.x + saleAmountWidth + 1.4 * (positions.saleAmount.size / 2);
+
+      firstPage.drawText(formattedData.amountInWords, {
+        x: amountInWordsX,
+        y: positions.saleAmount.y,
+        size: positions.saleAmount.size,
+        color: rgb(0, 0, 0),
+      });
+
+      // Add invoice page similar to drawVehicleInvoice and include header/logo
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      if (embeddedLogo) {
+        try {
+          invoicePage.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });
+          invoicePage.drawImage(embeddedLogo, { x: 50, y: 745, width: 150, height: 120 });
+          try {
+            invoicePage.drawImage(embeddedLogo, { x: 280, y: 150, width: 470, height: 400, opacity: 0.3, rotate: degrees(45) });
+          } catch (e) {
+            invoicePage.drawImage(embeddedLogo, { x: 280, y: 150, width: 470, height: 400, opacity: 0.3 });
+          }
+        } catch (e) {
+          // ignore drawing errors
+        }
+      }
+      invoicePage.drawText("Vehicle Invoice", { x: 250, y: 800, size: 20, color: rgb(0, 0, 0) });
+
+      const pdfBytes = await pdfDoc.save();
+      return pdfBytes;
+    } catch (err) {
+      console.error("generateLocalPdfBytes error:", err);
+      throw err;
+    }
+  };
+
+  // Function to download PDF from buffer
+  const downloadPDFFromBuffer = (buffer, filename) => {
+    const blob = new Blob([buffer], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleSaveAndDownload = async () => {
     try {
       setIsDownloading(true);
       setIsSaving(true);
+      if (!isOnline) {
+        // Offline mode - generate PDF locally (use in-component generators) and queue data for sync
+        try {
+          if (selectedLanguage === "hindi") {
+            await fillAndDownloadHindiPdf();
+          } else {
+            await fillAndDownloadEnglishPdf();
+          }
 
+          // Queue the data for later sync
+          const queueItem = {
+            type: "save",
+            data: formData,
+            language: selectedLanguage,
+            timestamp: new Date().toISOString(),
+          };
+
+          offlineManager.addToQueue("buyLetterOfflineQueue", queueItem);
+          const updatedQueue = offlineManager.getQueue("buyLetterOfflineQueue");
+          setOfflineQueue(updatedQueue);
+
+          alert("Buy letter PDF downloaded. Data will sync when online.");
+          return;
+        } catch (pdfError) {
+          console.error("Error generating offline PDF:", pdfError);
+          alert("Failed to generate PDF offline. Please try again.");
+          return;
+        }
+      }
+
+      // Online mode - normal operation
       const existingLetter = await httpClient.get(
         `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
       );
@@ -1516,10 +1754,19 @@ const BuyLetterForm = () => {
                 }}>
                   {isOnline ? 'Online' : 'Offline'}
                 </span>
-                {!isOnline && httpClient.getQueueStatus().count > 0 && (
+                {!isOnline && offlineQueue.length > 0 && (
                   <span style={styles.queueCount}>
-                    {httpClient.getQueueStatus().count} queued
+                    {offlineQueue.length} queued
                   </span>
+                )}
+                {isOnline && offlineQueue.length > 0 && (
+                  <button
+                    onClick={syncOfflineData}
+                    disabled={isSyncing}
+                    style={styles.syncButton}
+                  >
+                    {isSyncing ? 'Syncing...' : 'Sync Data'}
+                  </button>
                 )}
               </div>
             </div>
@@ -2316,7 +2563,8 @@ const BuyLetterForm = () => {
                 style={styles.downloadButton}
                 disabled={isSaving}
               >
-                <Download style={styles.buttonIcon} /> Save & Download
+                <Download style={styles.buttonIcon} />
+                {isOnline ? 'Save & Download' : 'Download (Save When Online)'}
               </button>
             </div>
           </form>
@@ -2491,6 +2739,45 @@ const styles = {
   },
   header: {
     marginBottom: "32px",
+  },
+  headerTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: "16px",
+  },
+  statusIndicator: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+  statusDot: {
+    width: "8px",
+    height: "8px",
+    borderRadius: "50%",
+  },
+  statusText: {
+    fontSize: "0.875rem",
+    fontWeight: "500",
+  },
+  queueCount: {
+    fontSize: "0.75rem",
+    backgroundColor: "#f59e0b",
+    color: "white",
+    padding: "2px 6px",
+    borderRadius: "10px",
+  },
+  syncButton: {
+    fontSize: "0.75rem",
+    backgroundColor: "#10b981",
+    color: "white",
+    border: "none",
+    padding: "4px 8px",
+    borderRadius: "4px",
+    cursor: "pointer",
+    ":hover": {
+      backgroundColor: "#059669",
+    },
   },
   pageTitle: {
     fontSize: "1.875rem",
