@@ -53,18 +53,20 @@ const formatDate = (dateString) => {
             `/api/advance-bills?page=${currentPage}`,
             { headers: {} }
           );
-          setAdvanceBills(response.data);
-          offlineManager.saveToStorage(OFFLINE_KEYS.advance, response.data);
+          setAdvanceBills(response.data.data || []);
+          offlineManager.saveToStorage(OFFLINE_KEYS.advance, response.data.data || []);
           // Save token for offline login
           const token = localStorage.getItem("token");
           if (token) {
             localStorage.setItem("offline_token", token);
           }
         } catch (error) {
-          setAdvanceBills(offlineManager.loadFromStorage(OFFLINE_KEYS.advance, []));
+          const storedData = offlineManager.loadFromStorage(OFFLINE_KEYS.advance, []);
+          setAdvanceBills(Array.isArray(storedData) ? storedData : storedData.data || []);
         }
       } else {
-        setAdvanceBills(offlineManager.loadFromStorage(OFFLINE_KEYS.advance, []));
+        const storedData = offlineManager.loadFromStorage(OFFLINE_KEYS.advance, []);
+        setAdvanceBills(Array.isArray(storedData) ? storedData : storedData.data || []);
       }
       setLoading(false);
     };
