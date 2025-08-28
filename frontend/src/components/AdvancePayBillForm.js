@@ -216,6 +216,13 @@ const [formData, setFormData] = useState({
 
   // Function to generate PDF buffer for offline use
   const generatePDFBuffer = async (data) => {
+    // If offline, don't call the server (which would enqueue an HTTP request) - generate locally
+    if (!navigator.onLine) {
+      // Use client-side generator to avoid queuing an HTTP request
+      const bytes = await generateAdvanceClientPDF(data);
+      return bytes;
+    }
+
     try {
       const response = await httpClient.post(
         `https://ok-motor.onrender.com/api/advance-bills/generate-pdf`,
@@ -227,7 +234,13 @@ const [formData, setFormData] = useState({
       return response.data;
     } catch (error) {
       console.error("Error generating PDF:", error);
-      throw error;
+      // If server call failed while online, fall back to client generator
+      try {
+        const bytes = await generateAdvanceClientPDF(data);
+        return bytes;
+      } catch (clientErr) {
+        throw error;
+      }
     }
   };
 

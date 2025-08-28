@@ -473,12 +473,27 @@ const BuyLetterForm = () => {
 
       // Try to embed the same logo used by server template so offline PDF looks identical
       let embeddedLogo = null;
-      try {
-        const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
-        embeddedLogo = await pdfDoc.embedPng(logoBytes);
-      } catch (logoErr) {
-        // ignore logo embedding errors
-        console.warn('Could not embed logo for local PDF fallback:', logoErr);
+      const possibleLogoUrls = [logo1, '/images/okmotorback.png', '/images/company.png', '/logo192.png'];
+      for (const lurl of possibleLogoUrls) {
+        if (!lurl) continue;
+        try {
+          const logoBytes = await fetch(lurl).then((r) => {
+            if (!r.ok) throw new Error('Logo fetch failed');
+            return r.arrayBuffer();
+          });
+          try {
+            embeddedLogo = await pdfDoc.embedPng(logoBytes);
+          } catch (pngErr) {
+            try {
+              embeddedLogo = await pdfDoc.embedJpg(logoBytes);
+            } catch (jpgErr) {
+              embeddedLogo = null;
+            }
+          }
+          if (embeddedLogo) break;
+        } catch (logoErr) {
+          console.warn('Could not embed logo for local PDF fallback from', lurl, logoErr);
+        }
       }
 
       const positions = language === "hindi" ? fieldPositions : englishFieldPositions;

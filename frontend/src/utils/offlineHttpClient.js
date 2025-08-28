@@ -1,5 +1,6 @@
 import axios from "axios";
 import swManager from "./serviceWorkerManager";
+import offlineManager from "./offlineManager";
 import config from "../config/environment";
 
 // Enhanced axios client with offline support
@@ -129,22 +130,58 @@ class OfflineHttpClient {
       config,
       timestamp: Date.now(),
     };
-
     this.offlineQueue.push(queuedRequest);
 
-    // Store in localStorage for persistence
-    const storedQueue = JSON.parse(localStorage.getItem("httpQueue") || "[]");
-    storedQueue.push(queuedRequest);
-    localStorage.setItem("httpQueue", JSON.stringify(storedQueue));
+    // Heuristic: if the URL matches a known domain API that has an offlineManager queue,
+    // add the item to that queue instead of the generic httpQueue to avoid duplicate entries.
+    try {
+      const url = typeof config.url === 'string' ? config.url : (config.url && config.url.url) || '';
+      const PATH_TO_QUEUE = {
+        '/api/advance-bills': 'advanceBillOfflineQueue',
+        '/api/service-bills': 'serviceBillOfflineQueue',
+        '/api/sell-letters': 'sellLetterOfflineQueue',
+        '/api/buy-letter': 'buyLetterOfflineQueue',
+      };
 
-    // Register with service worker manager
-    await swManager.queueOfflineAction("HTTP_REQUEST", config.url, {
-      method: config.method,
-      headers: config.headers,
-      body: config.data,
-    });
+      let matchedQueue = null;
+      for (const path in PATH_TO_QUEUE) {
+        if (url.includes(path)) {
+          matchedQueue = PATH_TO_QUEUE[path];
+          break;
+        }
+      }
 
-    console.log("Request queued for offline sync:", queuedRequest);
+      if (matchedQueue) {
+        // Add to domain-specific offline queue (store minimal metadata)
+        const queueItem = {
+          id: queuedRequest.id.toString(),
+          type: config.method === 'post' ? 'create' : (config.method === 'put' ? 'update' : (config.method === 'delete' ? 'delete' : 'create')),
+          data: config.data || {},
+          timestamp: new Date().toISOString(),
+        };
+        offlineManager.addToQueue(matchedQueue, queueItem);
+        console.log('Added offline HTTP request to domain queue', matchedQueue, queueItem.id);
+      } else {
+        // Fallback: store in generic httpQueue in localStorage for other endpoints
+        const storedQueue = JSON.parse(localStorage.getItem("httpQueue") || "[]");
+        storedQueue.push(queuedRequest);
+        localStorage.setItem("httpQueue", JSON.stringify(storedQueue));
+
+        // Register with service worker manager
+        await swManager.queueOfflineAction("HTTP_REQUEST", config.url, {
+          method: config.method,
+          headers: config.headers,
+          body: config.data,
+        });
+
+        console.log("Request queued for offline sync:", queuedRequest);
+      }
+    } catch (err) {
+      console.error('Failed to route queued request to offlineManager, falling back to httpQueue', err);
+      const storedQueue = JSON.parse(localStorage.getItem("httpQueue") || "[]");
+      storedQueue.push(queuedRequest);
+      localStorage.setItem("httpQueue", JSON.stringify(storedQueue));
+    }
   }
 
   // Process offline queue when back online

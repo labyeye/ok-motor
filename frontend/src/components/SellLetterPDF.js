@@ -769,6 +769,17 @@ const SellLetterForm = () => {
 
   // Function to generate PDF buffer for offline use
   const generatePDFBuffer = async (data, language = "hindi") => {
+    // If offline, avoid calling server (which would enqueue an HTTP request). Prefer local generator.
+    if (!navigator.onLine) {
+      // Attempt to use local generator (file templates or client-side generator)
+      try {
+        const localBytes = await generateLocalPdfBytes(language);
+        return localBytes;
+      } catch (localErr) {
+        throw localErr;
+      }
+    }
+
     try {
       const response = await httpClient.post(
         `https://ok-motor.onrender.com/api/sell-letters/generate-pdf?language=${language}`,
@@ -780,7 +791,13 @@ const SellLetterForm = () => {
       return response.data;
     } catch (error) {
       console.error("Error generating PDF:", error);
-      throw error;
+      // fallback to local generator on failure
+      try {
+        const localBytes = await generateLocalPdfBytes(language);
+        return localBytes;
+      } catch (localErr) {
+        throw error;
+      }
     }
   };
 

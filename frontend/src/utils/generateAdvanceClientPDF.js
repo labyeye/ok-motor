@@ -55,16 +55,30 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
 
   const formatRupeeWithSymbol = (val) => `Rs.${formatRupee(val)}`;
 
-  // Try to fetch logo from public folder
+  // Try to fetch logo from several possible locations (imported path, public path, fallback)
   let logoImage = null;
-  try {
-    const res = await fetch(brandlogo);
-    if (res.ok) {
+  const possibleLogoUrls = [brandlogo, '/images/okmotorback.png', '/images/company.png', '/logo192.png'];
+  for (const url of possibleLogoUrls) {
+    if (!url) continue;
+    try {
+      const res = await fetch(url);
+      if (!res || !res.ok) continue;
       const bytes = await res.arrayBuffer();
-      logoImage = await pdfDoc.embedPng(bytes);
+      // try png then jpg
+      try {
+        logoImage = await pdfDoc.embedPng(bytes);
+      } catch (pngErr) {
+        try {
+          logoImage = await pdfDoc.embedJpg(bytes);
+        } catch (jpgErr) {
+          // continue to next
+          logoImage = null;
+        }
+      }
+      if (logoImage) break;
+    } catch (e) {
+      // ignore and try next
     }
-  } catch (e) {
-    // ignore
   }
 
   // Layout adapted from backend
