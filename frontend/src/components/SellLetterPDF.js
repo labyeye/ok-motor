@@ -773,7 +773,7 @@ const SellLetterForm = () => {
     if (!navigator.onLine) {
       // Attempt to use local generator (file templates or client-side generator)
       try {
-        const localBytes = await generateLocalPdfBytes(language);
+        const localBytes = await generatePDFBuffer(language);
         return localBytes;
       } catch (localErr) {
         throw localErr;
@@ -793,7 +793,7 @@ const SellLetterForm = () => {
       console.error("Error generating PDF:", error);
       // fallback to local generator on failure
       try {
-        const localBytes = await generateLocalPdfBytes(language);
+        const localBytes = await generatePDFBuffer(language);
         return localBytes;
       } catch (localErr) {
         throw error;

@@ -465,7 +465,7 @@ const BuyLetterForm = () => {
   };
 
   // Local PDF bytes generator (used as fallback when server generation is unavailable)
-  const generateLocalPdfBytes = async (language = "hindi") => {
+   const generateLocalPdfBytes = async (language = "hindi") => {
     try {
       const templateUrl = language === "hindi" ? "/templates/buyletter.pdf" : "/templates/englishbuyletter.pdf";
       const existingPdfBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
@@ -3171,5 +3171,4 @@ const styles = {
     color: "#6b7280",
   },
 };
-
 export default BuyLetterForm;

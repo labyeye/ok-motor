@@ -621,7 +621,8 @@ const SellLetterHistory = () => {
         buyerName2: letter.buyerName,
         saleDate: formatDate(letter.saleDate),
         saleTime: formatTime12Hour(letter.saleTime), // Use 12-hour format
-        todayDate: formatDate(letter.todayDate || new Date()),
+    amountInWords: formatIndianAmountInWords(letter.saleAmount), // Amount in words
+    saleAmount: formatRupee(letter.saleAmount), // Formatted amount
         todayTime: formatTime12Hour(letter.todayTime || "12:00"),
         previousDate: formatDate(
           letter.previousDate || letter.todayDate || new Date()
