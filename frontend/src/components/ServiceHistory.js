@@ -69,7 +69,7 @@ const ServiceHistory = () => {
 
         // Fetch service bills
         const serviceResponse = await httpClient.get(
-          `https://ok-motor.onrender.com/api/service-bills?page=${currentPage}`
+          `https://ok-motor-51l3.vercel.app/api/service-bills?page=${currentPage}`
         );
         setServiceBills(serviceResponse.data.data || serviceResponse.data);
         setTotalPages(serviceResponse.data.totalPages || 1);
@@ -82,7 +82,7 @@ const ServiceHistory = () => {
 
         // Fetch sell history (if needed)
         const sellResponse = await httpClient.get(
-          `https://ok-motor.onrender.com/api/sell-letters`
+          `https://ok-motor-51l3.vercel.app/api/sell-letters`
         );
         setSellHistory(sellResponse.data.data || sellResponse.data);
       } catch (error) {
@@ -316,7 +316,7 @@ const ServiceHistory = () => {
       console.log('Token exists:', !!token);
       console.log('Token preview:', token ? `${token.substring(0, 20)}...` : 'No token');
       
-      const response = await httpClient.get('https://ok-motor.onrender.com/api/auth/me');
+      const response = await httpClient.get('https://ok-motor-51l3.vercel.app/api/auth/me');
       console.log('Auth test successful:', response.data);
     } catch (error) {
       console.error('Auth test failed:', error);
@@ -328,7 +328,7 @@ const ServiceHistory = () => {
   const checkServerStatus = async () => {
     try {
       console.log('Checking server status...');
-      const response = await httpClient.get('https://ok-motor.onrender.com/api/auth/me', {
+      const response = await httpClient.get('https://ok-motor-51l3.vercel.app/api/auth/me', {
         timeout: 5000
       });
       alert(`✅ Server is running! Status: ${response.status}\nYour account: ${response.data.name} (${response.data.role})`);
@@ -369,7 +369,7 @@ const ServiceHistory = () => {
       console.log('User:', user);
 
       const response = await httpClient.get(
-        `https://ok-motor.onrender.com/api/service-bills/${billId}/download`,
+        `https://ok-motor-51l3.vercel.app/api/service-bills/${billId}/download`,
         {
           responseType: "blob",
           timeout: 30000, // 30 second timeout
@@ -419,7 +419,7 @@ const ServiceHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this service bill?")) {
       try {
-        await httpClient.delete(`https://ok-motor.onrender.com/api/service-bills/${id}`);
+        await httpClient.delete(`https://ok-motor-51l3.vercel.app/api/service-bills/${id}`);
         setServiceBills(serviceBills.filter((bill) => bill._id !== id));
       } catch (error) {
         console.error("Error deleting service bill:", error);

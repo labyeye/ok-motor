@@ -309,7 +309,7 @@ const AdvanceHistory = () => {
       }
       await simulateProgress();
       const response = await httpClient.get(
-        `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
+        `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
           timeout: 30000,
@@ -383,7 +383,7 @@ const AdvanceHistory = () => {
         }
 
         await httpClient.delete(
-          `https://ok-motor.onrender.com/api/advance-bills/${id}`,
+          `https://ok-motor-51l3.vercel.app/api/advance-bills/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

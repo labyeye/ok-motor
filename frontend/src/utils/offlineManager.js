@@ -4,24 +4,24 @@ import httpClient from './offlineHttpClient';
 // Known queue -> API endpoints mapping
 const QUEUE_ENDPOINTS = {
   advanceBillOfflineQueue: {
-    create: 'https://ok-motor.onrender.com/api/advance-bills',
-    update: 'https://ok-motor.onrender.com/api/advance-bills',
-    delete: 'https://ok-motor.onrender.com/api/advance-bills',
+    create: 'https://ok-motor-51l3.vercel.app/api/advance-bills',
+    update: 'https://ok-motor-51l3.vercel.app/api/advance-bills',
+    delete: 'https://ok-motor-51l3.vercel.app/api/advance-bills',
   },
   serviceBillOfflineQueue: {
-    create: 'https://ok-motor.onrender.com/api/service-bills',
-    update: 'https://ok-motor.onrender.com/api/service-bills',
-    delete: 'https://ok-motor.onrender.com/api/service-bills',
+    create: 'https://ok-motor-51l3.vercel.app/api/service-bills',
+    update: 'https://ok-motor-51l3.vercel.app/api/service-bills',
+    delete: 'https://ok-motor-51l3.vercel.app/api/service-bills',
   },
   sellLetterOfflineQueue: {
-    create: 'https://ok-motor.onrender.com/api/sell-letters',
-    update: 'https://ok-motor.onrender.com/api/sell-letters',
-    delete: 'https://ok-motor.onrender.com/api/sell-letters',
+    create: 'https://ok-motor-51l3.vercel.app/api/sell-letters',
+    update: 'https://ok-motor-51l3.vercel.app/api/sell-letters',
+    delete: 'https://ok-motor-51l3.vercel.app/api/sell-letters',
   },
   buyLetterOfflineQueue: {
-    create: 'https://ok-motor.onrender.com/api/buy-letter',
-    update: 'https://ok-motor.onrender.com/api/buy-letter',
-    delete: 'https://ok-motor.onrender.com/api/buy-letter',
+    create: 'https://ok-motor-51l3.vercel.app/api/buy-letter',
+    update: 'https://ok-motor-51l3.vercel.app/api/buy-letter',
+    delete: 'https://ok-motor-51l3.vercel.app/api/buy-letter',
   },
 };
 

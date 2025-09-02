@@ -64,8 +64,8 @@ this.addEventListener("fetch", (event) => {
   }
   const isApiRequest =
     url.pathname.startsWith("/api/") ||
-    url.origin === "https://ok-motor.onrender.com" ||
-    (url.origin === "https://ok-motor.onrender.com" &&
+    url.origin === "https://ok-motor-51l3.vercel.app" ||
+    (url.origin === "https://ok-motor-51l3.vercel.app" &&
       url.pathname.startsWith("/api/"));
 
   if (isApiRequest) {

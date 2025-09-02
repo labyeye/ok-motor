@@ -210,7 +210,7 @@ const BuyLetterHistory = () => {
       try {
         setLoading(true);
         const response = await httpClient.get(
-          `https://ok-motor.onrender.com/api/buy-letter?page=${currentPage}`,
+          `https://ok-motor-51l3.vercel.app/api/buy-letter?page=${currentPage}`,
           {
             headers: {
             },
@@ -1139,7 +1139,7 @@ const BuyLetterHistory = () => {
         }
 
         await httpClient.delete(
-          `https://ok-motor.onrender.com/api/buy-letter/${id}`,
+          `https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -1179,7 +1179,7 @@ const BuyLetterHistory = () => {
       }
 
       const response = await httpClient.put(
-        `https://ok-motor.onrender.com/api/buy-letter/${updatedLetter._id}`,
+        `https://ok-motor-51l3.vercel.app/api/buy-letter/${updatedLetter._id}`,
         updatedLetter,
         {
           headers: {

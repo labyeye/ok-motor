@@ -16,7 +16,7 @@ const checkUserLoggedIn = async () => {
   try {
     const token = localStorage.getItem('token');
     if (token) {
-      const res = await httpClient.get('https://ok-motor.onrender.com/api/auth/me');
+      const res = await httpClient.get('https://ok-motor-51l3.vercel.app/api/auth/me');
       setUser(res.data);
     } else {
       setUser(null); // Explicitly set user to null if no token
@@ -48,7 +48,7 @@ const checkUserLoggedIn = async () => {
 
   const login = async (email, password) => {
     try {
-      const res = await httpClient.post('https://ok-motor.onrender.com/api/auth/login', { email, password });
+      const res = await httpClient.post('https://ok-motor-51l3.vercel.app/api/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
       // Cache user data for offline use after restart
       try {

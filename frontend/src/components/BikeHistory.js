@@ -1326,16 +1326,16 @@ const BikeHistory = () => {
       const [buyLetters, sellLetters, serviceBills, advanceBills] =
         await Promise.all([
           httpClient.get(
-            `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${searchTerm}`
+            `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${searchTerm}`
           ),
           httpClient.get(
-            `https://ok-motor.onrender.com/api/sell-letters/by-registration?registrationNumber=${searchTerm}`
+            `https://ok-motor-51l3.vercel.app/api/sell-letters/by-registration?registrationNumber=${searchTerm}`
           ),
           httpClient.get(
-            `https://ok-motor.onrender.com/api/service-bills/by-registration?registrationNumber=${searchTerm}`
+            `https://ok-motor-51l3.vercel.app/api/service-bills/by-registration?registrationNumber=${searchTerm}`
           ),
           httpClient.get(
-            `https://ok-motor.onrender.com/api/advance-bills/by-registration?registrationNumber=${searchTerm}`
+            `https://ok-motor-51l3.vercel.app/api/advance-bills/by-registration?registrationNumber=${searchTerm}`
           ),
         ]);
 
@@ -1586,7 +1586,7 @@ const BikeHistory = () => {
         }
         return;
       } else if (type === "service") {
-        const endpoint = `https://ok-motor.onrender.com/api/service-bills/${id}/pdf`;
+        const endpoint = `https://ok-motor-51l3.vercel.app/api/service-bills/${id}/pdf`;
         const response = await httpClient.get(endpoint, {
           responseType: "blob",
         });
@@ -1595,7 +1595,7 @@ const BikeHistory = () => {
         setPdfUrl(pdfUrl);
         setShowPdfModal(true);
       } else if (type === "advance") {
-        const endpoint = `https://ok-motor.onrender.com/api/advance-bills/${id}/pdf`;
+        const endpoint = `https://ok-motor-51l3.vercel.app/api/advance-bills/${id}/pdf`;
         const response = await httpClient.get(endpoint, {
           responseType: "blob",
         });
@@ -1631,7 +1631,7 @@ const BikeHistory = () => {
         }
         return;
       } else if (type === "service") {
-        const endpoint = `https://ok-motor.onrender.com/api/service-bills/${id}/pdf`;
+        const endpoint = `https://ok-motor-51l3.vercel.app/api/service-bills/${id}/pdf`;
         const response = await httpClient.get(endpoint, {
           responseType: "blob",
         });
@@ -1646,7 +1646,7 @@ const BikeHistory = () => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
       } else if (type === "advance") {
-        const endpoint = `https://ok-motor.onrender.com/api/advance-bills/${id}/download`;
+        const endpoint = `https://ok-motor-51l3.vercel.app/api/advance-bills/${id}/download`;
         const response = await httpClient.get(endpoint, {
           responseType: "blob",
         });

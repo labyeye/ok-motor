@@ -34,7 +34,7 @@ const StaffList = () => {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const response = await httpClient.get("https://ok-motor.onrender.com/api/users");
+        const response = await httpClient.get("https://ok-motor-51l3.vercel.app/api/users");
         setStaff(response.data);
       } catch (err) {
         setError(
@@ -60,7 +60,7 @@ const StaffList = () => {
           return;
         }
 
-        await httpClient.delete(`https://ok-motor.onrender.com/api/users/${id}`, {
+        await httpClient.delete(`https://ok-motor-51l3.vercel.app/api/users/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

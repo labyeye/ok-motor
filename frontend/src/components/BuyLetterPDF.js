@@ -386,7 +386,7 @@ const BuyLetterForm = () => {
     try {
       setIsSaving(true);
       const response = await httpClient.post(
-        "https://ok-motor.onrender.com/api/buy-letter",
+        "https://ok-motor-51l3.vercel.app/api/buy-letter",
         formData
       );
       alert("Buy letter saved successfully!");
@@ -420,9 +420,9 @@ const BuyLetterForm = () => {
         httpClient,
         "buyLetterOfflineQueue",
         {
-          create: "https://ok-motor.onrender.com/api/buy-letter",
-          update: "https://ok-motor.onrender.com/api/buy-letter",
-          delete: "https://ok-motor.onrender.com/api/buy-letter"
+          create: "https://ok-motor-51l3.vercel.app/api/buy-letter",
+          update: "https://ok-motor-51l3.vercel.app/api/buy-letter",
+          delete: "https://ok-motor-51l3.vercel.app/api/buy-letter"
         }
       );
 
@@ -444,7 +444,7 @@ const BuyLetterForm = () => {
   const generatePDFBuffer = async (data, language = "hindi") => {
     try {
       const response = await httpClient.post(
-        `https://ok-motor.onrender.com/api/buy-letter/generate-pdf?language=${language}`,
+        `https://ok-motor-51l3.vercel.app/api/buy-letter/generate-pdf?language=${language}`,
         data,
         {
           responseType: 'arraybuffer',
@@ -640,7 +640,7 @@ const BuyLetterForm = () => {
 
       // Online mode - normal operation
       const existingLetter = await httpClient.get(
-        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
+        `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
       );
       let savedLetter;
       if (existingLetter.data && existingLetter.data.length > 0) {
@@ -831,7 +831,7 @@ const BuyLetterForm = () => {
 
       // Check if letter exists first
       const existingLetter = await httpClient.get(
-        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
+        `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {
           },
@@ -844,7 +844,7 @@ const BuyLetterForm = () => {
       } else {
         // Save new letter if doesn't exist
         const response = await httpClient.post(
-          "https://ok-motor.onrender.com/api/buy-letter",
+          "https://ok-motor-51l3.vercel.app/api/buy-letter",
           formData
         );
         savedLetterData = response.data;
@@ -1023,7 +1023,7 @@ const BuyLetterForm = () => {
 
       // Check if letter exists first
       const existingLetter = await httpClient.get(
-        `https://ok-motor.onrender.com/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
+        `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {
           },
@@ -1035,7 +1035,7 @@ const BuyLetterForm = () => {
         savedLetterData = existingLetter.data[0];
       } else {
         const response = await httpClient.post(
-          "https://ok-motor.onrender.com/api/buy-letter",
+          "https://ok-motor-51l3.vercel.app/api/buy-letter",
           formData
         );
         savedLetterData = response.data;

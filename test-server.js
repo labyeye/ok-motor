@@ -2,9 +2,9 @@
 const https = require('https');
 
 const testEndpoints = [
-  'https://ok-motor.onrender.com/health',
-  'https://ok-motor.onrender.com/test',
-  'https://ok-motor.onrender.com/api/service-bills/debug'
+  'https://ok-motor-51l3.vercel.app/health',
+  'https://ok-motor-51l3.vercel.app/test',
+  'https://ok-motor-51l3.vercel.app/api/service-bills/debug'
 ];
 
 async function testEndpoint(url) {

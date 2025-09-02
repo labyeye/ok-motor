@@ -194,9 +194,9 @@ const [formData, setFormData] = useState({
         httpClient,
         "advanceBillOfflineQueue",
         {
-          create: "https://ok-motor.onrender.com/api/advance-bills",
-          update: "https://ok-motor.onrender.com/api/advance-bills",
-          delete: "https://ok-motor.onrender.com/api/advance-bills"
+          create: "https://ok-motor-51l3.vercel.app/api/advance-bills",
+          update: "https://ok-motor-51l3.vercel.app/api/advance-bills",
+          delete: "https://ok-motor-51l3.vercel.app/api/advance-bills"
         }
       );
 
@@ -225,7 +225,7 @@ const [formData, setFormData] = useState({
 
     try {
       const response = await httpClient.post(
-        `https://ok-motor.onrender.com/api/advance-bills/generate-pdf`,
+        `https://ok-motor-51l3.vercel.app/api/advance-bills/generate-pdf`,
         data,
         {
           responseType: 'arraybuffer'
@@ -327,7 +327,7 @@ const [formData, setFormData] = useState({
       } else {
         // Online mode: Normal save and download
         const saveResponse = await httpClient.post(
-          "https://ok-motor.onrender.com/api/advance-bills",
+          "https://ok-motor-51l3.vercel.app/api/advance-bills",
           requestData,
           {
             headers: {
@@ -343,7 +343,7 @@ const [formData, setFormData] = useState({
 
         const billId = saveResponse.data.data._id;
         const pdfResponse = await httpClient.get(
-          `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
+          `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
           {
             responseType: "blob",
             headers: {
@@ -555,11 +555,11 @@ const [formData, setFormData] = useState({
       if (forPreview) {
         // For preview, use a preview endpoint that doesn't save data
         try {
-          console.log("Making preview request to:", "https://ok-motor.onrender.com/api/advance-bills/preview");
+          console.log("Making preview request to:", "https://ok-motor-51l3.vercel.app/api/advance-bills/preview");
           console.log("Request data:", requestData);
           
           const previewResponse = await httpClient.post(
-            "https://ok-motor.onrender.com/api/advance-bills/preview",
+            "https://ok-motor-51l3.vercel.app/api/advance-bills/preview",
             requestData,
             {
               responseType: "blob",
@@ -586,7 +586,7 @@ const [formData, setFormData] = useState({
       } else {
         // For download, save the bill first
         const saveResponse = await httpClient.post(
-          "https://ok-motor.onrender.com/api/advance-bills",
+          "https://ok-motor-51l3.vercel.app/api/advance-bills",
           requestData,
           {
             headers: {
@@ -604,7 +604,7 @@ const [formData, setFormData] = useState({
 
         // Get the PDF for download
         const pdfResponse = await httpClient.get(
-          `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
+          `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
           {
             responseType: "blob",
             headers: {
@@ -640,7 +640,7 @@ const [formData, setFormData] = useState({
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
       const response = await httpClient.get(
-        "https://ok-motor.onrender.com/api/advance-bills/vehicle-details",
+        "https://ok-motor-51l3.vercel.app/api/advance-bills/vehicle-details",
         {
           params: { registrationNumber },
         }

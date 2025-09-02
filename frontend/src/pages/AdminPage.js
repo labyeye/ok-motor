@@ -88,8 +88,8 @@ const AdminPage = () => {
 
       const endpoint =
         user?.role === "admin"
-          ? "https://ok-motor.onrender.com/api/dashboard/stats"
-          : "https://ok-motor.onrender.com/api/dashboard/owner-stats";
+          ? "https://ok-motor-51l3.vercel.app/api/dashboard/stats"
+          : "https://ok-motor-51l3.vercel.app/api/dashboard/owner-stats";
 
       const response = await axios.get(endpoint, {
         headers: {
