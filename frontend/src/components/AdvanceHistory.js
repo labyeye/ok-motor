@@ -22,7 +22,7 @@ import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
 
 const AdvanceHistory = () => {
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   const [activeMenu, setActiveMenu] = useState("Advance History");
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -31,18 +31,18 @@ const AdvanceHistory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-    const [downloadProgress, setDownloadProgress] = useState(0);
-    const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
   const navigate = useNavigate();
-  
-const formatDate = (dateString) => {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-};
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,19 +54,31 @@ const formatDate = (dateString) => {
             { headers: {} }
           );
           setAdvanceBills(response.data.data || []);
-          offlineManager.saveToStorage(OFFLINE_KEYS.advance, response.data.data || []);
-          // Save token for offline login
+          offlineManager.saveToStorage(
+            OFFLINE_KEYS.advance,
+            response.data.data || []
+          );
           const token = localStorage.getItem("token");
           if (token) {
             localStorage.setItem("offline_token", token);
           }
         } catch (error) {
-          const storedData = offlineManager.loadFromStorage(OFFLINE_KEYS.advance, []);
-          setAdvanceBills(Array.isArray(storedData) ? storedData : storedData.data || []);
+          const storedData = offlineManager.loadFromStorage(
+            OFFLINE_KEYS.advance,
+            []
+          );
+          setAdvanceBills(
+            Array.isArray(storedData) ? storedData : storedData.data || []
+          );
         }
       } else {
-        const storedData = offlineManager.loadFromStorage(OFFLINE_KEYS.advance, []);
-        setAdvanceBills(Array.isArray(storedData) ? storedData : storedData.data || []);
+        const storedData = offlineManager.loadFromStorage(
+          OFFLINE_KEYS.advance,
+          []
+        );
+        setAdvanceBills(
+          Array.isArray(storedData) ? storedData : storedData.data || []
+        );
       }
       setLoading(false);
     };
@@ -77,7 +89,7 @@ const formatDate = (dateString) => {
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
-    const simulateProgress = () => {
+  const simulateProgress = () => {
     return new Promise((resolve) => {
       let progress = 0;
       const interval = setInterval(() => {
@@ -91,7 +103,6 @@ const formatDate = (dateString) => {
     });
   };
 
-  
   const DownloadProgressModal = ({ progress, onClose }) => {
     return (
       <div style={modalStyles.overlay}>
@@ -276,98 +287,35 @@ const formatDate = (dateString) => {
   };
 
   const filteredBills = searchTerm
-    ? advanceBills.filter((bill) =>
-        bill.registrationNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        bill.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
+    ? advanceBills.filter(
+        (bill) =>
+          bill.registrationNumber
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          bill.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : advanceBills;
-
-  // Add server status checker
-  const checkServerStatus = async () => {
-    try {
-      console.log('Checking server status...');
-      const response = await httpClient.get('https://ok-motor.onrender.com/api/auth/me', {
-        timeout: 5000
-      });
-      alert(`✅ Server is running! Status: ${response.status}\nYour account: ${response.data.name} (${response.data.role})`);
-    } catch (error) {
-      console.error('Server status check failed:', error);
-      if (error.code === 'ECONNABORTED') {
-        alert('❌ Server timeout - Server is taking too long to respond');
-      } else if (error.response?.status === 503) {
-        alert('❌ Server unavailable (503) - Backend service is down or restarting');
-      } else if (error.response?.status === 502) {
-        alert('❌ Bad Gateway (502) - Server deployment issue');
-      } else {
-        alert(`❌ Server error: ${error.response?.status || 'Network error'}\n${error.message}`);
-      }
-    }
-  };
-
-  // Alternative download method using direct URL
-  const handleAlternativeDownload = async (billId) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert("You are not authenticated. Please login again.");
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      // Try direct URL approach
-      const url = `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`;
-      const link = document.createElement('a');
-      link.href = url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      
-      // Add authorization header via a temporary form
-      const form = document.createElement('form');
-      form.method = 'GET';
-      form.action = url;
-      form.style.display = 'none';
-      
-      const tokenInput = document.createElement('input');
-      tokenInput.type = 'hidden';
-      tokenInput.name = 'token';
-      tokenInput.value = token;
-      form.appendChild(tokenInput);
-      
-      document.body.appendChild(form);
-      form.submit();
-      document.body.removeChild(form);
-      
-    } catch (error) {
-      alert('Alternative download failed. Please try the main download method.');
-    }
-  };
 
   const handleDownload = async (billId) => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
-
-      // Check authentication
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
         alert("You are not authenticated. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
         return;
       }
-
-      // Simulate progress
       await simulateProgress();
-      
       const response = await httpClient.get(
         `https://ok-motor.onrender.com/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
-          timeout: 30000, // 30 second timeout
+          timeout: 30000,
           headers: {
             Authorization: `Bearer ${token}`,
-            'Cache-Control': 'no-cache', // Prevent service worker caching
+            "Cache-Control": "no-cache",
           },
         }
       );
@@ -379,29 +327,44 @@ const formatDate = (dateString) => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url); // Clean up memory
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading PDF:", error);
-      
-      // Handle specific errors
       if (error.response?.status === 401) {
         alert("Your session has expired. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
       } else if (error.response?.status === 403) {
         alert("You don't have permission to download this file.");
       } else if (error.response?.status === 404) {
-        alert("Advance bill not found or PDF could not be generated. Please try again or contact support.");
+        alert(
+          "Advance bill not found or PDF could not be generated. Please try again or contact support."
+        );
       } else if (error.response?.status === 503) {
-        alert("Server is temporarily unavailable. Please try again in a few minutes.");
-      } else if (error.response?.status === 502 || error.response?.status === 504) {
+        alert(
+          "Server is temporarily unavailable. Please try again in a few minutes."
+        );
+      } else if (
+        error.response?.status === 502 ||
+        error.response?.status === 504
+      ) {
         alert("Server is experiencing issues. Please try again later.");
-      } else if (error.code === 'ERR_NETWORK' || error.code === 'ERR_FAILED') {
-        alert("Network error. This might be due to:\n• Server is temporarily down\n• Service worker interference\n• Network connectivity issues\n\nPlease try again in a few minutes.");
-      } else if (error.code === 'ECONNABORTED') {
-        alert("Connection timeout. Please check your internet connection and try again.");
+      } else if (error.code === "ERR_NETWORK" || error.code === "ERR_FAILED") {
+        alert(
+          "Network error. This might be due to:\n• Server is temporarily down\n• Service worker interference\n• Network connectivity issues\n\nPlease try again in a few minutes."
+        );
+      } else if (error.code === "ECONNABORTED") {
+        alert(
+          "Connection timeout. Please check your internet connection and try again."
+        );
       } else {
-        alert(`Failed to download PDF: ${error.response?.data?.message || error.message || 'Server temporarily unavailable'}`);
+        alert(
+          `Failed to download PDF: ${
+            error.response?.data?.message ||
+            error.message ||
+            "Server temporarily unavailable"
+          }`
+        );
       }
     } finally {
       setIsDownloading(false);
@@ -411,45 +374,60 @@ const formatDate = (dateString) => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this advance bill?")) {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) {
           alert("You are not authenticated. Please login again.");
           logout();
-          navigate('/login');
+          navigate("/login");
           return;
         }
 
-        await httpClient.delete(`https://ok-motor.onrender.com/api/advance-bills/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await httpClient.delete(
+          `https://ok-motor.onrender.com/api/advance-bills/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         // Remove from UI
         setAdvanceBills(advanceBills.filter((bill) => bill._id !== id));
 
         // Also remove any queued offline items that reference this bill
-        const deletedBill = advanceBills.find(b => b._id === id);
+        const deletedBill = advanceBills.find((b) => b._id === id);
         const registrationNumber = deletedBill?.registrationNumber;
         // Remove by _id
-        offlineManager.removeFromQueueBy('advanceBillOfflineQueue', (item) => {
+        offlineManager.removeFromQueueBy("advanceBillOfflineQueue", (item) => {
           try {
-            if (item.data && (item.data._id === id || item.data.id === id)) return true;
-            if (registrationNumber && item.data && item.data.registrationNumber === registrationNumber) return true;
-          } catch (e) { /* ignore */ }
+            if (item.data && (item.data._id === id || item.data.id === id))
+              return true;
+            if (
+              registrationNumber &&
+              item.data &&
+              item.data.registrationNumber === registrationNumber
+            )
+              return true;
+          } catch (e) {
+            /* ignore */
+          }
           return false;
         });
       } catch (error) {
         console.error("Error deleting advance bill:", error);
-        
+
         // Handle authentication errors
         if (error.response?.status === 401) {
           alert("Your session has expired. Please login again.");
           logout();
-          navigate('/login');
+          navigate("/login");
         } else if (error.response?.status === 403) {
           alert("You don't have permission to delete this file.");
         } else {
-          alert(`Failed to delete: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+          alert(
+            `Failed to delete: ${
+              error.response?.data?.message || error.message || "Unknown error"
+            }`
+          );
         }
       }
     }
@@ -534,7 +512,7 @@ const formatDate = (dateString) => {
     <div style={styles.container}>
       {/* Sidebar */}
       <div style={styles.sidebar}>
-         <div style={styles.sidebarHeader}>
+        <div style={styles.sidebarHeader}>
           <img
             src={logo}
             alt="logo"
@@ -630,8 +608,7 @@ const formatDate = (dateString) => {
                 style={styles.searchInput}
               />
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              
+            <div style={{ display: "flex", gap: "8px" }}>
               <button
                 style={styles.newBillButton}
                 onClick={() => navigate("/advance/create")}
@@ -670,20 +647,22 @@ const formatDate = (dateString) => {
                         <td style={styles.tableCell}>
                           {bill.vehicleBrand} {bill.vehicleModel}
                         </td>
-                        <td style={styles.tableCell}>{bill.registrationNumber}</td>
-                         <td style={styles.tableCell}>
+                        <td style={styles.tableCell}>
+                          {bill.registrationNumber}
+                        </td>
+                        <td style={styles.tableCell}>
                           ₹
                           {new Intl.NumberFormat("en-IN").format(
                             bill.grandTotal
                           )}
                         </td>
-                         <td style={styles.tableCell}>
+                        <td style={styles.tableCell}>
                           ₹
                           {new Intl.NumberFormat("en-IN").format(
                             bill.advancePaid
                           )}
                         </td>
-                         <td style={styles.tableCell}>
+                        <td style={styles.tableCell}>
                           ₹
                           {new Intl.NumberFormat("en-IN").format(
                             bill.balanceDue
@@ -693,7 +672,11 @@ const formatDate = (dateString) => {
                           {formatDate(bill.createdAt)}
                         </td>
                         <td style={styles.tableCell}>
-                          {bill.user && bill.user.role === 'admin' ? 'admin' : (bill.user && bill.user.name ? bill.user.name : '')}
+                          {bill.user && bill.user.role === "admin"
+                            ? "admin"
+                            : bill.user && bill.user.name
+                            ? bill.user.name
+                            : ""}
                         </td>
                         <td style={styles.tableCell}>
                           <button
@@ -703,7 +686,7 @@ const formatDate = (dateString) => {
                           >
                             <Download size={16} />
                           </button>
-                          
+
                           {user?.role === "admin" && (
                             <button
                               onClick={() => handleDelete(bill._id)}

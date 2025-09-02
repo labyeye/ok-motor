@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useContext } from "react";
 import httpClient from "../utils/offlineHttpClient";
 import {
@@ -163,7 +162,7 @@ const EditSellLetterModal = ({ letter, onClose, onSave }) => {
 };
 
 const SellLetterHistory = () => {
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   const [activeMenu, setActiveMenu] = useState("Sell Letter History");
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -406,21 +405,21 @@ const SellLetterHistory = () => {
           maximumFractionDigits: 2,
         }).format(num)}`;
   };
-   const formatTime = (timeString) => {
-  if (!timeString) return "";
+  const formatTime = (timeString) => {
+    if (!timeString) return "";
 
-  const [hour, minute] = timeString.split(":").map(Number);
-  
-  // Convert to 12-hour format with leading zeros and proper AM/PM
-  const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
-  const ampm = hour >= 12 ? "PM" : "AM";
-  
-  // Add leading zero to hours and minutes if needed
-  const formattedHours = String(hours12).padStart(2, "0");
-  const formattedMinutes = String(minute).padStart(2, "0");
+    const [hour, minute] = timeString.split(":").map(Number);
 
-  return `${formattedHours}:${formattedMinutes} ${ampm}`;
-};
+    // Convert to 12-hour format with leading zeros and proper AM/PM
+    const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
+    const ampm = hour >= 12 ? "PM" : "AM";
+
+    // Add leading zero to hours and minutes if needed
+    const formattedHours = String(hours12).padStart(2, "0");
+    const formattedMinutes = String(minute).padStart(2, "0");
+
+    return `${formattedHours}:${formattedMinutes} ${ampm}`;
+  };
   const filteredLetters = sellLetters.filter(
     (letter) =>
       letter.vehicleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -509,7 +508,6 @@ const SellLetterHistory = () => {
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
-
       const formattedLetter = {
         ...letter,
         buyerName1: letter.buyerName,
@@ -526,21 +524,10 @@ const SellLetterHistory = () => {
           letter.previousTime || letter.todayTime || "12:00"
         ),
         amountInWords: formatIndianAmountInWords(letter.saleAmount), // Amount in words
-        saleAmount: formatRupee(letter.saleAmount), // Formatted amount
+        saleAmount: formatRupee(letter.saleAmount), 
         sellerphone: letter.sellerphone || "9876543210",
         selleraadhar: letter.selleraadhar || "764465626571",
       };
-
-      // for (const [fieldName, position] of Object.entries(hindiFieldPositions)) {
-      //   if (formattedLetter[fieldName]) {
-      //     pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
-      //       x: position.x,
-      //       y: position.y,
-      //       size: position.size,
-      //       color: rgb(0, 0, 0),
-      //     });
-      //   }
-      // }
       for (const [fieldName, position] of Object.entries(hindiFieldPositions)) {
         if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
           const combinedPhones = `${formattedLetter.buyerPhone}${
@@ -572,11 +559,9 @@ const SellLetterHistory = () => {
         const saleText = `${formattedLetter.saleAmount}`;
         const xBase = hindiFieldPositions.saleAmount.x;
         const yBase = hindiFieldPositions.saleAmount.y;
-
-        // Draw Amount in Words right next to it
         const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
         page.drawText(formattedLetter.amountInWords, {
-          x: xBase + saleTextWidth + 8, // 8px padding
+          x: xBase + saleTextWidth + 8,
           y: yBase,
           size: 10,
           color: rgb(0, 0, 0),
@@ -603,16 +588,12 @@ const SellLetterHistory = () => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
-
-      // Simulate progress
       await simulateProgress();
       const templateUrl = "/templates/englishsell.pdf";
       const existingPdfBytes = await fetch(templateUrl).then((res) =>
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-
-      // Create vehicle invoice page
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
       const formattedLetter = {
@@ -621,8 +602,8 @@ const SellLetterHistory = () => {
         buyerName2: letter.buyerName,
         saleDate: formatDate(letter.saleDate),
         saleTime: formatTime12Hour(letter.saleTime), // Use 12-hour format
-    amountInWords: formatIndianAmountInWords(letter.saleAmount), // Amount in words
-    saleAmount: formatRupee(letter.saleAmount), // Formatted amount
+        amountInWords: formatIndianAmountInWords(letter.saleAmount), // Amount in words
+        saleAmount: formatRupee(letter.saleAmount), // Formatted amount
         todayTime: formatTime12Hour(letter.todayTime || "12:00"),
         previousDate: formatDate(
           letter.previousDate || letter.todayDate || new Date()
@@ -631,13 +612,12 @@ const SellLetterHistory = () => {
           letter.previousTime || letter.todayTime || "12:00"
         ),
         vehiclekm: formatKm(letter.vehiclekm), // Formatted KM
-        saleAmount: formatRupee(letter.saleAmount), // Formatted amount
+        saleAmount: formatRupee(letter.saleAmount), 
         amountInWords: formatIndianAmountInWords(letter.saleAmount), // Amount in words
         sellerphone: letter.sellerphone || "9876543210",
         selleraadhar: letter.selleraadhar || "764465626571",
       };
 
-      // Fill sell letter fields
       for (const [fieldName, position] of Object.entries(
         englishFieldPositions
       )) {
@@ -671,11 +651,9 @@ const SellLetterHistory = () => {
         const saleText = `${formattedLetter.saleAmount}`;
         const xBase = englishFieldPositions.saleAmount.x;
         const yBase = englishFieldPositions.saleAmount.y;
-
-        // Draw Amount in Words right next to it
         const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
         page.drawText(formattedLetter.amountInWords, {
-          x: xBase + saleTextWidth + 8, // 8px padding
+          x: xBase + saleTextWidth + 8,
           y: yBase,
           size: 10,
           color: rgb(0, 0, 0),
@@ -698,7 +676,6 @@ const SellLetterHistory = () => {
     }
   };
   const drawVehicleInvoice = async (page, pdfDoc, letter) => {
-    // Embed fonts first
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const logoUrl = logo1; // Use your imported logo
@@ -1144,11 +1121,11 @@ const SellLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this sell letter?")) {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) {
           alert("You are not authenticated. Please login again.");
           logout();
-          navigate('/login');
+          navigate("/login");
           return;
         }
 
@@ -1163,16 +1140,20 @@ const SellLetterHistory = () => {
         setSellLetters(sellLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting sell letter:", error);
-        
+
         // Handle authentication errors
         if (error.response?.status === 401) {
           alert("Your session has expired. Please login again.");
           logout();
-          navigate('/login');
+          navigate("/login");
         } else if (error.response?.status === 403) {
           alert("You don't have permission to delete this item.");
         } else {
-          alert(`Failed to delete: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+          alert(
+            `Failed to delete: ${
+              error.response?.data?.message || error.message || "Unknown error"
+            }`
+          );
         }
       }
     }
@@ -1187,11 +1168,11 @@ const SellLetterHistory = () => {
   };
   const handleSaveEdit = async (updatedLetter) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
         alert("You are not authenticated. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
@@ -1212,16 +1193,20 @@ const SellLetterHistory = () => {
       setEditingLetter(null);
     } catch (error) {
       console.error("Error updating sell letter:", error);
-      
+
       // Handle authentication errors
       if (error.response?.status === 401) {
         alert("Your session has expired. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
       } else if (error.response?.status === 403) {
         alert("You don't have permission to edit this item.");
       } else {
-        alert(`Failed to update: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+        alert(
+          `Failed to update: ${
+            error.response?.data?.message || error.message || "Unknown error"
+          }`
+        );
       }
     }
   };
@@ -1300,7 +1285,7 @@ const SellLetterHistory = () => {
     <div style={styles.container}>
       {/* Sidebar - same as SellLetterForm */}
       <div style={styles.sidebar}>
-         <div style={styles.sidebarHeader}>
+        <div style={styles.sidebarHeader}>
           <img
             src={logo}
             alt="logo"
@@ -1459,7 +1444,11 @@ const SellLetterHistory = () => {
                           {formatDate(letter.createdAt)}
                         </td>
                         <td style={styles.tableCell}>
-                          {letter.user && letter.user.role === 'admin' ? 'admin' : (letter.user && letter.user.name ? letter.user.name : '')}
+                          {letter.user && letter.user.role === "admin"
+                            ? "admin"
+                            : letter.user && letter.user.name
+                            ? letter.user.name
+                            : ""}
                         </td>
                         <td style={styles.tableCell}>
                           <button
