@@ -23,6 +23,8 @@ import {
   ChevronRight,
   Bike,
   FileText,
+  Menu,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "../images/company.png";
@@ -35,9 +37,9 @@ const SellLetterForm = () => {
   const [activeMenu, setActiveMenu] = useState("Create Sell Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [previewPdf, setPreviewPdf] = useState(null);
-  const [missingFields, setMissingFields] = useState([]);
+  const [, setMissingFields] = useState([]);
   const [previewLanguage, setPreviewLanguage] = useState("hindi");
-  const [selectedLanguage, setSelectedLanguage] = useState("hindi"); // default to hindi
+  const [selectedLanguage, setSelectedLanguage] = useState("hindi");
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -45,6 +47,8 @@ const SellLetterForm = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [offlineQueue, setOfflineQueue] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -92,8 +96,35 @@ const SellLetterForm = () => {
     note: "",
   });
   const [isSaving, setIsSaving] = useState(false);
-  
-  // Handle online/offline status
+
+  const syncOfflineData = useCallback(async () => {
+    if (!isOnline) return;
+
+    setIsSyncing(true);
+    try {
+      await offlineManager.syncOfflineData(
+        httpClient,
+        "sellLetterOfflineQueue",
+        {
+          create: "https://ok-motor-51l3.vercel.app/api/sell-letters",
+          update: "https://ok-motor-51l3.vercel.app/api/sell-letters",
+          delete: "https://ok-motor-51l3.vercel.app/api/sell-letters",
+        }
+      );
+
+      const updatedQueue = offlineManager.getQueue("sellLetterOfflineQueue");
+      setOfflineQueue(updatedQueue);
+
+      if (updatedQueue.length === 0) {
+        alert("All offline data synced successfully!");
+      }
+    } catch (error) {
+      console.error("Error syncing offline data:", error);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [isOnline]);
+
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
@@ -101,55 +132,58 @@ const SellLetterForm = () => {
     };
     const handleOffline = () => setIsOnline(false);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
+  }, [syncOfflineData]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Load saved data on component mount
   useEffect(() => {
     const savedData = offlineManager.loadFromStorage("sellLetterFormData");
     if (savedData) {
       setFormData(savedData);
     }
 
-    // Load offline queue
     const savedQueue = offlineManager.getQueue("sellLetterOfflineQueue");
     setOfflineQueue(savedQueue);
   }, []);
 
-  // Save form data whenever it changes
   useEffect(() => {
     offlineManager.saveToStorage("sellLetterFormData", formData);
   }, [formData]);
 
-  // Save offline queue to localStorage whenever it changes
   useEffect(() => {
     offlineManager.saveToStorage("sellLetterOfflineQueue", offlineQueue);
   }, [offlineQueue]);
 
-  // Load draft data on mount
   useEffect(() => {
     try {
-      const savedDraft = localStorage.getItem('sellLetterDraft');
+      const savedDraft = localStorage.getItem("sellLetterDraft");
       if (savedDraft) {
         const draftData = JSON.parse(savedDraft);
-        setFormData(prev => ({ ...prev, ...draftData }));
-        console.log('Loaded draft data from localStorage');
+        setFormData((prev) => ({ ...prev, ...draftData }));
+        console.log("Loaded draft data from localStorage");
       }
     } catch (error) {
-      console.error('Failed to load draft:', error);
-      localStorage.removeItem('sellLetterDraft');
+      console.error("Failed to load draft:", error);
+      localStorage.removeItem("sellLetterDraft");
     }
   }, []);
 
-  // Clear form and draft
   const clearForm = () => {
-    if (window.confirm('Are you sure you want to clear all form data?')) {
+    if (window.confirm("Are you sure you want to clear all form data?")) {
       const defaultFormData = {
         vehicleName: "",
         vehicleModel: "",
@@ -194,17 +228,17 @@ const SellLetterForm = () => {
         documentsVerified: true,
         note: "",
       };
-      
+
       setFormData(defaultFormData);
-      
+
       try {
-        localStorage.removeItem('sellLetterDraft');
+        localStorage.removeItem("sellLetterDraft");
       } catch (error) {
-        console.error('Failed to clear draft:', error);
+        console.error("Failed to clear draft:", error);
       }
     }
   };
-  
+
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
 
@@ -224,11 +258,10 @@ const SellLetterForm = () => {
         newData.previousTime = value;
       }
 
-      // Auto-save to localStorage for offline persistence
       try {
-        localStorage.setItem('sellLetterDraft', JSON.stringify(newData));
+        localStorage.setItem("sellLetterDraft", JSON.stringify(newData));
       } catch (error) {
-        console.error('Failed to save draft:', error);
+        console.error("Failed to save draft:", error);
       }
 
       return newData;
@@ -240,11 +273,7 @@ const SellLetterForm = () => {
         <div style={modalStyles.modal}>
           <div style={modalStyles.header}>
             <div style={modalStyles.logoContainer}>
-              <img 
-                src={logo1} 
-                alt="OK Motor Logo" 
-                style={modalStyles.logo}
-              />
+              <img src={logo1} alt="OK Motor Logo" style={modalStyles.logo} />
             </div>
             <h2 style={modalStyles.title}>Generating PDF</h2>
           </div>
@@ -645,11 +674,9 @@ const SellLetterForm = () => {
 
     const [hour, minute] = timeString.split(":").map(Number);
 
-    // Convert to 12-hour format with leading zeros and proper AM/PM
-    const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
+    const hours12 = hour % 12 || 12;
     const ampm = hour >= 12 ? "PM" : "AM";
 
-    // Add leading zero to hours and minutes if needed
     const formattedHours = String(hours12).padStart(2, "0");
     const formattedMinutes = String(minute).padStart(2, "0");
 
@@ -693,33 +720,35 @@ const SellLetterForm = () => {
         return false;
       }
 
-      const response = await httpClient.post("https://ok-motor-51l3.vercel.app/api/sell-letters", formData);
+      const response = await httpClient.post(
+        "https://ok-motor-51l3.vercel.app/api/sell-letters",
+        formData
+      );
 
       if (response.data) {
         if (response.data._cached) {
           alert("Sell letter queued for saving when online!");
         } else {
           alert("Sell letter saved successfully!");
-          // Clear draft after successful save
           try {
-            localStorage.removeItem('sellLetterDraft');
+            localStorage.removeItem("sellLetterDraft");
           } catch (error) {
-            console.error('Failed to clear draft:', error);
+            console.error("Failed to clear draft:", error);
           }
         }
         return true;
       }
     } catch (error) {
       console.error("Error saving sell letter:", error);
-      
-      // Handle offline case
+
       if (error.message === "Request queued for when online") {
-        alert("No internet connection. Sell letter will be saved when connection is restored.");
+        alert(
+          "No internet connection. Sell letter will be saved when connection is restored."
+        );
         return true; // Allow download to proceed
       }
-      
+
       if (error.response) {
-        // Handle server validation errors
         if (error.response.data.errors) {
           const errorMessages = Object.values(error.response.data.errors)
             .map((err) => err.message)
@@ -737,41 +766,8 @@ const SellLetterForm = () => {
     }
   };
 
-  // Sync offline data when back online
-  const syncOfflineData = async () => {
-    if (!isOnline) return;
-
-    setIsSyncing(true);
-    try {
-      await offlineManager.syncOfflineData(
-        httpClient,
-        "sellLetterOfflineQueue",
-        {
-          create: "https://ok-motor-51l3.vercel.app/api/sell-letters",
-          update: "https://ok-motor-51l3.vercel.app/api/sell-letters",
-          delete: "https://ok-motor-51l3.vercel.app/api/sell-letters"
-        }
-      );
-
-      // Reload queue after sync
-      const updatedQueue = offlineManager.getQueue("sellLetterOfflineQueue");
-      setOfflineQueue(updatedQueue);
-
-      if (updatedQueue.length === 0) {
-        alert("All offline data synced successfully!");
-      }
-    } catch (error) {
-      console.error("Error syncing offline data:", error);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // Function to generate PDF buffer for offline use
   const generatePDFBuffer = async (data, language = "hindi") => {
-    // If offline, avoid calling server (which would enqueue an HTTP request). Prefer local generator.
     if (!navigator.onLine) {
-      // Attempt to use local generator (file templates or client-side generator)
       try {
         const localBytes = await generatePDFBuffer(language);
         return localBytes;
@@ -785,13 +781,12 @@ const SellLetterForm = () => {
         `https://ok-motor-51l3.vercel.app/api/sell-letters/generate-pdf?language=${language}`,
         data,
         {
-          responseType: 'arraybuffer'
+          responseType: "arraybuffer",
         }
       );
       return response.data;
     } catch (error) {
       console.error("Error generating PDF:", error);
-      // fallback to local generator on failure
       try {
         const localBytes = await generatePDFBuffer(language);
         return localBytes;
@@ -801,7 +796,6 @@ const SellLetterForm = () => {
     }
   };
 
-  // Function to download PDF from buffer
   const downloadPDFFromBuffer = (buffer, filename) => {
     const blob = new Blob([buffer], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
@@ -819,25 +813,25 @@ const SellLetterForm = () => {
       setIsSaving(true);
 
       if (!isOnline) {
-        // Offline mode - generate PDF using server endpoint and queue data for sync
         try {
-          // Generate PDF buffer using server endpoint
           const pdfBuffer = await generatePDFBuffer(formData, selectedLanguage);
 
-          // Download the PDF
-          const filename = `vehicle_sell_agreement_${formData.registrationNumber || "document"}.pdf`;
+          const filename = `vehicle_sell_agreement_${
+            formData.registrationNumber || "document"
+          }.pdf`;
           downloadPDFFromBuffer(pdfBuffer, filename);
 
-          // Queue the data for later sync
           const queueItem = {
             type: "save",
             data: formData,
             language: selectedLanguage,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           };
 
           offlineManager.addToQueue("sellLetterOfflineQueue", queueItem);
-          const updatedQueue = offlineManager.getQueue("sellLetterOfflineQueue");
+          const updatedQueue = offlineManager.getQueue(
+            "sellLetterOfflineQueue"
+          );
           setOfflineQueue(updatedQueue);
 
           alert("Sell letter PDF downloaded. Data will sync when online.");
@@ -849,7 +843,6 @@ const SellLetterForm = () => {
         }
       }
 
-      // Online mode - normal operation
       const existingLetter = await httpClient.get(
         `https://ok-motor-51l3.vercel.app/api/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`
       );
@@ -858,11 +851,9 @@ const SellLetterForm = () => {
       if (existingLetter.data && existingLetter.data.length > 0) {
         savedLetter = existingLetter.data[0];
       } else {
-        // Save new letter if doesn't exist
         savedLetter = await saveToDatabase();
       }
 
-      // Download based on selected language
       if (selectedLanguage === "hindi") {
         await fillAndDownloadHindiPdf();
       } else {
@@ -1103,7 +1094,6 @@ const SellLetterForm = () => {
       font: font,
     });
 
-    // Vehicle Information section
     page.drawText("VEHICLE DETAILS", {
       x: 50,
       y: 620,
@@ -1112,7 +1102,6 @@ const SellLetterForm = () => {
       font: boldFont,
     });
 
-    // Vehicle details table header
     page.drawRectangle({
       x: 50,
       y: 590,
@@ -1143,7 +1132,6 @@ const SellLetterForm = () => {
     });
     const lineHeight = 12;
 
-    // Vehicle details row
     const vehicleValues = [
       formData.vehicleName || "N/A",
       formData.vehicleModel || "N/A",
@@ -1177,7 +1165,6 @@ const SellLetterForm = () => {
       }
       if (currentLine) lines.push(currentLine);
 
-      // Draw each line
       lines.forEach((line, lineIndex) => {
         page.drawText(line, {
           x: xPos,
@@ -1189,7 +1176,6 @@ const SellLetterForm = () => {
       });
     });
 
-    // Sale Information section
     page.drawText("SALE INFORMATION", {
       x: 50,
       y: 515,
@@ -1329,7 +1315,6 @@ const SellLetterForm = () => {
       });
     });
 
-    // Seller Signature
     page.drawText("Buyer Signature", {
       x: 120,
       y: 70,
@@ -1360,7 +1345,6 @@ const SellLetterForm = () => {
       color: rgb(0.6, 0.6, 0.6),
     });
 
-    // Footer
     page.drawLine({
       start: { x: 50, y: 55 },
       end: { x: 545, y: 55 },
@@ -1412,7 +1396,7 @@ const SellLetterForm = () => {
           ...response.data,
           registrationNumber,
         }));
-        
+
         if (response.data._cached) {
           console.log("Using cached vehicle details");
         }
@@ -1430,7 +1414,6 @@ const SellLetterForm = () => {
       setIsDownloading(true);
       setDownloadProgress(0);
 
-      // Simulate progress
       await simulateProgress();
       const templateUrl = "/templates/sellletter.pdf";
       const existingPdfBytes = await fetch(templateUrl).then((res) =>
@@ -1442,11 +1425,9 @@ const SellLetterForm = () => {
 
         const [hour, minute] = timeString.split(":").map(Number);
 
-        // Convert to 12-hour format with leading zeros and proper AM/PM
-        const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
+        const hours12 = hour % 12 || 12;
         const ampm = hour >= 12 ? "PM" : "AM";
 
-        // Add leading zero to hours and minutes if needed
         const formattedHours = String(hours12).padStart(2, "0");
         const formattedMinutes = String(minute).padStart(2, "0");
 
@@ -1516,7 +1497,6 @@ const SellLetterForm = () => {
       setIsDownloading(true);
       setDownloadProgress(0);
 
-      // Simulate progress
       await simulateProgress();
       const templateUrl = "/templates/englishsell.pdf";
       const existingPdfBytes = await fetch(templateUrl).then((res) =>
@@ -1549,7 +1529,6 @@ const SellLetterForm = () => {
         ),
       };
 
-      // Fill sell letter fields
       for (const [fieldName, position] of Object.entries(
         englishFieldPositions
       )) {
@@ -1594,9 +1573,51 @@ const SellLetterForm = () => {
   };
 
   return (
-    <div style={styles.container}>
+    <div
+      style={{
+        ...styles.container,
+        paddingTop: isMobile ? "80px" : "0",
+      }}
+    >
+      <div
+        style={{
+          ...styles.topBar,
+          display: isMobile && !isSidebarOpen ? "block" : "none",
+        }}
+      >
+        <div
+          style={{
+            ...styles.hamburgerMenu,
+            display: isMobile && !isSidebarOpen ? "block" : "none",
+          }}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+        </div>
+      </div>
+
+      {isSidebarOpen && isMobile && (
+        <div
+          style={styles.sidebarOverlay}
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* Sidebar */}
-      <div style={styles.sidebar}>
+      <div
+        style={{
+          ...styles.sidebar,
+          ...(isMobile
+            ? {
+                transform: isSidebarOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
+                position: "fixed",
+                zIndex: 15,
+              }
+            : {}),
+        }}
+      >
         <div style={styles.sidebarHeader}>
           <img
             src={logo}
@@ -1605,13 +1626,13 @@ const SellLetterForm = () => {
               width: "100%",
               maxWidth: "25rem",
               height: "13rem",
-              objectFit: "cover", // match CSS
+              objectFit: "cover",
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
             }}
           />
-          <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
+          <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
         </div>
 
         <nav style={styles.nav}>
@@ -1626,7 +1647,6 @@ const SellLetterForm = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
-                    // Pass the path as-is (could be string or function)
                     handleMenuClick(item.name, item.path);
                   }
                 }}
@@ -1643,8 +1663,19 @@ const SellLetterForm = () => {
                   ))}
               </div>
 
-              {item.submenu && expandedMenus[item.name] && (
-                <div style={styles.submenu}>
+              {item.submenu && (
+                <div
+                  style={{
+                    ...styles.submenu,
+                    maxHeight: expandedMenus[item.name]
+                      ? `${item.submenu.length * 48}px`
+                      : "0px",
+                    opacity: expandedMenus[item.name] ? 1 : 0,
+                    transition:
+                      "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
+                    overflow: "hidden",
+                  }}
+                >
                   {item.submenu.map((subItem) => (
                     <div
                       key={subItem.name}
@@ -1677,7 +1708,13 @@ const SellLetterForm = () => {
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <h1 style={styles.pageTitle}>Create Sell Letter</h1>
                 <p style={styles.pageSubtitle}>
@@ -1685,26 +1722,30 @@ const SellLetterForm = () => {
                 </p>
               </div>
               {!isOnline && (
-                <div style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#fef3cd',
-                  color: '#856404',
-                  borderRadius: '4px',
-                  border: '1px solid #ffeaa7',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
+                <div
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: "#fef3cd",
+                    color: "#856404",
+                    borderRadius: "4px",
+                    border: "1px solid #ffeaa7",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
                   ⚠️ Offline Mode - Data will sync when connected
-                  <span style={{
-                    fontSize: '12px',
-                    backgroundColor: '#f59e0b',
-                    color: 'white',
-                    padding: '2px 6px',
-                    borderRadius: '10px'
-                  }}>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      backgroundColor: "#f59e0b",
+                      color: "white",
+                      padding: "2px 6px",
+                      borderRadius: "10px",
+                    }}
+                  >
                     {offlineQueue.length} queued
                   </span>
                 </div>
@@ -1714,26 +1755,28 @@ const SellLetterForm = () => {
                   onClick={syncOfflineData}
                   disabled={isSyncing}
                   style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#10b981',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
+                    padding: "8px 16px",
+                    backgroundColor: "#10b981",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
                   }}
                 >
-                  {isSyncing ? 'Syncing...' : 'Sync Data'}
-                  <span style={{
-                    fontSize: '12px',
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    padding: '2px 6px',
-                    borderRadius: '10px'
-                  }}>
+                  {isSyncing ? "Syncing..." : "Sync Data"}
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      backgroundColor: "rgba(255,255,255,0.2)",
+                      padding: "2px 6px",
+                      borderRadius: "10px",
+                    }}
+                  >
                     {offlineQueue.length}
                   </span>
                 </button>
@@ -1962,7 +2005,7 @@ const SellLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={30}
+                    maxLength={selectedLanguage === "hindi" ? 25 : 29}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1985,7 +2028,7 @@ const SellLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={16}
+                    maxLength={selectedLanguage === "hindi" ? 30 : 15}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2008,7 +2051,7 @@ const SellLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={65}
+                    maxLength={selectedLanguage === "hindi" ? 60 : 40}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2329,8 +2372,8 @@ const SellLetterForm = () => {
                   onClick={clearForm}
                   style={{
                     ...styles.previewButton,
-                    backgroundColor: '#dc3545',
-                    color: 'white'
+                    backgroundColor: "#dc3545",
+                    color: "white",
                   }}
                   disabled={isSaving}
                 >
@@ -2343,8 +2386,10 @@ const SellLetterForm = () => {
                 style={styles.downloadButton}
                 disabled={isSaving}
               >
-                <Download style={styles.buttonIcon} /> 
-                {isOnline ? 'Save & Download' : 'Download (Will Save When Online)'}
+                <Download style={styles.buttonIcon} />
+                {isOnline
+                  ? "Save & Download"
+                  : "Download (Will Save When Online)"}
               </button>
             </div>
           </form>
@@ -2416,8 +2461,32 @@ const styles = {
     backgroundColor: "#f1f5f9",
     fontFamily: "'Inter', sans-serif",
   },
+  topBar: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: "1rem",
+    background: "#ffffff",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    zIndex: 20,
+  },
+  hamburgerMenu: {
+    cursor: "pointer",
+    padding: "8px",
+    borderRadius: "4px",
+    transition: "background-color 0.2s",
+  },
+  sidebarOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0, 0, 0, 0.5)",
+    zIndex: 14,
+  },
 
-  // Sidebar Styles
   sidebar: {
     width: "280px",
     backgroundColor: "#1e293b",
@@ -2426,6 +2495,7 @@ const styles = {
     position: "sticky",
     top: 0,
     height: "100vh",
+    transition: "transform 0.3s ease",
     backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
   },
   sidebarHeader: {
@@ -2476,7 +2546,11 @@ const styles = {
     fontWeight: "500",
   },
   submenu: {
-    backgroundColor: "#1a2536",
+    backgroundColor: "rgba(26, 32, 44, 0.7)",
+    maxHeight: 0,
+    opacity: 0,
+    overflow: "hidden",
+    transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
   },
   submenuItem: {
     padding: "10px 24px 10px 64px",
@@ -2506,7 +2580,6 @@ const styles = {
     },
   },
 
-  // Main Content Styles
   mainContent: {
     flex: 1,
     overflow: "auto",
@@ -2750,7 +2823,6 @@ const styles = {
     cursor: "pointer",
   },
 
-  // Action Buttons
   formActions: {
     display: "flex",
     justifyContent: "flex-end",
@@ -2800,7 +2872,6 @@ const styles = {
     backgroundColor: "yellow",
   },
 
-  // Preview Mode Styles
   formPreviewContainer: {
     backgroundColor: "#ffffff",
     borderRadius: "12px",

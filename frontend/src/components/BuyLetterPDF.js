@@ -20,6 +20,8 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
+  Menu,
+  X,
 } from "lucide-react";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
@@ -37,7 +39,7 @@ const BuyLetterForm = () => {
   const navigate = useNavigate();
   const [previewPdf, setPreviewPdf] = useState(null);
   const [previewLanguage, setPreviewLanguage] = useState("hindi");
-  const [selectedLanguage, setSelectedLanguage] = useState("hindi"); // default to hindi
+  const [selectedLanguage, setSelectedLanguage] = useState("hindi");
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -45,7 +47,9 @@ const BuyLetterForm = () => {
   const [focusedInput, setFocusedInput] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [offlineQueue, setOfflineQueue] = useState([]);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [, setIsSyncing] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [formData, setFormData] = useState({
     sellerName: "",
     sellerFatherName: "",
@@ -94,7 +98,35 @@ const BuyLetterForm = () => {
     returnpersonname: "",
     note: "",
   });
-  // Monitor online/offline status
+
+  const syncOfflineData = useCallback(async () => {
+    if (!isOnline) return;
+
+    setIsSyncing(true);
+    try {
+      await offlineManager.syncOfflineData(
+        httpClient,
+        "buyLetterOfflineQueue",
+        {
+          create: "https://ok-motor-51l3.vercel.app/api/buy-letter",
+          update: "https://ok-motor-51l3.vercel.app/api/buy-letter",
+          delete: "https://ok-motor-51l3.vercel.app/api/buy-letter",
+        }
+      );
+
+      const updatedQueue = offlineManager.getQueue("buyLetterOfflineQueue");
+      setOfflineQueue(updatedQueue);
+
+      if (updatedQueue.length === 0) {
+        alert("All offline data synced successfully!");
+      }
+    } catch (error) {
+      console.error("Error syncing offline data:", error);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [isOnline]);
+
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
@@ -102,38 +134,42 @@ const BuyLetterForm = () => {
     };
     const handleOffline = () => setIsOnline(false);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
+  }, [syncOfflineData]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Load saved data on component mount
   useEffect(() => {
     const savedData = offlineManager.loadFromStorage("buyLetterFormData");
     if (savedData) {
       setFormData(savedData);
     }
 
-    // Load offline queue
     const savedQueue = offlineManager.getQueue("buyLetterOfflineQueue");
     setOfflineQueue(savedQueue);
   }, []);
 
-  // Save form data whenever it changes
   useEffect(() => {
     offlineManager.saveToStorage("buyLetterFormData", formData);
   }, [formData]);
 
-  // Save offline queue to localStorage whenever it changes
   useEffect(() => {
     offlineManager.saveToStorage("buyLetterOfflineQueue", offlineQueue);
   }, [offlineQueue]);
 
-  
   const LoadingOverlay = () => (
     <div style={styles.loadingOverlay}>
       <div style={styles.loadingContent}>
@@ -149,11 +185,7 @@ const BuyLetterForm = () => {
         <div style={modalStyles.modal}>
           <div style={modalStyles.header}>
             <div style={modalStyles.logoContainer}>
-              <img 
-                src={logo1} 
-                alt="OK Motor Logo" 
-                style={modalStyles.logo}
-              />
+              <img src={logo1} alt="OK Motor Logo" style={modalStyles.logo} />
             </div>
             <h2 style={modalStyles.title}>Generating PDF</h2>
           </div>
@@ -410,206 +442,11 @@ const BuyLetterForm = () => {
     }
   };
 
-  // Sync offline data when back online
-  const syncOfflineData = async () => {
-    if (!isOnline) return;
-
-    setIsSyncing(true);
-    try {
-      await offlineManager.syncOfflineData(
-        httpClient,
-        "buyLetterOfflineQueue",
-        {
-          create: "https://ok-motor-51l3.vercel.app/api/buy-letter",
-          update: "https://ok-motor-51l3.vercel.app/api/buy-letter",
-          delete: "https://ok-motor-51l3.vercel.app/api/buy-letter"
-        }
-      );
-
-      // Reload queue after sync
-      const updatedQueue = offlineManager.getQueue("buyLetterOfflineQueue");
-      setOfflineQueue(updatedQueue);
-
-      if (updatedQueue.length === 0) {
-        alert("All offline data synced successfully!");
-      }
-    } catch (error) {
-      console.error("Error syncing offline data:", error);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // Function to generate PDF buffer for offline use
-  const generatePDFBuffer = async (data, language = "hindi") => {
-    try {
-      const response = await httpClient.post(
-        `https://ok-motor-51l3.vercel.app/api/buy-letter/generate-pdf?language=${language}`,
-        data,
-        {
-          responseType: 'arraybuffer',
-        }
-      );
-      return response.data;
-    } catch (error) {
-      console.warn("Server PDF generation failed, falling back to local generator:", error?.message || error);
-      // Fallback: generate PDF locally using the same template logic
-      try {
-        const localBytes = await generateLocalPdfBytes(language);
-        return localBytes;
-      } catch (localErr) {
-        console.error("Local PDF generation also failed:", localErr);
-        throw error; // throw original error to preserve semantics
-      }
-    }
-  };
-
-  // Local PDF bytes generator (used as fallback when server generation is unavailable)
-   const generateLocalPdfBytes = async (language = "hindi") => {
-    try {
-      const templateUrl = language === "hindi" ? "/templates/buyletter.pdf" : "/templates/englishbuyletter.pdf";
-      const existingPdfBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
-      const pdfDoc = await PDFDocument.load(existingPdfBytes);
-
-      // Try to embed the same logo used by server template so offline PDF looks identical
-      let embeddedLogo = null;
-      const possibleLogoUrls = [logo1, '/images/okmotorback.png', '/images/company.png', '/logo192.png'];
-      for (const lurl of possibleLogoUrls) {
-        if (!lurl) continue;
-        try {
-          const logoBytes = await fetch(lurl).then((r) => {
-            if (!r.ok) throw new Error('Logo fetch failed');
-            return r.arrayBuffer();
-          });
-          try {
-            embeddedLogo = await pdfDoc.embedPng(logoBytes);
-          } catch (pngErr) {
-            try {
-              embeddedLogo = await pdfDoc.embedJpg(logoBytes);
-            } catch (jpgErr) {
-              embeddedLogo = null;
-            }
-          }
-          if (embeddedLogo) break;
-        } catch (logoErr) {
-          console.warn('Could not embed logo for local PDF fallback from', lurl, logoErr);
-        }
-      }
-
-      const positions = language === "hindi" ? fieldPositions : englishFieldPositions;
-      const firstPage = pdfDoc.getPages()[0];
-
-      // If we have an embedded logo, draw a faint watermark on the first page to match server output
-      if (embeddedLogo) {
-        try {
-          firstPage.drawImage(embeddedLogo, {
-            x: 200,
-            y: 120,
-            width: 300,
-            height: 300,
-            opacity: 0.12,
-            rotate: degrees(45),
-          });
-        } catch (e) {
-          // some environments might not support rotate; draw without rotate
-          try {
-            firstPage.drawImage(embeddedLogo, { x: 200, y: 120, width: 300, height: 300, opacity: 0.12 });
-          } catch (e2) {
-            // ignore
-          }
-        }
-      }
-
-      const formattedData = {
-        ...formData,
-        saleDate: formatDate(formData.saleDate),
-        todayDate: formatDate(formData.todayDate),
-        todayDate1: formatDate(formData.todayDate),
-        todayTime: formatTime(formData.todayTime),
-        todayTime1: formatTime(formData.todayTime),
-        saleTime: formatTime(formData.saleTime),
-        saleAmount: formatRupee(formData.saleAmount),
-        vehiclekm: formatKm(formData.vehiclekm),
-        amountInWords: formatIndianAmountInWords(
-          formData.saleAmount ? formData.saleAmount.toString().replace(/\D/g, "") : "0"
-        ),
-      };
-
-      for (const [fieldName, position] of Object.entries(positions)) {
-        if (fieldName === "selleraadharphone" && formattedData.selleraadharphone) {
-          const combinedPhones = `${formattedData.selleraadharphone}${formattedData.selleraadharphone2 ? ` , ${formattedData.selleraadharphone2}` : ""}`;
-          firstPage.drawText(combinedPhones, {
-            x: position.x,
-            y: position.y,
-            size: position.size,
-            color: rgb(0, 0, 0),
-          });
-        } else if (fieldName !== "selleraadharphone2" && formattedData[fieldName]) {
-          firstPage.drawText(String(formattedData[fieldName]), {
-            x: position.x,
-            y: position.y,
-            size: position.size,
-            color: rgb(0, 0, 0),
-          });
-        }
-      }
-
-      // Add amount in words
-      const saleAmountText = formattedData.saleAmount || "";
-      const saleAmountWidth = saleAmountText.length * (positions.saleAmount.size / 2);
-      const amountInWordsX = positions.saleAmount.x + saleAmountWidth + 1.4 * (positions.saleAmount.size / 2);
-
-      firstPage.drawText(formattedData.amountInWords, {
-        x: amountInWordsX,
-        y: positions.saleAmount.y,
-        size: positions.saleAmount.size,
-        color: rgb(0, 0, 0),
-      });
-
-      // Add invoice page similar to drawVehicleInvoice and include header/logo
-      const invoicePage = pdfDoc.addPage([595, 842]);
-      if (embeddedLogo) {
-        try {
-          invoicePage.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });
-          invoicePage.drawImage(embeddedLogo, { x: 50, y: 745, width: 150, height: 120 });
-          try {
-            invoicePage.drawImage(embeddedLogo, { x: 280, y: 150, width: 470, height: 400, opacity: 0.3, rotate: degrees(45) });
-          } catch (e) {
-            invoicePage.drawImage(embeddedLogo, { x: 280, y: 150, width: 470, height: 400, opacity: 0.3 });
-          }
-        } catch (e) {
-          // ignore drawing errors
-        }
-      }
-      invoicePage.drawText("Vehicle Invoice", { x: 250, y: 800, size: 20, color: rgb(0, 0, 0) });
-
-      const pdfBytes = await pdfDoc.save();
-      return pdfBytes;
-    } catch (err) {
-      console.error("generateLocalPdfBytes error:", err);
-      throw err;
-    }
-  };
-
-  // Function to download PDF from buffer
-  const downloadPDFFromBuffer = (buffer, filename) => {
-    const blob = new Blob([buffer], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
   const handleSaveAndDownload = async () => {
     try {
       setIsDownloading(true);
       setIsSaving(true);
       if (!isOnline) {
-        // Offline mode - generate PDF locally (use in-component generators) and queue data for sync
         try {
           if (selectedLanguage === "hindi") {
             await fillAndDownloadHindiPdf();
@@ -617,7 +454,6 @@ const BuyLetterForm = () => {
             await fillAndDownloadEnglishPdf();
           }
 
-          // Queue the data for later sync
           const queueItem = {
             type: "save",
             data: formData,
@@ -638,7 +474,6 @@ const BuyLetterForm = () => {
         }
       }
 
-      // Online mode - normal operation
       const existingLetter = await httpClient.get(
         `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
       );
@@ -710,6 +545,7 @@ const BuyLetterForm = () => {
       return newData;
     });
   }, []);
+
   const menuItems = [
     {
       name: "Dashboard",
@@ -825,16 +661,13 @@ const BuyLetterForm = () => {
       setIsDownloading(true);
       setDownloadProgress(0);
 
-      // Simulate progress
       await simulateProgress();
       setIsSaving(true);
 
-      // Check if letter exists first
       const existingLetter = await httpClient.get(
         `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
-          headers: {
-          },
+          headers: {},
         }
       );
 
@@ -842,15 +675,12 @@ const BuyLetterForm = () => {
       if (existingLetter.data && existingLetter.data.length > 0) {
         savedLetterData = existingLetter.data[0];
       } else {
-        // Save new letter if doesn't exist
         const response = await httpClient.post(
           "https://ok-motor-51l3.vercel.app/api/buy-letter",
           formData
         );
         savedLetterData = response.data;
       }
-
-      // Load PDF template
       const buyLetterUrl = "/templates/buyletter.pdf";
       const existingPdfBytes = await fetch(buyLetterUrl).then((res) =>
         res.arrayBuffer()
@@ -872,7 +702,6 @@ const BuyLetterForm = () => {
         amountInWords: formatIndianAmountInWords(formData.saleAmount),
       };
 
-      // Fill all form fields
       for (const [fieldName, position] of Object.entries(fieldPositions)) {
         if (
           fieldName === "selleraadharphone" &&
@@ -902,7 +731,6 @@ const BuyLetterForm = () => {
         }
       }
 
-      // Add amount in words
       const saleAmountText = formattedData.saleAmount || "";
       const saleAmountWidth =
         saleAmountText.length * (fieldPositions.saleAmount.size / 2);
@@ -918,11 +746,9 @@ const BuyLetterForm = () => {
         color: rgb(0, 0, 0),
       });
 
-      // Add invoice page
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
-      // Generate and download PDF
       const pdfBytes = await pdfDoc.save();
       saveAs(
         new Blob([pdfBytes], { type: "application/pdf" }),
@@ -994,7 +820,7 @@ const BuyLetterForm = () => {
       : new Intl.NumberFormat("en-IN", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
-        }).format(num); // Remove division by 100
+        }).format(num);
   };
   const formatAadhar = (val) =>
     val
@@ -1002,31 +828,27 @@ const BuyLetterForm = () => {
       .match(/.{1,4}/g)
       ?.join("-") || "";
   const formatRupee = (val) => {
-  const num = parseFloat(val.toString().replace(/,/g, ""));
-  return isNaN(num)
-    ? "0.00"
-    : `${new Intl.NumberFormat("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(num)}`;
-};
-
+    const num = parseFloat(val.toString().replace(/,/g, ""));
+    return isNaN(num)
+      ? "0.00"
+      : `${new Intl.NumberFormat("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(num)}`;
+  };
 
   const fillAndDownloadEnglishPdf = async () => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
 
-      // Simulate progress
       await simulateProgress();
       setIsSaving(true);
 
-      // Check if letter exists first
       const existingLetter = await httpClient.get(
         `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
-          headers: {
-          },
+          headers: {},
         }
       );
 
@@ -1047,10 +869,7 @@ const BuyLetterForm = () => {
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-      const logoUrl = logo1;
-
       const firstPage = pdfDoc.getPages()[0];
-      // ✅ JUST BEFORE drawing the logo (logo1)
 
       const formattedData = {
         ...formData,
@@ -1100,7 +919,6 @@ const BuyLetterForm = () => {
         }
       }
 
-      // Add amount in words (positioned for English layout)
       if (formattedData.saleAmount && formattedData.amountInWords) {
         const saleAmountText = formattedData.saleAmount || "";
         const saleAmountWidth =
@@ -1118,11 +936,9 @@ const BuyLetterForm = () => {
         });
       }
 
-      // Add invoice page
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
-      // Generate and download PDF
       const pdfBytes = await pdfDoc.save();
       saveAs(
         new Blob([pdfBytes], { type: "application/pdf" }),
@@ -1169,10 +985,7 @@ const BuyLetterForm = () => {
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-      const logoUrl = logo1;
-
       const firstPage = pdfDoc.getPages()[0];
-      // ✅ JUST BEFORE drawing the logo (logo1)
 
       const formattedData = {
         ...formData,
@@ -1256,23 +1069,15 @@ const BuyLetterForm = () => {
       setIsGeneratingPreview(false);
     }
   };
-  const handlePreviewAndDownload = async (language) => {
-    setShowPreviewModal(false);
-    if (language === "hindi") {
-      await fillAndDownloadHindiPdf();
-    } else {
-      await fillAndDownloadEnglishPdf();
-    }
-  };
   const handleInput = (e) => {
-    const { name, value } = e.target;
+    const { value } = e.target;
     e.target.value = value.toUpperCase();
     handleChange(e);
   };
   const drawVehicleInvoice = async (page, pdfDoc) => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const logoUrl = logo1; // Use your imported logo
+    const logoUrl = logo1;
     const logoImageBytes = await fetch(logoUrl).then((res) =>
       res.arrayBuffer()
     );
@@ -1363,15 +1168,12 @@ const BuyLetterForm = () => {
       font: font,
     });
 
-    // Divider line
     page.drawLine({
       start: { x: 50, y: 710 },
       end: { x: 545, y: 710 },
       thickness: 1,
       color: rgb(0.8, 0.8, 0.8),
     });
-
-    // Customer Information section
     page.drawText("CUSTOMER DETAILS", {
       x: 50,
       y: 690,
@@ -1465,7 +1267,7 @@ const BuyLetterForm = () => {
       "Engine",
       "KM",
     ];
-    const vehicleHeaderPositions = [60, 120, 180, 220, 280, 370, 460];
+    const vehicleHeaderPositions = [60, 120, 175, 235, 300, 405, 485];
 
     vehicleHeaders.forEach((header, index) => {
       page.drawText(header, {
@@ -1486,7 +1288,7 @@ const BuyLetterForm = () => {
       formData.vehiclekm ? `${formatKm(formData.vehiclekm)} km` : "N/A",
     ];
 
-    const columnWidths = [60, 60, 40, 60, 80, 80, 40, 60];
+    const columnWidths = [ 60, 40, 60, 80, 80, 40, 60];
 
     vehicleValues.forEach((value, index) => {
       const maxWidth = columnWidths[index];
@@ -1509,7 +1311,6 @@ const BuyLetterForm = () => {
       }
       if (currentLine) lines.push(currentLine);
 
-      // Draw each line
       lines.forEach((line, lineIndex) => {
         page.drawText(line, {
           x: xPos,
@@ -1573,7 +1374,6 @@ const BuyLetterForm = () => {
       }
     );
 
-    // Terms and Conditions section
     page.drawText("TERMS & CONDITIONS", {
       x: 40,
       y: 430,
@@ -1606,7 +1406,6 @@ const BuyLetterForm = () => {
       });
     });
 
-    // Seller Signature
     page.drawText("Seller Signature", {
       x: 110,
       y: 170,
@@ -1665,9 +1464,46 @@ const BuyLetterForm = () => {
   };
 
   return (
-    <div style={styles.container}>
-      {/* Sidebar */}
-      <div style={styles.sidebar}>
+    <div style={{
+      ...styles.container,
+      paddingTop: isMobile ? "80px" : "0",
+    }}>
+      <div style={{
+        ...styles.topBar,
+        display: isMobile && !isSidebarOpen ? "block" : "none",
+      }}>
+        <div
+          style={{
+            ...styles.hamburgerMenu,
+            display: isMobile && !isSidebarOpen ? "block" : "none",
+          }}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+        </div>
+      </div>
+
+      {isSidebarOpen && isMobile && (
+        <div
+          style={styles.sidebarOverlay}
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
+      <div
+        style={{
+          ...styles.sidebar,
+          ...(isMobile
+            ? {
+                transform: isSidebarOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
+                position: "fixed",
+                zIndex: 15,
+              }
+            : {}),
+        }}
+      >
         <div style={styles.sidebarHeader}>
           <img
             src={logo}
@@ -1676,13 +1512,13 @@ const BuyLetterForm = () => {
               width: "100%",
               maxWidth: "25rem",
               height: "13rem",
-              objectFit: "cover", // match CSS
+              objectFit: "cover",
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
             }}
           />
-          <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
+          <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
         </div>
 
         <nav style={styles.nav}>
@@ -1697,7 +1533,6 @@ const BuyLetterForm = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
-                    // Pass the path as-is (could be string or function)
                     handleMenuClick(item.name, item.path);
                   }
                 }}
@@ -1714,8 +1549,19 @@ const BuyLetterForm = () => {
                   ))}
               </div>
 
-              {item.submenu && expandedMenus[item.name] && (
-                <div style={styles.submenu}>
+              {item.submenu && (
+                <div
+                  style={{
+                    ...styles.submenu,
+                    maxHeight: expandedMenus[item.name]
+                      ? `${item.submenu.length * 48}px`
+                      : "0px",
+                    opacity: expandedMenus[item.name] ? 1 : 0,
+                    transition:
+                      "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
+                    overflow: "hidden",
+                  }}
+                >
                   {item.submenu.map((subItem) => (
                     <div
                       key={subItem.name}
@@ -1744,7 +1590,6 @@ const BuyLetterForm = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
@@ -1755,40 +1600,10 @@ const BuyLetterForm = () => {
                   Fill in the details to generate a vehicle purchase agreement
                 </p>
               </div>
-              
-              {/* Online/Offline Status Indicator */}
-              <div style={styles.statusIndicator}>
-                <div style={{
-                  ...styles.statusDot,
-                  backgroundColor: isOnline ? '#10b981' : '#ef4444'
-                }}>
-                </div>
-                <span style={{
-                  ...styles.statusText,
-                  color: isOnline ? '#10b981' : '#ef4444'
-                }}>
-                  {isOnline ? 'Online' : 'Offline'}
-                </span>
-                {!isOnline && offlineQueue.length > 0 && (
-                  <span style={styles.queueCount}>
-                    {offlineQueue.length} queued
-                  </span>
-                )}
-                {isOnline && offlineQueue.length > 0 && (
-                  <button
-                    onClick={syncOfflineData}
-                    disabled={isSyncing}
-                    style={styles.syncButton}
-                  >
-                    {isSyncing ? 'Syncing...' : 'Sync Data'}
-                  </button>
-                )}
-              </div>
             </div>
           </div>
 
           <form className="form" style={styles.form}>
-            {/* Seller Information */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <User style={styles.sectionIcon} /> Seller Information
@@ -1814,7 +1629,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={30}
+                    maxLength={selectedLanguage === 'hindi' ? 35 : 35}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1837,7 +1652,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={30}
+                    maxLength={selectedLanguage === 'hindi' ? 36 : 37}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1860,7 +1675,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={60}
+                    maxLength={selectedLanguage === 'hindi' ? 64 : 57}
                   />
                 </div>
 
@@ -1981,7 +1796,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={30}
+                    maxLength={selectedLanguage === 'hindi' ? 30 : 40}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2010,7 +1825,6 @@ const BuyLetterForm = () => {
               </div>
             </div>
 
-            {/* Vehicle Information */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <Car style={styles.sectionIcon} /> Vehicle Information
@@ -2036,7 +1850,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={30}
+                    maxLength={selectedLanguage === 'hindi' ? 14 : 19}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2059,7 +1873,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={30}
+                    maxLength={selectedLanguage === 'hindi' ? 15 : 16}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2082,7 +1896,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={9}
+                    maxLength={selectedLanguage === 'hindi' ? 9 : 8}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2105,7 +1919,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={11}
+                    maxLength={selectedLanguage === 'hindi' ? 11 : 14}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2128,7 +1942,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={18}
+                    maxLength={selectedLanguage === 'hindi' ? 17 : 17}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2151,7 +1965,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={15}
+                    maxLength={selectedLanguage === 'hindi' ? 12 : 12}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2165,7 +1979,6 @@ const BuyLetterForm = () => {
                     value={formData.vehiclekm}
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/[^0-9.]/g, "");
-                      // Update the form data with the raw value
                       setFormData((prev) => ({
                         ...prev,
                         vehiclekm: rawValue,
@@ -2173,12 +1986,8 @@ const BuyLetterForm = () => {
                     }}
                     onFocus={() => setFocusedInput("vehiclekm")}
                     onBlur={() => {
-                      // Format the value on blur if it's not empty
                       if (formData.vehiclekm !== "") {
-                        const formatted = new Intl.NumberFormat("en-IN", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }).format(Number(formData.vehiclekm));
+                        // Format the vehiclekm if needed
                       }
                       setFocusedInput(null);
                     }}
@@ -2217,7 +2026,6 @@ const BuyLetterForm = () => {
               </div>
             </div>
 
-            {/* Buyer Information */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <User style={styles.sectionIcon} /> Buyer Information
@@ -2243,7 +2051,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={30}
+                    maxLength={selectedLanguage === 'hindi' ? 27 : 30}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2266,7 +2074,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={30}
+                    maxLength={selectedLanguage === 'hindi' ? 20 : 25}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2289,7 +2097,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={100}
+                    maxLength={selectedLanguage === 'hindi' ? 100 : 40}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2312,7 +2120,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={30}
+                    maxLength={selectedLanguage === 'hindi' ? 30 : 14}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2335,7 +2143,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={100}
+                    maxLength={selectedLanguage === 'hindi' ? 100 : 29}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2358,13 +2166,12 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={30}
+                    maxLength={selectedLanguage === 'hindi' ? 20 : 36}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Sale Details */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <IndianRupee style={styles.sectionIcon} /> Sale Details
@@ -2541,7 +2348,7 @@ const BuyLetterForm = () => {
                       ...styles.formInput,
                       ...(focusedInput === "note" ? styles.inputFocused : {}),
                     }}
-                    maxLength={80}
+                    maxLength={selectedLanguage === 'hindi' ? 80 : 100}
                     rows={3}
                   />
                 </div>
@@ -2579,7 +2386,7 @@ const BuyLetterForm = () => {
                 disabled={isSaving}
               >
                 <Download style={styles.buttonIcon} />
-                {isOnline ? 'Save & Download' : 'Download (Save When Online)'}
+                {isOnline ? "Save & Download" : "Download (Save When Online)"}
               </button>
             </div>
           </form>
@@ -2654,7 +2461,6 @@ const styles = {
     backgroundColor: "#f1f5f9",
     fontFamily: "'Inter', sans-serif",
   },
-  // Sidebar Styles
   sidebar: {
     width: "280px",
     backgroundColor: "#1e293b",
@@ -2713,7 +2519,11 @@ const styles = {
     fontWeight: "500",
   },
   submenu: {
-    backgroundColor: "#1a2536",
+    backgroundColor: "rgba(26, 32, 44, 0.7)",
+    maxHeight: 0,
+    opacity: 0,
+    overflow: "hidden",
+    transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
   },
   submenuItem: {
     padding: "10px 24px 10px 64px",
@@ -2743,7 +2553,6 @@ const styles = {
     },
   },
 
-  // Main Content Styles
   mainContent: {
     flex: 1,
     overflow: "auto",
@@ -2877,22 +2686,12 @@ const styles = {
       backgroundColor: "#e2e8f0",
     },
   },
-  // Add this to your styles object
-  formSelect: {
-    padding: "8px 12px",
-    border: "1px solid #cbd5e1",
-    borderRadius: "6px",
-    fontSize: "0.875rem",
-    backgroundColor: "#ffffff",
-    cursor: "pointer",
-  },
   pageSubtitle: {
     fontSize: "1rem",
     color: "#64748b",
     margin: "8px 0 0 0",
   },
 
-  // Form Styles
   form: {
     backgroundColor: "#ffffff",
     borderRadius: "12px",
@@ -3008,7 +2807,6 @@ const styles = {
     color: "#64748b",
   },
 
-  // Update the formInput style in the styles object:
   formInput: {
     width: "90%",
     padding: "10px 12px",
@@ -3016,7 +2814,7 @@ const styles = {
     borderRadius: "8px",
     fontSize: "0.875rem",
     transition: "all 0.2s ease",
-    backgroundColor: "#ffffff", // Changed from #f8fafc to white
+    backgroundColor: "#ffffff",
     ":focus": {
       outline: "none",
       borderColor: "#3b82f6",
@@ -3031,7 +2829,7 @@ const styles = {
     border: "1px solid #cbd5e1",
     borderRadius: "8px",
     fontSize: "0.875rem",
-    backgroundColor: "#ffffff", // Changed from #f8fafc to white
+    backgroundColor: "#ffffff",
     transition: "all 0.2s ease",
     appearance: "none",
     backgroundRepeat: "no-repeat",
@@ -3041,7 +2839,7 @@ const styles = {
       outline: "none",
       borderColor: "#3b82f6",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
-      backgroundColor: "red", // Changed to light blue when focused
+      backgroundColor: "red",
     },
   },
 
@@ -3054,12 +2852,12 @@ const styles = {
     minHeight: "80px",
     resize: "vertical",
     transition: "all 0.2s ease",
-    backgroundColor: "#ffffff", // Changed from #f8fafc to white
+    backgroundColor: "#ffffff",
     ":focus": {
       outline: "none",
       borderColor: "#3b82f6",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
-      backgroundColor: "#f8fafc", // Changed to light blue when focused
+      backgroundColor: "#f8fafc",
     },
   },
   formCheckboxField: {
@@ -3082,8 +2880,6 @@ const styles = {
     color: "#1e293b",
     cursor: "pointer",
   },
-
-  // Action Buttons
   formActions: {
     display: "flex",
     justifyContent: "flex-end",
@@ -3129,8 +2925,6 @@ const styles = {
     width: "16px",
     height: "16px",
   },
-
-  // Preview Mode Styles
   formPreviewContainer: {
     backgroundColor: "#ffffff",
     borderRadius: "12px",
@@ -3169,6 +2963,31 @@ const styles = {
     justifyContent: "center",
     backgroundColor: "#f9fafb",
     color: "#6b7280",
+  },
+  topBar: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: "1rem",
+    background: "#ffffff",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    zIndex: 20,
+  },
+  hamburgerMenu: {
+    cursor: "pointer",
+    padding: "8px",
+    borderRadius: "4px",
+    transition: "background-color 0.2s",
+  },
+  sidebarOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0, 0, 0, 0.5)",
+    zIndex: 14,
   },
 };
 export default BuyLetterForm;

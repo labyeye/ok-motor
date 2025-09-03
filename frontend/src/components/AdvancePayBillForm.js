@@ -17,6 +17,8 @@ import {
   ChevronDown,
   ChevronRight,
   Bike,
+  Menu,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import httpClient from "../utils/offlineHttpClient";
@@ -40,7 +42,9 @@ const AdvancePayBillForm = () => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [offlineQueue, setOfflineQueue] = useState([]);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [, setIsSyncing] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 const [formData, setFormData] = useState({
     customerName: "",
     customerPhone: "",
@@ -64,6 +68,36 @@ const [formData, setFormData] = useState({
     balanceDue: "0.00",
   });
 
+  // Sync offline data when back online
+  const syncOfflineData = useCallback(async () => {
+    if (!isOnline) return;
+
+    setIsSyncing(true);
+    try {
+      await offlineManager.syncOfflineData(
+        httpClient,
+        "advanceBillOfflineQueue",
+        {
+          create: "https://ok-motor-51l3.vercel.app/api/advance-bills",
+          update: "https://ok-motor-51l3.vercel.app/api/advance-bills",
+          delete: "https://ok-motor-51l3.vercel.app/api/advance-bills"
+        }
+      );
+
+      // Reload queue after sync
+      const updatedQueue = offlineManager.getQueue("advanceBillOfflineQueue");
+      setOfflineQueue(updatedQueue);
+
+      if (updatedQueue.length === 0) {
+        alert("All offline data synced successfully!");
+      }
+    } catch (error) {
+      console.error("Error syncing offline data:", error);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [isOnline]);
+
   // Monitor online/offline status
   useEffect(() => {
     const handleOnline = () => {
@@ -79,7 +113,7 @@ const [formData, setFormData] = useState({
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [syncOfflineData]);
 
   // Load saved data on component mount
   useEffect(() => {
@@ -103,7 +137,15 @@ const [formData, setFormData] = useState({
     offlineManager.saveToStorage("advanceBillOfflineQueue", offlineQueue);
   }, [offlineQueue]);
 
-  
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [previewMode, setPreviewMode] = useState(false);
 
   useEffect(() => {
@@ -181,36 +223,6 @@ const [formData, setFormData] = useState({
       updatedData.grandTotal = calculated.grandTotal;
       updatedData.balanceDue = calculated.balanceDue;
       setFormData(updatedData);
-    }
-  };
-
-  // Sync offline data when back online
-  const syncOfflineData = async () => {
-    if (!isOnline) return;
-
-    setIsSyncing(true);
-    try {
-      await offlineManager.syncOfflineData(
-        httpClient,
-        "advanceBillOfflineQueue",
-        {
-          create: "https://ok-motor-51l3.vercel.app/api/advance-bills",
-          update: "https://ok-motor-51l3.vercel.app/api/advance-bills",
-          delete: "https://ok-motor-51l3.vercel.app/api/advance-bills"
-        }
-      );
-
-      // Reload queue after sync
-      const updatedQueue = offlineManager.getQueue("advanceBillOfflineQueue");
-      setOfflineQueue(updatedQueue);
-
-      if (updatedQueue.length === 0) {
-        alert("All offline data synced successfully!");
-      }
-    } catch (error) {
-      console.error("Error syncing offline data:", error);
-    } finally {
-      setIsSyncing(false);
     }
   };
 
@@ -764,8 +776,44 @@ const [formData, setFormData] = useState({
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.sidebar}>
+    <div style={{
+      ...styles.container,
+      paddingTop: isMobile ? "80px" : "0",
+    }}>
+      <div style={{
+        ...styles.topBar,
+        display: isMobile && !isSidebarOpen ? "block" : "none",
+      }}>
+        <div
+          style={{
+            ...styles.hamburgerMenu,
+            display: isMobile && !isSidebarOpen ? "block" : "none",
+          }}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+        </div>
+      </div>
+      {isSidebarOpen && isMobile && (
+        <div
+          style={styles.sidebarOverlay}
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+      <div
+        style={{
+          ...styles.sidebar,
+          ...(isMobile
+            ? {
+                transform: isSidebarOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
+                position: "fixed",
+                zIndex: 15,
+              }
+            : {}),
+        }}
+      >
         <div style={styles.sidebarHeader}>
           <img
             src={logo}
@@ -780,7 +828,7 @@ const [formData, setFormData] = useState({
               margin: "0 auto 1rem auto",
             }}
           />
-          <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
+          <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
         </div>
 
         <nav style={styles.nav}>
@@ -811,8 +859,19 @@ const [formData, setFormData] = useState({
                   ))}
               </div>
 
-              {item.submenu && expandedMenus[item.name] && (
-                <div style={styles.submenu}>
+              {item.submenu && (
+                <div
+                  style={{
+                    ...styles.submenu,
+                    maxHeight: expandedMenus[item.name]
+                      ? `${item.submenu.length * 48}px`
+                      : "0px",
+                    opacity: expandedMenus[item.name] ? 1 : 0,
+                    transition:
+                      "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
+                    overflow: "hidden",
+                  }}
+                >
                   {item.submenu.map((subItem) => (
                     <div
                       key={subItem.name}
@@ -851,27 +910,7 @@ const [formData, setFormData] = useState({
                   Fill in the details to generate an advance payment invoice for the
                   vehicle
                 </p>
-              </div>
-              
-              {/* Online/Offline Status Indicator */}
-              <div style={styles.statusIndicator}>
-                <div style={{
-                  ...styles.statusDot,
-                  backgroundColor: isOnline ? '#10b981' : '#ef4444'
-                }}>
-                </div>
-                <span style={{
-                  ...styles.statusText,
-                  color: isOnline ? '#10b981' : '#ef4444'
-                }}>
-                  {isOnline ? 'Online' : 'Offline'}
-                </span>
-                {!isOnline && httpClient.getQueueStatus().count > 0 && (
-                  <span style={styles.queueCount}>
-                    {httpClient.getQueueStatus().count} queued
-                  </span>
-                )}
-              </div>
+              </div>              
             </div>
           </div>
 
@@ -1423,6 +1462,7 @@ const styles = {
     top: 0,
     height: "100vh",
     backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
+    transition: "transform 0.3s ease-in-out",
   },
   loadingOverlay: {
     position: "fixed",
@@ -1573,7 +1613,11 @@ const styles = {
     fontWeight: "500",
   },
   submenu: {
-    backgroundColor: "#1a2536",
+    backgroundColor: "rgba(26, 32, 44, 0.7)",
+    maxHeight: 0,
+    opacity: 0,
+    overflow: "hidden",
+    transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
   },
   submenuItem: {
     padding: "10px 24px 10px 64px",
@@ -1627,12 +1671,6 @@ const styles = {
     borderRadius: "8px",
     border: "1px solid #e2e8f0",
     marginTop: "8px",
-  },
-  statusDot: {
-    width: "8px",
-    height: "8px",
-    borderRadius: "50%",
-    animation: "pulse 2s infinite",
   },
   statusText: {
     fontSize: "0.875rem",
@@ -1788,6 +1826,31 @@ const styles = {
   },
   buttonIcon: {
     marginRight: "8px",
+  },
+  topBar: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: "1rem",
+    background: "#ffffff",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    zIndex: 20,
+  },
+  hamburgerMenu: {
+    cursor: "pointer",
+    padding: "8px",
+    borderRadius: "4px",
+    transition: "background-color 0.2s",
+  },
+  sidebarOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0, 0, 0, 0.5)",
+    zIndex: 14,
   },
 };
 

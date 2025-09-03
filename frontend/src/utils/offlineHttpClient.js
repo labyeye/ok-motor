@@ -1,6 +1,6 @@
 import axios from "axios";
 import swManager from "./serviceWorkerManager";
-import offlineManager from "./offlineManager";
+// import offlineManager from "./offlineManager"; // Remove circular dependency
 import config from "../config/environment";
 
 // Enhanced axios client with offline support
@@ -159,8 +159,19 @@ class OfflineHttpClient {
           data: config.data || {},
           timestamp: new Date().toISOString(),
         };
-        offlineManager.addToQueue(matchedQueue, queueItem);
-        console.log('Added offline HTTP request to domain queue', matchedQueue, queueItem.id);
+
+        // Use dynamic import to avoid circular dependency
+        try {
+          const { default: offlineManager } = await import('./offlineManager');
+          offlineManager.addToQueue(matchedQueue, queueItem);
+          console.log('Added offline HTTP request to domain queue', matchedQueue, queueItem.id);
+        } catch (importError) {
+          console.error('Failed to import offlineManager:', importError);
+          // Fallback to localStorage
+          const storedQueue = JSON.parse(localStorage.getItem("httpQueue") || "[]");
+          storedQueue.push(queuedRequest);
+          localStorage.setItem("httpQueue", JSON.stringify(storedQueue));
+        }
       } else {
         // Fallback: store in generic httpQueue in localStorage for other endpoints
         const storedQueue = JSON.parse(localStorage.getItem("httpQueue") || "[]");

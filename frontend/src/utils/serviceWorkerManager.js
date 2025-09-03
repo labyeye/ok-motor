@@ -8,6 +8,27 @@ class ServiceWorkerManager {
 
   // Register service worker
   async register() {
+    // In development, unregister any existing service workers first
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Development mode: Unregistering any existing service workers...');
+      if ("serviceWorker" in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+          console.log('Unregistered service worker:', registration.scope);
+        }
+        // Also clear all caches
+        if ("caches" in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(
+            cacheNames.map((cacheName) => caches.delete(cacheName))
+          );
+          console.log('Cleared all caches in development mode');
+        }
+      }
+      return null;
+    }
+
     if ("serviceWorker" in navigator) {
       try {
         // Use process.env.PUBLIC_URL for correct path in production
@@ -181,6 +202,26 @@ class ServiceWorkerManager {
       );
       console.log("All caches cleared");
     }
+  }
+
+  // Force update service worker and clear all caches
+  async forceUpdate() {
+    console.log("Forcing service worker update and cache clear...");
+
+    // Clear all caches first
+    await this.clearCache();
+
+    // Unregister current service worker
+    if ("serviceWorker" in navigator) {
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (registration) {
+        await registration.unregister();
+        console.log("Service worker unregistered");
+      }
+    }
+
+    // Reload the page to get fresh content
+    window.location.reload(true);
   }
 }
 

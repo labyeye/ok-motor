@@ -60,7 +60,7 @@ const CreateStaff = () => {
         return;
       }
 
-      const response = await httpClient.post(
+      await httpClient.post(
         "https://ok-motor-51l3.vercel.app/api/users",
         formData,
         {
@@ -209,8 +209,19 @@ const CreateStaff = () => {
                 )}
               </div>
 
-              {item.submenu && expandedMenus[item.name] && (
-                <div style={styles.submenu}>
+              {item.submenu && (
+                <div
+                  style={{
+                    ...styles.submenu,
+                    maxHeight: expandedMenus[item.name]
+                      ? `${item.submenu.length * 48}px`
+                      : "0px",
+                    opacity: expandedMenus[item.name] ? 1 : 0,
+                    transition:
+                      "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
+                    overflow: "hidden",
+                  }}
+                >
                   {item.submenu.map((subItem) => (
                     <div
                       key={subItem.name}
@@ -400,7 +411,11 @@ const styles = {
     fontWeight: "500",
   },
   submenu: {
-    backgroundColor: "#1a2536",
+    backgroundColor: "rgba(26, 32, 44, 0.7)",
+    maxHeight: 0,
+    opacity: 0,
+    overflow: "hidden",
+    transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
   },
   submenuItem: {
     padding: "10px 24px 10px 64px",

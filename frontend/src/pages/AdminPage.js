@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -12,6 +12,8 @@ import {
   Target,
   RefreshCw,
   Bike,
+  Menu,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
@@ -45,6 +47,7 @@ const AdminPage = () => {
   const { user, logout } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [expandedMenus, setExpandedMenus] = useState({});
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dashboardData, setDashboardData] = useState({
     totalBuyLetters: 0,
     totalSellLetters: 0,
@@ -69,14 +72,7 @@ const AdminPage = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user && activeMenu === "Dashboard") {
-      fetchDashboardData();
-    }
-  }, [user, activeMenu]);
-  
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -116,7 +112,13 @@ const AdminPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user && activeMenu === "Dashboard") {
+      fetchDashboardData();
+    }
+  }, [user, activeMenu, fetchDashboardData]);
 
   const formatCurrency = (amount) => {
     if (isNaN(amount)) return "₹0";
@@ -169,7 +171,8 @@ const AdminPage = () => {
       },
       {
         label: "Service Amount (Revenue)",
-        data: dashboardData.monthlyData?.map((item) => item.serviceAmount) || [],
+        data:
+          dashboardData.monthlyData?.map((item) => item.serviceAmount) || [],
         backgroundColor: "rgba(245, 158, 11, 0.7)",
         borderColor: "rgba(245, 158, 11, 1)",
       },
@@ -475,12 +478,13 @@ const AdminPage = () => {
               {formatCurrency(dashboardData.profit)}
             </p>
             <small className="revenue-detail">
-              {dashboardData.profit >= 0 ? "Profit" : "Loss"}: {Math.abs(dashboardData.profitPercentage).toFixed(2)}%
+              {dashboardData.profit >= 0 ? "Profit" : "Loss"}:{" "}
+              {Math.abs(dashboardData.profitPercentage).toFixed(2)}%
             </small>
           </div>
         </div>
       )}
-      
+
       {/* Additional Revenue Summary */}
       {!loading && !error && (
         <div className="revenue-summary">
@@ -585,29 +589,35 @@ const AdminPage = () => {
         <div className="chart-card">
           <h3 className="chart-title">Revenue Breakdown</h3>
           <div className="chart-wrapper">
-            <Pie 
+            <Pie
               data={{
-                labels: ["Service Revenue", "Sales Revenue", "Purchase Expenses"],
-                datasets: [{
-                  data: [
-                    dashboardData.totalServiceValue || 0,
-                    dashboardData.totalSellValue || 0,
-                    dashboardData.totalBuyValue || 0
-                  ],
-                  backgroundColor: [
-                    "rgba(245, 158, 11, 0.7)",
-                    "rgba(16, 185, 129, 0.7)",
-                    "rgba(239, 68, 68, 0.7)"
-                  ],
-                  borderColor: [
-                    "rgba(217, 119, 6, 1)",
-                    "rgba(5, 150, 105, 1)",
-                    "rgba(239, 68, 68, 1)"
-                  ],
-                  borderWidth: 1
-                }]
-              }} 
-              options={pieOptions} 
+                labels: [
+                  "Service Revenue",
+                  "Sales Revenue",
+                  "Purchase Expenses",
+                ],
+                datasets: [
+                  {
+                    data: [
+                      dashboardData.totalServiceValue || 0,
+                      dashboardData.totalSellValue || 0,
+                      dashboardData.totalBuyValue || 0,
+                    ],
+                    backgroundColor: [
+                      "rgba(245, 158, 11, 0.7)",
+                      "rgba(16, 185, 129, 0.7)",
+                      "rgba(239, 68, 68, 0.7)",
+                    ],
+                    borderColor: [
+                      "rgba(217, 119, 6, 1)",
+                      "rgba(5, 150, 105, 1)",
+                      "rgba(239, 68, 68, 1)",
+                    ],
+                    borderWidth: 1,
+                  },
+                ],
+              }}
+              options={pieOptions}
             />
           </div>
         </div>
@@ -747,8 +757,29 @@ const AdminPage = () => {
 
   return (
     <div className="admin-container">
+      <div className="top-bar">
+        <div
+          className="hamburger-menu"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+        </div>
+      </div>
+
+      {/* Overlay for Mobile */}
+      {isSidebarOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* Sidebar */}
-      <div className="sidebar">
+      <div
+        className={`sidebar ${
+          isSidebarOpen ? "sidebar-open" : "sidebar-closed"
+        }`}
+      >
         <div className="sidebar-header">
           <img src={logo} alt="logo" className="brand-logo" />
           <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
@@ -781,8 +812,23 @@ const AdminPage = () => {
                   ))}
               </div>
 
-              {item.submenu && expandedMenus[item.name] && (
-                <div className="submenu">
+              {item.submenu && (
+                <div
+                  className={`submenu${
+                    expandedMenus[item.name]
+                      ? " submenu-open"
+                      : " submenu-closed"
+                  }`}
+                  style={{
+                    maxHeight: expandedMenus[item.name]
+                      ? `${item.submenu.length * 48}px`
+                      : "0px",
+                    opacity: expandedMenus[item.name] ? 1 : 0,
+                    transition:
+                      "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
+                    overflow: "hidden",
+                  }}
+                >
                   {item.submenu.map((subItem) => (
                     <div
                       key={subItem.name}
@@ -805,8 +851,6 @@ const AdminPage = () => {
           </div>
         </nav>
       </div>
-
-      {/* Main Content */}
       <div className="main-content">
         <div className="content-padding">
           <div className="banner">
@@ -837,24 +881,45 @@ const AdminPage = () => {
       </div>
 
       <style>{`
+      .top-bar{
+        padding: 1rem;
+        background: #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
         .admin-container {
           display: flex;
           min-height: 100vh;
           font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
           background-color: #f3f4f6;
         }
+        .sidebar-overlay {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 14;
+        }
+
+        @media (max-width: 768px) {
+          .sidebar-overlay {
+            display: block;
+          }
+        }
 
         /* Sidebar Styles */
         .sidebar {
           width: 280px;
-          background: #1e293b;
-          backdrop-filter: blur(10px);
+          background: #1E283A;
           color: #f8fafc;
           position: sticky;
           top: 0;
           height: 100vh;
           border-right: 1px solid rgba(255, 255, 255, 0.1);
           z-index: 10;
+          transition: transform 0.3s ease;
         }
 
         .sidebar-header {
@@ -865,12 +930,10 @@ const AdminPage = () => {
 
         .brand-logo {
           width: 100%;
-          max-width: 25rem; /* Adjust as needed */
-          height: 13rem; /* Adjust for height */
-          object-fit: cover; /* or 'cover' if you want to crop edges */
-          object-position: center; /* centers the image content */
+          height: 13rem; 
+          object-fit: cover; 
+          object-position: center;
           display: block;
-          margin: 0 auto 1rem auto;
         }
 
         .sidebar-subtitle {
@@ -924,6 +987,18 @@ const AdminPage = () => {
 
         .submenu {
           background: rgba(26, 32, 44, 0.7);
+          max-height: 0;
+          opacity: 0;
+          overflow: hidden;
+          transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
+        }
+        .submenu.submenu-open {
+          max-height: 500px;
+          opacity: 1;
+        }
+        .submenu.submenu-closed {
+          max-height: 0;
+          opacity: 0;
         }
 
         .submenu-item {
@@ -975,10 +1050,9 @@ const AdminPage = () => {
         }
 
         .banner-logo {
-          height: 500px;
+          height: 100%;
           width: 100%;
           object-fit: cover;
-          object-position: center -150px; /* Moves image up = crops top */
         }
 
         /* Dashboard Cards */
@@ -1556,6 +1630,14 @@ const AdminPage = () => {
         }
 
         /* Responsive Styles */
+        .hamburger-menu {
+          display: none;
+        }
+
+        .top-bar {
+          display: none;
+        }
+
         @media (max-width: 1024px) {
           .sidebar {
             width: 240px;
@@ -1563,14 +1645,38 @@ const AdminPage = () => {
         }
 
         @media (max-width: 768px) {
+          .hamburger-menu {
+            display: block;
+          }
+
+          .top-bar {
+            display: block;
+          }
+
+          .sidebar-overlay {
+            display: block;
+          }
+
           .admin-container {
             flex-direction: column;
           }
 
           .sidebar {
-            width: 100%;
-            height: auto;
-            position: relative;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            transform: translateX(-100%);
+            z-index: 15;
+          }
+
+          .sidebar.sidebar-open {
+            transform: translateX(0);
+          }
+
+          .sidebar.sidebar-closed {
+            transform: translateX(-100%);
           }
 
           .content-padding {

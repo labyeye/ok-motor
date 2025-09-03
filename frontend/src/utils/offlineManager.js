@@ -30,10 +30,12 @@ class OfflineManager {
     this.isOnline = navigator.onLine;
     this.setupEventListeners();
 
-    // Attempt sync at startup if online
+    // Delay sync to avoid initialization issues
     if (this.isOnline) {
-      // fire-and-forget
-      this.syncAllQueues();
+      // Use setTimeout to defer execution until after module initialization
+      setTimeout(() => {
+        this.syncAllQueues();
+      }, 100);
     }
   }
 

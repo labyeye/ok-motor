@@ -1,5 +1,6 @@
-const STATIC_CACHE = "ok-motor-static-v1";
-const API_CACHE = "ok-motor-api-v1";
+const CACHE_VERSION = 'v' + Date.now(); // Dynamic versioning
+const STATIC_CACHE = `ok-motor-static-${CACHE_VERSION}`;
+const API_CACHE = `ok-motor-api-${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   "/",
   "/static/js/bundle.js",

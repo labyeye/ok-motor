@@ -167,7 +167,7 @@ const StaffList = () => {
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
            <img src={logo} alt="logo" style={{width: '14.5rem', height: '10.5rem', color: '#7c3aed'}} />
-          <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
+          <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
         </div>
 
         <nav style={styles.nav}>
@@ -199,26 +199,32 @@ const StaffList = () => {
                   ))}
               </div>
 
-              {item.submenu && expandedMenus[item.name] && (
-                <div style={styles.submenu}>
-                  {item.submenu.map((subItem) => (
-                    <div
-                      key={subItem.name}
-                      style={{
-                        ...styles.submenuItem,
-                        ...(activeMenu === subItem.name
-                          ? styles.submenuItemActive
-                          : {}),
-                      }}
-                      onClick={() =>
-                        handleMenuClick(subItem.name, subItem.path)
-                      }
-                    >
-                      {subItem.name}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div
+                style={{
+                  ...styles.submenu,
+                  maxHeight: expandedMenus[item.name]
+                    ? `${item.submenu.length * 48}px`
+                    : "0px",
+                  opacity: expandedMenus[item.name] ? 1 : 0,
+                }}
+              >
+                {item.submenu.map((subItem) => (
+                  <div
+                    key={subItem.name}
+                    style={{
+                      ...styles.submenuItem,
+                      ...(activeMenu === subItem.name
+                        ? styles.submenuItemActive
+                        : {}),
+                    }}
+                    onClick={() =>
+                      handleMenuClick(subItem.name, subItem.path)
+                    }
+                  >
+                    {subItem.name}
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
 
@@ -391,14 +397,18 @@ const styles = {
     fontWeight: "500",
   },
   submenu: {
-    backgroundColor: "#1a2536",
+    backgroundColor: "rgba(26, 37, 54, 0.8)",
+    maxHeight: "0px",
+    overflow: "hidden",
+    transition: "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    opacity: 0,
   },
   submenuItem: {
     padding: "10px 24px 10px 64px",
     cursor: "pointer",
     color: "#cbd5e1",
     fontSize: "0.875rem",
-    transition: "all 0.2s ease",
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
     ":hover": {
       backgroundColor: "#2d3748",
     },

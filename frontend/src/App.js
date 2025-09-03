@@ -64,7 +64,7 @@ const RootRedirect = () => {
   }
 
   // If authenticated, redirect based on role
-  const redirectPath = user.role === "admin" ? "/admin" : "/staff";
+  const redirectPath = user?.role === "admin" ? "/admin" : "/staff";
   return <Navigate to={redirectPath} replace />;
 };
 
@@ -86,13 +86,13 @@ function App() {
       <div
         style={{
           position: "fixed",
-          top: 0,
-          right: 0,
+          top: 10,
+          right: 10,
           padding: "8px 16px",
           background: isOnline ? "#4caf50" : "#f44336",
           color: "#fff",
           zIndex: 1000,
-          borderRadius: "0 0 0 8px",
+          borderRadius: "8px 8px 8px 8px",
           fontWeight: "bold",
         }}
       >

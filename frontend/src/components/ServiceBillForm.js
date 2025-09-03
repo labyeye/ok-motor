@@ -22,6 +22,8 @@ import {
   Plus,
   Trash,
   Bike,
+  Menu,
+  X,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import httpClient from "../utils/offlineHttpClient";
@@ -46,6 +48,8 @@ const ServiceBillForm = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [offlineQueue, setOfflineQueue] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const [formData, setFormData] = useState({
     taxEnabled: false,
@@ -336,7 +340,7 @@ const ServiceBillForm = () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, []);
+  }, [location.state]);
 
   // Save form data to localStorage whenever it changes
   useEffect(() => {
@@ -347,6 +351,15 @@ const ServiceBillForm = () => {
   useEffect(() => {
     offlineManager.saveToStorage("serviceBillOfflineQueue", offlineQueue);
   }, [offlineQueue]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Function to sync offline data when coming back online
   const syncOfflineData = async () => {
@@ -385,56 +398,6 @@ const ServiceBillForm = () => {
     offlineManager.addToQueue("serviceBillOfflineQueue", queueItem);
     const updatedQueue = offlineManager.getQueue("serviceBillOfflineQueue");
     setOfflineQueue(updatedQueue);
-  };
-
-  // Function to generate PDF buffer for offline use
-  const generatePDFBuffer = async (data) => {
-    try {
-      const response = await httpClient.post(`${API_BASE_URL}/service-bills/generate-pdf`, data, {
-        responseType: 'arraybuffer'
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      throw error;
-    }
-  };
-
-  // Wrapper to prefer server-side PDF but fallback to client-side when offline
-  const getPDFBuffer = async (data) => {
-    if (!isOnline) {
-      return await generatePDFBufferClient(data);
-    }
-    try {
-      return await generatePDFBuffer(data);
-    } catch (err) {
-      console.warn('Server PDF generation failed, falling back to client generator', err);
-      return await generatePDFBufferClient(data);
-    }
-  };
-
-  // Client-side PDF fallback
-  const generatePDFBufferClient = async (data) => {
-    try {
-      const bytes = await generateServiceClientPDF(data);
-      return bytes;
-    } catch (err) {
-      console.error('Client-side PDF generation failed:', err);
-      throw err;
-    }
-  };
-
-  // Function to download PDF from buffer
-  const downloadPDFFromBuffer = (buffer, filename) => {
-    const blob = new Blob([buffer], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   // Modified handleSaveAndDownload function with offline support
@@ -738,22 +701,9 @@ const ServiceBillForm = () => {
     },
   };
 
-  const simulateProgress = () => {
-    return new Promise((resolve) => {
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 10;
-        setDownloadProgress(Math.min(progress, 100));
-        if (progress >= 100) {
-          clearInterval(interval);
-          resolve();
-        }
-      }, 100);
-    });
-  };
-
   // Retry mechanism for failed requests
-  const retryRequest = async (requestFn, maxRetries = 3, delay = 1000) => {
+  const retryRequest = async (requestFn, maxRetries = 3, initialDelay = 1000) => {
+    let delay = initialDelay;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         return await requestFn();
@@ -940,7 +890,7 @@ const ServiceBillForm = () => {
     }
   };
   const handleInput = (e) => {
-    const { name, value } = e.target;
+    const { value } = e.target;
     e.target.value = value.toUpperCase();
     handleChange(e);
   };
@@ -1048,9 +998,45 @@ const ServiceBillForm = () => {
   }
 
   return (
-    <div style={styles.container}>
+    <div style={{
+      ...styles.container,
+      paddingTop: isMobile ? "80px" : "0",
+    }}>
+      <div style={{
+        ...styles.topBar,
+        display: isMobile && !isSidebarOpen ? "block" : "none",
+      }}>
+        <div
+          style={{
+            ...styles.hamburgerMenu,
+            display: isMobile && !isSidebarOpen ? "block" : "none",
+          }}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+        </div>
+      </div>
+
+      {isSidebarOpen && isMobile && (
+        <div
+          style={styles.sidebarOverlay}
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* Sidebar */}
-      <div style={styles.sidebar}>
+      <div style={{
+        ...styles.sidebar,
+        ...(isMobile
+          ? {
+              transform: isSidebarOpen
+                ? "translateX(0)"
+                : "translateX(-100%)",
+              position: "fixed",
+              zIndex: 15,
+            }
+          : {}),
+      }}>
         <div style={styles.sidebarHeader}>
           <img
             src={logo}
@@ -1065,60 +1051,71 @@ const ServiceBillForm = () => {
               margin: "0 auto 1rem auto",
             }}
           />
-          <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
+          <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
         </div>
 
         <nav style={styles.nav}>
           {menuItems.map((item) => (
-            <div key={item.name}>
-              <div
-                style={{
-                  ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                }}
-                onClick={() => {
-                  if (item.submenu) {
-                    toggleMenu(item.name);
-                  } else {
-                    // Pass the path as-is (could be string or function)
-                    handleMenuClick(item.name, item.path);
-                  }
-                }}
-              >
-                <div style={styles.menuItemContent}>
-                  <item.icon size={20} style={styles.menuIcon} />
-                  <span style={styles.menuText}>{item.name}</span>
-                </div>
-                {item.submenu &&
-                  (expandedMenus[item.name] ? (
-                    <ChevronDown size={16} />
-                  ) : (
-                    <ChevronRight size={16} />
-                  ))}
-              </div>
-
-              {item.submenu && expandedMenus[item.name] && (
-                <div style={styles.submenu}>
-                  {item.submenu.map((subItem) => (
-                    <div
-                      key={subItem.name}
-                      style={{
-                        ...styles.submenuItem,
-                        ...(activeMenu === subItem.name
-                          ? styles.submenuItemActive
-                          : {}),
-                      }}
-                      onClick={() =>
-                        handleMenuClick(subItem.name, subItem.path)
-                      }
-                    >
-                      {subItem.name}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+                      <div key={item.name}>
+                        <div
+                          style={{
+                            ...styles.menuItem,
+                            ...(activeMenu === item.name ? styles.menuItemActive : {}),
+                          }}
+                          onClick={() => {
+                            if (item.submenu) {
+                              toggleMenu(item.name);
+                            } else {
+                              // Pass the path as-is (could be string or function)
+                              handleMenuClick(item.name, item.path);
+                            }
+                          }}
+                        >
+                          <div style={styles.menuItemContent}>
+                            <item.icon size={20} style={styles.menuIcon} />
+                            <span style={styles.menuText}>{item.name}</span>
+                          </div>
+                          {item.submenu &&
+                            (expandedMenus[item.name] ? (
+                              <ChevronDown size={16} />
+                            ) : (
+                              <ChevronRight size={16} />
+                            ))}
+                        </div>
+          
+                        {item.submenu && (
+                          <div
+                            style={{
+                              ...styles.submenu,
+                              maxHeight: expandedMenus[item.name]
+                                ? `${item.submenu.length * 48}px`
+                                : "0px",
+                              opacity: expandedMenus[item.name] ? 1 : 0,
+                              transition:
+                                "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
+                              overflow: "hidden",
+                            }}
+                          >
+                            {item.submenu.map((subItem) => (
+                              <div
+                                key={subItem.name}
+                                style={{
+                                  ...styles.submenuItem,
+                                  ...(activeMenu === subItem.name
+                                    ? styles.submenuItemActive
+                                    : {}),
+                                }}
+                                onClick={() =>
+                                  handleMenuClick(subItem.name, subItem.path)
+                                }
+                              >
+                                {subItem.name}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
 
           <div style={styles.logoutButton} onClick={handleLogout}>
             <LogOut size={20} style={styles.menuIcon} />
@@ -2042,6 +2039,31 @@ const styles = {
     backgroundColor: "#f1f5f9",
     fontFamily: "'Inter', sans-serif",
   },
+  topBar: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: "1rem",
+    background: "#ffffff",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    zIndex: 20,
+  },
+  hamburgerMenu: {
+    cursor: "pointer",
+    padding: "8px",
+    borderRadius: "4px",
+    transition: "background-color 0.2s",
+  },
+  sidebarOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0, 0, 0, 0.5)",
+    zIndex: 14,
+  },
   sidebar: {
     width: "280px",
     backgroundColor: "#1e293b",
@@ -2050,6 +2072,7 @@ const styles = {
     position: "sticky",
     top: 0,
     height: "100vh",
+    transition: "transform 0.3s ease",
     backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
   },
   loadingOverlay: {
@@ -2197,14 +2220,18 @@ const styles = {
     fontWeight: "500",
   },
   submenu: {
-    backgroundColor: "#1a2536",
+    backgroundColor: "rgba(26, 37, 54, 0.8)",
+    maxHeight: "0px",
+    overflow: "hidden",
+    transition: "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    opacity: 0,
   },
   submenuItem: {
     padding: "10px 24px 10px 64px",
     cursor: "pointer",
     color: "#cbd5e1",
     fontSize: "0.875rem",
-    transition: "all 0.2s ease",
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
     ":hover": {
       backgroundColor: "#2d3748",
     },

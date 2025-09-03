@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Bike } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import logo from "../images/company.png";
 
 const AuthForm = ({ isLogin }) => {
@@ -22,7 +22,7 @@ const AuthForm = ({ isLogin }) => {
 
   useEffect(() => {
     if (user && !authLoading) {
-      navigate(user.role === "admin" ? "/admin" : "/staff", { replace: true });
+      navigate(user?.role === "admin" ? "/admin" : "/staff", { replace: true });
     }
   }, [user, authLoading, navigate]);
 

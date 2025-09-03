@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -9,7 +9,6 @@ import {
   ChevronDown,
   ChevronRight,
   FileText,
-  Target,
   RefreshCw,
   Bike,
 } from "lucide-react";
@@ -35,13 +34,7 @@ const StaffPage = () => {
   const [isOwnerView, setIsOwnerView] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (activeMenu === "Dashboard") {
-      fetchDashboardData();
-    }
-  }, [activeMenu, isOwnerView]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
         const endpoint = isOwnerView
@@ -75,7 +68,13 @@ const StaffPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isOwnerView]);
+
+  useEffect(() => {
+    if (activeMenu === "Dashboard") {
+      fetchDashboardData();
+    }
+  }, [activeMenu, isOwnerView, fetchDashboardData]);
 
   const formatCurrency = (amount) => {
     if (isNaN(amount)) return "₹0";
@@ -369,7 +368,7 @@ const StaffPage = () => {
             alt="logo"
             style={{ width: "10.5rem", height: "10.5rem", color: "#7c3aed" }}
           />
-          <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
+          <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
         </div>
 
         <nav style={styles.nav}>

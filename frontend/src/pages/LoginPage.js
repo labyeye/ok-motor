@@ -9,7 +9,7 @@ const LoginPage = () => {
   const [showLogin, setShowLogin] = useState(true);
 
   if (user) {
-    navigate(user.role === "admin" ? "/admin" : "/staff");
+    navigate(user?.role === "admin" ? "/admin" : "/staff");
     return null;
   }
 

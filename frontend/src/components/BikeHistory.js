@@ -1,5 +1,5 @@
 // BikeHistory.js
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import httpClient from "../utils/offlineHttpClient";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import {
@@ -19,6 +19,7 @@ import {
   X,
   Download,
   Eye,
+  Menu,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -35,7 +36,9 @@ const BikeHistory = () => {
   const [loading, setLoading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState("");
   const [showPdfModal, setShowPdfModal] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [, setIsOnline] = useState(navigator.onLine);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
 
   // Helper functions for PDF generation
@@ -1318,7 +1321,7 @@ const BikeHistory = () => {
     );
   };
   
-  const fetchBikeHistory = async () => {
+  const fetchBikeHistory = useCallback(async () => {
     if (!searchTerm.trim()) return;
 
     try {
@@ -1408,7 +1411,7 @@ const BikeHistory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm]);
 
   // Preview PDF functions for buy and sell letters
   const previewBuyLetterPDF = async (letter) => {
@@ -1677,7 +1680,7 @@ const BikeHistory = () => {
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
+  }, [searchTerm, fetchBikeHistory]);
 
   useEffect(() => {
     return () => {
@@ -1698,6 +1701,15 @@ const BikeHistory = () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
   const getActionIcon = (type) => {
     switch (type) {
@@ -1854,8 +1866,44 @@ const BikeHistory = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.sidebar}>
+    <div style={{
+      ...styles.container,
+      paddingTop: isMobile ? "80px" : "0",
+    }}>
+      <div style={{
+        ...styles.topBar,
+        display: isMobile && !isSidebarOpen ? "block" : "none",
+      }}>
+        <div
+          style={{
+            ...styles.hamburgerMenu,
+            display: isMobile && !isSidebarOpen ? "block" : "none",
+          }}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+        </div>
+      </div>
+
+      {isSidebarOpen && isMobile && (
+        <div
+          style={styles.sidebarOverlay}
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
+      <div style={{
+        ...styles.sidebar,
+        ...(isMobile
+          ? {
+              transform: isSidebarOpen
+                ? "translateX(0)"
+                : "translateX(-100%)",
+              position: "fixed",
+              zIndex: 15,
+            }
+          : {}),
+      }}>
         <div style={styles.sidebarHeader}>
           <img
             src={logo}
@@ -1870,7 +1918,7 @@ const BikeHistory = () => {
               margin: "0 auto 1rem auto",
             }}
           />
-          <p style={styles.sidebarSubtitle}>Welcome, OK MOTORS</p>
+          <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
         </div>
         <nav style={styles.nav}>
           {menuItems.map((item) => (
@@ -1901,8 +1949,19 @@ const BikeHistory = () => {
                   ))}
               </div>
 
-              {item.submenu && expandedMenus[item.name] && (
-                <div style={styles.submenu}>
+              {item.submenu && (
+                <div
+                  style={{
+                    ...styles.submenu,
+                    maxHeight: expandedMenus[item.name]
+                      ? `${item.submenu.length * 48}px`
+                      : "0px",
+                    opacity: expandedMenus[item.name] ? 1 : 0,
+                    transition:
+                      "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
+                    overflow: "hidden",
+                  }}
+                >
                   {item.submenu.map((subItem) => (
                     <div
                       key={subItem.name}
@@ -1933,27 +1992,7 @@ const BikeHistory = () => {
 
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
-          <div style={styles.header}>
-            <div style={styles.headerContent}>
-              <div>
-                <h1 style={styles.pageTitle}>Bike History</h1>
-                <p style={styles.pageSubtitle}>
-                  Track all activities for a specific bike
-                </p>
-              </div>
-              <div style={styles.statusIndicator}>
-                <div
-                  style={{
-                    ...styles.statusDot,
-                    backgroundColor: isOnline ? "#10b981" : "#ef4444",
-                  }}
-                />
-                <span style={styles.statusText}>
-                  {isOnline ? "Online" : "Offline"}
-                </span>
-              </div>
-            </div>
-          </div>
+          
 
           <div style={styles.searchContainer}>
             <div style={styles.searchInputContainer}>
@@ -2094,6 +2133,31 @@ const styles = {
     backgroundColor: "#f1f5f9",
     fontFamily: "'Inter', sans-serif",
   },
+  topBar: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: "1rem",
+    background: "#ffffff",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    zIndex: 20,
+  },
+  hamburgerMenu: {
+    cursor: "pointer",
+    padding: "8px",
+    borderRadius: "4px",
+    transition: "background-color 0.2s",
+  },
+  sidebarOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0, 0, 0, 0.5)",
+    zIndex: 14,
+  },
   sidebar: {
     width: "280px",
     backgroundColor: "#1e293b",
@@ -2102,6 +2166,7 @@ const styles = {
     position: "sticky",
     top: 0,
     height: "100vh",
+    transition: "transform 0.3s ease",
     backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
   },
   sidebarHeader: {
@@ -2152,7 +2217,11 @@ const styles = {
     fontWeight: "500",
   },
   submenu: {
-    backgroundColor: "#1a2536",
+    backgroundColor: "rgba(26, 32, 44, 0.7)",
+    maxHeight: 0,
+    opacity: 0,
+    overflow: "hidden",
+    transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
   },
   submenuItem: {
     padding: "10px 24px 10px 64px",

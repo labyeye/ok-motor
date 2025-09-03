@@ -3,19 +3,61 @@ import { Navigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 
 const PrivateRoute = ({ children, roles }) => {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
+
+  // Development helper: Log authentication state
+  if (process.env.NODE_ENV === 'development') {
+    console.log('PrivateRoute Debug:', { user, loading, roles });
+  }
+
+  // Show loading spinner while checking authentication
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          backgroundColor: "#f3f4f6",
+        }}
+      >
+        <div
+          style={{
+            width: "50px",
+            height: "50px",
+            border: "5px solid #e5e7eb",
+            borderTop: "5px solid #3b82f6",
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite",
+          }}
+        ></div>
+        <style>
+          {`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}
+        </style>
+      </div>
+    );
+  }
 
   // If no user in context, but we have cached user data in localStorage, allow offline access.
-  if (!user) {
+  let effectiveUser = user;
+  if (!effectiveUser) {
     const cached = localStorage.getItem('cachedUser');
     if (cached) {
       try {
-        const parsed = JSON.parse(cached);
-        // attach a lightweight offline flag so downstream code can know
-        parsed._offline = true;
-        // NOTE: We don't set context here to avoid side effects; we simply permit access.
+        const parsedUser = JSON.parse(cached);
+        if (parsedUser) {
+          effectiveUser = parsedUser;
+          effectiveUser._offline = true;
+        } else {
+          return <Navigate to="/login" replace />;
+        }
       } catch (e) {
-        // invalid cached data -> redirect to login
         return <Navigate to="/login" replace />;
       }
     } else {
@@ -23,7 +65,7 @@ const PrivateRoute = ({ children, roles }) => {
     }
   }
 
-  if (roles && !roles.includes(user.role)) {
+  if (roles && (!effectiveUser || !effectiveUser?.role || !roles.includes(effectiveUser?.role))) {
     return <Navigate to="/" replace />;
   }
 
