@@ -32,6 +32,10 @@ import logo1 from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 
 const ServiceBillForm = () => {
+  // Clear saved form data on mount for new entry
+  useEffect(() => {
+    offlineManager.saveToStorage("serviceBillFormData", null);
+  }, []);
   const { user, logout } = useContext(AuthContext);
 
   const [activeMenu, setActiveMenu] = useState("Create Service Bill");

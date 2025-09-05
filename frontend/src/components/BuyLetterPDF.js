@@ -31,6 +31,10 @@ import httpClient from "../utils/offlineHttpClient";
 import AuthContext from "../context/AuthContext";
 import offlineManager from "../utils/offlineManager";
 const BuyLetterForm = () => {
+  // Clear saved form data on mount for new entry
+  useEffect(() => {
+    offlineManager.saveToStorage("buyLetterFormData", null);
+  }, []);
   const { user, logout } = useContext(AuthContext);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Create Buy Letter");

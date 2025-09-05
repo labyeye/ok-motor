@@ -35,7 +35,7 @@ const StaffList = () => {
     const fetchStaff = async () => {
       try {
         const response = await httpClient.get("https://ok-motor-51l3.vercel.app/api/users");
-        setStaff(response.data);
+        setStaff(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         setError(
           err.response?.data?.message ||
@@ -208,7 +208,7 @@ const StaffList = () => {
                   opacity: expandedMenus[item.name] ? 1 : 0,
                 }}
               >
-                {item.submenu.map((subItem) => (
+                {Array.isArray(item.submenu) ? item.submenu.map((subItem) => (
                   <div
                     key={subItem.name}
                     style={{
@@ -223,7 +223,7 @@ const StaffList = () => {
                   >
                     {subItem.name}
                   </div>
-                ))}
+                )) : null}
               </div>
             </div>
           ))}
@@ -274,7 +274,7 @@ const StaffList = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {staff.map((user) => (
+                  {(Array.isArray(staff) ? staff : []).map((user) => (
                     <tr key={user._id}>
                       <td style={styles.td}>
                         <div style={styles.userCell}>

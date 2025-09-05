@@ -33,6 +33,10 @@ import logo1 from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 
 const SellLetterForm = () => {
+  // Clear saved form data on mount for new entry
+  useEffect(() => {
+    offlineManager.saveToStorage("sellLetterFormData", null);
+  }, []);
   const { user, logout } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Create Sell Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
