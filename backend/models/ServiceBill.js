@@ -90,11 +90,35 @@ const ServiceBillSchema = new mongoose.Schema({
 // Pre-save hook to generate bill number
 ServiceBillSchema.pre("save", async function(next) {
   if (!this.billNumber) {
-    const count = await this.constructor.countDocuments();
-    this.billNumber = `SRV-${new Date().getFullYear()}-${(count + 1).toString().padStart(5, '0')}`;
+    let billNumber;
+    let attempts = 0;
+    const maxAttempts = 10;
     
-    // Calculate amounts if service items are modified
-    if (this.isModified('serviceItems') || this.isModified('discount') || this.isModified('discountPercentage') || this.isModified('discountType') || this.isModified('taxRate')) {
+    while (attempts < maxAttempts) {
+      try {
+        const count = await this.constructor.countDocuments();
+        billNumber = `SRV-${new Date().getFullYear()}-${(count + 1 + attempts).toString().padStart(5, '0')}`;
+        
+        // Check if this bill number already exists
+        const existing = await this.constructor.findOne({ billNumber });
+        if (!existing) {
+          this.billNumber = billNumber;
+          break;
+        }
+        attempts++;
+      } catch (error) {
+        attempts++;
+        if (attempts >= maxAttempts) {
+          // Fallback to timestamp-based bill number
+          this.billNumber = `SRV-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
+          break;
+        }
+      }
+    }
+  }
+  
+  // Calculate amounts if service items are modified
+  if (this.isModified('serviceItems') || this.isModified('discount') || this.isModified('discountPercentage') || this.isModified('discountType') || this.isModified('taxRate')) {
       this.totalAmount = this.serviceItems.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
       this.taxAmount = (this.taxRate / 100) * this.totalAmount;
       
@@ -109,7 +133,7 @@ ServiceBillSchema.pre("save", async function(next) {
       this.grandTotal = this.totalAmount + this.taxAmount - discountAmount;
       this.balanceDue = this.grandTotal - (this.advancePaid || 0);
     }
-  }
+  
   next();
 });
 

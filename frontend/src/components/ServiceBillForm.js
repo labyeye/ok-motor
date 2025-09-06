@@ -37,7 +37,6 @@ const ServiceBillForm = () => {
     offlineManager.saveToStorage("serviceBillFormData", null);
   }, []);
   const { user, logout } = useContext(AuthContext);
-
   const [activeMenu, setActiveMenu] = useState("Create Service Bill");
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
