@@ -149,24 +149,44 @@ const advanceBillSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Pre-save middleware to calculate amounts
-advanceBillSchema.pre('save', function(next) {
-  if (this.isModified('totalAmount') || this.isModified('advancePaid') || 
-      this.isModified('discount')) {
-    
-    // Calculate grand total with discount
-    this.grandTotal = this.totalAmount - (this.discount || 0);
-    this.balanceDue = this.grandTotal - this.advancePaid;
+// Pre-save middleware to calculate amounts and generate unique bill number
+advanceBillSchema.pre('save', async function(next) {
+  try {
+    if (this.isModified('totalAmount') || this.isModified('advancePaid') ||
+        this.isModified('discount')) {
+      // Calculate grand total with discount
+      this.grandTotal = this.totalAmount - (this.discount || 0);
+      this.balanceDue = this.grandTotal - this.advancePaid;
+    }
+
+    if (!this.billNumber) {
+      const year = new Date().getFullYear();
+      let attempts = 0;
+      const maxAttempts = 10;
+
+      while (attempts < maxAttempts) {
+        const random = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+        const candidate = `ADV-${year}-${random}`;
+        // Check uniqueness
+        // eslint-disable-next-line no-await-in-loop
+        const existing = await this.constructor.findOne({ billNumber: candidate }).lean().exec();
+        if (!existing) {
+          this.billNumber = candidate;
+          break;
+        }
+        attempts += 1;
+      }
+
+      if (!this.billNumber) {
+        // Fallback to timestamp-based bill number to guarantee uniqueness
+        this.billNumber = `ADV-${year}-${Date.now().toString().slice(-8)}`;
+      }
+    }
+
+    next();
+  } catch (err) {
+    next(err);
   }
-  
-  // Keep the existing bill number generation
-  if (!this.billNumber) {
-    const year = new Date().getFullYear();
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
-    this.billNumber = `ADV-${year}-${random}`;
-  }
-  
-  next();
 });
 
 // Virtual for formatted total amount
