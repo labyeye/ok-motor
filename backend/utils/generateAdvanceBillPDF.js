@@ -51,6 +51,10 @@ const formatTime12Hour = (timeString) => {
 const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
   try {
     console.log("Starting PDF generation for:", advanceBill._id || "new bill");
+    // Defensive: convert Mongoose document to plain object if necessary
+    if (advanceBill && typeof advanceBill.toObject === 'function') {
+      advanceBill = advanceBill.toObject();
+    }
 
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([595, 842]);
@@ -236,8 +240,9 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
 
     const customerAddress = advanceBill.customerAddress || "N/A";
     const customerAddressLines = [];
+    // Break address into readable lines (wrap at ~45 chars)
     for (let i = 0; i < customerAddress.length; i += 45) {
-      customerAddressLines.push(customerAddress.substring(i, i + 30));
+      customerAddressLines.push(customerAddress.substring(i, i + 45));
     }
 
     customerAddressLines.forEach((line, index) => {
@@ -397,10 +402,15 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     });
 
     // Convert all amounts to numbers first
-    const totalAmount = Number(advanceBill.totalAmount) || 0;
-    const advancePaid = Number(advanceBill.advancePaid) || 0;
-    const grandTotal = Number(advanceBill.grandTotal) || totalAmount * 100;
-    const balanceDue = Number(advanceBill.balanceDue);
+    // Parse numeric fields safely and provide sensible defaults
+    const totalAmount = parseFloat(advanceBill.totalAmount) || 0;
+    const advancePaid = parseFloat(advanceBill.advancePaid) || 0;
+    const grandTotal = (advanceBill.grandTotal !== undefined && advanceBill.grandTotal !== null)
+      ? parseFloat(advanceBill.grandTotal) || totalAmount
+      : totalAmount;
+    const balanceDue = (advanceBill.balanceDue !== undefined && advanceBill.balanceDue !== null)
+      ? parseFloat(advanceBill.balanceDue) || (grandTotal - advancePaid)
+      : (grandTotal - advancePaid);
 
     const paymentDetails = [
       { label: "Total Amount:", value: formatRupeeWithSymbol(totalAmount) },
@@ -594,13 +604,32 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       return Buffer.from(pdfBytes);
     } else {
       const uploadDir = path.join(__dirname, "../uploads/advance-bills");
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
+      const os = require("os");
+      const fallbackDir = path.join(os.tmpdir(), "advance-bills");
       const filename = `advance-bill-${advanceBill._id}.pdf`;
-      const filePath = path.join(uploadDir, filename);
-      fs.writeFileSync(filePath, pdfBytes);
-      return filename; // Return just the filename
+
+      // Try primary uploads directory first, fall back to OS tmpdir if write fails (e.g., read-only FS)
+      try {
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        const filePath = path.join(uploadDir, filename);
+        fs.writeFileSync(filePath, pdfBytes);
+        return filename; // Return just the filename
+      } catch (err) {
+        console.warn("Primary upload directory write failed, falling back to tmpdir:", err.message);
+        try {
+          if (!fs.existsSync(fallbackDir)) {
+            fs.mkdirSync(fallbackDir, { recursive: true });
+          }
+          const fallbackPath = path.join(fallbackDir, filename);
+          fs.writeFileSync(fallbackPath, pdfBytes);
+          return filename; // Return filename; route will check fallback location
+        } catch (err2) {
+          console.error("Failed to write PDF to fallback tmpdir:", err2);
+          throw new Error(`PDF generation failed: ${err2.message}`);
+        }
+      }
     }
   } catch (error) {
     console.error("Error generating PDF:", error);

@@ -191,20 +191,24 @@ advanceBillSchema.pre('save', async function(next) {
 
 // Virtual for formatted total amount
 advanceBillSchema.virtual('formattedTotalAmount').get(function() {
-  return `₹${this.totalAmount.toFixed(2)}`;
+  const val = this.totalAmount != null ? Number(this.totalAmount) : 0;
+  return `₹${val.toFixed(2)}`;
 });
 
 // Virtual for formatted advance paid
 advanceBillSchema.virtual('formattedAdvancePaid').get(function() {
-  return `₹${this.advancePaid.toFixed(2)}`;
+  const val = this.advancePaid != null ? Number(this.advancePaid) : 0;
+  return `₹${val.toFixed(2)}`;
 });
 
 // Virtual for formatted balance due
 advanceBillSchema.virtual('formattedBalanceDue').get(function() {
-  return `₹${this.balanceDue.toFixed(2)}`;
+  const val = this.balanceDue != null ? Number(this.balanceDue) : 0;
+  return `₹${val.toFixed(2)}`;
 });
 advanceBillSchema.virtual('formattedDiscount').get(function() {
-  return `₹${this.discount.toFixed(2)}`;
+  const val = this.discount != null ? Number(this.discount) : 0;
+  return `₹${val.toFixed(2)}`;
 });
 
 // Ensure virtuals are included in JSON output

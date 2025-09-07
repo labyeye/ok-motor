@@ -98,16 +98,23 @@ router.get("/:id/pdf", protect, async (req, res) => {
 router.get("/pdf/:filename", protect, async (req, res) => {
   try {
     const { filename } = req.params;
-    const filePath = path.join(__dirname, "../uploads/advance-bills", filename);
+    const primaryPath = path.join(__dirname, "../uploads/advance-bills", filename);
+    const os = require('os');
+    const fallbackPath = path.join(os.tmpdir(), "advance-bills", filename);
 
-    if (!fs.existsSync(filePath)) {
+    let filePathToServe = null;
+    if (fs.existsSync(primaryPath)) {
+      filePathToServe = primaryPath;
+    } else if (fs.existsSync(fallbackPath)) {
+      filePathToServe = fallbackPath;
+    } else {
       return res.status(404).json({ message: "PDF file not found" });
     }
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename=${filename}`);
 
-    const fileStream = fs.createReadStream(filePath);
+    const fileStream = fs.createReadStream(filePathToServe);
     fileStream.pipe(res);
   } catch (error) {
     console.error("Error serving PDF:", error);
@@ -265,45 +272,49 @@ router.post("/", protect, async (req, res) => {
       });
     }
 
-    const advanceBillData = {
-      ...req.body,
-      user: req.user.id || req.user._id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    // Build advance bill data safely
+    const advanceBillData = Object.assign({}, req.body);
+    advanceBillData.user = req.user && (req.user.id || req.user._id);
+    advanceBillData.createdAt = new Date();
+    advanceBillData.updatedAt = new Date();
 
-    // Ensure numeric values
+    // Ensure numeric values are numbers (store as numbers, not formatted strings)
     const totalAmount = parseFloat(advanceBillData.totalAmount) || 0;
     const advancePaid = parseFloat(advanceBillData.advancePaid) || 0;
+    const discount = parseFloat(advanceBillData.discount) || 0;
 
     // Calculate amounts
-    advanceBillData.grandTotal = totalAmount.toFixed(2);
-    advanceBillData.balanceDue = (
-      advanceBillData.grandTotal - advancePaid
-    ).toFixed(2);
+    const grandTotalNum = totalAmount - discount;
+    const balanceDueNum = grandTotalNum - advancePaid;
+
+    advanceBillData.totalAmount = totalAmount;
+    advanceBillData.advancePaid = advancePaid;
+    advanceBillData.discount = discount;
+    advanceBillData.grandTotal = grandTotalNum;
+    advanceBillData.balanceDue = balanceDueNum;
 
     // Save to database
     const advanceBill = new AdvanceBill(advanceBillData);
     const savedBill = await advanceBill.save();
 
+    // Generate and attach PDF (filename returned)
     const filename = await generateAdvanceBillPDF(savedBill, false);
 
-    // Update bill with PDF filename
-    savedBill.pdfUrl = `/api/advance-bills/pdf/${filename}`;
-    await savedBill.save();
+    if (filename) {
+      savedBill.pdfUrl = `/api/advance-bills/pdf/${filename}`;
+      await savedBill.save();
+    } else {
+      console.warn('PDF generator returned empty filename for advance bill', savedBill._id);
+    }
 
-    res.status(201).json({
-      success: true,
-      message: "Advance bill created successfully",
-      data: savedBill,
-    });
+    res.status(201).json({ success: true, message: 'Advance bill created successfully', data: savedBill });
   } catch (error) {
     console.error("Error creating advance bill:", error);
     res.status(500).json({
       success: false,
-      message: error.message, // Include the actual error message
+      message: error.message,
       error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 });
@@ -389,10 +400,12 @@ router.get("/:id/download", protect, async (req, res) => {
 // Get all advance bills
 router.get("/", protect, async (req, res) => {
   try {
-    // Staff and admin can see all bills, others only their own
-    const query = (req.user.role === 'staff' || req.user.role === 'admin')
-      ? {}
-      : { user: req.user.id || req.user._id };
+  // Staff and admin can see all bills, others only their own
+  const userRole = req.user && req.user.role;
+  const userId = req.user && (req.user.id || req.user._id);
+  if (!req.user) console.warn('Advance bills list requested without req.user set');
+
+  const query = (userRole === 'staff' || userRole === 'admin') ? {} : { user: userId };
     const advanceBills = await AdvanceBill.find(query)
       .sort({ createdAt: -1 })
       .populate('user', 'name role');
@@ -404,8 +417,10 @@ router.get("/", protect, async (req, res) => {
   } catch (error) {
     console.error("Error fetching advance bills:", error);
     res.status(500).json({
-      success: false,
-      message: "Failed to fetch advance bills",
+  success: false,
+  message: "Failed to fetch advance bills",
+  error: error.message,
+  stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 });
