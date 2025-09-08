@@ -195,7 +195,7 @@ const BuyLetterHistory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [editingLetter, setEditingLetter] = useState(null);
+  // Remove modal state for editing
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -215,8 +215,7 @@ const BuyLetterHistory = () => {
         const response = await httpClient.get(
           `https://ok-motor-51l3.vercel.app/api/buy-letter?page=${currentPage}`,
           {
-            headers: {
-            },
+            headers: {},
           }
         );
         console.log("API Response:", response.data);
@@ -1141,94 +1140,58 @@ const BuyLetterHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) {
           alert("You are not authenticated. Please login again.");
           logout();
-          navigate('/login');
+          navigate("/login");
           return;
         }
 
-        await httpClient.delete(
-          `https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        await httpClient.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
       } catch (error) {
         console.error("Error deleting buy letter:", error);
-        
+
         // Handle authentication errors
         if (error.response?.status === 401) {
           alert("Your session has expired. Please login again.");
           logout();
-          navigate('/login');
+          navigate("/login");
         } else if (error.response?.status === 403) {
           alert("You don't have permission to delete this item.");
         } else {
-          alert(`Failed to delete: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+          alert(
+            `Failed to delete: ${
+              error.response?.data?.message || error.message || "Unknown error"
+            }`
+          );
         }
       }
     }
   };
 
   const handleEdit = (letter) => {
-    setEditingLetter(letter);
-  };
-
-  const handleSaveEdit = async (updatedLetter) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert("You are not authenticated. Please login again.");
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      const response = await httpClient.put(
-        `https://ok-motor-51l3.vercel.app/api/buy-letter/${updatedLetter._id}`,
-        updatedLetter,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setBuyLetters(
-        buyLetters.map((letter) =>
-          letter._id === updatedLetter._id ? response.data : letter
-        )
-      );
-      setEditingLetter(null);
-    } catch (error) {
-      console.error("Error updating buy letter:", error);
-      
-      // Handle authentication errors
-      if (error.response?.status === 401) {
-        alert("Your session has expired. Please login again.");
-        logout();
-        navigate('/login');
-      } else if (error.response?.status === 403) {
-        alert("You don't have permission to edit this item.");
-      } else {
-        alert(`Failed to update: ${error.response?.data?.message || error.message || 'Unknown error'}`);
-      }
-    }
+    navigate("/buy/create", { state: { editLetter: letter } });
   };
 
   return (
-    <div style={{
-      ...styles.container,
-      paddingTop: isMobile ? "80px" : "0",
-    }}>
-      <div style={{
-        ...styles.topBar,
-        display: isMobile && !isSidebarOpen ? "block" : "none",
-      }}>
+    <div
+      style={{
+        ...styles.container,
+        paddingTop: isMobile ? "80px" : "0",
+      }}
+    >
+      <div
+        style={{
+          ...styles.topBar,
+          display: isMobile && !isSidebarOpen ? "block" : "none",
+        }}
+      >
         <div
           style={{
             ...styles.hamburgerMenu,
@@ -1248,18 +1211,20 @@ const BuyLetterHistory = () => {
       )}
 
       {/* Sidebar */}
-      <div style={{
-        ...styles.sidebar,
-        ...(isMobile
-          ? {
-              transform: isSidebarOpen
-                ? "translateX(0)"
-                : "translateX(-100%)",
-              position: "fixed",
-              zIndex: 15,
-            }
-          : {}),
-      }}>
+      <div
+        style={{
+          ...styles.sidebar,
+          ...(isMobile
+            ? {
+                transform: isSidebarOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
+                position: "fixed",
+                zIndex: 15,
+              }
+            : {}),
+        }}
+      >
         <div style={styles.sidebarHeader}>
           <img
             src={logo}
@@ -1413,7 +1378,11 @@ const BuyLetterHistory = () => {
                           {formatDate(letter.createdAt)}
                         </td>
                         <td style={styles.tableCell}>
-                          {letter.user && letter.user.role === 'admin' ? 'admin' : (letter.user && letter.user.name ? letter.user.name : '')}
+                          {letter.user && letter.user.role === "admin"
+                            ? "admin"
+                            : letter.user && letter.user.name
+                            ? letter.user.name
+                            : ""}
                         </td>
                         <td style={styles.tableCell}>
                           <button
@@ -1546,14 +1515,6 @@ const BuyLetterHistory = () => {
         <DownloadProgressModal
           progress={downloadProgress}
           onClose={() => setIsDownloading(false)}
-        />
-      )}
-
-      {editingLetter && (
-        <EditBuyLetterModal
-          letter={editingLetter}
-          onClose={() => setEditingLetter(null)}
-          onSave={handleSaveEdit}
         />
       )}
     </div>

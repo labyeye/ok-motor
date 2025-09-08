@@ -26,7 +26,7 @@ import {
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import httpClient from "../utils/offlineHttpClient";
 import AuthContext from "../context/AuthContext";
 import offlineManager from "../utils/offlineManager";
@@ -54,54 +54,60 @@ const BuyLetterForm = () => {
   const [, setIsSyncing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [formData, setFormData] = useState({
-    sellerName: "",
-    sellerFatherName: "",
-    sellerCurrentAddress: "",
-    vehicleName: "",
-    vehicleModel: "",
-    vehicleColor: "",
-    registrationNumber: "",
-    chassisNumber: "",
-    engineNumber: "",
-    vehiclekm: "",
-    vehicleCondition: "running",
-    buyerName: "",
-    buyerFatherName: "",
-    buyerCurrentAddress: "",
-    saleDate: new Date().toISOString().split("T")[0],
-    saleTime: new Date().toLocaleTimeString("en-GB", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    saleAmount: "",
-    paymentMethod: "cash",
-    todayDate: new Date().toISOString().split("T")[0],
-    todayTime: new Date().toLocaleTimeString("en-GB", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    todayDate1: "",
-    todayTime1: "",
-    sellerName1: "",
-    sellerFatherName1: "",
-    sellerCurrentAddress1: "",
-    buyerName1: "OK MOTORS",
-    buyerFatherName1: "",
-    dealername: "",
-    dealeraddress: "",
-    documentsVerified1: true,
-    selleraadhar: "",
-    sellerpan: "",
-    selleraadharphone: "",
-    selleraadharphone2: "",
-    witnessname: "",
-    witnessphone: "",
-    returnpersonname: "",
-    note: "",
-  });
+  const location = useLocation();
+  const editLetter = location.state?.editLetter;
+  const [formData, setFormData] = useState(
+    editLetter
+      ? { ...editLetter }
+      : {
+          sellerName: "",
+          sellerFatherName: "",
+          sellerCurrentAddress: "",
+          vehicleName: "",
+          vehicleModel: "",
+          vehicleColor: "",
+          registrationNumber: "",
+          chassisNumber: "",
+          engineNumber: "",
+          vehiclekm: "",
+          vehicleCondition: "running",
+          buyerName: "",
+          buyerFatherName: "",
+          buyerCurrentAddress: "",
+          saleDate: new Date().toISOString().split("T")[0],
+          saleTime: new Date().toLocaleTimeString("en-GB", {
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          saleAmount: "",
+          paymentMethod: "cash",
+          todayDate: new Date().toISOString().split("T")[0],
+          todayTime: new Date().toLocaleTimeString("en-GB", {
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          todayDate1: "",
+          todayTime1: "",
+          sellerName1: "",
+          sellerFatherName1: "",
+          sellerCurrentAddress1: "",
+          buyerName1: "OK MOTORS",
+          buyerFatherName1: "",
+          dealername: "",
+          dealeraddress: "",
+          documentsVerified1: true,
+          selleraadhar: "",
+          sellerpan: "",
+          selleraadharphone: "",
+          selleraadharphone2: "",
+          witnessname: "",
+          witnessphone: "",
+          returnpersonname: "",
+          note: "",
+        }
+  );
 
   const syncOfflineData = useCallback(async () => {
     if (!isOnline) return;
@@ -421,15 +427,26 @@ const BuyLetterForm = () => {
   const saveBuyLetter = async () => {
     try {
       setIsSaving(true);
-      const response = await httpClient.post(
-        "https://ok-motor-51l3.vercel.app/api/buy-letter",
-        formData
-      );
-      alert("Buy letter saved successfully!");
+      let response;
+      if (editLetter && editLetter._id) {
+        // Update existing letter
+        response = await httpClient.put(
+          `https://ok-motor-51l3.vercel.app/api/buy-letter/${editLetter._id}`,
+          formData
+        );
+        alert("Buy letter updated successfully!");
+      } else {
+        // Create new letter
+        response = await httpClient.post(
+          "https://ok-motor-51l3.vercel.app/api/buy-letter",
+          formData
+        );
+        alert("Buy letter saved successfully!");
+      }
       return response.data;
     } catch (error) {
-      console.error("Error saving buy letter:", error);
-      let errorMessage = "Failed to save buy letter. Please try again.";
+      console.error("Error saving/updating buy letter:", error);
+      let errorMessage = "Failed to save/update buy letter. Please try again.";
 
       if (error.response) {
         errorMessage = error.response.data.message || errorMessage;
@@ -478,21 +495,13 @@ const BuyLetterForm = () => {
         }
       }
 
-      const existingLetter = await httpClient.get(
-        `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
-      );
-      let savedLetter;
-      if (existingLetter.data && existingLetter.data.length > 0) {
-        savedLetter = existingLetter.data[0];
-      } else {
-        savedLetter = await saveBuyLetter();
-      }
+      // Always save or update before generating PDF
+      const savedLetter = await saveBuyLetter();
       if (selectedLanguage === "hindi") {
         await fillAndDownloadHindiPdf();
       } else {
         await fillAndDownloadEnglishPdf();
       }
-
       return savedLetter;
     } catch (error) {
       console.error("Error checking/saving buy letter:", error);
@@ -1368,7 +1377,13 @@ const BuyLetterForm = () => {
       }
     );
     page.drawText(
-      `Amount in Words: ${formatIndianAmountInWords(formData.saleAmount)}`,
+      `Amount in Words: ${
+        formatIndianAmountInWords(
+          !formData.saleAmount || isNaN(Number(formData.saleAmount))
+            ? 0
+            : Number(formData.saleAmount)
+        )
+      }`,
       {
         x: 60,
         y: 460,

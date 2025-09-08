@@ -26,7 +26,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
 
@@ -55,50 +55,62 @@ const SellLetterForm = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    vehicleName: "",
-    vehicleModel: "",
-    vehicleColor: "",
-    registrationNumber: "",
-    chassisNumber: "",
-    engineNumber: "",
-    vehiclekm: "",
-    buyerName: "",
-    buyerFatherName: "",
-    buyerAddress: "",
-    buyerPhone: "",
-    buyerPhone2: "",
-    buyerAadhar: "",
-    buyerName1: "",
-    buyerName2: "",
-    vehicleCondition: "running",
-    saleDate: new Date().toISOString().split("T")[0],
-    saleTime: new Date().toLocaleTimeString("en-GB", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    saleAmount: "",
-    todayDate: new Date().toISOString().split("T")[0],
-    todayTime: new Date().toLocaleTimeString("en-GB", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    previousDate: new Date().toISOString().split("T")[0],
-    previousTime: new Date().toLocaleTimeString("en-GB", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    paymentMethod: "cash",
-    sellerphone: "9876543210",
-    selleraadhar: "764465626571",
-    witnessName: "",
-    witnessPhone: "",
-    documentsVerified: true,
-    note: "",
-  });
+  const location = useLocation();
+  const editLetter = location.state?.editLetter;
+  const [formData, setFormData] = useState(
+    editLetter
+      ? {
+          ...editLetter,
+          selleraadhar:
+            editLetter.selleraadhar || "764465626571",
+          sellerphone:
+            editLetter.sellerphone || "9876543210",
+        }
+      : {
+          vehicleName: "",
+          vehicleModel: "",
+          vehicleColor: "",
+          registrationNumber: "",
+          chassisNumber: "",
+          engineNumber: "",
+          vehiclekm: "",
+          buyerName: "",
+          buyerFatherName: "",
+          buyerAddress: "",
+          buyerPhone: "",
+          buyerPhone2: "",
+          buyerAadhar: "",
+          buyerName1: "",
+          buyerName2: "",
+          vehicleCondition: "running",
+          saleDate: new Date().toISOString().split("T")[0],
+          saleTime: new Date().toLocaleTimeString("en-GB", {
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          saleAmount: "",
+          todayDate: new Date().toISOString().split("T")[0],
+          todayTime: new Date().toLocaleTimeString("en-GB", {
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          previousDate: new Date().toISOString().split("T")[0],
+          previousTime: new Date().toLocaleTimeString("en-GB", {
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          paymentMethod: "cash",
+          sellerphone: "9876543210",
+          selleraadhar: "764465626571",
+          witnessName: "",
+          witnessPhone: "",
+          documentsVerified: true,
+          note: "",
+        }
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   const syncOfflineData = useCallback(async () => {
@@ -155,14 +167,15 @@ const SellLetterForm = () => {
   }, []);
 
   useEffect(() => {
-    const savedData = offlineManager.loadFromStorage("sellLetterFormData");
-    if (savedData) {
-      setFormData(savedData);
+    if (!editLetter) {
+      const savedData = offlineManager.loadFromStorage("sellLetterFormData");
+      if (savedData) {
+        setFormData(savedData);
+      }
     }
-
     const savedQueue = offlineManager.getQueue("sellLetterOfflineQueue");
     setOfflineQueue(savedQueue);
-  }, []);
+  }, [editLetter]);
 
   useEffect(() => {
     offlineManager.saveToStorage("sellLetterFormData", formData);
@@ -173,18 +186,20 @@ const SellLetterForm = () => {
   }, [offlineQueue]);
 
   useEffect(() => {
-    try {
-      const savedDraft = localStorage.getItem("sellLetterDraft");
-      if (savedDraft) {
-        const draftData = JSON.parse(savedDraft);
-        setFormData((prev) => ({ ...prev, ...draftData }));
-        console.log("Loaded draft data from localStorage");
+    if (!editLetter) {
+      try {
+        const savedDraft = localStorage.getItem("sellLetterDraft");
+        if (savedDraft) {
+          const draftData = JSON.parse(savedDraft);
+          setFormData((prev) => ({ ...prev, ...draftData }));
+          console.log("Loaded draft data from localStorage");
+        }
+      } catch (error) {
+        console.error("Failed to load draft:", error);
+        localStorage.removeItem("sellLetterDraft");
       }
-    } catch (error) {
-      console.error("Failed to load draft:", error);
-      localStorage.removeItem("sellLetterDraft");
     }
-  }, []);
+  }, [editLetter]);
 
   const clearForm = () => {
     if (window.confirm("Are you sure you want to clear all form data?")) {
@@ -724,16 +739,26 @@ const SellLetterForm = () => {
         return false;
       }
 
-      const response = await httpClient.post(
-        "https://ok-motor-51l3.vercel.app/api/sell-letters",
-        formData
-      );
-
+      let response;
+      if (editLetter && editLetter._id) {
+        // Update existing letter
+        response = await httpClient.put(
+          `https://ok-motor-51l3.vercel.app/api/sell-letters/${editLetter._id}`,
+          formData
+        );
+        alert("Sell letter updated successfully!");
+      } else {
+        // Create new letter
+        response = await httpClient.post(
+          "https://ok-motor-51l3.vercel.app/api/sell-letters",
+          formData
+        );
+        alert("Sell letter saved successfully!");
+      }
       if (response.data) {
         if (response.data._cached) {
           alert("Sell letter queued for saving when online!");
         } else {
-          alert("Sell letter saved successfully!");
           try {
             localStorage.removeItem("sellLetterDraft");
           } catch (error) {
@@ -847,23 +872,13 @@ const SellLetterForm = () => {
         }
       }
 
-      const existingLetter = await httpClient.get(
-        `https://ok-motor-51l3.vercel.app/api/sell-letters/by-registration?registrationNumber=${formData.registrationNumber}`
-      );
-
-      let savedLetter;
-      if (existingLetter.data && existingLetter.data.length > 0) {
-        savedLetter = existingLetter.data[0];
-      } else {
-        savedLetter = await saveToDatabase();
-      }
-
+      // Always save or update before generating PDF
+      const savedLetter = await saveToDatabase();
       if (selectedLanguage === "hindi") {
         await fillAndDownloadHindiPdf();
       } else {
         await fillAndDownloadEnglishPdf();
       }
-
       return savedLetter;
     } catch (error) {
       console.error("Error checking/saving sell letter:", error);
@@ -883,6 +898,7 @@ const SellLetterForm = () => {
     }
   };
   const hindiFieldPositions = {
+    amountInWords: { x: 60, y: 584, size: 10 },
     vehicleName: { x: 303, y: 696, size: 11 },
     vehicleModel: { x: 39, y: 674, size: 11 },
     vehicleColor: { x: 453, y: 696, size: 11 },
@@ -911,6 +927,7 @@ const SellLetterForm = () => {
   };
 
   const englishFieldPositions = {
+    amountInWords: { x: 60, y: 578, size: 10 },
     vehicleName: { x: 284, y: 680, size: 11 },
     vehicleModel: { x: 93, y: 660, size: 11 },
     vehicleColor: { x: 447, y: 680, size: 11 },
@@ -1225,7 +1242,11 @@ const SellLetterForm = () => {
     );
     page.drawText(
       `Amount in Words: ${
-        formatIndianAmountInWords(formData.saleAmount) || "N/A"
+        formatIndianAmountInWords(
+          !formData.saleAmount || isNaN(Number(formData.saleAmount))
+            ? 0
+            : Number(formData.saleAmount)
+        )
       }`,
       {
         x: 60,
@@ -1445,7 +1466,11 @@ const SellLetterForm = () => {
         buyerName1: formData.buyerName,
         buyerName2: formData.buyerName,
         saleAmount: formatRupee(formData.saleAmount),
-        amountInWords: formatIndianAmountInWords(formData.saleAmount),
+        amountInWords: formatIndianAmountInWords(
+          !formData.saleAmount || isNaN(Number(formData.saleAmount))
+            ? 0
+            : Number(formData.saleAmount)
+        ),
         vehiclekm: formatKm(formData.vehiclekm),
         saleDate: formatDate(formData.saleDate),
         saleTime: formatTime(formData.saleTime),
@@ -1471,6 +1496,18 @@ const SellLetterForm = () => {
             y: position.y,
             size: position.size,
             weight: "bold",
+            color: rgb(0, 0, 0),
+          });
+        } else if (fieldName === "amountInWords" && formattedLetter.amountInWords) {
+          // Dynamic X position for amountInWords (Hindi)
+          const saleAmountText = formattedLetter.saleAmount || "";
+          const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+          const saleAmountWidth = font.widthOfTextAtSize(saleAmountText, position.size);
+          const dynamicX = hindiFieldPositions.saleAmount.x + saleAmountWidth + 10;
+          pdfDoc.getPages()[0].drawText(String(formattedLetter.amountInWords), {
+            x: dynamicX,
+            y: position.y,
+            size: position.size,
             color: rgb(0, 0, 0),
           });
         } else if (fieldName !== "buyerPhone2" && formattedLetter[fieldName]) {
@@ -1519,7 +1556,11 @@ const SellLetterForm = () => {
         buyerName1: formData.buyerName,
         buyerName2: formData.buyerName,
         saleAmount: formData.saleAmount,
-        amountInWords: formatIndianAmountInWords(formData.saleAmount),
+        amountInWords: formatIndianAmountInWords(
+          !formData.saleAmount || isNaN(Number(formData.saleAmount))
+            ? 0
+            : Number(formData.saleAmount)
+        ),
         vehiclekm: formatKm(formData.vehiclekm),
         saleDate: formatDate(formData.saleDate),
         saleTime: formatTime(formData.saleTime),
@@ -1544,6 +1585,18 @@ const SellLetterForm = () => {
           }`;
           pdfDoc.getPages()[0].drawText(combinedPhones, {
             x: position.x,
+            y: position.y,
+            size: position.size,
+            color: rgb(0, 0, 0),
+          });
+        } else if (fieldName === "amountInWords" && formattedLetter.amountInWords) {
+          // Dynamic X position for amountInWords (English)
+          const saleAmountText = formattedLetter.saleAmount || "";
+          const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+          const saleAmountWidth = font.widthOfTextAtSize(saleAmountText, position.size);
+          const dynamicX = englishFieldPositions.saleAmount.x + saleAmountWidth + 10;
+          pdfDoc.getPages()[0].drawText(String(formattedLetter.amountInWords), {
+            x: dynamicX,
             y: position.y,
             size: position.size,
             color: rgb(0, 0, 0),

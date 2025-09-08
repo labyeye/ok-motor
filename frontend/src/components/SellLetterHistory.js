@@ -176,7 +176,7 @@ const SellLetterHistory = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [editingLetter, setEditingLetter] = useState(null);
+  // Remove modal state for editing
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
@@ -1170,55 +1170,12 @@ const SellLetterHistory = () => {
   };
 
   const handleEdit = (letter) => {
-    setEditingLetter(letter);
+  // Navigate to SellLetterPDF.js for editing, passing letter data via state
+  navigate('/sell/create', { state: { editLetter: letter } });
   };
   const handleLogout = () => {
     logout();
     navigate("/login");
-  };
-  const handleSaveEdit = async (updatedLetter) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("You are not authenticated. Please login again.");
-        logout();
-        navigate("/login");
-        return;
-      }
-
-      const response = await httpClient.put(
-        `https://ok-motor-51l3.vercel.app/api/sell-letters/${updatedLetter._id}`,
-        updatedLetter,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setSellLetters(
-        sellLetters.map((letter) =>
-          letter._id === updatedLetter._id ? response.data : letter
-        )
-      );
-      setEditingLetter(null);
-    } catch (error) {
-      console.error("Error updating sell letter:", error);
-
-      // Handle authentication errors
-      if (error.response?.status === 401) {
-        alert("Your session has expired. Please login again.");
-        logout();
-        navigate("/login");
-      } else if (error.response?.status === 403) {
-        alert("You don't have permission to edit this item.");
-      } else {
-        alert(
-          `Failed to update: ${
-            error.response?.data?.message || error.message || "Unknown error"
-          }`
-        );
-      }
-    }
   };
   const menuItems = [
     {
@@ -1601,13 +1558,7 @@ const SellLetterHistory = () => {
             onClose={() => setIsDownloading(false)}
           />
         )}
-        {editingLetter && (
-          <EditSellLetterModal
-            letter={editingLetter}
-            onClose={() => setEditingLetter(null)}
-            onSave={handleSaveEdit}
-          />
-        )}
+    {/* Edit modal removed; navigation now handles editing */}
       </div>
     </div>
   );
