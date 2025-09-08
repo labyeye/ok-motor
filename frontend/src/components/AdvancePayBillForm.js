@@ -115,14 +115,8 @@ const [formData, setFormData] = useState({
     };
   }, [syncOfflineData]);
 
-  // Load saved data on component mount
+  // Only load offline queue, do not load saved form data
   useEffect(() => {
-    const savedData = offlineManager.loadFromStorage("advanceBillFormData");
-    if (savedData) {
-      setFormData(savedData);
-    }
-
-    // Load offline queue
     const savedQueue = offlineManager.getQueue("advanceBillOfflineQueue");
     setOfflineQueue(savedQueue);
   }, []);
