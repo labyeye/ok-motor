@@ -518,19 +518,7 @@ const SellLetterForm = () => {
       };
       const saleAmountText = formattedData.saleAmount || "";
 
-      const saleAmountWidth =
-        saleAmountText.length * (englishFieldPositions.saleAmount.size / 2);
-      const amountInWordsX =
-        englishFieldPositions.saleAmount.x +
-        saleAmountWidth +
-        1 * (englishFieldPositions.saleAmount.size / 1);
-
-      pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
-        x: amountInWordsX,
-        y: 584,
-        size: englishFieldPositions.saleAmount.size,
-        color: rgb(0, 0, 0),
-      });
+  // ...existing code...
       const positions =
         language === "hindi" ? hindiFieldPositions : englishFieldPositions;
 
@@ -541,6 +529,20 @@ const SellLetterForm = () => {
           }`;
           pdfDoc.getPages()[0].drawText(combinedPhones, {
             x: position.x,
+            y: position.y,
+            size: position.size,
+            weight: "bold",
+            color: rgb(0, 0, 0),
+          });
+        } else if (fieldName === "amountInWords" && formattedData[fieldName]) {
+          // Dynamically position amountInWords after saleAmount
+          const saleAmountText = formattedData.saleAmount || "";
+          const saleAmountFontSize = positions.saleAmount?.size || 11;
+          // Estimate width: each character ~0.6 * fontSize
+          const saleAmountWidth = saleAmountText.length * saleAmountFontSize * 0.6;
+          const dynamicX = (positions.saleAmount?.x || position.x) + saleAmountWidth + 10;
+          pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
+            x: dynamicX,
             y: position.y,
             size: position.size,
             weight: "bold",
