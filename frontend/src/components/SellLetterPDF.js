@@ -842,6 +842,17 @@ const SellLetterForm = () => {
   const handleSaveAndDownload = async () => {
     try {
       setIsSaving(true);
+      // List of required fields for Sell Letter
+      const requiredFields = [
+        "vehicleName", "vehicleModel", "vehicleColor", "registrationNumber", "chassisNumber", "engineNumber", "vehiclekm",
+        "buyerName", "buyerFatherName", "buyerAddress", "buyerPhone", "saleDate", "saleTime", "saleAmount", "paymentMethod",
+        "todayDate", "todayTime", "witnessName", "witnessPhone"
+      ];
+      const missing = requiredFields.filter(field => !formData[field] || (typeof formData[field] === "string" && formData[field].trim() === ""));
+      if (missing.length > 0) {
+        alert(`Please fill all required fields before saving/downloading. Missing: ${missing.join(", ")}`);
+        return; // Block download/save if any required field is missing
+      }
 
       if (!isOnline) {
         try {
