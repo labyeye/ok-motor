@@ -57,14 +57,25 @@ const SellLetterForm = () => {
 
   const location = useLocation();
   const editLetter = location.state?.editLetter;
+  const getCurrentDate = () => new Date().toISOString().split("T")[0];
+  const getCurrentTime = () => {
+    const now = new Date();
+    return now.toLocaleTimeString("en-GB", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
   const [formData, setFormData] = useState(
     editLetter
       ? {
           ...editLetter,
-          selleraadhar:
-            editLetter.selleraadhar || "764465626571",
-          sellerphone:
-            editLetter.sellerphone || "9876543210",
+          saleDate: getCurrentDate(),
+          saleTime: getCurrentTime(),
+          todayDate: getCurrentDate(),
+          todayTime: getCurrentTime(),
+          selleraadhar: editLetter.selleraadhar || "764465626571",
+          sellerphone: editLetter.sellerphone || "9876543210",
         }
       : {
           vehicleName: "",
@@ -83,25 +94,13 @@ const SellLetterForm = () => {
           buyerName1: "",
           buyerName2: "",
           vehicleCondition: "running",
-          saleDate: new Date().toISOString().split("T")[0],
-          saleTime: new Date().toLocaleTimeString("en-GB", {
-            hour12: false,
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
+          saleDate: getCurrentDate(),
+          saleTime: getCurrentTime(),
           saleAmount: "",
-          todayDate: new Date().toISOString().split("T")[0],
-          todayTime: new Date().toLocaleTimeString("en-GB", {
-            hour12: false,
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          previousDate: new Date().toISOString().split("T")[0],
-          previousTime: new Date().toLocaleTimeString("en-GB", {
-            hour12: false,
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
+          todayDate: getCurrentDate(),
+          todayTime: getCurrentTime(),
+          previousDate: getCurrentDate(),
+          previousTime: getCurrentTime(),
           paymentMethod: "cash",
           sellerphone: "9876543210",
           selleraadhar: "764465626571",
@@ -518,7 +517,7 @@ const SellLetterForm = () => {
       };
       const saleAmountText = formattedData.saleAmount || "";
 
-  // ...existing code...
+      // ...existing code...
       const positions =
         language === "hindi" ? hindiFieldPositions : englishFieldPositions;
 
@@ -539,8 +538,10 @@ const SellLetterForm = () => {
           const saleAmountText = formattedData.saleAmount || "";
           const saleAmountFontSize = positions.saleAmount?.size || 11;
           // Estimate width: each character ~0.6 * fontSize
-          const saleAmountWidth = saleAmountText.length * saleAmountFontSize * 0.6;
-          const dynamicX = (positions.saleAmount?.x || position.x) + saleAmountWidth + 10;
+          const saleAmountWidth =
+            saleAmountText.length * saleAmountFontSize * 0.6;
+          const dynamicX =
+            (positions.saleAmount?.x || position.x) + saleAmountWidth + 10;
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: dynamicX,
             y: position.y,
@@ -844,13 +845,37 @@ const SellLetterForm = () => {
       setIsSaving(true);
       // List of required fields for Sell Letter
       const requiredFields = [
-        "vehicleName", "vehicleModel", "vehicleColor", "registrationNumber", "chassisNumber", "engineNumber", "vehiclekm",
-        "buyerName", "buyerFatherName", "buyerAddress", "buyerPhone", "saleDate", "saleTime", "saleAmount", "paymentMethod",
-        "todayDate", "todayTime", "witnessName", "witnessPhone"
+        "vehicleName",
+        "vehicleModel",
+        "vehicleColor",
+        "registrationNumber",
+        "chassisNumber",
+        "engineNumber",
+        "vehiclekm",
+        "buyerName",
+        "buyerFatherName",
+        "buyerAddress",
+        "buyerPhone",
+        "saleDate",
+        "saleTime",
+        "saleAmount",
+        "paymentMethod",
+        "todayDate",
+        "todayTime",
+        "witnessName",
+        "witnessPhone",
       ];
-      const missing = requiredFields.filter(field => !formData[field] || (typeof formData[field] === "string" && formData[field].trim() === ""));
+      const missing = requiredFields.filter(
+        (field) =>
+          !formData[field] ||
+          (typeof formData[field] === "string" && formData[field].trim() === "")
+      );
       if (missing.length > 0) {
-        alert(`Please fill all required fields before saving/downloading. Missing: ${missing.join(", ")}`);
+        alert(
+          `Please fill all required fields before saving/downloading. Missing: ${missing.join(
+            ", "
+          )}`
+        );
         return; // Block download/save if any required field is missing
       }
 
@@ -1254,13 +1279,11 @@ const SellLetterForm = () => {
       }
     );
     page.drawText(
-      `Amount in Words: ${
-        formatIndianAmountInWords(
-          !formData.saleAmount || isNaN(Number(formData.saleAmount))
-            ? 0
-            : Number(formData.saleAmount)
-        )
-      }`,
+      `Amount in Words: ${formatIndianAmountInWords(
+        !formData.saleAmount || isNaN(Number(formData.saleAmount))
+          ? 0
+          : Number(formData.saleAmount)
+      )}`,
       {
         x: 60,
         y: 475,
@@ -1285,27 +1308,27 @@ const SellLetterForm = () => {
 
     page.drawRectangle({
       x: 0,
-      y: 360,
+      y: 390,
       width: 595,
       height: 60,
       color: rgb(0.047, 0.098, 0.196),
     });
     page.drawImage(logoImage, {
       x: 40,
-      y: 345,
+      y: 375,
       width: 120,
       height: 90,
     });
     page.drawRectangle({
       x: 0,
-      y: 335,
+      y: 365,
       width: 595,
       height: 30,
       color: rgb(0.9, 0.9, 0.9),
     });
     page.drawText("GUARRANTEE & WARRANTY CERTIFICATE", {
       x: 130,
-      y: 345,
+      y: 375,
       size: 17,
       color: rgb(0, 0, 0),
       fontWeight: "bold",
@@ -1313,7 +1336,7 @@ const SellLetterForm = () => {
     });
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
-      y: 385,
+      y: 415,
       size: 18,
       color: rgb(1, 1, 1),
       font: font,
@@ -1321,7 +1344,7 @@ const SellLetterForm = () => {
 
     page.drawText("TERMS & CONDITIONS", {
       x: 50,
-      y: 305,
+      y: 335,
       size: 12,
       color: rgb(0.047, 0.098, 0.196),
       font: boldFont,
@@ -1346,7 +1369,7 @@ const SellLetterForm = () => {
     terms.forEach((term, index) => {
       page.drawText(term, {
         x: 60,
-        y: 285 - index * 15,
+        y: 315 - index * 15,
         size: 10,
         color: rgb(0.3, 0.3, 0.3),
         font: font,
@@ -1511,12 +1534,19 @@ const SellLetterForm = () => {
             weight: "bold",
             color: rgb(0, 0, 0),
           });
-        } else if (fieldName === "amountInWords" && formattedLetter.amountInWords) {
+        } else if (
+          fieldName === "amountInWords" &&
+          formattedLetter.amountInWords
+        ) {
           // Dynamic X position for amountInWords (Hindi)
           const saleAmountText = formattedLetter.saleAmount || "";
           const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-          const saleAmountWidth = font.widthOfTextAtSize(saleAmountText, position.size);
-          const dynamicX = hindiFieldPositions.saleAmount.x + saleAmountWidth + 10;
+          const saleAmountWidth = font.widthOfTextAtSize(
+            saleAmountText,
+            position.size
+          );
+          const dynamicX =
+            hindiFieldPositions.saleAmount.x + saleAmountWidth + 10;
           pdfDoc.getPages()[0].drawText(String(formattedLetter.amountInWords), {
             x: dynamicX,
             y: position.y,
@@ -1602,12 +1632,19 @@ const SellLetterForm = () => {
             size: position.size,
             color: rgb(0, 0, 0),
           });
-        } else if (fieldName === "amountInWords" && formattedLetter.amountInWords) {
+        } else if (
+          fieldName === "amountInWords" &&
+          formattedLetter.amountInWords
+        ) {
           // Dynamic X position for amountInWords (English)
           const saleAmountText = formattedLetter.saleAmount || "";
           const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-          const saleAmountWidth = font.widthOfTextAtSize(saleAmountText, position.size);
-          const dynamicX = englishFieldPositions.saleAmount.x + saleAmountWidth + 10;
+          const saleAmountWidth = font.widthOfTextAtSize(
+            saleAmountText,
+            position.size
+          );
+          const dynamicX =
+            englishFieldPositions.saleAmount.x + saleAmountWidth + 10;
           pdfDoc.getPages()[0].drawText(String(formattedLetter.amountInWords), {
             x: dynamicX,
             y: position.y,

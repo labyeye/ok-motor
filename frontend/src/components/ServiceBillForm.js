@@ -32,7 +32,6 @@ import logo1 from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 
 const ServiceBillForm = () => {
-  // Clear saved form data on mount for new entry
   useEffect(() => {
     offlineManager.saveToStorage("serviceBillFormData", null);
   }, []);
@@ -75,8 +74,8 @@ const ServiceBillForm = () => {
     chassisNumber: "",
     engineNumber: "",
     kmReading: "",
-    serviceDate: new Date().toISOString().split("T")[0],
-    deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+  serviceDate: new Date().toISOString().split("T")[0],
+  deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
     serviceType: "regular",
     serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
     discount: 0,
@@ -302,18 +301,11 @@ const ServiceBillForm = () => {
   useEffect(() => {
     if (location.state && location.state.bill) {
       const bill = location.state.bill;
-      // Convert date fields to YYYY-MM-DD for input type="date"
-      const formatDate = (date) => {
-        if (!date) return "";
-        const d = new Date(date);
-        if (isNaN(d.getTime())) return "";
-        return d.toISOString().split("T")[0];
-      };
       setFormData((prev) => ({
         ...prev,
         ...bill,
-        serviceDate: formatDate(bill.serviceDate),
-        deliveryDate: formatDate(bill.deliveryDate),
+        serviceDate: new Date().toISOString().split("T")[0],
+        deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
       }));
     } else {
       const savedData = offlineManager.loadFromStorage("serviceBillFormData");
@@ -321,24 +313,17 @@ const ServiceBillForm = () => {
         setFormData(savedData);
       }
     }
-
-    // Load offline queue
     const savedQueue = offlineManager.getQueue("serviceBillOfflineQueue");
     setOfflineQueue(savedQueue);
-
-    // Set up online/offline listeners
     const handleOnline = () => {
       setIsOnline(true);
       syncOfflineData();
     };
-
     const handleOffline = () => {
       setIsOnline(false);
     };
-
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
-
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);

@@ -85,9 +85,12 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       serviceItems: serviceBill.serviceItems.map((item) => {
         const quantity = parseFloat(item.quantity) || 0;
         const rate = parseFloat(item.rate) || 0;
-        const amount = (item.amount !== undefined && item.amount !== null && item.amount !== "")
-          ? parseFloat(item.amount) || 0
-          : rate * quantity;
+        const amount =
+          item.amount !== undefined &&
+          item.amount !== null &&
+          item.amount !== ""
+            ? parseFloat(item.amount) || 0
+            : rate * quantity;
         return {
           ...item,
           quantity,
@@ -545,7 +548,14 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     // Function to draw table headers (added Discount column)
     const drawServiceItemHeaders = (page, y) => {
-      const serviceHeaders = ["#", "Description", "Qty", "Rate Rs.", "Disc Rs.", "Amount Rs."];
+      const serviceHeaders = [
+        "#",
+        "Description",
+        "Qty",
+        "Rate Rs.",
+        "Disc Rs.",
+        "Amount Rs.",
+      ];
       // positions: index, desc, qty, rate, discount, amount
       const serviceHeaderPositions = [60, 100, 300, 350, 400, 470];
 
@@ -847,7 +857,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       }
     );
     sectionY -= 20;
-    
 
     // Issues Reported
     currentPage.drawText("ISSUES REPORTED", {
@@ -1047,19 +1056,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const pdfBytes = await pdfDoc.save();
     console.log("PDF saved, bytes length:", pdfBytes.length);
 
-    if (returnBuffer) {
-      console.log("Returning buffer for download/preview");
-      return Buffer.from(pdfBytes);
-    } else {
-      const uploadDir = path.join(__dirname, "../uploads/service-bills");
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-      const filename = `service-bill-${serviceBill._id}.pdf`;
-      const filePath = path.join(uploadDir, filename);
-      fs.writeFileSync(filePath, pdfBytes);
-      return `/uploads/service-bills/${filename}`;
-    }
+    // Always return buffer, never write to disk (Vercel-compatible)
+    console.log("Returning buffer for download/preview (Vercel-compatible)");
+    return Buffer.from(pdfBytes);
   } catch (error) {
     console.error("Error generating PDF:", error);
     throw error;
