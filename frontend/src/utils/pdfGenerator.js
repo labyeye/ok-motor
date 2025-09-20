@@ -248,8 +248,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.8, 0.8, 0.8),
     });
 
-    // Business Information (if enabled)
-    if (Boolean(serviceBill.taxEnabled)) {
+  // Business Information (if enabled)
+  let customerY;
+  if (Boolean(serviceBill.taxEnabled)) {
       currentPage.drawText("BUSINESS INFORMATION", {
         x: 50,
         y: 690,
@@ -292,9 +293,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
 
       // Adjust Y positions for other sections
-      var customerY = 600;
+      customerY = 600;
     } else {
-      var customerY = 690;
+      customerY = 690;
     }
 
     // Customer Information

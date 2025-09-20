@@ -514,9 +514,7 @@ const SellLetterForm = () => {
         previousTime: formatTime(
           formData.previousTime || formData.todayTime || "12:00"
         ),
-      };
-      const saleAmountText = formattedData.saleAmount || "";
-
+  };
       // ...existing code...
       const positions =
         language === "hindi" ? hindiFieldPositions : englishFieldPositions;

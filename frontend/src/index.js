@@ -18,9 +18,21 @@ root.render(
     await swManager.register();
     swManager.addCallback(({ type }) => {
       if (type === 'SW_UPDATED' || type === 'UPDATE_AVAILABLE') {
-        console.log('New app version detected, forcing update...');
-        // Force update and clear all caches
-        swManager.forceUpdate();
+        console.log('New app version detected');
+        // If there's an existing service worker controller, it means this
+        // page was previously controlled by a SW and an update implies a new
+        // version; in that case it's safe to force an update. If there's no
+        // controller, this is likely the first install in this browser and
+        // forcing a reload can cause a startup reload loop. So avoid an
+        // immediate reload on first install.
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+          console.log('Previous service worker detected, performing force update');
+          swManager.forceUpdate();
+        } else {
+          console.log('No previous service worker controller detected — skipping forced reload on first install');
+          // Notify app code (or show a banner) if desired — we rely on callbacks
+          // so no further action here.
+        }
       }
     });
   } catch (err) {

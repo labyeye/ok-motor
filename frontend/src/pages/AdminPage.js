@@ -112,7 +112,7 @@ const AdminPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, logout, navigate]);
 
   useEffect(() => {
     if (user && activeMenu === "Dashboard") {

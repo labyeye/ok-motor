@@ -1,7 +1,6 @@
 import React, { useState, useContext, useCallback, useEffect } from "react";
 import { saveAs } from "file-saver";
 import offlineManager from "../utils/offlineManager";
-import { generateServiceClientPDF } from "../utils/generateServiceClientPDF";
 import {
   FileText,
   ArrowLeft,
@@ -690,6 +689,9 @@ const ServiceBillForm = () => {
   };
 
   // Retry mechanism for failed requests
+  // Helper to wait for a given number of milliseconds
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
   const retryRequest = async (requestFn, maxRetries = 3, initialDelay = 1000) => {
     let delay = initialDelay;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -707,7 +709,7 @@ const ServiceBillForm = () => {
           !error.response
         ) {
           console.log(`Attempt ${attempt} failed, retrying in ${delay}ms...`);
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          await wait(delay);
           delay *= 2; // Exponential backoff
         } else {
           throw error;

@@ -83,7 +83,6 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
 
   // Layout adapted from backend
   const pageWidth = 595;
-  const pageHeight = 842;
 
   page.drawRectangle({ x: 0, y: 780, width: pageWidth, height: 80, color: rgb(0.047, 0.098, 0.196) });
 

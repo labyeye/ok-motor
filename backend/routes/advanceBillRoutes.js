@@ -12,6 +12,10 @@ const fs = require("fs");
 // Preview route (doesn't save to database)
 router.post("/preview", protect, async (req, res) => {
   try {
+    // Increase timeout for PDF generation
+    req.setTimeout(120000); // 2 minutes
+    res.setTimeout(120000); // 2 minutes
+    
     console.log("Generating advance bill preview PDF...");
     console.log("User making request:", req.user.email);
     console.log("Request body keys:", Object.keys(req.body));
@@ -324,6 +328,10 @@ router.post("/", protect, async (req, res) => {
 // Generate PDF buffer route (for offline use)
 router.post("/generate-pdf", protect, async (req, res) => {
   try {
+    // Increase timeout for PDF generation
+    req.setTimeout(120000); // 2 minutes
+    res.setTimeout(120000); // 2 minutes
+    
     const advanceBillData = req.body;
     
     // Validate required fields

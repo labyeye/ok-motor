@@ -104,6 +104,9 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       if (fs.existsSync(logoPath)) {
         const logoBytes = fs.readFileSync(logoPath);
         logoImage = await pdfDoc.embedPng(logoBytes);
+        console.log("Logo loaded successfully");
+      } else {
+        console.warn("Logo file not found at:", logoPath);
       }
     } catch (logoError) {
       console.warn(
@@ -134,14 +137,14 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         width: 160,
         height: 130,
       });
-    }
-    if (logoImage) {
+      
+      // Add single watermark logo (optimized)
       page.drawImage(logoImage, {
-        x: 300,
-        y: 100,
-        width: 500,
-        height: 470,
-        opacity: 0.3,
+        x: 200,
+        y: 250,
+        width: 300,
+        height: 280,
+        opacity: 0.15,
         rotate: degrees(45),
       });
     }

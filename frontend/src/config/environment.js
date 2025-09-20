@@ -32,8 +32,8 @@ export const config = {
   // Cache names with environment suffix
   CACHE_PREFIX: isProduction && !isLocalhost ? "ok-motor-prod" : "ok-motor-dev",
 
-  // Timeouts
-  API_TIMEOUT: isProduction && !isLocalhost ? 15000 : 10000,
+  // Timeouts - Increased for PDF generation
+  API_TIMEOUT: isProduction && !isLocalhost ? 60000 : 30000, // 60s for production, 30s for dev
 
   // Debug logging
   DEBUG: isDevelopment || isLocalhost,

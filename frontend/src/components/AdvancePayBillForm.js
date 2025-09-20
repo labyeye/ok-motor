@@ -265,6 +265,22 @@ const [formData, setFormData] = useState({
 
   const handleSaveAndDownload = async () => {
     if (isSaving) return; // Prevent multiple clicks
+
+    // List of required fields for Advance Bill
+    const requiredFields = [
+      "customerName", "customerPhone", "customerAddress", "vehicleType", 
+      "vehicleBrand", "vehicleModel", "registrationNumber", "totalAmount"
+    ];
+    
+    const missing = requiredFields.filter(field => 
+      !formData[field] || (typeof formData[field] === "string" && formData[field].trim() === "")
+    );
+    
+    if (missing.length > 0) {
+      alert(`Please fill all required fields before saving/downloading. Missing: ${missing.join(", ")}`);
+      return; // Block download/save if any required field is missing
+    }
+
     setIsSaving(true);
     setIsDownloading(true);
     setDownloadProgress(0);

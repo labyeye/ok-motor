@@ -220,8 +220,10 @@ class ServiceWorkerManager {
       }
     }
 
-    // Reload the page to get fresh content
-    window.location.reload(true);
+    // Notify application that a forced update occurred. The app can
+    // choose to reload or show a message to the user. Avoid forcing
+    // a reload automatically to prevent reload loops on first visit.
+    this.notifyCallbacks("FORCED_UPDATE");
   }
 }
 
