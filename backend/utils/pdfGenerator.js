@@ -858,136 +858,144 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     );
     sectionY -= 20;
 
-    // Issues Reported
-    currentPage.drawText("ISSUES REPORTED", {
-      x: 50,
-      y: sectionY,
-      size: 10,
-      color: rgb(0.047, 0.098, 0.196),
-      font: fontBold,
-    });
-
-    const issues = serviceBill.issuesReported || "";
-    const maxCharsPerLine = 30;
+    // Issues / Notes / Warranty - dynamic wrapping and spacing
+    const labelX = 50;
+    const contentX = 150;
+    const rightMargin = 545;
+    const contentWidth = rightMargin - contentX;
+    const fontSize = 9;
+    const titleSize = 10;
     const lineHeight = 12;
-    const startY = currentY - 40;
 
-    // Function to split text into lines with max characters, respecting word boundaries
-    function splitTextIntoLines(text, maxLength) {
+    function wrapTextByWidth(text, maxWidth, font, size) {
+      if (!text) return [];
+      const words = text.split(/\s+/);
       const lines = [];
       let currentLine = "";
 
-      // Split the text into words first
-      const words = text.split(/\s+/);
-
       for (const word of words) {
-        if (currentLine.length + word.length <= maxLength) {
-          // Add the word to current line
-          currentLine += (currentLine.length > 0 ? " " : "") + word;
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        const width = font.widthOfTextAtSize(testLine, size);
+        if (width <= maxWidth) {
+          currentLine = testLine;
         } else {
-          // Current line is full, push it and start a new line
-          if (currentLine.length > 0) {
+          if (currentLine) {
             lines.push(currentLine);
           }
-
-          // If the word itself is longer than maxLength, split it
-          if (word.length > maxLength) {
-            // Split the long word into chunks
-            let i = 0;
-            while (i < word.length) {
-              lines.push(word.substr(i, maxLength));
-              i += maxLength;
+          // If single word longer than maxWidth, split by characters
+          if (font.widthOfTextAtSize(word, size) > maxWidth) {
+            let sub = "";
+            for (const ch of word) {
+              const testSub = sub + ch;
+              if (font.widthOfTextAtSize(testSub, size) <= maxWidth) {
+                sub = testSub;
+              } else {
+                if (sub) lines.push(sub);
+                sub = ch;
+              }
             }
-            currentLine = "";
+            if (sub) currentLine = sub;
+            else currentLine = "";
           } else {
             currentLine = word;
           }
         }
       }
-
-      // Push the last line if it's not empty
-      if (currentLine.length > 0) {
-        lines.push(currentLine);
-      }
-
+      if (currentLine) lines.push(currentLine);
       return lines;
     }
 
-    const issuesLines = splitTextIntoLines(issues, maxCharsPerLine);
+    const issues = (serviceBill.issuesReported || "").trim();
+    const notes = (serviceBill.technicianNotes || "").trim();
+    const warranty = (serviceBill.warrantyInfo || "").trim();
 
-    // Draw each line
-    issuesLines.forEach((line, index) => {
-      currentPage.drawText(line, {
-        x: 150,
-        y: startY - index * lineHeight,
-        size: 9,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
+    const issuesLines = wrapTextByWidth(issues, contentWidth, font, fontSize);
+    const notesLines = wrapTextByWidth(notes, contentWidth, font, fontSize);
+    const warrantyLines = wrapTextByWidth(warranty, contentWidth, font, fontSize);
+
+    // Ensure we have enough space; if not, add a page
+    const neededHeight =
+      (issuesLines.length > 0 ? (issuesLines.length + 1) * lineHeight + 8 : 0) +
+      (notesLines.length > 0 ? (notesLines.length + 1) * lineHeight + 8 : 0) +
+      (warrantyLines.length > 0 ? (warrantyLines.length + 1) * lineHeight + 8 : 0);
+
+    if (sectionY - neededHeight < 140) {
+      currentPage = pdfDoc.addPage([595, 842]);
+      pages.push(currentPage);
+      addWatermark(currentPage);
+      sectionY = 780;
+    }
+
+    let cursorY = sectionY;
+
+    if (issuesLines.length > 0) {
+      currentPage.drawText("ISSUES REPORTED", {
+        x: labelX,
+        y: cursorY,
+        size: titleSize,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold,
       });
-    });
+      cursorY -= lineHeight;
+      issuesLines.forEach((line) => {
+        currentPage.drawText(line, {
+          x: contentX,
+          y: cursorY,
+          size: fontSize,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font,
+        });
+        cursorY -= lineHeight;
+      });
+      cursorY -= 8;
+    }
 
-    // Technical Notes
-    const technicianNotes = serviceBill.technicianNotes || "";
-    const technicianNotesLines = splitTextIntoLines(
-      technicianNotes,
-      maxCharsPerLine
-    );
-
-    if (technicianNotesLines.length > 0) {
+    if (notesLines.length > 0) {
       currentPage.drawText("TECHNICAL NOTES", {
-        x: 50,
-        y: startY - issuesLines.length * lineHeight - 60,
-        size: 10,
+        x: labelX,
+        y: cursorY,
+        size: titleSize,
         color: rgb(0.047, 0.098, 0.196),
         font: fontBold,
       });
-
-      technicianNotesLines.forEach((line, index) => {
+      cursorY -= lineHeight;
+      notesLines.forEach((line) => {
         currentPage.drawText(line, {
-          x: 150,
-          y:
-            startY -
-            issuesLines.length * lineHeight -
-            60 -
-            (index + 1) * lineHeight,
-          size: 9,
+          x: contentX,
+          y: cursorY,
+          size: fontSize,
           color: rgb(0.2, 0.2, 0.2),
           font: font,
         });
+        cursorY -= lineHeight;
       });
+      cursorY -= 8;
     }
 
-    // Warranty Information
-    const warrantyInfo = serviceBill.warrantyInfo || "";
-    const warrantyInfoLines = splitTextIntoLines(warrantyInfo, maxCharsPerLine);
-
-    if (warrantyInfoLines.length > 0) {
-      const warrantyStartY =
-        startY -
-        issuesLines.length * lineHeight -
-        (technicianNotesLines.length > 0
-          ? technicianNotesLines.length * lineHeight + 60
-          : 0) -
-        60;
-
+    if (warrantyLines.length > 0) {
       currentPage.drawText("WARRANTY INFORMATION", {
-        x: 50,
-        y: warrantyStartY,
-        size: 10,
+        x: labelX,
+        y: cursorY,
+        size: titleSize,
         color: rgb(0.047, 0.098, 0.196),
         font: fontBold,
       });
-
-      warrantyInfoLines.forEach((line, index) => {
+      cursorY -= lineHeight;
+      warrantyLines.forEach((line) => {
         currentPage.drawText(line, {
-          x: 150,
-          y: warrantyStartY - (index + 1) * lineHeight,
-          size: 9,
+          x: contentX,
+          y: cursorY,
+          size: fontSize,
           color: rgb(0.2, 0.2, 0.2),
           font: font,
         });
+        cursorY -= lineHeight;
       });
+      cursorY -= 8;
     }
+
+    // move sectionY down for any following content (footer etc.)
+    sectionY = cursorY;
 
     // Grand Total at the very end
 
