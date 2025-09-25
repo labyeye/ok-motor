@@ -515,6 +515,15 @@ const SellLetterForm = () => {
           formData.previousTime || formData.todayTime || "12:00"
         ),
   };
+      // default witness values when empty
+      formattedData.witnessName =
+        formattedData.witnessName && String(formattedData.witnessName).trim()
+          ? formattedData.witnessName
+          : "N/A";
+      formattedData.witnessPhone =
+        formattedData.witnessPhone && String(formattedData.witnessPhone).trim()
+          ? formattedData.witnessPhone
+          : "0000000000";
       // ...existing code...
       const positions =
         language === "hindi" ? hindiFieldPositions : englishFieldPositions;

@@ -714,6 +714,15 @@ const BuyLetterForm = () => {
         vehiclekm: formatKm(formData.vehiclekm),
         amountInWords: formatIndianAmountInWords(formData.saleAmount),
       };
+      // defaults for witness fields
+      formattedData.witnessname =
+        formattedData.witnessname && String(formattedData.witnessname).trim()
+          ? formattedData.witnessname
+          : "N/A";
+      formattedData.witnessphone =
+        formattedData.witnessphone && String(formattedData.witnessphone).trim()
+          ? formattedData.witnessphone
+          : "0000000000";
 
       for (const [fieldName, position] of Object.entries(fieldPositions)) {
         if (
