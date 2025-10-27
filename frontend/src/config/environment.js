@@ -11,12 +11,12 @@ const getApiUrl = () => {
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
-  
+
   // For development or when running locally, use local backend
   if (isLocalhost) {
     return "https://ok-motor-51l3.vercel.app";
   }
-  
+
   // For production, use the deployed backend
   return "https://ok-motor-51l3.vercel.app";
 };

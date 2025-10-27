@@ -21,8 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import httpClient from "../utils/offlineHttpClient";
-import offlineManager from "../utils/offlineManager";
+import axios from "axios";
 import { generateAdvanceClientPDF } from "../utils/generateAdvanceClientPDF";
 import logo from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
@@ -38,11 +37,8 @@ const AdvancePayBillForm = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [offlineQueue, setOfflineQueue] = useState([]);
-  const [, setIsSyncing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 const [formData, setFormData] = useState({
@@ -68,69 +64,6 @@ const [formData, setFormData] = useState({
     balanceDue: "0.00",
   });
 
-  // Sync offline data when back online
-  const syncOfflineData = useCallback(async () => {
-    if (!isOnline) return;
-
-    setIsSyncing(true);
-    try {
-      await offlineManager.syncOfflineData(
-        httpClient,
-        "advanceBillOfflineQueue",
-        {
-          create: "https://ok-motor-51l3.vercel.app/api/advance-bills",
-          update: "https://ok-motor-51l3.vercel.app/api/advance-bills",
-          delete: "https://ok-motor-51l3.vercel.app/api/advance-bills"
-        }
-      );
-
-      // Reload queue after sync
-      const updatedQueue = offlineManager.getQueue("advanceBillOfflineQueue");
-      setOfflineQueue(updatedQueue);
-
-      if (updatedQueue.length === 0) {
-        alert("All offline data synced successfully!");
-      }
-    } catch (error) {
-      console.error("Error syncing offline data:", error);
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [isOnline]);
-
-  // Monitor online/offline status
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      syncOfflineData();
-    };
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [syncOfflineData]);
-
-  // Only load offline queue, do not load saved form data
-  useEffect(() => {
-    const savedQueue = offlineManager.getQueue("advanceBillOfflineQueue");
-    setOfflineQueue(savedQueue);
-  }, []);
-
-  // Save form data whenever it changes
-  useEffect(() => {
-    offlineManager.saveToStorage("advanceBillFormData", formData);
-  }, [formData]);
-
-  // Save offline queue to localStorage whenever it changes
-  useEffect(() => {
-    offlineManager.saveToStorage("advanceBillOfflineQueue", offlineQueue);
-  }, [offlineQueue]);
-
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -150,8 +83,7 @@ const [formData, setFormData] = useState({
     }
   }, [navigate]);
 
-  // Remove the axios.create since we're using httpClient now
-  // httpClient handles authentication automatically
+  // Use axios directly - no need for httpClient wrapper
 
   const calculateAmounts = (data) => {
     // Handle formatted values with commas and progressive formatting
@@ -230,7 +162,7 @@ const [formData, setFormData] = useState({
     }
 
     try {
-      const response = await httpClient.post(
+      const response = await axios.post(
         `https://ok-motor-51l3.vercel.app/api/advance-bills/generate-pdf`,
         data,
         {
@@ -308,81 +240,41 @@ const [formData, setFormData] = useState({
         kmReading: parseFloat(formData.kmReading) || 0,
       };
 
-      if (!isOnline) {
-        // Offline mode: Generate PDF and queue data for later sync
-        try {
-          // Try server PDF generation first; if it fails, use client generator
-          let pdfBuffer;
-          try {
-            pdfBuffer = await generatePDFBuffer(requestData);
-          } catch (serverErr) {
-            console.warn('Server PDF generation failed, using client generator:', serverErr);
-            const bytes = await generateAdvanceClientPDF(requestData);
-            pdfBuffer = bytes;
-          }
-          
-          // Download PDF
-          const filename = `advance-bill-${Date.now()}.pdf`;
-          downloadPDFFromBuffer(pdfBuffer, filename);
-
-          // Queue data for sync when back online
-          const queueItem = {
-            id: Date.now().toString(),
-            type: 'create',
-            data: requestData,
-            timestamp: new Date().toISOString(),
-            filename: filename
-          };
-
-          offlineManager.addToQueue("advanceBillOfflineQueue", queueItem);
-          const updatedQueue = offlineManager.getQueue("advanceBillOfflineQueue");
-          setOfflineQueue(updatedQueue);
-
-          // Wait for progress to complete
-          await progressPromise;
-
-          alert("Advance bill saved offline and PDF downloaded! Data will sync when you're back online.");
-        } catch (pdfError) {
-          console.error("Error generating PDF offline:", pdfError);
-          alert("Failed to generate PDF offline. Please check your connection and try again.");
+      // Online mode: Normal save and download
+      const saveResponse = await axios.post(
+        "https://ok-motor-51l3.vercel.app/api/advance-bills",
+        requestData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      } else {
-        // Online mode: Normal save and download
-        const saveResponse = await httpClient.post(
-          "https://ok-motor-51l3.vercel.app/api/advance-bills",
-          requestData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+      );
 
-        if (!saveResponse.data?.data?._id) {
-          throw new Error("Invalid response format from server");
-        }
-
-        const billId = saveResponse.data.data._id;
-        const pdfResponse = await httpClient.get(
-          `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
-          {
-            responseType: "blob",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/pdf",
-            },
-          }
-        );
-
-        // Wait for progress to complete
-        await progressPromise;
-
-        const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-        saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
-
-        alert("Advance bill saved and downloaded successfully!");
+      if (!saveResponse.data?.data?._id) {
+        throw new Error("Invalid response format from server");
       }
+
+      const billId = saveResponse.data.data._id;
+      const pdfResponse = await axios.get(
+        `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
+        {
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/pdf",
+          },
+        }
+      );
+
+      // Wait for progress to complete
+      await progressPromise;
+
+      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
+      saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+
+      alert("Advance bill saved and downloaded successfully!");
     } catch (error) {
       console.error("Error in save and download:", error);
       
@@ -580,7 +472,7 @@ const [formData, setFormData] = useState({
           console.log("Making preview request to:", "https://ok-motor-51l3.vercel.app/api/advance-bills/preview");
           console.log("Request data:", requestData);
           
-          const previewResponse = await httpClient.post(
+          const previewResponse = await axios.post(
             "https://ok-motor-51l3.vercel.app/api/advance-bills/preview",
             requestData,
             {
@@ -607,7 +499,7 @@ const [formData, setFormData] = useState({
         }
       } else {
         // For download, save the bill first
-        const saveResponse = await httpClient.post(
+        const saveResponse = await axios.post(
           "https://ok-motor-51l3.vercel.app/api/advance-bills",
           requestData,
           {
@@ -625,7 +517,7 @@ const [formData, setFormData] = useState({
         const billId = saveResponse.data.data._id;
 
         // Get the PDF for download
-        const pdfResponse = await httpClient.get(
+        const pdfResponse = await axios.get(
           `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
           {
             responseType: "blob",
@@ -661,7 +553,7 @@ const [formData, setFormData] = useState({
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const response = await httpClient.get(
+      const response = await axios.get(
         "https://ok-motor-51l3.vercel.app/api/advance-bills/vehicle-details",
         {
           params: { registrationNumber },

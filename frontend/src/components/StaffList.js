@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
-
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import httpClient from "../utils/offlineHttpClient";
 import {
   User,
   ChevronDown,
@@ -34,7 +33,7 @@ const StaffList = () => {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const response = await httpClient.get("https://ok-motor-51l3.vercel.app/api/users");
+        const response = await axios.get("https://ok-motor-51l3.vercel.app/api/users");
         setStaff(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         setError(
@@ -60,7 +59,7 @@ const StaffList = () => {
           return;
         }
 
-        await httpClient.delete(`https://ok-motor-51l3.vercel.app/api/users/${id}`, {
+        await axios.delete(`https://ok-motor-51l3.vercel.app/api/users/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

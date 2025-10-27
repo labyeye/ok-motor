@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import offlineManager from "../utils/offlineManager";
-import { OFFLINE_KEYS } from "../utils/offlineSync";
-import httpClient from "../utils/offlineHttpClient";
+import axios from "axios";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -51,42 +49,18 @@ const AdvanceHistory = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      if (offlineManager.getOnlineStatus()) {
-        try {
-          const response = await httpClient.get(
-            `/api/advance-bills?page=${currentPage}`,
-            { headers: {} }
-          );
-          setAdvanceBills(response.data.data || []);
-          offlineManager.saveToStorage(
-            OFFLINE_KEYS.advance,
-            response.data.data || []
-          );
-          const token = localStorage.getItem("token");
-          if (token) {
-            localStorage.setItem("offline_token", token);
-          }
-        } catch (error) {
-          const storedData = offlineManager.loadFromStorage(
-            OFFLINE_KEYS.advance,
-            []
-          );
-          setAdvanceBills(
-            Array.isArray(storedData) ? storedData : storedData.data || []
-          );
-        }
-      } else {
-        const storedData = offlineManager.loadFromStorage(
-          OFFLINE_KEYS.advance,
-          []
+      try {
+        const response = await axios.get(
+          `/api/advance-bills?page=${currentPage}`,
+          { headers: {} }
         );
-        setAdvanceBills(
-          Array.isArray(storedData) ? storedData : storedData.data || []
-        );
+        setAdvanceBills(response.data.data || []);
+      } catch (error) {
+        console.error("Error fetching advance bills:", error);
+        setAdvanceBills([]);
       }
       setLoading(false);
     };
-    fetchData();
     fetchData();
   }, [currentPage]);
 
@@ -321,7 +295,7 @@ const AdvanceHistory = () => {
         return;
       }
       await simulateProgress();
-      const response = await httpClient.get(
+      const response = await axios.get(
         `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
@@ -395,7 +369,7 @@ const AdvanceHistory = () => {
           return;
         }
 
-        await httpClient.delete(
+        await axios.delete(
           `https://ok-motor-51l3.vercel.app/api/advance-bills/${id}`,
           {
             headers: {
@@ -405,26 +379,6 @@ const AdvanceHistory = () => {
         );
         // Remove from UI
         setAdvanceBills(advanceBills.filter((bill) => bill._id !== id));
-
-        // Also remove any queued offline items that reference this bill
-        const deletedBill = advanceBills.find((b) => b._id === id);
-        const registrationNumber = deletedBill?.registrationNumber;
-        // Remove by _id
-        offlineManager.removeFromQueueBy("advanceBillOfflineQueue", (item) => {
-          try {
-            if (item.data && (item.data._id === id || item.data.id === id))
-              return true;
-            if (
-              registrationNumber &&
-              item.data &&
-              item.data.registrationNumber === registrationNumber
-            )
-              return true;
-          } catch (e) {
-            /* ignore */
-          }
-          return false;
-        });
       } catch (error) {
         console.error("Error deleting advance bill:", error);
 

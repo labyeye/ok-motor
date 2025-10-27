@@ -16,7 +16,7 @@ connectDB();
 // Dynamic CORS configuration for different environments
 const getAllowedOrigins = () => {
   const origins = [
-    "http://localhost:3000", // Local development
+    "http://localhost:3001", // Local development
     "http://127.0.0.1:3000", // Local development
     "https://ok-motor.vercel.app", // Production
     "https://ok-motor-git-main-ok-motor.vercel.app", // Vercel preview

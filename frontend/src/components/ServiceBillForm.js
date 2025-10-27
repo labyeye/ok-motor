@@ -1,6 +1,6 @@
 import React, { useState, useContext, useCallback, useEffect } from "react";
 import { saveAs } from "file-saver";
-import offlineManager from "../utils/offlineManager";
+import axios from "axios";
 import {
   FileText,
   ArrowLeft,
@@ -25,15 +25,11 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import httpClient from "../utils/offlineHttpClient";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 
 const ServiceBillForm = () => {
-  useEffect(() => {
-    offlineManager.saveToStorage("serviceBillFormData", null);
-  }, []);
   const { user, logout } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Create Service Bill");
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -44,11 +40,8 @@ const ServiceBillForm = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [offlineQueue, setOfflineQueue] = useState([]);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -122,7 +115,7 @@ const ServiceBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const response = await httpClient.get(
+      const response = await axios.get(
         `${API_BASE_URL}/advance-bills/vehicle-details`,
         {
           params: { registrationNumber },
@@ -306,38 +299,8 @@ const ServiceBillForm = () => {
         serviceDate: new Date().toISOString().split("T")[0],
         deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
       }));
-    } else {
-      const savedData = offlineManager.loadFromStorage("serviceBillFormData");
-      if (savedData) {
-        setFormData(savedData);
-      }
     }
-    const savedQueue = offlineManager.getQueue("serviceBillOfflineQueue");
-    setOfflineQueue(savedQueue);
-    const handleOnline = () => {
-      setIsOnline(true);
-      syncOfflineData();
-    };
-    const handleOffline = () => {
-      setIsOnline(false);
-    };
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
   }, [location.state]);
-
-  // Save form data to localStorage whenever it changes
-  useEffect(() => {
-    offlineManager.saveToStorage("serviceBillFormData", formData);
-  }, [formData]);
-
-  // Save offline queue to localStorage whenever it changes
-  useEffect(() => {
-    offlineManager.saveToStorage("serviceBillOfflineQueue", offlineQueue);
-  }, [offlineQueue]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -348,46 +311,7 @@ const ServiceBillForm = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Function to sync offline data when coming back online
-  const syncOfflineData = async () => {
-    const endpoints = {
-      create: `${API_BASE_URL}/service-bills`,
-      update: `${API_BASE_URL}/service-bills`,
-      delete: `${API_BASE_URL}/service-bills`,
-    };
-
-    setIsSyncing(true);
-
-    try {
-      await offlineManager.syncOfflineData(
-        httpClient,
-        "serviceBillOfflineQueue",
-        endpoints
-      );
-      // Update local state after sync
-      const updatedQueue = offlineManager.getQueue("serviceBillOfflineQueue");
-      setOfflineQueue(updatedQueue);
-    } catch (error) {
-      console.error("Error during sync:", error);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // Function to add item to offline queue
-  const addToOfflineQueue = (type, data, id = null) => {
-    const queueItem = {
-      type,
-      data,
-      id: id || Date.now().toString(),
-    };
-
-    offlineManager.addToQueue("serviceBillOfflineQueue", queueItem);
-    const updatedQueue = offlineManager.getQueue("serviceBillOfflineQueue");
-    setOfflineQueue(updatedQueue);
-  };
-
-  // Modified handleSaveAndDownload function with offline support
+  // Modified handleSaveAndDownload function
   const handleSaveAndDownload = async () => {
     if (isSaving) return;
     setIsSaving(true);
@@ -423,31 +347,30 @@ const ServiceBillForm = () => {
       };
 
       // Start progress simulation
-      if (isOnline) {
-        try {
-          let billId;
-          if (formData._id) {
-            // Update existing bill
-            const updateResponse = await httpClient.put(
-              `${API_BASE_URL}/service-bills/${formData._id}`,
-              formattedData,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-                timeout: 30000,
-              }
-            );
-            billId = updateResponse.data?.data?._id || formData._id;
-            if (!updateResponse.data?.success) {
+      try {
+        let billId;
+        if (formData._id) {
+          // Update existing bill
+          const updateResponse = await axios.put(
+            `${API_BASE_URL}/service-bills/${formData._id}`,
+            formattedData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              timeout: 30000,
+            }
+          );
+          billId = updateResponse.data?.data?._id || formData._id;
+          if (!updateResponse.data?.success) {
               throw new Error(
                 updateResponse.data?.message || "Failed to update service bill"
               );
             }
           } else {
             const saveResponse = await retryRequest(() =>
-              httpClient.post(`${API_BASE_URL}/service-bills`, formattedData, {
+              axios.post(`${API_BASE_URL}/service-bills`, formattedData, {
                 headers: {
                   Authorization: `Bearer ${token}`,
                   "Content-Type": "application/json",
@@ -463,7 +386,7 @@ const ServiceBillForm = () => {
 
           // Download PDF after save/update
           const pdfResponse = await retryRequest(() =>
-            httpClient.get(`${API_BASE_URL}/service-bills/${billId}/download`, {
+            axios.get(`${API_BASE_URL}/service-bills/${billId}/download`, {
               responseType: "blob",
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -520,8 +443,45 @@ const ServiceBillForm = () => {
             warrantyInfo: "",
           });
 
-          // Clear localStorage
-          offlineManager.removeFromStorage("serviceBillFormData");
+          // Clear form after successful save
+          setFormData({
+            taxEnabled: false,
+            businessName: "",
+            businessGSTIN: "",
+            businessAddress: "",
+            totalAmount: 0,
+            taxAmount: 0,
+            grandTotal: 0,
+            balanceDue: 0,
+            customerName: "",
+            customerPhone: "",
+            customerAddress: "",
+            customerEmail: "",
+            vehicleType: "bike",
+            vehicleBrand: "",
+            customServiceDescription: "",
+            vehicleModel: "",
+            registrationNumber: "",
+            chassisNumber: "",
+            engineNumber: "",
+            kmReading: "",
+            serviceDate: new Date().toISOString().split("T")[0],
+            deliveryDate: new Date(Date.now() + 86400000)
+              .toISOString()
+              .split("T")[0],
+            serviceType: "regular",
+            serviceItems: [
+              { description: "", quantity: 1, rate: 0, amount: 0 },
+            ],
+            discount: 0,
+            taxRate: 0,
+            paymentMethod: "cash",
+            paymentStatus: "paid",
+            advancePaid: 0,
+            issuesReported: "",
+            technicianNotes: "",
+            warrantyInfo: "",
+          });
         } catch (error) {
           console.error(
             "Error in save and download:",
@@ -557,11 +517,6 @@ const ServiceBillForm = () => {
           setIsDownloading(false);
           setDownloadProgress(0);
         }
-      } else {
-        // Add to offline queue
-        addToOfflineQueue("save", formattedData, formData._id); // Assuming formData has _id if it's an update
-        alert("You are offline. Data will be saved when you come back online.");
-      }
     } catch (error) {
       console.error("Error in handleSaveAndDownload:", error);
       alert("Error generating PDF. Please try again.");
@@ -786,7 +741,7 @@ const ServiceBillForm = () => {
         console.log("Request data:", formattedBillData);
 
         const previewResponse = await retryRequest(() =>
-          httpClient.post(
+          axios.post(
             `${API_BASE_URL}/service-bills/preview`,
             formattedBillData,
             {
@@ -816,7 +771,7 @@ const ServiceBillForm = () => {
       } else {
         // For download, save the bill first
         const saveResponse = await retryRequest(() =>
-          httpClient.post(`${API_BASE_URL}/service-bills`, formattedBillData, {
+          axios.post(`${API_BASE_URL}/service-bills`, formattedBillData, {
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
@@ -831,7 +786,7 @@ const ServiceBillForm = () => {
 
         const billId = saveResponse.data.data._id;
         const pdfResponse = await retryRequest(() =>
-          httpClient.get(`${API_BASE_URL}/service-bills/${billId}/download`, {
+          axios.get(`${API_BASE_URL}/service-bills/${billId}/download`, {
             responseType: "blob",
             headers: {
               Authorization: `Bearer ${token}`,
@@ -1916,28 +1871,6 @@ const ServiceBillForm = () => {
             </div>
 
             <div style={styles.formActions}>
-              {/* Offline/Online Status Indicators */}
-              <div style={styles.statusContainer}>
-                <div
-                  style={{
-                    ...styles.statusIndicator,
-                    backgroundColor: isOnline ? "#4CAF50" : "#f44336",
-                  }}
-                >
-                  {isOnline ? "🟢 Online" : "🔴 Offline"}
-                </div>
-
-                {isSyncing && (
-                  <div style={styles.syncIndicator}>🔄 Syncing...</div>
-                )}
-
-                {offlineQueue.length > 0 && (
-                  <div style={styles.queueIndicator}>
-                    📋 {offlineQueue.length} pending
-                  </div>
-                )}
-              </div>
-
               <div style={styles.buttonContainer}>
                 <button
                   type="button"
@@ -1954,7 +1887,7 @@ const ServiceBillForm = () => {
                   disabled={isSaving}
                 >
                   <Download style={styles.buttonIcon} />
-                  {isOnline ? "Save & Download" : "Download (Save When Online)"}
+                  Save & Download
                 </button>
               </div>
             </div>

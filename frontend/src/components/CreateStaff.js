@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import httpClient from "../utils/offlineHttpClient";
+import axios from "axios";
 import {
   User,
   Mail,
@@ -60,7 +60,7 @@ const CreateStaff = () => {
         return;
       }
 
-      await httpClient.post(
+      await axios.post(
         "https://ok-motor-51l3.vercel.app/api/users",
         formData,
         {

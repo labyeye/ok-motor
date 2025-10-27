@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import httpClient from "../utils/offlineHttpClient";
+import axios from "axios";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -23,9 +23,6 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
-import offlineManager from "../utils/offlineManager";
-
-const OFFLINE_KEYS = { sell: "SellLetterOfflineQueue" };
 
 const SellLetterHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -113,31 +110,20 @@ const SellLetterHistory = () => {
   useEffect(() => {
     const fetchSellLetters = async () => {
       setLoading(true);
-      if (offlineManager.getOnlineStatus()) {
-        try {
-          const response = await httpClient.get(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters/my-letters?page=${currentPage}`,
-            { headers: {} }
-          );
-          setSellLetters(response.data);
-          offlineManager.saveToStorage(OFFLINE_KEYS.sell, response.data);
-          // Save token for offline login
-          const token = localStorage.getItem("token");
-          if (token) {
-            localStorage.setItem("offline_token", token);
-          }
-        } catch (error) {
-          setSellLetters(offlineManager.loadFromStorage(OFFLINE_KEYS.sell, []));
-        }
-      } else {
-        setSellLetters(offlineManager.loadFromStorage(OFFLINE_KEYS.sell, []));
+      try {
+        const response = await axios.get(
+          `https://ok-motor-51l3.vercel.app/api/sell-letters/my-letters?page=${currentPage}`,
+          { headers: {} }
+        );
+        setSellLetters(response.data);
+      } catch (error) {
+        console.error("Error fetching sell letters:", error);
+        setSellLetters([]);
       }
       setTotalPages(1);
       setLoading(false);
     };
     fetchSellLetters();
-    window.addEventListener("online", fetchSellLetters);
-    return () => window.removeEventListener("online", fetchSellLetters);
   }, [currentPage]);
 
   useEffect(() => {
@@ -1004,7 +990,7 @@ const SellLetterHistory = () => {
           return;
         }
 
-        await httpClient.delete(
+        await axios.delete(
           `https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`,
           {
             headers: {

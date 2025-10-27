@@ -1,6 +1,7 @@
-import React, { useState, useCallback, useContext, useEffect } from "react";
+import React, { useState, useCallback, useContext, useEffect, useRef } from "react";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { saveAs } from "file-saver";
+import axios from "axios";
 import {
   FileText,
   User,
@@ -27,14 +28,9 @@ import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
 
 import { useNavigate, useLocation } from "react-router-dom";
-import httpClient from "../utils/offlineHttpClient";
 import AuthContext from "../context/AuthContext";
-import offlineManager from "../utils/offlineManager";
+
 const BuyLetterForm = () => {
-  // Clear saved form data on mount for new entry
-  useEffect(() => {
-    offlineManager.saveToStorage("buyLetterFormData", null);
-  }, []);
   const { user, logout } = useContext(AuthContext);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Create Buy Letter");
@@ -49,13 +45,14 @@ const BuyLetterForm = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [offlineQueue, setOfflineQueue] = useState([]);
-  const [, setIsSyncing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const location = useLocation();
   const editLetter = location.state?.editLetter;
+  // Refs to prevent duplicate saves
+  const savePromiseRef = useRef(null);
+  const saveResultRef = useRef(null);
+  const [createdId, setCreatedId] = useState(null);
   const [formData, setFormData] = useState(
     editLetter
       ? { ...editLetter }
@@ -109,50 +106,6 @@ const BuyLetterForm = () => {
         }
   );
 
-  const syncOfflineData = useCallback(async () => {
-    if (!isOnline) return;
-
-    setIsSyncing(true);
-    try {
-      await offlineManager.syncOfflineData(
-        httpClient,
-        "buyLetterOfflineQueue",
-        {
-          create: "https://ok-motor-51l3.vercel.app/api/buy-letter",
-          update: "https://ok-motor-51l3.vercel.app/api/buy-letter",
-          delete: "https://ok-motor-51l3.vercel.app/api/buy-letter",
-        }
-      );
-
-      const updatedQueue = offlineManager.getQueue("buyLetterOfflineQueue");
-      setOfflineQueue(updatedQueue);
-
-      if (updatedQueue.length === 0) {
-        alert("All offline data synced successfully!");
-      }
-    } catch (error) {
-      console.error("Error syncing offline data:", error);
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [isOnline]);
-
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      syncOfflineData();
-    };
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, [syncOfflineData]);
-
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -161,24 +114,6 @@ const BuyLetterForm = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  useEffect(() => {
-    const savedData = offlineManager.loadFromStorage("buyLetterFormData");
-    if (savedData) {
-      setFormData(savedData);
-    }
-
-    const savedQueue = offlineManager.getQueue("buyLetterOfflineQueue");
-    setOfflineQueue(savedQueue);
-  }, []);
-
-  useEffect(() => {
-    offlineManager.saveToStorage("buyLetterFormData", formData);
-  }, [formData]);
-
-  useEffect(() => {
-    offlineManager.saveToStorage("buyLetterOfflineQueue", offlineQueue);
-  }, [offlineQueue]);
 
   const LoadingOverlay = () => (
     <div style={styles.loadingOverlay}>
@@ -428,16 +363,17 @@ const BuyLetterForm = () => {
     try {
       setIsSaving(true);
       let response;
-      if (editLetter && editLetter._id) {
+      if ((editLetter && editLetter._id) || createdId) {
         // Update existing letter
-        response = await httpClient.put(
-          `https://ok-motor-51l3.vercel.app/api/buy-letter/${editLetter._id}`,
+        const updateId = createdId || editLetter._id;
+        response = await axios.put(
+          `https://ok-motor-51l3.vercel.app/api/buy-letter/${updateId}`,
           formData
         );
         alert("Buy letter updated successfully!");
       } else {
         // Create new letter
-        response = await httpClient.post(
+        response = await axios.post(
           "https://ok-motor-51l3.vercel.app/api/buy-letter",
           formData
         );
@@ -466,34 +402,8 @@ const BuyLetterForm = () => {
   const handleSaveAndDownload = async () => {
     try {
       setIsDownloading(true);
+      setIsDownloading(true);
       setIsSaving(true);
-      if (!isOnline) {
-        try {
-          if (selectedLanguage === "hindi") {
-            await fillAndDownloadHindiPdf();
-          } else {
-            await fillAndDownloadEnglishPdf();
-          }
-
-          const queueItem = {
-            type: "save",
-            data: formData,
-            language: selectedLanguage,
-            timestamp: new Date().toISOString(),
-          };
-
-          offlineManager.addToQueue("buyLetterOfflineQueue", queueItem);
-          const updatedQueue = offlineManager.getQueue("buyLetterOfflineQueue");
-          setOfflineQueue(updatedQueue);
-
-          alert("Buy letter PDF downloaded. Data will sync when online.");
-          return;
-        } catch (pdfError) {
-          console.error("Error generating offline PDF:", pdfError);
-          alert("Failed to generate PDF offline. Please try again.");
-          return;
-        }
-      }
 
       // Always save or update before generating PDF
       const savedLetter = await saveBuyLetter();
@@ -677,7 +587,7 @@ const BuyLetterForm = () => {
       await simulateProgress();
       setIsSaving(true);
 
-      const existingLetter = await httpClient.get(
+      const existingLetter = await axios.get(
         `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {},
@@ -688,7 +598,7 @@ const BuyLetterForm = () => {
       if (existingLetter.data && existingLetter.data.length > 0) {
         savedLetterData = existingLetter.data[0];
       } else {
-        const response = await httpClient.post(
+        const response = await axios.post(
           "https://ok-motor-51l3.vercel.app/api/buy-letter",
           formData
         );
@@ -867,7 +777,7 @@ const BuyLetterForm = () => {
       await simulateProgress();
       setIsSaving(true);
 
-      const existingLetter = await httpClient.get(
+      const existingLetter = await axios.get(
         `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
         {
           headers: {},
@@ -878,7 +788,7 @@ const BuyLetterForm = () => {
       if (existingLetter.data && existingLetter.data.length > 0) {
         savedLetterData = existingLetter.data[0];
       } else {
-        const response = await httpClient.post(
+        const response = await axios.post(
           "https://ok-motor-51l3.vercel.app/api/buy-letter",
           formData
         );
@@ -2414,7 +2324,7 @@ const BuyLetterForm = () => {
                 disabled={isSaving}
               >
                 <Download style={styles.buttonIcon} />
-                {isOnline ? "Save & Download" : "Download (Save When Online)"}
+                Save & Download
               </button>
             </div>
           </form>

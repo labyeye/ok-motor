@@ -1,7 +1,7 @@
 // BuyLetterHistory.js
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import httpClient from "../utils/offlineHttpClient";
+import axios from "axios";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -55,7 +55,7 @@ const BuyLetterHistory = () => {
     const fetchBuyLetters = async () => {
       try {
         setLoading(true);
-        const response = await httpClient.get(
+        const response = await axios.get(
           `https://ok-motor-51l3.vercel.app/api/buy-letter?page=${currentPage}`,
           {
             headers: {},
@@ -991,7 +991,7 @@ const BuyLetterHistory = () => {
           return;
         }
 
-        await httpClient.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
+        await axios.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

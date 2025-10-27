@@ -1,6 +1,6 @@
 // BikeHistory.js
 import React, { useState, useEffect, useContext, useCallback } from "react";
-import httpClient from "../utils/offlineHttpClient";
+import axios from "axios";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import {
   LayoutDashboard,
@@ -36,7 +36,6 @@ const BikeHistory = () => {
   const [loading, setLoading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState("");
   const [showPdfModal, setShowPdfModal] = useState(false);
-  const [, setIsOnline] = useState(navigator.onLine);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
@@ -1328,16 +1327,16 @@ const BikeHistory = () => {
       setLoading(true);
       const [buyLetters, sellLetters, serviceBills, advanceBills] =
         await Promise.all([
-          httpClient.get(
+          axios.get(
             `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${searchTerm}`
           ),
-          httpClient.get(
+          axios.get(
             `https://ok-motor-51l3.vercel.app/api/sell-letters/by-registration?registrationNumber=${searchTerm}`
           ),
-          httpClient.get(
+          axios.get(
             `https://ok-motor-51l3.vercel.app/api/service-bills/by-registration?registrationNumber=${searchTerm}`
           ),
-          httpClient.get(
+          axios.get(
             `https://ok-motor-51l3.vercel.app/api/advance-bills/by-registration?registrationNumber=${searchTerm}`
           ),
         ]);
@@ -1590,7 +1589,7 @@ const BikeHistory = () => {
         return;
       } else if (type === "service") {
         const endpoint = `https://ok-motor-51l3.vercel.app/api/service-bills/${id}/pdf`;
-        const response = await httpClient.get(endpoint, {
+        const response = await axios.get(endpoint, {
           responseType: "blob",
         });
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
@@ -1599,7 +1598,7 @@ const BikeHistory = () => {
         setShowPdfModal(true);
       } else if (type === "advance") {
         const endpoint = `https://ok-motor-51l3.vercel.app/api/advance-bills/${id}/pdf`;
-        const response = await httpClient.get(endpoint, {
+        const response = await axios.get(endpoint, {
           responseType: "blob",
         });
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
@@ -1635,7 +1634,7 @@ const BikeHistory = () => {
         return;
       } else if (type === "service") {
         const endpoint = `https://ok-motor-51l3.vercel.app/api/service-bills/${id}/pdf`;
-        const response = await httpClient.get(endpoint, {
+        const response = await axios.get(endpoint, {
           responseType: "blob",
         });
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
@@ -1650,7 +1649,7 @@ const BikeHistory = () => {
         URL.revokeObjectURL(url);
       } else if (type === "advance") {
         const endpoint = `https://ok-motor-51l3.vercel.app/api/advance-bills/${id}/download`;
-        const response = await httpClient.get(endpoint, {
+        const response = await axios.get(endpoint, {
           responseType: "blob",
         });
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
@@ -1689,19 +1688,6 @@ const BikeHistory = () => {
       }
     };
   }, [pdfUrl]);
-
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
 
   useEffect(() => {
     const handleResize = () => {
