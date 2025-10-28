@@ -23,6 +23,7 @@ import {
   Bike,
   Menu,
   X,
+  Settings,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../images/company.png";
@@ -900,6 +901,11 @@ const ServiceBillForm = () => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
     },
   ];
 

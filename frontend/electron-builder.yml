@@ -1,0 +1,54 @@
+appId: com.okmotor.app
+productName: OK Motor
+directories:
+  buildResources: assets
+  output: dist
+files:
+  - build/**/*
+  - electron/**/*
+  - package.json
+  - node_modules/**/*
+  - "!node_modules/.cache"
+  - "!**/*.map"
+  - "!**/*.md"
+  - "!src"
+  - "!public"
+extraMetadata:
+  main: electron/main.js
+asar: false
+mac:
+  category: public.app-category.business
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+  identity: null
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+        - ia32
+    - target: portable
+      arch:
+        - x64
+        - ia32
+  publisherName: OK Motor
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+portable:
+  artifactName: OK-Motor-Portable-${version}.exe
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Office

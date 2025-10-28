@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
+import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -20,6 +21,7 @@ import {
   Download,
   Eye,
   Menu,
+  Settings,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -248,8 +250,8 @@ const BikeHistory = () => {
   // PDF Generation Functions
   const downloadBuyLetterPDF = async (letter) => {
     try {
-      const templateUrl = "/templates/buyletter.pdf";
-      const existingPdfBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
+      // Use the new PDF template loader
+      const existingPdfBytes = await loadPDFTemplate('buyletter.pdf');
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       
       const formattedData = {
@@ -329,8 +331,8 @@ const BikeHistory = () => {
 
   const downloadSellLetterPDF = async (letter) => {
     try {
-      const templateUrl = "/templates/sellletter.pdf";
-      const existingPdfBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
+      // Use the new PDF template loader
+      const existingPdfBytes = await loadPDFTemplate('sellletter.pdf');
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       
       const formattedData = {
@@ -1415,8 +1417,8 @@ const BikeHistory = () => {
   // Preview PDF functions for buy and sell letters
   const previewBuyLetterPDF = async (letter) => {
     try {
-      const templateUrl = "/templates/buyletter.pdf";
-      const existingPdfBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
+      // Use the new PDF template loader
+      const existingPdfBytes = await loadPDFTemplate('buyletter.pdf');
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       
       const formattedData = {
@@ -1492,8 +1494,8 @@ const BikeHistory = () => {
 
   const previewSellLetterPDF = async (letter) => {
     try {
-      const templateUrl = "/templates/sellletter.pdf";
-      const existingPdfBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
+      // Use the new PDF template loader
+      const existingPdfBytes = await loadPDFTemplate('sellletter.pdf');
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       
       const formattedData = {
@@ -1830,6 +1832,11 @@ const BikeHistory = () => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
     },
   ];
 

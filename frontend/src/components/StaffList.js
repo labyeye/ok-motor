@@ -15,6 +15,7 @@ import {
   LogOut,
   Trash2,
   UserPlus,
+  Settings
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import logo from '../images/company.png';
@@ -153,6 +154,11 @@ const StaffList = () => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
     },
   ];
   const handleLogout = () => {

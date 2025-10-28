@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // PDF operations
   savePDF: (filename, buffer) => ipcRenderer.invoke('save-pdf', { filename, buffer }),
   openPDFDirectory: () => ipcRenderer.invoke('open-pdf-directory'),
+  getPDFTemplate: (templateName) => ipcRenderer.invoke('get-pdf-template', templateName),
 
   // App settings
   getAppSetting: (key) => ipcRenderer.invoke('get-app-setting', key),

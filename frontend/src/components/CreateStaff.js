@@ -15,6 +15,7 @@ import {
   FileText,
   Bike,
   LogOut,
+  Settings,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import logo from '../images/company.png';
@@ -166,6 +167,11 @@ const CreateStaff = () => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
     },
   ];
 

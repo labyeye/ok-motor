@@ -1,7 +1,8 @@
 // electron/main.js
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
+const url = require('url');
 
 // Check if running in development
 const isDev = !app.isPackaged;
@@ -25,18 +26,27 @@ function createWindow() {
   });
 
   // Load React app
-  const startUrl = isDev
-    ? 'http://localhost:3000'
-    : `file://${path.join(__dirname, '../public/index.html')}`;
-
-  console.log('🚀 Loading URL:', startUrl);
-  console.log('📁 __dirname:', __dirname);
-  console.log('🔧 isDev:', isDev);
-
-  mainWindow.loadURL(startUrl);
-
-  // Always open DevTools to see console errors
-  mainWindow.webContents.openDevTools();
+  if (isDev) {
+    // Development: Load from React dev server
+    mainWindow.loadURL('http://localhost:3000');
+    mainWindow.webContents.openDevTools();
+  } else {
+    // Production: Load from packaged build folder
+    // Use url.format to properly create file:// URL
+    const indexPath = path.join(__dirname, '..', 'build', 'index.html');
+    const startUrl = url.format({
+      pathname: indexPath,
+      protocol: 'file:',
+      slashes: true
+    });
+    
+    console.log('🚀 Loading URL:', startUrl);
+    console.log('📁 Index path:', indexPath);
+    console.log('� __dirname:', __dirname);
+    console.log('📦 isPackaged:', app.isPackaged);
+    
+    mainWindow.loadURL(startUrl);
+  }
 
   // Log when page finishes loading
   mainWindow.webContents.on('did-finish-load', () => {
@@ -202,6 +212,29 @@ ipcMain.handle('export-all-data', async () => {
     
     return { success: true, data: allData };
   } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// PDF Template operations
+ipcMain.handle('get-pdf-template', async (event, templateName) => {
+  try {
+    let templatePath;
+    
+    if (isDev) {
+      // In development, templates are in public folder
+      templatePath = path.join(__dirname, '..', 'public', 'templates', templateName);
+    } else {
+      // In production, templates are in build/templates folder
+      templatePath = path.join(__dirname, '..', 'build', 'templates', templateName);
+    }
+    
+    console.log('📄 Loading PDF template:', templatePath);
+    
+    const buffer = await fs.readFile(templatePath);
+    return { success: true, data: Array.from(buffer) };
+  } catch (error) {
+    console.error('❌ Error loading PDF template:', error);
     return { success: false, error: error.message };
   }
 });

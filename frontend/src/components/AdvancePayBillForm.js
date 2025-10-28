@@ -19,6 +19,7 @@ import {
   Bike,
   Menu,
   X,
+  Settings,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -635,6 +636,11 @@ const [formData, setFormData] = useState({
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
     },
   ];
 

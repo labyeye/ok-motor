@@ -11,6 +11,7 @@ import axios from "axios";
 import apiService from "../services/apiService";
 import networkService from "../services/networkService";
 import pdfService from "../services/pdfService";
+import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
 import {
   FileText,
   User,
@@ -32,6 +33,7 @@ import {
   ChevronRight,
   Menu,
   X,
+  Settings,
 } from "lucide-react";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
@@ -550,6 +552,11 @@ const BuyLetterForm = () => {
       icon: Bike,
       path: "/bike-history",
     },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
+    },
   ];
 
   const toggleMenu = (menuName) => {
@@ -649,10 +656,9 @@ const BuyLetterForm = () => {
         }
         savedLetterData = response.data;
       }
-      const buyLetterUrl = "/templates/buyletter.pdf";
-      const existingPdfBytes = await fetch(buyLetterUrl).then((res) =>
-        res.arrayBuffer()
-      );
+      
+      // Use the new PDF template loader
+      const existingPdfBytes = await loadPDFTemplate('buyletter.pdf');
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const firstPage = pdfDoc.getPages()[0];
@@ -971,14 +977,13 @@ const BuyLetterForm = () => {
       setPreviewLanguage(language);
       setIsGeneratingPreview(true);
 
-      const templateUrl =
+      const templateName =
         language === "hindi"
-          ? "/templates/buyletter.pdf"
-          : "/templates/englishbuyletter.pdf";
+          ? "buyletter.pdf"
+          : "englishbuyletter.pdf";
 
-      const existingPdfBytes = await fetch(templateUrl).then((res) =>
-        res.arrayBuffer()
-      );
+      // Use the new PDF template loader
+      const existingPdfBytes = await loadPDFTemplate(templateName);
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const firstPage = pdfDoc.getPages()[0];

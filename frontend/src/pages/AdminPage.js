@@ -324,6 +324,7 @@ const AdminPage = () => {
       icon: Settings,
       path: "/settings",
     },
+    
   ];
 
   const DashboardCards = () => (

@@ -1,10 +1,17 @@
-import React, { useState, useCallback, useContext, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+} from "react";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
 import axios from "axios";
 import apiService from "../services/apiService";
 import networkService from "../services/networkService";
 import pdfService from "../services/pdfService";
+import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
 import {
   User,
   FileSignature,
@@ -27,6 +34,7 @@ import {
   FileText,
   Menu,
   X,
+  Settings,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../images/company.png";
@@ -184,10 +192,10 @@ const SellLetterForm = () => {
       };
 
       setFormData(defaultFormData);
-  // Reset saved/create guards
-  setCreatedId(null);
-  saveResultRef.current = null;
-  savePromiseRef.current = null;
+      // Reset saved/create guards
+      setCreatedId(null);
+      saveResultRef.current = null;
+      savePromiseRef.current = null;
 
       try {
         localStorage.removeItem("sellLetterDraft");
@@ -396,6 +404,11 @@ const SellLetterForm = () => {
       icon: Bike,
       path: "/bike-history",
     },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
+    },
   ];
   const handlePreview = async (language = "hindi") => {
     try {
@@ -454,7 +467,7 @@ const SellLetterForm = () => {
         previousTime: formatTime(
           formData.previousTime || formData.todayTime || "12:00"
         ),
-  };
+      };
       // default witness values when empty
       formattedData.witnessName =
         formattedData.witnessName && String(formattedData.witnessName).trim()
@@ -692,14 +705,17 @@ const SellLetterForm = () => {
       let response;
       // Check if we're in Electron
       const isElectron = window.electronAPI !== undefined;
-      
+
       if ((editLetter && editLetter._id) || createdId) {
         // Update existing letter
         const updateId = createdId || editLetter._id;
-        
+
         if (isElectron) {
           // Use apiService for Electron (handles offline)
-          response = await apiService.put(`/api/sell-letters/${updateId}`, formData);
+          response = await apiService.put(
+            `/api/sell-letters/${updateId}`,
+            formData
+          );
         } else {
           // Use axios directly for web browser
           response = await axios.put(
@@ -766,7 +782,7 @@ const SellLetterForm = () => {
     try {
       // Check if we're in Electron
       const isElectron = window.electronAPI !== undefined;
-      
+
       let response;
       if (isElectron) {
         // Use apiService for Electron (handles offline)
@@ -847,7 +863,7 @@ const SellLetterForm = () => {
 
       // Always save or update before generating PDF
       let savedLetter;
-      
+
       // For new creates, guard against duplicate POSTs when user double-clicks
       if (saveResultRef.current && !editLetter?._id && !createdId) {
         // Reuse already saved result
@@ -868,7 +884,7 @@ const SellLetterForm = () => {
           savePromiseRef.current = null;
         }
       }
-      
+
       if (!savedLetter) throw new Error("Failed to save sell letter");
       // If we created a new letter, store its id so subsequent clicks update instead of creating duplicates
       const newId = savedLetter._id || savedLetter?.data?._id;
@@ -1430,11 +1446,11 @@ const SellLetterForm = () => {
       setDownloadProgress(0);
 
       await simulateProgress();
-      const templateUrl = "/templates/sellletter.pdf";
-      const existingPdfBytes = await fetch(templateUrl).then((res) =>
-        res.arrayBuffer()
-      );
+      
+      // Use the new PDF template loader
+      const existingPdfBytes = await loadPDFTemplate('sellletter.pdf');
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      
       const formatTime = (timeString) => {
         if (!timeString) return "";
 
@@ -1536,11 +1552,11 @@ const SellLetterForm = () => {
       setDownloadProgress(0);
 
       await simulateProgress();
-      const templateUrl = "/templates/englishsell.pdf";
-      const existingPdfBytes = await fetch(templateUrl).then((res) =>
-        res.arrayBuffer()
-      );
+      
+      // Use the new PDF template loader
+      const existingPdfBytes = await loadPDFTemplate('englishsell.pdf');
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      
       function formatTime(timeString) {
         if (!timeString) return "";
         return timeString.slice(0, 5);

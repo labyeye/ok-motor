@@ -19,8 +19,10 @@ import {
   Trash2,
   X,
   Menu,
+  Settings,
 } from "lucide-react";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
+import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
 
@@ -223,6 +225,11 @@ const BuyLetterHistory = () => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
     },
   ];
 
@@ -443,12 +450,10 @@ const BuyLetterHistory = () => {
       // Simulate progress
       await simulateProgress();
 
-      // Actual download code remains the same...
-      const templateUrl = "/templates/buyletter.pdf";
-      const existingPdfBytes = await fetch(templateUrl).then((res) =>
-        res.arrayBuffer()
-      );
+      // Use the new PDF template loader
+      const existingPdfBytes = await loadPDFTemplate('buyletter.pdf');
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      
       // Format all data for PDF
       const formattedData = {
         ...letter,

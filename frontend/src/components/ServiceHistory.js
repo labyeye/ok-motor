@@ -17,7 +17,8 @@ import {
   Bike,
   Pencil,
   Menu,
-  X
+  X,
+  Settings,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -481,6 +482,11 @@ const ServiceHistory = () => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
     },
   ];
 

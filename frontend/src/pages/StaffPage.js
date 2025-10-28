@@ -170,6 +170,11 @@ const StaffPage = () => {
       icon: Settings,
       path: "/settings",
     },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
+    },
   ];
 
   const DashboardCards = () => (

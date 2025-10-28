@@ -18,16 +18,30 @@ const checkUserLoggedIn = async () => {
     if (token) {
       // Set default Authorization header for axios so all requests include the token
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      const res = await axios.get('https://ok-motor-51l3.vercel.app/api/auth/me');
-      // server may return user inside data or data.data depending on implementation
-      setUser(res.data?.data || res.data || null);
+      
+      try {
+        const res = await axios.get('https://ok-motor-51l3.vercel.app/api/auth/me');
+        // server may return user inside data or data.data depending on implementation
+        setUser(res.data?.data || res.data || null);
+      } catch (apiError) {
+        // If API call fails (offline or server error), keep user logged in with cached data
+        console.log('Cannot verify user online, using cached login');
+        
+        // Try to get cached user data from localStorage
+        const cachedUser = localStorage.getItem('userData');
+        if (cachedUser) {
+          setUser(JSON.parse(cachedUser));
+        } else {
+          // No cached data, but keep token for when they go online
+          setUser({ email: 'offline-user' }); // Placeholder user
+        }
+      }
     } else {
       setUser(null);
     }
   } catch (err) {
     console.error(err);
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common["Authorization"];
+    // Don't remove token on error - only on explicit logout
     setUser(null);
   } finally {
     setLoading(false);
@@ -38,13 +52,21 @@ const checkUserLoggedIn = async () => {
     try {
       const res = await axios.post('https://ok-motor-51l3.vercel.app/api/auth/login', { email, password });
       const token = res.data?.token || res.data?.data?.token;
+      const userData = res.data?.data || res.data || null;
+      
       if (token) {
         localStorage.setItem('token', token);
         // set axios default header
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       }
+      
+      // Cache user data for offline use
+      if (userData) {
+        localStorage.setItem('userData', JSON.stringify(userData));
+      }
+      
       // set user from response (handle different response shapes)
-      setUser(res.data?.data || res.data || null);
+      setUser(userData);
       return res.data;
     } catch (error) {
       console.error('Login error:', error);
@@ -54,7 +76,7 @@ const checkUserLoggedIn = async () => {
 
   const logout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('cachedUser');
+    localStorage.removeItem('userData'); // Fixed: was 'cachedUser', now matches 'userData'
     // remove default header so subsequent requests are unauthenticated
     try {
       delete axios.defaults.headers.common["Authorization"];
