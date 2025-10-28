@@ -20,7 +20,10 @@ import StaffList from "./components/StaffList";
 import ServiceHistory from "./components/ServiceHistory";
 import AdvancePayBillForm from "./components/AdvancePayBillForm";
 import AdvanceHistory from "./components/AdvanceHistory";
-import { useState,useEffect } from "react";
+import SettingsPage from "./pages/SettingsPage";
+import { useState, useEffect } from "react";
+import networkService from "./services/networkService";
+import syncService from "./services/syncService";
 
 const RootRedirect = () => {
   const { user, loading } = useAuth();
@@ -69,18 +72,45 @@ const RootRedirect = () => {
 };
 
 function App() {
-   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
+    // Initialize services only in Electron
+    const isElectron = window.electronAPI !== undefined;
+    
+    if (isElectron) {
+      console.log("🚀 Initializing offline services in Electron...");
+      
+      // Start network monitoring
+      networkService.checkConnection();
+      
+      // Subscribe to network changes
+      const unsubscribeNetwork = networkService.subscribe((online) => {
+        console.log(`📡 Network status changed: ${online ? "Online" : "Offline"}`);
+        setIsOnline(online);
+      });
+      
+      // Sync service auto-initializes when imported
+      // It will automatically start monitoring and syncing
+      
+      console.log("✅ Offline services initialized successfully!");
+      
+      return () => {
+        unsubscribeNetwork();
+      };
+    } else {
+      // Browser - use default online/offline events
+      const handleOnline = () => setIsOnline(true);
+      const handleOffline = () => setIsOnline(false);
+      window.addEventListener("online", handleOnline);
+      window.addEventListener("offline", handleOffline);
+      return () => {
+        window.removeEventListener("online", handleOnline);
+        window.removeEventListener("offline", handleOffline);
+      };
+    }
   }, []);
+  
   return (
     <AuthProvider>
       <div
@@ -203,6 +233,14 @@ function App() {
             element={
               <PrivateRoute roles={["admin", "staff"]}>
                 <AdvanceHistory />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <SettingsPage />
               </PrivateRoute>
             }
           />

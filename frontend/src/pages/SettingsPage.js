@@ -1,0 +1,859 @@
+// src/pages/SettingsPage.js
+import React, { useState, useEffect, useContext } from 'react';
+import {
+  LayoutDashboard,
+  ShoppingCart,
+  TrendingUp,
+  Wrench,
+  Users,
+  LogOut,
+  ChevronDown,
+  ChevronRight,
+  FileText,
+  Bike,
+  Menu,
+  X,
+  Settings,
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import AuthContext from '../context/AuthContext';
+import networkService from '../services/networkService';
+import syncService from '../services/syncService';
+import offlineStorage from '../services/offlineStorage';
+import logo from '../images/company.png';
+
+const SettingsPage = () => {
+  const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [activeMenu, setActiveMenu] = useState('Settings');
+  const [expandedMenus, setExpandedMenus] = useState({});
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
+  const [storagePath, setStoragePath] = useState('');
+  const [syncStatus, setSyncStatus] = useState({});
+  const [syncStats, setSyncStats] = useState({});
+  const [autoSync, setAutoSync] = useState(true);
+  const [isOnline, setIsOnline] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const [lastSyncTime, setLastSyncTime] = useState(null);
+
+  // Menu items
+  const menuItems = [
+    {
+      name: 'Dashboard',
+      icon: LayoutDashboard,
+      path: user?.role === 'admin' ? '/admin' : '/staff',
+    },
+    {
+      name: 'Buy',
+      icon: ShoppingCart,
+      submenu: [
+        { name: 'Create Buy Letter', path: '/buy/create' },
+        { name: 'Buy Letter History', path: '/buy/history' },
+      ],
+    },
+    {
+      name: 'Sell',
+      icon: TrendingUp,
+      submenu: [
+        { name: 'Create Sell Letter', path: '/sell/create' },
+        { name: 'Sell Letter History', path: '/sell/history' },
+      ],
+    },
+    {
+      name: 'Service',
+      icon: Wrench,
+      submenu: [
+        { name: 'Create Service Bill', path: '/service/create' },
+        { name: 'Service History', path: '/service/history' },
+      ],
+    },
+    {
+      name: 'Payment',
+      icon: FileText,
+      submenu: [
+        { name: 'Create Advance Bill', path: '/advance/create' },
+        { name: 'Advance History', path: '/advance/history' },
+      ],
+    },
+    ...(user?.role !== 'staff'
+      ? [
+          {
+            name: 'Staff',
+            icon: Users,
+            submenu: [
+              { name: 'Create Staff ID', path: '/staff/create' },
+              { name: 'Staff List', path: '/staff/list' },
+            ],
+          },
+        ]
+      : []),
+    {
+      name: 'Vehicle History',
+      icon: Bike,
+      path: '/bike-history',
+    },
+    {
+      name: 'Settings',
+      icon: Settings,
+      path: '/settings',
+    },
+  ];
+
+  const toggleMenu = (menuName) => {
+    setExpandedMenus((prev) => ({
+      ...prev,
+      [menuName]: !prev[menuName],
+    }));
+  };
+
+  const handleMenuClick = (menuName, path) => {
+    setActiveMenu(menuName);
+    if (path) {
+      navigate(path);
+    }
+    if (window.innerWidth <= 768) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    loadSettings();
+    loadSyncStats();
+
+    // Subscribe to network changes
+    const unsubscribeNetwork = networkService.subscribe((online) => {
+      setIsOnline(online);
+    });
+
+    // Subscribe to sync events
+    const unsubscribeSync = syncService.subscribe((event, data) => {
+      if (event === 'sync-start') {
+        setIsSyncing(true);
+        showMessage('info', 'Syncing data...');
+      } else if (event === 'sync-complete') {
+        setIsSyncing(false);
+        loadSyncStats();
+        showMessage('success', 'Sync completed successfully!');
+        setLastSyncTime(new Date());
+      } else if (event === 'sync-error') {
+        setIsSyncing(false);
+        showMessage('error', `Sync error: ${data.error}`);
+      }
+    });
+
+    return () => {
+      unsubscribeNetwork();
+      unsubscribeSync();
+    };
+  }, []);
+
+  const loadSettings = async () => {
+    if (window.electronAPI) {
+      const path = await window.electronAPI.getStoragePath();
+      setStoragePath(path);
+    }
+
+    const status = syncService.getSyncStatus();
+    setSyncStatus(status);
+    setAutoSync(status.autoSyncEnabled);
+    setIsOnline(status.isOnline);
+    
+    if (status.lastSyncTime) {
+      setLastSyncTime(new Date(status.lastSyncTime));
+    }
+  };
+
+  const loadSyncStats = async () => {
+    const stats = await syncService.getSyncStatistics();
+    if (stats.success) {
+      setSyncStats(stats.collections || {});
+    }
+  };
+
+  const handleSelectPath = async () => {
+    if (!window.electronAPI) {
+      showMessage('error', 'Path selection is only available in desktop app');
+      return;
+    }
+
+    const result = await window.electronAPI.selectStoragePath();
+    if (result.success) {
+      setStoragePath(result.path);
+      showMessage('success', `Storage path updated to: ${result.path}`);
+    } else if (!result.canceled) {
+      showMessage('error', 'Failed to update storage path');
+    }
+  };
+
+  const handleManualSync = async () => {
+    if (!isOnline) {
+      showMessage('error', 'Cannot sync while offline');
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const result = await syncService.forceSyncNow();
+      if (result.success) {
+        loadSyncStats();
+        showMessage('success', 'Manual sync completed!');
+        setLastSyncTime(new Date());
+      } else {
+        showMessage('error', result.message || 'Sync failed');
+      }
+    } catch (error) {
+      showMessage('error', error.message || 'Sync failed');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleAutoSyncToggle = (e) => {
+    const enabled = e.target.checked;
+    setAutoSync(enabled);
+    syncService.setAutoSync(enabled);
+    showMessage('info', `Auto-sync ${enabled ? 'enabled' : 'disabled'}`);
+  };
+
+  const handleOpenPDFFolder = async () => {
+    if (!window.electronAPI) {
+      showMessage('error', 'This feature is only available in desktop app');
+      return;
+    }
+
+    const result = await window.electronAPI.openPDFDirectory();
+    if (result.success) {
+      showMessage('success', 'Opened PDF directory');
+    } else {
+      showMessage('error', 'Failed to open PDF directory');
+    }
+  };
+
+  const handleExportData = async () => {
+    if (!window.electronAPI) {
+      showMessage('error', 'Export is only available in desktop app');
+      return;
+    }
+
+    try {
+      const result = await window.electronAPI.exportAllData();
+      if (result.success) {
+        const dataStr = JSON.stringify(result.data, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `backup-${new Date().toISOString()}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showMessage('success', 'Data exported successfully!');
+      }
+    } catch (error) {
+      showMessage('error', 'Export failed: ' + error.message);
+    }
+  };
+
+  const showMessage = (type, text) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+  };
+
+  const formatTime = (date) => {
+    if (!date) return 'Never';
+    return new Date(date).toLocaleString();
+  };
+
+  const styles = {
+    container: {
+      display: "flex",
+      minHeight: "100vh",
+      fontFamily: "'Inter', sans-serif",
+    },
+    sidebar: {
+      width: "280px",
+      backgroundColor: "#1e293b",
+      color: "#f8fafc",
+      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+      position: "sticky",
+      top: 0,
+      height: "100vh",
+      backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
+    },
+    sidebarHeader: {
+      padding: "24px",
+      borderBottom: "1px solid #1e293b",
+    },
+    nav: {
+      padding: "16px 0",
+    },
+    menuItem: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "12px 24px",
+      cursor: "pointer",
+      color: "#e2e8f0",
+      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    },
+    menuItemActive: {
+      backgroundColor: "#1e293b",
+      borderRight: "3px solid #3b82f6",
+      color: "#ffffff",
+    },
+    menuItemContent: {
+      display: "flex",
+      alignItems: "center",
+    },
+    menuIcon: {
+      marginRight: "12px",
+      color: "#94a3b8",
+    },
+    menuText: {
+      fontSize: "0.9375rem",
+      fontWeight: "500",
+    },
+    submenu: {
+      backgroundColor: "rgba(26, 32, 44, 0.7)",
+      maxHeight: 0,
+      opacity: 0,
+      overflow: "hidden",
+      transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
+    },
+    submenuItem: {
+      padding: "10px 24px 10px 64px",
+      cursor: "pointer",
+      color: "#cbd5e1",
+      fontSize: "0.875rem",
+      transition: "all 0.2s ease",
+    },
+    logoutButton: {
+      display: "flex",
+      alignItems: "center",
+      padding: "12px 24px",
+      cursor: "pointer",
+      color: "#f87171",
+      marginTop: "16px",
+      borderTop: "1px solid #1e293b",
+      transition: "all 0.2s ease",
+    },
+    mainContent: {
+      flex: 1,
+      overflow: "auto",
+      backgroundColor: "#ffffff",
+    },
+    contentPadding: {
+      padding: "32px",
+    },
+    topBar: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      padding: "1rem",
+      background: "#ffffff",
+      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+      zIndex: 20,
+    },
+    hamburgerMenu: {
+      cursor: "pointer",
+      padding: "8px",
+      borderRadius: "4px",
+      transition: "background-color 0.2s",
+    },
+    sidebarOverlay: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0, 0, 0, 0.5)",
+      zIndex: 14,
+    },
+  };
+
+  return (
+    <div style={{
+      ...styles.container,
+      paddingTop: isMobile ? "80px" : "0",
+    }}>
+      <div style={{
+        ...styles.topBar,
+        display: isMobile && !isSidebarOpen ? "block" : "none",
+      }}>
+        <div
+          style={{
+            ...styles.hamburgerMenu,
+            display: isMobile && !isSidebarOpen ? "block" : "none",
+          }}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+        </div>
+      </div>
+
+      {isSidebarOpen && isMobile && (
+        <div
+          style={styles.sidebarOverlay}
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
+      <div
+        style={{
+          ...styles.sidebar,
+          ...(isMobile
+            ? {
+                transform: isSidebarOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
+                position: "fixed",
+                zIndex: 15,
+              }
+            : {}),
+        }}
+      >
+        <div style={styles.sidebarHeader}>
+          <img
+            src={logo}
+            alt="logo"
+            style={{
+              width: "100%",
+              maxWidth: "25rem",
+              height: "13rem",
+              objectFit: "cover",
+              objectPosition: "center",
+              display: "block",
+              margin: "0 auto 1rem auto",
+            }}
+          />
+          <p className="sidebar-subtitle">Welcome, {user?.name || 'User'}</p>
+        </div>
+
+        <nav style={styles.nav}>
+          {menuItems.map((item) => (
+            <div key={item.name}>
+              <div
+                style={{
+                  ...styles.menuItem,
+                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
+                }}
+                onClick={() => {
+                  if (item.submenu) {
+                    toggleMenu(item.name);
+                  } else {
+                    handleMenuClick(item.name, item.path);
+                  }
+                }}
+              >
+                <div style={styles.menuItemContent}>
+                  <item.icon size={20} style={styles.menuIcon} />
+                  <span style={styles.menuText}>{item.name}</span>
+                </div>
+                {item.submenu &&
+                  (expandedMenus[item.name] ? (
+                    <ChevronDown size={16} />
+                  ) : (
+                    <ChevronRight size={16} />
+                  ))}
+              </div>
+
+              {item.submenu && (
+                <div
+                  style={{
+                    ...styles.submenu,
+                    maxHeight: expandedMenus[item.name]
+                      ? `${item.submenu.length * 48}px`
+                      : "0px",
+                    opacity: expandedMenus[item.name] ? 1 : 0,
+                    transition:
+                      "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
+                    overflow: "hidden",
+                  }}
+                >
+                  {item.submenu.map((subItem) => (
+                    <div
+                      key={subItem.name}
+                      style={styles.submenuItem}
+                      onClick={() =>
+                        handleMenuClick(subItem.name, subItem.path)
+                      }
+                    >
+                      {subItem.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
+          <div style={styles.logoutButton} onClick={handleLogout}>
+            <LogOut size={20} style={styles.menuIcon} />
+            <span style={styles.menuText}>Logout</span>
+          </div>
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div style={styles.mainContent}>
+        <div style={styles.contentPadding}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div style={{
+              backgroundColor: "white",
+              borderRadius: "12px",
+              padding: "2rem",
+              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+            }}>
+              <h1 style={{
+                fontSize: "2rem",
+                fontWeight: "700",
+                color: "#1f2937",
+                marginBottom: "2rem",
+                paddingBottom: "1rem",
+                borderBottom: "2px solid #e5e7eb",
+              }}>Settings</h1>
+
+              {/* Network Status */}
+              <section style={{
+                marginBottom: "2rem",
+                paddingBottom: "2rem",
+                borderBottom: "1px solid #e5e7eb",
+              }}>
+                <h2 style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "600",
+                  color: "#374151",
+                  marginBottom: "1rem",
+                }}>Network Status</h2>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  padding: "1rem",
+                  background: "#f9fafb",
+                  borderRadius: "8px",
+                }}>
+                  <span style={{
+                    width: "12px",
+                    height: "12px",
+                    borderRadius: "50%",
+                    background: isOnline ? "#10b981" : "#ef4444",
+                    animation: "pulse 2s infinite",
+                  }}></span>
+                  <span style={{
+                    fontSize: "1rem",
+                    fontWeight: "600",
+                    color: "#374151",
+                  }}>
+                    {isOnline ? 'Online' : 'Offline'}
+                  </span>
+                  {isSyncing && <span style={{
+                    color: "#3b82f6",
+                    fontStyle: "italic",
+                  }}> • Syncing...</span>}
+                </div>
+              </section>
+
+              {/* Storage Settings */}
+              {window.electronAPI && (
+                <section style={{
+                  marginBottom: "2rem",
+                  paddingBottom: "2rem",
+                  borderBottom: "1px solid #e5e7eb",
+                }}>
+                  <h2 style={{
+                    fontSize: "1.5rem",
+                    fontWeight: "600",
+                    color: "#374151",
+                    marginBottom: "1rem",
+                  }}>Storage Location</h2>
+                  <div style={{
+                    display: "flex",
+                    gap: "1rem",
+                    marginBottom: "1rem",
+                    flexDirection: isMobile ? "column" : "row",
+                  }}>
+                    <input
+                      type="text"
+                      value={storagePath}
+                      readOnly
+                      style={{
+                        flex: 1,
+                        padding: "0.75rem",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "8px",
+                        fontSize: "0.9rem",
+                        background: "#f9fafb",
+                      }}
+                    />
+                    <button onClick={handleSelectPath} style={{
+                      padding: "0.75rem 1.5rem",
+                      background: "#3b82f6",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontSize: "0.95rem",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      width: isMobile ? "100%" : "auto",
+                    }}>
+                      Change Location
+                    </button>
+                  </div>
+                  <p style={{
+                    color: "#6b7280",
+                    fontSize: "0.875rem",
+                    marginTop: "0.5rem",
+                  }}>
+                    All offline data and PDFs will be stored in this location
+                  </p>
+                  <button onClick={handleOpenPDFFolder} style={{
+                    padding: "0.75rem 1.5rem",
+                    background: "#f3f4f6",
+                    color: "#374151",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "8px",
+                    fontSize: "0.95rem",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    marginTop: "1rem",
+                    width: isMobile ? "100%" : "auto",
+                  }}>
+                    Open PDF Folder
+                  </button>
+                </section>
+              )}
+
+              {/* Sync Settings */}
+              <section style={{
+                marginBottom: "2rem",
+                paddingBottom: "2rem",
+                borderBottom: "1px solid #e5e7eb",
+              }}>
+                <h2 style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "600",
+                  color: "#374151",
+                  marginBottom: "1rem",
+                }}>Sync Settings</h2>
+                
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    cursor: "pointer",
+                    fontSize: "1rem",
+                    fontWeight: "500",
+                    color: "#374151",
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={autoSync}
+                      onChange={handleAutoSyncToggle}
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span>Enable Automatic Sync</span>
+                  </label>
+                  <p style={{
+                    color: "#6b7280",
+                    fontSize: "0.875rem",
+                    marginTop: "0.5rem",
+                  }}>
+                    Automatically sync offline data when connection is restored
+                  </p>
+                </div>
+
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "1rem",
+                  background: "#f9fafb",
+                  borderRadius: "8px",
+                  flexDirection: isMobile ? "column" : "row",
+                  gap: isMobile ? "1rem" : "0",
+                }}>
+                  <p style={{ margin: 0, color: "#6b7280" }}>
+                    <strong>Last Sync:</strong> {formatTime(lastSyncTime)}
+                  </p>
+                  <button
+                    onClick={handleManualSync}
+                    disabled={!isOnline || isSyncing}
+                    style={{
+                      padding: "0.75rem 1.5rem",
+                      background: (!isOnline || isSyncing) ? "#9ca3af" : "#3b82f6",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontSize: "0.95rem",
+                      fontWeight: "600",
+                      cursor: (!isOnline || isSyncing) ? "not-allowed" : "pointer",
+                      transition: "all 0.2s",
+                      width: isMobile ? "100%" : "auto",
+                    }}
+                  >
+                    {isSyncing ? 'Syncing...' : 'Sync Now'}
+                  </button>
+                </div>
+              </section>
+
+              {/* Sync Statistics */}
+              <section style={{
+                marginBottom: "2rem",
+                paddingBottom: "2rem",
+                borderBottom: "1px solid #e5e7eb",
+              }}>
+                <h2 style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "600",
+                  color: "#374151",
+                  marginBottom: "1rem",
+                }}>Sync Statistics</h2>
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(250px, 1fr))",
+                  gap: "1rem",
+                }}>
+                  {Object.keys(syncStats).length > 0 ? (
+                    Object.entries(syncStats).map(([collection, stats]) => (
+                      <div key={collection} style={{
+                        background: "#f9fafb",
+                        padding: "1.5rem",
+                        borderRadius: "8px",
+                        border: "1px solid #e5e7eb",
+                      }}>
+                        <h3 style={{
+                          fontSize: "1.1rem",
+                          fontWeight: "600",
+                          color: "#1f2937",
+                          marginBottom: "1rem",
+                          textTransform: "capitalize",
+                        }}>{collection}</h3>
+                        <div style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "0.75rem",
+                        }}>
+                          <div style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}>
+                            <span style={{ color: "#6b7280", fontSize: "0.9rem" }}>Total:</span>
+                            <span style={{ fontWeight: "600", fontSize: "1.1rem", color: "#1f2937" }}>{stats.total}</span>
+                          </div>
+                          <div style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}>
+                            <span style={{ color: "#6b7280", fontSize: "0.9rem" }}>Synced:</span>
+                            <span style={{ fontWeight: "600", fontSize: "1.1rem", color: "#10b981" }}>{stats.synced}</span>
+                          </div>
+                          <div style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}>
+                            <span style={{ color: "#6b7280", fontSize: "0.9rem" }}>Pending:</span>
+                            <span style={{ fontWeight: "600", fontSize: "1.1rem", color: "#f59e0b" }}>{stats.unsynced}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p style={{
+                      textAlign: "center",
+                      color: "#9ca3af",
+                      padding: "2rem",
+                      fontStyle: "italic",
+                    }}>No sync data available</p>
+                  )}
+                </div>
+              </section>
+
+              {/* Data Management */}
+              <section style={{
+                marginBottom: "2rem",
+                paddingBottom: "2rem",
+              }}>
+                <h2 style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "600",
+                  color: "#374151",
+                  marginBottom: "1rem",
+                }}>Data Management</h2>
+                <button onClick={handleExportData} style={{
+                  padding: "0.75rem 1.5rem",
+                  background: "#f3f4f6",
+                  color: "#374151",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "8px",
+                  fontSize: "0.95rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  width: isMobile ? "100%" : "auto",
+                }}>
+                  Export All Data (Backup)
+                </button>
+                <p style={{
+                  color: "#6b7280",
+                  fontSize: "0.875rem",
+                  marginTop: "0.5rem",
+                }}>
+                  Export all offline data as a JSON backup file
+                </p>
+              </section>
+
+              {/* Message Display */}
+              {message.text && (
+                <div style={{
+                  padding: "1rem",
+                  borderRadius: "8px",
+                  marginTop: "1rem",
+                  fontWeight: "500",
+                  background: message.type === 'success' ? "#d1fae5" : 
+                             message.type === 'error' ? "#fee2e2" : "#dbeafe",
+                  color: message.type === 'success' ? "#065f46" : 
+                         message.type === 'error' ? "#991b1b" : "#1e40af",
+                  border: `1px solid ${message.type === 'success' ? "#10b981" : 
+                                        message.type === 'error' ? "#ef4444" : "#3b82f6"}`,
+                }}>
+                  {message.text}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SettingsPage;

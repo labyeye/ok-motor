@@ -2,6 +2,8 @@
   "name": "bikemanagementapp",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/main.js",
+  "homepage": "./",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -34,7 +36,13 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "deploy-test": "node deploy-test.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "electron": "electron .",
+    "electron:dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:build": "npm run build && electron-builder",
+    "electron:build:mac": "npm run build && electron-builder --mac",
+    "electron:build:win": "npm run build && electron-builder --win",
+    "electron:build:linux": "npm run build && electron-builder --linux"
   },
   "eslintConfig": {
     "extends": [
@@ -55,7 +63,35 @@
     ]
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
+    "electron-store": "^8.2.0",
     "source-map-loader": "^5.0.0",
+    "wait-on": "^7.2.0",
     "webpack-dev-server": "^5.2.1"
+  },
+  "build": {
+    "appId": "com.okmotor.app",
+    "productName": "OK Motor",
+    "files": [
+      "build/**/*",
+      "electron/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "mac": {
+      "category": "public.app-category.business",
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Office"
+    }
   }
 }

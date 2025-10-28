@@ -2,6 +2,9 @@ import React, { useState, useCallback, useContext, useEffect, useRef } from "rea
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
 import axios from "axios";
+import apiService from "../services/apiService";
+import networkService from "../services/networkService";
+import pdfService from "../services/pdfService";
 import {
   User,
   FileSignature,
@@ -687,20 +690,36 @@ const SellLetterForm = () => {
       }
 
       let response;
+      // Check if we're in Electron
+      const isElectron = window.electronAPI !== undefined;
+      
       if ((editLetter && editLetter._id) || createdId) {
         // Update existing letter
         const updateId = createdId || editLetter._id;
-        response = await axios.put(
-          `https://ok-motor-51l3.vercel.app/api/sell-letters/${updateId}`,
-          formData
-        );
+        
+        if (isElectron) {
+          // Use apiService for Electron (handles offline)
+          response = await apiService.put(`/api/sell-letters/${updateId}`, formData);
+        } else {
+          // Use axios directly for web browser
+          response = await axios.put(
+            `https://ok-motor-51l3.vercel.app/api/sell-letters/${updateId}`,
+            formData
+          );
+        }
         alert("Sell letter updated successfully!");
       } else {
         // Create new letter
-        response = await axios.post(
-          "https://ok-motor-51l3.vercel.app/api/sell-letters",
-          formData
-        );
+        if (isElectron) {
+          // Use apiService for Electron (handles offline)
+          response = await apiService.post("/api/sell-letters", formData);
+        } else {
+          // Use axios directly for web browser
+          response = await axios.post(
+            "https://ok-motor-51l3.vercel.app/api/sell-letters",
+            formData
+          );
+        }
         alert("Sell letter saved successfully!");
       }
       if (response.data) {
@@ -745,13 +764,29 @@ const SellLetterForm = () => {
 
   const generatePDFBuffer = async (data, language = "hindi") => {
     try {
-      const response = await axios.post(
-        `https://ok-motor-51l3.vercel.app/api/sell-letters/generate-pdf?language=${language}`,
-        data,
-        {
-          responseType: "arraybuffer",
-        }
-      );
+      // Check if we're in Electron
+      const isElectron = window.electronAPI !== undefined;
+      
+      let response;
+      if (isElectron) {
+        // Use apiService for Electron (handles offline)
+        response = await apiService.post(
+          `/api/sell-letters/generate-pdf?language=${language}`,
+          data,
+          {
+            responseType: "arraybuffer",
+          }
+        );
+      } else {
+        // Use axios directly for web browser
+        response = await axios.post(
+          `https://ok-motor-51l3.vercel.app/api/sell-letters/generate-pdf?language=${language}`,
+          data,
+          {
+            responseType: "arraybuffer",
+          }
+        );
+      }
       return response.data;
     } catch (error) {
       console.error("Error generating PDF:", error);

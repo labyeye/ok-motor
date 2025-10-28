@@ -1,0 +1,203 @@
+/* src/components/NetworkStatus.css */
+.network-status-widget {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+.network-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.network-status-indicator:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.online {
+  background: #4caf50;
+  animation: pulse 2s infinite;
+}
+
+.status-dot.offline {
+  background: #f44336;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 4px rgba(76, 175, 80, 0);
+  }
+}
+
+.status-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+.unsynced-badge {
+  background: #ff9800;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 4px;
+}
+
+.network-status-details {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  min-width: 280px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.status-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 13px;
+  color: #555;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.status-detail-row:last-child {
+  border-bottom: none;
+}
+
+.status-detail-row.syncing {
+  color: #2196f3;
+  font-weight: 600;
+}
+
+.sync-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e3f2fd;
+  border-top-color: #2196f3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sync-now-btn {
+  width: 100%;
+  padding: 8px 16px;
+  margin-top: 12px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.sync-now-btn:hover {
+  background: #1976d2;
+}
+
+.sync-now-btn:active {
+  transform: scale(0.98);
+}
+
+.status-message {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  font-size: 12px;
+  color: #777;
+  line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .network-status-widget {
+    top: 10px;
+    right: 10px;
+  }
+
+  .network-status-indicator {
+    padding: 8px 12px;
+  }
+
+  .status-text {
+    font-size: 12px;
+  }
+
+  .network-status-details {
+    min-width: 240px;
+    right: -10px;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .network-status-indicator,
+  .network-status-details {
+    background: #2d2d2d;
+    color: #e0e0e0;
+  }
+
+  .status-text {
+    color: #e0e0e0;
+  }
+
+  .status-detail-row {
+    color: #b0b0b0;
+    border-bottom-color: #404040;
+  }
+
+  .status-message {
+    color: #999;
+    border-top-color: #404040;
+  }
+}

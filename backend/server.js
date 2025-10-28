@@ -8,6 +8,7 @@ const sellLetterRoutes = require("./routes/selLetter");
 const dashboardRoutes = require("./routes/dashboard");
 const serviceBillRoutes = require("./routes/serviceBillRoutes");
 const advanceBillRoutes = require("./routes/advanceBillRoutes");
+const syncRoutes = require("./routes/syncRoutes");
 const { protect } = require("./middleware/auth");
 const cors = require("cors");
 const app = express();
@@ -16,7 +17,7 @@ connectDB();
 // Dynamic CORS configuration for different environments
 const getAllowedOrigins = () => {
   const origins = [
-    "http://localhost:3001", // Local development
+    "http://localhost:3000", // Local development
     "http://127.0.0.1:3000", // Local development
     "https://ok-motor.vercel.app", // Production
     "https://ok-motor-git-main-ok-motor.vercel.app", // Vercel preview
@@ -99,6 +100,16 @@ app.use("/api/sell-letters", sellLetterRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/service-bills", serviceBillRoutes);
 app.use("/api/advance-bills", advanceBillRoutes);
+app.use("/api/sync", syncRoutes); // Sync routes
+
+// Health check endpoint (also in syncRoutes but duplicated here for convenience)
+app.get("/api/health", (req, res) => {
+  res.json({ 
+    success: true,
+    status: "online", 
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Public root route
 app.get("/", (req, res) => {

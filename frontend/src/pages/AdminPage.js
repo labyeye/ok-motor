@@ -14,6 +14,7 @@ import {
   Bike,
   Menu,
   X,
+  Settings,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
@@ -317,6 +318,11 @@ const AdminPage = () => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
     },
   ];
 

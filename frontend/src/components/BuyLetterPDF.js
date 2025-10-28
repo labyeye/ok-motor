@@ -1,7 +1,16 @@
-import React, { useState, useCallback, useContext, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+} from "react";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { saveAs } from "file-saver";
 import axios from "axios";
+import apiService from "../services/apiService";
+import networkService from "../services/networkService";
+import pdfService from "../services/pdfService";
 import {
   FileText,
   User,
@@ -363,20 +372,37 @@ const BuyLetterForm = () => {
     try {
       setIsSaving(true);
       let response;
+      
+      // Check if we're in Electron
+      const isElectron = window.electronAPI !== undefined;
+      
       if ((editLetter && editLetter._id) || createdId) {
         // Update existing letter
         const updateId = createdId || editLetter._id;
-        response = await axios.put(
-          `https://ok-motor-51l3.vercel.app/api/buy-letter/${updateId}`,
-          formData
-        );
+        
+        if (isElectron) {
+          // Use apiService for Electron (handles offline)
+          response = await apiService.put(`/api/buy-letter/${updateId}`, formData);
+        } else {
+          // Use axios directly for web browser
+          response = await axios.put(
+            `https://ok-motor-51l3.vercel.app/api/buy-letter/${updateId}`,
+            formData
+          );
+        }
         alert("Buy letter updated successfully!");
       } else {
         // Create new letter
-        response = await axios.post(
-          "https://ok-motor-51l3.vercel.app/api/buy-letter",
-          formData
-        );
+        if (isElectron) {
+          // Use apiService for Electron (handles offline)
+          response = await apiService.post("/api/buy-letter", formData);
+        } else {
+          // Use axios directly for web browser
+          response = await axios.post(
+            "https://ok-motor-51l3.vercel.app/api/buy-letter",
+            formData
+          );
+        }
         alert("Buy letter saved successfully!");
       }
       return response.data;
@@ -587,21 +613,40 @@ const BuyLetterForm = () => {
       await simulateProgress();
       setIsSaving(true);
 
-      const existingLetter = await axios.get(
-        `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
-        {
-          headers: {},
-        }
-      );
+      // Check if we're in Electron
+      const isElectron = window.electronAPI !== undefined;
+
+      let existingLetter;
+      if (isElectron) {
+        // Use apiService for Electron (handles offline)
+        existingLetter = await apiService.get(
+          `/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
+        );
+      } else {
+        // Use axios directly for web browser
+        existingLetter = await axios.get(
+          `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
+          {
+            headers: {},
+          }
+        );
+      }
 
       let savedLetterData;
       if (existingLetter.data && existingLetter.data.length > 0) {
         savedLetterData = existingLetter.data[0];
       } else {
-        const response = await axios.post(
-          "https://ok-motor-51l3.vercel.app/api/buy-letter",
-          formData
-        );
+        let response;
+        if (isElectron) {
+          // Use apiService for Electron (handles offline)
+          response = await apiService.post("/api/buy-letter", formData);
+        } else {
+          // Use axios directly for web browser
+          response = await axios.post(
+            "https://ok-motor-51l3.vercel.app/api/buy-letter",
+            formData
+          );
+        }
         savedLetterData = response.data;
       }
       const buyLetterUrl = "/templates/buyletter.pdf";
@@ -777,21 +822,40 @@ const BuyLetterForm = () => {
       await simulateProgress();
       setIsSaving(true);
 
-      const existingLetter = await axios.get(
-        `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
-        {
-          headers: {},
-        }
-      );
+      // Check if we're in Electron
+      const isElectron = window.electronAPI !== undefined;
+
+      let existingLetter;
+      if (isElectron) {
+        // Use apiService for Electron (handles offline)
+        existingLetter = await apiService.get(
+          `/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
+        );
+      } else {
+        // Use axios directly for web browser
+        existingLetter = await axios.get(
+          `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
+          {
+            headers: {},
+          }
+        );
+      }
 
       let savedLetterData;
       if (existingLetter.data && existingLetter.data.length > 0) {
         savedLetterData = existingLetter.data[0];
       } else {
-        const response = await axios.post(
-          "https://ok-motor-51l3.vercel.app/api/buy-letter",
-          formData
-        );
+        let response;
+        if (isElectron) {
+          // Use apiService for Electron (handles offline)
+          response = await apiService.post("/api/buy-letter", formData);
+        } else {
+          // Use axios directly for web browser
+          response = await axios.post(
+            "https://ok-motor-51l3.vercel.app/api/buy-letter",
+            formData
+          );
+        }
         savedLetterData = response.data;
       }
 
@@ -1220,7 +1284,7 @@ const BuyLetterForm = () => {
       formData.vehiclekm ? `${formatKm(formData.vehiclekm)} km` : "N/A",
     ];
 
-    const columnWidths = [ 60, 40, 60, 80, 80, 40, 60];
+    const columnWidths = [60, 40, 60, 80, 80, 40, 60];
 
     vehicleValues.forEach((value, index) => {
       const maxWidth = columnWidths[index];
@@ -1296,13 +1360,11 @@ const BuyLetterForm = () => {
       }
     );
     page.drawText(
-      `Amount in Words: ${
-        formatIndianAmountInWords(
-          !formData.saleAmount || isNaN(Number(formData.saleAmount))
-            ? 0
-            : Number(formData.saleAmount)
-        )
-      }`,
+      `Amount in Words: ${formatIndianAmountInWords(
+        !formData.saleAmount || isNaN(Number(formData.saleAmount))
+          ? 0
+          : Number(formData.saleAmount)
+      )}`,
       {
         x: 60,
         y: 460,
@@ -1402,14 +1464,18 @@ const BuyLetterForm = () => {
   };
 
   return (
-    <div style={{
-      ...styles.container,
-      paddingTop: isMobile ? "80px" : "0",
-    }}>
-      <div style={{
-        ...styles.topBar,
-        display: isMobile && !isSidebarOpen ? "block" : "none",
-      }}>
+    <div
+      style={{
+        ...styles.container,
+        paddingTop: isMobile ? "80px" : "0",
+      }}
+    >
+      <div
+        style={{
+          ...styles.topBar,
+          display: isMobile && !isSidebarOpen ? "block" : "none",
+        }}
+      >
         <div
           style={{
             ...styles.hamburgerMenu,
@@ -1567,7 +1633,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 35 : 35}
+                    maxLength={selectedLanguage === "hindi" ? 35 : 35}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1590,7 +1656,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 36 : 37}
+                    maxLength={selectedLanguage === "hindi" ? 36 : 37}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1613,7 +1679,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 64 : 57}
+                    maxLength={selectedLanguage === "hindi" ? 64 : 57}
                   />
                 </div>
 
@@ -1734,7 +1800,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 30 : 40}
+                    maxLength={selectedLanguage === "hindi" ? 30 : 40}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1788,7 +1854,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 14 : 19}
+                    maxLength={selectedLanguage === "hindi" ? 14 : 19}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1811,7 +1877,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 15 : 16}
+                    maxLength={selectedLanguage === "hindi" ? 15 : 16}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1834,7 +1900,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 9 : 8}
+                    maxLength={selectedLanguage === "hindi" ? 9 : 8}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1857,7 +1923,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 11 : 14}
+                    maxLength={selectedLanguage === "hindi" ? 11 : 14}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1880,7 +1946,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 17 : 17}
+                    maxLength={selectedLanguage === "hindi" ? 17 : 17}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1903,7 +1969,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 12 : 12}
+                    maxLength={selectedLanguage === "hindi" ? 12 : 12}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -1989,7 +2055,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 27 : 30}
+                    maxLength={selectedLanguage === "hindi" ? 27 : 30}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2012,7 +2078,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 20 : 25}
+                    maxLength={selectedLanguage === "hindi" ? 20 : 25}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2035,7 +2101,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 100 : 40}
+                    maxLength={selectedLanguage === "hindi" ? 100 : 40}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2058,7 +2124,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 30 : 14}
+                    maxLength={selectedLanguage === "hindi" ? 30 : 14}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2081,7 +2147,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 100 : 29}
+                    maxLength={selectedLanguage === "hindi" ? 100 : 29}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2104,7 +2170,7 @@ const BuyLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={selectedLanguage === 'hindi' ? 20 : 36}
+                    maxLength={selectedLanguage === "hindi" ? 20 : 36}
                   />
                 </div>
               </div>
@@ -2286,7 +2352,7 @@ const BuyLetterForm = () => {
                       ...styles.formInput,
                       ...(focusedInput === "note" ? styles.inputFocused : {}),
                     }}
-                    maxLength={selectedLanguage === 'hindi' ? 80 : 100}
+                    maxLength={selectedLanguage === "hindi" ? 80 : 100}
                     rows={3}
                   />
                 </div>
