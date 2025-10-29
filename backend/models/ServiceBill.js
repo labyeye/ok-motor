@@ -71,6 +71,13 @@ const ServiceBillSchema = new mongoose.Schema({
   technicianNotes: { type: String },
   warrantyInfo: { type: String },
   
+  // Versioning fields - to track document history
+  originalDocumentId: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceBill', default: null },
+  previousVersionId: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceBill', default: null },
+  version: { type: Number, default: 1 },
+  editedAt: { type: Date },
+  editedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  
   // Reference to user who created it
   user: { 
     type: mongoose.Schema.Types.ObjectId, 

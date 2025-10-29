@@ -132,6 +132,27 @@ const advanceBillSchema = new mongoose.Schema({
     sparse: true
   },
 
+  // Version tracking fields
+  originalDocumentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'AdvanceBill'
+  },
+  previousVersionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'AdvanceBill'
+  },
+  version: {
+    type: Number,
+    default: 1
+  },
+  editedAt: {
+    type: Date
+  },
+  editedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
   // User who created this bill
   user: {
     type: mongoose.Schema.Types.ObjectId,
