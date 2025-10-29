@@ -57,17 +57,60 @@ const BuyLetterHistory = () => {
     const fetchBuyLetters = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
-          `https://ok-motor-51l3.vercel.app/api/buy-letter?page=${currentPage}`,
-          {
-            headers: {},
+        
+        // Check if online
+        const isOnline = navigator.onLine;
+        
+        if (isOnline) {
+          // ONLINE - Fetch from server
+          const response = await axios.get(
+            `https://ok-motor-51l3.vercel.app/api/buy-letter?page=${currentPage}`,
+            {
+              headers: {},
+            }
+          );
+          console.log("API Response:", response.data);
+          setBuyLetters(response.data.buyLetters);
+          setTotalPages(response.data.pages);
+        } else {
+          // OFFLINE - Fetch from local storage
+          console.log('Offline mode - loading from local storage');
+          const offlineStorage = (await import('../services/offlineStorage')).default;
+          const result = await offlineStorage.find('buyLetters');
+          
+          if (result.success && result.data) {
+            // Sort by creation date (newest first)
+            const sortedData = result.data.sort((a, b) => 
+              new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+            );
+            setBuyLetters(sortedData);
+            setTotalPages(1); // No pagination for offline data
+          } else {
+            setBuyLetters([]);
+            setTotalPages(1);
           }
-        );
-        console.log("API Response:", response.data);
-        setBuyLetters(response.data.buyLetters);
-        setTotalPages(response.data.pages);
+        }
       } catch (error) {
         console.error("Error details:", error.response?.data || error.message);
+        
+        // If online fetch fails, try offline as fallback
+        if (navigator.onLine) {
+          console.log('Online fetch failed, trying offline fallback');
+          try {
+            const offlineStorage = (await import('../services/offlineStorage')).default;
+            const result = await offlineStorage.find('buyLetters');
+            
+            if (result.success && result.data) {
+              const sortedData = result.data.sort((a, b) => 
+                new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+              );
+              setBuyLetters(sortedData);
+              setTotalPages(1);
+            }
+          } catch (offlineError) {
+            console.error('Offline fallback also failed:', offlineError);
+          }
+        }
       } finally {
         setLoading(false);
       }
@@ -989,19 +1032,36 @@ const BuyLetterHistory = () => {
     if (window.confirm("Are you sure you want to delete this buy letter?")) {
       try {
         const token = localStorage.getItem("token");
-        if (!token) {
-          alert("You are not authenticated. Please login again.");
-          logout();
-          navigate("/login");
-          return;
-        }
+        const isOnline = navigator.onLine;
+        
+        if (isOnline) {
+          // ONLINE - Delete from server
+          if (!token) {
+            alert("You are not authenticated. Please login again.");
+            logout();
+            navigate("/login");
+            return;
+          }
 
-        await axios.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
+          await axios.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
+          alert("Buy letter deleted successfully!");
+        } else {
+          // OFFLINE - Delete from local storage
+          const offlineStorage = (await import('../services/offlineStorage')).default;
+          const result = await offlineStorage.deleteById('buyLetters', id);
+          
+          if (result.success) {
+            setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
+            alert("Buy letter deleted from offline storage. Will sync when online.");
+          } else {
+            throw new Error(result.error || 'Failed to delete from offline storage');
+          }
+        }
       } catch (error) {
         console.error("Error deleting buy letter:", error);
 

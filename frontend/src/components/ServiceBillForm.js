@@ -67,8 +67,8 @@ const ServiceBillForm = () => {
     chassisNumber: "",
     engineNumber: "",
     kmReading: "",
-  serviceDate: new Date().toISOString().split("T")[0],
-  deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+    serviceDate: new Date().toISOString().split("T")[0],
+    deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
     serviceType: "regular",
     serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
     discount: 0,
@@ -207,8 +207,8 @@ const ServiceBillForm = () => {
 
   const addServiceItem = () => {
     const newItems = [
-  ...formData.serviceItems,
-  { description: "", quantity: 1, rate: 0, amount: 0 },
+      ...formData.serviceItems,
+      { description: "", quantity: 1, rate: 0, amount: 0 },
     ];
 
     setFormData({
@@ -298,7 +298,9 @@ const ServiceBillForm = () => {
         ...prev,
         ...bill,
         serviceDate: new Date().toISOString().split("T")[0],
-        deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+        deliveryDate: new Date(Date.now() + 86400000)
+          .toISOString()
+          .split("T")[0],
       }));
     }
   }, [location.state]);
@@ -312,7 +314,7 @@ const ServiceBillForm = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Modified handleSaveAndDownload function
+  // Modified handleSaveAndDownload function with offline support
   const handleSaveAndDownload = async () => {
     if (isSaving) return;
     setIsSaving(true);
@@ -327,12 +329,7 @@ const ServiceBillForm = () => {
       }
 
       const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Authentication required. Please login again.");
-        logout();
-        navigate("/login");
-        return;
-      }
+      const isOnline = navigator.onLine;
 
       // Format dates and ensure numeric fields
       const formattedData = {
@@ -345,104 +342,154 @@ const ServiceBillForm = () => {
           rate: parseFloat(item.rate) || 0,
         })),
         user: user._id,
+        // VERSIONING: Add version tracking fields
+        ...(formData._id && {
+          originalDocumentId: formData.originalDocumentId || formData._id,
+          previousVersionId: formData._id,
+          version: (formData.version || 1) + 1,
+          editedAt: new Date().toISOString(),
+          editedBy: user?._id || user?.id,
+        }),
+        ...(!formData._id && {
+          originalDocumentId: null,
+          previousVersionId: null,
+          version: 1,
+        }),
       };
 
-      // Start progress simulation
-      try {
-        let billId;
-        if (formData._id) {
-          // Update existing bill
-          const updateResponse = await axios.put(
-            `${API_BASE_URL}/service-bills/${formData._id}`,
-            formattedData,
-            {
+      let billId;
+      let pdfBlob;
+
+      if (!isOnline) {
+        // OFFLINE MODE - Save to offline storage (always create new)
+        console.log("Offline mode - saving to local storage");
+
+        // Import offline storage
+        const offlineStorage = (await import("../services/offlineStorage"))
+          .default;
+
+        // Always create new version, never update
+        const result = await offlineStorage.create(
+          "serviceBills",
+          formattedData
+        );
+        if (result.success) {
+          billId = result.data._id;
+          if (formData._id) {
+            alert(
+              "Service bill saved as new version offline! Will sync when online."
+            );
+          } else {
+            alert(
+              "Service bill saved offline successfully! Will sync when online."
+            );
+          }
+        } else {
+          throw new Error(result.error || "Failed to save offline");
+        }
+
+        // Generate PDF locally using pdfService
+        const pdfService = (await import("../services/pdfService")).default;
+        const pdfResult = await pdfService.generateServiceBillPDF({
+          ...formattedData,
+          _id: billId,
+          billNumber: `SRV-${new Date().getFullYear()}-${billId.substring(
+            0,
+            4
+          )}`,
+        });
+
+        if (pdfResult.success) {
+          pdfBlob = pdfResult.blob;
+          saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+        } else {
+          throw new Error(pdfResult.error || "Failed to generate PDF");
+        }
+
+        // Clear form after successful save
+        setFormData({
+          taxEnabled: false,
+          businessName: "",
+          businessGSTIN: "",
+          businessAddress: "",
+          totalAmount: 0,
+          taxAmount: 0,
+          grandTotal: 0,
+          balanceDue: 0,
+          customerName: "",
+          customerPhone: "",
+          customerAddress: "",
+          customerEmail: "",
+          vehicleType: "bike",
+          vehicleBrand: "",
+          customServiceDescription: "",
+          vehicleModel: "",
+          registrationNumber: "",
+          chassisNumber: "",
+          engineNumber: "",
+          kmReading: "",
+          serviceDate: new Date().toISOString().split("T")[0],
+          deliveryDate: new Date(Date.now() + 86400000)
+            .toISOString()
+            .split("T")[0],
+          serviceType: "regular",
+          serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
+          discount: 0,
+          taxRate: 0,
+          paymentMethod: "cash",
+          paymentStatus: "paid",
+          advancePaid: 0,
+          issuesReported: "",
+          technicianNotes: "",
+          warrantyInfo: "",
+        });
+      } else {
+        // ONLINE MODE - Save to server (always create new version)
+        if (!token) {
+          alert("Authentication required. Please login again.");
+          logout();
+          navigate("/login");
+          return;
+        }
+
+        try {
+          // Always create new document (never update) - for versioning
+          const saveResponse = await retryRequest(() =>
+            axios.post(`${API_BASE_URL}/service-bills`, formattedData, {
               headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
               },
               timeout: 30000,
-            }
-          );
-          billId = updateResponse.data?.data?._id || formData._id;
-          if (!updateResponse.data?.success) {
-              throw new Error(
-                updateResponse.data?.message || "Failed to update service bill"
-              );
-            }
-          } else {
-            const saveResponse = await retryRequest(() =>
-              axios.post(`${API_BASE_URL}/service-bills`, formattedData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-                timeout: 30000,
-              })
-            );
-            if (!saveResponse.data?.data?._id) {
-              throw new Error("Invalid response format from server");
-            }
-            billId = saveResponse.data.data._id;
-          }
-
-          // Download PDF after save/update
-          const pdfResponse = await retryRequest(() =>
-            axios.get(`${API_BASE_URL}/service-bills/${billId}/download`, {
-              responseType: "blob",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: "application/pdf",
-              },
-              timeout: 30000, // 30 second timeout
             })
           );
+          if (!saveResponse.data?.data?._id) {
+            throw new Error("Invalid response format from server");
+          }
+          billId = saveResponse.data.data._id;
 
-          const pdfBlob = new Blob([pdfResponse.data], {
-            type: "application/pdf",
+          // Generate PDF using pdfService (consistent with offline mode)
+          const pdfService = (await import("../services/pdfService")).default;
+          const pdfResult = await pdfService.generateServiceBillPDF({
+            ...formattedData,
+            _id: billId,
+            billNumber: saveResponse.data.data.billNumber,
           });
-          saveAs(pdfBlob, `service-bill-${billId}.pdf`);
 
-          alert("Service bill saved and downloaded successfully!");
+          if (pdfResult.success) {
+            pdfBlob = pdfResult.blob;
+            saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+          } else {
+            throw new Error(pdfResult.error || "Failed to generate PDF");
+          }
 
-          // Clear form after successful save
-          setFormData({
-            taxEnabled: false,
-            businessName: "",
-            businessGSTIN: "",
-            businessAddress: "",
-            totalAmount: 0,
-            taxAmount: 0,
-            grandTotal: 0,
-            balanceDue: 0,
-            customerName: "",
-            customerPhone: "",
-            customerAddress: "",
-            customerEmail: "",
-            vehicleType: "bike",
-            vehicleBrand: "",
-            customServiceDescription: "",
-            vehicleModel: "",
-            registrationNumber: "",
-            chassisNumber: "",
-            engineNumber: "",
-            kmReading: "",
-            serviceDate: new Date().toISOString().split("T")[0],
-            deliveryDate: new Date(Date.now() + 86400000)
-              .toISOString()
-              .split("T")[0],
-            serviceType: "regular",
-            serviceItems: [
-              { description: "", quantity: 1, rate: 0, amount: 0 },
-            ],
-            discount: 0,
-            taxRate: 0,
-            paymentMethod: "cash",
-            paymentStatus: "paid",
-            advancePaid: 0,
-            issuesReported: "",
-            technicianNotes: "",
-            warrantyInfo: "",
-          });
+          if (formData._id) {
+            alert(
+              "Service bill saved as new version! Original remains unchanged."
+            );
+          } else {
+            alert("Service bill saved and downloaded successfully!");
+          }
 
           // Clear form after successful save
           setFormData({
@@ -513,11 +560,8 @@ const ServiceBillForm = () => {
           }
 
           alert(errorMessage);
-        } finally {
-          setIsSaving(false);
-          setIsDownloading(false);
-          setDownloadProgress(0);
         }
+      }
     } catch (error) {
       console.error("Error in handleSaveAndDownload:", error);
       alert("Error generating PDF. Please try again.");
@@ -648,7 +692,11 @@ const ServiceBillForm = () => {
   // Helper to wait for a given number of milliseconds
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  const retryRequest = async (requestFn, maxRetries = 3, initialDelay = 1000) => {
+  const retryRequest = async (
+    requestFn,
+    maxRetries = 3,
+    initialDelay = 1000
+  ) => {
     let delay = initialDelay;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -949,14 +997,18 @@ const ServiceBillForm = () => {
   }
 
   return (
-    <div style={{
-      ...styles.container,
-      paddingTop: isMobile ? "80px" : "0",
-    }}>
-      <div style={{
-        ...styles.topBar,
-        display: isMobile && !isSidebarOpen ? "block" : "none",
-      }}>
+    <div
+      style={{
+        ...styles.container,
+        paddingTop: isMobile ? "80px" : "0",
+      }}
+    >
+      <div
+        style={{
+          ...styles.topBar,
+          display: isMobile && !isSidebarOpen ? "block" : "none",
+        }}
+      >
         <div
           style={{
             ...styles.hamburgerMenu,
@@ -976,18 +1028,20 @@ const ServiceBillForm = () => {
       )}
 
       {/* Sidebar */}
-      <div style={{
-        ...styles.sidebar,
-        ...(isMobile
-          ? {
-              transform: isSidebarOpen
-                ? "translateX(0)"
-                : "translateX(-100%)",
-              position: "fixed",
-              zIndex: 15,
-            }
-          : {}),
-      }}>
+      <div
+        style={{
+          ...styles.sidebar,
+          ...(isMobile
+            ? {
+                transform: isSidebarOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
+                position: "fixed",
+                zIndex: 15,
+              }
+            : {}),
+        }}
+      >
         <div style={styles.sidebarHeader}>
           <img
             src={logo}
@@ -1007,66 +1061,66 @@ const ServiceBillForm = () => {
 
         <nav style={styles.nav}>
           {menuItems.map((item) => (
-                      <div key={item.name}>
-                        <div
-                          style={{
-                            ...styles.menuItem,
-                            ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                          }}
-                          onClick={() => {
-                            if (item.submenu) {
-                              toggleMenu(item.name);
-                            } else {
-                              // Pass the path as-is (could be string or function)
-                              handleMenuClick(item.name, item.path);
-                            }
-                          }}
-                        >
-                          <div style={styles.menuItemContent}>
-                            <item.icon size={20} style={styles.menuIcon} />
-                            <span style={styles.menuText}>{item.name}</span>
-                          </div>
-                          {item.submenu &&
-                            (expandedMenus[item.name] ? (
-                              <ChevronDown size={16} />
-                            ) : (
-                              <ChevronRight size={16} />
-                            ))}
-                        </div>
-          
-                        {item.submenu && (
-                          <div
-                            style={{
-                              ...styles.submenu,
-                              maxHeight: expandedMenus[item.name]
-                                ? `${item.submenu.length * 48}px`
-                                : "0px",
-                              opacity: expandedMenus[item.name] ? 1 : 0,
-                              transition:
-                                "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
-                              overflow: "hidden",
-                            }}
-                          >
-                            {item.submenu.map((subItem) => (
-                              <div
-                                key={subItem.name}
-                                style={{
-                                  ...styles.submenuItem,
-                                  ...(activeMenu === subItem.name
-                                    ? styles.submenuItemActive
-                                    : {}),
-                                }}
-                                onClick={() =>
-                                  handleMenuClick(subItem.name, subItem.path)
-                                }
-                              >
-                                {subItem.name}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+            <div key={item.name}>
+              <div
+                style={{
+                  ...styles.menuItem,
+                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
+                }}
+                onClick={() => {
+                  if (item.submenu) {
+                    toggleMenu(item.name);
+                  } else {
+                    // Pass the path as-is (could be string or function)
+                    handleMenuClick(item.name, item.path);
+                  }
+                }}
+              >
+                <div style={styles.menuItemContent}>
+                  <item.icon size={20} style={styles.menuIcon} />
+                  <span style={styles.menuText}>{item.name}</span>
+                </div>
+                {item.submenu &&
+                  (expandedMenus[item.name] ? (
+                    <ChevronDown size={16} />
+                  ) : (
+                    <ChevronRight size={16} />
+                  ))}
+              </div>
+
+              {item.submenu && (
+                <div
+                  style={{
+                    ...styles.submenu,
+                    maxHeight: expandedMenus[item.name]
+                      ? `${item.submenu.length * 48}px`
+                      : "0px",
+                    opacity: expandedMenus[item.name] ? 1 : 0,
+                    transition:
+                      "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
+                    overflow: "hidden",
+                  }}
+                >
+                  {item.submenu.map((subItem) => (
+                    <div
+                      key={subItem.name}
+                      style={{
+                        ...styles.submenuItem,
+                        ...(activeMenu === subItem.name
+                          ? styles.submenuItemActive
+                          : {}),
+                      }}
+                      onClick={() =>
+                        handleMenuClick(subItem.name, subItem.path)
+                      }
+                    >
+                      {subItem.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
 
           <div style={styles.logoutButton} onClick={handleLogout}>
             <LogOut size={20} style={styles.menuIcon} />
@@ -2152,7 +2206,8 @@ const styles = {
     backgroundColor: "rgba(26, 37, 54, 0.8)",
     maxHeight: "0px",
     overflow: "hidden",
-    transition: "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition:
+      "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
     opacity: 0,
   },
   submenuItem: {

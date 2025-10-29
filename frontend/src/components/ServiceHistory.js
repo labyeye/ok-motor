@@ -71,27 +71,96 @@ const ServiceHistory = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        
+        // Check if online
+        const isOnline = navigator.onLine;
 
-        // Fetch service bills
-        const serviceResponse = await axios.get(
-          `https://ok-motor-51l3.vercel.app/api/service-bills?page=${currentPage}`
-        );
-        setServiceBills(serviceResponse.data.data || serviceResponse.data);
-        setTotalPages(serviceResponse.data.totalPages || 1);
+        if (isOnline) {
+          // ONLINE - Fetch from server
+          // Fetch service bills
+          const serviceResponse = await axios.get(
+            `https://ok-motor-51l3.vercel.app/api/service-bills?page=${currentPage}`
+          );
+          setServiceBills(serviceResponse.data.data || serviceResponse.data);
+          setTotalPages(serviceResponse.data.totalPages || 1);
 
-        // Fetch purchase history (if needed)
-        const purchaseResponse = await axios.get(
-          `${config.API_BASE_URL}/buy-letter`
-        );
-        setPurchaseHistory(purchaseResponse.data.data || purchaseResponse.data);
+          // Fetch purchase history (if needed)
+          const purchaseResponse = await axios.get(
+            `${config.API_BASE_URL}/buy-letter`
+          );
+          setPurchaseHistory(purchaseResponse.data.data || purchaseResponse.data);
 
-        // Fetch sell history (if needed)
-        const sellResponse = await axios.get(
-          `https://ok-motor-51l3.vercel.app/api/sell-letters`
-        );
-        setSellHistory(sellResponse.data.data || sellResponse.data);
+          // Fetch sell history (if needed)
+          const sellResponse = await axios.get(
+            `https://ok-motor-51l3.vercel.app/api/sell-letters`
+          );
+          setSellHistory(sellResponse.data.data || sellResponse.data);
+        } else {
+          // OFFLINE - Fetch from local storage
+          console.log('Offline mode - loading service bills from local storage');
+          const offlineStorage = (await import('../services/offlineStorage')).default;
+          
+          // Fetch service bills
+          const serviceResult = await offlineStorage.find('serviceBills');
+          if (serviceResult.success && serviceResult.data) {
+            const sortedData = serviceResult.data.sort((a, b) => 
+              new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+            );
+            setServiceBills(sortedData);
+          } else {
+            setServiceBills([]);
+          }
+          
+          // Fetch buy letters
+          const buyResult = await offlineStorage.find('buyLetters');
+          if (buyResult.success && buyResult.data) {
+            setPurchaseHistory(buyResult.data);
+          } else {
+            setPurchaseHistory([]);
+          }
+          
+          // Fetch sell letters
+          const sellResult = await offlineStorage.find('sellLetters');
+          if (sellResult.success && sellResult.data) {
+            setSellHistory(sellResult.data);
+          } else {
+            setSellHistory([]);
+          }
+          
+          setTotalPages(1);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
+        
+        // If online fetch fails, try offline as fallback
+        if (navigator.onLine) {
+          console.log('Online fetch failed, trying offline fallback');
+          try {
+            const offlineStorage = (await import('../services/offlineStorage')).default;
+            
+            const serviceResult = await offlineStorage.find('serviceBills');
+            if (serviceResult.success && serviceResult.data) {
+              const sortedData = serviceResult.data.sort((a, b) => 
+                new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+              );
+              setServiceBills(sortedData);
+            }
+            
+            const buyResult = await offlineStorage.find('buyLetters');
+            if (buyResult.success) {
+              setPurchaseHistory(buyResult.data || []);
+            }
+            
+            const sellResult = await offlineStorage.find('sellLetters');
+            if (sellResult.success) {
+              setSellHistory(sellResult.data || []);
+            }
+            
+            setTotalPages(1);
+          } catch (offlineError) {
+            console.error('Offline fallback also failed:', offlineError);
+          }
+        }
       } finally {
         setLoading(false);
       }

@@ -24,6 +24,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { generateAdvanceClientPDF } from "../utils/generateAdvanceClientPDF";
+import pdfService from "../services/pdfService";
+import networkService from "../services/networkService";
+import offlineStorage from "../services/offlineStorage";
 import logo from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 import logo1 from "../images/okmotorback.png";
@@ -231,6 +234,8 @@ const [formData, setFormData] = useState({
       // Start progress simulation
       const progressPromise = simulateProgress();
 
+      const isOnline = networkService.getStatus();
+
       const requestData = {
         ...formData,
         user: user._id,
@@ -239,43 +244,155 @@ const [formData, setFormData] = useState({
         grandTotal: parseFloat(formData.grandTotal) || 0,
         balanceDue: parseFloat(formData.balanceDue) || 0,
         kmReading: parseFloat(formData.kmReading) || 0,
+        discount: parseFloat(formData.discount) || 0,
+        // VERSIONING: Add version tracking fields
+        ...(formData._id && {
+          originalDocumentId: formData.originalDocumentId || formData._id,
+          previousVersionId: formData._id,
+          version: (formData.version || 1) + 1,
+          editedAt: new Date().toISOString(),
+          editedBy: user?._id || user?.id,
+        }),
+        ...(!formData._id && {
+          originalDocumentId: null,
+          previousVersionId: null,
+          version: 1,
+        }),
       };
 
-      // Online mode: Normal save and download
-      const saveResponse = await axios.post(
-        "https://ok-motor-51l3.vercel.app/api/advance-bills",
-        requestData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      let billId;
+      let pdfBlob;
 
-      if (!saveResponse.data?.data?._id) {
-        throw new Error("Invalid response format from server");
+      if (!isOnline) {
+        // OFFLINE MODE - Save to offline storage
+        console.log('Offline mode - saving to local storage');
+
+        // Always create new version, never update
+        const result = await offlineStorage.create('advanceBills', requestData);
+        if (result.success) {
+          billId = result.data._id;
+          if (formData._id) {
+            alert("Advance bill saved as new version offline! Will sync when online.");
+          } else {
+            alert("Advance bill saved offline successfully! Will sync when online.");
+          }
+        } else {
+          throw new Error(result.error || 'Failed to save offline');
+        }
+
+        // Generate PDF locally using pdfService
+        const pdfResult = await pdfService.generateAdvanceBillPDF({
+          ...requestData,
+          _id: billId,
+          billNumber: `ADV-${new Date().getFullYear()}-${billId.substring(0, 4)}`
+        });
+
+        if (pdfResult.success) {
+          pdfBlob = pdfResult.blob;
+        } else {
+          throw new Error(pdfResult.error || 'Failed to generate PDF');
+        }
+
+        // Wait for progress to complete
+        await progressPromise;
+
+        saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+
+        // Clear form after successful save
+        setFormData({
+          customerName: "",
+          customerPhone: "",
+          customerAddress: "",
+          customerEmail: "",
+          vehicleType: "bike",
+          vehicleBrand: "",
+          vehicleModel: "",
+          registrationNumber: "",
+          chassisNumber: "",
+          engineNumber: "",
+          kmReading: "",
+          serviceDate: new Date().toISOString().split("T")[0],
+          deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+          totalAmount: 0,
+          advancePaid: 0,
+          grandTotal: 0,
+          balanceDue: 0,
+          discount: 0,
+          paymentMethod: "cash",
+          note: "",
+        });
+
+      } else {
+        // ONLINE MODE - Save to server
+        console.log('Online mode - saving to server');
+
+        // Always create new document (never update) - for versioning
+        const saveResponse = await axios.post(
+          "https://ok-motor-51l3.vercel.app/api/advance-bills",
+          requestData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!saveResponse.data?.data?._id) {
+          throw new Error("Invalid response format from server");
+        }
+
+        billId = saveResponse.data.data._id;
+
+        // Generate PDF using pdfService
+        const pdfResult = await pdfService.generateAdvanceBillPDF({
+          ...requestData,
+          _id: billId,
+          billNumber: saveResponse.data.data.billNumber
+        });
+
+        if (pdfResult.success) {
+          pdfBlob = pdfResult.blob;
+        } else {
+          throw new Error(pdfResult.error || 'Failed to generate PDF');
+        }
+
+        // Wait for progress to complete
+        await progressPromise;
+
+        saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+
+        if (formData._id) {
+          alert("Advance bill saved as new version! Original remains unchanged.");
+        } else {
+          alert("Advance bill saved and downloaded successfully!");
+        }
+
+        // Clear form after successful save
+        setFormData({
+          customerName: "",
+          customerPhone: "",
+          customerAddress: "",
+          customerEmail: "",
+          vehicleType: "bike",
+          vehicleBrand: "",
+          vehicleModel: "",
+          registrationNumber: "",
+          chassisNumber: "",
+          engineNumber: "",
+          kmReading: "",
+          serviceDate: new Date().toISOString().split("T")[0],
+          deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+          totalAmount: 0,
+          advancePaid: 0,
+          grandTotal: 0,
+          balanceDue: 0,
+          discount: 0,
+          paymentMethod: "cash",
+          note: "",
+        });
       }
 
-      const billId = saveResponse.data.data._id;
-      const pdfResponse = await axios.get(
-        `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/pdf",
-          },
-        }
-      );
-
-      // Wait for progress to complete
-      await progressPromise;
-
-      const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-      saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
-
-      alert("Advance bill saved and downloaded successfully!");
     } catch (error) {
       console.error("Error in save and download:", error);
       
@@ -468,35 +585,15 @@ const [formData, setFormData] = useState({
       };
 
       if (forPreview) {
-        // For preview, use a preview endpoint that doesn't save data
-        try {
-          console.log("Making preview request to:", "https://ok-motor-51l3.vercel.app/api/advance-bills/preview");
-          console.log("Request data:", requestData);
-          
-          const previewResponse = await axios.post(
-            "https://ok-motor-51l3.vercel.app/api/advance-bills/preview",
-            requestData,
-            {
-              responseType: "blob",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-
-          console.log("Preview response received:", previewResponse);
-          console.log("Response data type:", typeof previewResponse.data);
-          console.log("Response data length:", previewResponse.data?.length || 'N/A');
-
-          const pdfBlob = new Blob([previewResponse.data], { type: "application/pdf" });
-          const pdfUrl = URL.createObjectURL(pdfBlob);
+        // Generate PDF using pdfService (works offline too)
+        const pdfResult = await pdfService.generateAdvanceBillPDF(requestData);
+        
+        if (pdfResult.success) {
+          const pdfUrl = URL.createObjectURL(pdfResult.blob);
           setPreviewPdf(pdfUrl);
           setShowPreviewModal(true);
-        } catch (previewError) {
-          console.error("Preview request failed:", previewError);
-          console.error("Preview error response:", previewError.response);
-          throw previewError;
+        } else {
+          throw new Error(pdfResult.error || 'Failed to generate PDF');
         }
       } else {
         // For download, save the bill first
@@ -517,19 +614,18 @@ const [formData, setFormData] = useState({
 
         const billId = saveResponse.data.data._id;
 
-        // Get the PDF for download
-        const pdfResponse = await axios.get(
-          `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
-          {
-            responseType: "blob",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        // Generate PDF using pdfService with saved bill ID
+        const pdfResult = await pdfService.generateAdvanceBillPDF({
+          ...requestData,
+          _id: billId,
+          billNumber: saveResponse.data.data.billNumber
+        });
 
-        const pdfBlob = new Blob([pdfResponse.data], { type: "application/pdf" });
-        saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+        if (pdfResult.success) {
+          saveAs(pdfResult.blob, `advance-bill-${billId}.pdf`);
+        } else {
+          throw new Error(pdfResult.error || 'Failed to generate PDF');
+        }
       }
     } catch (error) {
       console.error("Error generating PDF:", error);

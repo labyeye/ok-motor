@@ -393,81 +393,1366 @@ class PDFService {
   }
 
   /**
-   * Generate Service Bill PDF offline
+   * Generate Service Bill PDF offline - Complete template matching backend
    */
-  async generateServiceBillPDFOffline(data) {
+  async generateServiceBillPDFOffline(serviceBill) {
     try {
+      // Validate input
+      if (!serviceBill || typeof serviceBill !== 'object') {
+        throw new Error('Invalid serviceBill parameter: must be an object');
+      }
+      if (!serviceBill.serviceItems || !Array.isArray(serviceBill.serviceItems)) {
+        throw new Error('Invalid serviceBill: serviceItems must be an array');
+      }
+
+      // Parse all numeric fields safely
+      const validatedServiceBill = {
+        ...serviceBill,
+        totalAmount: parseFloat(serviceBill.totalAmount) || 0,
+        taxAmount: parseFloat(serviceBill.taxAmount) || 0,
+        discount: parseFloat(serviceBill.discount) || 0,
+        grandTotal: parseFloat(serviceBill.grandTotal) || 0,
+        advancePaid: parseFloat(serviceBill.advancePaid) || 0,
+        balanceDue: parseFloat(serviceBill.balanceDue) || 0,
+        taxRate: parseFloat(serviceBill.taxRate) || 0,
+        serviceItems: serviceBill.serviceItems.map((item) => {
+          const quantity = parseFloat(item.quantity) || 0;
+          const rate = parseFloat(item.rate) || 0;
+          const amount = item.amount !== undefined && item.amount !== null && item.amount !== ''
+            ? parseFloat(item.amount) || 0
+            : rate * quantity;
+          return { ...item, quantity, rate, amount };
+        })
+      };
+      serviceBill = validatedServiceBill;
+
+      // Set defaults for missing string fields
+      serviceBill.paymentMethod = serviceBill.paymentMethod || 'cash';
+      serviceBill.paymentStatus = serviceBill.paymentStatus || 'pending';
+      serviceBill.vehicleType = serviceBill.vehicleType || 'bike';
+      serviceBill.serviceType = serviceBill.serviceType || 'regular';
+      serviceBill.customerName = serviceBill.customerName || '';
+      serviceBill.customerPhone = serviceBill.customerPhone || '';
+      serviceBill.customerAddress = serviceBill.customerAddress || '';
+      serviceBill.registrationNumber = serviceBill.registrationNumber || '';
+      serviceBill.vehicleBrand = serviceBill.vehicleBrand || '';
+      serviceBill.vehicleModel = serviceBill.vehicleModel || '';
+
       const pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([595, 842]);
+      const pages = [];
+      let currentPage = pdfDoc.addPage([595, 842]);
+      pages.push(currentPage);
+
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-      const { width, height } = page.getSize();
-      let yPosition = height - 50;
+      // Load logo (if available from local assets)
+      let logoImage = null;
+      try {
+        const logoPath = '/images/okmotorback.png';
+        const logoResponse = await fetch(logoPath);
+        if (logoResponse.ok) {
+          const logoBytes = await logoResponse.arrayBuffer();
+          logoImage = await pdfDoc.embedPng(logoBytes);
+        }
+      } catch (logoError) {
+        console.warn('Logo not found, continuing without logo:', logoError.message);
+      }
 
-      const drawText = (text, x, y, options = {}) => {
-        page.drawText(text, {
-          x, y,
-          size: options.size || 10,
-          font: options.bold ? boldFont : font,
-          color: rgb(0, 0, 0),
-          ...options
+      // Function to add watermark
+      const addWatermark = (page) => {
+        if (logoImage) {
+          page.drawImage(logoImage, {
+            x: 280, y: 200,
+            width: 450, height: 400,
+            opacity: 0.4,
+            rotate: degrees(45)
+          });
+        }
+      };
+
+      // Function to add page number
+      const addPageNumber = (page, currentPageNum, totalPages) => {
+        page.drawText(`${currentPageNum}/${totalPages}`, {
+          x: 550, y: 30,
+          size: 10,
+          color: rgb(0.5, 0.5, 0.5),
+          font: font
         });
       };
 
-      // Title
-      drawText('SERVICE BILL', width / 2 - 50, yPosition, { bold: true, size: 16 });
-      yPosition -= 30;
+      addWatermark(currentPage);
 
-      // Customer Information
-      drawText('CUSTOMER INFORMATION', 50, yPosition, { bold: true, size: 12 });
-      yPosition -= 20;
-      drawText(`Name: ${data.customerName}`, 50, yPosition);
-      yPosition -= 15;
-      drawText(`Phone: ${data.customerPhone}`, 50, yPosition);
-      yPosition -= 15;
-      drawText(`Address: ${data.customerAddress}`, 50, yPosition);
-      yPosition -= 20;
+      // Header Section
+      currentPage.drawRectangle({
+        x: 0, y: 780,
+        width: 595, height: 120,
+        color: rgb(0.047, 0.098, 0.196)
+      });
 
-      // Vehicle Information
-      drawText('VEHICLE INFORMATION', 50, yPosition, { bold: true, size: 12 });
-      yPosition -= 20;
-      drawText(`Type: ${data.vehicleType}`, 50, yPosition);
-      yPosition -= 15;
-      drawText(`Brand: ${data.vehicleBrand} ${data.vehicleModel}`, 50, yPosition);
-      yPosition -= 15;
-      drawText(`Registration: ${data.registrationNumber}`, 50, yPosition);
-      yPosition -= 20;
-
-      // Service Items
-      drawText('SERVICE DETAILS', 50, yPosition, { bold: true, size: 12 });
-      yPosition -= 20;
-
-      if (data.serviceItems && data.serviceItems.length > 0) {
-        data.serviceItems.forEach((item, index) => {
-          drawText(`${index + 1}. ${item.description}`, 60, yPosition);
-          yPosition -= 15;
-          drawText(`   Qty: ${item.quantity} x ₹${item.rate} = ₹${item.amount}`, 60, yPosition);
-          yPosition -= 15;
+      if (logoImage) {
+        currentPage.drawImage(logoImage, {
+          x: 50, y: 740,
+          width: 170, height: 140
         });
       }
 
-      yPosition -= 10;
-      drawText(`Total Amount: ₹${data.totalAmount}`, 50, yPosition, { bold: true });
-      yPosition -= 15;
-      drawText(`Grand Total: ₹${data.grandTotal}`, 50, yPosition, { bold: true, size: 12 });
+      currentPage.drawText('UDAYAM-BR-26-0028550', {
+        x: 400, y: 800,
+        size: 14,
+        color: rgb(0.8, 0.8, 0.8),
+        font: fontBold
+      });
+
+      // Title Section
+      currentPage.drawRectangle({
+        x: 0, y: 750,
+        width: 595, height: 30,
+        color: rgb(0.9, 0.9, 0.9)
+      });
+
+      currentPage.drawText('VEHICLE SERVICE INVOICE', {
+        x: 180, y: 758,
+        size: 18,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold
+      });
+
+      // Invoice Info
+      const invoiceNumber = serviceBill.billNumber || 
+        `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+
+      currentPage.drawText(`Invoice Number: ${invoiceNumber}`, {
+        x: 50, y: 720,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+
+      const currentDate = new Date();
+      const formatTime12Hour = (date) => {
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const hours12 = hours % 12 || 12;
+        return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
+      };
+
+      currentPage.drawText(
+        `Date: ${currentDate.toLocaleDateString('en-IN')} Time: ${formatTime12Hour(currentDate)}`,
+        {
+          x: 400, y: 720,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        }
+      );
+
+      // Divider
+      currentPage.drawLine({
+        start: { x: 50, y: 710 },
+        end: { x: 545, y: 710 },
+        thickness: 1,
+        color: rgb(0.8, 0.8, 0.8)
+      });
+
+      // Business Information (if enabled)
+      let customerY;
+      if (Boolean(serviceBill.taxEnabled)) {
+        currentPage.drawText('BUSINESS INFORMATION', {
+          x: 50, y: 690,
+          size: 12,
+          color: rgb(0.047, 0.098, 0.196),
+          font: fontBold
+        });
+
+        currentPage.drawText(`Name: ${serviceBill.businessName || 'N/A'}`, {
+          x: 60, y: 670,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+
+        currentPage.drawText(`GSTIN: ${serviceBill.businessGSTIN || 'N/A'}`, {
+          x: 380, y: 670,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+
+        const address = serviceBill.businessAddress || '';
+        const maxCharsPerLine = 30;
+        const addressLines = [];
+        for (let i = 0; i < address.length; i += maxCharsPerLine) {
+          addressLines.push(address.substring(i, i + maxCharsPerLine));
+        }
+
+        addressLines.forEach((line, index) => {
+          currentPage.drawText(index === 0 ? `Address: ${line}` : line, {
+            x: index === 0 ? 60 : 100,
+            y: 655 - index * 12,
+            size: 10,
+            color: rgb(0.2, 0.2, 0.2),
+            font: font
+          });
+        });
+
+        customerY = 600;
+      } else {
+        customerY = 690;
+      }
+
+      // Customer Information
+      currentPage.drawText('CUSTOMER DETAILS', {
+        x: 50, y: customerY,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold
+      });
+
+      currentPage.drawText(`Name: ${serviceBill.customerName || 'N/A'}`, {
+        x: 60, y: customerY - 25,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+
+      const customerAddress = serviceBill.customerAddress || '';
+      const customerAddressLines = [];
+      for (let i = 0; i < customerAddress.length; i += 30) {
+        customerAddressLines.push(customerAddress.substring(i, i + 30));
+      }
+
+      customerAddressLines.forEach((line, index) => {
+        currentPage.drawText(index === 0 ? `Address: ${line}` : line, {
+          x: index === 0 ? 60 : 100,
+          y: customerY - 40 - index * 12,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+      });
+
+      currentPage.drawText(`Phone: ${serviceBill.customerPhone || 'N/A'}`, {
+        x: 350, y: customerY - 25,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+
+      currentPage.drawText(`Email: ${serviceBill.customerEmail || 'N/A'}`, {
+        x: 350, y: customerY - 40,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+
+      const columnY = customerY - 80;
+      const leftColumnX = 50;
+      const rightColumnX = 300;
+      const columnWidth = 240;
+
+      currentPage.drawText('VEHICLE DETAILS', {
+        x: leftColumnX, y: columnY,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold
+      });
+
+      // Vehicle condition
+      currentPage.drawRectangle({
+        x: leftColumnX, y: columnY - 30,
+        width: columnWidth, height: 20,
+        color: rgb(0.9, 0.9, 0.9)
+      });
+
+      currentPage.drawText('Condition: ' + (serviceBill.vehicleCondition || 'Excellent'), {
+        x: leftColumnX + 10, y: columnY - 23,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+
+      const vehicleDetails = [
+        { label: 'Type:', value: serviceBill.vehicleType ? serviceBill.vehicleType.toUpperCase() : 'N/A' },
+        { label: 'Brand:', value: serviceBill.vehicleBrand || 'N/A' },
+        { label: 'Model:', value: serviceBill.vehicleModel || 'N/A' },
+        { label: 'Reg No:', value: serviceBill.registrationNumber || 'N/A' },
+        {
+          label: 'KM:',
+          value: serviceBill.kmReading !== undefined && serviceBill.kmReading !== null
+            ? `${Number(serviceBill.kmReading).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              })} km`
+            : 'N/A'
+        }
+      ];
+
+      let vehicleY = columnY - 50;
+      vehicleDetails.forEach((detail, index) => {
+        currentPage.drawText(detail.label, {
+          x: leftColumnX + 10, y: vehicleY - index * 15,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: fontBold
+        });
+
+        currentPage.drawText(detail.value, {
+          x: leftColumnX + 60, y: vehicleY - index * 15,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+      });
+
+      // Right Column - Service Information
+      currentPage.drawText('SERVICE DETAILS', {
+        x: rightColumnX, y: columnY,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold
+      });
+
+      const serviceDetails = [
+        {
+          label: 'Service Date:',
+          value: serviceBill.serviceDate
+            ? new Date(serviceBill.serviceDate).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })
+            : new Date().toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })
+        },
+        {
+          label: 'Delivery Date:',
+          value: serviceBill.deliveryDate
+            ? new Date(serviceBill.deliveryDate).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })
+            : new Date(Date.now() + 86400000).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })
+        },
+        {
+          label: 'Service Type:',
+          value: serviceBill.serviceType ? serviceBill.serviceType.toUpperCase() : 'N/A'
+        }
+      ];
+
+      serviceDetails.forEach((detail, index) => {
+        currentPage.drawText(detail.label, {
+          x: rightColumnX + 10, y: columnY - 25 - index * 15,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: fontBold
+        });
+
+        currentPage.drawText(detail.value, {
+          x: rightColumnX + 90, y: columnY - 25 - index * 15,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+      });
+
+      // Custom service description if applicable
+      const isCustomService = serviceBill.serviceType && serviceBill.serviceType.toLowerCase() === 'custom';
+      const hasCustomDesc = serviceBill.customServiceDescription && serviceBill.customServiceDescription.trim() !== '';
+
+      if (isCustomService && hasCustomDesc) {
+        const customDescY = columnY - 25 - serviceDetails.length * 15;
+
+        currentPage.drawText('Custom Service Description:', {
+          x: rightColumnX + 10, y: customDescY,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: fontBold
+        });
+
+        const description = serviceBill.customServiceDescription;
+        const maxCharsPerLine = 30;
+        const descLines = [];
+        for (let i = 0; i < description.length; i += maxCharsPerLine) {
+          descLines.push(description.substring(i, i + maxCharsPerLine));
+        }
+
+        descLines.forEach((line, index) => {
+          currentPage.drawText(line, {
+            x: rightColumnX + 10, y: customDescY - 15 - index * 12,
+            size: 10,
+            color: rgb(0.2, 0.2, 0.2),
+            font: font
+          });
+        });
+      }
+
+      // Service Items Table with pagination
+      const itemsStartY = columnY - 140;
+      const minItemsFirstPage = 25;
+      const maxItemsPerPage = 25;
+      let currentY = itemsStartY;
+      let currentPageItems = 0;
+      let isFirstPage = true;
+
+      if (serviceBill.serviceItems.length > 0) {
+        currentPage.drawText('SERVICE ITEMS', {
+          x: 50, y: currentY,
+          size: 12,
+          color: rgb(0.047, 0.098, 0.196),
+          font: fontBold
+        });
+        currentY -= 20;
+      }
+
+      // Function to draw table headers
+      const drawServiceItemHeaders = (page, y) => {
+        const serviceHeaders = ['#', 'Description', 'Qty', 'Rate Rs.', 'Disc Rs.', 'Amount Rs.'];
+        const serviceHeaderPositions = [60, 100, 300, 350, 400, 470];
+
+        serviceHeaders.forEach((header, index) => {
+          page.drawText(header, {
+            x: serviceHeaderPositions[index], y: y,
+            size: 10,
+            color: rgb(0.2, 0.2, 0.2),
+            font: fontBold
+          });
+        });
+      };
+
+      drawServiceItemHeaders(currentPage, currentY);
+      currentY -= 20;
+
+      // Draw all service items
+      serviceBill.serviceItems.forEach((item, index) => {
+        if (!item || typeof item !== 'object') return;
+
+        const shouldCreateNewPage = (!isFirstPage && currentPageItems >= maxItemsPerPage) ||
+          (isFirstPage && currentPageItems >= minItemsFirstPage && currentY < 300);
+
+        if (shouldCreateNewPage) {
+          currentPage = pdfDoc.addPage([595, 842]);
+          pages.push(currentPage);
+          addWatermark(currentPage);
+          isFirstPage = false;
+          currentY = 780;
+          currentPageItems = 0;
+          drawServiceItemHeaders(currentPage, currentY);
+          currentY -= 20;
+        }
+
+        // Draw item number
+        currentPage.drawText((index + 1).toString(), {
+          x: 60, y: currentY,
+          size: 9,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+
+        // Handle description wrapping
+        const description = item.description || '';
+        const maxWidth = 180;
+        const lines = [];
+        let currentLine = '';
+
+        for (const word of description.split(' ')) {
+          const testLine = currentLine ? `${currentLine} ${word}` : word;
+          const testWidth = font.widthOfTextAtSize(testLine, 9);
+          if (testWidth <= maxWidth) {
+            currentLine = testLine;
+          } else {
+            if (currentLine) lines.push(currentLine);
+            currentLine = word;
+          }
+        }
+        if (currentLine) lines.push(currentLine);
+
+        lines.forEach((line, lineIndex) => {
+          currentPage.drawText(line, {
+            x: 100, y: currentY - lineIndex * 12,
+            size: 9,
+            color: rgb(0.2, 0.2, 0.2),
+            font: font
+          });
+        });
+
+        const descHeight = Math.max(lines.length * 12, 12);
+
+        // Draw quantity, rate, discount and amount
+        currentPage.drawText(item.quantity.toString(), {
+          x: 300, y: currentY,
+          size: 9,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+
+        const rate = parseFloat(item.rate) || 0;
+        currentPage.drawText(rate.toFixed(2), {
+          x: 350, y: currentY,
+          size: 9,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+
+        const amount = parseFloat(item.amount) || 0;
+        const qty = parseFloat(item.quantity) || 0;
+        const perUnitAmount = qty > 0 ? amount / qty : rate;
+        const discountPerUnit = rate - perUnitAmount;
+
+        currentPage.drawText(discountPerUnit.toFixed(2), {
+          x: 400, y: currentY,
+          size: 9,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+
+        currentPage.drawText(amount.toFixed(2), {
+          x: 470, y: currentY,
+          size: 9,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+
+        currentY -= descHeight;
+        currentPageItems++;
+      });
+
+      // Ensure space for totals
+      if (currentY < 300) {
+        currentPage = pdfDoc.addPage([595, 842]);
+        pages.push(currentPage);
+        addWatermark(currentPage);
+        currentY = 700;
+      }
+
+      let sectionY = currentY;
+
+      // Totals Section
+      currentPage.drawText('Subtotal:', {
+        x: 350, y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+      currentPage.drawText(serviceBill.totalAmount.toFixed(2), {
+        x: 450, y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+
+      sectionY -= 20;
+      if (serviceBill.taxEnabled) {
+        currentPage.drawText(`Tax (${serviceBill.taxRate}%):`, {
+          x: 350, y: sectionY,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+        currentPage.drawText(serviceBill.taxAmount.toFixed(2), {
+          x: 450, y: sectionY,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+        sectionY -= 20;
+      }
+
+      // Discount
+      let discountAmount = 0;
+      let discountLabel = 'Discount:';
+      if (serviceBill.discountType === 'percentage') {
+        discountAmount = ((serviceBill.discountPercentage || 0) / 100) * serviceBill.totalAmount;
+        discountLabel = `Discount (${serviceBill.discountPercentage || 0}%):`;
+      } else {
+        discountAmount = parseFloat(serviceBill.discount) || 0;
+      }
+      currentPage.drawText(discountLabel, {
+        x: 350, y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+      currentPage.drawText(discountAmount.toFixed(2), {
+        x: 450, y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+      sectionY -= 20;
+
+      // Advance Paid
+      currentPage.drawText('Advance Paid:', {
+        x: 350, y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+      currentPage.drawText(serviceBill.advancePaid.toFixed(2), {
+        x: 450, y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+      sectionY -= 20;
+
+      // Balance Due
+      currentPage.drawText('Balance Due:', {
+        x: 350, y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+      currentPage.drawText(serviceBill.balanceDue.toFixed(2), {
+        x: 450, y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+      sectionY -= 20;
+
+      currentPage.drawText('GRAND TOTAL:', {
+        x: 350, y: sectionY,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold
+      });
+      currentPage.drawText(serviceBill.grandTotal.toFixed(2), {
+        x: 450, y: sectionY,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold
+      });
+
+      sectionY -= 40;
+
+      // Payment Information
+      currentPage.drawText('Payment Method:', {
+        x: 50, y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: fontBold
+      });
+      currentPage.drawText((serviceBill.paymentMethod || 'CASH').toUpperCase(), {
+        x: 150, y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+      sectionY -= 20;
+
+      currentPage.drawText('Payment Status:', {
+        x: 50, y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: fontBold
+      });
+      currentPage.drawText((serviceBill.paymentStatus || 'PENDING').toUpperCase(), {
+        x: 150, y: sectionY,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+      sectionY -= 20;
+
+      // Issues/Notes/Warranty - helper function
+      const wrapTextByWidth = (text, maxWidth, font, size) => {
+        if (!text) return [];
+        const words = text.split(/\s+/);
+        const lines = [];
+        let currentLine = '';
+
+        for (const word of words) {
+          const testLine = currentLine ? `${currentLine} ${word}` : word;
+          const width = font.widthOfTextAtSize(testLine, size);
+          if (width <= maxWidth) {
+            currentLine = testLine;
+          } else {
+            if (currentLine) lines.push(currentLine);
+            if (font.widthOfTextAtSize(word, size) > maxWidth) {
+              let sub = '';
+              for (const ch of word) {
+                const testSub = sub + ch;
+                if (font.widthOfTextAtSize(testSub, size) <= maxWidth) {
+                  sub = testSub;
+                } else {
+                  if (sub) lines.push(sub);
+                  sub = ch;
+                }
+              }
+              if (sub) currentLine = sub;
+              else currentLine = '';
+            } else {
+              currentLine = word;
+            }
+          }
+        }
+        if (currentLine) lines.push(currentLine);
+        return lines;
+      };
+
+      const labelX = 50;
+      const contentX = 150;
+      const rightMargin = 545;
+      const contentWidth = rightMargin - contentX;
+      const fontSize = 9;
+      const titleSize = 10;
+      const lineHeight = 12;
+
+      const issues = (serviceBill.issuesReported || '').trim();
+      const notes = (serviceBill.technicianNotes || '').trim();
+      const warranty = (serviceBill.warrantyInfo || '').trim();
+
+      const issuesLines = wrapTextByWidth(issues, contentWidth, font, fontSize);
+      const notesLines = wrapTextByWidth(notes, contentWidth, font, fontSize);
+      const warrantyLines = wrapTextByWidth(warranty, contentWidth, font, fontSize);
+
+      const neededHeight =
+        (issuesLines.length > 0 ? (issuesLines.length + 1) * lineHeight + 8 : 0) +
+        (notesLines.length > 0 ? (notesLines.length + 1) * lineHeight + 8 : 0) +
+        (warrantyLines.length > 0 ? (warrantyLines.length + 1) * lineHeight + 8 : 0);
+
+      if (sectionY - neededHeight < 140) {
+        currentPage = pdfDoc.addPage([595, 842]);
+        pages.push(currentPage);
+        addWatermark(currentPage);
+        sectionY = 780;
+      }
+
+      let cursorY = sectionY;
+
+      if (issuesLines.length > 0) {
+        currentPage.drawText('ISSUES REPORTED', {
+          x: labelX, y: cursorY,
+          size: titleSize,
+          color: rgb(0.047, 0.098, 0.196),
+          font: fontBold
+        });
+        cursorY -= lineHeight;
+        issuesLines.forEach((line) => {
+          currentPage.drawText(line, {
+            x: contentX, y: cursorY,
+            size: fontSize,
+            color: rgb(0.2, 0.2, 0.2),
+            font: font
+          });
+          cursorY -= lineHeight;
+        });
+        cursorY -= 8;
+      }
+
+      if (notesLines.length > 0) {
+        currentPage.drawText('TECHNICAL NOTES', {
+          x: labelX, y: cursorY,
+          size: titleSize,
+          color: rgb(0.047, 0.098, 0.196),
+          font: fontBold
+        });
+        cursorY -= lineHeight;
+        notesLines.forEach((line) => {
+          currentPage.drawText(line, {
+            x: contentX, y: cursorY,
+            size: fontSize,
+            color: rgb(0.2, 0.2, 0.2),
+            font: font
+          });
+          cursorY -= lineHeight;
+        });
+        cursorY -= 8;
+      }
+
+      if (warrantyLines.length > 0) {
+        currentPage.drawText('WARRANTY INFORMATION', {
+          x: labelX, y: cursorY,
+          size: titleSize,
+          color: rgb(0.047, 0.098, 0.196),
+          font: fontBold
+        });
+        cursorY -= lineHeight;
+        warrantyLines.forEach((line) => {
+          currentPage.drawText(line, {
+            x: contentX, y: cursorY,
+            size: fontSize,
+            color: rgb(0.2, 0.2, 0.2),
+            font: font
+          });
+          cursorY -= lineHeight;
+        });
+      }
+
+      // Footer with Signatures
+      const footerY = 80;
+
+      currentPage.drawText('Customer Signature', {
+        x: 100, y: footerY,
+        size: 10,
+        color: rgb(0.4, 0.4, 0.4),
+        font: font
+      });
+
+      currentPage.drawLine({
+        start: { x: 50, y: footerY + 15 },
+        end: { x: 250, y: footerY + 15 },
+        thickness: 1,
+        color: rgb(0.6, 0.6, 0.6)
+      });
+
+      currentPage.drawText('Authorized Signatory', {
+        x: 350, y: footerY,
+        size: 10,
+        color: rgb(0.4, 0.4, 0.4),
+        font: font
+      });
+
+      currentPage.drawLine({
+        start: { x: 300, y: footerY + 15 },
+        end: { x: 500, y: footerY + 15 },
+        thickness: 1,
+        color: rgb(0.6, 0.6, 0.6)
+      });
+
+      currentPage.drawText('Thank you for your business!', {
+        x: 220, y: footerY - 30,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold
+      });
+
+      currentPage.drawText('OK MOTORS | Pillar num.53, Bailey Rd,  Raja Bazar,  Patna, Bihar 800014', {
+        x: 130, y: footerY - 50,
+        size: 8,
+        color: rgb(0.5, 0.5, 0.5),
+        font: font
+      });
+
+      // Add page numbers
+      const totalPages = pages.length;
+      pages.forEach((page, index) => {
+        addPageNumber(page, index + 1, totalPages);
+      });
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
 
       if (window.electronAPI) {
-        const filename = `service-bill-${data.registrationNumber}-${Date.now()}.pdf`;
+        const filename = `service-bill-${serviceBill._id || serviceBill.registrationNumber}-${Date.now()}.pdf`;
         await window.electronAPI.savePDF(filename, pdfBytes);
       }
 
       return { success: true, blob, buffer: pdfBytes };
     } catch (error) {
       console.error('Error generating service bill PDF offline:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Generate Advance Bill PDF (offline-capable)
+   */
+  async generateAdvanceBillPDF(billData) {
+    if (networkService.getStatus()) {
+      try {
+        return await this.generateAdvanceBillPDFOnline(billData);
+      } catch (error) {
+        console.log('Online PDF generation failed, using offline:', error);
+      }
+    }
+    return await this.generateAdvanceBillPDFOffline(billData);
+  }
+
+  /**
+   * Generate Advance Bill PDF online
+   */
+  async generateAdvanceBillPDFOnline(billData) {
+    try {
+      const response = await axios.post(
+        `${this.baseURL}/api/advance-bills/generate-pdf`,
+        billData,
+        {
+          responseType: 'arraybuffer',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      return { success: true, blob, buffer: response.data };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Generate Advance Bill PDF offline - Complete template matching backend
+   */
+  async generateAdvanceBillPDFOffline(advanceBill) {
+    try {
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([595, 842]);
+
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      const formatKm = (val) => {
+        if (val === undefined || val === null) return '0.00';
+        const num = typeof val === 'string' ? parseFloat(val.replace(/,/g, '')) : Number(val);
+        return isNaN(num) ? '0.00' : new Intl.NumberFormat('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }).format(num);
+      };
+
+      const formatRupee = (val) => {
+        if (val === undefined || val === null) return '0.00';
+        const num = typeof val === 'string' ? parseFloat(val.replace(/,/g, '')) : Number(val);
+        return isNaN(num) ? '0.00' : new Intl.NumberFormat('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }).format(num);
+      };
+
+      const formatRupeeWithSymbol = (val) => `Rs.${formatRupee(val)}`;
+
+      const formatTime12Hour = (date) => {
+        if (!date) return '';
+        const d = date instanceof Date ? date : new Date(date);
+        const hours = d.getHours();
+        const minutes = d.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const hours12 = hours % 12 || 12;
+        return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
+      };
+
+      // Load logo
+      let logoImage = null;
+      try {
+        const logoPath = '/images/okmotorback.png';
+        const logoResponse = await fetch(logoPath);
+        if (logoResponse.ok) {
+          const logoBytes = await logoResponse.arrayBuffer();
+          logoImage = await pdfDoc.embedPng(logoBytes);
+        }
+      } catch (logoError) {
+        console.warn('Logo not found:', logoError.message);
+      }
+
+      const pageWidth = 595;
+
+      // Header Section
+      page.drawRectangle({
+        x: 0, y: 780,
+        width: pageWidth, height: 80,
+        color: rgb(0.047, 0.098, 0.196)
+      });
+
+      if (logoImage) {
+        page.drawImage(logoImage, {
+          x: 50, y: 744,
+          width: 160, height: 130
+        });
+
+        page.drawImage(logoImage, {
+          x: 200, y: 250,
+          width: 300, height: 280,
+          opacity: 0.15,
+          rotate: degrees(45)
+        });
+      }
+
+      page.drawText('UDAYAM-BR-26-0028550', {
+        x: 400, y: 815,
+        size: 14,
+        color: rgb(0.8, 0.8, 0.8),
+        font: fontBold
+      });
+
+      // Title Section
+      page.drawRectangle({
+        x: 0, y: 750,
+        width: pageWidth, height: 30,
+        color: rgb(0.9, 0.9, 0.9)
+      });
+
+      page.drawText('ADVANCE PAYMENT INVOICE', {
+        x: 180, y: 758,
+        size: 18,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold
+      });
+
+      // Invoice Info
+      const invoiceNumber = advanceBill.billNumber || 
+        `ADV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+
+      page.drawText(`Invoice Number: ${invoiceNumber}`, {
+        x: 50, y: 720,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+
+      const currentDate = new Date();
+      const istDate = new Date(currentDate.getTime() + (5.5 * 60 * 60 * 1000));
+
+      page.drawText(
+        `Date: ${istDate.toLocaleDateString('en-IN')} Time: ${formatTime12Hour(istDate)}`,
+        {
+          x: 400, y: 720,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        }
+      );
+
+      // Divider
+      page.drawLine({
+        start: { x: 50, y: 710 },
+        end: { x: 545, y: 710 },
+        thickness: 1,
+        color: rgb(0.8, 0.8, 0.8)
+      });
+
+      page.drawRectangle({
+        x: 0, y: 685,
+        width: 595, height: 20,
+        color: rgb(0.9, 0.9, 0.9),
+        opacity: 0.6
+      });
+
+      // Customer Information
+      const customerY = 690;
+      page.drawText('CUSTOMER DETAILS', {
+        x: 50, y: customerY,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold
+      });
+
+      page.drawText(`Name: ${advanceBill.customerName || 'N/A'}`, {
+        x: 60, y: customerY - 25,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+
+      const customerAddress = advanceBill.customerAddress || 'N/A';
+      const customerAddressLines = [];
+      for (let i = 0; i < customerAddress.length; i += 45) {
+        customerAddressLines.push(customerAddress.substring(i, i + 45));
+      }
+
+      customerAddressLines.forEach((line, index) => {
+        page.drawText(index === 0 ? `Address: ${line}` : line, {
+          x: index === 0 ? 60 : 100,
+          y: customerY - 40 - index * 12,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+      });
+
+      page.drawText(`Phone: ${advanceBill.customerPhone || 'N/A'}`, {
+        x: 350, y: customerY - 25,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+
+      page.drawText(`Email: ${advanceBill.customerEmail || 'N/A'}`, {
+        x: 350, y: customerY - 40,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+
+      page.drawRectangle({
+        x: 0, y: 605,
+        width: 595, height: 20,
+        color: rgb(0.9, 0.9, 0.9),
+        opacity: 0.6
+      });
+
+      // Vehicle Information
+      const vehicleY = customerY - 80;
+      page.drawText('VEHICLE DETAILS', {
+        x: 50, y: vehicleY,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold
+      });
+
+      const vehicleDetails = [
+        { label: 'Type:', value: advanceBill.vehicleType ? advanceBill.vehicleType.toUpperCase() : 'N/A' },
+        { label: 'Brand:', value: advanceBill.vehicleBrand || 'N/A' },
+        { label: 'Model:', value: advanceBill.vehicleModel || 'N/A' },
+        { label: 'Reg No:', value: advanceBill.registrationNumber || 'N/A' },
+        { label: 'Chassis:', value: advanceBill.chassisNumber || 'N/A' },
+        { label: 'Engine:', value: advanceBill.engineNumber || 'N/A' },
+        { label: 'KM:', value: advanceBill.kmReading ? `${formatKm(advanceBill.kmReading)} km` : 'N/A' }
+      ];
+
+      vehicleDetails.forEach((detail, index) => {
+        page.drawText(detail.label, {
+          x: 60, y: vehicleY - 25 - index * 15,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: fontBold
+        });
+
+        page.drawText(detail.value, {
+          x: 120, y: vehicleY - 25 - index * 15,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+      });
+
+      page.drawRectangle({
+        x: 0, y: 465,
+        width: 595, height: 20,
+        color: rgb(0.9, 0.9, 0.9),
+        opacity: 0.6
+      });
+
+      // Service Dates
+      const serviceY = vehicleY - 140;
+      page.drawText('ADVANCE PAYMENT DATES', {
+        x: 50, y: serviceY,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold
+      });
+
+      page.drawText('Advance Payment Date:', {
+        x: 60, y: serviceY - 25,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: fontBold
+      });
+
+      page.drawText(new Date(advanceBill.serviceDate || Date.now()).toLocaleDateString('en-IN'), {
+        x: 180, y: serviceY - 25,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+
+      page.drawText('Delivery Date:', {
+        x: 350, y: serviceY - 25,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: fontBold
+      });
+
+      page.drawText(new Date(advanceBill.deliveryDate || Date.now() + 86400000).toLocaleDateString('en-IN'), {
+        x: 420, y: serviceY - 25,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font
+      });
+
+      page.drawRectangle({
+        x: 0, y: 415,
+        width: 595, height: 20,
+        color: rgb(0.9, 0.9, 0.9),
+        opacity: 0.6
+      });
+
+      // Payment Information
+      const paymentY = serviceY - 50;
+      page.drawText('PAYMENT INFORMATION', {
+        x: 50, y: paymentY,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold
+      });
+
+      const totalAmount = parseFloat(advanceBill.totalAmount) || 0;
+      const advancePaid = parseFloat(advanceBill.advancePaid) || 0;
+      const grandTotal = advanceBill.grandTotal !== undefined && advanceBill.grandTotal !== null
+        ? parseFloat(advanceBill.grandTotal) || totalAmount
+        : totalAmount;
+      const balanceDue = advanceBill.balanceDue !== undefined && advanceBill.balanceDue !== null
+        ? parseFloat(advanceBill.balanceDue) || (grandTotal - advancePaid)
+        : (grandTotal - advancePaid);
+
+      const paymentDetails = [
+        { label: 'Total Amount:', value: formatRupeeWithSymbol(totalAmount) },
+        { label: 'Discount:', value: formatRupeeWithSymbol(advanceBill.discount || 0) },
+        { label: 'Advance Paid:', value: formatRupeeWithSymbol(advancePaid) },
+        { label: 'Grand Total:', value: formatRupeeWithSymbol(grandTotal) },
+        { label: 'Balance Due:', value: formatRupeeWithSymbol(balanceDue) },
+        { label: 'Payment Method:', value: advanceBill.paymentMethod ? advanceBill.paymentMethod.toUpperCase() : 'N/A' }
+      ];
+
+      paymentDetails.forEach((detail, index) => {
+        page.drawText(detail.label, {
+          x: 60, y: paymentY - 20 - index * 15,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: fontBold
+        });
+
+        page.drawText(detail.value, {
+          x: 180, y: paymentY - 25 - index * 15,
+          size: 10,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+      });
+
+      page.drawRectangle({
+        x: 0, y: 285,
+        width: 595, height: 20,
+        color: rgb(0.9, 0.9, 0.9),
+        opacity: 0.6
+      });
+
+      // Note Section (if note exists)
+      let termsY = 250;
+
+      if (advanceBill.note && advanceBill.note.trim()) {
+        const noteY = 290;
+        page.drawText('NOTE', {
+          x: 50, y: noteY,
+          size: 12,
+          color: rgb(0.047, 0.098, 0.196),
+          font: fontBold
+        });
+
+        const noteText = advanceBill.note.trim();
+        const maxLineLength = 160;
+        const noteLines = [];
+
+        for (let i = 0; i < noteText.length; i += maxLineLength) {
+          noteLines.push(noteText.substring(i, i + maxLineLength));
+        }
+
+        noteLines.forEach((line, index) => {
+          page.drawText(line, {
+            x: 60, y: noteY - 20 - index * 12,
+            size: 10,
+            color: rgb(0.2, 0.2, 0.2),
+            font: font
+          });
+        });
+
+        termsY = noteY - 20 - (noteLines.length * 12) - 20;
+
+        page.drawRectangle({
+          x: 0, y: termsY - 5,
+          width: 595, height: 20,
+          color: rgb(0.9, 0.9, 0.9),
+          opacity: 0.6
+        });
+
+        page.drawText('TERMS AND CONDITIONS', {
+          x: 50, y: termsY,
+          size: 15,
+          color: rgb(0.047, 0.098, 0.196),
+          font: fontBold
+        });
+      } else {
+        page.drawRectangle({
+          x: 0, y: termsY + 20,
+          width: 595, height: 20,
+          color: rgb(0.9, 0.9, 0.9),
+          opacity: 0.6
+        });
+
+        page.drawText('TERMS AND CONDITIONS', {
+          x: 50, y: termsY,
+          size: 15,
+          color: rgb(0.047, 0.098, 0.196),
+          font: fontBold
+        });
+      }
+
+      const termsAndConditions = [
+        '1. If advance bill generated then no refund will be given.',
+        '2. Advance payment is non-refundable if the service is cancelled by the customer.',
+        '3. Any additional work required will be charged separately.',
+        '4. Vehicle must be collected within the delivery date.',
+        '5. Original invoice must be presented for vehicle collection.',
+        '6. Warranty applies only to parts replaced by us and for the specified period.',
+        '7. This is an advance payment invoice only, not the final bill.',
+        '8. Paper Work (Insaurance, Pollution etc.) will be charged separately.'
+      ];
+
+      termsAndConditions.forEach((term, index) => {
+        page.drawText(term, {
+          x: 60, y: termsY - 20 - index * 12,
+          size: 9,
+          color: rgb(0.2, 0.2, 0.2),
+          font: font
+        });
+      });
+
+      // Footer with Signatures
+      const footerY = 60;
+      page.drawText('Customer Signature', {
+        x: 100, y: footerY,
+        size: 10,
+        color: rgb(0.4, 0.4, 0.4),
+        font: font
+      });
+
+      page.drawLine({
+        start: { x: 50, y: footerY + 15 },
+        end: { x: 250, y: footerY + 15 },
+        thickness: 1,
+        color: rgb(0.6, 0.6, 0.6)
+      });
+
+      page.drawText('Authorized Signatory', {
+        x: 350, y: footerY,
+        size: 10,
+        color: rgb(0.4, 0.4, 0.4),
+        font: font
+      });
+
+      page.drawLine({
+        start: { x: 300, y: footerY + 15 },
+        end: { x: 500, y: footerY + 15 },
+        thickness: 1,
+        color: rgb(0.6, 0.6, 0.6)
+      });
+
+      page.drawText('Thank you for your business!', {
+        x: 220, y: footerY - 30,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold
+      });
+
+      page.drawText('OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014', {
+        x: 160, y: footerY - 50,
+        size: 8,
+        color: rgb(0.5, 0.5, 0.5),
+        font: font
+      });
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+      if (window.electronAPI) {
+        const filename = `advance-bill-${advanceBill._id || advanceBill.registrationNumber}-${Date.now()}.pdf`;
+        await window.electronAPI.savePDF(filename, pdfBytes);
+      }
+
+      return { success: true, blob, buffer: pdfBytes };
+    } catch (error) {
+      console.error('Error generating advance bill PDF offline:', error);
       return { success: false, error: error.message };
     }
   }

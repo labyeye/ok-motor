@@ -113,14 +113,55 @@ const SellLetterHistory = () => {
     const fetchSellLetters = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(
-          `https://ok-motor-51l3.vercel.app/api/sell-letters/my-letters?page=${currentPage}`,
-          { headers: {} }
-        );
-        setSellLetters(response.data);
+        // Check if online
+        const isOnline = navigator.onLine;
+        
+        if (isOnline) {
+          // ONLINE - Fetch from server
+          const response = await axios.get(
+            `https://ok-motor-51l3.vercel.app/api/sell-letters/my-letters?page=${currentPage}`,
+            { headers: {} }
+          );
+          setSellLetters(response.data);
+        } else {
+          // OFFLINE - Fetch from local storage
+          console.log('Offline mode - loading sell letters from local storage');
+          const offlineStorage = (await import('../services/offlineStorage')).default;
+          const result = await offlineStorage.find('sellLetters');
+          
+          if (result.success && result.data) {
+            // Sort by creation date (newest first)
+            const sortedData = result.data.sort((a, b) => 
+              new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+            );
+            setSellLetters(sortedData);
+          } else {
+            setSellLetters([]);
+          }
+        }
       } catch (error) {
         console.error("Error fetching sell letters:", error);
-        setSellLetters([]);
+        
+        // If online fetch fails, try offline as fallback
+        if (navigator.onLine) {
+          console.log('Online fetch failed, trying offline fallback');
+          try {
+            const offlineStorage = (await import('../services/offlineStorage')).default;
+            const result = await offlineStorage.find('sellLetters');
+            
+            if (result.success && result.data) {
+              const sortedData = result.data.sort((a, b) => 
+                new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+              );
+              setSellLetters(sortedData);
+            }
+          } catch (offlineError) {
+            console.error('Offline fallback also failed:', offlineError);
+            setSellLetters([]);
+          }
+        } else {
+          setSellLetters([]);
+        }
       }
       setTotalPages(1);
       setLoading(false);
@@ -984,22 +1025,39 @@ const SellLetterHistory = () => {
     if (window.confirm("Are you sure you want to delete this sell letter?")) {
       try {
         const token = localStorage.getItem("token");
-        if (!token) {
-          alert("You are not authenticated. Please login again.");
-          logout();
-          navigate("/login");
-          return;
-        }
-
-        await axios.delete(
-          `https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const isOnline = navigator.onLine;
+        
+        if (isOnline) {
+          // ONLINE - Delete from server
+          if (!token) {
+            alert("You are not authenticated. Please login again.");
+            logout();
+            navigate("/login");
+            return;
           }
-        );
-        setSellLetters(sellLetters.filter((letter) => letter._id !== id));
+
+          await axios.delete(
+            `https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          setSellLetters(sellLetters.filter((letter) => letter._id !== id));
+          alert("Sell letter deleted successfully!");
+        } else {
+          // OFFLINE - Delete from local storage
+          const offlineStorage = (await import('../services/offlineStorage')).default;
+          const result = await offlineStorage.deleteById('sellLetters', id);
+          
+          if (result.success) {
+            setSellLetters(sellLetters.filter((letter) => letter._id !== id));
+            alert("Sell letter deleted from offline storage. Will sync when online.");
+          } else {
+            throw new Error(result.error || 'Failed to delete from offline storage');
+          }
+        }
       } catch (error) {
         console.error("Error deleting sell letter:", error);
 

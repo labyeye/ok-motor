@@ -706,38 +706,43 @@ const SellLetterForm = () => {
       // Check if we're in Electron
       const isElectron = window.electronAPI !== undefined;
 
-      if ((editLetter && editLetter._id) || createdId) {
-        // Update existing letter
-        const updateId = createdId || editLetter._id;
+      // VERSIONING: Always create new document, never update
+      // If editing, create a new version with reference to original
+      const dataToSave = {
+        ...formData,
+        // Add version tracking fields
+        ...(editLetter?._id && {
+          originalDocumentId: editLetter.originalDocumentId || editLetter._id,
+          previousVersionId: editLetter._id,
+          version: (editLetter.version || 1) + 1,
+          editedAt: new Date().toISOString(),
+          editedBy: user?._id || user?.id,
+        }),
+        ...(!editLetter?._id && {
+          originalDocumentId: null,
+          previousVersionId: null,
+          version: 1,
+        }),
+      };
 
-        if (isElectron) {
-          // Use apiService for Electron (handles offline)
-          response = await apiService.put(
-            `/api/sell-letters/${updateId}`,
-            formData
-          );
-        } else {
-          // Use axios directly for web browser
-          response = await axios.put(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters/${updateId}`,
-            formData
-          );
-        }
-        alert("Sell letter updated successfully!");
+      // Always create new document (never update)
+      if (isElectron) {
+        // Use apiService for Electron (handles offline)
+        response = await apiService.post("/api/sell-letters", dataToSave);
       } else {
-        // Create new letter
-        if (isElectron) {
-          // Use apiService for Electron (handles offline)
-          response = await apiService.post("/api/sell-letters", formData);
-        } else {
-          // Use axios directly for web browser
-          response = await axios.post(
-            "https://ok-motor-51l3.vercel.app/api/sell-letters",
-            formData
-          );
-        }
+        // Use axios directly for web browser
+        response = await axios.post(
+          "https://ok-motor-51l3.vercel.app/api/sell-letters",
+          dataToSave
+        );
+      }
+      
+      if (editLetter?._id) {
+        alert("Sell letter saved as new version! Original remains unchanged.");
+      } else {
         alert("Sell letter saved successfully!");
       }
+
       if (response.data) {
         if (response.data._cached) {
           alert("Sell letter queued for saving when online!");
@@ -1446,11 +1451,11 @@ const SellLetterForm = () => {
       setDownloadProgress(0);
 
       await simulateProgress();
-      
+
       // Use the new PDF template loader
-      const existingPdfBytes = await loadPDFTemplate('sellletter.pdf');
+      const existingPdfBytes = await loadPDFTemplate("sellletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      
+
       const formatTime = (timeString) => {
         if (!timeString) return "";
 
@@ -1552,11 +1557,11 @@ const SellLetterForm = () => {
       setDownloadProgress(0);
 
       await simulateProgress();
-      
+
       // Use the new PDF template loader
-      const existingPdfBytes = await loadPDFTemplate('englishsell.pdf');
+      const existingPdfBytes = await loadPDFTemplate("englishsell.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      
+
       function formatTime(timeString) {
         if (!timeString) return "";
         return timeString.slice(0, 5);

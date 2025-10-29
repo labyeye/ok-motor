@@ -64,9 +64,66 @@ const BuyLetterForm = () => {
   const savePromiseRef = useRef(null);
   const saveResultRef = useRef(null);
   const [createdId, setCreatedId] = useState(null);
+  
+  // Helper function to format date for input field (YYYY-MM-DD)
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return new Date().toISOString().split("T")[0];
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return new Date().toISOString().split("T")[0];
+      return date.toISOString().split("T")[0];
+    } catch (error) {
+      return new Date().toISOString().split("T")[0];
+    }
+  };
+
+  // Helper function to format time for input field (HH:MM)
+  const formatTimeForInput = (timeString) => {
+    if (!timeString) {
+      return new Date().toLocaleTimeString("en-GB", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+    // If it's already in HH:MM format, return as is
+    if (/^\d{2}:\d{2}$/.test(timeString)) {
+      return timeString;
+    }
+    // Try to parse and format
+    try {
+      const date = new Date(timeString);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleTimeString("en-GB", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+    } catch (error) {}
+    // Fallback to current time
+    return new Date().toLocaleTimeString("en-GB", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const [formData, setFormData] = useState(
     editLetter
-      ? { ...editLetter }
+      ? {
+          ...editLetter,
+          // Ensure dates are properly formatted for input fields
+          saleDate: formatDateForInput(editLetter.saleDate),
+          todayDate: formatDateForInput(editLetter.todayDate),
+          saleTime: formatTimeForInput(editLetter.saleTime),
+          todayTime: formatTimeForInput(editLetter.todayTime),
+          // Ensure all fields are populated
+          sellerFatherName: editLetter.sellerFatherName || "",
+          buyerFatherName: editLetter.buyerFatherName || "",
+          vehicleCondition: editLetter.vehicleCondition || "running",
+          paymentMethod: editLetter.paymentMethod || "cash",
+        }
       : {
           sellerName: "",
           sellerFatherName: "",
@@ -378,35 +435,43 @@ const BuyLetterForm = () => {
       // Check if we're in Electron
       const isElectron = window.electronAPI !== undefined;
       
-      if ((editLetter && editLetter._id) || createdId) {
-        // Update existing letter
-        const updateId = createdId || editLetter._id;
-        
-        if (isElectron) {
-          // Use apiService for Electron (handles offline)
-          response = await apiService.put(`/api/buy-letter/${updateId}`, formData);
-        } else {
-          // Use axios directly for web browser
-          response = await axios.put(
-            `https://ok-motor-51l3.vercel.app/api/buy-letter/${updateId}`,
-            formData
-          );
-        }
-        alert("Buy letter updated successfully!");
+      // VERSIONING: Always create new document, never update
+      // If editing, create a new version with reference to original
+      const dataToSave = {
+        ...formData,
+        // Add version tracking fields
+        ...(editLetter?._id && {
+          originalDocumentId: editLetter.originalDocumentId || editLetter._id,
+          previousVersionId: editLetter._id,
+          version: (editLetter.version || 1) + 1,
+          editedAt: new Date().toISOString(),
+          editedBy: user?._id || user?.id,
+        }),
+        ...(!editLetter?._id && {
+          originalDocumentId: null,
+          previousVersionId: null,
+          version: 1,
+        }),
+      };
+
+      // Always create new document (never update)
+      if (isElectron) {
+        // Use apiService for Electron (handles offline)
+        response = await apiService.post("/api/buy-letter", dataToSave);
       } else {
-        // Create new letter
-        if (isElectron) {
-          // Use apiService for Electron (handles offline)
-          response = await apiService.post("/api/buy-letter", formData);
-        } else {
-          // Use axios directly for web browser
-          response = await axios.post(
-            "https://ok-motor-51l3.vercel.app/api/buy-letter",
-            formData
-          );
-        }
+        // Use axios directly for web browser
+        response = await axios.post(
+          "https://ok-motor-51l3.vercel.app/api/buy-letter",
+          dataToSave
+        );
+      }
+      
+      if (editLetter?._id) {
+        alert("Buy letter saved as new version! Original remains unchanged.");
+      } else {
         alert("Buy letter saved successfully!");
       }
+      
       return response.data;
     } catch (error) {
       console.error("Error saving/updating buy letter:", error);
