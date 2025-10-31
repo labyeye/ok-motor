@@ -24,7 +24,7 @@ const SellLetterSchema = new mongoose.Schema({
   saleDate: { type: Date, required: true, default: Date.now },
   saleTime: { type: String },
   saleAmount: { type: Number, required: true },
-  paymentMethod: { type: String, required: true, enum: ['cash', 'upi', 'bankTransfer', 'other'] },
+  paymentMethod: { type: String, required: true, enum: ['cash', 'upi', 'bankTransfer', 'loan', 'soldloan', 'other'] },
   todayDate: { type: Date },
   todayTime: { type: String },
   previousDate: { type: Date },

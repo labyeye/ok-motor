@@ -2338,6 +2338,8 @@ const BuyLetterForm = () => {
                     <option value="cash">Cash</option>
                     <option value="upi">UPI</option>
                     <option value="bankTransfer">Bank Transfer</option>
+                    <option value="loan">Loan</option>
+                    <option value="soldloan">Sold on Loan</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
