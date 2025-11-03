@@ -1425,8 +1425,17 @@ const ServiceBillForm = () => {
               </h2>
               <div style={{ marginBottom: "20px" }}>
                 {formData.serviceItems.map((item, index) => (
-                  <div key={index} style={styles.serviceItemRow}>
-                    <div style={styles.serviceItemField}>
+                  // compute responsive styles per-row so mobile stacks fields
+                  <div
+                    key={index}
+                    className="service-item-row"
+                    style={
+                      isMobile
+                        ? { ...styles.serviceItemRow, flexDirection: "column", alignItems: "stretch" }
+                        : styles.serviceItemRow
+                    }
+                  >
+                    <div style={isMobile ? { ...styles.serviceItemField, width: "100%" } : styles.serviceItemField}>
                       <label style={styles.formLabel}>
                         Description || विवरण
                       </label>
@@ -1440,15 +1449,14 @@ const ServiceBillForm = () => {
                         onBlur={() => setFocusedInput(null)}
                         style={{
                           ...styles.formInput,
-                          ...(focusedInput === "description"
-                            ? styles.inputFocused
-                            : {}),
+                          width: isMobile ? "80%" : styles.formInput.width,
+                          ...(focusedInput === "description" ? styles.inputFocused : {}),
                         }}
                         required
                         maxLength={30}
                       />
                     </div>
-                    <div style={styles.serviceItemField}>
+                    <div style={isMobile ? { ...styles.serviceItemField, width: "100%" } : styles.serviceItemField}>
                       <label style={styles.formLabel}>Rate (₹) || दर (₹)</label>
                       <input
                         type="text"
@@ -1459,9 +1467,8 @@ const ServiceBillForm = () => {
                         onBlur={() => setFocusedInput(null)}
                         style={{
                           ...styles.formInput,
-                          ...(focusedInput === "rate"
-                            ? styles.inputFocused
-                            : {}),
+                          width: isMobile ? "80%" : styles.formInput.width,
+                          ...(focusedInput === "rate" ? styles.inputFocused : {}),
                         }}
                         required
                         maxLength={10}
@@ -1486,7 +1493,7 @@ const ServiceBillForm = () => {
                       />
                     </div>
 
-                    <div style={styles.serviceItemField}>
+                    <div style={isMobile ? { ...styles.serviceItemField, width: "100%" } : styles.serviceItemField}>
                       <label style={styles.formLabel}>Qty || मात्रा</label>
                       <input
                         type="number"
@@ -1497,9 +1504,8 @@ const ServiceBillForm = () => {
                         onBlur={() => setFocusedInput(null)}
                         style={{
                           ...styles.formInput,
-                          ...(focusedInput === "quantity"
-                            ? styles.inputFocused
-                            : {}),
+                          width: isMobile ? "80%" : styles.formInput.width,
+                          ...(focusedInput === "quantity" ? styles.inputFocused : {}),
                         }}
                         min="1"
                         required
@@ -1516,7 +1522,7 @@ const ServiceBillForm = () => {
                       />
                     </div>
 
-                    <div style={styles.serviceItemField}>
+                    <div style={isMobile ? { ...styles.serviceItemField, width: "100%" } : styles.serviceItemField}>
                       <label style={styles.formLabel}>
                         Amount (₹) || राशि (₹)
                       </label>
@@ -1529,9 +1535,8 @@ const ServiceBillForm = () => {
                         onBlur={() => setFocusedInput(null)}
                         style={{
                           ...styles.formInput,
-                          ...(focusedInput === "amount"
-                            ? styles.inputFocused
-                            : {}),
+                          width: isMobile ? "80%" : styles.formInput.width,
+                          ...(focusedInput === "amount" ? styles.inputFocused : {}),
                         }}
                         required
                         maxLength={10}
@@ -1558,7 +1563,11 @@ const ServiceBillForm = () => {
                     <button
                       type="button"
                       onClick={() => removeServiceItem(index)}
-                      style={styles.removeItemButton}
+                      style={
+                        isMobile
+                          ? { ...styles.removeItemButton, alignSelf: "flex-end", marginTop: 8 }
+                          : styles.removeItemButton
+                      }
                       tabIndex={-1} // Remove from tab order since we have keyboard shortcut
                     >
                       <Trash size={16} />
@@ -2253,6 +2262,7 @@ const styles = {
     padding: "10px",
     backgroundColor: "#f8fafc",
     borderRadius: "8px",
+    width: "100%",
   },
   serviceItemField: {
     flex: 1,
@@ -2347,8 +2357,7 @@ const styles = {
     marginBottom: "8px",
   },
   formInput: {
-    width: "90%",
-    padding: "10px 12px",
+    width: "85%",
     border: "1px solid #cbd5e1",
     borderRadius: "8px",
     fontSize: "0.875rem",
@@ -2383,8 +2392,7 @@ const styles = {
     },
   },
   formTextarea: {
-    width: "90%",
-    padding: "10px 12px",
+    width: "85%",
     border: "1px solid #cbd5e1",
     borderRadius: "8px",
     fontSize: "0.875rem",
