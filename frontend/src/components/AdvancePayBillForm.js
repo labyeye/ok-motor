@@ -1394,13 +1394,19 @@ const [formData, setFormData] = useState({
           <div
             style={{
               ...styles.modalContent,
-              maxWidth: "90%",
-              width: "800px",
+              width: isMobile ? "95vw" : "800px",
+              maxWidth: isMobile ? "95vw" : "90%",
+              height: isMobile ? "80vh" : undefined,
+              overflow: "hidden",
             }}
           >
             <h3 style={styles.modalTitle}>Advance Payment Invoice Preview</h3>
             <div
-              style={{ height: "70vh", width: "100%", marginBottom: "20px" }}
+              style={{
+                height: isMobile ? "65vh" : "70vh",
+                width: "100%",
+                marginBottom: "20px",
+              }}
             >
               {previewPdf ? (
                 <iframe
@@ -1429,7 +1435,13 @@ const [formData, setFormData] = useState({
             
             <button
               style={styles.modalCloseButton}
-              onClick={() => setShowPreviewModal(false)}
+              onClick={() => {
+                try {
+                  if (previewPdf) URL.revokeObjectURL(previewPdf);
+                } catch (e) {}
+                setPreviewPdf(null);
+                setShowPreviewModal(false);
+              }}
             >
               Close Preview
             </button>
@@ -1746,7 +1758,7 @@ const styles = {
     marginBottom: "8px",
   },
   formInput: {
-    width: "90%",
+    width: "100%",
     padding: "10px 12px",
     border: "1px solid #cbd5e1",
     borderRadius: "8px",

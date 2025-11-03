@@ -2425,8 +2425,10 @@ const SellLetterForm = () => {
             <div
               style={{
                 ...styles.modalContent,
-                maxWidth: "90%",
-                width: "800px",
+                width: isMobile ? "95vw" : "800px",
+                maxWidth: isMobile ? "95vw" : "90%",
+                height: isMobile ? "80vh" : undefined,
+                overflow: "hidden",
               }}
             >
               <h3 style={styles.modalTitle}>
@@ -2434,7 +2436,11 @@ const SellLetterForm = () => {
                 {previewLanguage === "hindi" ? "Hindi" : "English"}
               </h3>
               <div
-                style={{ height: "70vh", width: "100%", marginBottom: "20px" }}
+                style={{
+                  height: isMobile ? "65vh" : "70vh",
+                  width: "100%",
+                  marginBottom: "20px",
+                }}
               >
                 {previewPdf ? (
                   <iframe
@@ -2463,7 +2469,13 @@ const SellLetterForm = () => {
 
               <button
                 style={styles.modalCloseButton}
-                onClick={() => setShowPreviewModal(false)}
+                onClick={() => {
+                  try {
+                    if (previewPdf) URL.revokeObjectURL(previewPdf);
+                  } catch (e) {}
+                  setPreviewPdf(null);
+                  setShowPreviewModal(false);
+                }}
               >
                 Close Preview
               </button>
@@ -2695,8 +2707,8 @@ const styles = {
       backgroundColor: "#e2e8f0",
     },
   },
-  form: {
-    backgroundColor: "#ffffff",
+  formInput: {
+    width: "100%",
     borderRadius: "12px",
     boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
     padding: "32px",

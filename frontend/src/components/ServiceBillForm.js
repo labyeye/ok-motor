@@ -1968,13 +1968,20 @@ const ServiceBillForm = () => {
           <div
             style={{
               ...styles.modalContent,
-              maxWidth: "90%",
-              width: "800px",
+              // Make modal responsive: full-width on small screens, constrained on desktop
+              width: isMobile ? "95vw" : "800px",
+              maxWidth: isMobile ? "95vw" : "90%",
+              height: isMobile ? "80vh" : undefined,
+              overflow: "hidden",
             }}
           >
             <h3 style={styles.modalTitle}>Service Bill Preview</h3>
             <div
-              style={{ height: "70vh", width: "100%", marginBottom: "20px" }}
+              style={{
+                height: isMobile ? "65vh" : "70vh",
+                width: "100%",
+                marginBottom: "20px",
+              }}
             >
               {previewPdf ? (
                 <iframe
@@ -2003,7 +2010,18 @@ const ServiceBillForm = () => {
 
             <button
               style={styles.modalCloseButton}
-              onClick={() => setShowPreviewModal(false)}
+              onClick={() => {
+                // revoke blob url to free memory
+                try {
+                  if (previewPdf) {
+                    URL.revokeObjectURL(previewPdf);
+                  }
+                } catch (e) {
+                  // ignore
+                }
+                setPreviewPdf(null);
+                setShowPreviewModal(false);
+              }}
             >
               Close Preview
             </button>
