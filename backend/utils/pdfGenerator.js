@@ -229,11 +229,20 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: font,
     });
 
-    const currentDate = new Date();
+    // Use India Standard Time (Asia/Kolkata) for printed date/time so server TZ doesn't affect output
+    const now = new Date();
+    const istDateStr = now.toLocaleDateString("en-IN", {
+      timeZone: "Asia/Kolkata",
+    });
+    const istTimeStr = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }).format(now);
+
     currentPage.drawText(
-      `Date: ${currentDate.toLocaleDateString(
-        "en-IN"
-      )} Time: ${formatTime12Hour(currentDate)}`,
+      `Date: ${istDateStr} Time: ${istTimeStr}`,
       {
         x: 400,
         y: 720,

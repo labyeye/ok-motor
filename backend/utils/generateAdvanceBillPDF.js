@@ -189,22 +189,25 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       font: font,
     });
 
-    // Get current date in IST (Indian Standard Time)
-    const currentDate = new Date();
-    const istDate = new Date(currentDate.getTime() + (5.5 * 60 * 60 * 1000)); // Add 5.5 hours for IST
-    
-    page.drawText(
-      `Date: ${istDate.toLocaleDateString(
-        "en-IN"
-      )} Time: ${formatTime12Hour(istDate)}`,
-      {
-        x: 400,
-        y: 720,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      }
-    );
+    // Use India Standard Time (Asia/Kolkata) for printed date/time
+    const now = new Date();
+    const istDateStr = now.toLocaleDateString("en-IN", {
+      timeZone: "Asia/Kolkata",
+    });
+    const istTimeStr = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }).format(now);
+
+    page.drawText(`Date: ${istDateStr} Time: ${istTimeStr}`, {
+      x: 400,
+      y: 720,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
 
     // Divider
     page.drawLine({
