@@ -122,18 +122,40 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const font = await pdfDoc.embedFont("Helvetica");
     const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
 
-    // Load logo
-    const logoPath = path.join(
-      __dirname,
-      "../../frontend/src/images/okmotorback.png"
-    );
-    let logoImage;
-    try {
-      const logoBytes = fs.readFileSync(logoPath);
-      logoImage = await pdfDoc.embedPng(logoBytes);
-    } catch (logoError) {
-      console.error("Error loading logo for PDF:", logoError);
-      logoImage = null;
+    // Load logo from multiple possible locations (source, public, env override)
+    const locateLogo = () => {
+      const candidates = [];
+      if (process.env.LOGO_PATH) candidates.push(process.env.LOGO_PATH);
+      // Common locations relative to this file
+      candidates.push(path.join(__dirname, "../../frontend/src/images/okmotorback.png"));
+      candidates.push(path.join(__dirname, "../../frontend/public/images/okmotorback.png"));
+      candidates.push(path.join(__dirname, "../../frontend/public/okmotorback.png"));
+      candidates.push(path.join(__dirname, "../images/okmotorback.png"));
+      candidates.push(path.join(__dirname, "../assets/okmotorback.png"));
+
+      for (const p of candidates) {
+        try {
+          if (p && fs.existsSync(p)) return p;
+        } catch (e) {
+          // ignore and try next
+        }
+      }
+      return null;
+    };
+
+    const logoLocation = locateLogo();
+    let logoImage = null;
+    if (logoLocation) {
+      try {
+        const logoBytes = fs.readFileSync(logoLocation);
+        logoImage = await pdfDoc.embedPng(logoBytes);
+        console.log('Loaded logo from', logoLocation);
+      } catch (logoError) {
+        console.error('Error embedding logo for PDF:', logoError.message);
+        logoImage = null;
+      }
+    } else {
+      console.warn('No logo found in candidate locations, continuing without logo');
     }
 
     // Function to add watermark to a page

@@ -15,7 +15,7 @@ files:
   - "!public"
 extraMetadata:
   main: electron/main.js
-asar: false
+asar: true
 mac:
   category: public.app-category.business
   target:
@@ -38,7 +38,7 @@ win:
       arch:
         - x64
         - ia32
-  publisherName: OK Motor
+  publisherName: Pixelate Nest
 nsis:
   oneClick: false
   perMachine: false

@@ -1,7 +1,25 @@
 const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
-const logoPath = path.join(__dirname, "../../frontend/src/images/okmotorback.png");
+// Logo path will be resolved from several candidate locations (env override allowed)
+const locateLogoPath = () => {
+  const candidates = [];
+  if (process.env.LOGO_PATH) candidates.push(process.env.LOGO_PATH);
+  candidates.push(path.join(__dirname, "../../frontend/src/images/okmotorback.png"));
+  candidates.push(path.join(__dirname, "../../frontend/public/images/okmotorback.png"));
+  candidates.push(path.join(__dirname, "../../frontend/public/okmotorback.png"));
+  candidates.push(path.join(__dirname, "../images/okmotorback.png"));
+  candidates.push(path.join(__dirname, "../assets/okmotorback.png"));
+
+  for (const p of candidates) {
+    try {
+      if (p && fs.existsSync(p)) return p;
+    } catch (e) {
+      // ignore and continue
+    }
+  }
+  return null;
+};
 
 
 const formatTime12Hour = (timeString) => {
@@ -98,21 +116,20 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       return `Rs.${formatRupee(val)}`;
     };
 
-    // Optimize logo loading - only load once and reuse
+    // Optimize logo loading - attempt to locate from candidates and embed
     let logoImage = null;
     try {
-      if (fs.existsSync(logoPath)) {
+      const logoPath = locateLogoPath();
+      if (logoPath && fs.existsSync(logoPath)) {
         const logoBytes = fs.readFileSync(logoPath);
         logoImage = await pdfDoc.embedPng(logoBytes);
-        console.log("Logo loaded successfully");
+        console.log("Logo loaded successfully from:", logoPath);
       } else {
-        console.warn("Logo file not found at:", logoPath);
+        console.warn("Logo file not found in candidate locations");
       }
     } catch (logoError) {
-      console.warn(
-        "Logo not found, continuing without logo:",
-        logoError.message
-      );
+      console.warn("Logo not found, continuing without logo:", logoError.message);
+      logoImage = null;
     }
 
     // Pre-calculate common values for better performance

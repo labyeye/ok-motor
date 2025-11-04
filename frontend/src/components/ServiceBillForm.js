@@ -45,6 +45,7 @@ const ServiceBillForm = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [showBusinessFields, setShowBusinessFields] = useState(false);
 
   const [formData, setFormData] = useState({
     taxEnabled: false,
@@ -1602,12 +1603,27 @@ const ServiceBillForm = () => {
                         type="checkbox"
                         checked={formData.taxEnabled}
                         onChange={() => {
+                          const enabling = !formData.taxEnabled;
                           const newData = {
                             ...formData,
-                            taxEnabled: !formData.taxEnabled,
+                            taxEnabled: enabling,
                             // Reset tax rate to 18 when enabling, 0 when disabling
-                            taxRate: !formData.taxEnabled ? 18 : 0,
+                            taxRate: enabling ? 18 : 0,
                           };
+
+                          // If enabling and business details already present, show fields.
+                          // Otherwise keep them collapsed until user chooses to add details.
+                          if (enabling) {
+                            const hasBusinessInfo = Boolean(
+                              formData.businessName ||
+                                formData.businessGSTIN ||
+                                formData.businessAddress
+                            );
+                            setShowBusinessFields(hasBusinessInfo);
+                          } else {
+                            setShowBusinessFields(false);
+                          }
+
                           setFormData({
                             ...newData,
                             ...calculateAmounts(newData),
@@ -1620,62 +1636,103 @@ const ServiceBillForm = () => {
                 </div>
                 {formData.taxEnabled && (
                   <>
-                    <div style={styles.formField}>
-                      <label style={styles.formLabel}>
-                        Business Name || व्यापार का नाम
-                      </label>
-                      <input
-                        type="text"
-                        name="businessName"
-                        value={formData.businessName}
-                        onChange={handleChange}
-                        onInput={handleInput}
-                        onFocus={() => setFocusedInput("businessName")}
-                        onBlur={() => setFocusedInput(null)}
-                        style={{
-                          ...styles.formInput,
-                          ...(focusedInput === "businessName"
-                            ? styles.inputFocused
-                            : {}),
-                        }}
-                        maxLength={30}
-                      />
-                    </div>
-                    <div style={styles.formField}>
-                      <label style={styles.formLabel}>
-                        Business GSTIN || व्यापार का GSTIN
-                      </label>
-                      <input
-                        type="text"
-                        name="businessGSTIN"
-                        value={formData.businessGSTIN}
-                        onChange={handleChange}
-                        onInput={handleInput}
-                        onFocus={() => setFocusedInput("businessGSTIN")}
-                        onBlur={() => setFocusedInput(null)}
-                        style={{
-                          ...styles.formInput,
-                          ...(focusedInput === "businessGSTIN"
-                            ? styles.inputFocused
-                            : {}),
-                        }}
-                        maxLength={11}
-                      />
-                    </div>
-                    <div style={styles.formField}>
-                      <label style={styles.formLabel}>
-                        Business Address || व्यापार का पता
-                      </label>
-                      <textarea
-                        name="businessAddress"
-                        value={formData.businessAddress}
-                        onChange={handleChange}
-                        rows={3}
-                        onInput={handleInput}
-                        style={styles.formTextarea}
-                        maxLength={100}
-                      />
-                    </div>
+                    {/* If business fields are collapsed, show a compact CTA */}
+                    {!showBusinessFields &&
+                      !(
+                        formData.businessName ||
+                        formData.businessGSTIN ||
+                        formData.businessAddress
+                      ) && (
+                        <div style={styles.formField}>
+                          <button
+                            type="button"
+                            onClick={() => setShowBusinessFields(true)}
+                            style={{
+                              padding: "8px 12px",
+                              borderRadius: "6px",
+                              background: "#eef2ff",
+                              border: "1px solid #c7d2fe",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Add business details (optional)
+                          </button>
+                        </div>
+                      )}
+
+                    {(showBusinessFields ||
+                      formData.businessName ||
+                      formData.businessGSTIN ||
+                      formData.businessAddress) && (
+                      <>
+                        <div style={styles.formField}>
+                          <label style={styles.formLabel}>
+                            Business Name || व्यापार का नाम
+                          </label>
+                          <input
+                            type="text"
+                            name="businessName"
+                            value={formData.businessName}
+                            onChange={(e) => {
+                              handleChange(e);
+                              // ensure fields stay visible when user types
+                              setShowBusinessFields(true);
+                            }}
+                            onInput={handleInput}
+                            onFocus={() => setFocusedInput("businessName")}
+                            onBlur={() => setFocusedInput(null)}
+                            style={{
+                              ...styles.formInput,
+                              ...(focusedInput === "businessName"
+                                ? styles.inputFocused
+                                : {}),
+                            }}
+                            maxLength={30}
+                          />
+                        </div>
+                        <div style={styles.formField}>
+                          <label style={styles.formLabel}>
+                            Business GSTIN || व्यापार का GSTIN
+                          </label>
+                          <input
+                            type="text"
+                            name="businessGSTIN"
+                            value={formData.businessGSTIN}
+                            onChange={(e) => {
+                              handleChange(e);
+                              setShowBusinessFields(true);
+                            }}
+                            onInput={handleInput}
+                            onFocus={() => setFocusedInput("businessGSTIN")}
+                            onBlur={() => setFocusedInput(null)}
+                            style={{
+                              ...styles.formInput,
+                              ...(focusedInput === "businessGSTIN"
+                                ? styles.inputFocused
+                                : {}),
+                            }}
+                            maxLength={11}
+                          />
+                        </div>
+                        <div style={styles.formField}>
+                          <label style={styles.formLabel}>
+                            Business Address || व्यापार का पता
+                          </label>
+                          <textarea
+                            name="businessAddress"
+                            value={formData.businessAddress}
+                            onChange={(e) => {
+                              handleChange(e);
+                              setShowBusinessFields(true);
+                            }}
+                            rows={3}
+                            onInput={handleInput}
+                            style={styles.formTextarea}
+                            maxLength={100}
+                          />
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
               </div>

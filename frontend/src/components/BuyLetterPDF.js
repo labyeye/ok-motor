@@ -459,11 +459,8 @@ const BuyLetterForm = () => {
         // Use apiService for Electron (handles offline)
         response = await apiService.post("/api/buy-letter", dataToSave);
       } else {
-        // Use axios directly for web browser
-        response = await axios.post(
-          "https://ok-motor-51l3.vercel.app/api/buy-letter",
-          dataToSave
-        );
+        // Use apiService (handles online/offline uniformly)
+        response = await apiService.post("/api/buy-letters", dataToSave);
       }
       
       if (editLetter?._id) {
@@ -692,15 +689,12 @@ const BuyLetterForm = () => {
       if (isElectron) {
         // Use apiService for Electron (handles offline)
         existingLetter = await apiService.get(
-          `/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
+          `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`
         );
       } else {
-        // Use axios directly for web browser
-        existingLetter = await axios.get(
-          `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
-          {
-            headers: {},
-          }
+        // Use apiService in browser as well (will route online when available)
+        existingLetter = await apiService.get(
+          `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`
         );
       }
 
@@ -709,16 +703,8 @@ const BuyLetterForm = () => {
         savedLetterData = existingLetter.data[0];
       } else {
         let response;
-        if (isElectron) {
-          // Use apiService for Electron (handles offline)
-          response = await apiService.post("/api/buy-letter", formData);
-        } else {
-          // Use axios directly for web browser
-          response = await axios.post(
-            "https://ok-motor-51l3.vercel.app/api/buy-letter",
-            formData
-          );
-        }
+        // Use apiService for both electron and browser to ensure consistent behavior
+        response = await apiService.post("/api/buy-letters", formData);
         savedLetterData = response.data;
       }
       
@@ -896,38 +882,19 @@ const BuyLetterForm = () => {
       // Check if we're in Electron
       const isElectron = window.electronAPI !== undefined;
 
-      let existingLetter;
-      if (isElectron) {
-        // Use apiService for Electron (handles offline)
-        existingLetter = await apiService.get(
-          `/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`
-        );
-      } else {
-        // Use axios directly for web browser
-        existingLetter = await axios.get(
-          `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${formData.registrationNumber}`,
-          {
-            headers: {},
-          }
-        );
-      }
+      // Use apiService for both electron and browser (handles offline/online)
+      let existingLetter = await apiService.get(
+        `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`
+      );
 
       let savedLetterData;
       if (existingLetter.data && existingLetter.data.length > 0) {
         savedLetterData = existingLetter.data[0];
       } else {
         let response;
-        if (isElectron) {
-          // Use apiService for Electron (handles offline)
-          response = await apiService.post("/api/buy-letter", formData);
-        } else {
-          // Use axios directly for web browser
-          response = await axios.post(
-            "https://ok-motor-51l3.vercel.app/api/buy-letter",
-            formData
-          );
-        }
-        savedLetterData = response.data;
+        // Use apiService for both electron and browser
+        const resp = await apiService.post("/api/buy-letters", formData);
+        savedLetterData = resp.data || resp;
       }
 
       const englishTemplateUrl = "/templates/englishbuyletter.pdf";

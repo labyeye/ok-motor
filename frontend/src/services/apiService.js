@@ -115,11 +115,16 @@ class ApiService {
    * Map endpoint to collection name
    */
   getCollectionFromEndpoint(endpoint) {
+    // Support both plural and singular endpoint paths.
     const mapping = {
       'buy-letters': 'buyLetters',
+      'buy-letter': 'buyLetters',
       'sell-letters': 'sellLetters',
+      'sell-letter': 'sellLetters',
       'service-bills': 'serviceBills',
+      'service-bill': 'serviceBills',
       'advance-bills': 'advanceBills',
+      'advance-bill': 'advanceBills',
       'users': 'users'
     };
 
@@ -128,6 +133,12 @@ class ApiService {
         return value;
       }
     }
+
+    // Fallback: if endpoint contains a known root like 'buy' or 'sell', map heuristically
+    if (endpoint.includes('buy')) return 'buyLetters';
+    if (endpoint.includes('sell')) return 'sellLetters';
+    if (endpoint.includes('service')) return 'serviceBills';
+    if (endpoint.includes('advance')) return 'advanceBills';
 
     return endpoint;
   }

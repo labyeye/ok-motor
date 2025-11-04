@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "main": "electron/main.js",
+  "description": "OK Motor desktop app",
+  "author": "Pixelate Nest",
   "homepage": "./",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
@@ -43,7 +45,8 @@
     "electron:build": "npm run build && electron-builder",
     "electron:build:mac": "npm run build && electron-builder --mac",
     "electron:build:win": "npm run build && electron-builder --win",
-    "electron:build:linux": "npm run build && electron-builder --linux"
+    "electron:build:linux": "npm run build && electron-builder --linux",
+    "electron:build:win:elevate": "powershell -ExecutionPolicy Bypass -File ./scripts/elevate-and-build.ps1"
   },
   "eslintConfig": {
     "extends": [
