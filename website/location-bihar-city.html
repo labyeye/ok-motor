@@ -8,11 +8,20 @@
       name="description"
       content="Bike Builders — city listings for second hand bikes."
     />
-    <meta name="keywords" content="second hand bikes, used bikes, pre-owned motorcycles, buy used bike" />
+    <meta
+      name="keywords"
+      content="second hand bikes, used bikes, pre-owned motorcycles, buy used bike"
+    />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Second Hand Bikes — Bike Builders" />
-    <meta name="twitter:description" content="Find second hand bikes in your city with Bike Builders — verified pre-owned motorcycles, inspections and local support." />
-    <meta name="twitter:image" content="https://www.okmotors.in/assets/social-preview.jpg" />
+    <meta
+      name="twitter:description"
+      content="Find second hand bikes in your city with Bike Builders — verified pre-owned motorcycles, inspections and local support."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.okmotors.in/assets/social-preview.jpg"
+    />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -133,19 +142,53 @@
       document.addEventListener("DOMContentLoaded", renderCity);
     </script>
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        var t = document.getElementById('mobileMenuBtn'), n = document.querySelector('.header-nav');
+      document.addEventListener("DOMContentLoaded", function () {
+        var t = document.getElementById("mobileMenuBtn"),
+          n = document.querySelector(".header-nav");
         if (!t || !n) return;
-        function setAria(e) { t.setAttribute('aria-expanded', e ? 'true' : 'false'); }
-        t.addEventListener('click', function (ev) { ev.preventDefault(); var o = n.classList.toggle('open'); setAria(o); document.body.style.overflow = o ? 'hidden' : ''; });
-        n.addEventListener('click', function (ev) {
-          var a = ev.target.closest && ev.target.closest('a'); if (!a) return;
-          var parent = a.closest && a.closest('.nav-dropdown');
-          if (parent && window.innerWidth <= 1024 && (a.classList.contains('dropdown-toggle') || a.classList.contains('nav-link'))) { ev.preventDefault(); parent.classList.toggle('open'); return; }
-          if (window.innerWidth <= 1024) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; }
+        function setAria(e) {
+          t.setAttribute("aria-expanded", e ? "true" : "false");
+        }
+        t.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          var o = n.classList.toggle("open");
+          setAria(o);
+          document.body.style.overflow = o ? "hidden" : "";
         });
-        window.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
-        window.addEventListener('resize', function () { if (window.innerWidth > 1024 && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
+        n.addEventListener("click", function (ev) {
+          var a = ev.target.closest && ev.target.closest("a");
+          if (!a) return;
+          var parent = a.closest && a.closest(".nav-dropdown");
+          if (
+            parent &&
+            window.innerWidth <= 1024 &&
+            (a.classList.contains("dropdown-toggle") ||
+              a.classList.contains("nav-link"))
+          ) {
+            ev.preventDefault();
+            parent.classList.toggle("open");
+            return;
+          }
+          if (window.innerWidth <= 1024) {
+            n.classList.remove("open");
+            setAria(false);
+            document.body.style.overflow = "";
+          }
+        });
+        window.addEventListener("keydown", function (ev) {
+          if (ev.key === "Escape" && n.classList.contains("open")) {
+            n.classList.remove("open");
+            setAria(false);
+            document.body.style.overflow = "";
+          }
+        });
+        window.addEventListener("resize", function () {
+          if (window.innerWidth > 1024 && n.classList.contains("open")) {
+            n.classList.remove("open");
+            setAria(false);
+            document.body.style.overflow = "";
+          }
+        });
       });
     </script>
   </head>
@@ -155,9 +198,9 @@
       <div class="top-banner-container">
         <div class="top-banner-left">
           <span
-            ><i class="fas fa-phone-alt" aria-hidden="true"></i>&nbsp;+91 72800 12222</span
+            ><i class="fas fa-phone-alt" aria-hidden="true"></i>&nbsp;+91 72800
+            12222</span
           >
-          
         </div>
         <div class="top-banner-right" aria-hidden="true">
           <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
@@ -169,18 +212,25 @@
     <!-- Sticky Header -->
     <header class="site-header" id="siteHeader">
       <div class="header-container">
-       <a href="https://www.okmotors.in/index.html" class="header-logo">
+        <a href="https://www.okmotors.in/index.html" class="header-logo">
           <img
-             src="./assets/images/logoblack.png"
+            src="./assets/images/logoblack.png"
             alt="Ok Motors Logo"
             itemprop="logo"
           />
         </a>
 
         <nav class="header-nav" aria-label="Main navigation">
-         <a href="https://www.okmotors.in/index.html" class="nav-item active" data-translate="Home">Home</a>
+          <a
+            href="https://www.okmotors.in/index.html"
+            class="nav-item active"
+            data-translate="Home"
+            >Home</a
+          >
           <div class="nav-item nav-dropdown" aria-haspopup="true">
-            <a href="https://www.okmotors.in/inventory.html" class="nav-link dropdown-toggle"
+            <a
+              href="https://www.okmotors.in/inventory.html"
+              class="nav-link dropdown-toggle"
               >Buy Vehicle
               <i
                 class="fa fa-caret-down"
@@ -244,10 +294,16 @@
             data-translate="Sell Your Vehicle"
             >Sell Your Vehicle</a
           >
-          <a href="https://www.okmotors.in/about.html" class="nav-item" data-translate="About Us"
+          <a
+            href="https://www.okmotors.in/about.html"
+            class="nav-item"
+            data-translate="About Us"
             >About Us</a
           >
-          <a href="https://www.okmotors.in/book.html" class="nav-item" data-translate="Book Bike"
+          <a
+            href="https://www.okmotors.in/book.html"
+            class="nav-item"
+            data-translate="Book Bike"
             >Book Vehicle</a
           >
           <a
@@ -256,10 +312,16 @@
             data-translate="Bike Finance"
             >Bike Finance</a
           >
-          <a href="https://www.okmotors.in/updates.html" class="nav-item" data-translate="Updates"
+          <a
+            href="https://www.okmotors.in/updates.html"
+            class="nav-item"
+            data-translate="Updates"
             >Updates</a
           >
-          <a href="https://www.okmotors.in/contact.html" class="nav-item" data-translate="Contact"
+          <a
+            href="https://www.okmotors.in/contact.html"
+            class="nav-item"
+            data-translate="Contact"
             >Contact</a
           >
           <div class="nav-item nav-dropdown" aria-haspopup="true">
@@ -326,7 +388,7 @@
           </div>
           <div class="logo">
             <img
-               src="./assets/images/okmotor.png"
+              src="./assets/images/okmotor.png"
               style="width: 220px"
               alt="Bike Builders Logo"
             />
@@ -335,7 +397,8 @@
             Bringing the future of bike riding to you today.
           </p>
           <div class="social-icons">
-            <a href="https://www.facebook.com/people/OK-motors-Patna/100092409081953/?rdid=HgY7OAFmgYcvAsoC&share_url=https%253A%252F%252Fwww.facebook.com%252Fshare%252F1BpgmB9Azo%252F"
+            <a
+              href="https://www.facebook.com/people/OK-motors-Patna/100092409081953/?rdid=HgY7OAFmgYcvAsoC&share_url=https%253A%252F%252Fwww.facebook.com%252Fshare%252F1BpgmB9Azo%252F"
               ><i class="fa-brands fa-facebook-f" style="color: #0400ff"></i
             ></a>
             <a
@@ -354,9 +417,7 @@
           <h3 data-translate="Quick Links">Quick Links</h3>
           <ul>
             <li>
-              <a href="https://www.okmotors.in/" data-translate="Home"
-                >Home</a
-              >
+              <a href="https://www.okmotors.in/" data-translate="Home">Home</a>
             </li>
             <li>
               <a
@@ -429,7 +490,8 @@
           <p
             data-translate="Rambag Chowk, Rambag Road Kabristaan k bagal me, Gaushala Chowk Mandir , Muzaffarpur, Bihar 842002"
           >
-            <i class="fas fa-map-marker-alt"></i> Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014
+            <i class="fas fa-map-marker-alt"></i> Pillar num.53, Bailey Rd,
+            Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014
           </p>
           <span itemprop="telephone">+91 72800 12222</span>
         </div>
