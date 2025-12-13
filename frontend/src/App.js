@@ -11,6 +11,9 @@ import AdminPage from "./pages/AdminPage";
 import StaffPage from "./pages/StaffPage";
 import BuyLetterForm from "./components/BuyLetterPDF";
 import SellLetterForm from "./components/SellLetterPDF";
+import SellRequests from "./components/SellRequests";
+import UpdatesList from "./components/UpdatesList";
+import CreateUpdate from "./components/CreateUpdate";
 import BuyLetterHistory from "./components/BuyLetterHistory";
 import SellLetterHistory from "./components/SellLetterHistory";
 import ServiceBillForm from "./components/ServiceBillForm";
@@ -21,11 +24,14 @@ import ServiceHistory from "./components/ServiceHistory";
 import AdvancePayBillForm from "./components/AdvancePayBillForm";
 import AdvanceHistory from "./components/AdvanceHistory";
 import SettingsPage from "./pages/SettingsPage";
+import VehicleCreate from "./components/VehicleCreate";
+import VehicleHistory from "./components/VehicleHistory";
+import GalleryManagement from "./components/GalleryManagement";
 import { useState, useEffect } from "react";
 import networkService from "./services/networkService";
-import syncService from "./services/syncService";
+import "./services/syncService"; // initialize sync service for side-effects
 
-const RootRedirect = () => {
+const Rootredirect = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -61,7 +67,7 @@ const RootRedirect = () => {
     );
   }
 
-  // If not authenticated, redirect to login
+  // If not authenticated, #ff6b00irect to login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
@@ -130,7 +136,7 @@ function App() {
       </div>
       <Router>
         <Routes>
-          <Route path="/" element={<RootRedirect />} />
+          <Route path="/" element={<Rootredirect />} />
           <Route path="/login" element={<LoginPage />} />
           <Route
             path="/admin"
@@ -177,6 +183,38 @@ function App() {
             element={
               <PrivateRoute roles={["admin", "staff"]}>
                 <SellLetterHistory />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/sell/requests"
+            element={
+              <PrivateRoute roles={["admin"]}>
+                <SellRequests />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/updates"
+            element={
+              <PrivateRoute roles={["admin"]}>
+                <UpdatesList />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/updates/create"
+            element={
+              <PrivateRoute roles={["admin"]}>
+                <CreateUpdate />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/updates/edit/:id"
+            element={
+              <PrivateRoute roles={["admin"]}>
+                <CreateUpdate />
               </PrivateRoute>
             }
           />
@@ -241,6 +279,30 @@ function App() {
             element={
               <PrivateRoute roles={["admin", "staff"]}>
                 <SettingsPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/gallery/manage"
+            element={
+              <PrivateRoute roles={["admin"]}>
+                <GalleryManagement />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/vehicle/create"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <VehicleCreate />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/vehicle/history"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <VehicleHistory />
               </PrivateRoute>
             }
           />

@@ -1,6 +1,7 @@
 import React, { useState, useContext, useCallback, useEffect } from "react";
 import { saveAs } from "file-saver";
 import axios from "axios";
+import fileSaveService from "../services/fileSaveService";
 import {
   FileText,
   ArrowLeft,
@@ -14,6 +15,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Wrench,
+  ShipWheel,
   Users,
   LogOut,
   ChevronDown,
@@ -24,6 +26,8 @@ import {
   Menu,
   X,
   Settings,
+  RefreshCcw,
+  RefreshCw,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../images/company.png";
@@ -250,7 +254,7 @@ const ServiceBillForm = () => {
   const validateForm = () => {
     const errors = {};
 
-    // Required fields
+    // required fields
     if (!formData.customerName.trim())
       errors.customerName = "Customer name is required";
     if (!formData.customerPhone.trim())
@@ -402,7 +406,11 @@ const ServiceBillForm = () => {
 
         if (pdfResult.success) {
           pdfBlob = pdfResult.blob;
-          saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+          if (pdfResult.saved && window.electronAPI) {
+            alert(`PDF saved to ${pdfResult.savedPath || 'default PDF folder'}`);
+          } else {
+            saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+          }
         } else {
           throw new Error(pdfResult.error || "Failed to generate PDF");
         }
@@ -479,7 +487,11 @@ const ServiceBillForm = () => {
 
           if (pdfResult.success) {
             pdfBlob = pdfResult.blob;
-            saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+            if (pdfResult.saved && window.electronAPI) {
+              alert(`PDF saved to ${pdfResult.savedPath || 'default PDF folder'}`);
+            } else {
+              saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+            }
           } else {
             throw new Error(pdfResult.error || "Failed to generate PDF");
           }
@@ -539,7 +551,7 @@ const ServiceBillForm = () => {
           );
 
           if (error.response?.status === 401) {
-            alert("Your session has expired. Please login again.");
+            alert("Your session has expi#ff6b00. Please login again.");
             logout();
             navigate("/login");
             return;
@@ -553,11 +565,11 @@ const ServiceBillForm = () => {
           let errorMessage = "Failed to save and download";
           if (error.response) {
             errorMessage =
-              error.response.data?.message || "Server error occurred";
+              error.response.data?.message || "Server error occur#ff6b00";
           } else if (error.code === "ECONNABORTED") {
             errorMessage = "Request timed out. Please try again.";
           } else {
-            errorMessage = error.message || "Unknown error occurred";
+            errorMessage = error.message || "Unknown error occur#ff6b00";
           }
 
           alert(errorMessage);
@@ -849,14 +861,26 @@ const ServiceBillForm = () => {
         const pdfBlob = new Blob([pdfResponse.data], {
           type: "application/pdf",
         });
-        saveAs(pdfBlob, `service-bill-${billId}.pdf`);
+        const filename = `service-bill-${billId}.pdf`;
+        try {
+          const arrayBuf = await pdfResponse.data.arrayBuffer();
+          const saveRes = await fileSaveService.savePdfToDefaultDir(filename, arrayBuf, 'service');
+          if (saveRes && saveRes.success && window.electronAPI) {
+            alert(`PDF saved to ${saveRes.path || 'default PDF folder'}`);
+          } else {
+            saveAs(pdfBlob, filename);
+          }
+        } catch (err) {
+          console.warn('Silent save failed for service bill:', err);
+          saveAs(pdfBlob, filename);
+        }
       }
     } catch (error) {
       console.error("Error generating PDF:", error);
 
       // Handle authentication errors
       if (error.response?.status === 401) {
-        alert("Your session has expired. Please login again.");
+        alert("Your session has expi#ff6b00. Please login again.");
         logout();
         navigate("/login");
         return;
@@ -872,11 +896,11 @@ const ServiceBillForm = () => {
 
       let errorMessage = "Failed to generate PDF";
       if (error.response) {
-        errorMessage = error.response.data?.message || "Server error occurred";
+        errorMessage = error.response.data?.message || "Server error occur#ff6b00";
       } else if (error.code === "ECONNABORTED") {
         errorMessage = "Request timed out. Please try again.";
       } else {
-        errorMessage = error.message || "Unknown error occurred";
+        errorMessage = error.message || "Unknown error occur#ff6b00";
       }
 
       alert(errorMessage);
@@ -901,6 +925,14 @@ const ServiceBillForm = () => {
       path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
+    },
+    {
       name: "Buy",
       icon: ShoppingCart,
       submenu: [
@@ -914,6 +946,15 @@ const ServiceBillForm = () => {
       submenu: [
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Updates",
+      icon: RefreshCw,
+      submenu: [
+        { name: "Create Update", path: "/updates/create" },
+        { name: "Updates List", path: "/updates" },
       ],
     },
     {
@@ -946,6 +987,11 @@ const ServiceBillForm = () => {
           },
         ]
       : []),
+    {
+      name: 'Gallery',
+      icon: Image,
+      path: '/gallery/manage',
+    },
     {
       name: "Vehicle History",
       icon: Bike,
@@ -1050,7 +1096,7 @@ const ServiceBillForm = () => {
             style={{
               width: "100%",
               maxWidth: "25rem",
-              height: "13rem",
+              height: "9rem",
               objectFit: "cover", // match CSS
               objectPosition: "center",
               display: "block",

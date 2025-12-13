@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inventory | Bike Builders</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./inventory.css" />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style></style>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var t = document.getElementById('mobileMenuBtn'), n = document.querySelector('.header-nav');
+        if (!t || !n) return;
+        function setAria(e) { t.setAttribute('aria-expanded', e ? 'true' : 'false'); }
+        t.addEventListener('click', function (ev) { ev.preventDefault(); var o = n.classList.toggle('open'); setAria(o); document.body.style.overflow = o ? 'hidden' : ''; });
+        n.addEventListener('click', function (ev) {
+          var a = ev.target.closest && ev.target.closest('a'); if (!a) return;
+          var parent = a.closest && a.closest('.nav-dropdown');
+          if (parent && window.innerWidth <= 1024 && (a.classList.contains('dropdown-toggle') || a.classList.contains('nav-link'))) { ev.preventDefault(); parent.classList.toggle('open'); return; }
+          if (window.innerWidth <= 1024) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; }
+        });
+        window.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
+        window.addEventListener('resize', function () { if (window.innerWidth > 1024 && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
+      });
+    </script>
+  </head>
+  <body>
+    <!-- Top banner (contact + social) -->
+    <div class="top-banner" id="topBanner" role="banner">
+      <div class="top-banner-container">
+        <div class="top-banner-left">
+          <span
+            ><i class="fas fa-phone-alt" aria-hidden="true"></i>&nbsp;+91 72800
+            12222</span
+          >
+        </div>
+        <div class="top-banner-right" aria-hidden="true">
+          <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+    </div>
+    <header class="site-header" id="siteHeader">
+      <div class="header-container">
+        <a href="./" class="header-logo">
+          <img
+             src="./assets/images/logoblack.png"
+            alt="Ok Motors Logo"
+            itemprop="logo"
+          />
+        </a>
+
+        <nav class="header-nav" aria-label="Main navigation">
+          <a href="./" class="nav-item" data-translate="Home">Home</a>
+          <div class="nav-item nav-dropdown" aria-haspopup="true">
+            <a href="./inventory.html" class="nav-link dropdown-toggle"
+              >Buy Vehicle
+              <i
+                class="fa fa-caret-down"
+                aria-hidden="true"
+                style="margin-left: 6px"
+              ></i
+            ></a>
+            <div
+              class="dropdown-menu"
+              role="menu"
+              aria-label="Buy Vehicle submenu"
+            >
+              <h4 class="dropdown-column-title">Cars</h4>
+              <a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Maruti"
+                >Maruti</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Hyundai"
+                >Hyundai</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Tata"
+                >Tata</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Mahindra"
+                >Mahindra</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Toyota"
+                >Toyota</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Honda"
+                >Honda</a
+              >
+              <h4 class="dropdown-column-title">Vehicles</h4>
+              <a
+                class="dropdown-item"
+                href="inventory.html?brand=Royal%20Enfield"
+                >Royal Enfield</a
+              ><a class="dropdown-item" href="inventory.html?brand=Bajaj"
+                >Bajaj</a
+              ><a class="dropdown-item" href="inventory.html?brand=Hero">Hero</a
+              ><a class="dropdown-item" href="inventory.html?brand=Yamaha"
+                >Yamaha</a
+              ><a class="dropdown-item" href="inventory.html?brand=KTM">KTM</a
+              ><a class="dropdown-item" href="inventory.html?brand=TVS">TVS</a
+              ><a class="dropdown-item" href="inventory.html?brand=Honda"
+                >Honda</a
+              ><a class="dropdown-item" href="inventory.html?brand=Suzuki"
+                >Suzuki</a
+              >
+            </div>
+          </div>
+          <a
+            href="./sell.html"
+            class="nav-item"
+            data-translate="Sell Your Vehicle"
+            >Sell Your Vehicle</a
+          >
+          <a href="./about.html" class="nav-item" data-translate="About Us"
+            >About Us</a
+          >
+          <a href="./book.html" class="nav-item" data-translate="Book Bike"
+            >Book Vehicle</a
+          >
+          <a
+            href="./finance.html"
+            class="nav-item"
+            data-translate="Bike Finance"
+            >Bike Finance</a
+          >
+          <a href="./updates.html" class="nav-item" data-translate="Updates"
+            >Updates</a
+          >
+          <a href="./contact.html" class="nav-item" data-translate="Contact"
+            >Contact</a
+          >
+          <div class="nav-item nav-dropdown" aria-haspopup="true">
+            <a href="#" class="nav-link dropdown-toggle"
+              >Vehicle Valuation
+              <i
+                class="fa fa-caret-down"
+                aria-hidden="true"
+                style="margin-left: 6px"
+              ></i
+            ></a>
+            <div
+              class="dropdown-menu"
+              role="menu"
+              aria-label="Vehicle Valuation submenu"
+            >
+              <a class="dropdown-item" href="used-bike-valuation.html"
+                >Used Bike Valuation</a
+              >
+              <a class="dropdown-item" href="used-car-valuation.html"
+                >Used Car Valuation</a
+              >
+            </div>
+          </div>
+          <!-- Vehicle Valuation dropdown -->
+        </nav>
+
+        <div class="header-actions">
+          <button
+            class="mobile-menu-btn"
+            aria-label="Toggle menu"
+            id="mobileMenuBtn"
+          >
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+    <!-- Page Title -->
+    <section class="hero-section">
+      <div class="hero-background"></div>
+      <div class="hero-container">
+        <div class="hero-content">
+          <span class="hero-label">Our Vehicles</span>
+          <h1>
+            <span class="hero-title-line1">Used Bike / Cars</span>
+          </h1>
+          <p class="hero-subtitle">
+            Get basic details and get an estimated market price for your
+            vehicle.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filters -->
+    <div class="filters-container">
+      <div class="desktop-filters">
+        <div class="filter-group">
+          <button class="filter-btn" data-filter="all">
+            <i class="fas fa-th"></i> All Vehicles
+          </button>
+        </div>
+        <div class="filter-group">
+          <button class="filter-btn" data-filter="price">
+            Price <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="filter-dropdown" id="price-dropdown">
+            <h4>Price Range</h4>
+            <div id="price-options"></div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <button class="filter-btn" data-filter="brand">
+            Brand <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="filter-dropdown" id="brand-dropdown">
+            <h4>Brands</h4>
+            <div id="brand-options"></div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <button class="filter-btn" data-filter="year">
+            Year <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="filter-dropdown" id="year-dropdown">
+            <h4>Year</h4>
+            <div id="year-options"></div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <button class="filter-btn" data-filter="type">
+            Type <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="filter-dropdown" id="type-dropdown">
+            <h4>Type</h4>
+            <div id="type-options"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory Section -->
+    <div class="bike-grid-container">
+      <div class="bike-grid" id="bike-grid">
+        <!-- Cards will be rende#ff6b00 here by JavaScript -->
+      </div>
+      <div class="load-more-container">
+        <button id="load-more-btn" class="load-more-btn" style="display:none">Load More</button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-section">
+          <div class="footer-stars" style="margin: 10px 0">
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+          </div>
+          <div class="logo">
+            <img
+               src="./assets/images/okmotor.png"
+              style="width: 220px"
+              alt="Ok Motors Logo"
+            />
+          </div>
+          <p data-translate="Bringing the future of bike riding to you today.">
+            Bringing the future of bike riding to you today.
+          </p>
+          <div class="social-icons">
+            <a href="https://www.facebook.com/people/OK-motors-Patna/100092409081953/?rdid=HgY7OAFmgYcvAsoC&share_url=https%253A%252F%252Fwww.facebook.com%252Fshare%252F1BpgmB9Azo%252F"
+              ><i class="fa-brands fa-facebook-f" style="color: #0400ff"></i
+            ></a>
+            <a
+              href="https://www.instagram.com/ok_motors_patna?igsh=MXdiYzU1NDZ6ankxZw%3D%3D"
+              aria-label="Visit our Instagram profile"
+              ><img
+                src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+                style="width: 20px"
+            /></a>
+            <a href="https://wa.me/918210283582"
+              ><i class="fa-brands fa-whatsapp" style="color: #00a841"></i
+            ></a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h3 data-translate="Quick Links">Quick Links</h3>
+          <ul>
+            <li>
+              <a href="./" data-translate="Home">Home</a>
+            </li>
+            <li>
+              <a href="./inventory.html" data-translate="Buy Vehicle"
+                >Buy Vehicle</a
+              >
+            </li>
+            <li>
+              <a href="./sell.html" data-translate="Sell Your Vehicle"
+                >Sell Your Vehicle</a
+              >
+            </li>
+            <li>
+              <a
+                href="./about.html"
+                aria-label="About Ok Motors"
+                data-translate="About Us"
+                >About Us</a
+              >
+            </li>
+            <li>
+              <a
+                href="./book.html"
+                aria-label="Book Bike"
+                data-translate="Book Bike"
+                >Book Vehicle</a
+              >
+            </li>
+            <li>
+              <a href="./updates.html" data-translate="Updates">Updates</a>
+            </li>
+            <li>
+              <a href="./contact.html" data-translate="Contact">Contact</a>
+            </li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3 data-translate="Resources">Resources</h3>
+          <ul>
+            <li>
+              <a href="./finance.html" data-translate="Bike Finance"
+                >Bike Finance</a
+              >
+            </li>
+            <li>
+              <a href="./locations-bihar.html" data-translate="Locations"
+                >Locations</a
+              >
+            </li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3 data-translate="Contact Us">Contact Us</h3>
+          <p>
+            <i class="fas fa-map-marker-alt"></i> Pillar num.53, Bailey Rd,
+            Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014
+          </p>
+          <span itemprop="telephone">+91 72800 12222</span>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p data-translate="&copy; 2023 Ok Motors. All rights reserved.">
+          &copy; 2023 Ok Motors. All rights reserved.
+        </p>
+        <a
+          href="https://www.pixelatenest.com/"
+          style="color: #a9a9a9"
+          data-translate="Designed By Pixelate Nest"
+          >Designed By Pixelate Nest</a
+        >
+      </div>
+    </footer>
+
+    <script>
+      // Filter dropdown toggle
+      document.querySelectorAll(".filter-btn").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          const dropdown = this.nextElementSibling;
+          if (dropdown && dropdown.classList.contains("filter-dropdown")) {
+            dropdown.classList.toggle("active");
+          }
+
+          // Close other dropdowns
+          document.querySelectorAll(".filter-dropdown").forEach((d) => {
+            if (d !== dropdown) d.classList.remove("active");
+          });
+        });
+      });
+
+      // Close dropdowns when clicking outside
+      document.addEventListener("click", function (e) {
+        if (!e.target.closest(".filter-group")) {
+          document.querySelectorAll(".filter-dropdown").forEach((d) => {
+            d.classList.remove("active");
+          });
+        }
+      });
+
+      // Fetch and render public vehicle listings
+      document.addEventListener("DOMContentLoaded", function () {
+        const grid = document.getElementById("bike-grid");
+        // Selected filter state
+        let selectedBrand = null;
+        let selectedYear = null;
+        let selectedType = null;
+        let selectedPrice = null; // {min, max, label}
+        let currentPage = 1;
+        let totalPages = 1;
+
+        function priceFormatter(num) {
+          if (num === null || num === undefined) return "-";
+          return new Intl.NumberFormat("en-IN").format(num);
+        }
+
+        function createCard(vehicle) {
+          const div = document.createElement("div");
+          div.className = "bike-card";
+
+          // Choose image
+          const imageUrl =
+            (vehicle.primaryImage && vehicle.primaryImage.url) ||
+            (vehicle.images &&
+              vehicle.images.length &&
+              vehicle.images[0].url) ||
+            "https://via.placeholder.com/400x300/cccccc/666666?text=No+Image";
+
+          // Photo count
+          const photos = vehicle.images ? vehicle.images.length : 0;
+
+          div.innerHTML = `
+            <div class="image-container">
+              <span class="status-badge">${
+                vehicle.availabilityStatus || "Available"
+              }</span>
+              ${
+                photos > 0
+                  ? `<span class="photo-count">📷 ${photos}</span>`
+                  : ""
+              }
+              <img src="${imageUrl}" alt="${
+            (vehicle.vehicleName || "") + " " + (vehicle.vehicleModel || "")
+          }" />
+            </div>
+            <div class="card-content">
+              <div class="car-body">${vehicle.bodyType || ""}</div>
+              <h3>${vehicle.vehicleName || ""} ${
+            vehicle.vehicleModel || ""
+          }</h3>
+              <span class="model">${vehicle.manufacturingYear || ""}</span>
+              <div class="details">
+                <div class="detail-item"><i class="fas fa-tachometer-alt"></i><span>${
+                  vehicle.kilometersRun
+                    ? priceFormatter(vehicle.kilometersRun) + " km"
+                    : "-"
+                }</span></div>
+                <div class="detail-item"><i class="fas fa-user"></i><span>${
+                  vehicle.ownershipNumber
+                    ? vehicle.ownershipNumber +
+                      (vehicle.ownershipNumber === 1 ? "st Owner" : "th Owner")
+                    : "-"
+                }</span></div>
+                <div class="detail-item"><i class="fas fa-gas-pump"></i><span>${
+                  vehicle.fuelType || "-"
+                }</span></div>
+                <div class="detail-item"><i class="fas fa-calendar-alt"></i><span>${
+                  vehicle.manufacturingYear
+                    ? new Date().getFullYear() -
+                      vehicle.manufacturingYear +
+                      " years"
+                    : "-"
+                }</span></div>
+              </div>
+              <div class="price-container">
+                <div class="price">₹${priceFormatter(
+                  vehicle.sellingPrice ||
+                    vehicle.expectedPrice ||
+                    vehicle.purchasePrice ||
+                    0
+                )}</div>
+                <div class="emi">${
+                  vehicle.downPayment
+                    ? "Down: ₹" + priceFormatter(vehicle.downPayment)
+                    : ""
+                } ${
+            vehicle.emi
+              ? "| EMI: ₹" + priceFormatter(vehicle.emi) + "/month"
+              : ""
+          }</div>
+                <div class="button-group">
+                  <button class="contact-btn" data-id="${
+                    vehicle._id
+                  }">Book Now</button>
+                  <button class="view-details-btn" data-id="${
+                    vehicle._id
+                  }">View Details</button>
+                </div>
+              </div>
+            </div>
+          `;
+
+          // Add event listeners for actions (delegated would be better for many cards)
+          const contactBtn = div.querySelector(".contact-btn");
+          const detailsBtn = div.querySelector(".view-details-btn");
+
+          contactBtn.addEventListener("click", () => {
+            // simple action: open mailto or booking page
+            window.location.href = `book.html?vehicleId=${vehicle._id}`;
+          });
+
+          detailsBtn.addEventListener("click", () => {
+            // open a details page (create route as needed)
+            window.location.href = `vehicle-details.html?id=${vehicle._id}`;
+          });
+
+          return div;
+        }
+
+        async function loadListings(page = 1, limit = 12, append = false) {
+          if (!append) grid.innerHTML = '<div class="loading">Loading vehicles...</div>';
+          try {
+            // build query params from selected filters
+            const params = new URLSearchParams();
+            params.set('page', page);
+            params.set('limit', limit);
+            if (selectedType) params.set('vehicleType', selectedType);
+            if (selectedBrand) params.set('vehicleName', selectedBrand);
+            if (selectedYear) params.set('manufacturingYear', selectedYear);
+            if (selectedPrice) {
+              if (selectedPrice.min !== null && selectedPrice.min !== undefined)
+                params.set('priceMin', selectedPrice.min);
+              if (selectedPrice.max !== null && selectedPrice.max !== undefined)
+                params.set('priceMax', selectedPrice.max);
+            }
+
+            const url = `https://ok-motor-51l3.vercel.app/api/vehicles/public/listings?${params.toString()}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Failed to fetch");
+            const data = await res.json();
+
+            // update paging info
+            currentPage = data.page || page;
+            totalPages = data.pages || 1;
+
+            if (!append) grid.innerHTML = "";
+            if (!data.vehicles || data.vehicles.length === 0) {
+              if (!append) grid.innerHTML = '<p style="padding:20px">No vehicles found.</p>';
+              document.getElementById('load-more-btn').style.display = 'none';
+              return;
+            }
+
+            data.vehicles.forEach((v) => {
+              const card = createCard(v);
+              grid.appendChild(card);
+            });
+
+            // show/hide load more
+            const loadMoreBtn = document.getElementById('load-more-btn');
+            if (currentPage < totalPages) {
+              loadMoreBtn.style.display = 'inline-block';
+            } else {
+              loadMoreBtn.style.display = 'none';
+            }
+          } catch (err) {
+            console.error(err);
+            if (!append) grid.innerHTML =
+              '<p style="padding:20px;color:#b00">Failed to load vehicles. Try again later.</p>';
+          }
+        }
+
+        // helper: update filter button label/badge
+        function setFilterBadge(filterKey, label) {
+          const btn = document.querySelector(`.filter-btn[data-filter="${filterKey}"]`);
+          if (!btn) return;
+          // remove existing badge if any
+          const old = btn.querySelector('.filter-badge');
+          if (old) old.remove();
+          if (!label) return;
+          const span = document.createElement('span');
+          span.className = 'filter-badge';
+          span.innerHTML = `${label} <span class="clear-filter" title="Clear">×</span>`;
+          btn.appendChild(span);
+          span.querySelector('.clear-filter').addEventListener('click', (e) => {
+            e.stopPropagation();
+            // clear corresponding filter
+            if (filterKey === 'brand') selectedBrand = null;
+            if (filterKey === 'year') selectedYear = null;
+            if (filterKey === 'type') selectedType = null;
+            if (filterKey === 'price') selectedPrice = null;
+            span.remove();
+            loadListings(1, 12, false);
+          });
+        }
+
+        // populate filter options from backend
+        async function populateFilters() {
+          try {
+            const res = await fetch('https://ok-motor-51l3.vercel.app/api/vehicles/public/filters');
+            if (!res.ok) throw new Error('Failed to fetch filters');
+            const data = await res.json();
+
+            // Price ranges
+            const priceContainer = document.getElementById('price-options');
+            priceContainer.innerHTML = '';
+            // Add an 'All' option
+            const allPriceBtn = document.createElement('button');
+            allPriceBtn.className = 'filter-option';
+            allPriceBtn.textContent = 'All';
+            allPriceBtn.addEventListener('click', () => {
+              selectedPrice = null;
+              setFilterBadge('price', null);
+              document.getElementById('price-dropdown').classList.remove('active');
+              loadListings(1,12,false);
+            });
+            priceContainer.appendChild(allPriceBtn);
+            data.priceRanges.forEach(pr => {
+              const btn = document.createElement('button');
+              btn.className = 'filter-option';
+              btn.textContent = pr.label;
+              btn.addEventListener('click', () => {
+                selectedPrice = { min: pr.min, max: pr.max, label: pr.label };
+                setFilterBadge('price', pr.label);
+                // close dropdown
+                document.getElementById('price-dropdown').classList.remove('active');
+                loadListings(1,12,false);
+              });
+              priceContainer.appendChild(btn);
+            });
+
+            // Brands
+            const brandContainer = document.getElementById('brand-options');
+            brandContainer.innerHTML = '';
+            // All Brands option
+            const allBrandBtn = document.createElement('button');
+            allBrandBtn.className = 'filter-option';
+            allBrandBtn.textContent = 'All';
+            allBrandBtn.addEventListener('click', () => {
+              selectedBrand = null; setFilterBadge('brand', null); document.getElementById('brand-dropdown').classList.remove('active'); loadListings(1,12,false);
+            });
+            brandContainer.appendChild(allBrandBtn);
+            data.brands.sort().forEach(b => {
+              const btn = document.createElement('button');
+              btn.className = 'filter-option';
+              btn.textContent = b;
+              btn.addEventListener('click', () => {
+                selectedBrand = b;
+                setFilterBadge('brand', b);
+                document.getElementById('brand-dropdown').classList.remove('active');
+                loadListings(1,12,false);
+              });
+              brandContainer.appendChild(btn);
+            });
+
+            // Years
+            const yearContainer = document.getElementById('year-options');
+            yearContainer.innerHTML = '';
+            // All Years
+            const allYearBtn = document.createElement('button');
+            allYearBtn.className = 'filter-option';
+            allYearBtn.textContent = 'All';
+            allYearBtn.addEventListener('click', () => { selectedYear = null; setFilterBadge('year', null); document.getElementById('year-dropdown').classList.remove('active'); loadListings(1,12,false); });
+            yearContainer.appendChild(allYearBtn);
+            data.years.forEach(y => {
+              const btn = document.createElement('button');
+              btn.className = 'filter-option';
+              btn.textContent = y;
+              btn.addEventListener('click', () => {
+                selectedYear = y;
+                setFilterBadge('year', y);
+                document.getElementById('year-dropdown').classList.remove('active');
+                loadListings(1,12,false);
+              });
+              yearContainer.appendChild(btn);
+            });
+
+            // Types
+            const typeContainer = document.getElementById('type-options');
+            typeContainer.innerHTML = '';
+            // All Types
+            const allTypeBtn = document.createElement('button');
+            allTypeBtn.className = 'filter-option';
+            allTypeBtn.textContent = 'All';
+            allTypeBtn.addEventListener('click', () => { selectedType = null; setFilterBadge('type', null); document.getElementById('type-dropdown').classList.remove('active'); loadListings(1,12,false); });
+            typeContainer.appendChild(allTypeBtn);
+            data.types.forEach(t => {
+              const btn = document.createElement('button');
+              btn.className = 'filter-option';
+              btn.textContent = t;
+              btn.addEventListener('click', () => {
+                selectedType = t;
+                setFilterBadge('type', t);
+                document.getElementById('type-dropdown').classList.remove('active');
+                loadListings(1,12,false);
+              });
+              typeContainer.appendChild(btn);
+            });
+
+          } catch (err) {
+            console.error('Failed to load filters', err);
+          }
+        }
+
+        // load filters then first page
+        populateFilters().then(() => {
+          currentPage = 1; loadListings(currentPage, 12, false);
+        });
+
+        // Load more handler
+        document.getElementById('load-more-btn').addEventListener('click', () => {
+          if (currentPage < totalPages) {
+            currentPage += 1;
+            loadListings(currentPage, 12, true);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

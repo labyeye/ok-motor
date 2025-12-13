@@ -104,7 +104,7 @@ const NetworkStatus = () => {
           <div className="status-message">
             {isOnline 
               ? 'All changes are being saved to the server'
-              : 'Working offline - Changes will sync when connection is restored'
+              : 'Working offline - Changes will sync when connection is resto#ff6b00'
             }
           </div>
         </div>

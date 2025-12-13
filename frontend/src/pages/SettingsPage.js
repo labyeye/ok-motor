@@ -5,8 +5,10 @@ import {
   ShoppingCart,
   TrendingUp,
   Wrench,
+  ShipWheel,
   Users,
   LogOut,
+  Image,
   ChevronDown,
   ChevronRight,
   FileText,
@@ -21,6 +23,8 @@ import networkService from '../services/networkService';
 import syncService from '../services/syncService';
 import offlineStorage from '../services/offlineStorage';
 import logo from '../images/company.png';
+import fileSaveService from '../services/fileSaveService';
+import { PDFDocument, StandardFonts } from 'pdf-lib';
 
 const SettingsPage = () => {
   const { user, logout } = useContext(AuthContext);
@@ -31,6 +35,7 @@ const SettingsPage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   
   const [storagePath, setStoragePath] = useState('');
+  const [saveDirs, setSaveDirs] = useState({});
   const [syncStatus, setSyncStatus] = useState({});
   const [syncStats, setSyncStats] = useState({});
   const [autoSync, setAutoSync] = useState(true);
@@ -47,6 +52,14 @@ const SettingsPage = () => {
       path: user?.role === 'admin' ? '/admin' : '/staff',
     },
     {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
+    },
+    {
       name: 'Buy',
       icon: ShoppingCart,
       submenu: [
@@ -60,6 +73,7 @@ const SettingsPage = () => {
       submenu: [
         { name: 'Create Sell Letter', path: '/sell/create' },
         { name: 'Sell Letter History', path: '/sell/history' },
+        { name: 'Sell Requests', path: '/sell/requests' },
       ],
     },
     {
@@ -90,6 +104,11 @@ const SettingsPage = () => {
           },
         ]
       : []),
+    {
+      name: 'Gallery',
+      icon: Image,
+      path: '/gallery/manage',
+    },
     {
       name: 'Vehicle History',
       icon: Bike,
@@ -136,6 +155,14 @@ const SettingsPage = () => {
   useEffect(() => {
     loadSettings();
     loadSyncStats();
+
+    // load save dirs
+    (async () => {
+      if (window.electronAPI && window.electronAPI.getSaveDirs) {
+        const res = await window.electronAPI.getSaveDirs();
+        if (res && res.success) setSaveDirs(res.data || {});
+      }
+    })();
 
     // Subscribe to network changes
     const unsubscribeNetwork = networkService.subscribe((online) => {
@@ -243,6 +270,68 @@ const SettingsPage = () => {
       showMessage('success', 'Opened PDF directory');
     } else {
       showMessage('error', 'Failed to open PDF directory');
+    }
+  };
+
+  const handleSelectSaveDir = async (docType) => {
+    if (!window.electronAPI || !window.electronAPI.selectSaveDir) {
+      showMessage('error', 'Directory selection is only available in desktop app');
+      return;
+    }
+
+    const result = await window.electronAPI.selectSaveDir(docType);
+    if (result && result.success) {
+      setSaveDirs((prev) => ({ ...prev, [docType]: result.path }));
+      showMessage('success', `Save directory for ${docType} set to ${result.path}`);
+    } else if (!result.canceled) {
+      showMessage('error', 'Failed to set save directory');
+    }
+  };
+
+  const handleClearSaveDir = async (docType) => {
+    if (window.electronAPI && window.electronAPI.clearSaveDir) {
+      const res = await window.electronAPI.clearSaveDir(docType);
+      if (res && res.success) {
+        setSaveDirs((prev) => {
+          const copy = { ...prev };
+          delete copy[docType];
+          return copy;
+        });
+        showMessage('success', `Clea#ff6b00 save directory for ${docType}`);
+        return;
+      }
+      showMessage('error', `Failed to clear save directory for ${docType}`);
+      return;
+    }
+
+    // Fallback: update UI state only
+    setSaveDirs((prev) => {
+      const copy = { ...prev };
+      delete copy[docType];
+      return copy;
+    });
+    showMessage('success', `Clea#ff6b00 save directory for ${docType}`);
+  };
+
+  const handleTestSaveDir = async (docType) => {
+    try {
+      // Create a tiny PDF for testing
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([300, 200]);
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      page.drawText(`OK Motor test save - ${docType}`, { x: 20, y: 100, size: 12, font });
+      const pdfBytes = await pdfDoc.save();
+      const filename = `okmotor-test-${docType}.pdf`;
+
+      const res = await fileSaveService.savePdfToDefaultDir(filename, pdfBytes, docType);
+      if (res && res.success) {
+        showMessage('success', `Test PDF saved${res.path ? ` to ${res.path}` : ''}`);
+      } else {
+        showMessage('error', `Test save failed${res && res.error ? `: ${res.error}` : ''}`);
+      }
+    } catch (error) {
+      console.error('Test save failed:', error);
+      showMessage('error', `Test save failed: ${error.message}`);
     }
   };
 
@@ -438,7 +527,7 @@ const SettingsPage = () => {
             style={{
               width: "100%",
               maxWidth: "25rem",
-              height: "13rem",
+              height: "9rem",
               objectFit: "cover",
               objectPosition: "center",
               display: "block",
@@ -624,7 +713,7 @@ const SettingsPage = () => {
                     fontSize: "0.875rem",
                     marginTop: "0.5rem",
                   }}>
-                    All offline data and PDFs will be stored in this location
+                    All offline data and PDFs will be sto#ff6b00 in this location
                   </p>
                   <button onClick={handleOpenPDFFolder} style={{
                     padding: "0.75rem 1.5rem",
@@ -684,7 +773,7 @@ const SettingsPage = () => {
                     fontSize: "0.875rem",
                     marginTop: "0.5rem",
                   }}>
-                    Automatically sync offline data when connection is restored
+                    Automatically sync offline data when connection is resto#ff6b00
                   </p>
                 </div>
 
@@ -830,6 +919,25 @@ const SettingsPage = () => {
                   Export all offline data as a JSON backup file
                 </p>
               </section>
+
+              {/* Default PDF Save Locations */}
+              {window.electronAPI && (
+                <section style={{ marginBottom: '2rem', paddingBottom: '2rem' }}>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#374151', marginBottom: '1rem' }}>Default PDF Save Locations</h2>
+                  <div style={{ display: 'grid', gap: '0.75rem' }}>
+                    {['buy', 'sell', 'service', 'advance'].map((type) => (
+                      <div key={type} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div style={{ minWidth: 90, fontWeight: 600, textTransform: 'capitalize' }}>{type}</div>
+                        <input type="text" value={saveDirs[type] || ''} readOnly style={{ flex: 1, padding: '0.5rem', borderRadius: 6, border: '1px solid #e5e7eb', background: '#fafafa' }} />
+                        <button onClick={() => handleSelectSaveDir(type)} style={{ padding: '0.5rem 0.75rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: 6 }}>Choose</button>
+                        <button onClick={() => handleTestSaveDir(type)} style={{ padding: '0.5rem 0.75rem', background: '#10b981', color: 'white', border: 'none', borderRadius: 6 }}>Test</button>
+                        <button onClick={() => handleClearSaveDir(type)} style={{ padding: '0.5rem 0.75rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: 6 }}>Clear</button>
+                      </div>
+                    ))}
+                  </div>
+                  <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.5rem' }}>When set, PDFs for that document type will be saved automatically to the chosen folder without showing a save dialog.</p>
+                </section>
+              )}
 
               {/* Message Display */}
               {message.text && (

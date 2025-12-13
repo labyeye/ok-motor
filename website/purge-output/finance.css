@@ -1,0 +1,228 @@
+
+.partners {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+}
+.partner {
+  width: 140px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fff;
+}
+.process {
+  max-width: 1920px;
+  margin: 24px auto;
+  margin-bottom: 100px;
+  padding: 0 16px;
+}
+.process h2 {
+  text-align: center;
+  margin-bottom: 32px;
+  color: black;
+}
+.dark-mode .process h2 {
+  text-align: center;
+  margin-bottom: 32px;
+  color: white;
+}
+
+/* Step description styling */
+
+/* New card-based layout for the financing process - single horizontal row */
+.process-cards {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  margin-top: 16px;
+  /* ensure cards always fit the container: no horizontal scroll */
+  overflow-x: hidden;
+  padding-bottom: 6px; /* give space for shadows on small screens */
+  align-items: stretch;
+  justify-content: stretch;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.process-card {
+  background: #ffffff;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  flex: 1 1 0; /* allow cards to shrink/grow and evenly distribute across full width */
+  min-width: 0; /* allow content to shrink inside card */
+  box-sizing: border-box;
+}
+.process-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.08);
+}
+
+.card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: #f3f4f6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #111827;
+  font-size: 1.2rem;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #111;
+}
+
+.card-desc {
+  margin: 0;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* Dark mode variants using .dark-mode (finance.html uses body.dark-mode) */
+.dark-mode .process-card {
+  background: #c65a18; /* dark card background */
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+.dark-mode .card-icon {
+  background: rgba(255, 255, 255, 0.04);
+  color: #f8fafc;
+}
+.dark-mode .card-title {
+  color: #f8fafc;
+}
+.dark-mode .card-desc {
+  color: #cbd5e1;
+}
+
+/* Also provide compatibility for .dark-theme class used on other pages */
+.dark-theme .process-card {
+  background: #0f1724;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.dark-theme .card-icon {
+  background: rgba(255, 255, 255, 0.04);
+  color: #f8fafc;
+}
+.dark-theme .card-title {
+  color: #f8fafc;
+}
+.dark-theme .card-desc {
+  color: #cbd5e1;
+}
+
+@media (max-width: 600px) {
+  .partners {
+    flex-direction: row;
+    overflow: auto;
+    padding: 8px;
+  }
+}
+
+/* Responsive tweaks specific to finance page */
+@media (max-width: 992px) {
+
+  .partners {
+    gap: 12px;
+    justify-content: flex-start;
+    padding: 8px 12px;
+  }
+
+  .partner {
+    flex: 0 0 45%;
+    width: auto;
+    padding: 8px;
+  }
+
+  .process {
+    padding: 0 12px;
+    margin: 12px auto;
+  }
+  /* Ensure the content container spans full width so headings center properly */
+}
+
+@media (max-width: 600px) {
+
+  .partners {
+    gap: 10px;
+    padding: 6px 8px;
+    justify-content: center;
+    overflow-x: auto;
+  }
+
+  .partner {
+    flex: 0 0 auto;
+    width: 140px;
+    padding: 8px;
+  }
+
+  .partner img {
+    width: 100%;
+    height: auto;
+    max-width: 140px;
+    max-height: 80px;
+    object-fit: contain;
+    display: block;
+  }
+
+  .process {
+    padding: 0 10px;
+  }
+
+  nav.navbar {
+    padding: 12px 4%;
+  }
+
+  .mobile-menu {
+    width: 85%;
+    max-width: 320px;
+  }
+}
+
+/* Stack process cards vertically on small devices for better readability */
+@media (max-width: 640px) {
+  .process-cards {
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 0;
+    align-items: stretch;
+  }
+
+  .process-card {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    padding: 14px;
+    box-shadow: none;
+    border-radius: 8px;
+  }
+
+  .card-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.1rem;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+
+  .card-desc {
+    font-size: 0.95rem;
+  }
+}

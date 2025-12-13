@@ -9,6 +9,9 @@ const dashboardRoutes = require("./routes/dashboard");
 const serviceBillRoutes = require("./routes/serviceBillRoutes");
 const advanceBillRoutes = require("./routes/advanceBillRoutes");
 const syncRoutes = require("./routes/syncRoutes");
+const vehicleRoutes = require("./routes/vehicleRoutes");
+const sellRequestRoutes = require("./routes/sellRequestRoutes");
+const updatesRoutes = require("./routes/updatesRoutes");
 const { protect } = require("./middleware/auth");
 const cors = require("cors");
 const app = express();
@@ -17,11 +20,14 @@ connectDB();
 // Dynamic CORS configuration for different environments
 const getAllowedOrigins = () => {
   const origins = [
+    "http://127.0.0.1:5500",
     "http://localhost:3000", // Local development
     "http://127.0.0.1:3000", // Local development
     "https://ok-motor.vercel.app", // Production
     "https://ok-motor-git-main-ok-motor.vercel.app", // Vercel preview
-    "https://ok-motor-ok-motor.vercel.app" // Vercel deployment
+    "https://ok-motor-ok-motor.vercel.app", // Vercel deployment
+    "https://okmotors.in",
+    "https://www.okmotors.in"
   ];
   
   // Add production origins from environment
@@ -101,6 +107,10 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/service-bills", serviceBillRoutes);
 app.use("/api/advance-bills", advanceBillRoutes);
 app.use("/api/sync", syncRoutes); // Sync routes
+app.use("/api/vehicles", vehicleRoutes); // Vehicle routes
+app.use("/api/gallery", require("./routes/galleryRoutes")); // Gallery routes
+app.use('/api/sell-request', sellRequestRoutes); // Sell form endpoints
+app.use('/api/updates', updatesRoutes); // Updates endpoints
 
 // Health check endpoint (also in syncRoutes but duplicated here for convenience)
 app.get("/api/health", (req, res) => {

@@ -9,13 +9,16 @@ import {
   ShoppingCart,
   TrendingUp,
   Wrench,
+  ShipWheel,
   Users,
+  Image,
   Bike,
   FileText,
   LogOut,
   Trash2,
   UserPlus,
-  Settings
+  Settings,
+  RefreshCw
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import logo from '../images/company.png';
@@ -69,7 +72,7 @@ const StaffList = () => {
       } catch (err) {
         // Handle authentication errors
         if (err.response?.status === 401) {
-          setError("Your session has expired. Please login again.");
+          setError("Your session has expi#ff6b00. Please login again.");
           logout();
           navigate('/login');
         } else if (err.response?.status === 403) {
@@ -106,6 +109,14 @@ const StaffList = () => {
       path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
+    },
+    {
       name: "Buy",
       icon: ShoppingCart,
       submenu: [
@@ -119,6 +130,15 @@ const StaffList = () => {
       submenu: [
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Updates",
+      icon: RefreshCw,
+      submenu: [
+        { name: "Create Update", path: "/updates/create" },
+        { name: "Updates List", path: "/updates" },
       ],
     },
     {
@@ -150,16 +170,21 @@ const StaffList = () => {
           },
         ]
       : []),
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
-    },
-    {
-      name: "Settings",
-      icon: Settings,
-      path: "/settings",
-    },
+      {
+        name: 'Gallery',
+        icon: Image,
+        path: '/gallery/manage',
+      },
+      {
+        name: "Vehicle History",
+        icon: Bike,
+        path: "/bike-history",
+      },
+      {
+        name: "Settings",
+        icon: Settings,
+        path: "/settings",
+      },
   ];
   const handleLogout = () => {
     logout();

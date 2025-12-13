@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>City — Bike Builders</title>
+    <meta
+      name="description"
+      content="Bike Builders — city listings for second hand bikes."
+    />
+    <meta name="keywords" content="second hand bikes, used bikes, pre-owned motorcycles, buy used bike" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Second Hand Bikes — Bike Builders" />
+    <meta name="twitter:description" content="Find second hand bikes in your city with Bike Builders — verified pre-owned motorcycles, inspections and local support." />
+    <meta name="twitter:image" content="https://www.bikebuilders.in/assets/social-preview.jpg" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "Bike Builders",
+        "url": "https://www.bikebuilders.in/locations-bihar.html",
+        "telephone": "+918210283582",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Rambag Chowk, Rambag Road, Gaushala Chowk",
+          "addressLocality": "Muzaffarpur",
+          "addressRegion": "Bihar",
+          "postalCode": "842002",
+          "addressCountry": "IN"
+        },
+        "areaServed": ["Muzaffarpur", "Bihar"]
+      }
+    </script>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./location-bihar.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <script>
+      // Helper to parse query params
+      function getQueryParam(name) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name);
+      }
+
+      async function renderCity() {
+        const slug = getQueryParam("city");
+        const dataUrl = "./location-bihar-cities.json";
+        try {
+          const res = await fetch(dataUrl);
+          const cities = await res.json();
+          const city = cities.find(
+            (c) => c.slug === slug || c.slug === (slug || "").toLowerCase()
+          );
+          if (!city) {
+            document.title = "City not found — Bike Builders";
+            document.getElementById("main").innerHTML =
+              '<p>City not found. <a href="https://www.bikebuilders.in/locations-bihar.html">Back to locations</a></p>';
+            return;
+          }
+
+          // Update title and meta
+          document.title = city.name + " — Second Hand Bikes | Bike Builders";
+          const desc = document.querySelector('meta[name="description"]');
+          if (desc)
+            desc.setAttribute(
+              "content",
+              city.description ||
+                `Find second hand bikes in ${city.name}. Verified pre-owned bikes, local inspections and finance options.`
+            );
+          // set meta keywords
+          let kw = document.querySelector('meta[name="keywords"]');
+          if (!kw) {
+            kw = document.createElement("meta");
+            kw.setAttribute("name", "keywords");
+            document.head.appendChild(kw);
+          }
+          kw.setAttribute(
+            "content",
+            city.keywords ||
+              `second hand bike in ${city.name}, used bike ${city.name}`
+          );
+          // Set canonical
+          let link = document.querySelector('link[rel="canonical"]');
+          if (!link) {
+            link = document.createElement("link");
+            link.setAttribute("rel", "canonical");
+            document.head.appendChild(link);
+          }
+          link.setAttribute(
+            "href",
+            `https://www.bikebuilders.in/second-hand-bikes-${city.slug}.html`
+          );
+
+          // Render content (include description, keywords and CTA to inventory)
+          const container = document.getElementById("main");
+          // build an extended SEO paragraph by combining the provided description and keywords
+          const keywordsText = (city.keywords || "")
+            .split(",")
+            .map((k) => k.trim())
+            .filter(Boolean);
+          const seoExtra = keywordsText.length
+            ? `People often search for ${keywordsText
+                .slice(0, 5)
+                .join(", ")} and related terms when looking for bikes in ${
+                city.name
+              }. We list a wide range of models, from commuter bikes to touring motorcycles, all thoroughly inspected and available with flexible finance options.`
+            : `We list a wide range of inspected pre-owned bikes, with local inspections, transparent pricing and finance options.`;
+
+          const descriptionHtml = `<p class="city-description">${
+            city.description || ""
+          }</p><p class="city-description-more">${seoExtra}</p>`;
+
+          container.innerHTML = `
+            <header class="city-header">
+              <h1>Second Hand Bikes in ${city.name}</h1>
+              ${descriptionHtml}
+            </header>
+            <section class="city-actions">
+              <a href="/inventory.html?city=${city.slug}" class="btn">Want a bike? View inventory</a>
+              <a href="/contact.html" class="btn-outline">Contact us for ${city.name}</a>
+            </section>
+            
+          `;
+        } catch (err) {
+          document.getElementById("main").innerHTML =
+            "<p>Failed to load city data. Please try again later.</p>";
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", renderCity);
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var t = document.getElementById('mobileMenuBtn'), n = document.querySelector('.header-nav');
+        if (!t || !n) return;
+        function setAria(e) { t.setAttribute('aria-expanded', e ? 'true' : 'false'); }
+        t.addEventListener('click', function (ev) { ev.preventDefault(); var o = n.classList.toggle('open'); setAria(o); document.body.style.overflow = o ? 'hidden' : ''; });
+        n.addEventListener('click', function (ev) {
+          var a = ev.target.closest && ev.target.closest('a'); if (!a) return;
+          var parent = a.closest && a.closest('.nav-dropdown');
+          if (parent && window.innerWidth <= 1024 && (a.classList.contains('dropdown-toggle') || a.classList.contains('nav-link'))) { ev.preventDefault(); parent.classList.toggle('open'); return; }
+          if (window.innerWidth <= 1024) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; }
+        });
+        window.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
+        window.addEventListener('resize', function () { if (window.innerWidth > 1024 && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
+      });
+    </script>
+  </head>
+  <body>
+    <!-- Top banner (contact + social) -->
+    <div class="top-banner" id="topBanner" role="banner">
+      <div class="top-banner-container">
+        <div class="top-banner-left">
+          <span
+            ><i class="fas fa-phone-alt" aria-hidden="true"></i>&nbsp;+91 72800 12222</span
+          >
+          
+        </div>
+        <div class="top-banner-right" aria-hidden="true">
+          <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sticky Header -->
+    <header class="site-header" id="siteHeader">
+      <div class="header-container">
+        <a href="./" class="header-logo">
+          <img
+             src="./assets/images/logoblack.png"
+            alt="Ok Motors Logo"
+            itemprop="logo"
+          />
+        </a>
+
+        <nav class="header-nav" aria-label="Main navigation">
+          <a href="./" class="nav-item active" data-translate="Home">Home</a>
+          <div class="nav-item nav-dropdown" aria-haspopup="true">
+            <a href="./inventory.html" class="nav-link dropdown-toggle"
+              >Buy Vehicle
+              <i
+                class="fa fa-caret-down"
+                aria-hidden="true"
+                style="margin-left: 6px"
+              ></i
+            ></a>
+            <div
+              class="dropdown-menu"
+              role="menu"
+              aria-label="Buy Vehicle submenu"
+            >
+              <h4 class="dropdown-column-title">Cars</h4>
+              <a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Maruti"
+                >Maruti</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Hyundai"
+                >Hyundai</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Tata"
+                >Tata</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Mahindra"
+                >Mahindra</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Toyota"
+                >Toyota</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Honda"
+                >Honda</a
+              >
+              <h4 class="dropdown-column-title">Vehicles</h4>
+              <a
+                class="dropdown-item"
+                href="inventory.html?brand=Royal%20Enfield"
+                >Royal Enfield</a
+              ><a class="dropdown-item" href="inventory.html?brand=Bajaj"
+                >Bajaj</a
+              ><a class="dropdown-item" href="inventory.html?brand=Hero">Hero</a
+              ><a class="dropdown-item" href="inventory.html?brand=Yamaha"
+                >Yamaha</a
+              ><a class="dropdown-item" href="inventory.html?brand=KTM">KTM</a
+              ><a class="dropdown-item" href="inventory.html?brand=TVS">TVS</a
+              ><a class="dropdown-item" href="inventory.html?brand=Honda"
+                >Honda</a
+              ><a class="dropdown-item" href="inventory.html?brand=Suzuki"
+                >Suzuki</a
+              >
+            </div>
+          </div>
+          <a
+            href="./sell.html"
+            class="nav-item"
+            data-translate="Sell Your Vehicle"
+            >Sell Your Vehicle</a
+          >
+          <a href="./about.html" class="nav-item" data-translate="About Us"
+            >About Us</a
+          >
+          <a href="./book.html" class="nav-item" data-translate="Book Bike"
+            >Book Vehicle</a
+          >
+          <a
+            href="./finance.html"
+            class="nav-item"
+            data-translate="Bike Finance"
+            >Bike Finance</a
+          >
+          <a href="./updates.html" class="nav-item" data-translate="Updates"
+            >Updates</a
+          >
+          <a href="./contact.html" class="nav-item" data-translate="Contact"
+            >Contact</a
+          >
+          <div class="nav-item nav-dropdown" aria-haspopup="true">
+            <a href="#" class="nav-link dropdown-toggle"
+              >Vehicle Valuation
+              <i
+                class="fa fa-caret-down"
+                aria-hidden="true"
+                style="margin-left: 6px"
+              ></i
+            ></a>
+            <div
+              class="dropdown-menu"
+              role="menu"
+              aria-label="Vehicle Valuation submenu"
+            >
+              <a class="dropdown-item" href="used-bike-valuation.html"
+                >Used Bike Valuation</a
+              >
+              <a class="dropdown-item" href="used-car-valuation.html"
+                >Used Car Valuation</a
+              >
+            </div>
+          </div>
+          <!-- Vehicle Valuation dropdown -->
+        </nav>
+
+        <div class="header-actions">
+          <button
+            class="mobile-menu-btn"
+            aria-label="Toggle menu"
+            id="mobileMenuBtn"
+          >
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="wrap">
+      <div class="loading">Loading...</div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-section">
+          <!-- 5-Star Rating Display -->
+          <div class="footer-stars" style="margin: 10px 0">
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+          </div>
+          <div class="logo">
+            <img
+               src="./assets/images/okmotor.png"
+              style="width: 220px"
+              alt="Bike Builders Logo"
+            />
+          </div>
+          <p data-translate="Bringing the future of bike riding to you today.">
+            Bringing the future of bike riding to you today.
+          </p>
+          <div class="social-icons">
+            <a href="https://www.facebook.com/people/OK-motors-Patna/100092409081953/?rdid=HgY7OAFmgYcvAsoC&share_url=https%253A%252F%252Fwww.facebook.com%252Fshare%252F1BpgmB9Azo%252F"
+              ><i class="fa-brands fa-facebook-f" style="color: #0400ff"></i
+            ></a>
+            <a
+              href="https://www.instagram.com/ok_motors_patna?igsh=MXdiYzU1NDZ6ankxZw%3D%3D"
+              aria-label="Visit our Instagram profile"
+              ><img
+                src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+                style="width: 20px"
+            /></a>
+            <a href="https://wa.me/918210283582"
+              ><i class="fa-brands fa-whatsapp" style="color: #00a841"></i
+            ></a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h3 data-translate="Quick Links">Quick Links</h3>
+          <ul>
+            <li>
+              <a href="https://www.bikebuilders.in/" data-translate="Home"
+                >Home</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://www.bikebuilders.in/inventory.html"
+                data-translate="Buy Bike"
+                >Buy Bike</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://www.bikebuilders.in/sell.html"
+                data-translate="Sell Your Bike"
+                >Sell Your Bike</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://www.bikebuilders.in/about.html"
+                aria-label="About Bike Builders"
+                data-translate="About Us"
+                >About Us</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://www.bikebuilders.in/book.html"
+                aria-label="Book Bike"
+                data-translate="Book Bike"
+                >Book Vehicle</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://www.bikebuilders.in/updates.html"
+                data-translate="Updates"
+                >Updates</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://www.bikebuilders.in/contact.html"
+                data-translate="Contact"
+                >Contact</a
+              >
+            </li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3 data-translate="Resources">Resources</h3>
+          <ul>
+            <li>
+              <a
+                href="https://www.bikebuilders.in/finance.html"
+                data-translate="Bike Finance"
+                >Bike Finance</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://www.bikebuilders.in/locations-bihar.html"
+                data-translate="Locations"
+                >Locations</a
+              >
+            </li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3 data-translate="Contact Us">Contact Us</h3>
+          <p
+            data-translate="Rambag Chowk, Rambag Road Kabristaan k bagal me, Gaushala Chowk Mandir , Muzaffarpur, Bihar 842002"
+          >
+            <i class="fas fa-map-marker-alt"></i> Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014
+          </p>
+          <span itemprop="telephone">+91 72800 12222</span>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p data-translate="&copy; 2023 Bike Builders. All rights reserved.">
+          &copy; 2023 Bike Builders. All rights reserved.
+        </p>
+        <a
+          href="https://www.pixelatenest.com/"
+          style="color: #a9a9a9"
+          data-translate="Designed By Pixelate Nest"
+          >Designed By Pixelate Nest</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

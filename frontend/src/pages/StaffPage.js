@@ -6,12 +6,14 @@ import {
   Wrench,
   Users,
   LogOut,
+  Image,
   ChevronDown,
   ChevronRight,
   FileText,
   RefreshCw,
   Bike,
   Settings,
+  ShipWheel,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "../images/company.png";
@@ -113,7 +115,15 @@ const StaffPage = () => {
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: "/admin",
+      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
+    },
+    {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
     },
     {
       name: "Buy",
@@ -129,6 +139,7 @@ const StaffPage = () => {
       submenu: [
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
       ],
     },
     {
@@ -147,7 +158,6 @@ const StaffPage = () => {
         { name: "Advance History", path: "/advance/history" },
       ],
     },
-    // Add the conditional check here
     ...(user?.role !== "staff"
       ? [
           {
@@ -161,14 +171,14 @@ const StaffPage = () => {
         ]
       : []),
     {
+      name: 'Gallery',
+      icon: Image,
+      path: '/gallery/manage',
+    },
+    {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
-    },
-    {
-      name: "Settings",
-      icon: Settings,
-      path: "/settings",
     },
     {
       name: "Settings",

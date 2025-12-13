@@ -2,7 +2,7 @@
 
 To build the Electron app with a custom icon, you need to add icon files to the `frontend/assets/` folder.
 
-## Required Files:
+## required Files:
 
 1. **icon.icns** - For Mac builds
 2. **icon.ico** - For Windows builds  
@@ -19,7 +19,7 @@ For now, the app will build without custom icons. Electron Builder will use defa
 #### Starting Point:
 Create a **512x512 pixel PNG** image with your logo/icon.
 
-#### Convert to Required Formats:
+#### Convert to required Formats:
 
 **On Mac:**
 ```bash

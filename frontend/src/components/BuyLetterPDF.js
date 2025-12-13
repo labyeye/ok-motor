@@ -1,17 +1,15 @@
-import React, {
+import {
   useState,
   useCallback,
   useContext,
   useEffect,
-  useRef,
 } from "react";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { saveAs } from "file-saver";
 import axios from "axios";
 import apiService from "../services/apiService";
-import networkService from "../services/networkService";
-import pdfService from "../services/pdfService";
 import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
+import fileSaveService from "../services/fileSaveService";
 import {
   FileText,
   User,
@@ -34,6 +32,8 @@ import {
   Menu,
   X,
   Settings,
+  ShipWheel,
+  RefreshCw
 } from "lucide-react";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
@@ -60,10 +60,9 @@ const BuyLetterForm = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const location = useLocation();
   const editLetter = location.state?.editLetter;
-  // Refs to prevent duplicate saves
-  const savePromiseRef = useRef(null);
-  const saveResultRef = useRef(null);
-  const [createdId, setCreatedId] = useState(null);
+  const [vehicles, setVehicles] = useState([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState("");
+  const [loadingVehicles, setLoadingVehicles] = useState(false);
   
   // Helper function to format date for input field (YYYY-MM-DD)
   const formatDateForInput = (dateString) => {
@@ -180,8 +179,49 @@ const BuyLetterForm = () => {
     };
 
     window.addEventListener("resize", handleResize);
+    fetchVehicles();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Fetch available vehicles from inventory
+  const fetchVehicles = async () => {
+    try {
+      setLoadingVehicles(true);
+      const token = localStorage.getItem("token");
+      const API_BASE = "https://ok-motor-51l3.vercel.app";
+      const response = await axios.get(`${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVehicles(response.data.vehicles || []);
+    } catch (error) {
+      console.error("Error fetching vehicles:", error);
+    } finally {
+      setLoadingVehicles(false);
+    }
+  };
+
+  // Handle vehicle selection from dropdown
+  const handleVehicleSelect = (e) => {
+    const vehicleId = e.target.value;
+    setSelectedVehicleId(vehicleId);
+    
+    if (vehicleId) {
+      const vehicle = vehicles.find(v => v._id === vehicleId);
+      if (vehicle) {
+        setFormData(prev => ({
+          ...prev,
+          vehicleName: vehicle.vehicleName || "",
+          vehicleModel: vehicle.vehicleModel || "",
+          vehicleColor: vehicle.vehicleColor || "",
+          registrationNumber: vehicle.registrationNumber || "",
+          chassisNumber: vehicle.chassisNumber || "",
+          engineNumber: vehicle.engineNumber || "",
+          vehiclekm: vehicle.kilometersRun?.toString() || "",
+          vehicleCondition: vehicle.vehicleCondition || "running",
+        }));
+      }
+    }
+  };
 
   const LoadingOverlay = () => (
     <div style={styles.loadingOverlay}>
@@ -437,8 +477,10 @@ const BuyLetterForm = () => {
       
       // VERSIONING: Always create new document, never update
       // If editing, create a new version with reference to original
+      const { _id, __v, createdAt, updatedAt, ...formDataWithoutId } = formData;
+      
       const dataToSave = {
-        ...formData,
+        ...formDataWithoutId,
         // Add version tracking fields
         ...(editLetter?._id && {
           originalDocumentId: editLetter.originalDocumentId || editLetter._id,
@@ -566,6 +608,14 @@ const BuyLetterForm = () => {
       path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
+    },
+    {
       name: "Buy",
       icon: ShoppingCart,
       submenu: [
@@ -579,6 +629,15 @@ const BuyLetterForm = () => {
       submenu: [
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Updates",
+      icon: RefreshCw,
+      submenu: [
+        { name: "Create Update", path: "/updates/create" },
+        { name: "Updates List", path: "/updates" },
       ],
     },
     {
@@ -609,6 +668,11 @@ const BuyLetterForm = () => {
           },
         ]
       : []),
+    {
+      name: 'Gallery',
+      icon: Image,
+      path: '/gallery/manage',
+    },
     {
       name: "Vehicle History",
       icon: Bike,
@@ -784,10 +848,20 @@ const BuyLetterForm = () => {
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
       const pdfBytes = await pdfDoc.save();
-      saveAs(
-        new Blob([pdfBytes], { type: "application/pdf" }),
-        `vehicle_buy_agreement_${formData.registrationNumber || "document"}.pdf`
-      );
+      const filename = `vehicle_buy_agreement_${formData.registrationNumber || "document"}.pdf`;
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      try {
+        const saveRes = await fileSaveService.savePdfToDefaultDir(filename, pdfBytes, 'buy');
+        if (saveRes && saveRes.success && window.electronAPI) {
+          alert(`PDF saved to ${saveRes.path || 'default PDF folder'}`);
+        } else {
+          // fallback to download
+          saveAs(blob, filename);
+        }
+      } catch (err) {
+        console.warn('Silent save failed for buy letter:', err);
+        saveAs(blob, filename);
+      }
 
       return savedLetterData;
     } catch (error) {
@@ -878,11 +952,7 @@ const BuyLetterForm = () => {
 
       await simulateProgress();
       setIsSaving(true);
-
-      // Check if we're in Electron
       const isElectron = window.electronAPI !== undefined;
-
-      // Use apiService for both electron and browser (handles offline/online)
       let existingLetter = await apiService.get(
         `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`
       );
@@ -892,7 +962,6 @@ const BuyLetterForm = () => {
         savedLetterData = existingLetter.data[0];
       } else {
         let response;
-        // Use apiService for both electron and browser
         const resp = await apiService.post("/api/buy-letters", formData);
         savedLetterData = resp.data || resp;
       }
@@ -974,12 +1043,19 @@ const BuyLetterForm = () => {
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
       const pdfBytes = await pdfDoc.save();
-      saveAs(
-        new Blob([pdfBytes], { type: "application/pdf" }),
-        `vehicle_purchase_agreement_${
-          formData.registrationNumber || "document"
-        }_en.pdf`
-      );
+      const filename = `vehicle_purchase_agreement_${formData.registrationNumber || "document"}_en.pdf`;
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      try {
+        const saveRes = await fileSaveService.savePdfToDefaultDir(filename, pdfBytes, 'buy');
+        if (saveRes && saveRes.success && window.electronAPI) {
+          alert(`PDF saved to ${saveRes.path || 'default PDF folder'}`);
+        } else {
+          saveAs(blob, filename);
+        }
+      } catch (err) {
+        console.warn('Silent save failed for buy letter (en):', err);
+        saveAs(blob, filename);
+      }
 
       return savedLetterData;
     } catch (error) {
@@ -1430,7 +1506,7 @@ const BuyLetterForm = () => {
       "6. OK MOTORS is not responsible for any past violations, legal disputes, or ownership claims before the date of purchase.",
       "7. The seller confirms that the bike has not been involved in any major accidents or insurance claims.",
       "8. Vehicle handover includes all keys, documents, and accessories as agreed.",
-      "9. The seller confirms that the chassis and engine numbers are intact and not tampered with.",
+      "9. The seller confirms that the chassis and engine numbers are intact and not tampe#ff6b00 with.",
     ];
 
     terms.forEach((term, index) => {
@@ -1552,7 +1628,7 @@ const BuyLetterForm = () => {
             style={{
               width: "100%",
               maxWidth: "25rem",
-              height: "13rem",
+              height: "9rem",
               objectFit: "cover",
               objectPosition: "center",
               display: "block",
@@ -1645,6 +1721,52 @@ const BuyLetterForm = () => {
           </div>
 
           <form className="form" style={styles.form}>
+            {/* Vehicle Selection from Inventory */}
+            <div style={styles.formSection}>
+              <h2 style={styles.sectionTitle}>
+                <Car style={styles.sectionIcon} /> Select Vehicle from Inventory (Optional)
+              </h2>
+              <div style={styles.formGrid}>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Car style={styles.formIcon} />
+                    Choose Vehicle (or enter manually below)
+                  </label>
+                  <select
+                    value={selectedVehicleId}
+                    onChange={handleVehicleSelect}
+                    style={styles.formSelect}
+                    disabled={loadingVehicles}
+                  >
+                    <option value="">
+                      {loadingVehicles ? "Loading vehicles..." : "-- Select Vehicle or Enter Manually --"}
+                    </option>
+                    {vehicles.map((vehicle) => (
+                      <option key={vehicle._id} value={vehicle._id}>
+                        {vehicle.vehicleName} {vehicle.vehicleModel} - {vehicle.registrationNumber}
+                        {vehicle.vehicleVariant ? ` (${vehicle.vehicleVariant})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {selectedVehicleId && (
+                <div style={{
+                  padding: "12px",
+                  backgroundColor: "#f0f9ff",
+                  borderRadius: "8px",
+                  marginTop: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}>
+                  <CheckCircle size={20} style={{ color: "#3b82f6" }} />
+                  <span style={{ fontSize: "0.875rem", color: "#1e293b" }}>
+                    Vehicle details auto-filled. You can modify them below if needed.
+                  </span>
+                </div>
+              )}
+            </div>
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <User style={styles.sectionIcon} /> Seller Information
@@ -2894,7 +3016,7 @@ const styles = {
       outline: "none",
       borderColor: "#3b82f6",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
-      backgroundColor: "red",
+      backgroundColor: "#ff6b00",
     },
   },
 

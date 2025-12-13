@@ -5,6 +5,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Wrench,
+  ShipWheel,
   Users,
   LogOut,
   ChevronDown,
@@ -18,6 +19,7 @@ import {
   Bike,
   Menu,
   Settings,
+  RefreshCw,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
@@ -115,7 +117,7 @@ const SellLetterHistory = () => {
       try {
         // Check if online
         const isOnline = navigator.onLine;
-        
+
         if (isOnline) {
           // ONLINE - Fetch from server
           const response = await axios.get(
@@ -125,14 +127,15 @@ const SellLetterHistory = () => {
           setSellLetters(response.data);
         } else {
           // OFFLINE - Fetch from local storage
-          console.log('Offline mode - loading sell letters from local storage');
-          const offlineStorage = (await import('../services/offlineStorage')).default;
-          const result = await offlineStorage.find('sellLetters');
-          
+          console.log("Offline mode - loading sell letters from local storage");
+          const offlineStorage = (await import("../services/offlineStorage"))
+            .default;
+          const result = await offlineStorage.find("sellLetters");
+
           if (result.success && result.data) {
             // Sort by creation date (newest first)
-            const sortedData = result.data.sort((a, b) => 
-              new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+            const sortedData = result.data.sort(
+              (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
             );
             setSellLetters(sortedData);
           } else {
@@ -141,22 +144,24 @@ const SellLetterHistory = () => {
         }
       } catch (error) {
         console.error("Error fetching sell letters:", error);
-        
+
         // If online fetch fails, try offline as fallback
         if (navigator.onLine) {
-          console.log('Online fetch failed, trying offline fallback');
+          console.log("Online fetch failed, trying offline fallback");
           try {
-            const offlineStorage = (await import('../services/offlineStorage')).default;
-            const result = await offlineStorage.find('sellLetters');
-            
+            const offlineStorage = (await import("../services/offlineStorage"))
+              .default;
+            const result = await offlineStorage.find("sellLetters");
+
             if (result.success && result.data) {
-              const sortedData = result.data.sort((a, b) => 
-                new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+              const sortedData = result.data.sort(
+                (a, b) =>
+                  new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
               );
               setSellLetters(sortedData);
             }
           } catch (offlineError) {
-            console.error('Offline fallback also failed:', offlineError);
+            console.error("Offline fallback also failed:", offlineError);
             setSellLetters([]);
           }
         } else {
@@ -404,9 +409,9 @@ const SellLetterHistory = () => {
 
       // Simulate progress
       await simulateProgress();
-      
+
       // Use the new PDF template loader
-      const existingPdfBytes = await loadPDFTemplate('sellletter.pdf');
+      const existingPdfBytes = await loadPDFTemplate("sellletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       // Create vehicle invoice page
@@ -429,7 +434,7 @@ const SellLetterHistory = () => {
           letter.previousTime || letter.todayTime || "12:00"
         ),
         amountInWords: formatIndianAmountInWords(letter.saleAmount), // Amount in words
-        saleAmount: formatRupee(letter.saleAmount), 
+        saleAmount: formatRupee(letter.saleAmount),
         sellerphone: letter.sellerphone || "9876543210",
         selleraadhar: letter.selleraadhar || "764465626571",
       };
@@ -940,7 +945,7 @@ const SellLetterHistory = () => {
       "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
       "2. A 3-month guarantee is provided on the entire engine.",
       "3. Engine warranty extends from 6 months to 1 year for performance defects.",
-      "4. Clutch plate is not covered under any guarantee or warranty.",
+      "4. Clutch plate is not cove#ff6b00 under any guarantee or warranty.",
       "5. Monthly servicing during the 3-month guarantee is mandatory.",
       "6. First 3 services are free, with minimal charges for oil and parts (excluding engine).",
       "7. Defects must be reported within 24 hours of purchase to avoid repair charges.",
@@ -949,7 +954,7 @@ const SellLetterHistory = () => {
       `10. OK MOTORS has recieved the money amount ${formatRupee(
         letter.saleAmount
       )} from ${letter.buyerName}.`,
-      "11. It is compulsory to get the vehicle serviced after driving 1500-1800 km otherwise guarrantee will be expired ",
+      "11. It is compulsory to get the vehicle serviced after driving 1500-1800 km otherwise guarrantee will be expi#ff6b00 ",
     ];
 
     terms.forEach((term, index) => {
@@ -1026,7 +1031,7 @@ const SellLetterHistory = () => {
       try {
         const token = localStorage.getItem("token");
         const isOnline = navigator.onLine;
-        
+
         if (isOnline) {
           // ONLINE - Delete from server
           if (!token) {
@@ -1036,26 +1041,28 @@ const SellLetterHistory = () => {
             return;
           }
 
-          await axios.delete(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+          await axios.delete(`https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
           alert("Sell letter deleted successfully!");
         } else {
           // OFFLINE - Delete from local storage
-          const offlineStorage = (await import('../services/offlineStorage')).default;
-          const result = await offlineStorage.deleteById('sellLetters', id);
-          
+          const offlineStorage = (await import("../services/offlineStorage"))
+            .default;
+          const result = await offlineStorage.deleteById("sellLetters", id);
+
           if (result.success) {
             setSellLetters(sellLetters.filter((letter) => letter._id !== id));
-            alert("Sell letter deleted from offline storage. Will sync when online.");
+            alert(
+              "Sell letter deleted from offline storage. Will sync when online."
+            );
           } else {
-            throw new Error(result.error || 'Failed to delete from offline storage');
+            throw new Error(
+              result.error || "Failed to delete from offline storage"
+            );
           }
         }
       } catch (error) {
@@ -1063,7 +1070,7 @@ const SellLetterHistory = () => {
 
         // Handle authentication errors
         if (error.response?.status === 401) {
-          alert("Your session has expired. Please login again.");
+          alert("Your session has expi#ff6b00. Please login again.");
           logout();
           navigate("/login");
         } else if (error.response?.status === 403) {
@@ -1080,8 +1087,8 @@ const SellLetterHistory = () => {
   };
 
   const handleEdit = (letter) => {
-  // Navigate to SellLetterPDF.js for editing, passing letter data via state
-  navigate('/sell/create', { state: { editLetter: letter } });
+    // Navigate to SellLetterPDF.js for editing, passing letter data via state
+    navigate("/sell/create", { state: { editLetter: letter } });
   };
   const handleLogout = () => {
     logout();
@@ -1092,6 +1099,14 @@ const SellLetterHistory = () => {
       name: "Dashboard",
       icon: LayoutDashboard,
       path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
+    },
+    {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
     },
     {
       name: "Buy",
@@ -1107,6 +1122,15 @@ const SellLetterHistory = () => {
       submenu: [
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Updates",
+      icon: RefreshCw,
+      submenu: [
+        { name: "Create Update", path: "/updates/create" },
+        { name: "Updates List", path: "/updates" },
       ],
     },
     {
@@ -1164,14 +1188,18 @@ const SellLetterHistory = () => {
   };
 
   return (
-    <div style={{
-      ...styles.container,
-      paddingTop: isMobile ? "80px" : "0",
-    }}>
-      <div style={{
-        ...styles.topBar,
-        display: isMobile && !isSidebarOpen ? "block" : "none",
-      }}>
+    <div
+      style={{
+        ...styles.container,
+        paddingTop: isMobile ? "80px" : "0",
+      }}
+    >
+      <div
+        style={{
+          ...styles.topBar,
+          display: isMobile && !isSidebarOpen ? "block" : "none",
+        }}
+      >
         <div
           style={{
             ...styles.hamburgerMenu,
@@ -1191,18 +1219,20 @@ const SellLetterHistory = () => {
       )}
 
       {/* Sidebar - same as SellLetterForm */}
-      <div style={{
-        ...styles.sidebar,
-        ...(isMobile
-          ? {
-              transform: isSidebarOpen
-                ? "translateX(0)"
-                : "translateX(-100%)",
-              position: "fixed",
-              zIndex: 15,
-            }
-          : {}),
-      }}>
+      <div
+        style={{
+          ...styles.sidebar,
+          ...(isMobile
+            ? {
+                transform: isSidebarOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
+                position: "fixed",
+                zIndex: 15,
+              }
+            : {}),
+        }}
+      >
         <div style={styles.sidebarHeader}>
           <img
             src={logo}
@@ -1210,7 +1240,7 @@ const SellLetterHistory = () => {
             style={{
               width: "100%",
               maxWidth: "25rem",
-              height: "13rem",
+              height: "9rem",
               objectFit: "cover", // match CSS
               objectPosition: "center",
               display: "block",
@@ -1473,7 +1503,7 @@ const SellLetterHistory = () => {
             onClose={() => setIsDownloading(false)}
           />
         )}
-    {/* Edit modal removed; navigation now handles editing */}
+        {/* Edit modal removed; navigation now handles editing */}
       </div>
     </div>
   );

@@ -27,9 +27,19 @@ function createWindow() {
 
   // Load React app
   if (isDev) {
-    // Development: Load from React dev server
-    mainWindow.loadURL('http://localhost:3000');
-    mainWindow.webContents.openDevTools();
+    const indexPath = path.join(__dirname, '..', 'build', 'index.html');
+    const startUrl = url.format({
+      pathname: indexPath,
+      protocol: 'file:',
+      slashes: true
+    });
+    
+    console.log('🚀 Loading URL:', startUrl);
+    console.log('📁 Index path:', indexPath);
+    console.log('� __dirname:', __dirname);
+    console.log('📦 isPackaged:', app.isPackaged);
+    
+    mainWindow.loadURL(startUrl);
   } else {
     // Production: Load from packaged build folder
     // Use url.format to properly create file:// URL
@@ -168,6 +178,79 @@ ipcMain.handle('save-pdf', async (event, { filename, buffer }) => {
   }
 });
 
+// Per-document save directories and silent save
+ipcMain.handle('get-save-dirs', async () => {
+  try {
+    const saveDirs = store.get('saveDirs', {});
+    return { success: true, data: saveDirs };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('select-save-dir', async (event, docType) => {
+  try {
+    const allowed = ['buy', 'sell', 'advance', 'service'];
+    if (!allowed.includes(docType)) return { success: false, error: 'Invalid docType' };
+
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory', 'createDirectory'],
+      title: `Select folder to save ${docType} PDFs`
+    });
+
+    if (!result.canceled && result.filePaths.length > 0) {
+      const selectedPath = result.filePaths[0];
+      store.set(`saveDirs.${docType}`, selectedPath);
+      return { success: true, path: selectedPath };
+    }
+
+    return { success: false, canceled: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('set-save-dir', async (event, docType, newPath) => {
+  try {
+    const allowed = ['buy', 'sell', 'advance', 'service'];
+    if (!allowed.includes(docType)) return { success: false, error: 'Invalid docType' };
+    await fs.mkdir(newPath, { recursive: true });
+    store.set(`saveDirs.${docType}`, newPath);
+    return { success: true, path: newPath };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('save-pdf-to-dir', async (event, { filename, buffer, docType }) => {
+  try {
+    const allowed = ['buy', 'sell', 'advance', 'service'];
+    if (!allowed.includes(docType)) return { success: false, error: 'Invalid docType' };
+
+    const saveDirs = store.get('saveDirs', {});
+    const targetDir = saveDirs[docType] || path.join(store.get('storagePath', app.getPath('userData')), 'pdfs');
+    await fs.mkdir(targetDir, { recursive: true });
+
+    const filePath = path.join(targetDir, filename);
+    await fs.writeFile(filePath, Buffer.from(buffer));
+    return { success: true, path: filePath };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Clear a saved directory for a docType
+ipcMain.handle('clear-save-dir', async (event, docType) => {
+  try {
+    const allowed = ['buy', 'sell', 'advance', 'service'];
+    if (!allowed.includes(docType)) return { success: false, error: 'Invalid docType' };
+    store.delete(`saveDirs.${docType}`);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle('open-pdf-directory', async () => {
   try {
     const storagePath = store.get('storagePath', app.getPath('userData'));
@@ -235,6 +318,37 @@ ipcMain.handle('get-pdf-template', async (event, templateName) => {
     return { success: true, data: Array.from(buffer) };
   } catch (error) {
     console.error('❌ Error loading PDF template:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Read an arbitrary asset (image) from the app bundle or build output.
+ipcMain.handle('read-asset', async (event, assetUrl) => {
+  try {
+    let assetPath = null;
+
+    // If a file:// URL was provided, convert to a local path
+    if (typeof assetUrl === 'string' && assetUrl.startsWith('file://')) {
+      try {
+        assetPath = url.fileURLToPath(assetUrl);
+      } catch (e) {
+        // fallback: strip file://
+        assetPath = assetUrl.replace(/^file:\/\//, '');
+      }
+    } else if (typeof assetUrl === 'string' && assetUrl.startsWith('/')) {
+      // leading slash - treat as path under build directory
+      assetPath = path.join(__dirname, '..', 'build', assetUrl);
+    } else if (typeof assetUrl === 'string') {
+      // relative path like static/media/xxx.png or similar
+      assetPath = path.join(__dirname, '..', 'build', assetUrl);
+    }
+
+    if (!assetPath) throw new Error('Unable to resolve asset path for: ' + assetUrl);
+
+    const buffer = await fs.readFile(assetPath);
+    return { success: true, data: Array.from(buffer) };
+  } catch (error) {
+    console.error('❌ read-asset failed for', assetUrl, error?.message || error);
     return { success: false, error: error.message };
   }
 });

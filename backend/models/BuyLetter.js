@@ -2,6 +2,13 @@
 const mongoose = require("mongoose");
 
 const BuyLetterSchema = new mongoose.Schema({
+  // Vehicle Reference - New system
+  vehicle: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Vehicle",
+    index: true,
+  },
+
   // Seller Information
   sellerName: { type: String, required: true },
   sellerFatherName: { type: String, required: true },
@@ -11,21 +18,21 @@ const BuyLetterSchema = new mongoose.Schema({
   selleraadharphone: { type: String },
   selleraadharphone2: { type: String },
 
-  // Vehicle Information
-  vehicleName: { type: String, required: true },
-  vehicleModel: { type: String, required: true },
-  vehicleColor: { type: String, required: true },
+  // Vehicle Information - Legacy fields (kept for backward compatibility)
+  // If vehicle reference is provided, these should be auto-populated from Vehicle model
+  vehicleName: { type: String },
+  vehicleModel: { type: String },
+  vehicleColor: { type: String },
   registrationNumber: {
     type: String,
-    required: true,
     unique: true,
+    sparse: true, // Allow null values and still maintain uniqueness for non-null
   },
-  chassisNumber: { type: String, required: true },
-  engineNumber: { type: String, required: true },
+  chassisNumber: { type: String },
+  engineNumber: { type: String },
   vehiclekm: { type: String },
   vehicleCondition: {
     type: String,
-    required: true,
     enum: ["running", "notRunning"],
   },
 
@@ -63,11 +70,19 @@ const BuyLetterSchema = new mongoose.Schema({
   note: { type: String },
 
   // Versioning fields - to track document history
-  originalDocumentId: { type: mongoose.Schema.Types.ObjectId, ref: 'BuyLetter', default: null },
-  previousVersionId: { type: mongoose.Schema.Types.ObjectId, ref: 'BuyLetter', default: null },
+  originalDocumentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "BuyLetter",
+    default: null,
+  },
+  previousVersionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "BuyLetter",
+    default: null,
+  },
   version: { type: Number, default: 1 },
   editedAt: { type: Date },
-  editedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
   // Reference to user who created it
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },

@@ -13,7 +13,7 @@ echo ""
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
-RED='\033[0;31m'
+#ff6b00='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Detect OS
@@ -30,7 +30,7 @@ echo ""
 
 # Check if we're in the right directory
 if [ ! -f "package.json" ]; then
-    echo -e "${RED}❌ Error: package.json not found!${NC}"
+    echo -e "${#ff6b00}❌ Error: package.json not found!${NC}"
     echo "Please run this script from the frontend/ directory:"
     echo "  cd frontend"
     echo "  ./build-electron.sh"
@@ -80,7 +80,7 @@ case $choice in
                 npm run electron:build:linux
                 ;;
             *)
-                echo -e "${RED}❌ Unsupported platform${NC}"
+                echo -e "${#ff6b00}❌ Unsupported platform${NC}"
                 exit 1
                 ;;
         esac
@@ -103,7 +103,7 @@ case $choice in
             echo -e "${YELLOW}⚠️  Cross-platform build: Mac → Windows${NC}"
             echo "Checking for Wine..."
             if ! command -v wine &> /dev/null; then
-                echo -e "${RED}❌ Wine not found!${NC}"
+                echo -e "${#ff6b00}❌ Wine not found!${NC}"
                 echo "Install with: brew install --cask wine-stable"
                 echo ""
                 read -p "Would you like to install Wine now? (y/n): " install_wine
@@ -160,7 +160,7 @@ case $choice in
         exit 0
         ;;
     *)
-        echo -e "${RED}❌ Invalid choice${NC}"
+        echo -e "${#ff6b00}❌ Invalid choice${NC}"
         exit 1
         ;;
 esac

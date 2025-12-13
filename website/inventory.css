@@ -1,0 +1,1401 @@
+.filters-container {
+  margin: 20px 0;
+  padding: 0 20px;
+}
+
+:root {
+  --bg-color: #ffffff;
+  --text-color: #1a1a1a;
+  --filter-btn-bg: #f5f5f5;
+  --filter-btn-hover: #e0e0e0;
+  --filter-btn-active-bg: #ff6b00;
+  --filter-btn-active-text: #ffffff;
+  --dropdown-bg: #ffffff;
+  --dropdown-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --range-input-border: #dddddd;
+  --mobile-filter-bg: #ffffff;
+  --mobile-filter-header-border: #eeeeee;
+  --reset-btn-bg: #f5f5f5;
+}
+
+.login-btn button {
+  background-color: white;
+  color: black;
+  border: 1px solid var(--primary-color);
+  border-radius: 25px;
+  padding: 8px 25px;
+  font-family: "Poppins", sans-serif;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.dark-mode .login-btn button {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 25px;
+  padding: 8px 25px;
+  font-family: "Poppins", sans-serif;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+
+
+.dark-mode {
+  --bg-color: #1e1e1e;
+  --text-color: #f0f0f0;
+  --filter-btn-bg: #2d2d2d;
+  --filter-btn-hover: #3d3d3d;
+  --filter-btn-active-bg: #ff6b00;
+  --filter-btn-active-text: #ffffff;
+  --dropdown-bg: #2d2d2d;
+  --dropdown-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --range-input-border: #444444;
+  --mobile-filter-bg: #2d2d2d;
+  --mobile-filter-header-border: #444444;
+  --reset-btn-bg: #3d3d3d;
+}
+
+.filters-container,
+.filter-btn,
+.filter-dropdown {
+  color: var(--text-color);
+}
+
+.bike-slider {
+  position: relative;
+}
+
+.desktop-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  background-color: transparent;
+}
+
+.filter-btn {
+  background: var(--filter-btn-bg);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+  background: var(--filter-btn-hover);
+}
+
+.filter-btn.active {
+  background: var(--filter-btn-active-bg);
+  color: var(--filter-btn-active-text);
+}
+
+.filter-group {
+  position: relative;
+}
+
+.filter-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--dropdown-bg);
+  border-radius: 8px;
+  box-shadow: var(--dropdown-shadow);
+  padding: 15px;
+  z-index: 100;
+  min-width: 250px;
+  margin-top: 5px;
+}
+
+.filter-dropdown.show {
+  display: block;
+}
+
+/* Mobile Filters */
+
+@keyframes slideUp {
+  to {
+    transform: translateY(0);
+  }
+}
+
+input[type="range"] {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--filter-btn-bg);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--filter-btn-active-bg);
+  cursor: pointer;
+}
+
+/* Responsive */
+
+/* Make slider images full width on small screens and align arrows */
+@media (max-width: 768px) {
+
+  .bike-slider .slide img,
+  .bike-slider img,
+  .image-container img {
+    width: 100% !important;
+    height: 300px !important;
+    display: block;
+    margin: 0 auto;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+
+  /* Ensure the slider container uses full width */
+  .image-container {
+    width: 100%;
+    padding: 0 12px;
+    box-sizing: border-box;
+  }
+
+  /* Position arrows vertically cente#ff6b00 and outside edges */
+
+  /* Slightly larger icons on mobile */
+
+  /* Keep arrows outside the main image flow */
+}
+
+@media (max-width: 768px) {
+  .desktop-filters {
+    display: none;
+  }
+
+  .filters-container {
+    padding: 0 15px;
+  }
+}
+
+.hero-section {
+  position: relative;
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+}
+
+.brand-logo {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  overflow: visible;
+  /* ensure badges aren't clipped */
+  min-width: 72px;
+}
+
+@media (max-width: 768px) {
+
+  .brand-logo {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .brand-logo {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Mobile bottom action bar for filters & sort */
+
+.price-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 15px;
+}
+
+.price-container .price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ff6b00;
+}
+
+.price-container .emi {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Main Inventory Layout */
+
+
+.status-badge {
+  position: absolute;
+  top: 10px;
+  right: 6px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: white;
+  z-index: 2;
+  max-width: 96px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.dark-mode .status-badge {
+  position: absolute;
+  top: 8px;
+  right: 6px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  z-index: 2;
+  max-width: 96px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.image-container {
+  position: relative;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.button-group button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.contact-btn {
+  background-color: #ff6b00;
+  color: white;
+}
+
+.contact-btn:hover {
+  background-color: #e05d00;
+}
+
+.view-details-btn {
+  background-color: #333;
+  color: white;
+}
+
+.view-details-btn:hover {
+  background-color: #444;
+}
+
+.button-group button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+@media (max-width: 576px) {
+  .button-group {
+    flex-direction: column;
+  }
+}
+
+.filter-btn {
+  background: #ffffff;
+  color: black;
+  border: 1px solid #444;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.dark-mode .filter-btn {
+  background: #2a2a2a;
+  color: white;
+  border: 1px solid #444;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.filter-btn.active {
+  background: #ff6b00;
+  border-color: #ff6b00;
+  color: white;
+  padding: 12px 20px;
+
+}
+
+.filter-btn:hover {
+  background: #333;
+}
+
+.filter-btn i {
+  transition: transform 0.2s ease;
+}
+
+.filter-btn.active i {
+  transform: rotate(180deg);
+}
+
+/* Bike Grid Container */
+.bike-grid-container {
+  flex-grow: 1;
+  padding-right: 20px;
+  box-sizing: border-box;
+  width: calc(100% - 330px);
+}
+
+
+/* Bike Grid */
+.bike-grid {
+  display: grid;
+  /* show 4 cards per row on desktop */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+
+@media (max-width: 1200px) {
+
+  .bike-grid-container {
+    width: calc(100% - 310px);
+  }
+}
+
+@media (max-width: 992px) {
+
+  /* 3 columns for medium screens */
+  .bike-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .bike-grid-container {
+    width: 100%;
+    padding-right: 0;
+  }
+
+  /* 2 columns on tablets / small laptops */
+  .bike-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .filter-btn {
+    padding: 12px 15px;
+  }
+}
+
+@media (max-width: 576px) {
+  .bike-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-btn {
+    font-size: 14px;
+  }
+}
+
+/* Animation for filter dropdown */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Brand filter specific styles */
+
+/* Custom scrollbar for brand dropdown */
+
+/* Make the filter button show selected brand */
+.filter-btn[data-filter="brand"] {
+  position: relative;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 30px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+
+.bike-grid {
+  display: grid;
+  /* enforce 4 columns on larger screens, with responsive fallback in media queries */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Search term display */
+
+@media (max-width: 768px) {
+
+  .bike-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .brand-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Button group in cards */
+  .button-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .button-group button {
+    width: 100%;
+  }
+}
+
+
+/* Mobile search container adjustments */
+@media (max-width: 768px) {
+
+
+  /* Mobile Filter Button */
+
+  .bike-grid-container {
+    width: 100% !important;
+    padding-right: 0 !important;
+  }
+
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Search and Sort Container */
+
+/* Modern Search Box */
+
+/* Modern Sort Dropdown */
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .section-header {
+    padding: 15px;
+  }
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Page Title Section */
+.page-title {
+  background: linear-gradient(135deg,
+      var(--secondary-color) 0%,
+      #1a1b1d 100%);
+  padding: 80px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-title::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,96C1248,75,1344,53,1392,42.7L1440,32L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+  background-size: cover;
+  opacity: 0.1;
+}
+
+.page-title h1 {
+  color: var(--white);
+  font-size: 52px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  position: relative;
+}
+
+.breadcrumb-trail {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  position: relative;
+}
+
+.breadcrumb-trail a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.breadcrumb-trail a:hover {
+  color: var(--primary-color);
+}
+
+/* Filters Section */
+.filters-container {
+  background: var(--white);
+  padding: 30px 20px;
+  box-shadow: var(--shadow);
+  margin: 40px auto 40px;
+  max-width: 1200px;
+  border-radius: 10px;
+  position: relative;
+}
+
+.desktop-filters {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-btn {
+  background: var(--white);
+  border: 2px solid var(--border-color);
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--heading-color);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+  background: var(--primary-color);
+  color: var(--white);
+  border-color: var(--primary-color);
+}
+
+.filter-group {
+  position: relative;
+}
+
+.filter-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--white);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  min-width: 250px;
+  margin-top: 10px;
+  z-index: 100;
+}
+
+.filter-dropdown.active {
+  display: block;
+}
+
+/* Dropdown option buttons inside filter dropdowns */
+.filter-dropdown .filter-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-color);
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.filter-dropdown .filter-option:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+/* small badge inside filter button to show active selection */
+.filter-btn .filter-badge {
+  display: inline-block;
+  margin-left: 8px;
+  background: rgba(0,0,0,0.06);
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.filter-btn .filter-badge .clear-filter {
+  margin-left: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #777;
+}
+
+/* Load more button */
+.load-more-container {
+  text-align: center;
+  margin: 24px 0 60px;
+}
+.load-more-btn {
+  background: var(--primary-color);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-color);
+}
+
+/* Section Header */
+.section-header {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* Search and Sort */
+
+/* Bike Grid */
+.bike-grid-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+.bike-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr 1fr));
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.image-container {
+  height: 20%;
+  background: var(--bg-light);
+}
+
+.image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.status-badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+.car-body {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(208, 24, 24, 0.1);
+  color: var(--primary-color);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 4px;
+  text-decoration: none;
+  margin-bottom: 10px;
+}
+
+
+.model {
+  color: var(--text-color);
+  font-size: 15px;
+  display: block;
+  margin-bottom: 15px;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 20px 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--text-color);
+}
+
+.detail-item i {
+  color: var(--primary-color);
+  font-size: 18px;
+}
+
+.price-container {
+  margin-top: 20px;
+}
+
+.price {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 8px;
+}
+
+.emi {
+  font-size: 14px;
+  color: var(--text-color);
+  margin-bottom: 20px;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.contact-btn,
+.view-details-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.contact-btn {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+.contact-btn:hover {
+  background: var(--primary-hover);
+}
+
+.view-details-btn {
+  background: transparent;
+  color: var(--heading-color);
+  border: 2px solid var(--border-color);
+}
+
+.view-details-btn:hover {
+  background: var(--heading-color);
+  color: var(--white);
+  border-color: var(--heading-color);
+}
+
+/* 
+/* Responsive Design */
+@media (max-width: 768px) {
+  .page-title h1 {
+    font-size: 36px;
+  }
+
+  .desktop-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .bike-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Loading Animation */
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-color);
+}
+
+.loading::after {
+  content: "";
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  margin-left: 10px;
+  border: 4px solid var(--border-color);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Vehicle Card Styles */
+.bike-card {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.bike-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  border-color: #ff6b00;
+}
+
+/* Image Container */
+.bike-card .image-container {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.bike-card .image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bike-card:hover .image-container img {
+  transform: scale(1.08);
+}
+
+/* Status Badge */
+.bike-card .status-badge {
+  position: absolute;
+  top: 13px;
+  right: 12px; /* anchor to top-right corner of image */
+  left: auto;
+  padding: 6px 10px;
+  border-radius: 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: white;
+  background: #ff6b00;
+  z-index: 6; /* above photo-count */
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.25);
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Photo Count Badge */
+.bike-card .photo-count {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 2;
+  backdrop-filter: blur(10px);
+}
+
+/* Card Content */
+.bike-card .card-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Category Badge */
+.bike-card .car-body {
+  display: inline-block;
+  padding: 4px 10px;
+  background: rgba(255, 107, 0, 0.1);
+  color: #ff6b00;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  width: fit-content;
+}
+
+/* Title */
+.bike-card h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+/* Model/Subtitle */
+.bike-card .model {
+  color: #6c757d;
+  font-size: 13px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Details Grid */
+.bike-card .details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+  padding: 12px 0;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.bike-card .detail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #495057;
+}
+
+.bike-card .detail-item i {
+  color: #ff6b00;
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+
+.bike-card .detail-item span {
+  font-weight: 600;
+  color: #212529;
+  font-size: 13px;
+}
+
+/* Price Container */
+.bike-card .price-container {
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.bike-card .price {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ff6b00;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bike-card .price .original-price {
+  font-size: 14px;
+  color: #6c757d;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.bike-card .emi {
+  color: #6c757d;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+/* Button Group */
+.bike-card .button-group {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.bike-card .button-group button {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bike-card .view-details-btn {
+  background: #f8f9fa;
+  color: #212529;
+  border: 1px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.bike-card .view-details-btn:hover {
+  background: #e9ecef;
+  transform: translateX(4px);
+}
+
+.bike-card .contact-btn {
+  background: linear-gradient(135deg, #ff6b00 0%, #e85d00 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+}
+
+.bike-card .contact-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 107, 0, 0.4);
+}
+
+.bike-card .button-group button:disabled {
+  background-color: #e9ecef;
+  color: #adb5bd;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Action Icons (Heart & Share) */
+.bike-card .action-icons {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 3;
+}
+
+.bike-card .action-icons button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #dee2e6;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bike-card .action-icons button:hover {
+  transform: scale(1.1);
+  background: #ff6b00;
+  border-color: #ff6b00;
+  color: white;
+}
+
+/* Responsive Design */
+
+/* Large Desktops (1200px+) - 4 columns */
+@media (min-width: 1200px) {
+  .bike-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Medium Desktops (992px - 1199px) - 3 columns */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .bike-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .bike-card .details {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Tablets (768px - 991px) - 2 columns */
+@media (min-width: 768px) and (max-width: 991px) {
+  .bike-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  
+  .bike-card {
+    height: 420px;
+  }
+  
+  .bike-card .image-container {
+    height: 200px;
+  }
+  
+  .bike-card h3 {
+    font-size: 17px;
+  }
+  
+  .bike-card .details {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  
+  .bike-card .detail-item {
+    font-size: 11px;
+  }
+  
+  .bike-card .detail-item i {
+    font-size: 14px;
+  }
+}
+
+/* Mobile Landscape (576px - 767px) - 2 columns */
+@media (min-width: 576px) and (max-width: 767px) {
+  .bike-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  
+  .bike-card {
+    height: 400px;
+  }
+  
+  .bike-card .image-container {
+    height: 160px;
+  }
+  
+  .bike-card .card-content {
+    padding: 14px;
+  }
+  
+  .bike-card h3 {
+    font-size: 15px;
+  }
+  
+  .bike-card .model {
+    font-size: 12px;
+  }
+  
+  .bike-card .details {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin: 10px 0;
+    padding: 10px 0;
+  }
+  
+  .bike-card .detail-item {
+    font-size: 11px;
+  }
+  
+  .bike-card .detail-item i {
+    font-size: 14px;
+  }
+  
+  .bike-card .price {
+    font-size: 18px;
+  }
+  
+  .bike-card .button-group button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Mobile Portrait (less than 576px) - 1 column */
+@media (max-width: 575px) {
+  .bike-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .bike-card {
+    height: auto;
+    max-width: 100%;
+  }
+  
+  .bike-card .image-container {
+    height: 220px;
+  }
+  
+  .bike-card .card-content {
+    padding: 16px;
+  }
+  
+  .bike-card h3 {
+    font-size: 18px;
+  }
+  
+  .bike-card .model {
+    font-size: 14px;
+  }
+  
+  .bike-card .details {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 14px 0;
+    padding: 14px 0;
+  }
+  
+  .bike-card .detail-item {
+    font-size: 12px;
+  }
+  
+  .bike-card .detail-item i {
+    font-size: 16px;
+  }
+  
+  .bike-card .detail-item span {
+    font-size: 13px;
+  }
+  
+  .bike-card .price {
+    font-size: 22px;
+  }
+  
+  .bike-card .emi {
+    font-size: 13px;
+  }
+  
+  .bike-card .button-group {
+    flex-direction: row;
+    gap: 10px;
+  }
+  
+  .bike-card .button-group button {
+    padding: 12px 18px;
+    font-size: 13px;
+  }
+}
+
+/* Extra Small Mobile (less than 380px) */
+@media (max-width: 379px) {
+  .bike-card .image-container {
+    height: 200px;
+  }
+  
+  .bike-card h3 {
+    font-size: 16px;
+  }
+  
+  .bike-card .details {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .bike-card .detail-item {
+    font-size: 11px;
+  }
+  
+  .bike-card .price {
+    font-size: 20px;
+  }
+  
+  .bike-card .button-group button {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+}

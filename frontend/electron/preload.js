@@ -18,6 +18,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openPDFDirectory: () => ipcRenderer.invoke('open-pdf-directory'),
   getPDFTemplate: (templateName) => ipcRenderer.invoke('get-pdf-template', templateName),
 
+  // Per-document save dirs
+  getSaveDirs: () => ipcRenderer.invoke('get-save-dirs'),
+  selectSaveDir: (docType) => ipcRenderer.invoke('select-save-dir', docType),
+  setSaveDir: (docType, path) => ipcRenderer.invoke('set-save-dir', docType, path),
+  // Silent save to configu#ff6b00 directory (no dialog)
+  savePDFToDir: ({ filename, buffer, docType }) => ipcRenderer.invoke('save-pdf-to-dir', { filename, buffer, docType }),
+  // Clear a saved directory
+  clearSaveDir: (docType) => ipcRenderer.invoke('clear-save-dir', docType),
+
   // App settings
   getAppSetting: (key) => ipcRenderer.invoke('get-app-setting', key),
   setAppSetting: (key, value) => ipcRenderer.invoke('set-app-setting', key, value),
@@ -27,4 +36,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Check if running in Electron
   isElectron: true
+  ,
+  // Read an asset (image) from the app bundle/main process (returns Uint8Array as Array)
+  readAsset: (assetUrl) => ipcRenderer.invoke('read-asset', assetUrl),
 });

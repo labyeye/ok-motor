@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Used Bike Valuation | Ok Motors</title>
+    <meta
+      name="description"
+      content="Get an instant used bike valuation from Ok Motors. Enter bike details and get an estimated market price."
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      crossorigin="anonymous"
+    />
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var t = document.getElementById('mobileMenuBtn'), n = document.querySelector('.header-nav');
+        if (!t || !n) return;
+        function setAria(e) { t.setAttribute('aria-expanded', e ? 'true' : 'false'); }
+        t.addEventListener('click', function (ev) { ev.preventDefault(); var o = n.classList.toggle('open'); setAria(o); document.body.style.overflow = o ? 'hidden' : ''; });
+        n.addEventListener('click', function (ev) {
+          var a = ev.target.closest && ev.target.closest('a'); if (!a) return;
+          var parent = a.closest && a.closest('.nav-dropdown');
+          if (parent && window.innerWidth <= 1024 && (a.classList.contains('dropdown-toggle') || a.classList.contains('nav-link'))) { ev.preventDefault(); parent.classList.toggle('open'); return; }
+          if (window.innerWidth <= 1024) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; }
+        });
+        window.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
+        window.addEventListener('resize', function () { if (window.innerWidth > 1024 && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
+      });
+    </script>
+  </head>
+  <body>
+    <!-- Top banner (contact + social) -->
+    <div class="top-banner" id="topBanner" role="banner">
+      <div class="top-banner-container">
+        <div class="top-banner-left">
+          <span
+            ><i class="fas fa-phone-alt" aria-hidden="true"></i>&nbsp;+91 72800
+            12222</span
+          >
+        </div>
+        <div class="top-banner-right" aria-hidden="true">
+          <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sticky Header -->
+    <header class="site-header" id="siteHeader">
+      <div class="header-container">
+        <a href="./" class="header-logo">
+          <img
+             src="./assets/images/logoblack.png"
+            alt="Ok Motors Logo"
+            itemprop="logo"
+          />
+        </a>
+
+        <nav class="header-nav" aria-label="Main navigation">
+          <a href="./" class="nav-item" data-translate="Home">Home</a>
+          <div class="nav-item nav-dropdown" aria-haspopup="true">
+            <a href="./inventory.html" class="nav-link dropdown-toggle"
+              >Buy Vehicle
+              <i
+                class="fa fa-caret-down"
+                aria-hidden="true"
+                style="margin-left: 6px"
+              ></i
+            ></a>
+            <div
+              class="dropdown-menu"
+              role="menu"
+              aria-label="Buy Vehicle submenu"
+            >
+              <h4 class="dropdown-column-title">Cars</h4>
+              <a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Maruti"
+                >Maruti</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Hyundai"
+                >Hyundai</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Tata"
+                >Tata</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Mahindra"
+                >Mahindra</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Toyota"
+                >Toyota</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Honda"
+                >Honda</a
+              >
+              <h4 class="dropdown-column-title">Vehicles</h4>
+              <a
+                class="dropdown-item"
+                href="inventory.html?brand=Royal%20Enfield"
+                >Royal Enfield</a
+              ><a class="dropdown-item" href="inventory.html?brand=Bajaj"
+                >Bajaj</a
+              ><a class="dropdown-item" href="inventory.html?brand=Hero">Hero</a
+              ><a class="dropdown-item" href="inventory.html?brand=Yamaha"
+                >Yamaha</a
+              ><a class="dropdown-item" href="inventory.html?brand=KTM">KTM</a
+              ><a class="dropdown-item" href="inventory.html?brand=TVS">TVS</a
+              ><a class="dropdown-item" href="inventory.html?brand=Honda"
+                >Honda</a
+              ><a class="dropdown-item" href="inventory.html?brand=Suzuki"
+                >Suzuki</a
+              >
+            </div>
+          </div>
+          <a
+            href="./sell.html"
+            class="nav-item"
+            data-translate="Sell Your Vehicle"
+            >Sell Your Vehicle</a
+          >
+          <a href="./about.html" class="nav-item" data-translate="About Us"
+            >About Us</a
+          >
+          <a href="./book.html" class="nav-item" data-translate="Book Bike"
+            >Book Vehicle</a
+          >
+          <a
+            href="./finance.html"
+            class="nav-item"
+            data-translate="Bike Finance"
+            >Bike Finance</a
+          >
+          <a href="./updates.html" class="nav-item" data-translate="Updates"
+            >Updates</a
+          >
+          <a href="./contact.html" class="nav-item" data-translate="Contact"
+            >Contact</a
+          >
+          <div class="nav-item nav-dropdown" aria-haspopup="true">
+            <a href="#" class="nav-link dropdown-toggle"
+              >Vehicle Valuation
+              <i
+                class="fa fa-caret-down"
+                aria-hidden="true"
+                style="margin-left: 6px"
+              ></i
+            ></a>
+            <div
+              class="dropdown-menu"
+              role="menu"
+              aria-label="Vehicle Valuation submenu"
+            >
+              <a class="dropdown-item active" href="used-bike-valuation.html"
+                >Used Bike Valuation</a
+              >
+              <a class="dropdown-item" href="used-car-valuation.html"
+                >Used Car Valuation</a
+              >
+            </div>
+          </div>
+          <!-- Vehicle Valuation dropdown -->
+        </nav>
+
+        <div class="header-actions">
+          <button
+            class="mobile-menu-btn"
+            aria-label="Toggle menu"
+            id="mobileMenuBtn"
+          >
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page hero -->
+    <section class="hero-section">
+      <div class="hero-background"></div>
+      <div class="hero-container">
+        <div class="hero-content">
+          <span class="hero-label">Instant Bike Valuation</span>
+          <h1>
+            <span class="hero-title-line1">Used Bike</span>
+            <span class="hero-title-line2">Valuation</span>
+          </h1>
+          <p class="hero-subtitle">
+            Enter basic details and get an estimated market price for your bike.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Valuation form -->
+    <main style="padding: 40px 5%; max-width: 1000px; margin: 0 auto">
+      <section
+        style="
+          background: #fff;
+          padding: 28px;
+          border-radius: 12px;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+        "
+      >
+        <h2 style="margin-top: 0; color: black">Get an Instant Valuation</h2>
+        <form id="bikeValForm">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+              gap: 16px;
+            "
+          >
+            <div>
+              <label for="make">Make</label>
+              <select id="make" name="make" required class="filter-select">
+                <option value="">Select Make</option>
+                <option>KTM</option>
+                <option>Royal Enfield</option>
+                <option>Yamaha</option>
+                <option>Honda</option>
+                <option>Bajaj</option>
+                <option>Suzuki</option>
+                <option>TVS</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="model">Model</label>
+              <input
+                id="model"
+                name="model"
+                class="filter-input"
+                placeholder="e.g. Duke 390"
+              />
+            </div>
+
+            <div>
+              <label for="year">Year of Registration</label>
+              <input
+                id="year"
+                name="year"
+                type="number"
+                min="1990"
+                max="2025"
+                class="filter-input"
+                placeholder="e.g. 2019"
+              />
+            </div>
+
+            <div>
+              <label for="kms">Kilometers Driven</label>
+              <input
+                id="kms"
+                name="kms"
+                type="number"
+                min="0"
+                class="filter-input"
+                placeholder="e.g. 12000"
+              />
+            </div>
+
+            <div>
+              <label for="condition">Condition</label>
+              <select id="condition" name="condition" class="filter-select">
+                <option value="excellent">Excellent</option>
+                <option value="good">Good</option>
+                <option value="fair">Fair</option>
+                <option value="poor">Poor</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="contact">Your Phone</label>
+              <input
+                id="contact"
+                name="contact"
+                class="filter-input"
+                placeholder="Mobile number"
+              />
+            </div>
+
+            <div style="grid-column: 1/-1">
+              <label for="notes">Additional Details</label>
+              <textarea
+                id="notes"
+                name="notes"
+                rows="4"
+                style="
+                  width: 100%;
+                  padding: 12px;
+                  border: 2px solid #ddd;
+                  border-radius: 6px;
+                "
+              ></textarea>
+            </div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              gap: 12px;
+              margin-top: 18px;
+              align-items: center;
+            "
+          >
+            <button
+              type="submit"
+              class="search-count-btn"
+              style="min-width: 160px"
+            >
+              Get Valuation
+            </button>
+            <div
+              id="valuationResult"
+              style="
+                padding: 12px 16px;
+                border-radius: 8px;
+                background: #f4f4f4;
+                flex: 1;
+                color: #222;
+                display: none;
+              "
+            ></div>
+          </div>
+        </form>
+
+        <p style="margin-top: 18px; color: #666">
+          Note: This is an estimated valuation based on typical market factors.
+          For an accurate quote, book an inspection.
+        </p>
+      </section>
+    </main>
+
+    <!-- Footer (copied from index) -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-section">
+          <div class="footer-stars" style="margin: 10px 0">
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+          </div>
+          <div class="logo">
+            <img
+               src="./assets/images/okmotor.png"
+              style="width: 220px"
+              alt="Ok Motors Logo"
+            />
+          </div>
+          <p>Bringing the future of bike riding to you today.</p>
+          <div class="social-icons">
+            <a href="#"
+              ><i class="fa-brands fa-facebook-f" style="color: #0400ff"></i
+            ></a>
+            <a href="#" aria-label="Instagram"
+              ><img
+                src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+                style="width: 20px"
+            /></a>
+            <a href="https://wa.me/918210283582"
+              ><i class="fa-brands fa-whatsapp" style="color: #00a841"></i
+            ></a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="./">Home</a></li>
+            <li><a href="./inventory.html">Buy Vehicle</a></li>
+            <li><a href="./sell.html">Sell Your Vehicle</a></li>
+            <li><a href="./about.html">About Us</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Resources</h3>
+          <ul>
+            <li><a href="./finance.html">Bike Finance</a></li>
+            <li><a href="./locations-bihar.html">Locations</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Contact Us</h3>
+          <p>
+            <i class="fas fa-map-marker-alt"></i> Rambag Chowk, Muzaffarpur,
+            Bihar 842002
+          </p>
+          <span>+91 82102 83582 / 98358 44897</span>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2023 Ok Motors. All rights reserved.</p>
+        <a href="https://www.pixelatenest.com/" style="color: #a9a9a9"
+          >Designed By Pixelate Nest</a
+        >
+      </div>
+    </footer>
+
+    <script src="./index.js"></script>
+    <script>
+      // small client-side valuation estimator (simple heuristic)
+      document
+        .getElementById("bikeValForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const make = document.getElementById("make").value.trim();
+          const model = document.getElementById("model").value.trim();
+          const year =
+            parseInt(document.getElementById("year").value, 10) ||
+            new Date().getFullYear();
+          const kms = parseInt(document.getElementById("kms").value, 10) || 0;
+          const condition = document.getElementById("condition").value;
+          const resultEl = document.getElementById("valuationResult");
+
+          // base price heuristic (very rough): newer year -> higher base, certain makes slightly higher
+          let age = Math.max(0, new Date().getFullYear() - year);
+          let base = 50000; // default base
+          if (/ktm/i.test(make)) base = 180000;
+          else if (/royal/i.test(make)) base = 120000;
+          else if (/yamaha/i.test(make)) base = 90000;
+          else if (/honda/i.test(make)) base = 80000;
+          else if (/bajaj/i.test(make)) base = 60000;
+          else if (/suzuki/i.test(make)) base = 85000;
+
+          // depreciation by age
+          let price = base * Math.max(0.2, 1 - age * 0.12);
+          // kms penalty
+          price = price * Math.max(0.6, 1 - (kms / 50000) * 0.2);
+          // condition modifier
+          const condMap = { excellent: 1.05, good: 1.0, fair: 0.9, poor: 0.75 };
+          price = price * (condMap[condition] || 1);
+
+          // round
+          price = Math.round(price / 1000) * 1000;
+
+          resultEl.style.display = "block";
+          resultEl.innerHTML = `<strong>Estimated valuation:</strong> ₹ ${price.toLocaleString()} <span style="display:block;color:#666;margin-top:6px">(Approx.)</span>`;
+
+          // Optionally, send to backend or open a booking flow here.
+        });
+
+      // mobile dropdown toggle (copied)
+      document.addEventListener("DOMContentLoaded", function () {
+        document
+          .querySelectorAll(
+            ".nav-dropdown .dropdown-toggle, .nav-dropdown .nav-link"
+          )
+          .forEach(function (btn) {
+            btn.addEventListener("click", function (e) {
+              if (window.innerWidth <= 1024) {
+                e.preventDefault();
+                var parent = this.closest(".nav-dropdown");
+                if (parent) parent.classList.toggle("open");
+              }
+            });
+          });
+      });
+    </script>
+  </body>
+</html>

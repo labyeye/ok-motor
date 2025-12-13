@@ -1,0 +1,91 @@
+{
+  "generatedAt": "2025-11-27T00:00:00Z",
+  "notes": "List contains popular car brands and commonly available models in the Indian market. Add or modify models as needed.",
+  "brands": [
+    {
+      "name": "Maruti Suzuki",
+      "slug": "maruti-suzuki",
+      "models": ["Swift","Baleno","Dzire","Alto","WagonR","Ertiga","Brezza","Ciaz","S-Presso","XL6"]
+    },
+    {
+      "name": "Hyundai",
+      "slug": "hyundai",
+      "models": ["Grand i10","i10 Nios","i20","Venue","Creta","Verna","Aura","Kona","Tucson"]
+    },
+    {
+      "name": "Tata",
+      "slug": "tata",
+      "models": ["Tiago","Tigor","Altroz","Nexon","Harrier","Punch","Safari"]
+    },
+    {
+      "name": "Mahindra",
+      "slug": "mahindra",
+      "models": ["Bolero","Scorpio-N","Thar","XUV300","XUV700","Bolero Neo"]
+    },
+    {
+      "name": "Toyota",
+      "slug": "toyota",
+      "models": ["Innova Crysta","Fortuner","Glanza","Urban Cruiser","Vios"]
+    },
+    {
+      "name": "Honda",
+      "slug": "honda",
+      "models": ["City","Amaze","Jazz","WR-V","Civic","CR-V"]
+    },
+    {
+      "name": "Kia",
+      "slug": "kia",
+      "models": ["Seltos","Sonet","Carens","Carnival","Sonet N Line"]
+    },
+    {
+      "name": "MG",
+      "slug": "mg",
+      "models": ["Hector","Hector Plus","Astor","Gloster"]
+    },
+    {
+      "name": "Renault",
+      "slug": "renault",
+      "models": ["Kwid","Triber","Kiger","Duster"]
+    },
+    {
+      "name": "Volkswagen",
+      "slug": "volkswagen",
+      "models": ["Polo","Vento","Taigun"]
+    },
+    {
+      "name": "Skoda",
+      "slug": "skoda",
+      "models": ["Kushaq","Rapid","Octavia","Superb"]
+    },
+    {
+      "name": "Nissan",
+      "slug": "nissan",
+      "models": ["Magnite","Kicks"]
+    },
+    {
+      "name": "BMW",
+      "slug": "bmw",
+      "models": ["1 Series","3 Series","5 Series","X1","X3","X5","7 Series"]
+    },
+    {
+      "name": "Mercedes-Benz",
+      "slug": "mercedes-benz",
+      "models": ["A-Class","C-Class","E-Class","GLA","GLE","GLS"]
+    },
+    {
+      "name": "Audi",
+      "slug": "audi",
+      "models": ["A3","A4","A6","Q3","Q5"]
+    },
+    {
+      "name": "Ford",
+      "slug": "ford",
+      "models": ["Figo","EcoSport","Aspire"]
+    },
+    {
+      "name": "Chevrolet",
+      "slug": "chevrolet",
+      "models": ["Beat","Spark","Enjoy"]
+    }
+  ]
+}

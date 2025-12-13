@@ -10,7 +10,7 @@ import networkService from './networkService';
 
 class ApiService {
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    this.baseURL = 'https://ok-motor-51l3.vercel.app';
     this.axiosInstance = axios.create({
       baseURL: this.baseURL
     });

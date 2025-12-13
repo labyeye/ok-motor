@@ -1,12 +1,32 @@
 const SellLetter = require("../models/SellLetter");
 const BuyLetter = require("../models/BuyLetter");
+const Vehicle = require("../models/Vehicle");
+
 // Create a new sell letter
 exports.createSellLetter = async (req, res) => {
   try {
-    const sellLetter = new SellLetter({
+    const sellLetterData = {
       ...req.body,
       user: req.user.id // Just assign the current user
-    });
+    };
+
+    // If vehicle reference is provided, auto-populate vehicle details
+    if (sellLetterData.vehicle) {
+      const vehicle = await Vehicle.findById(sellLetterData.vehicle);
+      if (vehicle) {
+        // Auto-populate vehicle fields from Vehicle model
+        sellLetterData.vehicleName = vehicle.vehicleName;
+        sellLetterData.vehicleModel = vehicle.vehicleModel;
+        sellLetterData.vehicleColor = vehicle.vehicleColor;
+        sellLetterData.registrationNumber = vehicle.registrationNumber;
+        sellLetterData.chassisNumber = vehicle.chassisNumber;
+        sellLetterData.engineNumber = vehicle.engineNumber;
+        sellLetterData.vehiclekm = vehicle.kilometersRun?.toString() || '';
+        sellLetterData.vehicleCondition = vehicle.vehicleCondition;
+      }
+    }
+
+    const sellLetter = new SellLetter(sellLetterData);
 
     const savedSellLetter = await sellLetter.save();
     res.status(201).json(savedSellLetter);
@@ -35,8 +55,8 @@ exports.getVehicleDetails = async (req, res) => {
       });
     }
 
-    // Search in both buy and sell letters
-    const [buyLetters, sellLetters] = await Promise.all([
+    // Search in both buy and sell letters and vehicles
+    const [buyLetters, sellLetters, vehicles] = await Promise.all([
       BuyLetter.find({
         registrationNumber: new RegExp(registrationNumber, "i"),
         $or: [
@@ -53,11 +73,16 @@ exports.getVehicleDetails = async (req, res) => {
           { visibility: "staff" },
           ...(req.user.role === "staff" || req.user.role === "admin" ? [{}] : [])
         ]
+      }).sort({ createdAt: -1 }).limit(1),
+      
+      Vehicle.find({
+        registrationNumber: new RegExp(registrationNumber, "i"),
+        isActive: true
       }).sort({ createdAt: -1 }).limit(1)
     ]);
 
-    // Prioritize buy letters (since they represent purchases)
-    const vehicleRecord = buyLetters[0] || sellLetters[0];
+    // Prioritize Vehicle model, then buy letters, then sell letters
+    const vehicleRecord = vehicles[0] || buyLetters[0] || sellLetters[0];
     
     if (!vehicleRecord) {
       return res.status(404).json({ 

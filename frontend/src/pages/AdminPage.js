@@ -4,6 +4,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Wrench,
+  ShipWheel,
   Users,
   LogOut,
   ChevronDown,
@@ -11,6 +12,7 @@ import {
   FileText,
   Target,
   RefreshCw,
+  Image,
   Bike,
   Menu,
   X,
@@ -106,7 +108,7 @@ const AdminPage = () => {
           "Failed to load dashboard data. Please try again."
       );
       if (err.response?.status === 401) {
-        // Handle unauthorized error (token expired or invalid)
+        // Handle unauthorized error (token expi#ff6b00 or invalid)
         logout();
         navigate("/login");
       }
@@ -275,6 +277,14 @@ const AdminPage = () => {
       path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
+    },
+    {
       name: "Buy",
       icon: ShoppingCart,
       submenu: [
@@ -288,6 +298,15 @@ const AdminPage = () => {
       submenu: [
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Updates",
+      icon: RefreshCw,
+      submenu: [
+        { name: "Create Update", path: "/updates/create" },
+        { name: "Updates List", path: "/updates" },
       ],
     },
     {
@@ -315,6 +334,11 @@ const AdminPage = () => {
       ],
     },
     {
+      name: 'Gallery',
+      icon: Image,
+      path: '/gallery/manage',
+    },
+    {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
@@ -324,7 +348,6 @@ const AdminPage = () => {
       icon: Settings,
       path: "/settings",
     },
-    
   ];
 
   const DashboardCards = () => (
@@ -937,7 +960,7 @@ const AdminPage = () => {
 
         .brand-logo {
           width: 100%;
-          height: 13rem; 
+          height: 8rem; 
           object-fit: cover; 
           object-position: center;
           display: block;

@@ -83,7 +83,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     const formatKm = (val) => {
       if (val === undefined || val === null) return "0.00";
 
-      // Convert to number and divide by 100 if stored in cents format
+      // Convert to number and divide by 100 if sto#ff6b00 in cents format
       const num =
         typeof val === "string"
           ? parseFloat(val.replace(/,/g, ""))

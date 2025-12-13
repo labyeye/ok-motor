@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useCallback } from "react";
+import  { useState, useContext, useEffect, useCallback } from "react";
 import { saveAs } from "file-saver";
 import {
   FileText,
@@ -12,6 +12,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Wrench,
+  ShipWheel,
   Users,
   LogOut,
   ChevronDown,
@@ -20,10 +21,10 @@ import {
   Menu,
   X,
   Settings,
+  RefreshCw,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { generateAdvanceClientPDF } from "../utils/generateAdvanceClientPDF";
 import pdfService from "../services/pdfService";
 import networkService from "../services/networkService";
 import offlineStorage from "../services/offlineStorage";
@@ -157,47 +158,7 @@ const [formData, setFormData] = useState({
   };
 
   // Function to generate PDF buffer for offline use
-  const generatePDFBuffer = async (data) => {
-    // If offline, don't call the server (which would enqueue an HTTP request) - generate locally
-    if (!navigator.onLine) {
-      // Use client-side generator to avoid queuing an HTTP request
-      const bytes = await generateAdvanceClientPDF(data);
-      return bytes;
-    }
-
-    try {
-      const response = await axios.post(
-        `https://ok-motor-51l3.vercel.app/api/advance-bills/generate-pdf`,
-        data,
-        {
-          responseType: 'arraybuffer'
-        }
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      // If server call failed while online, fall back to client generator
-      try {
-        const bytes = await generateAdvanceClientPDF(data);
-        return bytes;
-      } catch (clientErr) {
-        throw error;
-      }
-    }
-  };
-
-  // Function to download PDF from buffer
-  const downloadPDFFromBuffer = (buffer, filename) => {
-    const blob = new Blob([buffer], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
+  
 
   const handleSaveAndDownload = async () => {
     if (isSaving) return; // Prevent multiple clicks
@@ -296,7 +257,11 @@ const [formData, setFormData] = useState({
         // Wait for progress to complete
         await progressPromise;
 
-        saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+        if (pdfResult.saved && window.electronAPI) {
+          alert(`PDF saved to ${pdfResult.savedPath || 'default PDF folder'}`);
+        } else {
+          saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+        }
 
         // Clear form after successful save
         setFormData({
@@ -360,7 +325,11 @@ const [formData, setFormData] = useState({
         // Wait for progress to complete
         await progressPromise;
 
-        saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+        if (pdfResult.saved && window.electronAPI) {
+          alert(`PDF saved to ${pdfResult.savedPath || 'default PDF folder'}`);
+        } else {
+          saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+        }
 
         if (formData._id) {
           alert("Advance bill saved as new version! Original remains unchanged.");
@@ -398,7 +367,7 @@ const [formData, setFormData] = useState({
       
       // Handle authentication errors
       if (error.response?.status === 401) {
-        alert("Your session has expired. Please login again.");
+        alert("Your session has expi#ff6b00. Please login again.");
         logout();
         navigate('/login');
       } else if (error.response?.status === 403) {
@@ -622,7 +591,11 @@ const [formData, setFormData] = useState({
         });
 
         if (pdfResult.success) {
-          saveAs(pdfResult.blob, `advance-bill-${billId}.pdf`);
+          if (pdfResult.saved && window.electronAPI) {
+            alert(`PDF saved to ${pdfResult.savedPath || 'default PDF folder'}`);
+          } else {
+            saveAs(pdfResult.blob, `advance-bill-${billId}.pdf`);
+          }
         } else {
           throw new Error(pdfResult.error || 'Failed to generate PDF');
         }
@@ -632,7 +605,7 @@ const [formData, setFormData] = useState({
       
       // Handle authentication errors
       if (error.response?.status === 401) {
-        alert("Your session has expired. Please login again.");
+        alert("Your session has expi#ff6b00. Please login again.");
         logout();
         navigate('/login');
       } else if (error.response?.status === 403) {
@@ -685,6 +658,14 @@ const [formData, setFormData] = useState({
       path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
+    },
+    {
       name: "Buy",
       icon: ShoppingCart,
       submenu: [
@@ -698,6 +679,23 @@ const [formData, setFormData] = useState({
       submenu: [
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
+      ],
+    },
+    {
+      name: "Sell",
+      icon: TrendingUp,
+      submenu: [
+        { name: "Create Sell Letter", path: "/sell/create" },
+        { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Updates",
+      icon: RefreshCw,
+      submenu: [
+        { name: "Create Update", path: "/updates/create" },
+        { name: "Updates List", path: "/updates" },
       ],
     },
     {
@@ -728,6 +726,11 @@ const [formData, setFormData] = useState({
           },
         ]
       : []),
+    {
+      name: 'Gallery',
+      icon: Image,
+      path: '/gallery/manage',
+    },
     {
       name: "Vehicle History",
       icon: Bike,
@@ -825,7 +828,7 @@ const [formData, setFormData] = useState({
             style={{
               width: "100%",
               maxWidth: "25rem",
-              height: "13rem",
+              height: "9rem",
               objectFit: "cover", // match CSS
               objectPosition: "center",
               display: "block",

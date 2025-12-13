@@ -1,0 +1,385 @@
+{
+  "bike_brands_india": [
+    {
+      "brand": "Honda",
+      "models": [
+        "SP 125",
+        "CB 125 Hornet",
+        "Activa 6G",
+        "Shine",
+        "Shine 100",
+        "Unicorn",
+        "Hornet 2.0",
+        "CB350",
+        "CB350RS",
+        "CB350C",
+        "H'ness CB350",
+        "NX500",
+        "Rebel 500",
+        "CB650R",
+        "CBR650R",
+        "Hornet 750",
+        "XL750 Transalp",
+        "Hornet 1000 SP",
+        "CBR1000RR-R Fireblade",
+        "CBR1000RR-R SP",
+        "Gold Wing Tour",
+        "CD 110 Dream",
+        "Livo",
+        "Dio",
+        "Grazia",
+        "CB200X",
+        "CB300F",
+        "CB300R"
+      ]
+    },
+    {
+      "brand": "Royal Enfield",
+      "models": [
+        "Hunter 350",
+        "Classic 350",
+        "Bullet 350",
+        "Meteor 350",
+        "Goan Classic 350",
+        "Continental GT 650",
+        "Interceptor 650",
+        "Super Meteor 650",
+        "Shotgun 650",
+        "Bear 650",
+        "Classic 650",
+        "Himalayan 450",
+        "Guerrilla 450",
+        "Scram 440",
+        "Scram 411"
+      ]
+    },
+    {
+      "brand": "Hero",
+      "models": [
+        "Splendor Plus",
+        "Splendor Plus XTEC",
+        "HF Deluxe",
+        "Passion Pro",
+        "Super Splendor",
+        "Glamour",
+        "Xtreme 125R",
+        "Xtreme 160R",
+        "Xtreme 160R 4V",
+        "Xpulse 200",
+        "Xpulse 200 4V",
+        "Karizma XMR",
+        "Mavrick 440",
+        "Destini 125",
+        "Pleasure Plus",
+        "Maestro Edge"
+      ]
+    },
+    {
+      "brand": "Bajaj",
+      "models": [
+        "Platina 100",
+        "Platina 110",
+        "CT 100",
+        "CT 110X",
+        "Pulsar 125",
+        "Pulsar N125",
+        "Pulsar NS125",
+        "Pulsar 150",
+        "Pulsar N150",
+        "Pulsar N160",
+        "Pulsar NS160",
+        "Pulsar 180",
+        "Pulsar NS200",
+        "Pulsar RS200",
+        "Pulsar N250",
+        "Pulsar NS400Z",
+        "Dominar 250",
+        "Dominar 400",
+        "Avenger Cruise 220",
+        "Avenger Street 160",
+        "Freedom 125",
+        "Chetak (Electric)"
+      ]
+    },
+    {
+      "brand": "TVS",
+      "models": [
+        "Sport",
+        "Raider 125",
+        "Apache RTR 160",
+        "Apache RTR 160 4V",
+        "Apache RTR 180",
+        "Apache RTR 200 4V",
+        "Apache RTX 300",
+        "Ronin",
+        "Jupiter",
+        "Jupiter 125",
+        "Ntorq 125",
+        "Scooty Pep Plus",
+        "XL100",
+        "iQube (Electric)"
+      ]
+    },
+    {
+      "brand": "Yamaha",
+      "models": [
+        "FZ-S V4",
+        "FZ-X",
+        "FZ 25",
+        "FZS 25",
+        "MT-15 V2",
+        "R15 V4",
+        "R15M",
+        "Aerox 155",
+        "Ray ZR 125",
+        "Fascino 125",
+        "RayZR Street Rally",
+        "XSR 155",
+        "YZF-R3",
+        "MT-03"
+      ]
+    },
+    {
+      "brand": "KTM",
+      "models": [
+        "125 Duke",
+        "200 Duke",
+        "250 Duke",
+        "390 Duke",
+        "160 Duke",
+        "RC 125",
+        "RC 200",
+        "RC 390",
+        "250 Adventure",
+        "390 Adventure",
+        "390 Adventure X",
+        "1290 Super Duke R",
+        "1390 Super Duke R",
+        "890 Duke R",
+        "890 Duke GP",
+        "890 Adventure",
+        "990 SMT",
+        "450 Rally Replica"
+      ]
+    },
+    {
+      "brand": "Suzuki",
+      "models": [
+        "Access 125",
+        "Avenis 125",
+        "Burgman Street 125",
+        "Gixxer",
+        "Gixxer SF",
+        "Gixxer 250",
+        "Gixxer SF 250",
+        "V-Strom SX",
+        "Hayabusa",
+        "GSX-S1000",
+        "GSX-R1000R"
+      ]
+    },
+    {
+      "brand": "Kawasaki",
+      "models": [
+        "Ninja 300",
+        "Ninja 400",
+        "Ninja 500",
+        "Ninja 650",
+        "Ninja ZX-4R",
+        "Ninja ZX-6R",
+        "Ninja ZX-10R",
+        "Ninja 1000SX",
+        "Ninja H2",
+        "Ninja H2 SX",
+        "Z900",
+        "Z650",
+        "Z500",
+        "Versys 650",
+        "Vulcan S",
+        "W175",
+        "Eliminator"
+      ]
+    },
+    {
+      "brand": "Aprilia",
+      "models": [
+        "SR 125",
+        "SR 160",
+        "SXR 125",
+        "SXR 160",
+        "RS 457",
+        "Tuono 457",
+        "RS 660",
+        "Tuono 660",
+        "RSV4"
+      ]
+    },
+    {
+      "brand": "BMW",
+      "models": [
+        "G 310 R",
+        "G 310 GS",
+        "G 310 RR",
+        "CE 02",
+        "F 900 R",
+        "F 900 XR",
+        "S 1000 R",
+        "S 1000 RR",
+        "S 1000 XR",
+        "M 1000 RR",
+        "R 1250 GS",
+        "R 1250 RT",
+        "R 18"
+      ]
+    },
+    {
+      "brand": "Triumph",
+      "models": [
+        "Speed 400",
+        "Scrambler 400 X",
+        "Speed T4",
+        "Street Triple R",
+        "Street Triple RS",
+        "Trident 660",
+        "Tiger 900",
+        "Tiger 1200",
+        "Bonneville T100",
+        "Bonneville T120",
+        "Speed Twin 900",
+        "Thruxton RS",
+        "Scrambler 900",
+        "Scrambler 1200",
+        "Rocket 3"
+      ]
+    },
+    {
+      "brand": "Ducati",
+      "models": [
+        "Monster",
+        "Monster SP",
+        "Scrambler Icon",
+        "Scrambler Nightshift",
+        "Streetfighter V2",
+        "Streetfighter V4",
+        "Panigale V2",
+        "Panigale V4",
+        "Panigale V4 R",
+        "Panigale V4 S",
+        "Multistrada V2",
+        "Multistrada V4",
+        "Diavel V4",
+        "DesertX"
+      ]
+    },
+    {
+      "brand": "Harley-Davidson",
+      "models": [
+        "X440",
+        "Street 750",
+        "Iron 883",
+        "Forty-Eight",
+        "Street Bob",
+        "Fat Bob",
+        "Low Rider S",
+        "Softail Standard",
+        "Heritage Classic",
+        "Fat Boy",
+        "Street Glide",
+        "Road Glide",
+        "Road King",
+        "Ultra Limited",
+        "CVO Street Glide",
+        "Pan America 1250",
+        "Sportster S"
+      ]
+    },
+    {
+      "brand": "Jawa",
+      "models": ["42", "42 Bobber", "Perak", "350"]
+    },
+    {
+      "brand": "Yezdi",
+      "models": ["Scrambler", "Roadster", "Adventure"]
+    },
+    {
+      "brand": "Keeway",
+      "models": [
+        "Vieste 300",
+        "K300 N",
+        "K300 R",
+        "Sixties 300i",
+        "Cruiser 300",
+        "V302C"
+      ]
+    },
+    {
+      "brand": "Benelli",
+      "models": [
+        "Imperiale 400",
+        "Leoncino 250",
+        "TRK 251",
+        "TRK 502",
+        "TRK 502X",
+        "502C"
+      ]
+    },
+    {
+      "brand": "Indian Motorcycle",
+      "models": [
+        "Scout",
+        "Scout Bobber",
+        "Scout Rogue",
+        "FTR",
+        "Chief",
+        "Super Chief",
+        "Springfield",
+        "Chieftain",
+        "Roadmaster",
+        "Challenger",
+        "Pursuit"
+      ]
+    },
+    {
+      "brand": "Husqvarna",
+      "models": [
+        "Svartpilen 250",
+        "Svartpilen 401",
+        "Vitpilen 250",
+        "Vitpilen 401"
+      ]
+    },
+    {
+      "brand": "Ola Electric",
+      "models": ["S1 Pro", "S1 Air", "S1 X", "Gig"]
+    },
+    {
+      "brand": "Ather Energy",
+      "models": ["450X", "450S", "Rizta"]
+    },
+    {
+      "brand": "Ultraviolette",
+      "models": ["F77", "F77 Mach 2"]
+    },
+    {
+      "brand": "Revolt",
+      "models": ["RV400", "RV400 BRZ"]
+    },
+    {
+      "brand": "Oben Electric",
+      "models": ["Rorr", "Rorr EZ"]
+    },
+    {
+      "brand": "Simple Energy",
+      "models": ["Simple One"]
+    },
+    {
+      "brand": "Vida",
+      "models": ["V1 Pro", "V1 Plus", "V1"]
+    },
+    {
+      "brand": "BGauss",
+      "models": ["B8", "C12i", "D15i"]
+    }
+  ],
+  "note": "This list includes major motorcycle and scooter brands available in India as of 2024-2025. Prices, availability, and model variants may vary by region. Some models may be discontinued or upcoming. Please verify current availability with authorized dealers."
+}

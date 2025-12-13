@@ -206,15 +206,10 @@ class OfflineStorage {
    */
   async getUnsyncedDocuments(collection) {
     try {
-      console.log(`📂 Reading ${collection} to find unsynced documents...`);
       const data = await this.read(collection);
-      console.log(`📊 Total documents in ${collection}:`, data.length);
-      console.log(`📄 All documents in ${collection}:`, data);
-      
+     
       const unsynced = data.filter(doc => doc.synced === false);
-      console.log(`🔍 Unsynced documents in ${collection}:`, unsynced.length);
-      console.log(`📝 Unsynced documents details:`, unsynced);
-      
+     
       return { success: true, data: unsynced };
     } catch (error) {
       console.error('Error getting unsynced documents:', error);

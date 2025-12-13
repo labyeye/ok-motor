@@ -7,11 +7,13 @@ import {
   ShoppingCart,
   TrendingUp,
   Wrench,
+  ShipWheel,
   Users,
   LogOut,
   ChevronDown,
   ChevronRight,
   FileText,
+  Image,
   Search,
   Download,
   Edit,
@@ -20,6 +22,7 @@ import {
   X,
   Menu,
   Settings,
+  RefreshCw,
 } from "lucide-react";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
@@ -220,6 +223,14 @@ const BuyLetterHistory = () => {
       path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
+    },
+    {
       name: "Buy",
       icon: ShoppingCart,
       submenu: [
@@ -233,6 +244,15 @@ const BuyLetterHistory = () => {
       submenu: [
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Updates",
+      icon: RefreshCw,
+      submenu: [
+        { name: "Create Update", path: "/updates/create" },
+        { name: "Updates List", path: "/updates" },
       ],
     },
     {
@@ -264,6 +284,11 @@ const BuyLetterHistory = () => {
           },
         ]
       : []),
+    {
+      name: 'Gallery',
+      icon: Image,
+      path: '/gallery/manage',
+    },
     {
       name: "Vehicle History",
       icon: Bike,
@@ -425,7 +450,7 @@ const BuyLetterHistory = () => {
         );
       return (
         units[Math.floor(num / 100)] +
-        " Hundred" +
+        " hundred" +
         (num % 100 !== 0 ? " and " + convertLessThanThousand(num % 100) : "")
       );
     };
@@ -957,7 +982,7 @@ const BuyLetterHistory = () => {
       "6. OK MOTORS is not responsible for any past violations, legal disputes, or ownership claims before the date of purchase.",
       "7. The seller confirms that the bike has not been involved in any major accidents or insurance claims.",
       "8. Vehicle handover includes all keys, documents, and accessories as agreed.",
-      "9. The seller confirms that the chassis and engine numbers are intact and not tampered with.",
+      "9. The seller confirms that the chassis and engine numbers are intact and not tampe#ff6b00 with.",
     ];
 
     terms.forEach((term, index) => {
@@ -1067,7 +1092,7 @@ const BuyLetterHistory = () => {
 
         // Handle authentication errors
         if (error.response?.status === 401) {
-          alert("Your session has expired. Please login again.");
+          alert("Your session has expi#ff6b00. Please login again.");
           logout();
           navigate("/login");
         } else if (error.response?.status === 403) {
@@ -1140,7 +1165,7 @@ const BuyLetterHistory = () => {
             style={{
               width: "100%",
               maxWidth: "25rem",
-              height: "13rem",
+              height: "9rem",
               objectFit: "cover", // match CSS
               objectPosition: "center",
               display: "block",

@@ -1,6 +1,8 @@
 const BuyLetter = require("../models/BuyLetter");
+const Vehicle = require("../models/Vehicle");
 const fs = require("fs");
 const path = require("path");
+
 exports.createBuyLetter = async (req, res) => {
   try {
     const buyLetterData = {
@@ -8,6 +10,22 @@ exports.createBuyLetter = async (req, res) => {
       user: req.user.id, 
       visibility: req.body.visibility || 'private' 
     };
+
+    // If vehicle reference is provided, auto-populate vehicle details
+    if (buyLetterData.vehicle) {
+      const vehicle = await Vehicle.findById(buyLetterData.vehicle);
+      if (vehicle) {
+        // Auto-populate vehicle fields from Vehicle model
+        buyLetterData.vehicleName = vehicle.vehicleName;
+        buyLetterData.vehicleModel = vehicle.vehicleModel;
+        buyLetterData.vehicleColor = vehicle.vehicleColor;
+        buyLetterData.registrationNumber = vehicle.registrationNumber;
+        buyLetterData.chassisNumber = vehicle.chassisNumber;
+        buyLetterData.engineNumber = vehicle.engineNumber;
+        buyLetterData.vehiclekm = vehicle.kilometersRun?.toString() || '';
+        buyLetterData.vehicleCondition = vehicle.vehicleCondition;
+      }
+    }
 
     if (buyLetterData.saleDate) {
       buyLetterData.saleDate = new Date(buyLetterData.saleDate);
@@ -47,7 +65,8 @@ exports.getBuyLetters = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('user', 'name role');
+      .populate('user', 'name role')
+      .populate('vehicle'); // Populate vehicle details
 
     const total = await BuyLetter.countDocuments(conditions);
 

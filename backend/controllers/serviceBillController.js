@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const BuyLetter = require("../models/BuyLetter");
 const SellLetter = require("../models/SellLetter");
+const Vehicle = require("../models/Vehicle");
 
 exports.getVehicleDetails = async (req, res) => {
   try {
@@ -16,7 +17,7 @@ exports.getVehicleDetails = async (req, res) => {
     }
     const regex = new RegExp(registrationNumber, "i");
 
-    const [buyLetter, sellLetter, serviceBill] = await Promise.all([
+    const [buyLetter, sellLetter, serviceBill, vehicle] = await Promise.all([
       BuyLetter.findOne({ registrationNumber: regex })
         .sort({ createdAt: -1 })
         .select("vehicleName vehicleModel registrationNumber vehiclekm"),
@@ -28,19 +29,24 @@ exports.getVehicleDetails = async (req, res) => {
       ServiceBill.findOne({ registrationNumber: regex })
         .sort({ createdAt: -1 })
         .select("vehicleBrand vehicleModel registrationNumber kmReading"),
+      
+      Vehicle.findOne({ registrationNumber: regex, isActive: true })
+        .sort({ createdAt: -1 })
     ]);
-    const vehicleRecord = buyLetter || sellLetter || serviceBill;
+    
+    const vehicleRecord = vehicle || buyLetter || sellLetter || serviceBill;
 
     if (!vehicleRecord) {
       return res.status(404).json({
         message: "No vehicle found with this registration number",
       });
     }
+    
     const vehicleDetails = {
       vehicleBrand: vehicleRecord.vehicleName || vehicleRecord.vehicleBrand,
       vehicleModel: vehicleRecord.vehicleModel,
       registrationNumber: vehicleRecord.registrationNumber,
-      kmReading: vehicleRecord.vehiclekm || vehicleRecord.kmReading,
+      kmReading: vehicleRecord.vehiclekm || vehicleRecord.kmReading || vehicleRecord.kilometersRun,
     };
 
     res.json(vehicleDetails);
@@ -59,6 +65,21 @@ exports.createServiceBill = async (req, res) => {
     const { serviceItems, ...otherData } = req.body;
     
     console.log("Received service bill data:", JSON.stringify({ serviceItems, ...otherData }, null, 2));
+
+    // If vehicle reference is provided, auto-populate vehicle details
+    if (otherData.vehicle) {
+      const vehicle = await Vehicle.findById(otherData.vehicle);
+      if (vehicle) {
+        // Auto-populate vehicle fields from Vehicle model
+        otherData.vehicleType = vehicle.vehicleType?.toLowerCase();
+        otherData.vehicleBrand = vehicle.vehicleName;
+        otherData.vehicleModel = vehicle.vehicleModel;
+        otherData.registrationNumber = vehicle.registrationNumber;
+        otherData.chassisNumber = vehicle.chassisNumber;
+        otherData.engineNumber = vehicle.engineNumber;
+        otherData.kmReading = vehicle.kilometersRun;
+      }
+    }
 
     // Validate required fields
     const requiredFields = ['customerName', 'customerPhone', 'customerAddress', 'vehicleBrand', 'vehicleModel', 'registrationNumber'];

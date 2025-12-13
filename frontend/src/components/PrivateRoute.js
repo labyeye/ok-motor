@@ -1,13 +1,13 @@
-import { useContext } from 'react';
-import { Navigate } from 'react-router-dom';
-import AuthContext from '../context/AuthContext';
+import { useContext } from "react";
+import { Navigate } from "react-router-dom";
+import AuthContext from "../context/AuthContext";
 
 const PrivateRoute = ({ children, roles }) => {
   const { user, loading } = useContext(AuthContext);
 
   // Development helper: Log authentication state
-  if (process.env.NODE_ENV === 'development') {
-    console.log('PrivateRoute Debug:', { user, loading, roles });
+  if (process.env.NODE_ENV === "development") {
+    console.log("PrivateRoute Debug:", { user, loading, roles });
   }
 
   // Show loading spinner while checking authentication
@@ -47,7 +47,7 @@ const PrivateRoute = ({ children, roles }) => {
   // If no user in context, but we have cached user data in localStorage, allow offline access.
   let effectiveUser = user;
   if (!effectiveUser) {
-    const cached = localStorage.getItem('cachedUser');
+    const cached = localStorage.getItem("cachedUser");
     if (cached) {
       try {
         const parsedUser = JSON.parse(cached);
@@ -65,7 +65,12 @@ const PrivateRoute = ({ children, roles }) => {
     }
   }
 
-  if (roles && (!effectiveUser || !effectiveUser?.role || !roles.includes(effectiveUser?.role))) {
+  if (
+    roles &&
+    (!effectiveUser ||
+      !effectiveUser?.role ||
+      !roles.includes(effectiveUser?.role))
+  ) {
     return <Navigate to="/" replace />;
   }
 

@@ -1,111 +1,138 @@
 // models/ServiceBill.js
 const mongoose = require("mongoose");
 
-const ServiceBillSchema = new mongoose.Schema({
-  // Customer Information
-  customerName: { type: String, required: true },
-  customerPhone: { type: String, required: true },
-  customerAddress: { type: String, required: true },
-  customerEmail: { type: String },
-  
-  // Vehicle Information
-  vehicleType: { 
-    type: String, 
-    required: true, 
-    enum: ["bike", "scooter", "car", "other"] 
-  },
-  vehicleBrand: { type: String, required: true },
-  vehicleModel: { type: String, required: true },
-  registrationNumber: { type: String, required: true },
-  chassisNumber: { type: String },
-  engineNumber: { type: String },
-  kmReading: { type: Number, required: true },
-  
-  // Service Details
-  serviceDate: { type: Date, required: true, default: Date.now },
-  deliveryDate: { type: Date, required: true },
-  serviceType: { 
-    type: String, 
-    required: true,
-    enum: ["regular", "premium", "custom"] 
-  },
-  serviceItems: [
-    {
-      description: { type: String, required: true },
-      quantity: { type: Number, required: true, default: 1 },
-      rate: { type: Number, required: true },
-      amount: { type: Number, required: true }
-    }
-  ],
-  totalAmount: { type: Number, required: true },
-  discount: { type: Number, default: 0 },
-  discountType: { type: String, enum: ["fixed", "percentage"], default: "fixed" },
-  discountPercentage: { type: Number, default: 0 },
-  taxEnabled: { type: Boolean, default: false }, // New field for tax toggle
-  businessName: { type: String }, // New field
-  businessGSTIN: { type: String }, // New field
-  businessAddress: { type: String }, // New field
-  taxRate: { type: Number, default: 18 }, // Default GST rate
-  taxAmount: { type: Number, required: true },
-  grandTotal: { type: Number, required: true },
-  
-  // Payment Information
-  paymentMethod: {
-    type: String,
-    required: true,
-    enum: ["cash", "card", "upi", "bank transfer"],
-    default: "cash"
-  },
-  paymentStatus: {
-    type: String,
-    required: true,
-    enum: ["pending", "partial", "paid"],
-    default: "pending"
-  },
-  advancePaid: { type: Number, default: 0 },
-  balanceDue: { type: Number, required: true },
+const ServiceBillSchema = new mongoose.Schema(
+  {
+    // Vehicle Reference - New system
+    vehicle: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Vehicle",
+      index: true,
+    },
+
+    // Customer Information
+    customerName: { type: String, required: true },
+    customerPhone: { type: String, required: true },
+    customerAddress: { type: String, required: true },
+    customerEmail: { type: String },
+
+    // Vehicle Information - Legacy fields (kept for backward compatibility)
+    vehicleType: {
+      type: String,
+      enum: ["bike", "scooter", "car", "other"],
+    },
+    vehicleBrand: { type: String },
+    vehicleModel: { type: String },
+    registrationNumber: { type: String },
+    chassisNumber: { type: String },
+    engineNumber: { type: String },
+    kmReading: { type: Number },
+
+    // Service Details
+    serviceDate: { type: Date, required: true, default: Date.now },
+    deliveryDate: { type: Date, required: true },
+    serviceType: {
+      type: String,
+      required: true,
+      enum: ["regular", "premium", "custom"],
+    },
+    serviceItems: [
+      {
+        description: { type: String, required: true },
+        quantity: { type: Number, required: true, default: 1 },
+        rate: { type: Number, required: true },
+        amount: { type: Number, required: true },
+      },
+    ],
+    totalAmount: { type: Number, required: true },
+    discount: { type: Number, default: 0 },
+    discountType: {
+      type: String,
+      enum: ["fixed", "percentage"],
+      default: "fixed",
+    },
+    discountPercentage: { type: Number, default: 0 },
+    taxEnabled: { type: Boolean, default: false }, // New field for tax toggle
+    businessName: { type: String }, // New field
+    businessGSTIN: { type: String }, // New field
+    businessAddress: { type: String }, // New field
+    taxRate: { type: Number, default: 18 }, // Default GST rate
+    taxAmount: { type: Number, required: true },
+    grandTotal: { type: Number, required: true },
+
+    // Payment Information
+    paymentMethod: {
+      type: String,
+      required: true,
+      enum: ["cash", "card", "upi", "bank transfer"],
+      default: "cash",
+    },
+    paymentStatus: {
+      type: String,
+      required: true,
+      enum: ["pending", "partial", "paid"],
+      default: "pending",
+    },
+    advancePaid: { type: Number, default: 0 },
+    balanceDue: { type: Number, required: true },
     customServiceDescription: { type: String }, // Add this line
 
-  // Additional Information
-  issuesReported: { type: String },
-  technicianNotes: { type: String },
-  warrantyInfo: { type: String },
-  
-  // Versioning fields - to track document history
-  originalDocumentId: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceBill', default: null },
-  previousVersionId: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceBill', default: null },
-  version: { type: Number, default: 1 },
-  editedAt: { type: Date },
-  editedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  
-  // Reference to user who created it
-  user: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "User", 
-    required: true 
+    // Additional Information
+    issuesReported: { type: String },
+    technicianNotes: { type: String },
+    warrantyInfo: { type: String },
+
+    // Versioning fields - to track document history
+    originalDocumentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ServiceBill",
+      default: null,
+    },
+    previousVersionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ServiceBill",
+      default: null,
+    },
+    version: { type: Number, default: 1 },
+    editedAt: { type: Date },
+    editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+
+    // Reference to user who created it
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    // Visibility for staff access
+    visibility: {
+      type: String,
+      enum: ["admin", "staff", "all"],
+      default: "staff",
+    },
+
+    // PDF generation info
+    pdfUrl: { type: String },
+    billNumber: { type: String, unique: true },
+    createdAt: { type: Date, default: Date.now },
   },
-
-  // Visibility for staff access
-  visibility: { type: String, enum: ['admin', 'staff', 'all'], default: 'staff' },
-
-  // PDF generation info
-  pdfUrl: { type: String },
-  billNumber: { type: String, unique: true },
-  createdAt: { type: Date, default: Date.now }
-}, { timestamps: true });
+  { timestamps: true }
+);
 
 // Pre-save hook to generate bill number
-ServiceBillSchema.pre("save", async function(next) {
+ServiceBillSchema.pre("save", async function (next) {
   if (!this.billNumber) {
     let billNumber;
     let attempts = 0;
     const maxAttempts = 10;
-    
+
     while (attempts < maxAttempts) {
       try {
         const count = await this.constructor.countDocuments();
-        billNumber = `SRV-${new Date().getFullYear()}-${(count + 1 + attempts).toString().padStart(5, '0')}`;
-        
+        billNumber = `SRV-${new Date().getFullYear()}-${(count + 1 + attempts)
+          .toString()
+          .padStart(5, "0")}`;
+
         // Check if this bill number already exists
         const existing = await this.constructor.findOne({ billNumber });
         if (!existing) {
@@ -117,30 +144,41 @@ ServiceBillSchema.pre("save", async function(next) {
         attempts++;
         if (attempts >= maxAttempts) {
           // Fallback to timestamp-based bill number
-          this.billNumber = `SRV-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
+          this.billNumber = `SRV-${new Date().getFullYear()}-${Date.now()
+            .toString()
+            .slice(-5)}`;
           break;
         }
       }
     }
   }
-  
+
   // Calculate amounts if service items are modified
-  if (this.isModified('serviceItems') || this.isModified('discount') || this.isModified('discountPercentage') || this.isModified('discountType') || this.isModified('taxRate')) {
-      this.totalAmount = this.serviceItems.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-      this.taxAmount = (this.taxRate / 100) * this.totalAmount;
-      
-      // Calculate discount based on type
-      let discountAmount = 0;
-      if (this.discountType === "percentage") {
-        discountAmount = (this.discountPercentage / 100) * this.totalAmount;
-      } else {
-        discountAmount = this.discount || 0;
-      }
-      
-      this.grandTotal = this.totalAmount + this.taxAmount - discountAmount;
-      this.balanceDue = this.grandTotal - (this.advancePaid || 0);
+  if (
+    this.isModified("serviceItems") ||
+    this.isModified("discount") ||
+    this.isModified("discountPercentage") ||
+    this.isModified("discountType") ||
+    this.isModified("taxRate")
+  ) {
+    this.totalAmount = this.serviceItems.reduce(
+      (sum, item) => sum + (parseFloat(item.amount) || 0),
+      0
+    );
+    this.taxAmount = (this.taxRate / 100) * this.totalAmount;
+
+    // Calculate discount based on type
+    let discountAmount = 0;
+    if (this.discountType === "percentage") {
+      discountAmount = (this.discountPercentage / 100) * this.totalAmount;
+    } else {
+      discountAmount = this.discount || 0;
     }
-  
+
+    this.grandTotal = this.totalAmount + this.taxAmount - discountAmount;
+    this.balanceDue = this.grandTotal - (this.advancePaid || 0);
+  }
+
   next();
 });
 

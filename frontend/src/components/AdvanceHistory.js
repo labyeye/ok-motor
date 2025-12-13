@@ -5,6 +5,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Wrench,
+  ShipWheel,
   Users,
   LogOut,
   ChevronDown,
@@ -17,6 +18,7 @@ import {
   Menu,
   X,
   Settings,
+  RefreshCw,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -319,7 +321,7 @@ const AdvanceHistory = () => {
     } catch (error) {
       console.error("Error downloading PDF:", error);
       if (error.response?.status === 401) {
-        alert("Your session has expired. Please login again.");
+        alert("Your session has expi#ff6b00. Please login again.");
         logout();
         navigate("/login");
       } else if (error.response?.status === 403) {
@@ -385,7 +387,7 @@ const AdvanceHistory = () => {
 
         // Handle authentication errors
         if (error.response?.status === 401) {
-          alert("Your session has expired. Please login again.");
+          alert("Your session has expi#ff6b00. Please login again.");
           logout();
           navigate("/login");
         } else if (error.response?.status === 403) {
@@ -413,6 +415,14 @@ const AdvanceHistory = () => {
       path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
+    },
+    {
       name: "Buy",
       icon: ShoppingCart,
       submenu: [
@@ -426,6 +436,23 @@ const AdvanceHistory = () => {
       submenu: [
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
+      ],
+    },
+    {
+      name: "Sell",
+      icon: TrendingUp,
+      submenu: [
+        { name: "Create Sell Letter", path: "/sell/create" },
+        { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Updates",
+      icon: RefreshCw,
+      submenu: [
+        { name: "Create Update", path: "/updates/create" },
+        { name: "Updates List", path: "/updates" },
       ],
     },
     {
@@ -456,6 +483,11 @@ const AdvanceHistory = () => {
           },
         ]
       : []),
+    {
+      name: 'Gallery',
+      icon: Image,
+      path: '/gallery/manage',
+    },
     {
       name: "Vehicle History",
       icon: Bike,
@@ -528,7 +560,7 @@ const AdvanceHistory = () => {
             style={{
               width: "100%",
               maxWidth: "25rem",
-              height: "13rem",
+              height: "9rem",
               objectFit: "cover", // match CSS
               objectPosition: "center",
               display: "block",

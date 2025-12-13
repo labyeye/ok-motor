@@ -11,11 +11,14 @@ import {
   ShoppingCart,
   TrendingUp,
   Wrench,
+  ShipWheel,
   Users,
   FileText,
   Bike,
+  Image,
   LogOut,
   Settings,
+  RefreshCw
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import logo from '../images/company.png';
@@ -77,7 +80,7 @@ const CreateStaff = () => {
     } catch (err) {
       // Handle authentication errors
       if (err.response?.status === 401) {
-        setError("Your session has expired. Please login again.");
+        setError("Your session has expi#ff6b00. Please login again.");
         logout();
         navigate('/login');
       } else if (err.response?.status === 403) {
@@ -120,6 +123,14 @@ const CreateStaff = () => {
       path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
+    },
+    {
       name: "Buy",
       icon: ShoppingCart,
       submenu: [
@@ -133,6 +144,15 @@ const CreateStaff = () => {
       submenu: [
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Updates",
+      icon: RefreshCw,
+      submenu: [
+        { name: "Create Update", path: "/updates/create" },
+        { name: "Updates List", path: "/updates" },
       ],
     },
     {
@@ -163,6 +183,11 @@ const CreateStaff = () => {
           },
         ]
       : []),
+    {
+      name: 'Gallery',
+      icon: Image,
+      path: '/gallery/manage',
+    },
     {
       name: "Vehicle History",
       icon: Bike,

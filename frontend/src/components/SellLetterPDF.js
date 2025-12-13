@@ -1,4 +1,4 @@
-import React, {
+import  {
   useState,
   useCallback,
   useContext,
@@ -9,8 +9,7 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
 import axios from "axios";
 import apiService from "../services/apiService";
-import networkService from "../services/networkService";
-import pdfService from "../services/pdfService";
+import fileSaveService from "../services/fileSaveService";
 import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
 import {
   User,
@@ -25,6 +24,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Wrench,
+  ShipWheel,
   Users,
   AlertCircle,
   LogOut,
@@ -35,6 +35,7 @@ import {
   Menu,
   X,
   Settings,
+  RefreshCw,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../images/company.png";
@@ -64,6 +65,11 @@ const SellLetterForm = () => {
 
   const location = useLocation();
   const editLetter = location.state?.editLetter;
+  
+  // Vehicle selection from inventory
+  const [vehicles, setVehicles] = useState([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState("");
+  const [loadingVehicles, setLoadingVehicles] = useState(false);
   const getCurrentDate = () => new Date().toISOString().split("T")[0];
   const getCurrentTime = () => {
     const now = new Date();
@@ -125,8 +131,49 @@ const SellLetterForm = () => {
     };
 
     window.addEventListener("resize", handleResize);
+    fetchVehicles();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Fetch available vehicles from inventory
+  const fetchVehicles = async () => {
+    try {
+      setLoadingVehicles(true);
+      const token = localStorage.getItem("token");
+      const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+      const response = await axios.get(`${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVehicles(response.data.vehicles || []);
+    } catch (error) {
+      console.error("Error fetching vehicles:", error);
+    } finally {
+      setLoadingVehicles(false);
+    }
+  };
+
+  // Handle vehicle selection from dropdown
+  const handleVehicleSelect = (e) => {
+    const vehicleId = e.target.value;
+    setSelectedVehicleId(vehicleId);
+    
+    if (vehicleId) {
+      const vehicle = vehicles.find(v => v._id === vehicleId);
+      if (vehicle) {
+        setFormData(prev => ({
+          ...prev,
+          vehicleName: vehicle.vehicleName || "",
+          vehicleModel: vehicle.vehicleModel || "",
+          vehicleColor: vehicle.vehicleColor || "",
+          registrationNumber: vehicle.registrationNumber || "",
+          chassisNumber: vehicle.chassisNumber || "",
+          engineNumber: vehicle.engineNumber || "",
+          vehiclekm: vehicle.kilometersRun?.toString() || "",
+          vehicleCondition: vehicle.vehicleCondition || "running",
+        }));
+      }
+    }
+  };
 
   useEffect(() => {
     if (!editLetter) {
@@ -360,6 +407,14 @@ const SellLetterForm = () => {
       path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
+    },
+    {
       name: "Buy",
       icon: ShoppingCart,
       submenu: [
@@ -373,6 +428,15 @@ const SellLetterForm = () => {
       submenu: [
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Updates",
+      icon: RefreshCw,
+      submenu: [
+        { name: "Create Update", path: "/updates/create" },
+        { name: "Updates List", path: "/updates" },
       ],
     },
     {
@@ -398,6 +462,11 @@ const SellLetterForm = () => {
         { name: "Create Staff ID", path: "/staff/create" },
         { name: "Staff List", path: "/staff/list" },
       ],
+    },
+    {
+      name: 'Gallery',
+      icon: Image,
+      path: '/gallery/manage',
     },
     {
       name: "Vehicle History",
@@ -588,7 +657,7 @@ const SellLetterForm = () => {
       const remainder = n % 100;
       return (
         units[hundred] +
-        " Hundred" +
+        " hundred" +
         (remainder !== 0 ? " and " + convertLessThanHundred(remainder) : "")
       );
     };
@@ -760,7 +829,7 @@ const SellLetterForm = () => {
 
       if (error.message === "Request queued for when online") {
         alert(
-          "No internet connection. Sell letter will be saved when connection is restored."
+          "No internet connection. Sell letter will be saved when connection is resto#ff6b00."
         );
         return true; // Allow download to proceed
       }
@@ -1336,7 +1405,7 @@ const SellLetterForm = () => {
       "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
       "2. A 3-month guarantee is provided on the entire engine.",
       "3. Engine warranty extends from 6 months to 1 year for performance defects.",
-      "4. Clutch plate is not covered under any guarantee or warranty.",
+      "4. Clutch plate is not cove#ff6b00 under any guarantee or warranty.",
       "5. Monthly servicing during the 3-month guarantee is mandatory.",
       "6. First 3 services are free, with minimal charges for oil and parts (excluding engine).",
       "7. Defects must be reported within 24 hours of purchase to avoid repair charges.",
@@ -1345,7 +1414,7 @@ const SellLetterForm = () => {
       `10. OK MOTORS has recieved the money amount ${formatRupee(
         formData.saleAmount
       )} from ${formData.buyerName}.`,
-      "11. It is compulsory to get the vehicle serviced after driving 1500-1800 km otherwise guarrantee will be expired ",
+      "11. It is compulsory to get the vehicle serviced after driving 1500-1800 km otherwise guarrantee will be expi#ff6b00 ",
     ];
 
     terms.forEach((term, index) => {
@@ -1539,12 +1608,19 @@ const SellLetterForm = () => {
         }
       }
       const pdfBytes = await pdfDoc.save();
-      saveAs(
-        new Blob([pdfBytes], { type: "application/pdf" }),
-        `vehicle_sale_agreement_hindi_${
-          formData.registrationNumber || "document"
-        }.pdf`
-      );
+      const filename = `vehicle_sale_agreement_hindi_${formData.registrationNumber || "document"}.pdf`;
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      try {
+        const saveRes = await fileSaveService.savePdfToDefaultDir(filename, pdfBytes, 'sell');
+        if (saveRes && saveRes.success && window.electronAPI) {
+          alert(`PDF saved to ${saveRes.path || 'default PDF folder'}`);
+        } else {
+          saveAs(blob, filename);
+        }
+      } catch (err) {
+        console.warn('Silent save failed for sell letter (hi):', err);
+        saveAs(blob, filename);
+      }
     } catch (error) {
       console.error("Error generating Hindi PDF:", error);
       alert("Failed to generate Hindi PDF. Please try again.");
@@ -1637,12 +1713,19 @@ const SellLetterForm = () => {
       }
 
       const pdfBytes = await pdfDoc.save();
-      saveAs(
-        new Blob([pdfBytes], { type: "application/pdf" }),
-        `vehicle_sale_agreement_english_${
-          formData.registrationNumber || "document"
-        }.pdf`
-      );
+      const filenameEn = `vehicle_sale_agreement_english_${formData.registrationNumber || "document"}.pdf`;
+      const blobEn = new Blob([pdfBytes], { type: "application/pdf" });
+      try {
+        const saveRes = await fileSaveService.savePdfToDefaultDir(filenameEn, pdfBytes, 'sell');
+        if (saveRes && saveRes.success && window.electronAPI) {
+          alert(`PDF saved to ${saveRes.path || 'default PDF folder'}`);
+        } else {
+          saveAs(blobEn, filenameEn);
+        }
+      } catch (err) {
+        console.warn('Silent save failed for sell letter (en):', err);
+        saveAs(blobEn, filenameEn);
+      }
     } catch (error) {
       console.error("Error generating English PDF:", error);
       alert("Failed to generate English PDF. Please try again.");
@@ -1707,7 +1790,7 @@ const SellLetterForm = () => {
             style={{
               width: "100%",
               maxWidth: "25rem",
-              height: "13rem",
+              height: "9rem",
               objectFit: "cover",
               objectPosition: "center",
               display: "block",
@@ -1807,6 +1890,53 @@ const SellLetterForm = () => {
           </div>
 
           <form className="form" style={styles.form}>
+            {/* Vehicle Selection from Inventory */}
+            <div style={styles.formSection}>
+              <h2 style={styles.sectionTitle}>
+                <Car style={styles.sectionIcon} /> Select Vehicle from Inventory (Optional)
+              </h2>
+              <div style={styles.formGrid}>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Car style={styles.formIcon} />
+                    Choose Vehicle (or enter manually below)
+                  </label>
+                  <select
+                    value={selectedVehicleId}
+                    onChange={handleVehicleSelect}
+                    style={styles.formSelect}
+                    disabled={loadingVehicles}
+                  >
+                    <option value="">
+                      {loadingVehicles ? "Loading vehicles..." : "-- Select Vehicle or Enter Manually --"}
+                    </option>
+                    {vehicles.map((vehicle) => (
+                      <option key={vehicle._id} value={vehicle._id}>
+                        {vehicle.vehicleName} {vehicle.vehicleModel} - {vehicle.registrationNumber}
+                        {vehicle.vehicleVariant ? ` (${vehicle.vehicleVariant})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {selectedVehicleId && (
+                <div style={{
+                  padding: "12px",
+                  backgroundColor: "#f0f9ff",
+                  borderRadius: "8px",
+                  marginTop: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}>
+                  <CheckCircle size={20} style={{ color: "#3b82f6" }} />
+                  <span style={{ fontSize: "0.875rem", color: "#1e293b" }}>
+                    Vehicle details auto-filled. You can modify them below if needed.
+                  </span>
+                </div>
+              )}
+            </div>
+
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <Car style={styles.sectionIcon} /> Vehicle Information

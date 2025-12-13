@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Wrench,
+  ShipWheel,
   Users,
   LogOut,
   ChevronDown,
@@ -22,6 +23,7 @@ import {
   Eye,
   Menu,
   Settings,
+  RefreshCw,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -122,11 +124,11 @@ const BikeHistory = () => {
       "Ninety",
     ];
 
-    const convertHundreds = (num) => {
+    const converthundreds = (num) => {
       let result = "";
 
       if (num > 99) {
-        result += units[Math.floor(num / 100)] + " Hundred ";
+        result += units[Math.floor(num / 100)] + " hundred ";
         num %= 100;
       }
 
@@ -157,16 +159,16 @@ const BikeHistory = () => {
     let hundreds = num % 1000;
 
     if (crores > 0) {
-      result += convertHundreds(crores) + "Crore ";
+      result += converthundreds(crores) + "Crore ";
     }
     if (lakhs > 0) {
-      result += convertHundreds(lakhs) + "Lakh ";
+      result += converthundreds(lakhs) + "Lakh ";
     }
     if (thousands > 0) {
-      result += convertHundreds(thousands) + "Thousand ";
+      result += converthundreds(thousands) + "Thousand ";
     }
     if (hundreds > 0) {
-      result += convertHundreds(hundreds);
+      result += converthundreds(hundreds);
     }
 
     return result.trim() + " Rupees Only";
@@ -738,7 +740,7 @@ const BikeHistory = () => {
       "6. OK MOTORS is not responsible for any past violations, legal disputes, or ownership claims before the date of purchase.",
       "7. The seller confirms that the bike has not been involved in any major accidents or insurance claims.",
       "8. Vehicle handover includes all keys, documents, and accessories as agreed.",
-      "9. The seller confirms that the chassis and engine numbers are intact and not tampered with.",
+      "9. The seller confirms that the chassis and engine numbers are intact and not tampe#ff6b00 with.",
     ];
 
     terms.forEach((term, index) => {
@@ -1202,7 +1204,7 @@ const BikeHistory = () => {
       "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
       "2. A 3-month guarantee is provided on the entire engine.",
       "3. Engine warranty extends from 6 months to 1 year for performance defects.",
-      "4. Clutch plate is not covered under any guarantee or warranty.",
+      "4. Clutch plate is not cove#ff6b00 under any guarantee or warranty.",
       "5. Monthly servicing during the 3-month guarantee is mandatory.",
       "6. First 3 services are free, with minimal charges for oil and parts (excluding engine).",
       "7. Defects must be reported within 24 hours of purchase to avoid repair charges.",
@@ -1211,7 +1213,7 @@ const BikeHistory = () => {
       `10. OK MOTORS has received the money amount ${formatRupee(
         letter.saleAmount
       )} from ${letter.buyerName}.`,
-      "11. It is compulsory to get the vehicle serviced after driving 1500-1800 km otherwise guarantee will be expired.",
+      "11. It is compulsory to get the vehicle serviced after driving 1500-1800 km otherwise guarantee will be expi#ff6b00.",
     ];
 
     terms.forEach((term, index) => {
@@ -1785,6 +1787,14 @@ const BikeHistory = () => {
       path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
+    },
+    {
       name: "Buy",
       icon: ShoppingCart,
       submenu: [
@@ -1798,6 +1808,23 @@ const BikeHistory = () => {
       submenu: [
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
+      ],
+    },
+    {
+      name: "Sell",
+      icon: TrendingUp,
+      submenu: [
+        { name: "Create Sell Letter", path: "/sell/create" },
+        { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Updates",
+      icon: RefreshCw,
+      submenu: [
+        { name: "Create Update", path: "/updates/create" },
+        { name: "Updates List", path: "/updates" },
       ],
     },
     {
@@ -1904,7 +1931,7 @@ const BikeHistory = () => {
             style={{
               width: "100%",
               maxWidth: "25rem",
-              height: "13rem",
+              height: "9rem",
               objectFit: "cover",
               objectPosition: "center",
               display: "block",

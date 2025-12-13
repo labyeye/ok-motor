@@ -28,7 +28,7 @@ export const initOfflineServices = () => {
   // Log network status changes (optional)
   networkService.subscribe((isOnline, wasOnline) => {
     if (isOnline && !wasOnline) {
-      console.log('📡 Connection restored');
+      console.log('📡 Connection resto#ff6b00');
     } else if (!isOnline && wasOnline) {
       console.log('📡 Connection lost - working offline');
     }

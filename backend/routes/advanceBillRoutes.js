@@ -6,6 +6,7 @@ const AdvanceBill = require("../models/AdvanceBill");
 const { protect } = require("../middleware/auth");
 const BuyLetter = require("../models/BuyLetter");
 const SellLetter = require("../models/SellLetter");
+const Vehicle = require("../models/Vehicle");
 const path = require("path");
 const fs = require("fs");
 
@@ -267,7 +268,25 @@ router.post("/", protect, async (req, res) => {
       "totalAmount",
     ];
 
-    const missingFields = requiredFields.filter((field) => !req.body[field]);
+    // Build advance bill data safely
+    const advanceBillData = Object.assign({}, req.body);
+    
+    // If vehicle reference is provided, auto-populate vehicle details
+    if (advanceBillData.vehicle) {
+      const vehicle = await Vehicle.findById(advanceBillData.vehicle);
+      if (vehicle) {
+        // Auto-populate vehicle fields from Vehicle model
+        advanceBillData.vehicleType = vehicle.vehicleType?.toLowerCase();
+        advanceBillData.vehicleBrand = vehicle.vehicleName;
+        advanceBillData.vehicleModel = vehicle.vehicleModel;
+        advanceBillData.registrationNumber = vehicle.registrationNumber;
+        advanceBillData.chassisNumber = vehicle.chassisNumber;
+        advanceBillData.engineNumber = vehicle.engineNumber;
+        advanceBillData.kmReading = vehicle.kilometersRun;
+      }
+    }
+
+    const missingFields = requiredFields.filter((field) => !advanceBillData[field]);
 
     if (missingFields.length > 0) {
       return res.status(400).json({
@@ -276,8 +295,6 @@ router.post("/", protect, async (req, res) => {
       });
     }
 
-    // Build advance bill data safely
-    const advanceBillData = Object.assign({}, req.body);
     advanceBillData.user = req.user && (req.user.id || req.user._id);
     advanceBillData.createdAt = new Date();
     advanceBillData.updatedAt = new Date();
