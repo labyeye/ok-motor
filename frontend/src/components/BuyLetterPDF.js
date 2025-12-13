@@ -31,6 +31,7 @@ import {
   ChevronRight,
   Menu,
   X,
+  Image,
   Settings,
   ShipWheel,
   RefreshCw
