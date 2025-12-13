@@ -179,16 +179,23 @@
     </div>
     <header class="site-header" id="siteHeader">
       <div class="header-container">
-       <a href="https://www.okmotors.in/index.html" class="header-logo"
+        <a href="https://www.okmotors.in/index.html" class="header-logo"
           ><img
             src="./assets/images/logoblack.png"
             alt="Ok Motors Logo"
             itemprop="logo"
         /></a>
         <nav class="header-nav" aria-label="Main navigation">
-         <a href="https://www.okmotors.in/index.html" class="nav-item" data-translate="Home">Home</a>
+          <a
+            href="https://www.okmotors.in/index.html"
+            class="nav-item"
+            data-translate="Home"
+            >Home</a
+          >
           <div class="nav-item nav-dropdown" aria-haspopup="true">
-            <a href="https://www.okmotors.in/inventory.html" class="nav-link dropdown-toggle"
+            <a
+              href="https://www.okmotors.in/inventory.html"
+              class="nav-link dropdown-toggle"
               >Buy Vehicle
               <i
                 class="fa fa-caret-down"
@@ -246,12 +253,24 @@
               >
             </div>
           </div>
-          <a href="https://www.okmotors.in/sell.html" class="nav-item">Sell Your Vehicle</a>
-          <a href="https://www.okmotors.in/about.html" class="nav-item">About Us</a>
-          <a href="https://www.okmotors.in/book.html" class="nav-item">Book Vehicle</a>
-          <a href="https://www.okmotors.in/finance.html" class="nav-item">Bike Finance</a>
-          <a href="https://www.okmotors.in/updates.html" class="nav-item">Updates</a>
-          <a href="https://www.okmotors.in/contact.html" class="nav-item">Contact</a>
+          <a href="https://www.okmotors.in/sell.html" class="nav-item"
+            >Sell Your Vehicle</a
+          >
+          <a href="https://www.okmotors.in/about.html" class="nav-item"
+            >About Us</a
+          >
+          <a href="https://www.okmotors.in/book.html" class="nav-item"
+            >Book Vehicle</a
+          >
+          <a href="https://www.okmotors.in/finance.html" class="nav-item"
+            >Bike Finance</a
+          >
+          <a href="https://www.okmotors.in/updates.html" class="nav-item"
+            >Updates</a
+          >
+          <a href="https://www.okmotors.in/contact.html" class="nav-item"
+            >Contact</a
+          >
           <div class="nav-item nav-dropdown" aria-haspopup="true">
             <a href="#" class="nav-link dropdown-toggle"
               >Vehicle Valuation
@@ -284,7 +303,161 @@
           </button>
         </div>
       </div>
+
+      <!-- Mobile-only search (appears after navbar, before action banner) -->
+      <div
+        class="mobile-search-bar"
+        id="mobileSearchBar"
+        role="search"
+        aria-label="Search inventory (mobile)"
+      >
+        <form class="mobile-search-form" action="inventory.html" method="get">
+          <input
+            id="mobileSearchInput"
+            name="q"
+            type="search"
+            placeholder="Search bikes, brands or models"
+            aria-label="Search bikes"
+          />
+          <button type="submit" class="mobile-search-btn" aria-label="Search">
+            <i class="fas fa-search"></i>
+          </button>
+        </form>
+      </div>
+
+      <div
+        class="mobile-action-banner"
+        id="mobileActionBanner"
+        role="region"
+        aria-label="Quick actions"
+      >
+        <div class="mobile-action-container">
+          <a href="https://www.okmotors.in/sell.html" class="mobile-action"
+            >Sell Bike</a
+          >
+          <a
+            href="https://www.okmotors.in/inventory.html?type=used"
+            class="mobile-action"
+            >Buy Used Bike</a
+          >
+          <a href="https://www.okmotors.in/insurance.html" class="mobile-action"
+            >Insurance &amp; POC</a
+          >
+          <a
+            href="https://www.okmotors.in/investment.html"
+            class="mobile-action"
+            >Investment</a
+          >
+          <a href="https://www.okmotors.in/service.html" class="mobile-action"
+            >Service</a
+          >
+        </div>
+      </div>
     </header>
+
+    <style>
+      .mobile-action-banner {
+        display: none;
+        width: 100%;
+        background: #d92b2b;
+        align-items: center;
+        z-index: 500;
+        transform: translateY(-30px);
+      }
+      .mobile-search-bar {
+        display: none;
+        width: 100%;
+        background: #fff;
+        z-index: 600;
+        padding: 6px 12px;
+        transform: translateY(-30px);
+      }
+      .mobile-search-form {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .mobile-search-form input[type="search"] {
+        flex: 1;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid #e6e6e6;
+        font-size: 14px;
+      }
+      .mobile-search-btn {
+        background: var(--primary-color, #d92b2b);
+        color: #fff;
+        border: none;
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mobile-action-container {
+        display: flex;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .mobile-action {
+        flex: 0 0 auto;
+        color: white;
+        padding: 8px 10px;
+        border-radius: 18px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      @media (max-width: 1024px) {
+        .mobile-action-banner {
+          display: flex;
+          justify-content: space-between;
+        }
+        .mobile-search-bar {
+          display: block;
+        }
+      }
+    </style>
+
+    <script>
+      (function () {
+        try {
+          var banner = document.getElementById("mobileActionBanner");
+          var closeBtn = document.getElementById("mobileBannerClose");
+          if (!banner || !closeBtn) return;
+
+          // Only show on small screens; CSS handles visual hide/show, but
+          // use aria-hidden for assistive tech and avoid unnecessary DOM focus.
+          function updateVisibility() {
+            var isMobile = window.matchMedia("(max-width:1024px)").matches;
+            var dismissed =
+              localStorage.getItem("mobileActionBannerDismissed") === "1";
+            if (isMobile && !dismissed) {
+              banner.setAttribute("aria-hidden", "false");
+            } else {
+              banner.setAttribute("aria-hidden", "true");
+            }
+          }
+
+          closeBtn.addEventListener("click", function () {
+            banner.setAttribute("aria-hidden", "true");
+            try {
+              localStorage.setItem("mobileActionBannerDismissed", "1");
+            } catch (e) {}
+          });
+
+          // Recompute on resize/orientation change
+          window.addEventListener("resize", updateVisibility);
+          window.addEventListener("orientationchange", updateVisibility);
+          document.addEventListener("DOMContentLoaded", updateVisibility);
+          updateVisibility();
+        } catch (e) {
+          console.error("mobile banner init error", e);
+        }
+      })();
+    </script>
     <section
       class="hero-section"
       itemscope
@@ -318,11 +491,10 @@
     </section>
     <section class="category-filter-section">
       <div class="category-tabs">
-        <button class="tab-btn active" data-tab="all" data-translate="All">
-          All</button
-        ><button class="tab-btn" data-tab="new" data-translate="New">New</button
-        ><button class="tab-btn" data-tab="used" data-translate="Used">
-          Used
+        <button class="tab-btn active" data-tab="new" data-translate="Car">
+          Car</button
+        ><button class="tab-btn" data-tab="used" data-translate="Bikes">
+          Bikes
         </button>
       </div>
       <div class="filter-panel">
@@ -373,7 +545,13 @@
             <i class="fas fa-sliders-h"></i></button
           ><button class="search-count-btn" id="searchCountBtn">
             <i class="fas fa-search"></i
-            ><span class="count-label">17 CARS</span>
+            ><span
+              class="count-label"
+              aria-live="polite"
+              data-count="0"
+              data-type="vehicle"
+              >Loading...</span
+            >
           </button>
         </div>
       </div>
@@ -437,10 +615,7 @@
           <i class="fas fa-chevron-right"></i>
         </button>
       </div>
-      <div
-        class="featured-footer"
-        style="text-align: center; margin-top: 18px"
-      >
+      <div class="featured-footer" style="text-align: center; margin-top: 18px">
         <a
           id="viewAllBikesBtn"
           class="view-all view-all-count"
@@ -959,15 +1134,21 @@
           <h3 data-translate="Quick Links">Quick Links</h3>
           <ul>
             <li>
-             <a href="https://www.okmotors.in/index.html" data-translate="Home">Home</a>
+              <a href="https://www.okmotors.in/index.html" data-translate="Home"
+                >Home</a
+              >
             </li>
             <li>
-              <a href="https://www.okmotors.in/inventory.html" data-translate="Buy Vehicle"
+              <a
+                href="https://www.okmotors.in/inventory.html"
+                data-translate="Buy Vehicle"
                 >Buy Vehicle</a
               >
             </li>
             <li>
-              <a href="https://www.okmotors.in/sell.html" data-translate="Sell Your Vehicle"
+              <a
+                href="https://www.okmotors.in/sell.html"
+                data-translate="Sell Your Vehicle"
                 >Sell Your Vehicle</a
               >
             </li>
@@ -988,10 +1169,18 @@
               >
             </li>
             <li>
-              <a href="https://www.okmotors.in/updates.html" data-translate="Updates">Updates</a>
+              <a
+                href="https://www.okmotors.in/updates.html"
+                data-translate="Updates"
+                >Updates</a
+              >
             </li>
             <li>
-              <a href="https://www.okmotors.in/contact.html" data-translate="Contact">Contact</a>
+              <a
+                href="https://www.okmotors.in/contact.html"
+                data-translate="Contact"
+                >Contact</a
+              >
             </li>
           </ul>
         </div>
@@ -999,7 +1188,9 @@
           <h3 data-translate="Resources">Resources</h3>
           <ul>
             <li>
-              <a href="https://www.okmotors.in/finance.html" data-translate="Bike Finance"
+              <a
+                href="https://www.okmotors.in/finance.html"
+                data-translate="Bike Finance"
                 >Bike Finance</a
               >
             </li>
@@ -1090,10 +1281,10 @@
         <span class="close">&times;</span>
         <h3>Choose WhatsApp Number</h3>
         <button class="number-option" data-number="918210283582">
-          +91 82102 83582
+          +91 72800 12222
         </button>
         <button class="number-option" data-number="919876543210">
-          +91 98358 44897
+          +91 72800 12222
         </button>
       </div>
     </div>
@@ -1149,10 +1340,10 @@
         <span class="close">&times;</span>
         <h3>Choose Number to Call</h3>
         <button class="number-option" data-number="918210283582">
-          +91 82102 83582
+          +91 72800 12222
         </button>
         <button class="number-option" data-number="919876543210">
-          +91 98358 44897
+          +91 72800 12222
         </button>
       </div>
     </div>
@@ -1443,10 +1634,7 @@
                     "cachedFeaturedBikes",
                     JSON.stringify(bikes)
                   );
-                  localStorage.setItem(
-                    "cachedFeaturedTS",
-                    String(Date.now())
-                  );
+                  localStorage.setItem("cachedFeaturedTS", String(Date.now()));
                 })
                 .catch(() => {});
             }
@@ -1455,6 +1643,177 @@
           }
         }
         prefetchInventoryCache();
+        // Update the search-count button with live counts from the Vehicle model
+        function updateSearchCount() {
+          try {
+            const btn = document.getElementById("searchCountBtn");
+            if (!btn) return;
+
+            const cacheKey = "vehicleCountsCache";
+            const cacheTSKey = "vehicleCountsCacheTS";
+            const maxAge = 2 * 60 * 1000; // 2 minutes
+            const now = Date.now();
+            const cachedTS = parseInt(
+              localStorage.getItem(cacheTSKey) || "0",
+              10
+            );
+            const cached = localStorage.getItem(cacheKey);
+            if (cached && cachedTS && now - cachedTS < maxAge) {
+              applyCount(JSON.parse(cached));
+              return;
+            }
+
+            // primary try: vehicles endpoint (uses Vehicle model on backend)
+            const endpoints = ["/api/vehicles", "/api/bikes", "/api/bikes"];
+            const tryEndpoint = (i) => {
+              if (i >= endpoints.length) {
+                // all endpoints tried -> show zeros
+                const zeroCounts = { total: 0, cars: 0, bikes: 0 };
+                try {
+                  localStorage.setItem(cacheKey, JSON.stringify(zeroCounts));
+                  localStorage.setItem(cacheTSKey, String(Date.now()));
+                } catch (e) {
+                  /* ignore storage errors */
+                }
+                applyCount(zeroCounts);
+                return;
+              }
+
+              fetch(API_BASE + endpoints[i])
+                .then((r) => r.json())
+                .then((data) => {
+                  let list = [];
+                  if (data && data.success && Array.isArray(data.vehicles))
+                    list = data.vehicles;
+                  else if (data && data.success && Array.isArray(data.bikes))
+                    list = data.bikes;
+                  else if (Array.isArray(data)) list = data;
+
+                  // If response is not an array, try the next endpoint
+                  if (!Array.isArray(list)) {
+                    tryEndpoint(i + 1);
+                    return;
+                  }
+
+                  // list is an array (may be empty). Compute counts (0 is valid)
+                  const counts = { total: list.length, cars: 0, bikes: 0 };
+                  list.forEach((v) => {
+                    const t = (
+                      v && (v.type || v.vehicleType || v.body)
+                        ? String(v.type || v.vehicleType || v.body)
+                        : ""
+                    ).toLowerCase();
+                    if (t.includes("car")) counts.cars += 1;
+                    else if (
+                      t.includes("bike") ||
+                      t.includes("motor") ||
+                      t.includes("motorcycle") ||
+                      t.includes("scooter")
+                    )
+                      counts.bikes += 1;
+                    else {
+                      if (
+                        v &&
+                        v.brand &&
+                        /royal|ktm|honda|suzuki|yamaha|bajaj|tvs|hero|jawa|harley/i.test(
+                          String(v.brand)
+                        )
+                      )
+                        counts.bikes += 1;
+                    }
+                  });
+
+                  // heuristics if classification still ambiguous and list has items
+                  if (
+                    counts.cars === 0 &&
+                    counts.bikes === 0 &&
+                    list.length > 0
+                  ) {
+                    const bikeGuess = list.filter(
+                      (v) =>
+                        v &&
+                        v.brand &&
+                        /royal|ktm|honda|suzuki|yamaha|bajaj|tvs|hero|jawa|harley/i.test(
+                          String(v.brand)
+                        )
+                    ).length;
+                    counts.bikes = bikeGuess || 0;
+                    counts.cars = counts.total - counts.bikes;
+                  }
+
+                  try {
+                    localStorage.setItem(cacheKey, JSON.stringify(counts));
+                    localStorage.setItem(cacheTSKey, String(Date.now()));
+                  } catch (e) {
+                    /* ignore storage errors */
+                  }
+                  applyCount(counts);
+                })
+                .catch(() => tryEndpoint(i + 1));
+            };
+
+            function applyCount(counts) {
+              const tab = document.querySelector(
+                ".category-tabs .tab-btn.active"
+              );
+              const isCarTab =
+                tab &&
+                tab.textContent &&
+                tab.textContent.toLowerCase().includes("car");
+              const labelEl = btn.querySelector(".count-label");
+              if (!labelEl) return;
+
+              function formatLabel(n, singular) {
+                const num = typeof n === "number" ? n : parseInt(n, 10) || 0;
+                const word = num === 1 ? singular : singular + "S";
+                return `${num} ${word}`;
+              }
+
+              if (isCarTab) {
+                const c =
+                  typeof counts.cars === "number" ? counts.cars : counts.total;
+                labelEl.textContent = formatLabel(c, "CAR");
+                labelEl.setAttribute("data-count", String(c));
+                labelEl.setAttribute("data-type", "CAR");
+                labelEl.setAttribute(
+                  "aria-label",
+                  `${c} ${c === 1 ? "CAR" : "CARS"}`
+                );
+              } else {
+                const b =
+                  typeof counts.bikes === "number"
+                    ? counts.bikes
+                    : counts.total;
+                labelEl.textContent = formatLabel(b, "BIKE");
+                labelEl.setAttribute("data-count", String(b));
+                labelEl.setAttribute("data-type", "BIKE");
+                labelEl.setAttribute(
+                  "aria-label",
+                  `${b} ${b === 1 ? "BIKE" : "BIKES"}`
+                );
+              }
+            }
+
+            tryEndpoint(0);
+          } catch (e) {
+            // silent
+          }
+        }
+
+        // wire tab clicks to refresh the search count
+        document.querySelectorAll(".category-tabs .tab-btn").forEach((t) => {
+          t.addEventListener("click", function () {
+            // toggle active state (mirrors existing tab code)
+            document
+              .querySelectorAll(".category-tabs .tab-btn")
+              .forEach((b) => b.classList.remove("active"));
+            this.classList.add("active");
+            updateSearchCount();
+          });
+        });
+
+        // initial call
+        updateSearchCount();
       });
     </script>
     <script>

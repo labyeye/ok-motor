@@ -1033,6 +1033,7 @@ body {
 }
 
 
+
 .header-logo img {
   height: 75px;
   width: 180px;
@@ -3479,6 +3480,7 @@ iframe {
 
   .top-banner-container,
   .hero-container {
+    
     padding-left: 10px;
     padding-right: 10px;
   }

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Invest with Ok Motors</title>
+    <meta
+      name="description"
+      content="Invest in Ok Motors — see how your money could grow and contact us to get started."
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="./assets/images/logoblack.png"
+    />
+    <style>
+      /* Page-specific small tweaks */
+      .invest-hero {
+        padding: 72px 18px 40px;
+        text-align: center;
+        background: linear-gradient(180deg, #fff 0%, #fafafa 100%);
+      }
+
+      .invest-hero h1 {
+        margin: 0 0 12px;
+        font-size: 2rem;
+        color: var(--primary-color, #cf1819);
+      }
+
+      .invest-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+        max-width: 1100px;
+        margin: 32px auto;
+        padding: 0 18px;
+      }
+
+      .invest-card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 18px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      }
+
+      .calculator {
+        max-width: 820px;
+        margin: 18px auto 40px;
+        padding: 18px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+      }
+
+      .calculator label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      .calculator input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #e6e6e6;
+        margin-bottom: 12px;
+      }
+
+      .calc-row {
+        display: flex;
+        gap: 12px;
+      }
+      .calc-row .col {
+        flex: 1;
+      }
+
+      .result {
+        margin-top: 14px;
+        font-weight: 700;
+        color: #222;
+      }
+
+      .cta {
+        display: flex;
+        justify-content: center;
+        margin: 28px 0;
+      }
+      .cta a {
+        background: var(--primary-color, #cf1819);
+        color: #fff;
+        padding: 12px 18px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top-banner" id="topBanner" role="banner">
+      <div class="top-banner-container">
+        <div class="top-banner-left">
+          <span
+            ><i class="fas fa-phone-alt" aria-hidden="true"></i>&nbsp;+91 72800
+            12222</span
+          >
+        </div>
+        <div class="top-banner-right" aria-hidden="true">
+          <a href="#" class="social"><i class="fab fa-facebook-f"></i></a
+          ><a href="#" class="social"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+    </div>
+    <header class="site-header" id="siteHeader">
+      <div class="header-container">
+        <a href="https://www.okmotors.in/index.html" class="header-logo"
+          ><img
+            src="./assets/images/logoblack.png"
+            alt="Ok Motors Logo"
+            itemprop="logo"
+        /></a>
+        <nav class="header-nav" aria-label="Main navigation">
+          <a
+            href="https://www.okmotors.in/index.html"
+            class="nav-item"
+            data-translate="Home"
+            >Home</a
+          >
+          <div class="nav-item nav-dropdown" aria-haspopup="true">
+            <a
+              href="https://www.okmotors.in/inventory.html"
+              class="nav-link dropdown-toggle"
+              >Buy Vehicle
+              <i
+                class="fa fa-caret-down"
+                aria-hidden="true"
+                style="margin-left: 6px"
+              ></i
+            ></a>
+            <div
+              class="dropdown-menu"
+              role="menu"
+              aria-label="Buy Vehicle submenu"
+            >
+              <h4 class="dropdown-column-title">Cars</h4>
+              <a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Maruti"
+                >Maruti</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Hyundai"
+                >Hyundai</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Tata"
+                >Tata</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Mahindra"
+                >Mahindra</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Toyota"
+                >Toyota</a
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Honda"
+                >Honda</a
+              >
+              <h4 class="dropdown-column-title">Vehicles</h4>
+              <a
+                class="dropdown-item"
+                href="inventory.html?brand=Royal%20Enfield"
+                >Royal Enfield</a
+              ><a class="dropdown-item" href="inventory.html?brand=Bajaj"
+                >Bajaj</a
+              ><a class="dropdown-item" href="inventory.html?brand=Hero">Hero</a
+              ><a class="dropdown-item" href="inventory.html?brand=Yamaha"
+                >Yamaha</a
+              ><a class="dropdown-item" href="inventory.html?brand=KTM">KTM</a
+              ><a class="dropdown-item" href="inventory.html?brand=TVS">TVS</a
+              ><a class="dropdown-item" href="inventory.html?brand=Honda"
+                >Honda</a
+              ><a class="dropdown-item" href="inventory.html?brand=Suzuki"
+                >Suzuki</a
+              >
+            </div>
+          </div>
+          <a href="https://www.okmotors.in/sell.html" class="nav-item"
+            >Sell Your Vehicle</a
+          >
+          <a href="https://www.okmotors.in/about.html" class="nav-item"
+            >About Us</a
+          >
+          <a href="https://www.okmotors.in/book.html" class="nav-item"
+            >Book Vehicle</a
+          >
+          <a href="https://www.okmotors.in/finance.html" class="nav-item"
+            >Bike Finance</a
+          >
+          <a href="https://www.okmotors.in/updates.html" class="nav-item"
+            >Updates</a
+          >
+          <a href="https://www.okmotors.in/contact.html" class="nav-item"
+            >Contact</a
+          >
+          <div class="nav-item nav-dropdown" aria-haspopup="true">
+            <a href="#" class="nav-link dropdown-toggle"
+              >Vehicle Valuation
+              <i
+                class="fa fa-caret-down"
+                aria-hidden="true"
+                style="margin-left: 6px"
+              ></i
+            ></a>
+            <div
+              class="dropdown-menu"
+              role="menu"
+              aria-label="Vehicle Valuation submenu"
+            >
+              <a class="dropdown-item" href="used-bike-valuation.html"
+                >Used Bike Valuation</a
+              ><a class="dropdown-item" href="used-car-valuation.html"
+                >Used Car Valuation</a
+              >
+            </div>
+          </div>
+        </nav>
+        <div class="header-actions">
+          <button
+            class="mobile-menu-btn"
+            aria-label="Toggle menu"
+            id="mobileMenuBtn"
+          >
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+      </div>
+      <div
+        class="mobile-action-banner"
+        id="mobileActionBanner"
+        role="region"
+        aria-label="Quick actions"
+      >
+        <div class="mobile-action-container">
+          <a href="https://www.okmotors.in/sell.html" class="mobile-action"
+            >Sell Bike</a
+          >
+          <a
+            href="https://www.okmotors.in/inventory.html?type=used"
+            class="mobile-action"
+            >Buy Used Bike</a
+          >
+          <a href="https://www.okmotors.in/insurance.html" class="mobile-action"
+            >Insurance &amp; POC</a
+          >
+          <a
+            href="https://www.okmotors.in/investment.html"
+            class="mobile-action"
+            >Investment</a
+          >
+          <a href="https://www.okmotors.in/service.html" class="mobile-action"
+            >Service</a
+          >
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero (copied from index) -->
+    <section
+      class="hero-section"
+      itemscope
+      itemtype="https://schema.org/WPHeader"
+    >
+      <div class="hero-background"></div>
+      <div class="hero-overlay"></div>
+      <div class="hero-container">
+        <div class="hero-content">
+          <span
+            class="hero-label"
+            data-translate="India's Trusted Vehicle Portal"
+            >India's Trusted Vehicle Portal</span
+          >
+          <h1 itemprop="headline">
+            <span class="hero-title-line1">Invest With</span>
+            <span class="hero-title-line2">Ok Motors</span>
+          </h1>
+          <p class="hero-subtitle">
+            Partner with a trusted marketplace to grow your capital through
+            vehicle sourcing and sales.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <style>
+      .mobile-action-banner {
+        display: none;
+        width: 100%;
+        background: #d92b2b;
+        align-items: center;
+        z-index: 500;
+        transform: translateY(-10px);
+      }
+      .mobile-action-container {
+        display: flex;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .mobile-action {
+        flex: 0 0 auto;
+        color: white;
+        padding: 8px 10px;
+        border-radius: 18px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      @media (max-width: 1024px) {
+        .mobile-action-banner {
+          display: flex;
+          justify-content: space-between;
+        }
+      }
+    </style>
+
+    <script>
+      (function () {
+        try {
+          var banner = document.getElementById("mobileActionBanner");
+          var closeBtn = document.getElementById("mobileBannerClose");
+          if (!banner || !closeBtn) return;
+
+          // Only show on small screens; CSS handles visual hide/show, but
+          // use aria-hidden for assistive tech and avoid unnecessary DOM focus.
+          function updateVisibility() {
+            var isMobile = window.matchMedia("(max-width:1024px)").matches;
+            var dismissed =
+              localStorage.getItem("mobileActionBannerDismissed") === "1";
+            if (isMobile && !dismissed) {
+              banner.setAttribute("aria-hidden", "false");
+            } else {
+              banner.setAttribute("aria-hidden", "true");
+            }
+          }
+
+          closeBtn.addEventListener("click", function () {
+            banner.setAttribute("aria-hidden", "true");
+            try {
+              localStorage.setItem("mobileActionBannerDismissed", "1");
+            } catch (e) {}
+          });
+
+          // Recompute on resize/orientation change
+          window.addEventListener("resize", updateVisibility);
+          window.addEventListener("orientationchange", updateVisibility);
+          document.addEventListener("DOMContentLoaded", updateVisibility);
+          updateVisibility();
+        } catch (e) {
+          console.error("mobile banner init error", e);
+        }
+      })();
+    </script>
+
+    <main>
+      <section class="invest-hero">
+        <h1>Invest with Ok Motors</h1>
+        <p style="max-width: 780px; margin: 0 auto; color: #444">
+          Put your money to work in a growing, trusted vehicle marketplace. See
+          below how an investment grows over time and the benefits you receive
+          when you partner with Ok Motors.
+        </p>
+      </section>
+
+      <section class="invest-grid">
+        <div class="invest-card">
+          <h3>What happens when you invest</h3>
+          <ul>
+            <li>
+              We use funds to expand inventory and certified inspection
+              capabilities.
+            </li>
+            <li>
+              Investments increase buying power, enabling better wholesale
+              acquisition.
+            </li>
+            <li>
+              Higher inventory turnover and marketing improves sales velocity
+              and margin.
+            </li>
+          </ul>
+        </div>
+
+        <div class="invest-card">
+          <h3>How returns are generated</h3>
+          <ol>
+            <li>Purchase, certify and list quality pre-owned vehicles.</li>
+            <li>
+              Sell at improved margins through improved sourcing and marketing.
+            </li>
+            <li>
+              Share a portion of profits or growth according to the agreement.
+            </li>
+          </ol>
+        </div>
+
+        <div class="invest-card">
+          <h3>Benefits to investors</h3>
+          <ul>
+            <li>Quarterly updates and transparent reports.</li>
+            <li>Priority access to vehicle auctions and buy-backs.</li>
+            <li>Direct line to our team for purchase & exit coordination.</li>
+          </ul>
+        </div>
+      </section>
+
+      
+
+      <div class="cta">
+        <a href="contact.html" aria-label="Contact us about investing"
+          >Contact Us to Invest</a
+        >
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-section">
+          <div class="footer-stars" style="margin: 10px 0">
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+          </div>
+          <div class="logo">
+            <img
+              src="./assets/images/okmotor.png"
+              style="width: 220px"
+              alt="Ok Motors Logo"
+            />
+          </div>
+          <p>Bringing the future of bike riding to you today.</p>
+          <div class="social-icons">
+            <a
+              href="https://www.facebook.com/people/OK-motors-Patna/100092409081953/?rdid=HgY7OAFmgYcvAsoC&share_url=https%253A%252F%252Fwww.facebook.com%252Fshare%252F1BpgmB9Azo%252F"
+              ><i class="fa-brands fa-facebook-f" style="color: #0400ff"></i
+            ></a>
+            <a
+              href="https://www.instagram.com/ok_motors_patna?igsh=MXdiYzU1NDZ6ankxZw%3D%3D"
+              aria-label="Visit our Instagram profile"
+              ><img
+                src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+                style="width: 20px"
+            /></a>
+            <a href="https://wa.me/918210283582"
+              ><i class="fa-brands fa-whatsapp" style="color: #00a841"></i
+            ></a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h3 data-translate="Quick Links">Quick Links</h3>
+          <ul>
+            <li>
+              <a href="https://www.okmotors.in/index.html" data-translate="Home">Home</a>
+            </li>
+            <li>
+              <a href="https://www.okmotors.in/inventory.html" data-translate="Buy Vehicle">Buy Vehicle</a>
+            </li>
+            <li>
+              <a href="https://www.okmotors.in/sell.html" data-translate="Sell Your Vehicle">Sell Your Vehicle</a>
+            </li>
+            <li>
+              <a href="https://www.okmotors.in/about.html" aria-label="About Ok Motors" data-translate="About Us">About Us</a>
+            </li>
+            <li>
+              <a href="https://www.okmotors.in/book.html" aria-label="Book Bike" data-translate="Book Bike">Book Vehicle</a>
+            </li>
+            <li>
+              <a href="https://www.okmotors.in/updates.html" data-translate="Updates">Updates</a>
+            </li>
+            <li>
+              <a href="https://www.okmotors.in/contact.html" data-translate="Contact">Contact</a>
+            </li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3 data-translate="Resources">Resources</h3>
+          <ul>
+            <li>
+              <a href="https://www.okmotors.in/finance.html" data-translate="Bike Finance">Bike Finance</a>
+            </li>
+            <li>
+              <a href="./locations-bihar.html" data-translate="Locations">Locations</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3 data-translate="Contact Us">Contact Us</h3>
+          <p>
+            <i class="fas fa-map-marker-alt"></i> Pillar num.53, Bailey Rd,
+            Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014
+          </p>
+          <span itemprop="telephone">+91 72800 12222</span>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p data-translate="&copy; 2023 Ok Motors. All rights reserved.">&copy; 2023 Ok Motors. All rights reserved.</p>
+        <a href="https://www.pixelatenest.com/" style="color: #a9a9a9" data-translate="Designed By Pixelate Nest">Designed By Pixelate Nest</a>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      function formatINR(x) {
+        return (
+          "₹" + Number(x).toLocaleString("en-IN", { maximumFractionDigits: 2 })
+        );
+      }
+
+      function calculate() {
+        const P = Number(document.getElementById("principal").value) || 0;
+        const r = Number(document.getElementById("rate").value) / 100 || 0;
+        const n = Number(document.getElementById("years").value) || 0;
+        if (P <= 0 || n <= 0) {
+          document.getElementById("result").textContent =
+            "Enter a positive investment and duration.";
+          document.getElementById("schedule").innerHTML = "";
+          return;
+        }
+        const FV = P * Math.pow(1 + r, n);
+        document.getElementById(
+          "result"
+        ).textContent = `Estimated value after ${n} year(s): ${formatINR(
+          FV.toFixed(2)
+        )}`;
+
+        // build yearly schedule
+        let html =
+          '<table style="width:100%;border-collapse:collapse;margin-top:8px"><thead><tr style="text-align:left"><th>Year</th><th>Value</th></tr></thead><tbody>';
+        let val = P;
+        for (let i = 1; i <= n; i++) {
+          val = val * (1 + r);
+          html += `<tr><td style="padding:6px 0;border-top:1px solid #f0f0f0">${i}</td><td style="padding:6px 0;border-top:1px solid #f0f0f0">${formatINR(
+            val.toFixed(2)
+          )}</td></tr>`;
+        }
+        html += "</tbody></table>";
+        document.getElementById("schedule").innerHTML = html;
+      }
+
+      document
+        .getElementById("calcBtn")
+        .addEventListener("click", function (e) {
+          e.preventDefault();
+          calculate();
+        });
+      document
+        .getElementById("resetBtn")
+        .addEventListener("click", function (e) {
+          e.preventDefault();
+          document.getElementById("principal").value = 100000;
+          document.getElementById("rate").value = 12;
+          document.getElementById("years").value = 5;
+          document.getElementById("result").textContent = "";
+          document.getElementById("schedule").innerHTML = "";
+        });
+
+      // initial calculate
+      calculate();
+    </script>
+  </body>
+</html>
