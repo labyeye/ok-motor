@@ -1,9 +1,4 @@
-import {
-  useState,
-  useCallback,
-  useContext,
-  useEffect,
-} from "react";
+import { useState, useCallback, useContext, useEffect } from "react";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { saveAs } from "file-saver";
 import axios from "axios";
@@ -34,7 +29,7 @@ import {
   Image,
   Settings,
   ShipWheel,
-  RefreshCw
+  RefreshCw,
 } from "lucide-react";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
@@ -64,7 +59,7 @@ const BuyLetterForm = () => {
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [loadingVehicles, setLoadingVehicles] = useState(false);
-  
+
   // Helper function to format date for input field (YYYY-MM-DD)
   const formatDateForInput = (dateString) => {
     if (!dateString) return new Date().toISOString().split("T")[0];
@@ -190,9 +185,12 @@ const BuyLetterForm = () => {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
       const API_BASE = "https://ok-motor-51l3.vercel.app";
-      const response = await axios.get(`${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(
+        `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setVehicles(response.data.vehicles || []);
     } catch (error) {
       console.error("Error fetching vehicles:", error);
@@ -205,11 +203,11 @@ const BuyLetterForm = () => {
   const handleVehicleSelect = (e) => {
     const vehicleId = e.target.value;
     setSelectedVehicleId(vehicleId);
-    
+
     if (vehicleId) {
-      const vehicle = vehicles.find(v => v._id === vehicleId);
+      const vehicle = vehicles.find((v) => v._id === vehicleId);
       if (vehicle) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           vehicleName: vehicle.vehicleName || "",
           vehicleModel: vehicle.vehicleModel || "",
@@ -472,14 +470,23 @@ const BuyLetterForm = () => {
     try {
       setIsSaving(true);
       let response;
-      
+
       // Check if we're in Electron
       const isElectron = window.electronAPI !== undefined;
-      
+
       // VERSIONING: Always create new document, never update
       // If editing, create a new version with reference to original
-      const { _id, __v, createdAt, updatedAt, ...formDataWithoutId } = formData;
-      
+      // Remove ALL MongoDB-specific fields to avoid duplicate key errors
+      const {
+        _id,
+        __v,
+        createdAt,
+        updatedAt,
+        id,
+        pdfPath,
+        ...formDataWithoutId
+      } = formData;
+
       const dataToSave = {
         ...formDataWithoutId,
         // Add version tracking fields
@@ -505,13 +512,13 @@ const BuyLetterForm = () => {
         // Use apiService (handles online/offline uniformly)
         response = await apiService.post("/api/buy-letters", dataToSave);
       }
-      
+
       if (editLetter?._id) {
         alert("Buy letter saved as new version! Original remains unchanged.");
       } else {
         alert("Buy letter saved successfully!");
       }
-      
+
       return response.data;
     } catch (error) {
       console.error("Error saving/updating buy letter:", error);
@@ -670,9 +677,9 @@ const BuyLetterForm = () => {
         ]
       : []),
     {
-      name: 'Gallery',
+      name: "Gallery",
       icon: Image,
-      path: '/gallery/manage',
+      path: "/gallery/manage",
     },
     {
       name: "Vehicle History",
@@ -772,9 +779,9 @@ const BuyLetterForm = () => {
         response = await apiService.post("/api/buy-letters", formData);
         savedLetterData = response.data;
       }
-      
+
       // Use the new PDF template loader
-      const existingPdfBytes = await loadPDFTemplate('buyletter.pdf');
+      const existingPdfBytes = await loadPDFTemplate("buyletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const firstPage = pdfDoc.getPages()[0];
@@ -849,18 +856,24 @@ const BuyLetterForm = () => {
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
       const pdfBytes = await pdfDoc.save();
-      const filename = `vehicle_buy_agreement_${formData.registrationNumber || "document"}.pdf`;
+      const filename = `vehicle_buy_agreement_${
+        formData.registrationNumber || "document"
+      }.pdf`;
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       try {
-        const saveRes = await fileSaveService.savePdfToDefaultDir(filename, pdfBytes, 'buy');
+        const saveRes = await fileSaveService.savePdfToDefaultDir(
+          filename,
+          pdfBytes,
+          "buy"
+        );
         if (saveRes && saveRes.success && window.electronAPI) {
-          alert(`PDF saved to ${saveRes.path || 'default PDF folder'}`);
+          alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
         } else {
           // fallback to download
           saveAs(blob, filename);
         }
       } catch (err) {
-        console.warn('Silent save failed for buy letter:', err);
+        console.warn("Silent save failed for buy letter:", err);
         saveAs(blob, filename);
       }
 
@@ -1044,17 +1057,23 @@ const BuyLetterForm = () => {
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
       const pdfBytes = await pdfDoc.save();
-      const filename = `vehicle_purchase_agreement_${formData.registrationNumber || "document"}_en.pdf`;
+      const filename = `vehicle_purchase_agreement_${
+        formData.registrationNumber || "document"
+      }_en.pdf`;
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       try {
-        const saveRes = await fileSaveService.savePdfToDefaultDir(filename, pdfBytes, 'buy');
+        const saveRes = await fileSaveService.savePdfToDefaultDir(
+          filename,
+          pdfBytes,
+          "buy"
+        );
         if (saveRes && saveRes.success && window.electronAPI) {
-          alert(`PDF saved to ${saveRes.path || 'default PDF folder'}`);
+          alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
         } else {
           saveAs(blob, filename);
         }
       } catch (err) {
-        console.warn('Silent save failed for buy letter (en):', err);
+        console.warn("Silent save failed for buy letter (en):", err);
         saveAs(blob, filename);
       }
 
@@ -1087,9 +1106,7 @@ const BuyLetterForm = () => {
       setIsGeneratingPreview(true);
 
       const templateName =
-        language === "hindi"
-          ? "buyletter.pdf"
-          : "englishbuyletter.pdf";
+        language === "hindi" ? "buyletter.pdf" : "englishbuyletter.pdf";
 
       // Use the new PDF template loader
       const existingPdfBytes = await loadPDFTemplate(templateName);
@@ -1725,7 +1742,8 @@ const BuyLetterForm = () => {
             {/* Vehicle Selection from Inventory */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
-                <Car style={styles.sectionIcon} /> Select Vehicle from Inventory (Optional)
+                <Car style={styles.sectionIcon} /> Select Vehicle from Inventory
+                (Optional)
               </h2>
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
@@ -1740,30 +1758,38 @@ const BuyLetterForm = () => {
                     disabled={loadingVehicles}
                   >
                     <option value="">
-                      {loadingVehicles ? "Loading vehicles..." : "-- Select Vehicle or Enter Manually --"}
+                      {loadingVehicles
+                        ? "Loading vehicles..."
+                        : "-- Select Vehicle or Enter Manually --"}
                     </option>
                     {vehicles.map((vehicle) => (
                       <option key={vehicle._id} value={vehicle._id}>
-                        {vehicle.vehicleName} {vehicle.vehicleModel} - {vehicle.registrationNumber}
-                        {vehicle.vehicleVariant ? ` (${vehicle.vehicleVariant})` : ""}
+                        {vehicle.vehicleName} {vehicle.vehicleModel} -{" "}
+                        {vehicle.registrationNumber}
+                        {vehicle.vehicleVariant
+                          ? ` (${vehicle.vehicleVariant})`
+                          : ""}
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
               {selectedVehicleId && (
-                <div style={{
-                  padding: "12px",
-                  backgroundColor: "#f0f9ff",
-                  borderRadius: "8px",
-                  marginTop: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}>
+                <div
+                  style={{
+                    padding: "12px",
+                    backgroundColor: "#f0f9ff",
+                    borderRadius: "8px",
+                    marginTop: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
                   <CheckCircle size={20} style={{ color: "#3b82f6" }} />
                   <span style={{ fontSize: "0.875rem", color: "#1e293b" }}>
-                    Vehicle details auto-filled. You can modify them below if needed.
+                    Vehicle details auto-filled. You can modify them below if
+                    needed.
                   </span>
                 </div>
               )}
