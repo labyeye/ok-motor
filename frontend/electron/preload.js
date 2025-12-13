@@ -22,7 +22,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSaveDirs: () => ipcRenderer.invoke('get-save-dirs'),
   selectSaveDir: (docType) => ipcRenderer.invoke('select-save-dir', docType),
   setSaveDir: (docType, path) => ipcRenderer.invoke('set-save-dir', docType, path),
-  // Silent save to configu#ff6b00 directory (no dialog)
+  // Silent save to configured directory (no dialog)
   savePDFToDir: ({ filename, buffer, docType }) => ipcRenderer.invoke('save-pdf-to-dir', { filename, buffer, docType }),
   // Clear a saved directory
   clearSaveDir: (docType) => ipcRenderer.invoke('clear-save-dir', docType),

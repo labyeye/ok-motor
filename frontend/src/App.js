@@ -67,7 +67,7 @@ const Rootredirect = () => {
     );
   }
 
-  // If not authenticated, #ff6b00irect to login
+  // If not authenticated, redirect to login
   if (!user) {
     return <Navigate to="/login" replace />;
   }

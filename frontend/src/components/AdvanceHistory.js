@@ -321,7 +321,7 @@ const AdvanceHistory = () => {
     } catch (error) {
       console.error("Error downloading PDF:", error);
       if (error.response?.status === 401) {
-        alert("Your session has expi#ff6b00. Please login again.");
+        alert("Your session has expired. Please login again.");
         logout();
         navigate("/login");
       } else if (error.response?.status === 403) {
@@ -387,7 +387,7 @@ const AdvanceHistory = () => {
 
         // Handle authentication errors
         if (error.response?.status === 401) {
-          alert("Your session has expi#ff6b00. Please login again.");
+          alert("Your session has expired. Please login again.");
           logout();
           navigate("/login");
         } else if (error.response?.status === 403) {

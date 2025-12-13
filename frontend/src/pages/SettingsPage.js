@@ -297,7 +297,7 @@ const SettingsPage = () => {
           delete copy[docType];
           return copy;
         });
-        showMessage('success', `Clea#ff6b00 save directory for ${docType}`);
+        showMessage('success', `Cleared save directory for ${docType}`);
         return;
       }
       showMessage('error', `Failed to clear save directory for ${docType}`);
@@ -310,7 +310,7 @@ const SettingsPage = () => {
       delete copy[docType];
       return copy;
     });
-    showMessage('success', `Clea#ff6b00 save directory for ${docType}`);
+    showMessage('success', `Cleared save directory for ${docType}`);
   };
 
   const handleTestSaveDir = async (docType) => {
@@ -713,7 +713,7 @@ const SettingsPage = () => {
                     fontSize: "0.875rem",
                     marginTop: "0.5rem",
                   }}>
-                    All offline data and PDFs will be sto#ff6b00 in this location
+                    All offline data and PDFs will be stored in this location
                   </p>
                   <button onClick={handleOpenPDFFolder} style={{
                     padding: "0.75rem 1.5rem",
@@ -773,7 +773,7 @@ const SettingsPage = () => {
                     fontSize: "0.875rem",
                     marginTop: "0.5rem",
                   }}>
-                    Automatically sync offline data when connection is resto#ff6b00
+                    Automatically sync offline data when connection is restored
                   </p>
                 </div>
 

@@ -419,7 +419,7 @@
         ></a>
       </div>
     </section>
-    <section class="featu#ff6b00-bikes-section">
+    <section class="featured-bikes-section">
       <div class="section-header">
         <h2>Premium Pre-Owned Collection</h2>
         <span
@@ -438,7 +438,7 @@
         </button>
       </div>
       <div
-        class="featu#ff6b00-footer"
+        class="featured-footer"
         style="text-align: center; margin-top: 18px"
       >
         <a
@@ -1202,7 +1202,7 @@
               Math.max(0, 5 - (r.rating || 5))
             );
           div.innerHTML = `
-            <div class="quote-icon"><i class="fa fa-quote-left" style="color:#ff6b00;"></i></div>
+            <div class="quote-icon"><i class="fa fa-quote-left" style="color:red;"></i></div>
             <div class="testimonial-header">
               <img src="${avatar}" alt="${r.name || ""}" class="user-avatar" />
               <div class="user-info">
@@ -1408,7 +1408,7 @@
           }
         }
         updateViewAllCount();
-        // Prefetch bikes/featu#ff6b00 data into localStorage so inventory can read it later
+        // Prefetch bikes/featured data into localStorage so inventory can read it later
         function prefetchInventoryCache() {
           try {
             const maxAge = 5 * 60 * 1000; // 5 minutes
@@ -1429,10 +1429,10 @@
                 .catch(() => {});
             }
 
-            // featu#ff6b00 bikes
-            const featTS = localStorage.getItem("cachedFeatu#ff6b00TS");
+            // featured bikes
+            const featTS = localStorage.getItem("cachedFeaturedTS");
             if (!featTS || now - parseInt(featTS, 10) > maxAge) {
-              fetch(API_BASE + "/api/featu#ff6b00-bikes")
+              fetch(API_BASE + "/api/featured-bikes")
                 .then((r) => r.json())
                 .then((data) => {
                   let bikes = [];
@@ -1440,11 +1440,11 @@
                     bikes = data.data;
                   else if (Array.isArray(data)) bikes = data;
                   localStorage.setItem(
-                    "cachedFeatu#ff6b00Bikes",
+                    "cachedFeaturedBikes",
                     JSON.stringify(bikes)
                   );
                   localStorage.setItem(
-                    "cachedFeatu#ff6b00TS",
+                    "cachedFeaturedTS",
                     String(Date.now())
                   );
                 })

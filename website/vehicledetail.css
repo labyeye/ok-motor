@@ -179,7 +179,7 @@
 }
 
 .vehicle-detail-item i {
-  color: #ff6b00;
+  color: red;
   font-size: 1.1em;
 }
 
@@ -299,7 +299,7 @@
   transform: translateX(-50%);
   width: 80px;
   height: 4px;
-  background: linear-gradient(135deg, #ff6b00 0%, #e55a00 100%);
+  background: linear-gradient(135deg, red 0%, #e55a00 100%);
   border-radius: 2px;
 }
 
@@ -309,7 +309,7 @@
   overflow-x: auto;
   padding: 20px 0;
   scrollbar-width: thin;
-  scrollbar-color: #ff6b00 #f1f5f9;
+  scrollbar-color: red #f1f5f9;
 }
 
 .other-cars-row::-webkit-scrollbar {
@@ -322,7 +322,7 @@
 }
 
 .other-cars-row::-webkit-scrollbar-thumb {
-  background: #ff6b00;
+  background: red;
   border-radius: 4px;
 }
 
@@ -409,7 +409,7 @@
 
 .contact-btn,
 .view-details-btn {
-  background: #ff6b00;
+  background: red;
   color: #fff;
   border: none;
   border-radius: 999px;
@@ -569,7 +569,7 @@
   }
 
   .mobile-thumbnails img.selected {
-    border: 3px solid #ff6b00;
+    border: 3px solid red;
     box-shadow: 0 6px 20px rgba(255, 107, 0, 0.3);
     transform: translateY(-2px) scale(1.05);
   }
@@ -734,7 +734,7 @@
 }
 
 .vehicle-thumbnails img.selected {
-  border-color: #ff6b00;
+  border-color: red;
 }
 
 /* Desktop: clear two-column layout using flex to keep image and details aligned */

@@ -982,7 +982,7 @@ const BuyLetterHistory = () => {
       "6. OK MOTORS is not responsible for any past violations, legal disputes, or ownership claims before the date of purchase.",
       "7. The seller confirms that the bike has not been involved in any major accidents or insurance claims.",
       "8. Vehicle handover includes all keys, documents, and accessories as agreed.",
-      "9. The seller confirms that the chassis and engine numbers are intact and not tampe#ff6b00 with.",
+      "9. The seller confirms that the chassis and engine numbers are intact and not tampered with.",
     ];
 
     terms.forEach((term, index) => {
@@ -1092,7 +1092,7 @@ const BuyLetterHistory = () => {
 
         // Handle authentication errors
         if (error.response?.status === 401) {
-          alert("Your session has expi#ff6b00. Please login again.");
+          alert("Your session has expired. Please login again.");
           logout();
           navigate("/login");
         } else if (error.response?.status === 403) {

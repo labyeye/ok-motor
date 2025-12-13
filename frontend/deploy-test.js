@@ -68,15 +68,15 @@ try {
   const vercelConfig = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
   
   if (vercelConfig.builds && vercelConfig.builds[0] && vercelConfig.builds[0].config && vercelConfig.builds[0].config.distDir === 'build') {
-    console.log('✅ Build output directory configu#ff6b00 correctly');
+    console.log('✅ Build output directory configured correctly');
   } else {
-    console.log('❌ Build output directory not configu#ff6b00 properly');
+    console.log('❌ Build output directory not configured properly');
   }
   
   if (vercelConfig.routes && vercelConfig.routes.some(route => route.src === '/(.*)'&& route.dest === '/index.html')) {
-    console.log('✅ SPA routing configu#ff6b00 correctly');
+    console.log('✅ SPA routing configured correctly');
   } else {
-    console.log('❌ SPA routing not configu#ff6b00 properly');
+    console.log('❌ SPA routing not configured properly');
   }
 } catch (error) {
   console.log('❌ Error reading vercel.json:', error.message);

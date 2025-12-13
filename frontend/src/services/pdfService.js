@@ -238,7 +238,7 @@ class PDFService {
       const buffer = response.data;
       const blob = new Blob([buffer], { type: "application/pdf" });
 
-      // Try to save silently to configu#ff6b00 folder when running in Electron
+      // Try to save silently to configured folder when running in Electron
       let saveRes = null;
       try {
         const filename = `buy-letter-${
@@ -385,7 +385,7 @@ class PDFService {
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
 
-      // Save to configu#ff6b00 directory (Electron) or fallback to download
+      // Save to configured directory (Electron) or fallback to download
       const filename = `buy-letter-${
         data.registrationNumber
       }-${Date.now()}.pdf`;

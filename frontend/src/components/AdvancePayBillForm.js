@@ -367,7 +367,7 @@ const [formData, setFormData] = useState({
       
       // Handle authentication errors
       if (error.response?.status === 401) {
-        alert("Your session has expi#ff6b00. Please login again.");
+        alert("Your session has expired. Please login again.");
         logout();
         navigate('/login');
       } else if (error.response?.status === 403) {
@@ -605,7 +605,7 @@ const [formData, setFormData] = useState({
       
       // Handle authentication errors
       if (error.response?.status === 401) {
-        alert("Your session has expi#ff6b00. Please login again.");
+        alert("Your session has expired. Please login again.");
         logout();
         navigate('/login');
       } else if (error.response?.status === 403) {

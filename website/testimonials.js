@@ -1,4 +1,4 @@
-/* Sha#ff6b00 testimonials script used by multiple pages.
+/* Shared testimonials script used by multiple pages.
    - Fetches reviews from backend and renders a responsive carousel
    - Wires the review modal (open/close, star rating, submission)
    - Safe-guards: only runs once (window.__testimonialsLoaded)
@@ -32,7 +32,7 @@
     div.setAttribute("itemscope", "");
     div.setAttribute("itemtype", "https://schema.org/Review");
     div.innerHTML = `
-      <div class="quote-icon"><i class="fa fa-quote-left" style="color:#ff6b00;"></i></div>
+      <div class="quote-icon"><i class="fa fa-quote-left" style="color:red;"></i></div>
       <div class="testimonial-header">
         <img src="${randomAvatar(r.name)}" alt="${r.name || ""}
           " class="user-avatar" width="60" height="60" loading="lazy" />

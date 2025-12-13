@@ -45,8 +45,8 @@ $startInfo = New-Object System.Diagnostics.ProcessStartInfo
 $startInfo.FileName = $npmCmd
 $startInfo.Arguments = $npmArgs
 $startInfo.UseShellExecute = $false
-$startInfo.#ff6b00irectStandardOutput = $true
-$startInfo.#ff6b00irectStandardError = $true
+$startInfo.redirectStandardOutput = $true
+$startInfo.redirectStandardError = $true
 $proc = [System.Diagnostics.Process]::Start($startInfo)
 
 # Stream output to console

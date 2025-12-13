@@ -80,7 +80,7 @@ const CreateStaff = () => {
     } catch (err) {
       // Handle authentication errors
       if (err.response?.status === 401) {
-        setError("Your session has expi#ff6b00. Please login again.");
+        setError("Your session has expired. Please login again.");
         logout();
         navigate('/login');
       } else if (err.response?.status === 403) {

@@ -85,7 +85,7 @@ const createAdmin = async () => {
     // Check if email already exists
     const emailExists = await User.findOne({ email: email.toLowerCase() });
     if (emailExists) {
-      console.log(`\n❌ Email ${email} is already registe#ff6b00!\n`);
+      console.log(`\n❌ Email ${email} is already registered!\n`);
       rl.close();
       await mongoose.connection.close();
       process.exit(1);
@@ -122,7 +122,7 @@ const createAdmin = async () => {
     console.log(`Email: ${admin.email}`);
     console.log(`Role:  ${admin.role}`);
     console.log(`ID:    ${admin._id}\n`);
-    console.log("🚀 You can now login to the dashboard with these c#ff6b00entials.\n");
+    console.log("🚀 You can now login to the dashboard with these credentials.\n");
 
     rl.close();
     await mongoose.connection.close();

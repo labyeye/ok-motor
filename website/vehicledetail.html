@@ -711,11 +711,11 @@
 
             // Enable auto-scroll for other cars
             enableAutoSlider();
-            // Translate newly added dynamic content to prefer#ff6b00 language
+            // Translate newly added dynamic content to preferred language
             try {
-              const prefer#ff6b00 =
+              const preferred =
                 localStorage.getItem("preferredLanguage") || "en";
-              if (prefer#ff6b00 && typeof translatePage === "function") {
+              if (preferred && typeof translatePage === "function") {
                 // translate the section only to avoid re-running across whole page
                 const dynamicElems =
                   otherCarsRow.querySelectorAll("[data-translate]");
@@ -723,10 +723,10 @@
                   const key = el.getAttribute("data-translate");
                   if (
                     translations &&
-                    translations[prefer#ff6b00] &&
-                    translations[prefer#ff6b00][key]
+                    translations[preferred] &&
+                    translations[preferred][key]
                   ) {
-                    el.textContent = translations[prefer#ff6b00][key];
+                    el.textContent = translations[preferred][key];
                   }
                 });
               }
@@ -1018,7 +1018,7 @@
               ><i class="fa-brands fa-whatsapp" style="color: #00a841"></i
             ></a>
             <a
-              href="https://youtube.com/@Carbuilders-vo2nm?feature=sha#ff6b00"
+              href="https://youtube.com/@Carbuilders-vo2nm?feature=shared"
               aria-label="Watch on Youtube"
               ><i class="fa-brands fa-youtube" style="color: #fa0000"></i
             ></a>

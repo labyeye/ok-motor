@@ -829,7 +829,7 @@ const SellLetterForm = () => {
 
       if (error.message === "Request queued for when online") {
         alert(
-          "No internet connection. Sell letter will be saved when connection is resto#ff6b00."
+          "No internet connection. Sell letter will be saved when connection is restored."
         );
         return true; // Allow download to proceed
       }
@@ -1405,7 +1405,7 @@ const SellLetterForm = () => {
       "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
       "2. A 3-month guarantee is provided on the entire engine.",
       "3. Engine warranty extends from 6 months to 1 year for performance defects.",
-      "4. Clutch plate is not cove#ff6b00 under any guarantee or warranty.",
+      "4. Clutch plate is not covered under any guarantee or warranty.",
       "5. Monthly servicing during the 3-month guarantee is mandatory.",
       "6. First 3 services are free, with minimal charges for oil and parts (excluding engine).",
       "7. Defects must be reported within 24 hours of purchase to avoid repair charges.",
@@ -1414,7 +1414,7 @@ const SellLetterForm = () => {
       `10. OK MOTORS has recieved the money amount ${formatRupee(
         formData.saleAmount
       )} from ${formData.buyerName}.`,
-      "11. It is compulsory to get the vehicle serviced after driving 1500-1800 km otherwise guarrantee will be expi#ff6b00 ",
+      "11. It is compulsory to get the vehicle serviced after driving 1500-1800 km otherwise guarrantee will be expired ",
     ];
 
     terms.forEach((term, index) => {

@@ -28,7 +28,7 @@ class SyncService {
     // Subscribe to network status changes
     networkService.subscribe((isOnline, wasOnline) => {
       if (isOnline && !wasOnline) {
-        console.log('Connection resto#ff6b00, triggering auto-sync');
+        console.log('Connection restored, triggering auto-sync');
         if (this.autoSyncEnabled) {
           this.syncAll();
         }

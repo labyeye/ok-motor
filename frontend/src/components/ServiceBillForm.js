@@ -551,7 +551,7 @@ const ServiceBillForm = () => {
           );
 
           if (error.response?.status === 401) {
-            alert("Your session has expi#ff6b00. Please login again.");
+            alert("Your session has expired. Please login again.");
             logout();
             navigate("/login");
             return;
@@ -565,11 +565,11 @@ const ServiceBillForm = () => {
           let errorMessage = "Failed to save and download";
           if (error.response) {
             errorMessage =
-              error.response.data?.message || "Server error occur#ff6b00";
+              error.response.data?.message || "Server error occurred";
           } else if (error.code === "ECONNABORTED") {
             errorMessage = "Request timed out. Please try again.";
           } else {
-            errorMessage = error.message || "Unknown error occur#ff6b00";
+            errorMessage = error.message || "Unknown error occurred";
           }
 
           alert(errorMessage);
@@ -880,7 +880,7 @@ const ServiceBillForm = () => {
 
       // Handle authentication errors
       if (error.response?.status === 401) {
-        alert("Your session has expi#ff6b00. Please login again.");
+        alert("Your session has expired. Please login again.");
         logout();
         navigate("/login");
         return;
@@ -896,11 +896,11 @@ const ServiceBillForm = () => {
 
       let errorMessage = "Failed to generate PDF";
       if (error.response) {
-        errorMessage = error.response.data?.message || "Server error occur#ff6b00";
+        errorMessage = error.response.data?.message || "Server error occurred";
       } else if (error.code === "ECONNABORTED") {
         errorMessage = "Request timed out. Please try again.";
       } else {
-        errorMessage = error.message || "Unknown error occur#ff6b00";
+        errorMessage = error.message || "Unknown error occurred";
       }
 
       alert(errorMessage);

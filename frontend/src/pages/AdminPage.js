@@ -108,7 +108,7 @@ const AdminPage = () => {
           "Failed to load dashboard data. Please try again."
       );
       if (err.response?.status === 401) {
-        // Handle unauthorized error (token expi#ff6b00 or invalid)
+        // Handle unauthorized error (token expired or invalid)
         logout();
         navigate("/login");
       }

@@ -17,7 +17,7 @@ if (IMAGEKIT_PUBLIC_KEY && IMAGEKIT_PRIVATE_KEY && IMAGEKIT_URL_ENDPOINT) {
     imagekit = null;
   }
 } else {
-  console.warn('ImageKit not configu#ff6b00 - missing IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY or IMAGEKIT_URL_ENDPOINT');
+  console.warn('ImageKit not configured - missing IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY or IMAGEKIT_URL_ENDPOINT');
 }
 
 // @desc    Get ImageKit authentication parameters
@@ -28,7 +28,7 @@ exports.getImageKitAuth = async (req, res) => {
   try {
     if (!imagekit) {
       return res.status(500).json({
-        message: "ImageKit is not configu#ff6b00 on the server. Set IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY and IMAGEKIT_URL_ENDPOINT in backend/.env",
+        message: "ImageKit is not configured on the server. Set IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY and IMAGEKIT_URL_ENDPOINT in backend/.env",
       });
     }
 
