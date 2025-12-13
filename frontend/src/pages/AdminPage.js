@@ -9,6 +9,7 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
+  Search,
   FileText,
   Target,
   RefreshCw,
@@ -34,6 +35,7 @@ import logo from "../images/company.png";
 import logo1 from "../images/dash.png";
 import AuthContext from "../context/AuthContext";
 import axios from "axios";
+import BikeHistory from "../components/BikeHistory";
 
 // Register ChartJS components
 ChartJS.register(
@@ -51,6 +53,8 @@ const AdminPage = () => {
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [historyQuery, setHistoryQuery] = useState("");
   const [dashboardData, setDashboardData] = useState({
     totalBuyLetters: 0,
     totalSellLetters: 0,
@@ -334,9 +338,9 @@ const AdminPage = () => {
       ],
     },
     {
-      name: 'Gallery',
+      name: "Gallery",
       icon: Image,
-      path: '/gallery/manage',
+      path: "/gallery/manage",
     },
     {
       name: "Vehicle History",
@@ -887,6 +891,23 @@ const AdminPage = () => {
             <img src={logo1} alt="Company Logo" className="banner-logo" />
           </div>
 
+          <div className="history-search-container">
+            <div className="history-search-box">
+              <Search size={18} className="history-search-icon" />
+              <input
+                type="text"
+                placeholder="Search vehicles (reg. no, model, name)..."
+                value={historyQuery}
+                onFocus={() => setIsHistoryModalOpen(true)}
+                onChange={(e) => {
+                  setHistoryQuery(e.target.value);
+                  if (!isHistoryModalOpen) setIsHistoryModalOpen(true);
+                }}
+                className="history-search-input"
+              />
+            </div>
+          </div>
+
           {activeMenu === "Dashboard" && (
             <>
               <DashboardCards />
@@ -909,6 +930,25 @@ const AdminPage = () => {
           )}
         </div>
       </div>
+
+      {isHistoryModalOpen && (
+        <div
+          className="modal-overlay"
+          onClick={() => setIsHistoryModalOpen(false)}
+        >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button
+                className="modal-close"
+                onClick={() => setIsHistoryModalOpen(false)}
+              >
+                <X />
+              </button>
+            </div>
+            <BikeHistory externalSearchTerm={historyQuery} />
+          </div>
+        </div>
+      )}
 
       <style>{`
       .top-bar{
@@ -1748,6 +1788,69 @@ const AdminPage = () => {
             height: 180px;
             width: 240px;
           }
+        }
+
+        /* History search box */
+        .history-search-container {
+          display: flex;
+          justify-content: center;
+          margin: 1rem 0 1.5rem 0;
+        }
+
+        .history-search-box {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          width: 640px;
+          max-width: 100%;
+          background: #ffffff;
+          border-radius: 8px;
+          padding: 8px 12px;
+          box-shadow: 0 6px 18px rgba(16,24,40,0.08);
+          border: 1px solid #e6edf3;
+        }
+
+        .history-search-icon {
+          color: #64748b;
+          flex: 0 0 24px;
+        }
+
+        .history-search-input {
+          border: none;
+          outline: none;
+          width: 100%;
+          font-size: 0.95rem;
+          padding: 6px 4px;
+        }
+
+        /* Modal styles for vehicle history */
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 1rem;
+        }
+
+        .modal-content {
+          width: 100%;
+          max-width: 1100px;
+          max-height: 90vh;
+          overflow: auto;
+          background: #ffffff;
+          border-radius: 12px;
+          padding: 1rem 1rem 2rem 1rem;
+          box-shadow: 0 10px 30px rgba(2,6,23,0.2);
+        }
+
+        .modal-close {
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: 6px;
         }
       `}</style>
     </div>
