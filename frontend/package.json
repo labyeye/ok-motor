@@ -5,7 +5,7 @@
   "main": "electron/main.js",
   "description": "OK Motor desktop app",
   "author": "Pixelate Nest",
-  "homepage": "./",
+  "homepage": "https://www.okmotors.in/index.html",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",

@@ -70,7 +70,7 @@ function initFilterSearch() {
       if (budget) params.append("budget", budget);
       if (state) params.append("state", state);
 
-      window.location.href = `https://www.bikebuilders.in/inventory.html?${params.toString()}`;
+      window.location.href = `https://www.okmotors.in/inventory.html?${params.toString()}`;
     });
   }
 }

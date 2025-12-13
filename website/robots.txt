@@ -7,4 +7,4 @@ Disallow: /wp-includes/
 Disallow: /search/
 Disallow: /?s=
 
-Sitemap: https://www.bikebuilders.in/sitemap.xml
+Sitemap: https://www.okmotors.in/sitemap.xml
