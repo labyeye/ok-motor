@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RTO & Documentation Services — Ok Motors</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="rto-services.css" />
+    
+  </head>
+  <body class="rto-page">
+    <div class="top-banner" id="topBanner" role="banner">
+      <div class="top-banner-container">
+        <div class="top-banner-left">
+          <span><i class="fas fa-phone-alt" aria-hidden="true"></i>&nbsp;+91 72800 12222</span>
+        </div>
+        <div class="top-banner-right" aria-hidden="true">
+          <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+    </div>
+    <header class="site-header" id="siteHeader">
+      <div class="header-container">
+        <a href="https://www.okmotors.in/index.html" class="header-logo"><img src="./assets/images/logoblack.png" alt="Ok Motors Logo" itemprop="logo"/></a>
+        <nav class="header-nav" aria-label="Main navigation">
+          <a href="https://www.okmotors.in/index.html" class="nav-item" data-translate="Home">Home</a>
+          <div class="nav-item nav-dropdown" aria-haspopup="true">
+            <a href="https://www.okmotors.in/inventory.html" class="nav-link dropdown-toggle">Buy Vehicle <i class="fa fa-caret-down" aria-hidden="true" style="margin-left: 6px"></i></a>
+            <div class="dropdown-menu" role="menu" aria-label="Buy Vehicle submenu">
+              <h4 class="dropdown-column-title">Cars</h4>
+              <a class="dropdown-item" href="inventory.html?type=car&brand=Maruti">Maruti</a>
+              <a class="dropdown-item" href="inventory.html?type=car&brand=Hyundai">Hyundai</a>
+              <a class="dropdown-item" href="inventory.html?type=car&brand=Tata">Tata</a>
+              <a class="dropdown-item" href="inventory.html?type=car&brand=Mahindra">Mahindra</a>
+              <a class="dropdown-item" href="inventory.html?type=car&brand=Toyota">Toyota</a>
+              <a class="dropdown-item" href="inventory.html?type=car&brand=Honda">Honda</a>
+              <h4 class="dropdown-column-title">Vehicles</h4>
+              <a class="dropdown-item" href="inventory.html?brand=Royal%20Enfield">Royal Enfield</a>
+              <a class="dropdown-item" href="inventory.html?brand=Bajaj">Bajaj</a>
+              <a class="dropdown-item" href="inventory.html?brand=Hero">Hero</a>
+              <a class="dropdown-item" href="inventory.html?brand=Yamaha">Yamaha</a>
+              <a class="dropdown-item" href="inventory.html?brand=KTM">KTM</a>
+              <a class="dropdown-item" href="inventory.html?brand=TVS">TVS</a>
+              <a class="dropdown-item" href="inventory.html?brand=Honda">Honda</a>
+              <a class="dropdown-item" href="inventory.html?brand=Suzuki">Suzuki</a>
+            </div>
+          </div>
+          <a href="https://www.okmotors.in/sell.html" class="nav-item">Sell Your Vehicle</a>
+          <a href="https://www.okmotors.in/about.html" class="nav-item">About Us</a>
+          <a href="https://www.okmotors.in/book.html" class="nav-item">Book Vehicle</a>
+          <a href="https://www.okmotors.in/finance.html" class="nav-item">Bike Finance</a>
+          <a href="https://www.okmotors.in/updates.html" class="nav-item">Updates</a>
+          <a href="https://www.okmotors.in/contact.html" class="nav-item">Contact</a>
+          <div class="nav-item nav-dropdown" aria-haspopup="true">
+            <a href="#" class="nav-link dropdown-toggle">Vehicle Valuation <i class="fa fa-caret-down" aria-hidden="true" style="margin-left: 6px"></i></a>
+            <div class="dropdown-menu" role="menu" aria-label="Vehicle Valuation submenu">
+              <a class="dropdown-item" href="used-bike-valuation.html">Used Bike Valuation</a>
+              <a class="dropdown-item" href="used-car-valuation.html">Used Car Valuation</a>
+            </div>
+          </div>
+        </nav>
+        <div class="header-actions">
+          <button class="mobile-menu-btn" aria-label="Toggle menu" id="mobileMenuBtn"><i class="fas fa-bars"></i></button>
+        </div>
+      </div>
+      <div class="mobile-search-bar" id="mobileSearchBar" role="search" aria-label="Search inventory (mobile)">
+        <form class="mobile-search-form" action="inventory.html" method="get">
+          <input id="mobileSearchInput" name="q" type="search" placeholder="Search bikes, brands or models" aria-label="Search bikes" />
+          <button type="submit" class="mobile-search-btn" aria-label="Search"><i class="fas fa-search"></i></button>
+        </form>
+      </div>
+      <div class="mobile-action-banner" id="mobileActionBanner" role="region" aria-label="Quick actions">
+        <div class="mobile-action-container">
+          <a href="https://www.okmotors.in/sell.html" class="mobile-action">Sell Bike</a>
+          <a href="https://www.okmotors.in/inventory.html?type=used" class="mobile-action">Buy Used Bike</a>
+          <a href="https://www.okmotors.in/insurance.html" class="mobile-action">Insurance &amp; POC</a>
+          <a href="https://www.okmotors.in/investment.html" class="mobile-action">Investment</a>
+          <a href="https://www.okmotors.in/service.html" class="mobile-action">Service</a>
+        </div>
+      </div>
+    </header>
+
+    <style>
+      .mobile-action-banner {
+        display: none;
+        width: 100%;
+        background: #d92b2b;
+        align-items: center;
+        z-index: 500;
+        transform: translateY(-30px);
+      }
+      .mobile-search-bar {
+        display: none;
+        width: 100%;
+        background: #fff;
+        z-index: 600;
+        padding: 6px 12px;
+        transform: translateY(-30px);
+      }
+      .mobile-search-form {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .mobile-search-form input[type="search"] {
+        flex: 1;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid #e6e6e6;
+        font-size: 14px;
+      }
+      .mobile-search-btn {
+        background: var(--primary-color, #d92b2b);
+        color: #fff;
+        border: none;
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mobile-action-container {
+        display: flex;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .mobile-action {
+        flex: 0 0 auto;
+        color: white;
+        padding: 8px 10px;
+        border-radius: 18px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      @media (max-width: 1024px) {
+        .mobile-action-banner {
+          display: flex;
+          justify-content: space-between;
+        }
+        .mobile-search-bar {
+          display: block;
+        }
+      }
+    </style>
+
+      <section class="hero-section" itemscope itemtype="https://schema.org/WPHeader">
+        <div class="hero-background"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-container">
+          <div class="hero-content">
+            <span class="hero-label">Traffic Challan Payment</span>
+            <h1 class="hero-title">
+              <span class="hero-title-line1">Hassle-free</span>
+              <span class="hero-title-line2">Traffic Challan Payment</span>
+            </h1>
+            <p class="hero-subtitle">Fast, transparent and government-compliant processing for traffic challan payment.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="services-title" class="process-timeline-section">
+        <h1 id="services-title" style="text-align:center;margin:20px 0 40px;font-size:2.8rem;font-weight:700">Our Process</h1>
+        <div class="timeline-container">
+          <svg class="timeline-path" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+            <path d="M 100 100 L 400 100 L 600 100 L 800 100 L 1100 100 Q 1150 100 1150 150 L 1150 300 Q 1150 350 1100 350 L 800 350 L 600 350 L 400 350 L 100 350" 
+                  fill="none" stroke="#0B6FB2" stroke-width="3" stroke-dasharray="8,8" opacity="0.3"/>
+          </svg>
+          
+          <div class="timeline-steps">
+            <article class="timeline-step" data-step="1">
+              <div class="step-icon-wrapper">
+                <i class="fas fa-file-contract"></i>
+              </div>
+              <h4>Contact & Request Submission</h4>
+              <p>User contacts us via call, WhatsApp, or enquiry form to request challan assistance.</p>
+            </article>
+
+            <article class="timeline-step" data-step="2">
+              <div class="step-icon-wrapper">
+                <i class="fas fa-sync-alt"></i>
+              </div>
+              <h4>Challan Verification & Check</h4>
+              <p>Our team checks the vehicle details and verifies any pending tax or challan against the vehicle.</p>
+            </article>
+
+            <article class="timeline-step" data-step="3">
+              <div class="step-icon-wrapper">
+                <i class="fas fa-money-bill-wave"></i>
+              </div>
+              <h4>Payment Collection from Customer</h4>
+              <p>Once the challan amount is confirmed, the payable amount is shared with the customer.</p>
+            </article>
+
+            <article class="timeline-step" data-step="4">
+              <div class="step-icon-wrapper">
+                <i class="fas fa-spinner"></i>
+              </div>
+              <h4>Challan Payment Processing</h4>
+              <p>The challan is officially paid through the authorized government portal.</p>
+            </article>
+
+            <article class="timeline-step" data-step="5">
+              <div class="step-icon-wrapper">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <h4>Receipt & Confirmation</h4>
+              <p>Payment receipt and confirmation are shared with the customer via WhatsApp.</p>
+            </article>
+
+            
+          </div>
+        </div>
+      </section>
+
+      
+
+      <footer class="footer">
+        <div class="footer-content">
+          <div class="footer-section">
+            <div class="footer-stars" style="margin: 10px 0">
+              <span class="star" style="color: gold; font-size: 1.5em"><i class="fa fa-star"></i></span>
+              <span class="star" style="color: gold; font-size: 1.5em"><i class="fa fa-star"></i></span>
+              <span class="star" style="color: gold; font-size: 1.5em"><i class="fa fa-star"></i></span>
+              <span class="star" style="color: gold; font-size: 1.5em"><i class="fa fa-star"></i></span>
+              <span class="star" style="color: gold; font-size: 1.5em"><i class="fa fa-star"></i></span>
+            </div>
+            <div class="logo"><img src="./assets/images/okmotor.png" style="width: 220px" alt="Ok Motors Logo"/></div>
+            <p data-translate="Bringing the future of bike riding to you today.">Bringing the future of bike riding to you today.</p>
+            <div class="social-icons">
+              <a href="https://www.facebook.com/people/OK-motors-Patna/100092409081953/?rdid=HgY7OAFmgYcvAsoC&share_url=https%253A%252F%252Fwww.facebook.com%252Fshare%252F1BpgmB9Azo%252F"><i class="fa-brands fa-facebook-f" style="color: #0400ff"></i></a>
+              <a href="https://www.instagram.com/ok_motors_patna?igsh=MXdiYzU1NDZ6ankxZw%3D%3D" aria-label="Visit our Instagram profile"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" style="width: 20px"/></a>
+              <a href="https://wa.me/918210283582"><i class="fa-brands fa-whatsapp" style="color: #00a841"></i></a>
+            </div>
+          </div>
+          <div class="footer-section">
+            <h3 data-translate="Quick Links">Quick Links</h3>
+            <ul>
+              <li><a href="https://www.okmotors.in/index.html" data-translate="Home">Home</a></li>
+              <li><a href="https://www.okmotors.in/inventory.html" data-translate="Buy Vehicle">Buy Vehicle</a></li>
+              <li><a href="https://www.okmotors.in/sell.html" data-translate="Sell Your Vehicle">Sell Your Vehicle</a></li>
+              <li><a href="https://www.okmotors.in/about.html" aria-label="About Ok Motors" data-translate="About Us">About Us</a></li>
+              <li><a href="https://www.okmotors.in/book.html" aria-label="Book Bike" data-translate="Book Bike">Book Vehicle</a></li>
+              <li><a href="https://www.okmotors.in/updates.html" data-translate="Updates">Updates</a></li>
+              <li><a href="https://www.okmotors.in/contact.html" data-translate="Contact">Contact</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h3 data-translate="Resources">Resources</h3>
+            <ul>
+              <li><a href="https://www.okmotors.in/finance.html" data-translate="Bike Finance">Bike Finance</a></li>
+              <li><a href="./locations-bihar.html" data-translate="Locations">Locations</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h3 data-translate="Contact Us">Contact Us</h3>
+            <p><i class="fas fa-map-marker-alt"></i> Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014</p>
+            <span itemprop="telephone">+91 72800 12222</span>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p data-translate="&copy; 2023 Ok Motors. All rights reserved.">&copy; 2023 Ok Motors. All rights reserved.</p>
+          <a href="https://www.pixelatenest.com/" style="color: #a9a9a9" data-translate="Designed By Pixelate Nest">Designed By Pixelate Nest</a>
+        </div>
+      </footer>
+    </div>
+    <script src="./index.js"></script>
+  </body>
+</html>
