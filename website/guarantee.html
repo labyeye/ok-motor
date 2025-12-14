@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>RTO & Documentation Services — Ok Motors</title>
+    <title>Guarantee & Warranty — Ok Motors</title>
     <link rel="stylesheet" href="style.css" />
     <link
       rel="stylesheet"
@@ -11,9 +11,8 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
-    <link rel="stylesheet" href="rto-services.css" />
   </head>
-  <body class="rto-page">
+  <body>
     <div class="top-banner" id="topBanner" role="banner">
       <div class="top-banner-container">
         <div class="top-banner-left">
@@ -23,8 +22,8 @@
           >
         </div>
         <div class="top-banner-right" aria-hidden="true">
-          <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
-          <a href="#" class="social"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social"><i class="fab fa-facebook-f"></i></a
+          ><a href="#" class="social"><i class="fab fa-instagram"></i></a>
         </div>
       </div>
     </div>
@@ -64,26 +63,23 @@
                 class="dropdown-item"
                 href="inventory.html?type=car&brand=Maruti"
                 >Maruti</a
-              >
-              <a
+              ><a
                 class="dropdown-item"
                 href="inventory.html?type=car&brand=Hyundai"
                 >Hyundai</a
-              >
-              <a class="dropdown-item" href="inventory.html?type=car&brand=Tata"
+              ><a
+                class="dropdown-item"
+                href="inventory.html?type=car&brand=Tata"
                 >Tata</a
-              >
-              <a
+              ><a
                 class="dropdown-item"
                 href="inventory.html?type=car&brand=Mahindra"
                 >Mahindra</a
-              >
-              <a
+              ><a
                 class="dropdown-item"
                 href="inventory.html?type=car&brand=Toyota"
                 >Toyota</a
-              >
-              <a
+              ><a
                 class="dropdown-item"
                 href="inventory.html?type=car&brand=Honda"
                 >Honda</a
@@ -93,20 +89,16 @@
                 class="dropdown-item"
                 href="inventory.html?brand=Royal%20Enfield"
                 >Royal Enfield</a
-              >
-              <a class="dropdown-item" href="inventory.html?brand=Bajaj"
+              ><a class="dropdown-item" href="inventory.html?brand=Bajaj"
                 >Bajaj</a
-              >
-              <a class="dropdown-item" href="inventory.html?brand=Hero">Hero</a>
-              <a class="dropdown-item" href="inventory.html?brand=Yamaha"
+              ><a class="dropdown-item" href="inventory.html?brand=Hero">Hero</a
+              ><a class="dropdown-item" href="inventory.html?brand=Yamaha"
                 >Yamaha</a
-              >
-              <a class="dropdown-item" href="inventory.html?brand=KTM">KTM</a>
-              <a class="dropdown-item" href="inventory.html?brand=TVS">TVS</a>
-              <a class="dropdown-item" href="inventory.html?brand=Honda"
+              ><a class="dropdown-item" href="inventory.html?brand=KTM">KTM</a
+              ><a class="dropdown-item" href="inventory.html?brand=TVS">TVS</a
+              ><a class="dropdown-item" href="inventory.html?brand=Honda"
                 >Honda</a
-              >
-              <a class="dropdown-item" href="inventory.html?brand=Suzuki"
+              ><a class="dropdown-item" href="inventory.html?brand=Suzuki"
                 >Suzuki</a
               >
             </div>
@@ -145,8 +137,7 @@
             >
               <a class="dropdown-item" href="used-bike-valuation.html"
                 >Used Bike Valuation</a
-              >
-              <a class="dropdown-item" href="used-car-valuation.html"
+              ><a class="dropdown-item" href="used-car-valuation.html"
                 >Used Car Valuation</a
               >
             </div>
@@ -162,6 +153,8 @@
           </button>
         </div>
       </div>
+
+      <!-- Mobile-only search (appears after navbar, before action banner) -->
       <div
         class="mobile-search-bar"
         id="mobileSearchBar"
@@ -181,6 +174,7 @@
           </button>
         </form>
       </div>
+
       <div
         class="mobile-action-banner"
         id="mobileActionBanner"
@@ -277,6 +271,44 @@
       }
     </style>
 
+    <script>
+      (function () {
+        try {
+          var banner = document.getElementById("mobileActionBanner");
+          var closeBtn = document.getElementById("mobileBannerClose");
+          if (!banner || !closeBtn) return;
+
+          // Only show on small screens; CSS handles visual hide/show, but
+          // use aria-hidden for assistive tech and avoid unnecessary DOM focus.
+          function updateVisibility() {
+            var isMobile = window.matchMedia("(max-width:1024px)").matches;
+            var dismissed =
+              localStorage.getItem("mobileActionBannerDismissed") === "1";
+            if (isMobile && !dismissed) {
+              banner.setAttribute("aria-hidden", "false");
+            } else {
+              banner.setAttribute("aria-hidden", "true");
+            }
+          }
+
+          closeBtn.addEventListener("click", function () {
+            banner.setAttribute("aria-hidden", "true");
+            try {
+              localStorage.setItem("mobileActionBannerDismissed", "1");
+            } catch (e) {}
+          });
+
+          // Recompute on resize/orientation change
+          window.addEventListener("resize", updateVisibility);
+          window.addEventListener("orientationchange", updateVisibility);
+          document.addEventListener("DOMContentLoaded", updateVisibility);
+          updateVisibility();
+        } catch (e) {
+          console.error("mobile banner init error", e);
+        }
+      })();
+    </script>
+
     <section
       class="hero-section"
       itemscope
@@ -286,181 +318,132 @@
       <div class="hero-overlay"></div>
       <div class="hero-container">
         <div class="hero-content">
-          <span class="hero-label">PUC Services</span>
-          <h1 class="hero-title">
-            <span class="hero-title-line1">Hassle-free</span>
-            <span class="hero-title-line2">Pollution Under Control</span>
+          <span
+            class="hero-label"
+            data-translate="India's Trusted Vehicle Portal"
+            >India's Trusted Vehicle Portal</span
+          >
+          <h1 itemprop="headline">
+            <span class="hero-title-line1" data-translate="Find Your"
+              >Find Your</span
+            >
+            <span class="hero-title-line2" data-translate="Dream Vehicle"
+              >Dream Vehicle</span
+            >
           </h1>
-          <p class="hero-subtitle">
-            Quick, accurate and government-backed PUC issuance and renewal
-            services.
+          <p
+            class="hero-subtitle"
+            data-translate="Ride into freedom with the vehicle you've always wanted"
+          >
+            Ride into freedom with the vehicle you've always wanted
           </p>
         </div>
       </div>
     </section>
 
-    <section aria-labelledby="puc-title" class="process-timeline-section">
-      <h1
-        id="puc-title"
+    <main
+      class="content"
+      style="max-width: 1100px; margin: 28px auto; padding: 0 20px"
+    >
+      <article
+        class="guarantee-card"
         style="
-          text-align: center;
-          margin: 20px 0 12px;
-          font-size: 2.2rem;
-          font-weight: 700;
+          background: #fff;
+          padding: 26px;
+          border-radius: 10px;
+          box-shadow: 0 8px 24px rgba(2, 6, 23, 0.06);
         "
       >
-        Pollution Under Control (PUC) — How It Works
-      </h1>
+        <h2 style="margin-top: 0">Guarantee & Warranty</h2>
 
-      <div
-        style="
-          max-width: 1200px;
-          margin: 10px auto 22px;
-          padding: 0 20px;
-          text-align: center;
-          color: #334155;
-        "
-      >
-        <p style="margin: 0 0 6px">
-          Official PUC issuance and renewal — quick, accurate and
-          government-backed.
-        </p>
-        <p style="margin: 6px 0 0; color: #64748b; font-size: 0.95rem">
-          We handle testing, submission and follow-up so you get your digital
-          certificate on your phone without queues.
-        </p>
-      </div>
-
-      <div class="timeline-container">
-        <div class="timeline-steps">
-          <article class="timeline-step" data-step="1">
-            <div class="step-icon-wrapper"><i class="fas fa-phone"></i></div>
-            <h4>Contact</h4>
-            <p>
-              Call, WhatsApp or submit an enquiry to request a PUC test or
-              renewal.
-            </p>
-          </article>
-
-          <article class="timeline-step" data-step="2">
-            <div class="step-icon-wrapper">
-              <i class="fas fa-pencil-alt"></i>
+        <ol style="margin: 0 0 18px 20px; padding: 0">
+          <li style="margin-bottom: 12px">
+            <strong>Three-month Guarantee on Engine:</strong>
+            <div>
+              The Seller provides a three-month guarantee on the overall ENGINE
+              of the vehicle, starting from the date of delivery.
             </div>
-            <h4>Details Submission</h4>
-            <p>
-              Share vehicle registration, engine/chassis details and any
-              previous PUC info.
-            </p>
-          </article>
+          </li>
 
-          <article class="timeline-step" data-step="3">
-            <div class="step-icon-wrapper">
-              <i class="fas fa-check"></i>
+          <li style="margin-bottom: 12px">
+            <strong>Engine Warranty (6 months to 1 year):</strong>
+            <div>
+              The Seller further provides a warranty on the engine for a period
+              of 6 months to 1 year, starting from the date of delivery. This
+              warranty covers any defects in the engine that may affect its
+              performance or functionality.
             </div>
-            <h4>Document Verify</h4>
-            <p>
-              We verify documents and confirm the tests needed before scheduling
-              the check.
-            </p>
-          </article>
+          </li>
 
-          <article class="timeline-step" data-step="4">
-            <div class="step-icon-wrapper">
-              <i class="fas fa-hand-holding-usd"></i>
+          <li style="margin-bottom: 12px">
+            <strong>Exclusions:</strong>
+            <div>
+              Please note that the guarantee does not cover the clutch plate.
+              Any repairs or replacements required for the clutch plate shall be
+              the sole responsibility of the Buyer.
             </div>
-            <h4>Payment to Ok Motors</h4>
-            <p>
-              Pay the service fee to Ok Motors; we handle the government testing
-              fees and submissions.
-            </p>
-          </article>
+          </li>
+        </ol>
 
-          <article class="timeline-step" data-step="5">
-            <div class="step-icon-wrapper"><i class="fas fa-cogs"></i></div>
-            <h4>Certificate Creation Processing</h4>
-            <p>
-              We perform the emission test, submit results to the government
-              portal and process the certificate.
-            </p>
-          </article>
+        <section style="margin-top: 18px">
+          <h3 style="margin-bottom: 8px">Service Requirements & Notes</h3>
+          <p>
+            During the three-month guarantee period, it is mandatory for the
+            Buyer to schedule and complete monthly servicing of the vehicle.
+            Failure to do so may result in the expiration of the guarantee.
+            However, the warranty (as mentioned in point 2) will still be
+            available to the Buyer.
+          </p>
 
-          <article class="timeline-step" data-step="6">
-            <div class="step-icon-wrapper">
-              <i class="fas fa-share-square"></i>
-            </div>
-            <h4>Certificate Sent</h4>
-            <p>
-              The government issues the digital PUC and it is sent to your
-              WhatsApp/phone; we also forward a copy.
-            </p>
-          </article>
-        </div>
-      </div>
+          <p>
+            The initial three services come to you as a heartfelt gift, with no
+            cost involved, apart from the nominal charge for engine oil if any
+            changes are required. For any additional spare parts, excluding the
+            engine itself, a reasonable fee will be applicable. In addition, we
+            kindly request a modest 50% labor charge to be included, ensuring
+            our dedicated team's exceptional service and attention to detail.
+          </p>
 
-      <!-- Benefits section -->
-      <div
-        class="benefits"
-        style="max-width: 1000px; margin: 32px auto 10px; padding: 0 20px"
-      >
-        <h3 style="text-align: center; margin-bottom: 12px">
-          Why choose Ok Motors for PUC?
-        </h3>
+          <p>
+            We kindly request your esteemed presence to provide us with the
+            cherished photocopies of the sell letter and transfer challan, as
+            they hold great significance in completing the process seamlessly.
+            Your cooperation in this regard is deeply appreciated.
+          </p>
+
+          <p>
+            In the event of any potential defects discovered post-purchase of
+            the vehicles, we humbly request you to promptly lodge a complaint
+            via the registered mobile number within a generous timeframe of 24
+            hours. Failure to adhere to this guideline may regrettably result in
+            the company incurring repair charges. Your timely communication is
+            greatly valued, fostering a harmonious partnership.
+          </p>
+
+          <p>
+            Once the invoice billing is generated, we regretfully inform you
+            that refunds will not be applicable. However, in the event of any
+            challenges encountered during the transfer of vehicle ownership, we
+            wholeheartedly commit to providing our esteemed customers with a
+            complete refund only where explicitly warranted and after due
+            verification.
+          </p>
+        </section>
+
         <div
           style="
+            margin-top: 20px;
             display: flex;
-            gap: 18px;
+            gap: 12px;
             flex-wrap: wrap;
-            justify-content: center;
+            align-items: center;
           "
         >
-          <div
-            style="
-              background: #fff;
-              padding: 18px;
-              border-radius: 10px;
-              max-width: 320px;
-              box-shadow: 0 8px 20px rgba(11, 111, 178, 0.06);
-            "
-          >
-            <h4 style="margin: 0 0 8px">Fast Government-backed PUC</h4>
-            <p style="margin: 0; color: #64748b">
-              Approved testing and direct submission to government portal — no
-              manual paperwork delays.
-            </p>
-          </div>
-          <div
-            style="
-              background: #fff;
-              padding: 18px;
-              border-radius: 10px;
-              max-width: 320px;
-              box-shadow: 0 8px 20px rgba(11, 111, 178, 0.06);
-            "
-          >
-            <h4 style="margin: 0 0 8px">Digital Certificate</h4>
-            <p style="margin: 0; color: #64748b">
-              Digital PUC delivered to your phone (WhatsApp/SMS) — easy to show
-              when needed.
-            </p>
-          </div>
-          <div
-            style="
-              background: #fff;
-              padding: 18px;
-              border-radius: 10px;
-              max-width: 320px;
-              box-shadow: 0 8px 20px rgba(11, 111, 178, 0.06);
-            "
-          >
-            <h4 style="margin: 0 0 8px">No Queues</h4>
-            <p style="margin: 0; color: #64748b">
-              We handle testing and submission so you avoid long waits at
-              testing centers.
-            </p>
-          </div>
+          <a class="btn-primary" href="contact.html">Contact Us</a>
+          <a class="btn-secondary" href="sell.html">Sell Your Vehicle</a>
         </div>
-      </div>
-    </section>
+      </article>
+    </main>
 
     <footer class="footer">
       <div class="footer-content">
@@ -489,17 +472,12 @@
               alt="Ok Motors Logo"
             />
           </div>
-          <p data-translate="Bringing the future of bike riding to you today.">
-            Bringing the future of bike riding to you today.
-          </p>
+          <p>Bringing the future of bike riding to you today.</p>
           <div class="social-icons">
-            <a
-              href="https://www.facebook.com/people/OK-motors-Patna/100092409081953/?rdid=HgY7OAFmgYcvAsoC&share_url=https%253A%252F%252Fwww.facebook.com%252Fshare%252F1BpgmB9Azo%252F"
+            <a href="#"
               ><i class="fa-brands fa-facebook-f" style="color: #0400ff"></i
             ></a>
-            <a
-              href="https://www.instagram.com/ok_motors_patna?igsh=MXdiYzU1NDZ6ankxZw%3D%3D"
-              aria-label="Visit our Instagram profile"
+            <a href="#" aria-label="Visit our Instagram profile"
               ><img
                 src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
                 style="width: 20px"
@@ -510,78 +488,16 @@
           </div>
         </div>
         <div class="footer-section">
-          <h3 data-translate="Quick Links">Quick Links</h3>
+          <h3>Quick Links</h3>
           <ul>
-            <li>
-              <a href="https://www.okmotors.in/index.html" data-translate="Home"
-                >Home</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://www.okmotors.in/inventory.html"
-                data-translate="Buy Vehicle"
-                >Buy Vehicle</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://www.okmotors.in/sell.html"
-                data-translate="Sell Your Vehicle"
-                >Sell Your Vehicle</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://www.okmotors.in/about.html"
-                aria-label="About Ok Motors"
-                data-translate="About Us"
-                >About Us</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://www.okmotors.in/book.html"
-                aria-label="Book Bike"
-                data-translate="Book Bike"
-                >Book Vehicle</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://www.okmotors.in/updates.html"
-                data-translate="Updates"
-                >Updates</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://www.okmotors.in/contact.html"
-                data-translate="Contact"
-                >Contact</a
-              >
-            </li>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="inventory.html">Buy Vehicle</a></li>
+            <li><a href="sell.html">Sell Your Vehicle</a></li>
+            <li><a href="contact.html">Contact</a></li>
           </ul>
         </div>
         <div class="footer-section">
-          <h3 data-translate="Resources">Resources</h3>
-          <ul>
-            <li>
-              <a
-                href="https://www.okmotors.in/finance.html"
-                data-translate="Bike Finance"
-                >Bike Finance</a
-              >
-            </li>
-            <li>
-              <a href="./locations-bihar.html" data-translate="Locations"
-                >Locations</a
-              >
-            </li>
-          </ul>
-        </div>
-        <div class="footer-section">
-          <h3 data-translate="Contact Us">Contact Us</h3>
+          <h3>Contact Us</h3>
           <p>
             <i class="fas fa-map-marker-alt"></i> Pillar num.53, Bailey Rd,
             Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014
@@ -590,13 +506,8 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p data-translate="&copy; 2023 Ok Motors. All rights reserved.">
-          &copy; 2023 Ok Motors. All rights reserved.
-        </p>
-        <a
-          href="https://www.pixelatenest.com/"
-          style="color: #a9a9a9"
-          data-translate="Designed By Pixelate Nest"
+        <p>&copy; 2023 Ok Motors. All rights reserved.</p>
+        <a href="https://www.pixelatenest.com/" style="color: #a9a9a9"
           >Designed By Pixelate Nest</a
         >
       </div>

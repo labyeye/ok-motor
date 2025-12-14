@@ -1,26 +1,4 @@
 
-.finance-hero {
-  padding: 48px 16px;
-  text-align: center;
-}
-.finance-hero h1 {
-  color: #111;
-  font-size: 2.5rem;
-}
-.dark-mode .finance-hero h1 {
-  color: white;
-  font-size: 2.5rem;
-}
-.finance-hero p {
-  color: #111;
-  margin-top: 15px;
-  font-size: 1.5rem;
-}
-.dark-mode .finance-hero p {
-  color: white;
-  margin-top: 15px;
-  font-size: 1.5rem;
-}
 .partners {
   display: flex;
   flex-wrap: wrap;
@@ -158,9 +136,6 @@
 
 /* Responsive tweaks specific to finance page */
 @media (max-width: 992px) {
-  .finance-hero {
-    padding: 32px 12px;
-  }
 
   .partners {
     gap: 12px;
@@ -182,16 +157,6 @@
 }
 
 @media (max-width: 600px) {
-  .finance-hero {
-    padding: 24px 12px;
-  }
-
-  .finance-hero h1 {
-    font-size: 2.5rem;
-  }
-  .finance-hero p {
-    font-size: 1rem;
-  }
 
   .partners {
     gap: 10px;

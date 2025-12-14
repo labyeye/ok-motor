@@ -592,22 +592,6 @@ input[type="range"]::-webkit-slider-thumb {
   position: relative;
 }
 
-.breadcrumb-trail {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 16px;
-  position: relative;
-}
-
-.breadcrumb-trail a {
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
-  transition: var(--transition);
-}
-
-.breadcrumb-trail a:hover {
-  color: var(--primary-color);
-}
-
 /* Filters Section */
 .filters-container {
   background: var(--white);
@@ -1105,13 +1089,6 @@ input[type="range"]::-webkit-slider-thumb {
   gap: 8px;
 }
 
-.bike-card .price .original-price {
-  font-size: 14px;
-  color: #6c757d;
-  text-decoration: line-through;
-  font-weight: 500;
-}
-
 .bike-card .emi {
   color: #6c757d;
   font-size: 12px;
@@ -1172,34 +1149,6 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 /* Action Icons (Heart & Share) */
-.bike-card .action-icons {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  display: flex;
-  gap: 8px;
-  z-index: 3;
-}
-
-.bike-card .action-icons button {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid #dee2e6;
-  background: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.bike-card .action-icons button:hover {
-  transform: scale(1.1);
-  background: red;
-  border-color: red;
-  color: white;
-}
 
 /* Responsive Design */
 
