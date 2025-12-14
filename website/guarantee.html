@@ -36,12 +36,7 @@
             itemprop="logo"
         /></a>
         <nav class="header-nav" aria-label="Main navigation">
-          <a
-            href="https://www.okmotors.in/index.html"
-            class="nav-item"
-            data-translate="Home"
-            >Home</a
-          >
+          <a href="https://www.okmotors.in/index.html" class="nav-item">Home</a>
           <div class="nav-item nav-dropdown" aria-haspopup="true">
             <a
               href="https://www.okmotors.in/inventory.html"
@@ -154,7 +149,6 @@
         </div>
       </div>
 
-      <!-- Mobile-only search (appears after navbar, before action banner) -->
       <div
         class="mobile-search-bar"
         id="mobileSearchBar"
@@ -278,8 +272,6 @@
           var closeBtn = document.getElementById("mobileBannerClose");
           if (!banner || !closeBtn) return;
 
-          // Only show on small screens; CSS handles visual hide/show, but
-          // use aria-hidden for assistive tech and avoid unnecessary DOM focus.
           function updateVisibility() {
             var isMobile = window.matchMedia("(max-width:1024px)").matches;
             var dismissed =
@@ -298,7 +290,6 @@
             } catch (e) {}
           });
 
-          // Recompute on resize/orientation change
           window.addEventListener("resize", updateVisibility);
           window.addEventListener("orientationchange", updateVisibility);
           document.addEventListener("DOMContentLoaded", updateVisibility);
@@ -318,23 +309,12 @@
       <div class="hero-overlay"></div>
       <div class="hero-container">
         <div class="hero-content">
-          <span
-            class="hero-label"
-            data-translate="India's Trusted Vehicle Portal"
-            >India's Trusted Vehicle Portal</span
-          >
+          <span class="hero-label">India's Trusted Vehicle Portal</span>
           <h1 itemprop="headline">
-            <span class="hero-title-line1" data-translate="Find Your"
-              >Find Your</span
-            >
-            <span class="hero-title-line2" data-translate="Dream Vehicle"
-              >Dream Vehicle</span
-            >
+            <span class="hero-title-line1">Find Your</span>
+            <span class="hero-title-line2">Dream Vehicle</span>
           </h1>
-          <p
-            class="hero-subtitle"
-            data-translate="Ride into freedom with the vehicle you've always wanted"
-          >
+          <p class="hero-subtitle">
             Ride into freedom with the vehicle you've always wanted
           </p>
         </div>

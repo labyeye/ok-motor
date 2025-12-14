@@ -57,7 +57,6 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
-    <!-- LocalBusiness JSON-LD for structured data -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -136,7 +135,6 @@
     </script>
   </head>
   <body itemscope itemtype="https://schema.org/WebPage">
-    <!-- Top banner (contact + social) -->
     <div class="top-banner" id="topBanner" role="banner">
       <div class="top-banner-container">
         <div class="top-banner-left">
@@ -152,7 +150,6 @@
       </div>
     </div>
 
-    <!-- Sticky Header -->
     <header class="site-header" id="siteHeader">
       <div class="header-container">
         <a href="https://www.okmotors.in/index.html" class="header-logo">
@@ -266,7 +263,6 @@
               >
             </div>
           </div>
-          <!-- Vehicle Valuation dropdown -->
         </nav>
 
         <div class="header-actions">
@@ -451,7 +447,6 @@
           </form>
         </div>
       </section>
-      <!-- Review Modal -->
       <div id="reviewModal" class="modal">
         <div class="modal-content">
           <span class="close">&times;</span>
@@ -624,7 +619,7 @@
               });
             });
           });
-          // Submit review
+
           const reviewForm = document.getElementById("reviewForm");
           reviewForm.addEventListener("submit", function (e) {
             e.preventDefault();
@@ -658,14 +653,14 @@
               })
               .catch(() => alert("Failed to submit review."));
           });
-          // Open modal button (add anywhere you want, e.g. after testimonials)
+
           const openBtn = document.createElement("button");
           openBtn.className = "review-btn";
           openBtn.onclick = () => {
             reviewModal.style.display = "block";
           };
           document.querySelector(".testimonials-section").appendChild(openBtn);
-          // Make footer stars open the review modal and pre-select rating
+
           const footerStars = document.querySelectorAll(".footer-stars .star");
           footerStars.forEach((fs, idx) => {
             fs.addEventListener("click", () => {
@@ -684,8 +679,6 @@
           const urlParams = new URLSearchParams(window.location.search);
           const bikeIdFromUrl = urlParams.get("bikeId");
 
-          // Fetch public vehicle listings from the backend and populate the select.
-          // The public listings endpoint returns an object: { vehicles, total, page, pages }
           fetch(
             "https://ok-motor-51l3.vercel.app/api/vehicles/public/listings?limit=200"
           )
@@ -783,8 +776,6 @@
             }
           });
         });
-
-        // Removed translation system: static content only.
       </script>
       <script src="./index.js"></script>
       <script>
@@ -794,7 +785,6 @@
             "mobileDarkModeToggle"
           );
 
-          // Check for saved user preference or system preference
           function checkDarkModePreference() {
             const savedTheme = localStorage.getItem("theme");
             const systemPrefersDark =
@@ -808,10 +798,8 @@
             }
           }
 
-          // Initialize dark mode
           checkDarkModePreference();
 
-          // Desktop toggle
           if (darkModeToggle) {
             darkModeToggle.addEventListener("change", function () {
               if (this.checked) {
@@ -821,14 +809,13 @@
                 document.body.classList.remove("dark-mode");
                 localStorage.setItem("theme", "light");
               }
-              // Sync mobile toggle
+
               if (mobileDarkModeToggle) {
                 mobileDarkModeToggle.checked = this.checked;
               }
             });
           }
 
-          // Mobile toggle
           if (mobileDarkModeToggle) {
             mobileDarkModeToggle.addEventListener("change", function () {
               if (this.checked) {
@@ -838,20 +825,18 @@
                 document.body.classList.remove("dark-mode");
                 localStorage.setItem("theme", "light");
               }
-              // Sync desktop toggle
+
               if (darkModeToggle) {
                 darkModeToggle.checked = this.checked;
               }
             });
           }
 
-          // Watch for system theme changes
           window
             .matchMedia("(prefers-color-scheme: dark)")
             .addEventListener("change", (e) => {
               const newColorScheme = e.matches ? "dark" : "light";
               if (!localStorage.getItem("theme")) {
-                // Only if user hasn't set a preference
                 if (newColorScheme === "dark") {
                   document.body.classList.add("dark-mode");
                   if (darkModeToggle) darkModeToggle.checked = true;
@@ -881,30 +866,24 @@
       </script>
       <script>
         document.addEventListener("DOMContentLoaded", function () {
-          // Get modal elements
           const whatsappModal = document.getElementById("whatsappModal");
           const callModal = document.getElementById("callModal");
 
-          // Get trigger buttons
           const whatsappTrigger = document.getElementById("whatsappTrigger");
           const callTrigger = document.getElementById("callTrigger");
 
-          // Get close buttons
           const closeButtons = document.getElementsByClassName("close");
 
-          // When user clicks WhatsApp button
           whatsappTrigger.addEventListener("click", function (e) {
             e.preventDefault();
             whatsappModal.style.display = "block";
           });
 
-          // When user clicks Call button
           callTrigger.addEventListener("click", function (e) {
             e.preventDefault();
             callModal.style.display = "block";
           });
 
-          // When user clicks on close button
           Array.from(closeButtons).forEach((button) => {
             button.addEventListener("click", function () {
               whatsappModal.style.display = "none";
@@ -912,7 +891,6 @@
             });
           });
 
-          // When user clicks outside the modal
           window.addEventListener("click", function (event) {
             if (event.target == whatsappModal) {
               whatsappModal.style.display = "none";
