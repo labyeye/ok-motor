@@ -26,7 +26,7 @@ import {
   Menu,
   X,
   Settings,
-  RefreshCcw,
+  Image,
   RefreshCw,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";

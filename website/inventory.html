@@ -17,19 +17,53 @@
     />
     <style></style>
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        var t = document.getElementById('mobileMenuBtn'), n = document.querySelector('.header-nav');
+      document.addEventListener("DOMContentLoaded", function () {
+        var t = document.getElementById("mobileMenuBtn"),
+          n = document.querySelector(".header-nav");
         if (!t || !n) return;
-        function setAria(e) { t.setAttribute('aria-expanded', e ? 'true' : 'false'); }
-        t.addEventListener('click', function (ev) { ev.preventDefault(); var o = n.classList.toggle('open'); setAria(o); document.body.style.overflow = o ? 'hidden' : ''; });
-        n.addEventListener('click', function (ev) {
-          var a = ev.target.closest && ev.target.closest('a'); if (!a) return;
-          var parent = a.closest && a.closest('.nav-dropdown');
-          if (parent && window.innerWidth <= 1024 && (a.classList.contains('dropdown-toggle') || a.classList.contains('nav-link'))) { ev.preventDefault(); parent.classList.toggle('open'); return; }
-          if (window.innerWidth <= 1024) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; }
+        function setAria(e) {
+          t.setAttribute("aria-expanded", e ? "true" : "false");
+        }
+        t.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          var o = n.classList.toggle("open");
+          setAria(o);
+          document.body.style.overflow = o ? "hidden" : "";
         });
-        window.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
-        window.addEventListener('resize', function () { if (window.innerWidth > 1024 && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
+        n.addEventListener("click", function (ev) {
+          var a = ev.target.closest && ev.target.closest("a");
+          if (!a) return;
+          var parent = a.closest && a.closest(".nav-dropdown");
+          if (
+            parent &&
+            window.innerWidth <= 1024 &&
+            (a.classList.contains("dropdown-toggle") ||
+              a.classList.contains("nav-link"))
+          ) {
+            ev.preventDefault();
+            parent.classList.toggle("open");
+            return;
+          }
+          if (window.innerWidth <= 1024) {
+            n.classList.remove("open");
+            setAria(false);
+            document.body.style.overflow = "";
+          }
+        });
+        window.addEventListener("keydown", function (ev) {
+          if (ev.key === "Escape" && n.classList.contains("open")) {
+            n.classList.remove("open");
+            setAria(false);
+            document.body.style.overflow = "";
+          }
+        });
+        window.addEventListener("resize", function () {
+          if (window.innerWidth > 1024 && n.classList.contains("open")) {
+            n.classList.remove("open");
+            setAria(false);
+            document.body.style.overflow = "";
+          }
+        });
       });
     </script>
   </head>
@@ -51,18 +85,25 @@
     </div>
     <header class="site-header" id="siteHeader">
       <div class="header-container">
-       <a href="https://www.okmotors.in/index.html" class="header-logo">
+        <a href="https://www.okmotors.in/index.html" class="header-logo">
           <img
-             src="./assets/images/logoblack.png"
+            src="./assets/images/logoblack.png"
             alt="Ok Motors Logo"
             itemprop="logo"
           />
         </a>
 
         <nav class="header-nav" aria-label="Main navigation">
-         <a href="https://www.okmotors.in/index.html" class="nav-item" data-translate="Home">Home</a>
+          <a
+            href="https://www.okmotors.in/index.html"
+            class="nav-item"
+            data-translate="Home"
+            >Home</a
+          >
           <div class="nav-item nav-dropdown" aria-haspopup="true">
-            <a href="https://www.okmotors.in/inventory.html" class="nav-link dropdown-toggle"
+            <a
+              href="https://www.okmotors.in/inventory.html"
+              class="nav-link dropdown-toggle"
               >Buy Vehicle
               <i
                 class="fa fa-caret-down"
@@ -126,10 +167,16 @@
             data-translate="Sell Your Vehicle"
             >Sell Your Vehicle</a
           >
-          <a href="https://www.okmotors.in/about.html" class="nav-item" data-translate="About Us"
+          <a
+            href="https://www.okmotors.in/about.html"
+            class="nav-item"
+            data-translate="About Us"
             >About Us</a
           >
-          <a href="https://www.okmotors.in/book.html" class="nav-item" data-translate="Book Bike"
+          <a
+            href="https://www.okmotors.in/book.html"
+            class="nav-item"
+            data-translate="Book Bike"
             >Book Vehicle</a
           >
           <a
@@ -138,10 +185,16 @@
             data-translate="Bike Finance"
             >Bike Finance</a
           >
-          <a href="https://www.okmotors.in/updates.html" class="nav-item" data-translate="Updates"
+          <a
+            href="https://www.okmotors.in/updates.html"
+            class="nav-item"
+            data-translate="Updates"
             >Updates</a
           >
-          <a href="https://www.okmotors.in/contact.html" class="nav-item" data-translate="Contact"
+          <a
+            href="https://www.okmotors.in/contact.html"
+            class="nav-item"
+            data-translate="Contact"
             >Contact</a
           >
           <div class="nav-item nav-dropdown" aria-haspopup="true">
@@ -253,7 +306,9 @@
         <!-- Cards will be rendered here by JavaScript -->
       </div>
       <div class="load-more-container">
-        <button id="load-more-btn" class="load-more-btn" style="display:none">Load More</button>
+        <button id="load-more-btn" class="load-more-btn" style="display: none">
+          Load More
+        </button>
       </div>
     </div>
 
@@ -280,7 +335,7 @@
           </div>
           <div class="logo">
             <img
-               src="./assets/images/okmotor.png"
+              src="./assets/images/okmotor.png"
               style="width: 220px"
               alt="Ok Motors Logo"
             />
@@ -289,7 +344,8 @@
             Bringing the future of bike riding to you today.
           </p>
           <div class="social-icons">
-            <a href="https://www.facebook.com/people/OK-motors-Patna/100092409081953/?rdid=HgY7OAFmgYcvAsoC&share_url=https%253A%252F%252Fwww.facebook.com%252Fshare%252F1BpgmB9Azo%252F"
+            <a
+              href="https://www.facebook.com/people/OK-motors-Patna/100092409081953/?rdid=HgY7OAFmgYcvAsoC&share_url=https%253A%252F%252Fwww.facebook.com%252Fshare%252F1BpgmB9Azo%252F"
               ><i class="fa-brands fa-facebook-f" style="color: #0400ff"></i
             ></a>
             <a
@@ -308,15 +364,21 @@
           <h3 data-translate="Quick Links">Quick Links</h3>
           <ul>
             <li>
-             <a href="https://www.okmotors.in/index.html" data-translate="Home">Home</a>
+              <a href="https://www.okmotors.in/index.html" data-translate="Home"
+                >Home</a
+              >
             </li>
             <li>
-              <a href="https://www.okmotors.in/inventory.html" data-translate="Buy Vehicle"
+              <a
+                href="https://www.okmotors.in/inventory.html"
+                data-translate="Buy Vehicle"
                 >Buy Vehicle</a
               >
             </li>
             <li>
-              <a href="https://www.okmotors.in/sell.html" data-translate="Sell Your Vehicle"
+              <a
+                href="https://www.okmotors.in/sell.html"
+                data-translate="Sell Your Vehicle"
                 >Sell Your Vehicle</a
               >
             </li>
@@ -337,10 +399,18 @@
               >
             </li>
             <li>
-              <a href="https://www.okmotors.in/updates.html" data-translate="Updates">Updates</a>
+              <a
+                href="https://www.okmotors.in/updates.html"
+                data-translate="Updates"
+                >Updates</a
+              >
             </li>
             <li>
-              <a href="https://www.okmotors.in/contact.html" data-translate="Contact">Contact</a>
+              <a
+                href="https://www.okmotors.in/contact.html"
+                data-translate="Contact"
+                >Contact</a
+              >
             </li>
           </ul>
         </div>
@@ -348,7 +418,9 @@
           <h3 data-translate="Resources">Resources</h3>
           <ul>
             <li>
-              <a href="https://www.okmotors.in/finance.html" data-translate="Bike Finance"
+              <a
+                href="https://www.okmotors.in/finance.html"
+                data-translate="Bike Finance"
                 >Bike Finance</a
               >
             </li>
@@ -527,20 +599,21 @@
         }
 
         async function loadListings(page = 1, limit = 12, append = false) {
-          if (!append) grid.innerHTML = '<div class="loading">Loading vehicles...</div>';
+          if (!append)
+            grid.innerHTML = '<div class="loading">Loading vehicles...</div>';
           try {
             // build query params from selected filters
             const params = new URLSearchParams();
-            params.set('page', page);
-            params.set('limit', limit);
-            if (selectedType) params.set('vehicleType', selectedType);
-            if (selectedBrand) params.set('vehicleName', selectedBrand);
-            if (selectedYear) params.set('manufacturingYear', selectedYear);
+            params.set("page", page);
+            params.set("limit", limit);
+            if (selectedType) params.set("vehicleType", selectedType);
+            if (selectedBrand) params.set("vehicleName", selectedBrand);
+            if (selectedYear) params.set("manufacturingYear", selectedYear);
             if (selectedPrice) {
               if (selectedPrice.min !== null && selectedPrice.min !== undefined)
-                params.set('priceMin', selectedPrice.min);
+                params.set("priceMin", selectedPrice.min);
               if (selectedPrice.max !== null && selectedPrice.max !== undefined)
-                params.set('priceMax', selectedPrice.max);
+                params.set("priceMax", selectedPrice.max);
             }
 
             const url = `https://ok-motor-51l3.vercel.app/api/vehicles/public/listings?${params.toString()}`;
@@ -554,8 +627,10 @@
 
             if (!append) grid.innerHTML = "";
             if (!data.vehicles || data.vehicles.length === 0) {
-              if (!append) grid.innerHTML = '<p style="padding:20px">No vehicles found.</p>';
-              document.getElementById('load-more-btn').style.display = 'none';
+              if (!append)
+                grid.innerHTML =
+                  '<p style="padding:20px">No vehicles found.</p>';
+              document.getElementById("load-more-btn").style.display = "none";
               return;
             }
 
@@ -565,38 +640,41 @@
             });
 
             // show/hide load more
-            const loadMoreBtn = document.getElementById('load-more-btn');
+            const loadMoreBtn = document.getElementById("load-more-btn");
             if (currentPage < totalPages) {
-              loadMoreBtn.style.display = 'inline-block';
+              loadMoreBtn.style.display = "inline-block";
             } else {
-              loadMoreBtn.style.display = 'none';
+              loadMoreBtn.style.display = "none";
             }
           } catch (err) {
             console.error(err);
-            if (!append) grid.innerHTML =
-              '<p style="padding:20px;color:#b00">Failed to load vehicles. Try again later.</p>';
+            if (!append)
+              grid.innerHTML =
+                '<p style="padding:20px;color:#b00">Failed to load vehicles. Try again later.</p>';
           }
         }
 
         // helper: update filter button label/badge
         function setFilterBadge(filterKey, label) {
-          const btn = document.querySelector(`.filter-btn[data-filter="${filterKey}"]`);
+          const btn = document.querySelector(
+            `.filter-btn[data-filter="${filterKey}"]`
+          );
           if (!btn) return;
           // remove existing badge if any
-          const old = btn.querySelector('.filter-badge');
+          const old = btn.querySelector(".filter-badge");
           if (old) old.remove();
           if (!label) return;
-          const span = document.createElement('span');
-          span.className = 'filter-badge';
+          const span = document.createElement("span");
+          span.className = "filter-badge";
           span.innerHTML = `${label} <span class="clear-filter" title="Clear">×</span>`;
           btn.appendChild(span);
-          span.querySelector('.clear-filter').addEventListener('click', (e) => {
+          span.querySelector(".clear-filter").addEventListener("click", (e) => {
             e.stopPropagation();
             // clear corresponding filter
-            if (filterKey === 'brand') selectedBrand = null;
-            if (filterKey === 'year') selectedYear = null;
-            if (filterKey === 'type') selectedType = null;
-            if (filterKey === 'price') selectedPrice = null;
+            if (filterKey === "brand") selectedBrand = null;
+            if (filterKey === "year") selectedYear = null;
+            if (filterKey === "type") selectedType = null;
+            if (filterKey === "price") selectedPrice = null;
             span.remove();
             loadListings(1, 12, false);
           });
@@ -605,123 +683,156 @@
         // populate filter options from backend
         async function populateFilters() {
           try {
-            const res = await fetch('https://ok-motor-51l3.vercel.app/api/vehicles/public/filters');
-            if (!res.ok) throw new Error('Failed to fetch filters');
+            const res = await fetch(
+              "https://ok-motor-51l3.vercel.app/api/vehicles/public/filters"
+            );
+            if (!res.ok) throw new Error("Failed to fetch filters");
             const data = await res.json();
 
             // Price ranges
-            const priceContainer = document.getElementById('price-options');
-            priceContainer.innerHTML = '';
+            const priceContainer = document.getElementById("price-options");
+            priceContainer.innerHTML = "";
             // Add an 'All' option
-            const allPriceBtn = document.createElement('button');
-            allPriceBtn.className = 'filter-option';
-            allPriceBtn.textContent = 'All';
-            allPriceBtn.addEventListener('click', () => {
+            const allPriceBtn = document.createElement("button");
+            allPriceBtn.className = "filter-option";
+            allPriceBtn.textContent = "All";
+            allPriceBtn.addEventListener("click", () => {
               selectedPrice = null;
-              setFilterBadge('price', null);
-              document.getElementById('price-dropdown').classList.remove('active');
-              loadListings(1,12,false);
+              setFilterBadge("price", null);
+              document
+                .getElementById("price-dropdown")
+                .classList.remove("active");
+              loadListings(1, 12, false);
             });
             priceContainer.appendChild(allPriceBtn);
-            data.priceRanges.forEach(pr => {
-              const btn = document.createElement('button');
-              btn.className = 'filter-option';
+            data.priceRanges.forEach((pr) => {
+              const btn = document.createElement("button");
+              btn.className = "filter-option";
               btn.textContent = pr.label;
-              btn.addEventListener('click', () => {
+              btn.addEventListener("click", () => {
                 selectedPrice = { min: pr.min, max: pr.max, label: pr.label };
-                setFilterBadge('price', pr.label);
+                setFilterBadge("price", pr.label);
                 // close dropdown
-                document.getElementById('price-dropdown').classList.remove('active');
-                loadListings(1,12,false);
+                document
+                  .getElementById("price-dropdown")
+                  .classList.remove("active");
+                loadListings(1, 12, false);
               });
               priceContainer.appendChild(btn);
             });
 
             // Brands
-            const brandContainer = document.getElementById('brand-options');
-            brandContainer.innerHTML = '';
+            const brandContainer = document.getElementById("brand-options");
+            brandContainer.innerHTML = "";
             // All Brands option
-            const allBrandBtn = document.createElement('button');
-            allBrandBtn.className = 'filter-option';
-            allBrandBtn.textContent = 'All';
-            allBrandBtn.addEventListener('click', () => {
-              selectedBrand = null; setFilterBadge('brand', null); document.getElementById('brand-dropdown').classList.remove('active'); loadListings(1,12,false);
+            const allBrandBtn = document.createElement("button");
+            allBrandBtn.className = "filter-option";
+            allBrandBtn.textContent = "All";
+            allBrandBtn.addEventListener("click", () => {
+              selectedBrand = null;
+              setFilterBadge("brand", null);
+              document
+                .getElementById("brand-dropdown")
+                .classList.remove("active");
+              loadListings(1, 12, false);
             });
             brandContainer.appendChild(allBrandBtn);
-            data.brands.sort().forEach(b => {
-              const btn = document.createElement('button');
-              btn.className = 'filter-option';
+            data.brands.sort().forEach((b) => {
+              const btn = document.createElement("button");
+              btn.className = "filter-option";
               btn.textContent = b;
-              btn.addEventListener('click', () => {
+              btn.addEventListener("click", () => {
                 selectedBrand = b;
-                setFilterBadge('brand', b);
-                document.getElementById('brand-dropdown').classList.remove('active');
-                loadListings(1,12,false);
+                setFilterBadge("brand", b);
+                document
+                  .getElementById("brand-dropdown")
+                  .classList.remove("active");
+                loadListings(1, 12, false);
               });
               brandContainer.appendChild(btn);
             });
 
             // Years
-            const yearContainer = document.getElementById('year-options');
-            yearContainer.innerHTML = '';
+            const yearContainer = document.getElementById("year-options");
+            yearContainer.innerHTML = "";
             // All Years
-            const allYearBtn = document.createElement('button');
-            allYearBtn.className = 'filter-option';
-            allYearBtn.textContent = 'All';
-            allYearBtn.addEventListener('click', () => { selectedYear = null; setFilterBadge('year', null); document.getElementById('year-dropdown').classList.remove('active'); loadListings(1,12,false); });
+            const allYearBtn = document.createElement("button");
+            allYearBtn.className = "filter-option";
+            allYearBtn.textContent = "All";
+            allYearBtn.addEventListener("click", () => {
+              selectedYear = null;
+              setFilterBadge("year", null);
+              document
+                .getElementById("year-dropdown")
+                .classList.remove("active");
+              loadListings(1, 12, false);
+            });
             yearContainer.appendChild(allYearBtn);
-            data.years.forEach(y => {
-              const btn = document.createElement('button');
-              btn.className = 'filter-option';
+            data.years.forEach((y) => {
+              const btn = document.createElement("button");
+              btn.className = "filter-option";
               btn.textContent = y;
-              btn.addEventListener('click', () => {
+              btn.addEventListener("click", () => {
                 selectedYear = y;
-                setFilterBadge('year', y);
-                document.getElementById('year-dropdown').classList.remove('active');
-                loadListings(1,12,false);
+                setFilterBadge("year", y);
+                document
+                  .getElementById("year-dropdown")
+                  .classList.remove("active");
+                loadListings(1, 12, false);
               });
               yearContainer.appendChild(btn);
             });
 
             // Types
-            const typeContainer = document.getElementById('type-options');
-            typeContainer.innerHTML = '';
+            const typeContainer = document.getElementById("type-options");
+            typeContainer.innerHTML = "";
             // All Types
-            const allTypeBtn = document.createElement('button');
-            allTypeBtn.className = 'filter-option';
-            allTypeBtn.textContent = 'All';
-            allTypeBtn.addEventListener('click', () => { selectedType = null; setFilterBadge('type', null); document.getElementById('type-dropdown').classList.remove('active'); loadListings(1,12,false); });
+            const allTypeBtn = document.createElement("button");
+            allTypeBtn.className = "filter-option";
+            allTypeBtn.textContent = "All";
+            allTypeBtn.addEventListener("click", () => {
+              selectedType = null;
+              setFilterBadge("type", null);
+              document
+                .getElementById("type-dropdown")
+                .classList.remove("active");
+              loadListings(1, 12, false);
+            });
             typeContainer.appendChild(allTypeBtn);
-            data.types.forEach(t => {
-              const btn = document.createElement('button');
-              btn.className = 'filter-option';
+            data.types.forEach((t) => {
+              const btn = document.createElement("button");
+              btn.className = "filter-option";
               btn.textContent = t;
-              btn.addEventListener('click', () => {
+              btn.addEventListener("click", () => {
                 selectedType = t;
-                setFilterBadge('type', t);
-                document.getElementById('type-dropdown').classList.remove('active');
-                loadListings(1,12,false);
+                setFilterBadge("type", t);
+                document
+                  .getElementById("type-dropdown")
+                  .classList.remove("active");
+                loadListings(1, 12, false);
               });
               typeContainer.appendChild(btn);
             });
-
           } catch (err) {
-            console.error('Failed to load filters', err);
+            console.error("Failed to load filters", err);
           }
         }
 
         // load filters then first page
         populateFilters().then(() => {
-          currentPage = 1; loadListings(currentPage, 12, false);
+          currentPage = 1;
+          loadListings(currentPage, 12, false);
         });
 
         // Load more handler
-        document.getElementById('load-more-btn').addEventListener('click', () => {
-          if (currentPage < totalPages) {
-            currentPage += 1;
-            loadListings(currentPage, 12, true);
-          }
-        });
+        document
+          .getElementById("load-more-btn")
+          .addEventListener("click", () => {
+            if (currentPage < totalPages) {
+              currentPage += 1;
+              loadListings(currentPage, 12, true);
+            }
+          });
       });
     </script>
   </body>

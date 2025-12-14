@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Bike,
   Menu,
+  Image,
   X,
   Settings,
   RefreshCw,

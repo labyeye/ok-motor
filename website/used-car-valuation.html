@@ -4,23 +4,64 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Used Car Valuation | Ok Motors</title>
-    <meta name="description" content="Get an instant used car valuation from Ok Motors. Enter car details and get an estimated market price." />
+    <meta
+      name="description"
+      content="Get an instant used car valuation from Ok Motors. Enter car details and get an estimated market price."
+    />
     <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      crossorigin="anonymous"
+    />
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        var t = document.getElementById('mobileMenuBtn'), n = document.querySelector('.header-nav');
+      document.addEventListener("DOMContentLoaded", function () {
+        var t = document.getElementById("mobileMenuBtn"),
+          n = document.querySelector(".header-nav");
         if (!t || !n) return;
-        function setAria(e) { t.setAttribute('aria-expanded', e ? 'true' : 'false'); }
-        t.addEventListener('click', function (ev) { ev.preventDefault(); var o = n.classList.toggle('open'); setAria(o); document.body.style.overflow = o ? 'hidden' : ''; });
-        n.addEventListener('click', function (ev) {
-          var a = ev.target.closest && ev.target.closest('a'); if (!a) return;
-          var parent = a.closest && a.closest('.nav-dropdown');
-          if (parent && window.innerWidth <= 1024 && (a.classList.contains('dropdown-toggle') || a.classList.contains('nav-link'))) { ev.preventDefault(); parent.classList.toggle('open'); return; }
-          if (window.innerWidth <= 1024) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; }
+        function setAria(e) {
+          t.setAttribute("aria-expanded", e ? "true" : "false");
+        }
+        t.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          var o = n.classList.toggle("open");
+          setAria(o);
+          document.body.style.overflow = o ? "hidden" : "";
         });
-        window.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
-        window.addEventListener('resize', function () { if (window.innerWidth > 1024 && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
+        n.addEventListener("click", function (ev) {
+          var a = ev.target.closest && ev.target.closest("a");
+          if (!a) return;
+          var parent = a.closest && a.closest(".nav-dropdown");
+          if (
+            parent &&
+            window.innerWidth <= 1024 &&
+            (a.classList.contains("dropdown-toggle") ||
+              a.classList.contains("nav-link"))
+          ) {
+            ev.preventDefault();
+            parent.classList.toggle("open");
+            return;
+          }
+          if (window.innerWidth <= 1024) {
+            n.classList.remove("open");
+            setAria(false);
+            document.body.style.overflow = "";
+          }
+        });
+        window.addEventListener("keydown", function (ev) {
+          if (ev.key === "Escape" && n.classList.contains("open")) {
+            n.classList.remove("open");
+            setAria(false);
+            document.body.style.overflow = "";
+          }
+        });
+        window.addEventListener("resize", function () {
+          if (window.innerWidth > 1024 && n.classList.contains("open")) {
+            n.classList.remove("open");
+            setAria(false);
+            document.body.style.overflow = "";
+          }
+        });
       });
     </script>
   </head>
@@ -30,9 +71,9 @@
       <div class="top-banner-container">
         <div class="top-banner-left">
           <span
-            ><i class="fas fa-phone-alt" aria-hidden="true"></i>&nbsp;+91 72800 12222</span
+            ><i class="fas fa-phone-alt" aria-hidden="true"></i>&nbsp;+91 72800
+            12222</span
           >
-          
         </div>
         <div class="top-banner-right" aria-hidden="true">
           <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
@@ -44,18 +85,25 @@
     <!-- Sticky Header -->
     <header class="site-header" id="siteHeader">
       <div class="header-container">
-       <a href="https://www.okmotors.in/index.html" class="header-logo">
+        <a href="https://www.okmotors.in/index.html" class="header-logo">
           <img
-             src="./assets/images/logoblack.png"
+            src="./assets/images/logoblack.png"
             alt="Ok Motors Logo"
             itemprop="logo"
           />
         </a>
 
         <nav class="header-nav" aria-label="Main navigation">
-         <a href="https://www.okmotors.in/index.html" class="nav-item" data-translate="Home">Home</a>
+          <a
+            href="https://www.okmotors.in/index.html"
+            class="nav-item"
+            data-translate="Home"
+            >Home</a
+          >
           <div class="nav-item nav-dropdown" aria-haspopup="true">
-            <a href="https://www.okmotors.in/inventory.html" class="nav-link dropdown-toggle"
+            <a
+              href="https://www.okmotors.in/inventory.html"
+              class="nav-link dropdown-toggle"
               >Buy Vehicle
               <i
                 class="fa fa-caret-down"
@@ -119,10 +167,16 @@
             data-translate="Sell Your Vehicle"
             >Sell Your Vehicle</a
           >
-          <a href="https://www.okmotors.in/about.html" class="nav-item" data-translate="About Us"
+          <a
+            href="https://www.okmotors.in/about.html"
+            class="nav-item"
+            data-translate="About Us"
             >About Us</a
           >
-          <a href="https://www.okmotors.in/book.html" class="nav-item" data-translate="Book Bike"
+          <a
+            href="https://www.okmotors.in/book.html"
+            class="nav-item"
+            data-translate="Book Bike"
             >Book Vehicle</a
           >
           <a
@@ -131,10 +185,16 @@
             data-translate="Bike Finance"
             >Bike Finance</a
           >
-          <a href="https://www.okmotors.in/updates.html" class="nav-item" data-translate="Updates"
+          <a
+            href="https://www.okmotors.in/updates.html"
+            class="nav-item"
+            data-translate="Updates"
             >Updates</a
           >
-          <a href="https://www.okmotors.in/contact.html" class="nav-item" data-translate="Contact"
+          <a
+            href="https://www.okmotors.in/contact.html"
+            class="nav-item"
+            data-translate="Contact"
             >Contact</a
           >
           <div class="nav-item nav-dropdown" aria-haspopup="true">
@@ -184,17 +244,34 @@
             <span class="hero-title-line1">Used Car</span>
             <span class="hero-title-line2">Valuation</span>
           </h1>
-          <p class="hero-subtitle">Enter basic details and get an estimated market price for your car.</p>
+          <p class="hero-subtitle">
+            Enter basic details and get an estimated market price for your car.
+          </p>
         </div>
       </div>
     </section>
 
     <!-- Valuation form -->
-    <main style="padding: 40px 5%; max-width: 1000px; margin: 0 auto;">
-      <section style="background:#fff;padding:28px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.06)">
-        <h2 style="margin-top:0; color:black">Get an Instant Car Valuation</h2>
+    <main style="padding: 40px 5%; max-width: 1000px; margin: 0 auto">
+      <section
+        style="
+          background: #fff;
+          padding: 28px;
+          border-radius: 12px;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+        "
+      >
+        <h2 style="margin-top: 0; color: black">
+          Get an Instant Car Valuation
+        </h2>
         <form id="carValForm">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+              gap: 16px;
+            "
+          >
             <div>
               <label for="make">Make</label>
               <select id="make" name="make" required class="filter-select">
@@ -210,17 +287,37 @@
 
             <div>
               <label for="model">Model</label>
-              <input id="model" name="model" class="filter-input" placeholder="e.g. Swift" />
+              <input
+                id="model"
+                name="model"
+                class="filter-input"
+                placeholder="e.g. Swift"
+              />
             </div>
 
             <div>
               <label for="year">Year of Registration</label>
-              <input id="year" name="year" type="number" min="1990" max="2025" class="filter-input" placeholder="e.g. 2018" />
+              <input
+                id="year"
+                name="year"
+                type="number"
+                min="1990"
+                max="2025"
+                class="filter-input"
+                placeholder="e.g. 2018"
+              />
             </div>
 
             <div>
               <label for="kms">Kilometers Driven</label>
-              <input id="kms" name="kms" type="number" min="0" class="filter-input" placeholder="e.g. 45000" />
+              <input
+                id="kms"
+                name="kms"
+                type="number"
+                min="0"
+                class="filter-input"
+                placeholder="e.g. 45000"
+              />
             </div>
 
             <div>
@@ -235,22 +332,63 @@
 
             <div>
               <label for="contact">Your Phone</label>
-              <input id="contact" name="contact" class="filter-input" placeholder="Mobile number" />
+              <input
+                id="contact"
+                name="contact"
+                class="filter-input"
+                placeholder="Mobile number"
+              />
             </div>
 
-            <div style="grid-column:1/-1">
+            <div style="grid-column: 1/-1">
               <label for="notes">Additional Details</label>
-              <textarea id="notes" name="notes" rows="4" style="width:100%;padding:12px;border:2px solid #ddd;border-radius:6px"></textarea>
+              <textarea
+                id="notes"
+                name="notes"
+                rows="4"
+                style="
+                  width: 100%;
+                  padding: 12px;
+                  border: 2px solid #ddd;
+                  border-radius: 6px;
+                "
+              ></textarea>
             </div>
           </div>
 
-          <div style="display:flex;gap:12px;margin-top:18px;align-items:center">
-            <button type="submit" class="search-count-btn" style="min-width:160px">Get Valuation</button>
-            <div id="valuationResult" style="padding:12px 16px;border-radius:8px;background:#f4f4f4;flex:1;color:#222;display:none"></div>
+          <div
+            style="
+              display: flex;
+              gap: 12px;
+              margin-top: 18px;
+              align-items: center;
+            "
+          >
+            <button
+              type="submit"
+              class="search-count-btn"
+              style="min-width: 160px"
+            >
+              Get Valuation
+            </button>
+            <div
+              id="valuationResult"
+              style="
+                padding: 12px 16px;
+                border-radius: 8px;
+                background: #f4f4f4;
+                flex: 1;
+                color: #222;
+                display: none;
+              "
+            ></div>
           </div>
         </form>
 
-        <p style="margin-top:18px;color:#666">Note: This is an estimated valuation based on typical market factors. For an accurate quote, book an inspection.</p>
+        <p style="margin-top: 18px; color: #666">
+          Note: This is an estimated valuation based on typical market factors.
+          For an accurate quote, book an inspection.
+        </p>
       </section>
     </main>
 
@@ -259,90 +397,131 @@
       <div class="footer-content">
         <div class="footer-section">
           <div class="footer-stars" style="margin: 10px 0">
-            <span class="star" style="color: gold; font-size: 1.5em"><i class="fa fa-star"></i></span>
-            <span class="star" style="color: gold; font-size: 1.5em"><i class="fa fa-star"></i></span>
-            <span class="star" style="color: gold; font-size: 1.5em"><i class="fa fa-star"></i></span>
-            <span class="star" style="color: gold; font-size: 1.5em"><i class="fa fa-star"></i></span>
-            <span class="star" style="color: gold; font-size: 1.5em"><i class="fa fa-star"></i></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
+            <span class="star" style="color: gold; font-size: 1.5em"
+              ><i class="fa fa-star"></i
+            ></span>
           </div>
           <div class="logo">
-            <img src="./assets/images/logoblack.png" style="width: 220px" alt="Ok Motors Logo" />
+            <img
+              src="./assets/images/logoblack.png"
+              style="width: 220px"
+              alt="Ok Motors Logo"
+            />
           </div>
           <p>Bringing the future of driving to you today.</p>
           <div class="social-icons">
-            <a href="#"><i class="fa-brands fa-facebook-f" style="color:#0400ff"></i></a>
-            <a href="#" aria-label="Instagram"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" style="width:20px"/></a>
-            <a href="https://wa.me/918210283582"><i class="fa-brands fa-whatsapp" style="color:#00a841"></i></a>
+            <a href="#"
+              ><i class="fa-brands fa-facebook-f" style="color: #0400ff"></i
+            ></a>
+            <a href="#" aria-label="Instagram"
+              ><img
+                src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+                style="width: 20px"
+            /></a>
+            <a href="https://wa.me/918210283582"
+              ><i class="fa-brands fa-whatsapp" style="color: #00a841"></i
+            ></a>
           </div>
         </div>
         <div class="footer-section">
           <h3>Quick Links</h3>
           <ul>
             <li><a href="https://www.okmotors.in/index.html">Home</a></li>
-            <li><a href="https://www.okmotors.in/inventory.html">Buy Vehicle</a></li>
-            <li><a href="https://www.okmotors.in/sell.html">Sell Your Vehicle</a></li>
+            <li>
+              <a href="https://www.okmotors.in/inventory.html">Buy Vehicle</a>
+            </li>
+            <li>
+              <a href="https://www.okmotors.in/sell.html">Sell Your Vehicle</a>
+            </li>
             <li><a href="https://www.okmotors.in/about.html">About Us</a></li>
           </ul>
         </div>
         <div class="footer-section">
           <h3>Resources</h3>
           <ul>
-            <li><a href="https://www.okmotors.in/finance.html">Bike Finance</a></li>
+            <li>
+              <a href="https://www.okmotors.in/finance.html">Bike Finance</a>
+            </li>
             <li><a href="./locations-bihar.html">Locations</a></li>
           </ul>
         </div>
         <div class="footer-section">
           <h3>Contact Us</h3>
-          <p><i class="fas fa-map-marker-alt"></i> Rambag Chowk, Muzaffarpur, Bihar 842002</p>
+          <p>
+            <i class="fas fa-map-marker-alt"></i> Rambag Chowk, Muzaffarpur,
+            Bihar 842002
+          </p>
           <span>+91 72800 12222 / 98358 44897</span>
         </div>
       </div>
       <div class="footer-bottom">
         <p>&copy; 2023 Ok Motors. All rights reserved.</p>
-        <a href="https://www.pixelatenest.com/" style="color:#a9a9a9">Designed By Pixelate Nest</a>
+        <a href="https://www.pixelatenest.com/" style="color: #a9a9a9"
+          >Designed By Pixelate Nest</a
+        >
       </div>
     </footer>
 
     <script src="./index.js"></script>
     <script>
       // simple car valuation heuristic
-      document.getElementById('carValForm').addEventListener('submit', function(e){
-        e.preventDefault();
-        const make = document.getElementById('make').value.trim();
-        const model = document.getElementById('model').value.trim();
-        const year = parseInt(document.getElementById('year').value,10) || new Date().getFullYear();
-        const kms = parseInt(document.getElementById('kms').value,10) || 0;
-        const condition = document.getElementById('condition').value;
-        const resultEl = document.getElementById('valuationResult');
+      document
+        .getElementById("carValForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const make = document.getElementById("make").value.trim();
+          const model = document.getElementById("model").value.trim();
+          const year =
+            parseInt(document.getElementById("year").value, 10) ||
+            new Date().getFullYear();
+          const kms = parseInt(document.getElementById("kms").value, 10) || 0;
+          const condition = document.getElementById("condition").value;
+          const resultEl = document.getElementById("valuationResult");
 
-        let age = Math.max(0, new Date().getFullYear() - year);
-        let base = 300000; // default base for cars
-        if(/maruti/i.test(make)) base = 300000;
-        else if(/hyundai/i.test(make)) base = 320000;
-        else if(/tata/i.test(make)) base = 250000;
-        else if(/toyota/i.test(make)) base = 400000;
-        else if(/mahindra/i.test(make)) base = 350000;
+          let age = Math.max(0, new Date().getFullYear() - year);
+          let base = 300000; // default base for cars
+          if (/maruti/i.test(make)) base = 300000;
+          else if (/hyundai/i.test(make)) base = 320000;
+          else if (/tata/i.test(make)) base = 250000;
+          else if (/toyota/i.test(make)) base = 400000;
+          else if (/mahindra/i.test(make)) base = 350000;
 
-        let price = base * Math.max(0.25, 1 - age * 0.12);
-        price = price * Math.max(0.6, 1 - (kms/100000)*0.2);
-        const condMap = { excellent: 1.05, good: 1.0, fair: 0.9, poor: 0.75 };
-        price = price * (condMap[condition] || 1);
-        price = Math.round(price/1000)*1000;
+          let price = base * Math.max(0.25, 1 - age * 0.12);
+          price = price * Math.max(0.6, 1 - (kms / 100000) * 0.2);
+          const condMap = { excellent: 1.05, good: 1.0, fair: 0.9, poor: 0.75 };
+          price = price * (condMap[condition] || 1);
+          price = Math.round(price / 1000) * 1000;
 
-        resultEl.style.display = 'block';
-        resultEl.innerHTML = `<strong>Estimated valuation:</strong> ₹ ${price.toLocaleString()} <span style="display:block;color:#666;margin-top:6px">(Approx.)</span>`;
-      });
-
-      document.addEventListener('DOMContentLoaded', function(){
-        document.querySelectorAll('.nav-dropdown .dropdown-toggle, .nav-dropdown .nav-link').forEach(function(btn){
-          btn.addEventListener('click', function(e){
-            if(window.innerWidth <= 1024){
-              e.preventDefault();
-              var parent = this.closest('.nav-dropdown');
-              if(parent) parent.classList.toggle('open');
-            }
-          });
+          resultEl.style.display = "block";
+          resultEl.innerHTML = `<strong>Estimated valuation:</strong> ₹ ${price.toLocaleString()} <span style="display:block;color:#666;margin-top:6px">(Approx.)</span>`;
         });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        document
+          .querySelectorAll(
+            ".nav-dropdown .dropdown-toggle, .nav-dropdown .nav-link"
+          )
+          .forEach(function (btn) {
+            btn.addEventListener("click", function (e) {
+              if (window.innerWidth <= 1024) {
+                e.preventDefault();
+                var parent = this.closest(".nav-dropdown");
+                if (parent) parent.classList.toggle("open");
+              }
+            });
+          });
       });
     </script>
   </body>

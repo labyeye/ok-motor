@@ -115,9 +115,9 @@
       <div class="top-banner-container">
         <div class="top-banner-left">
           <span
-            ><i class="fas fa-phone-alt" aria-hidden="true"></i>&nbsp;+91 72800 12222</span
+            ><i class="fas fa-phone-alt" aria-hidden="true"></i>&nbsp;+91 72800
+            12222</span
           >
-          
         </div>
         <div class="top-banner-right" aria-hidden="true">
           <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
@@ -129,18 +129,25 @@
     <!-- Sticky Header -->
     <header class="site-header" id="siteHeader">
       <div class="header-container">
-       <a href="https://www.okmotors.in/index.html" class="header-logo">
+        <a href="https://www.okmotors.in/index.html" class="header-logo">
           <img
-             src="./assets/images/logoblack.png"
+            src="./assets/images/logoblack.png"
             alt="Ok Motors Logo"
             itemprop="logo"
           />
         </a>
 
         <nav class="header-nav" aria-label="Main navigation">
-         <a href="https://www.okmotors.in/index.html" class="nav-item" data-translate="Home">Home</a>
+          <a
+            href="https://www.okmotors.in/index.html"
+            class="nav-item"
+            data-translate="Home"
+            >Home</a
+          >
           <div class="nav-item nav-dropdown" aria-haspopup="true">
-            <a href="https://www.okmotors.in/inventory.html" class="nav-link dropdown-toggle"
+            <a
+              href="https://www.okmotors.in/inventory.html"
+              class="nav-link dropdown-toggle"
               >Buy Vehicle
               <i
                 class="fa fa-caret-down"
@@ -204,10 +211,16 @@
             data-translate="Sell Your Vehicle"
             >Sell Your Vehicle</a
           >
-          <a href="https://www.okmotors.in/about.html" class="nav-item" data-translate="About Us"
+          <a
+            href="https://www.okmotors.in/about.html"
+            class="nav-item"
+            data-translate="About Us"
             >About Us</a
           >
-          <a href="https://www.okmotors.in/book.html" class="nav-item" data-translate="Book Bike"
+          <a
+            href="https://www.okmotors.in/book.html"
+            class="nav-item"
+            data-translate="Book Bike"
             >Book Vehicle</a
           >
           <a
@@ -216,10 +229,16 @@
             data-translate="Bike Finance"
             >Bike Finance</a
           >
-          <a href="https://www.okmotors.in/updates.html" class="nav-item" data-translate="Updates"
+          <a
+            href="https://www.okmotors.in/updates.html"
+            class="nav-item"
+            data-translate="Updates"
             >Updates</a
           >
-          <a href="https://www.okmotors.in/contact.html" class="nav-item" data-translate="Contact"
+          <a
+            href="https://www.okmotors.in/contact.html"
+            class="nav-item"
+            data-translate="Contact"
             >Contact</a
           >
           <div class="nav-item nav-dropdown" aria-haspopup="true">
@@ -589,8 +608,12 @@
                 engineNumber: vehicle.engineNumber,
                 color: vehicle.color,
                 // Convert ImageKit images array to imageUrl array
-                imageUrl: vehicle.images ? vehicle.images.map(img => img.url) : [],
-                photos: vehicle.images ? vehicle.images.map(img => img.url) : []
+                imageUrl: vehicle.images
+                  ? vehicle.images.map((img) => img.url)
+                  : [],
+                photos: vehicle.images
+                  ? vehicle.images.map((img) => img.url)
+                  : [],
               };
               populateCar(transformed);
             })
@@ -614,7 +637,8 @@
             otherCarsRow.innerHTML = "";
 
             vehicles.forEach((vehicle) => {
-              if (vehicle._id && vehicle._id === (carIdFromQuery() || "")) return;
+              if (vehicle._id && vehicle._id === (carIdFromQuery() || ""))
+                return;
 
               // Get ImageKit image URL
               let imgSrc = "assets/owner.png";
@@ -632,35 +656,46 @@
               }
 
               const statusClass =
-                vehicle.availabilityStatus === "Available" || vehicle.status === "Available"
+                vehicle.availabilityStatus === "Available" ||
+                vehicle.status === "Available"
                   ? "status-available"
-                  : vehicle.availabilityStatus === "Sold Out" || vehicle.status === "Sold Out"
+                  : vehicle.availabilityStatus === "Sold Out" ||
+                    vehicle.status === "Sold Out"
                   ? "status-sold"
-                  : vehicle.availabilityStatus === "Coming Soon" || vehicle.status === "Coming Soon"
+                  : vehicle.availabilityStatus === "Coming Soon" ||
+                    vehicle.status === "Coming Soon"
                   ? "status-coming-soon"
                   : "status-available";
 
-              const ownerText = formatOwnership(vehicle.ownershipNumber || vehicle.ownership || "1");
+              const ownerText = formatOwnership(
+                vehicle.ownershipNumber || vehicle.ownership || "1"
+              );
 
               const card = document.createElement("div");
               card.className = "other-car-card";
               card.innerHTML = `
                 <div class="image-container">
-                  <img src="${imgSrc}" alt="${vehicle.make || vehicle.brand || ""} ${
-                vehicle.model || ""
-              }" class="other-car-img" />
+                  <img src="${imgSrc}" alt="${
+                vehicle.make || vehicle.brand || ""
+              } ${vehicle.model || ""}" class="other-car-img" />
                   <div class="status-badge ${statusClass}" data-translate="${
                 vehicle.availabilityStatus || vehicle.status || "Available"
-              }">${vehicle.availabilityStatus || vehicle.status || "Available"}</div>
+              }">${
+                vehicle.availabilityStatus || vehicle.status || "Available"
+              }</div>
                 </div>
                 <div class="card-content">
                   <h3>${vehicle.make || vehicle.brand || "Unknown Brand"} ${
                 vehicle.model || "Unknown Model"
               }</h3>
-                  <span class="model">${vehicle.year || vehicle.modelYear || "-"} Model</span>
+                  <span class="model">${
+                    vehicle.year || vehicle.modelYear || "-"
+                  } Model</span>
                   <div class="details">
                     <div class="detail-item"><i class="fas fa-tachometer-alt"></i> <span>${(
-                      vehicle.kmsDriven || vehicle.kmDriven || 0
+                      vehicle.kmsDriven ||
+                      vehicle.kmDriven ||
+                      0
                     ).toLocaleString()} km</span></div>
                     <div class="detail-item"><i class="fas fa-user"></i> <span>${ownerText}</span></div>
                     <div class="detail-item"><i class="fas fa-gas-pump"></i> <span>${
@@ -675,10 +710,16 @@
                     ).toLocaleString()}</div>
                     <div class="button-group">
                       <button class="contact-btn" data-translate="Contact Seller" ${
-                        (vehicle.availabilityStatus || vehicle.status) !== "Available" ? "disabled" : ""
+                        (vehicle.availabilityStatus || vehicle.status) !==
+                        "Available"
+                          ? "disabled"
+                          : ""
                       }>Contact Seller</button>
                       <button class="view-details-btn" data-translate="View Details" ${
-                        (vehicle.availabilityStatus || vehicle.status) !== "Available" ? "disabled" : ""
+                        (vehicle.availabilityStatus || vehicle.status) !==
+                        "Available"
+                          ? "disabled"
+                          : ""
                       }>View Details</button>
                     </div>
                   </div>
@@ -1138,7 +1179,8 @@
           if (saved) applyTheme(saved);
           else {
             const prefersDark =
-              window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+              window.matchMedia &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches;
             applyTheme(prefersDark ? "dark" : "light");
           }
         } catch (e) {

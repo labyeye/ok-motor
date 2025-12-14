@@ -556,6 +556,79 @@
         </div>
       </div>
     </section>
+    <section class="services-section">
+      <div class="section-header">
+        <h2>Our Services</h2>
+        <p>Quick and convenient solutions for all your vehicle needs</p>
+      </div>
+
+      <div class="services-grid">
+        <!-- Traffic Challan Payment -->
+        <div class="service-card">
+          <div class="service-row">
+            <div class="service-icon">🚦</div>
+            <div>
+              <h3>Traffic Challan Payment</h3>
+              <p>
+                Pay your traffic challans instantly and securely online. Check
+                pending fines and clear them hassle-free.
+              </p>
+            </div>
+          </div>
+          <button class="service-btn">Pay Now</button>
+        </div>
+
+        <!-- Insurance Portal -->
+        <div class="service-card">
+          <div class="service-row">
+            <div class="service-icon">🛡️</div>
+            <div>
+              <h3>Insurance Portal</h3>
+              <p>
+                Compare and purchase vehicle insurance plans. Renew existing
+                policies with just a few clicks.
+              </p>
+            </div>
+          </div>
+          <button class="service-btn">Get Insured</button>
+        </div>
+
+        <!-- PUC Portal -->
+        <div class="service-card">
+          <div class="service-row">
+            <div class="service-icon">
+              <img
+                src="https://puc.parivahan.gov.in/puc/javax.faces.resource/e-puc-logo.png.xhtml?ln=images"
+                style="width:50px"
+                />
+            </div>
+            <div>
+              <h3>PUC Portal</h3>
+              <p>
+                Get your Pollution Under Control certificate online. Find nearby
+                centers and schedule appointments.
+              </p>
+            </div>
+          </div>
+          <button class="service-btn">Get PUC</button>
+        </div>
+
+        <!-- Service Centers -->
+        <div class="service-card">
+          <div class="service-row">
+            <div class="service-icon">🔧</div>
+            <div>
+              <h3>Vehicle Documentation & Ownership Services</h3>
+              <p>
+                Assistance with vehicle registration, ownership transfer, and
+                other documentation services to keep your vehicle compliant.
+              </p>
+            </div>
+          </div>
+          <button class="service-btn" onclick="location.href='rto-services.html'">Get Assistance</button>
+        </div>
+      </div>
+    </section>
     <section class="styles-section">
       <div class="styles-container">
         <a href="inventory.html?type=bike" class="style-card-link"
@@ -573,10 +646,10 @@
                 Explore our wide range of motorcycles from commuters to sport
                 vehicles.
               </p>
-              <span data-translate="View Vehicles">View Vehicles</span
-              ><i class="fas fa-arrow-right"></i>
-            </div></div
-        ></a>
+              <span data-translate="View Vehicles">View Vehicles</span>
+            </div>
+          </div></a
+        >
         <a href="inventory.html?type=car" class="style-card-link"
           ><div class="style-card">
             <img
@@ -591,19 +664,46 @@
               >
                 Find your perfect pre-owned car from trusted brands.
               </p>
-              <span data-translate="View Cars">View Cars</span
-              ><i class="fas fa-arrow-right"></i>
-            </div></div
-        ></a>
+              <span data-translate="View Cars">View Cars</span>
+            </div>
+          </div></a
+        >
       </div>
     </section>
+    <!-- Featured Cars Section -->
+    <section class="featured-cars-section">
+      <div class="section-header">
+        <h2>Premium Pre-Owned Cars</h2>
+        <span class="section-subtitle"
+          >Quality Certified Cars at Unbeatable Prices</span
+        >
+      </div>
+      <div class="bike-slider-container">
+        <button class="slider-nav prev" aria-label="Previous cars">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="car-slider"></div>
+        <button class="slider-nav next" aria-label="Next cars">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+      <div class="featured-footer" style="text-align: center; margin-top: 18px">
+        <a
+          id="viewAllCarsBtn"
+          class="view-all view-all-count"
+          href="https://www.okmotors.in/inventory.html?type=car"
+          aria-label="View all cars"
+          >View All Cars</a
+        >
+      </div>
+    </section>
+
+    <!-- Featured Bikes Section -->
     <section class="featured-bikes-section">
       <div class="section-header">
-        <h2>Premium Pre-Owned Collection</h2>
-        <span
-          class="section-subtitle"
-          data-translate="Best Second hand vehicle in Bihar"
-          >Quality Certified Vehicles at Unbeatable Prices</span
+        <h2>Premium Pre-Owned Bikes</h2>
+        <span class="section-subtitle"
+          >Quality Certified Bikes at Unbeatable Prices</span
         >
       </div>
       <div class="bike-slider-container">
@@ -619,7 +719,7 @@
         <a
           id="viewAllBikesBtn"
           class="view-all view-all-count"
-          href="https://www.okmotors.in/inventory.html"
+          href="https://www.okmotors.in/inventory.html?type=bike"
           aria-label="View all vehicles"
           >View All</a
         >
@@ -694,13 +794,11 @@
         </div>
       </div>
     </section>
-    <section class="brands-section">
+    <section class="brands-section bikes-brands-section">
       <div class="section-header">
-        <h2 data-translate="Other Brands">Other Brands</h2>
-        <span
-          class="section-subtitle"
-          data-translate="Other Brands second hand vehicle in Muzaffarpur, Bihar"
-          >Other Brands second hand vehicle in Muzaffarpur, Bihar</span
+        <h2 data-translate="Bike Brands">Bike Brands</h2>
+        <span class="section-subtitle" data-translate="Popular bike brands"
+          >Popular bike brands</span
         >
       </div>
       <div class="brands-grid">
@@ -708,158 +806,265 @@
           href="inventory.html?brand=Royal%20Enfield"
           class="brand-card"
           style="text-decoration: none"
-          ><div class="brand-logo">
+        >
+          <div class="brand-logo">
             <img
               src="./assets/images/relogo.png"
               alt="Royal Enfield logo"
               loading="lazy"
             />
           </div>
-          <h3>Royal Enfield</h3></a
-        >
+          <h3>Royal Enfield</h3>
+        </a>
         <a
           href="inventory.html?brand=Bajaj"
           class="brand-card"
           style="text-decoration: none"
-          ><div class="brand-logo">
+        >
+          <div class="brand-logo">
             <img
               src="https://static.vecteezy.com/system/resources/previews/019/766/250/non_2x/bajaj-logo-bajaj-icon-transparent-free-png.png"
               alt="Bajaj logo"
               loading="lazy"
             />
           </div>
-          <h3>Bajaj</h3></a
-        >
+          <h3>Bajaj</h3>
+        </a>
         <a
           href="inventory.html?brand=Hero"
           class="brand-card"
           style="text-decoration: none"
-          ><div class="brand-logo">
+        >
+          <div class="brand-logo">
             <img
               src="https://brandeps.com/logo-download/H/Hero-MotoCorp-logo-01.png"
               alt="Hero logo"
               loading="lazy"
             />
           </div>
-          <h3>Hero</h3></a
-        >
+          <h3>Hero</h3>
+        </a>
         <a
           href="inventory.html?brand=Yamaha"
           class="brand-card"
           style="text-decoration: none"
-          ><div class="brand-logo">
+        >
+          <div class="brand-logo">
             <img
               src="https://brandlogos.net/wp-content/uploads/2014/10/yamaha_3d-logo_brandlogos.net_iwtkb.png"
               alt="Yamaha logo"
               loading="lazy"
             />
           </div>
-          <h3>Yamaha</h3></a
-        >
+          <h3>Yamaha</h3>
+        </a>
         <a
           href="inventory.html?brand=KTM"
           class="brand-card"
           style="text-decoration: none"
-          ><div class="brand-logo">
+        >
+          <div class="brand-logo">
             <img
               src="https://download.logo.wine/logo/KTM/KTM-Logo.wine.png"
               alt="KTM logo"
               loading="lazy"
             />
           </div>
-          <h3>KTM</h3></a
-        >
+          <h3>KTM</h3>
+        </a>
         <a
           href="inventory.html?brand=TVS"
           class="brand-card"
           style="text-decoration: none"
-          ><div class="brand-logo">
+        >
+          <div class="brand-logo">
             <img
               src="https://download.logo.wine/logo/TVS_Motor_Company/TVS_Motor_Company-Logo.wine.png"
               alt="TVS logo"
               loading="lazy"
             />
           </div>
-          <h3>TVS Motor</h3></a
-        >
+          <h3>TVS Motor</h3>
+        </a>
         <a
           href="inventory.html?brand=Honda"
           class="brand-card"
           style="text-decoration: none"
-          ><div class="brand-logo">
+        >
+          <div class="brand-logo">
             <img
               src="https://upload.wikimedia.org/wikipedia/commons/7/7b/Honda_Logo.svg"
               alt="Honda logo"
               loading="lazy"
             />
           </div>
-          <h3>Honda</h3></a
-        >
+          <h3>Honda</h3>
+        </a>
         <a
           href="inventory.html?brand=Suzuki"
           class="brand-card"
           style="text-decoration: none"
-          ><div class="brand-logo">
+        >
+          <div class="brand-logo">
             <img
               src="https://images.seeklogo.com/logo-png/13/2/suzuki-logo-png_seeklogo-134277.png"
               alt="Suzuki logo"
               loading="lazy"
             />
           </div>
-          <h3>Suzuki</h3></a
-        >
+          <h3>Suzuki</h3>
+        </a>
         <a
           href="inventory.html?brand=Jawa"
           class="brand-card"
           style="text-decoration: none"
-          ><div class="brand-logo">
+        >
+          <div class="brand-logo">
             <img
               src="https://1000logos.net/wp-content/uploads/2021/04/Jawa-logo.png"
               alt="Jawa logo"
               loading="lazy"
             />
           </div>
-          <h3>Jawa</h3></a
-        >
-        <a
-          href="inventory.html?brand=BMW"
-          class="brand-card"
-          style="text-decoration: none"
-          ><div class="brand-logo">
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/1200px-BMW.svg.png"
-              alt="Audi logo"
-              loading="lazy"
-            />
-          </div>
-          <h3>BMW</h3></a
-        >
+          <h3>Jawa</h3>
+        </a>
         <a
           href="inventory.html?brand=Harley-Davidson"
           class="brand-card"
           style="text-decoration: none"
-          ><div class="brand-logo">
+        >
+          <div class="brand-logo">
             <img
               src="https://images.seeklogo.com/logo-png/21/2/harley-davidson-logo-png_seeklogo-216797.png"
               alt="Harley-Davidson logo"
               loading="lazy"
             />
           </div>
-          <h3>Harley-Davidson</h3></a
-        >
+          <h3>Harley-Davidson</h3>
+        </a>
         <a
           href="inventory.html?brand=Kawasaki"
           class="brand-card"
           style="text-decoration: none"
-          ><div class="brand-logo">
+        >
+          <div class="brand-logo">
             <img
               src="https://animationvisarts.com/wp-content/uploads/2023/11/image-16-1030x521.png"
               alt="Kawasaki logo"
               loading="lazy"
             />
           </div>
-          <h3>Kawasaki</h3></a
+          <h3>Kawasaki</h3>
+        </a>
+      </div>
+    </section>
+
+    <section class="brands-section cars-brands-section">
+      <div class="section-header">
+        <h2 data-translate="Car Brands">Car Brands</h2>
+        <span class="section-subtitle" data-translate="Popular car brands"
+          >Popular car brands</span
         >
+      </div>
+      <div class="brands-grid">
+        <a
+          href="inventory.html?type=car&brand=Maruti"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/en/thumb/3/39/Maruti_Suzuki_logo.svg/1200px-Maruti_Suzuki_logo.svg.png"
+              alt="Maruti Suzuki logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Maruti</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=Hyundai"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Hyundai_Motor_Company_logo.svg/1200px-Hyundai_Motor_Company_logo.svg.png"
+              alt="Hyundai logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Hyundai</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=Tata"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Tata_Motors_logo.svg/1200px-Tata_Motors_logo.svg.png"
+              alt="Tata logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Tata</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=Mahindra"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Mahindra_logo.svg/1200px-Mahindra_logo.svg.png"
+              alt="Mahindra logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Mahindra</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=Toyota"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Toyota_logo.svg/1200px-Toyota_logo.svg.png"
+              alt="Toyota logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Toyota</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=Honda"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/7/7b/Honda_Logo.svg"
+              alt="Honda logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Honda</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=BMW"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/1200px-BMW.svg.png"
+              alt="BMW logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>BMW</h3>
+        </a>
       </div>
     </section>
     <section class="gallery-section">
@@ -1075,7 +1280,18 @@
     </section> -->
     <section class="testimonials-section">
       <h2 data-translate="What Our Riders Say">What Our Riders Say</h2>
-      <div class="testimonials-container" id="testimonialsContainer"></div>
+      <div class="testimonials-container" id="testimonialsContainer">
+        <div class="reviews-widget" style="width: 100%">
+          <iframe
+            src="https://widgets.sociablekit.com/google-reviews/iframe/25633207"
+            frameborder="0"
+            width="100%"
+            height="100%"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
+      </div>
       <div
         class="testimonial-nav"
         id="testimonialNav"
@@ -1366,21 +1582,6 @@
         );
         const testimonialNav = document.getElementById("testimonialNav");
 
-        function fetchReviews() {
-          fetch(API_BASE + "/api/reviews")
-            .then((res) => res.json())
-            .then((data) => {
-              const reviews =
-                data && data.success && Array.isArray(data.reviews)
-                  ? data.reviews
-                  : Array.isArray(data)
-                  ? data
-                  : [];
-              renderTestimonialsSlider(reviews);
-            })
-            .catch(() => renderTestimonialsSlider([]));
-        }
-
         function createTestimonialEl(r) {
           const div = document.createElement("div");
           div.className = "testimonial";
@@ -1565,7 +1766,6 @@
                     Array.from(starRating.children).forEach((s) =>
                       s.classList.remove("selected")
                     );
-                  fetchReviews();
                 }, 900);
               } else {
                 alert("Failed to submit review.");
@@ -1575,30 +1775,6 @@
         });
 
         // initial load
-        fetchReviews();
-        // update 'View All' with live bike count (falls back to plain "View All" on error)
-        function updateViewAllCount() {
-          try {
-            const btn = document.getElementById("viewAllBikesBtn");
-            if (!btn) return;
-            fetch(API_BASE + "/api/bikes")
-              .then((r) => r.json())
-              .then((data) => {
-                let count = 0;
-                if (data && data.success && Array.isArray(data.bikes))
-                  count = data.bikes.length;
-                else if (Array.isArray(data)) count = data.length;
-                btn.textContent = `View All (${count}) Bikes`;
-                btn.setAttribute("aria-label", `View all bikes (${count})`);
-              })
-              .catch(() => {
-                /* ignore - keep default text */
-              });
-          } catch (e) {
-            /* ignore */
-          }
-        }
-        updateViewAllCount();
         // Prefetch bikes/featured data into localStorage so inventory can read it later
         function prefetchInventoryCache() {
           try {
@@ -1817,7 +1993,6 @@
       });
     </script>
     <script>
-      // Mobile-only dots for Services carousel
       (function () {
         function debounce(fn, wait) {
           let t;

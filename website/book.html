@@ -85,19 +85,53 @@
       }
     </script>
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        var t = document.getElementById('mobileMenuBtn'), n = document.querySelector('.header-nav');
+      document.addEventListener("DOMContentLoaded", function () {
+        var t = document.getElementById("mobileMenuBtn"),
+          n = document.querySelector(".header-nav");
         if (!t || !n) return;
-        function setAria(e) { t.setAttribute('aria-expanded', e ? 'true' : 'false'); }
-        t.addEventListener('click', function (ev) { ev.preventDefault(); var o = n.classList.toggle('open'); setAria(o); document.body.style.overflow = o ? 'hidden' : ''; });
-        n.addEventListener('click', function (ev) {
-          var a = ev.target.closest && ev.target.closest('a'); if (!a) return;
-          var parent = a.closest && a.closest('.nav-dropdown');
-          if (parent && window.innerWidth <= 1024 && (a.classList.contains('dropdown-toggle') || a.classList.contains('nav-link'))) { ev.preventDefault(); parent.classList.toggle('open'); return; }
-          if (window.innerWidth <= 1024) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; }
+        function setAria(e) {
+          t.setAttribute("aria-expanded", e ? "true" : "false");
+        }
+        t.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          var o = n.classList.toggle("open");
+          setAria(o);
+          document.body.style.overflow = o ? "hidden" : "";
         });
-        window.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
-        window.addEventListener('resize', function () { if (window.innerWidth > 1024 && n.classList.contains('open')) { n.classList.remove('open'); setAria(false); document.body.style.overflow = ''; } });
+        n.addEventListener("click", function (ev) {
+          var a = ev.target.closest && ev.target.closest("a");
+          if (!a) return;
+          var parent = a.closest && a.closest(".nav-dropdown");
+          if (
+            parent &&
+            window.innerWidth <= 1024 &&
+            (a.classList.contains("dropdown-toggle") ||
+              a.classList.contains("nav-link"))
+          ) {
+            ev.preventDefault();
+            parent.classList.toggle("open");
+            return;
+          }
+          if (window.innerWidth <= 1024) {
+            n.classList.remove("open");
+            setAria(false);
+            document.body.style.overflow = "";
+          }
+        });
+        window.addEventListener("keydown", function (ev) {
+          if (ev.key === "Escape" && n.classList.contains("open")) {
+            n.classList.remove("open");
+            setAria(false);
+            document.body.style.overflow = "";
+          }
+        });
+        window.addEventListener("resize", function () {
+          if (window.innerWidth > 1024 && n.classList.contains("open")) {
+            n.classList.remove("open");
+            setAria(false);
+            document.body.style.overflow = "";
+          }
+        });
       });
     </script>
   </head>
@@ -121,7 +155,7 @@
     <!-- Sticky Header -->
     <header class="site-header" id="siteHeader">
       <div class="header-container">
-       <a href="https://www.okmotors.in/index.html" class="header-logo">
+        <a href="https://www.okmotors.in/index.html" class="header-logo">
           <img
             src="./assets/images/logoblack.png"
             alt="Ok Motors Logo"
@@ -130,9 +164,11 @@
         </a>
 
         <nav class="header-nav" aria-label="Main navigation">
-         <a href="https://www.okmotors.in/index.html" class="nav-item">Home</a>
+          <a href="https://www.okmotors.in/index.html" class="nav-item">Home</a>
           <div class="nav-item nav-dropdown" aria-haspopup="true">
-            <a href="https://www.okmotors.in/inventory.html" class="nav-link dropdown-toggle"
+            <a
+              href="https://www.okmotors.in/inventory.html"
+              class="nav-link dropdown-toggle"
               >Buy Vehicle
               <i
                 class="fa fa-caret-down"
@@ -190,12 +226,24 @@
               >
             </div>
           </div>
-          <a href="https://www.okmotors.in/sell.html" class="nav-item">Sell Your Vehicle</a>
-          <a href="https://www.okmotors.in/about.html" class="nav-item">About Us</a>
-          <a href="https://www.okmotors.in/book.html" class="nav-item active">Book Vehicle</a>
-          <a href="https://www.okmotors.in/finance.html" class="nav-item">Bike Finance</a>
-          <a href="https://www.okmotors.in/updates.html" class="nav-item">Updates</a>
-          <a href="https://www.okmotors.in/contact.html" class="nav-item">Contact</a>
+          <a href="https://www.okmotors.in/sell.html" class="nav-item"
+            >Sell Your Vehicle</a
+          >
+          <a href="https://www.okmotors.in/about.html" class="nav-item"
+            >About Us</a
+          >
+          <a href="https://www.okmotors.in/book.html" class="nav-item active"
+            >Book Vehicle</a
+          >
+          <a href="https://www.okmotors.in/finance.html" class="nav-item"
+            >Bike Finance</a
+          >
+          <a href="https://www.okmotors.in/updates.html" class="nav-item"
+            >Updates</a
+          >
+          <a href="https://www.okmotors.in/contact.html" class="nav-item"
+            >Contact</a
+          >
           <div class="nav-item nav-dropdown" aria-haspopup="true">
             <a href="#" class="nav-link dropdown-toggle"
               >Vehicle Valuation
@@ -471,7 +519,8 @@
             </div>
             <p>Bringing the future of bike riding to you today.</p>
             <div class="social-icons">
-              <a href="https://www.facebook.com/people/OK-motors-Patna/100092409081953/?rdid=HgY7OAFmgYcvAsoC&share_url=https%253A%252F%252Fwww.facebook.com%252Fshare%252F1BpgmB9Azo%252F"
+              <a
+                href="https://www.facebook.com/people/OK-motors-Patna/100092409081953/?rdid=HgY7OAFmgYcvAsoC&share_url=https%253A%252F%252Fwww.facebook.com%252Fshare%252F1BpgmB9Azo%252F"
                 ><i class="fa-brands fa-facebook-f" style="color: #0400ff"></i
               ></a>
               <a
@@ -495,14 +544,10 @@
                 <a href="https://www.okmotors.in/">Home</a>
               </li>
               <li>
-                <a href="https://www.okmotors.in/inventory.html"
-                  >Buy Bike</a
-                >
+                <a href="https://www.okmotors.in/inventory.html">Buy Bike</a>
               </li>
               <li>
-                <a href="https://www.okmotors.in/sell.html"
-                  >Sell Your Bike</a
-                >
+                <a href="https://www.okmotors.in/sell.html">Sell Your Bike</a>
               </li>
               <li>
                 <a
@@ -530,9 +575,7 @@
             <h3>Resources</h3>
             <ul>
               <li>
-                <a href="https://www.okmotors.in/finance.html"
-                  >Bike Finance</a
-                >
+                <a href="https://www.okmotors.in/finance.html">Bike Finance</a>
               </li>
               <li>
                 <a href="https://www.okmotors.in/locations-bihar.html"
@@ -643,7 +686,9 @@
 
           // Fetch public vehicle listings from the backend and populate the select.
           // The public listings endpoint returns an object: { vehicles, total, page, pages }
-          fetch("https://ok-motor-51l3.vercel.app/api/vehicles/public/listings?limit=200")
+          fetch(
+            "https://ok-motor-51l3.vercel.app/api/vehicles/public/listings?limit=200"
+          )
             .then((response) => response.json())
             .then((data) => {
               const bikes = (data && data.vehicles) || [];

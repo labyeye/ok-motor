@@ -1,4 +1,3 @@
-// ========== STICKY HEADER ===========
 function initStickyHeader() {
   const header = document.getElementById("siteHeader");
   if (!header) return;
@@ -12,22 +11,18 @@ function initStickyHeader() {
   });
 }
 
-// ========== MOBILE MENU ===========
 function initMobileMenu() {
   const mobileBtn = document.getElementById("mobileMenuBtn");
   const headerNav = document.querySelector(".header-nav");
 
   if (mobileBtn && headerNav) {
-    // ensure aria-expanded present
     mobileBtn.setAttribute("aria-expanded", "false");
 
     mobileBtn.addEventListener("click", (ev) => {
       ev.preventDefault();
       const opened = headerNav.classList.toggle("open");
-      // keep backward-compatible class name
       headerNav.classList.toggle("mobile-active", opened);
       mobileBtn.setAttribute("aria-expanded", opened ? "true" : "false");
-      // lock body scroll while open
       document.body.style.overflow = opened ? "hidden" : "";
 
       const icon = mobileBtn.querySelector("i");
@@ -39,7 +34,6 @@ function initMobileMenu() {
   }
 }
 
-// ========== CATEGORY TABS ===========
 function initCategoryTabs() {
   const tabBtns = document.querySelectorAll(".tab-btn");
   tabBtns.forEach((btn) => {
@@ -48,12 +42,10 @@ function initCategoryTabs() {
       this.classList.add("active");
       const tab = this.getAttribute("data-tab");
       console.log("Selected tab:", tab);
-      // Here you can filter bikes by tab category if needed
     });
   });
 }
 
-// ========== FILTER SEARCH ===========
 function initFilterSearch() {
   const searchBtn = document.querySelector(".search-filters-btn");
   if (searchBtn) {
@@ -63,7 +55,6 @@ function initFilterSearch() {
       const budget = document.getElementById("budgetFilter").value;
       const state = document.getElementById("stateFilter").value;
 
-      // Build query params
       const params = new URLSearchParams();
       if (make) params.append("make", make);
       if (model) params.append("model", model);
@@ -75,7 +66,6 @@ function initFilterSearch() {
   }
 }
 
-// ========== INIT ON LOAD ===========
 document.addEventListener("DOMContentLoaded", function () {
   initStickyHeader();
   initMobileMenu();
@@ -84,7 +74,6 @@ document.addEventListener("DOMContentLoaded", function () {
   initNavDropdownToggles();
 });
 
-// Ensure mobile dropdown toggles don't navigate away — toggle submenu in-place
 function initNavDropdownToggles() {
   const headerNav = document.querySelector(".header-nav");
   if (!headerNav) return;
@@ -93,18 +82,15 @@ function initNavDropdownToggles() {
     const a = e.target.closest && e.target.closest("a");
     if (!a) return;
 
-    // on mobile, intercept dropdown toggles and normal links
     if (window.innerWidth <= 1024) {
       const parent = a.closest && a.closest(".nav-dropdown");
 
-      // if it's a dropdown toggle or the primary nav-link, toggle the submenu
       if (parent && (a.classList.contains("dropdown-toggle") || a.classList.contains("nav-link"))) {
         e.preventDefault();
         parent.classList.toggle("open");
         return;
       }
 
-      // otherwise, it's a normal link — close the mobile nav so navigation proceeds
       const mobileBtn = document.getElementById("mobileMenuBtn");
       headerNav.classList.remove("open");
       headerNav.classList.remove("mobile-active");
@@ -242,13 +228,12 @@ function initPreconnect() {
 window.API_BASE = (function () {
   try {
     const host = window.location.hostname;
-    if (host === "localhost")
-      return `${window.location.protocol}//${host}:2500`;
+    if (host === "localhost" || host === "127.0.0.1")
+      return `${window.location.protocol}//${host}:3500`;
   } catch (e) {}
   return "https://ok-motor-51l3.vercel.app";
 })();
 
-// Google Analytics
 window.dataLayer = window.dataLayer || [];
 function gtag() {
   dataLayer.push(arguments);
@@ -256,7 +241,6 @@ function gtag() {
 gtag("js", new Date());
 gtag("config", "G-ETL311CBE6");
 
-// Stats animation
 function animateStatsCounter() {
   const counters = document.querySelectorAll(".stat-number");
   counters.forEach((counter) => {
@@ -531,22 +515,18 @@ const translations = {
 };
 
 function updateMobileMenuTranslations() {
-  document.querySelectorAll(".language-btn").forEach((button) => {
-    button.addEventListener("click", function () {
-      const lang = this.getAttribute("data-lang");
-      translatePage(lang);
-    });
-  });
+  const mobileMenu = document.querySelector(".mobile-menu");
+  if (!mobileMenu) return;
+
   const updateMobileMenu = () => {
-    const mobileMenu = document.querySelector(".mobile-menu");
-    if (!mobileMenu) return;
-    const links = mobileMenu.querySelectorAll("a");
-    if (links[0]) links[0].setAttribute("data-translate", "Home");
-    if (links[1]) links[1].setAttribute("data-translate", "Buy Bike");
-    if (links[2]) links[2].setAttribute("data-translate", "Sell Your Bike");
-    if (links[3]) links[3].setAttribute("data-translate", "About Us");
-    if (links[4]) links[4].setAttribute("data-translate", "Updates");
-    if (links[5]) links[5].setAttribute("data-translate", "Contact");
+    const items = mobileMenu.querySelectorAll(".menu-item");
+    items.forEach((item) => {
+      const key = item.textContent.trim();
+      if (translations.hi[key]) item.setAttribute("data-translate", key);
+    });
+
+    const link = mobileMenu.querySelector(".login-link");
+    if (link) link.setAttribute("data-translate", "Get the Quote");
     const button = mobileMenu.querySelector(".login-btn button");
     if (button) button.setAttribute("data-translate", "Get the Quote");
   };
@@ -554,205 +534,314 @@ function updateMobileMenuTranslations() {
   setTimeout(updateMobileMenu, 500);
 }
 
-// Featured bikes slider
-function initFeaturedBikeSlider() {
+function initFeaturedSliders() {
+  const carSlider = document.querySelector(".car-slider");
   const bikeSlider = document.querySelector(".bike-slider");
-  const prevBtn = document.querySelector(".slider-nav.prev");
-  const nextBtn = document.querySelector(".slider-nav.next");
-  fetchFeaturedBikes();
-  if (prevBtn && bikeSlider)
-    prevBtn.addEventListener("click", () =>
-      bikeSlider.scrollBy({ left: -300, behavior: "smooth" })
-    );
-  if (nextBtn && bikeSlider)
-    nextBtn.addEventListener("click", () =>
-      bikeSlider.scrollBy({ left: 300, behavior: "smooth" })
-    );
-  if (bikeSlider && prevBtn && nextBtn)
-    bikeSlider.addEventListener("scroll", () => {
-      prevBtn.disabled = bikeSlider.scrollLeft <= 10;
-      nextBtn.disabled =
-        bikeSlider.scrollLeft >=
-        bikeSlider.scrollWidth - bikeSlider.clientWidth - 10;
-    });
-}
 
-function fetchFeaturedBikes() {
-  const API_BASE = window.API_BASE || "https://ok-motor-51l3.vercel.app";
-  function normalizeImageUrl(url) {
-    if (!url) return url;
-    if (
-      /^https?:\/\//i.test(url) ||
-      url.startsWith("data:") ||
-      url.startsWith("//")
-    )
-      return url;
-    if (url.startsWith("/")) return API_BASE + url;
-    return API_BASE + "/" + url;
+  if (carSlider) {
+    const carPrevBtn = carSlider.parentElement.querySelector(".slider-nav.prev");
+    const carNextBtn = carSlider.parentElement.querySelector(".slider-nav.next");
+
+    if (carPrevBtn) carPrevBtn.addEventListener("click", () => carSlider.scrollBy({ left: -300, behavior: "smooth" }));
+    if (carNextBtn) carNextBtn.addEventListener("click", () => carSlider.scrollBy({ left: 300, behavior: "smooth" }));
+
+    fetchFeaturedVehicles("Car", carSlider);
   }
 
-  fetch(API_BASE + "/api/config")
-    .then((r) => r.json())
-    .then((cfg) => {
-      const USE_CLOUDINARY = !!(cfg && cfg.success && cfg.cloudinary);
-      return fetch(API_BASE + "/api/featured-bikes").then((response) => {
-        if (!response.ok) throw new Error("Network response was not ok");
-        return response.json().then((data) => ({ data, USE_CLOUDINARY }));
-      });
+  if (bikeSlider) {
+    const bikePrevBtn = bikeSlider.parentElement.querySelector(".slider-nav.prev");
+    const bikeNextBtn = bikeSlider.parentElement.querySelector(".slider-nav.next");
+
+    if (bikePrevBtn) bikePrevBtn.addEventListener("click", () => bikeSlider.scrollBy({ left: -300, behavior: "smooth" }));
+    if (bikeNextBtn) bikeNextBtn.addEventListener("click", () => bikeSlider.scrollBy({ left: 300, behavior: "smooth" }));
+
+    fetchFeaturedVehicles("Bike", bikeSlider);
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function fetchFeaturedVehicles(vehicleType, sliderEl) {
+  const API_BASE = window.API_BASE || "https://ok-motor-51l3.vercel.app";
+
+  function normalizeImages(vehicle) {
+    let images = [];
+
+    if (Array.isArray(vehicle.images) && vehicle.images.length > 0) {
+      images = vehicle.images
+        .map(img => {
+          if (typeof img === 'object' && img.url) return img.url;
+          if (typeof img === 'string') return img;
+          return null;
+        })
+        .filter(url => url && url.trim() !== '');
+    }
+
+    if (images.length === 0 && vehicle.primaryImage) {
+      if (typeof vehicle.primaryImage === 'object' && vehicle.primaryImage.url) {
+        images.push(vehicle.primaryImage.url);
+      } else if (typeof vehicle.primaryImage === 'string' && vehicle.primaryImage.trim() !== '') {
+        images.push(vehicle.primaryImage);
+      }
+    }
+
+    if (images.length === 0 && vehicle.imageUrl) {
+      if (Array.isArray(vehicle.imageUrl)) {
+        images = vehicle.imageUrl.filter(url => url && url.trim() !== '');
+      } else if (typeof vehicle.imageUrl === 'string' && vehicle.imageUrl.trim() !== '') {
+        images.push(vehicle.imageUrl);
+      }
+    }
+
+    return images.length > 0 ? images : ['https://via.placeholder.com/300?text=No+Image'];
+  }
+
+  fetch(`${API_BASE}/api/vehicles/public/listings?limit=8&vehicleType=${vehicleType}`)
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
     })
-    .catch(() =>
-      fetch(API_BASE + "/api/featured-bikes")
-        .then((r) => r.json())
-        .then((data) => ({ data, USE_CLOUDINARY: false }))
-    )
-    .then(({ data, USE_CLOUDINARY }) => {
-      if (data.success && data.data) {
-        const bikes = data.data.map((b) => {
-          const copy = Object.assign({}, b);
-          try {
-            if (Array.isArray(copy.imageUrl)) {
-              copy.imageUrl = copy.imageUrl
-                .map((u) => normalizeImageUrl(u))
-                .filter(
-                  (u) => u && (!USE_CLOUDINARY || /^https?:\/\//i.test(u))
-                );
-            } else if (
-              typeof copy.imageUrl === "string" &&
-              copy.imageUrl.trim() !== ""
-            ) {
-              const nu = normalizeImageUrl(copy.imageUrl);
-              copy.imageUrl =
-                !USE_CLOUDINARY || /^https?:\/\//i.test(nu) ? [nu] : [];
-            } else copy.imageUrl = [];
-          } catch (e) {
-            copy.imageUrl = copy.imageUrl || [];
-          }
-          return copy;
+    .then(data => {
+      if (data.success && data.data && data.data.length > 0) {
+        const vehicles = data.data.map(v => {
+          return {
+            ...v,
+            images: normalizeImages(v)
+          };
         });
-        displayFeaturedBikes(bikes);
-      } else showFeaturedBikesError();
+        displayFeaturedVehicles(vehicles, sliderEl, vehicleType);
+      } else {
+        showFeaturedError(sliderEl, vehicleType, () => fetchFeaturedVehicles(vehicleType, sliderEl));
+      }
     })
-    .catch((error) => {
-      console.error("Error fetching featured bikes:", error);
-      showFeaturedBikesError();
+    .catch(error => {
+      console.error(`Error fetching ${vehicleType}:`, error);
+      showFeaturedError(sliderEl, vehicleType, () => fetchFeaturedVehicles(vehicleType, sliderEl));
     });
 }
 
-function displayFeaturedBikes(bikes) {
-  const bikeSlider = document.querySelector(".bike-slider");
-  bikeSlider.innerHTML = "";
+function displayFeaturedVehicles(items, sliderEl, vehicleType) {
+  sliderEl.innerHTML = "";
 
-  if (!bikes || bikes.length === 0) {
-    bikeSlider.innerHTML = `
-      <div class="no-bikes" style="width: 100%; text-align: center; padding: 40px;">
-        <i class="fas fa-motorcycle" style="font-size: 3rem; color: #ccc;"></i>
-        <p style="margin-top: 15px; color: #666;">No featured bikes available at the moment</p>
-      </div>
-    `;
+  if (!items || items.length === 0) {
+    showFeaturedError(sliderEl, vehicleType, null);
     return;
   }
 
-  bikes.forEach((bike) => {
-    const bikeCard = document.createElement("div");
-    bikeCard.className = "bike-card";
+  items.forEach((vehicle) => {
+    const card = document.createElement("div");
+    card.className = "bike-card";
 
     let statusClass = "status-available";
     let statusText = "Available";
     let isDisabled = false;
 
-    if (bike.status === "Sold Out") {
+    if (vehicle.status === "Sold Out" || vehicle.status === "sold") {
       statusClass = "status-sold";
       statusText = "Sold Out";
       isDisabled = true;
-    } else if (bike.status === "Coming Soon") {
+    } else if (vehicle.status === "Coming Soon") {
       statusClass = "status-coming-soon";
       statusText = "Coming Soon";
       isDisabled = true;
     }
 
-    // Handle image URLs - ensure it's always an array
-    const images = Array.isArray(bike.imageUrl)
-      ? bike.imageUrl.filter((url) => url && url.trim() !== "")
-      : [];
+    const images = vehicle.images || [];
+    const firstImage = images[0] || "https://via.placeholder.com/300?text=No+Image";
+    const photoCount = images.length;
 
-    const firstImage =
-      images.length > 0
-        ? images[0]
-        : "https://via.placeholder.com/300?text=No+Image";
+    const vehicleName = escapeHtml(`${vehicle.brand || ''} ${vehicle.model || ''}`).trim();
+    const carBody = escapeHtml(vehicle.vehicleType || vehicleType || 'Vehicle');
+    const modelYear = escapeHtml(vehicle.modelYear || vehicle.year || 'N/A');
+    const kmDriven = (vehicle.kmDriven || 0).toLocaleString();
+    const ownership = formatOwnership(vehicle.ownership || vehicle.owner || "1");
+    const fuelType = escapeHtml(vehicle.fuelType || 'Petrol');
+    const price = (vehicle.price || 0).toLocaleString();
+    const downPayment = vehicle.downPayment || 0;
+    const emiAmount = Math.round(((vehicle.price || 0) - downPayment) / 36).toLocaleString();
 
-    bikeCard.innerHTML = `
+    card.innerHTML = `
       <div class="image-container">
         <img src="${firstImage}" 
-            alt="${bike.brand} ${bike.model}" 
-            loading="lazy">
+             alt="${vehicleName}" 
+             loading="lazy">
         <div class="status-badge ${statusClass}">${statusText}</div>
+        <div class="photo-count">
+          <i class="fas fa-camera"></i> ${photoCount}
+        </div>
       </div>
       <div class="card-content">
-        <h3>${bike.brand} ${bike.model}</h3>
-        <span class="model">${bike.modelYear || bike.year || "N/A"} Model</span>
+        <div class="car-body">${carBody}</div>
+        <h3>${vehicleName}</h3>
+        <span class="model">${modelYear} Model</span>
         <div class="details">
           <div class="detail-item">
             <i class="fas fa-tachometer-alt"></i>
-            <span>${(bike.kmDriven || 0).toLocaleString()} km</span>
+            <span>${kmDriven} km</span>
           </div>
           <div class="detail-item">
             <i class="fas fa-user"></i>
-            <span>${formatOwnership(bike.ownership || "1")}</span>
+            <span>${ownership}</span>
           </div>
           <div class="detail-item">
             <i class="fas fa-gas-pump"></i>
-            <span>${bike.fuelType || "Petrol"}</span>
-          </div>
-          <div class="detail-item">
-            <i class="fas fa-calendar-alt"></i>
-            <span>${bike.year || bike.modelYear || "N/A"}</span>
+            <span>${fuelType}</span>
           </div>
         </div>
         <div class="price-container">
-          <div class="price">₹${(bike.price || 0).toLocaleString()}</div>
-          <div class="emi">Down: ₹${(
-            bike.downPayment || 0
-          ).toLocaleString()} | EMI: ₹${Math.round(
-      ((bike.price || 0) - (bike.downPayment || 0)) / 36
-    ).toLocaleString()}/month</div>
-          <button class="view-details-btn" ${isDisabled ? "disabled" : ""}>
-            ${isDisabled ? bike.status : "View Details"}
+          <div class="price">₹${price}</div>
+          <div class="emi">EMI: ₹${emiAmount}/month</div>
+          <div class="button-group">
+            <button class="view-btn" ${isDisabled ? "disabled" : ""}>
+              ${isDisabled ? statusText : "View Details"}
+            </button>
+            <button class="contact-btn" ${isDisabled ? "disabled" : ""}>Contact</button>
+          </div>
+        </div>
+        <div class="action-icons">
+          <button class="icon-btn favorite-btn" aria-label="Add to favorites" ${isDisabled ? "disabled" : ""}>
+            <i class="far fa-heart"></i>
+          </button>
+          <button class="icon-btn share-btn" aria-label="Share" ${isDisabled ? "disabled" : ""}>
+            <i class="fas fa-share-alt"></i>
           </button>
         </div>
       </div>
     `;
 
-    bikeSlider.appendChild(bikeCard);
+    sliderEl.appendChild(card);
 
     if (!isDisabled) {
-      bikeCard
-        .querySelector(".view-details-btn")
-        .addEventListener("click", () => {
-          window.location.href = `inventory.html#${bike._id || ""}`;
+      const viewBtn = card.querySelector(".view-btn");
+      const contactBtn = card.querySelector(".contact-btn");
+      const favoriteBtn = card.querySelector(".favorite-btn");
+      const shareBtn = card.querySelector(".share-btn");
+
+      if (viewBtn) {
+        viewBtn.addEventListener("click", () => {
+          window.location.href = `vehicledetail.html?id=${vehicle._id || ""}`;
         });
+      }
+
+      if (contactBtn) {
+        contactBtn.addEventListener("click", () => {
+          window.location.href = `contact.html?vehicle=${encodeURIComponent(vehicleName)}`;
+        });
+      }
+
+      if (favoriteBtn) {
+        favoriteBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          favoriteBtn.classList.toggle("active");
+          const icon = favoriteBtn.querySelector("i");
+          if (icon) {
+            icon.classList.toggle("far");
+            icon.classList.toggle("fas");
+          }
+        });
+      }
+
+      if (shareBtn) {
+        shareBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (navigator.share) {
+            navigator.share({
+              title: vehicleName,
+              text: `Check out this ${vehicleName} for ₹${price}`,
+              url: window.location.href
+            }).catch(err => console.log('Error sharing:', err));
+          } else {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+              alert('Link copied to clipboard!');
+            }).catch(err => console.log('Error copying:', err));
+          }
+        });
+      }
     }
   });
 }
 
-function showFeaturedBikesError() {
-  const bikeSlider = document.querySelector(".bike-slider");
-  bikeSlider.innerHTML = `
-      <div class="error-message" style="width: 100%; text-align: center; padding: 40px;">
-        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: red;"></i>
-        <p style="margin-top: 15px; color: #666;">Failed to load featured bikes. Please try again later.</p>
-        <button onclick="fetchFeaturedBikes()" style="margin-top: 10px; padding: 8px 15px; background: red; color: white; border: none; border-radius: 4px; cursor: pointer;">
-          Retry
+function showFeaturedError(sliderEl, vehicleType, retryFn) {
+  const card = document.createElement("div");
+  card.className = "bike-card";
+  card.style.minWidth = "300px";
+
+  card.innerHTML = `
+    <div class="image-container">
+      <img src="https://via.placeholder.com/300?text=Coming+Soon" 
+           alt="Coming Soon" 
+           loading="lazy"
+           style="opacity: 0.5;">
+      <div class="status-badge status-coming-soon">Coming Soon</div>
+      <div class="photo-count">
+        <i class="fas fa-camera"></i> 0
+      </div>
+    </div>
+    <div class="card-content">
+      <div class="car-body">${vehicleType}</div>
+      <h3>Coming Soon</h3>
+      <span class="model">Stay Tuned</span>
+      <div class="details">
+        <div class="detail-item">
+          <i class="fas fa-tachometer-alt"></i>
+          <span>-</span>
+        </div>
+        <div class="detail-item">
+          <i class="fas fa-user"></i>
+          <span>-</span>
+        </div>
+        <div class="detail-item">
+          <i class="fas fa-gas-pump"></i>
+          <span>-</span>
+        </div>
+      </div>
+      <div class="price-container">
+        <div class="price">-</div>
+        <div class="emi">-</div>
+        <div class="button-group">
+          <button class="view-btn" disabled>Coming Soon</button>
+          <button class="contact-btn" disabled>Contact</button>
+        </div>
+      </div>
+      <div class="action-icons">
+        <button class="icon-btn favorite-btn" aria-label="Add to favorites" disabled>
+          <i class="far fa-heart"></i>
+        </button>
+        <button class="icon-btn share-btn" aria-label="Share" disabled>
+          <i class="fas fa-share-alt"></i>
         </button>
       </div>
+    </div>
+  `;
+
+  sliderEl.innerHTML = "";
+  sliderEl.appendChild(card);
+
+  if (retryFn) {
+    const retryContainer = document.createElement("div");
+    retryContainer.style.cssText = "width: 100%; text-align: center; margin-top: 20px;";
+    retryContainer.innerHTML = `
+      <button onclick="location.reload()" 
+              style="padding: 10px 20px; background: var(--primary-color, #d92b2b); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+        Retry
+      </button>
     `;
+    sliderEl.parentElement.appendChild(retryContainer);
+  }
 }
 
 function formatOwnership(owner) {
   if (owner === "1") return "1st Owner";
   if (owner === "2") return "2nd Owner";
-  if (owner === "3") return "3+ Owner";
+  if (owner === "3" || owner === "3+") return "3+ Owner";
   return owner;
 }
+
 function initModals() {
   const whatsappModal = document.getElementById("whatsappModal");
   const callModal = document.getElementById("callModal");
@@ -865,48 +954,38 @@ function initDarkMode() {
   }
 }
 
-// Mobile Carousel for Choose Your Style
 function initStyleCarousel() {
   const stylesContainer = document.querySelector(".styles-container");
   const styleCards = document.querySelectorAll(".style-card-link");
 
-  // Only initialize carousel on mobile
   if (window.innerWidth > 768 || styleCards.length === 0) return;
 
-  // Create mobile carousel structure
   const mobileContainer = document.createElement("div");
   mobileContainer.className = "styles-container-mobile";
 
-  // Move existing cards to mobile container
   styleCards.forEach((card) => {
     mobileContainer.appendChild(card);
   });
 
-  // Replace original container with mobile version
   stylesContainer.innerHTML = "";
   stylesContainer.appendChild(mobileContainer);
 
-  // Create navigation elements
   const carouselNav = document.createElement("div");
   carouselNav.className = "carousel-nav";
 
-  // Previous arrow
   const prevArrow = document.createElement("button");
   prevArrow.className = "carousel-arrow prev";
   prevArrow.innerHTML = '<i class="fas fa-chevron-left"></i>';
   prevArrow.setAttribute("aria-label", "Previous style");
 
-  // Next arrow
   const nextArrow = document.createElement("button");
   nextArrow.className = "carousel-arrow next";
   nextArrow.innerHTML = '<i class="fas fa-chevron-right"></i>';
   nextArrow.setAttribute("aria-label", "Next style");
 
-  // Dots container
   const dotsContainer = document.createElement("div");
   dotsContainer.className = "carousel-dots";
 
-  // Create dots
   for (let i = 0; i < styleCards.length; i++) {
     const dot = document.createElement("div");
     dot.className = `carousel-dot ${i === 0 ? "active" : ""}`;
@@ -914,33 +993,26 @@ function initStyleCarousel() {
     dotsContainer.appendChild(dot);
   }
 
-  // Assemble navigation
   carouselNav.appendChild(prevArrow);
   carouselNav.appendChild(dotsContainer);
   carouselNav.appendChild(nextArrow);
 
-  // Add navigation to container
   stylesContainer.appendChild(carouselNav);
 
-  // Carousel state
   let currentIndex = 0;
   const totalSlides = styleCards.length;
 
-  // Update carousel position
   function updateCarousel() {
     mobileContainer.style.transform = `translateX(-${currentIndex * 100}%)`;
 
-    // Update dots
     document.querySelectorAll(".carousel-dot").forEach((dot, index) => {
       dot.classList.toggle("active", index === currentIndex);
     });
 
-    // Update arrow states
     prevArrow.disabled = currentIndex === 0;
     nextArrow.disabled = currentIndex === totalSlides - 1;
   }
 
-  // Next slide
   function nextSlide() {
     if (currentIndex < totalSlides - 1) {
       currentIndex++;
@@ -948,7 +1020,6 @@ function initStyleCarousel() {
     }
   }
 
-  // Previous slide
   function prevSlide() {
     if (currentIndex > 0) {
       currentIndex--;
@@ -956,24 +1027,20 @@ function initStyleCarousel() {
     }
   }
 
-  // Go to specific slide
   function goToSlide(index) {
     currentIndex = index;
     updateCarousel();
   }
 
-  // Event listeners
   nextArrow.addEventListener("click", nextSlide);
   prevArrow.addEventListener("click", prevSlide);
 
-  // Dot click events
   document.querySelectorAll(".carousel-dot").forEach((dot) => {
     dot.addEventListener("click", function () {
       goToSlide(parseInt(this.dataset.index));
     });
   });
 
-  // Swipe support for touch devices
   let startX = 0;
   let currentX = 0;
 
@@ -998,7 +1065,6 @@ function initStyleCarousel() {
     }
   });
 
-  // Initialize
   updateCarousel();
 }
 
@@ -1022,7 +1088,7 @@ function init() {
   updateMobileMenuTranslations();
   initLazyLoading();
   initPreconnect();
-  initFeaturedBikeSlider();
+  initFeaturedSliders();
   initStatsObserver();
   initModals();
   initDarkMode();

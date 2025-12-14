@@ -34,6 +34,7 @@ import {
   FileText,
   Menu,
   X,
+  Image,
   Settings,
   RefreshCw,
 } from "lucide-react";

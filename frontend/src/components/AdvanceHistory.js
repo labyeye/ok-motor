@@ -19,6 +19,7 @@ import {
   X,
   Settings,
   RefreshCw,
+  Image,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";

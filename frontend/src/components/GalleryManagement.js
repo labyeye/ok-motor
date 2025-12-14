@@ -16,7 +16,6 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  GripVertical,
   X,
   Menu,
   Settings,
