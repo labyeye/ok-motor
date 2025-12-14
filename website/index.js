@@ -969,10 +969,6 @@ function initStyleCarousel() {
 
   stylesContainer.innerHTML = "";
   stylesContainer.appendChild(mobileContainer);
-
-  const carouselNav = document.createElement("div");
-  carouselNav.className = "carousel-nav";
-
   const prevArrow = document.createElement("button");
   prevArrow.className = "carousel-arrow prev";
   prevArrow.innerHTML = '<i class="fas fa-chevron-left"></i>';
