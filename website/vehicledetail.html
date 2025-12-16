@@ -110,7 +110,6 @@
     />
   </head>
   <body itemscope itemtype="https://schema.org/WebPage">
-    <!-- Top banner (contact + social) -->
     <div class="top-banner" id="topBanner" role="banner">
       <div class="top-banner-container">
         <div class="top-banner-left">
@@ -126,7 +125,6 @@
       </div>
     </div>
 
-    <!-- Sticky Header -->
     <header class="site-header" id="siteHeader">
       <div class="header-container">
         <a href="https://www.okmotors.in/index.html" class="header-logo">
@@ -138,12 +136,7 @@
         </a>
 
         <nav class="header-nav" aria-label="Main navigation">
-          <a
-            href="https://www.okmotors.in/index.html"
-            class="nav-item"
-            data-translate="Home"
-            >Home</a
-          >
+          <a href="https://www.okmotors.in/index.html" class="nav-item">Home</a>
           <div class="nav-item nav-dropdown" aria-haspopup="true">
             <a
               href="https://www.okmotors.in/inventory.html"
@@ -205,40 +198,22 @@
               >
             </div>
           </div>
-          <a
-            href="https://www.okmotors.in/book.html"
-            class="nav-item"
-            data-translate="Sell Your Vehicle"
+          <a href="https://www.okmotors.in/book.html" class="nav-item"
             >Sell Your Vehicle</a
           >
-          <a
-            href="https://www.okmotors.in/about.html"
-            class="nav-item"
-            data-translate="About Us"
+          <a href="https://www.okmotors.in/about.html" class="nav-item"
             >About Us</a
           >
-          <a
-            href="https://www.okmotors.in/book.html"
-            class="nav-item"
-            data-translate="Book Bike"
+          <a href="https://www.okmotors.in/book.html" class="nav-item"
             >Book Vehicle</a
           >
-          <a
-            href="https://www.okmotors.in/finance.html"
-            class="nav-item"
-            data-translate="Bike Finance"
+          <a href="https://www.okmotors.in/finance.html" class="nav-item"
             >Bike Finance</a
           >
-          <a
-            href="https://www.okmotors.in/updates.html"
-            class="nav-item"
-            data-translate="Updates"
+          <a href="https://www.okmotors.in/updates.html" class="nav-item"
             >Updates</a
           >
-          <a
-            href="https://www.okmotors.in/contact.html"
-            class="nav-item"
-            data-translate="Contact"
+          <a href="https://www.okmotors.in/contact.html" class="nav-item"
             >Contact</a
           >
           <div class="nav-item nav-dropdown" aria-haspopup="true">
@@ -263,7 +238,6 @@
               >
             </div>
           </div>
-          <!-- Vehicle Valuation dropdown -->
         </nav>
 
         <div class="header-actions">
@@ -678,9 +652,7 @@
                   <img src="${imgSrc}" alt="${
                 vehicle.make || vehicle.brand || ""
               } ${vehicle.model || ""}" class="other-car-img" />
-                  <div class="status-badge ${statusClass}" data-translate="${
-                vehicle.availabilityStatus || vehicle.status || "Available"
-              }">${
+                  <div class="status-badge ${statusClass}">${
                 vehicle.availabilityStatus || vehicle.status || "Available"
               }</div>
                 </div>
@@ -709,13 +681,13 @@
                       0
                     ).toLocaleString()}</div>
                     <div class="button-group">
-                      <button class="contact-btn" data-translate="Contact Seller" ${
+                      <button class="contact-btn" ${
                         (vehicle.availabilityStatus || vehicle.status) !==
                         "Available"
                           ? "disabled"
                           : ""
                       }>Contact Seller</button>
-                      <button class="view-details-btn" data-translate="View Details" ${
+                      <button class="view-details-btn" ${
                         (vehicle.availabilityStatus || vehicle.status) !==
                         "Available"
                           ? "disabled"
@@ -936,43 +908,43 @@
       <li>
         <a href="index.html"  aria-current="page">
           <i class="fas fa-home"></i> 
-          <span data-translate="Home">Home</span>
+          <span>Home</span>
         </a>
       </li>
       <li>
         <a href="inventory.html">
           <i class="fas fa-motorcycle"></i> 
-          <span data-translate="Buy Car">Buy Car</span>
+          <span>Buy Car</span>
         </a>
       </li>
       <li>
         <a href="sell.html">
           <i class="fas fa-dollar-sign"></i>
-          <span data-translate="Sell Your Car">Sell Your Car</span>
+          <span>Sell Your Car</span>
         </a>
       </li>
       <li>
         <a href="about.html">
           <i class="fas fa-info-circle"></i>
-          <span data-translate="About Us">About Us</span>
+          <span>About Us</span>
         </a>
       </li>
       <li>
         <a href="#" class="updates-link">
           <i class="fas fa-bell"></i> 
-          <span data-translate="Updates">Updates</span>
+          <span>Updates</span>
         </a>
       </li>
       <li>
         <a href="contact.html">
           <i class="fas fa-envelope"></i>
-          <span data-translate="Contact">Contact</span>
+          <span>Contact</span>
         </a>
       </li>
     </ul>
     <div class="login-btn">
       <a href="/getquote.html">
-        <button aria-label="Get a quote for your Car" data-translate="Get the Quote">
+        <button aria-label="Get a quote for your Car">
           Get the Quote
         </button>
       </a>

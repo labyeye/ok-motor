@@ -1,0 +1,290 @@
+{
+  "brands": [
+    {
+      "make": "Maruti",
+      "models": [
+        "Alto",
+        "Swift",
+        "Wagon R",
+        "Baleno",
+        "Dzire",
+        "Vitara Brezza",
+        "Ertiga",
+        "Ciaz",
+        "S-Cross",
+        "XL6",
+        "Fronx",
+        "Grand Vitara",
+        "Jimny"
+      ],
+      "bodyTypes": ["hatchback", "sedan", "suv", "muv", "compact"],
+      "keywords": [
+        "maruti",
+        "suzuki",
+        "maruti suzuki",
+        "swift",
+        "alto",
+        "wagon r",
+        "baleno",
+        "dzire",
+        "brezza",
+        "ertiga"
+      ]
+    },
+    {
+      "make": "Hyundai",
+      "models": [
+        "i10",
+        "i20",
+        "Grand i10 Nios",
+        "Aura",
+        "Verna",
+        "Venue",
+        "Creta",
+        "Alcazar",
+        "Tucson",
+        "Exter",
+        "Ioniq 5"
+      ],
+      "bodyTypes": ["hatchback", "sedan", "suv", "compact"],
+      "keywords": [
+        "hyundai",
+        "i10",
+        "i20",
+        "creta",
+        "venue",
+        "verna",
+        "alcazar",
+        "tucson",
+        "exter"
+      ]
+    },
+    {
+      "make": "Tata",
+      "models": [
+        "Tiago",
+        "Tigor",
+        "Altroz",
+        "Punch",
+        "Nexon",
+        "Harrier",
+        "Safari",
+        "Thar",
+        "Nexon EV",
+        "Tigor EV"
+      ],
+      "bodyTypes": ["hatchback", "sedan", "suv", "compact"],
+      "keywords": [
+        "tata",
+        "tiago",
+        "tigor",
+        "altroz",
+        "nexon",
+        "harrier",
+        "safari",
+        "punch",
+        "ev",
+        "electric"
+      ]
+    },
+    {
+      "make": "Mahindra",
+      "models": [
+        "Thar",
+        "Scorpio",
+        "Scorpio-N",
+        "XUV300",
+        "XUV700",
+        "XUV400",
+        "Bolero",
+        "Bolero Neo",
+        "Marazzo"
+      ],
+      "bodyTypes": ["suv", "muv"],
+      "keywords": [
+        "mahindra",
+        "thar",
+        "scorpio",
+        "xuv",
+        "bolero",
+        "marazzo",
+        "suv"
+      ]
+    },
+    {
+      "make": "Toyota",
+      "models": [
+        "Glanza",
+        "Urban Cruiser Hyryder",
+        "Innova Crysta",
+        "Innova Hycross",
+        "Fortuner",
+        "Camry",
+        "Vellfire",
+        "Hilux",
+        "Land Cruiser"
+      ],
+      "bodyTypes": ["hatchback", "suv", "muv", "sedan", "luxury"],
+      "keywords": [
+        "toyota",
+        "innova",
+        "fortuner",
+        "glanza",
+        "hyryder",
+        "camry",
+        "land cruiser",
+        "hilux"
+      ]
+    },
+    {
+      "make": "Honda",
+      "models": ["Amaze", "City", "City Hybrid", "Elevate", "CR-V"],
+      "bodyTypes": ["sedan", "suv"],
+      "keywords": ["honda", "amaze", "city", "elevate", "cr-v", "crv"]
+    },
+    {
+      "make": "Kia",
+      "models": ["Sonet", "Seltos", "Carens", "Carnival", "EV6"],
+      "bodyTypes": ["suv", "muv", "compact"],
+      "keywords": [
+        "kia",
+        "sonet",
+        "seltos",
+        "carens",
+        "carnival",
+        "ev6",
+        "electric"
+      ]
+    },
+    {
+      "make": "Renault",
+      "models": ["Kwid", "Triber", "Kiger", "Duster"],
+      "bodyTypes": ["hatchback", "suv", "muv", "compact"],
+      "keywords": ["renault", "kwid", "triber", "kiger", "duster"]
+    },
+    {
+      "make": "Nissan",
+      "models": ["Magnite", "Kicks", "X-Trail"],
+      "bodyTypes": ["suv", "compact"],
+      "keywords": ["nissan", "magnite", "kicks", "x-trail", "xtrail"]
+    },
+    {
+      "make": "Volkswagen",
+      "models": ["Polo", "Vento", "Virtus", "Taigun", "Tiguan"],
+      "bodyTypes": ["hatchback", "sedan", "suv"],
+      "keywords": [
+        "volkswagen",
+        "vw",
+        "polo",
+        "vento",
+        "virtus",
+        "taigun",
+        "tiguan"
+      ]
+    },
+    {
+      "make": "Skoda",
+      "models": ["Slavia", "Kushaq", "Kodiaq", "Superb", "Octavia"],
+      "bodyTypes": ["sedan", "suv", "luxury"],
+      "keywords": ["skoda", "slavia", "kushaq", "kodiaq", "superb", "octavia"]
+    },
+    {
+      "make": "MG",
+      "models": ["Hector", "Astor", "Gloster", "ZS EV", "Comet EV"],
+      "bodyTypes": ["suv"],
+      "keywords": [
+        "mg",
+        "morris garages",
+        "hector",
+        "astor",
+        "gloster",
+        "zs",
+        "comet",
+        "ev",
+        "electric"
+      ]
+    },
+    {
+      "make": "Ford",
+      "models": ["EcoSport", "Endeavour", "Figo", "Aspire"],
+      "bodyTypes": ["suv", "hatchback", "sedan", "compact"],
+      "keywords": ["ford", "ecosport", "endeavour", "figo", "aspire"]
+    },
+    {
+      "make": "Jeep",
+      "models": ["Compass", "Meridian", "Wrangler", "Grand Cherokee"],
+      "bodyTypes": ["suv", "luxury"],
+      "keywords": ["jeep", "compass", "meridian", "wrangler", "grand cherokee"]
+    },
+    {
+      "make": "Mercedes-Benz",
+      "models": [
+        "A-Class",
+        "C-Class",
+        "E-Class",
+        "S-Class",
+        "GLA",
+        "GLC",
+        "GLE",
+        "GLS"
+      ],
+      "bodyTypes": ["sedan", "suv", "luxury"],
+      "keywords": [
+        "mercedes",
+        "benz",
+        "mercedes-benz",
+        "a class",
+        "c class",
+        "e class",
+        "s class",
+        "gla",
+        "glc",
+        "gle",
+        "gls"
+      ]
+    },
+    {
+      "make": "BMW",
+      "models": [
+        "2 Series",
+        "3 Series",
+        "5 Series",
+        "7 Series",
+        "X1",
+        "X3",
+        "X5",
+        "X7"
+      ],
+      "bodyTypes": ["sedan", "suv", "luxury"],
+      "keywords": [
+        "bmw",
+        "2 series",
+        "3 series",
+        "5 series",
+        "7 series",
+        "x1",
+        "x3",
+        "x5",
+        "x7"
+      ]
+    },
+    {
+      "make": "Audi",
+      "models": ["A3", "A4", "A6", "A8", "Q3", "Q5", "Q7", "Q8", "e-tron"],
+      "bodyTypes": ["sedan", "suv", "luxury"],
+      "keywords": [
+        "audi",
+        "a3",
+        "a4",
+        "a6",
+        "a8",
+        "q3",
+        "q5",
+        "q7",
+        "q8",
+        "etron",
+        "e-tron"
+      ]
+    }
+  ]
+}

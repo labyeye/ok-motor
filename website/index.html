@@ -10,7 +10,7 @@
       name="keywords"
       content="used vehicles India, second hand vehicles, pre-owned motorcycles, pre-owned cars, sell vehicle online, buy vehicle India, certified used vehicles, inspected used motorcycles, 150-point inspection, warranty, KTM, Royal Enfield, Suzuki, Yamaha, Honda, Bajaj, TVS, Hero, Jawa, Harley-Davidson, Kawasaki, Maruti, Hyundai, Tata, Mahindra, Toyota, BMW, bike finance, vehicle valuation, PUC certificate, insurance portal, tax challan payment, RTO services, vehicle documentation, service bills, sell bike, buy used bike, premium pre-owned motorcycles, certified bikes, inspected cars, used car valuation, used bike Patna, used car Patna, second hand bike Bihar, second hand car Bihar, buy second hand motorcycle, sell second hand car, online vehicle valuation, instant vehicle valuation, sell my bike online, sell my car online, bike loan, car loan, two wheeler EMI, used motorcycle inspection, certified pre-owned cars, certified pre-owned bikes, exchange old bike, bike exchange, vehicle insurance renewal, PUC online, tax challan payment online, RTO assistance Patna, vehicle RC transfer, pre owned KTM, pre owned Royal Enfield"
     />
-    <meta name="theme-color" content="#d92b2b" />
+    <meta name="theme-color" content="#1C7947" />
     <link
       rel="alternate"
       href="https://www.okmotors.in/index.html"
@@ -411,7 +411,7 @@
       .mobile-action-banner {
         display: none;
         width: 100%;
-        background: #d92b2b;
+        background: #1c7947;
         align-items: center;
         z-index: 500;
         transform: translateY(-30px);
@@ -437,7 +437,7 @@
         font-size: 14px;
       }
       .mobile-search-btn {
-        background: var(--primary-color, #d92b2b);
+        background: var(--primary-color, #1c7947);
         color: #fff;
         border: none;
         padding: 8px 10px;
@@ -470,6 +470,36 @@
         .mobile-search-bar {
           display: block;
         }
+      }
+
+      .service-card.bg-cover {
+        color: #fff;
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+      }
+      .service-card .service-row {
+        position: relative;
+        z-index: 2;
+      }
+      .service-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgb(34, 34, 34);
+        opacity: 0.9;
+        z-index: 1;
+        pointer-events: none;
+        transition: opacity 180ms ease;
+      }
+      .service-card .service-btn {
+        background: rgba(255, 255, 255, 0.9);
+        color: #222;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
       }
     </style>
 
@@ -520,12 +550,11 @@
       <div class="hero-container">
         <div class="hero-content">
           <span class="hero-label">India's Trusted Vehicle Portal</span>
-          >
+
           <h1 itemprop="headline">
             <span class="hero-title-line1">Find Your</span>
-            >
+
             <span class="hero-title-line2">Dream Vehicle</span>
-            >
           </h1>
           <p class="hero-subtitle">
             Ride into freedom with the vehicle you've always wanted
@@ -535,8 +564,8 @@
     </section>
     <section class="category-filter-section">
       <div class="category-tabs">
-        <button class="tab-btn active" data-tab="new">Car</button>
-        <button class="tab-btn" data-tab="used">Bikes</button>
+        <button class="tab-btn" data-tab="car">Car</button>
+        <button class="tab-btn active" data-tab="bike">Bikes</button>
       </div>
       <div class="filter-panel">
         <div class="filter-row">
@@ -544,29 +573,30 @@
             <label for="makeFilter">Make</label
             ><select id="makeFilter" class="filter-select">
               <option value="">Select Make</option>
-              <option value="ktm">KTM</option>
-              <option value="royal-enfield">Royal Enfield</option>
-              <option value="suzuki">Suzuki</option>
-              <option value="yamaha">Yamaha</option>
-              <option value="honda">Honda</option>
-              <option value="bajaj">Bajaj</option>
-              <option value="tvs">TVS</option>
             </select>
           </div>
           <div class="filter-card">
             <label for="modelFilter">Model</label
             ><select id="modelFilter" class="filter-select">
               <option value="">Select Model</option>
+              <!-- Options will be populated based on selected make -->
             </select>
           </div>
           <div class="filter-card">
             <label for="bodyFilter">Body</label
             ><select id="bodyFilter" class="filter-select">
               <option value="">Any Body</option>
-              <option value="cruiser">Cruiser</option>
-              <option value="sport">Sport</option>
-              <option value="commuter">Commuter</option>
-              <option value="scooter">Scooter</option>
+              <!-- Options will be populated dynamically from JSON -->
+              <option value="scooter" data-type="bike">Scooter</option>
+              <option value="touring" data-type="bike">Touring</option>
+              <option value="adventure" data-type="bike">Adventure</option>
+              <!-- Car Body Types -->
+              <option value="sedan" data-type="car">Sedan</option>
+              <option value="suv" data-type="car">SUV</option>
+              <option value="hatchback" data-type="car">Hatchback</option>
+              <option value="muv" data-type="car">MUV</option>
+              <option value="compact" data-type="car">Compact</option>
+              <option value="luxury" data-type="car">Luxury</option>
             </select>
           </div>
         </div>
@@ -603,7 +633,10 @@
 
       <div class="services-grid">
         <!-- Traffic Challan Payment -->
-        <div class="service-card">
+        <div
+          class="service-card"
+          data-bg="https://media.wired.com/photos/593257829be5e55af6c24476/3:2/w_2560%2Cc_limit/trafficlight-inline.jpg"
+        >
           <div class="service-row">
             <div class="service-icon">🚦</div>
             <div>
@@ -623,7 +656,10 @@
         </div>
 
         <!-- Insurance Portal -->
-        <div class="service-card">
+        <div
+          class="service-card"
+          data-bg="https://cdn-ilbompl.nitrocdn.com/ekftxraLRFUYZcKnOWazVKzvpTyQONCM/assets/images/optimized/rev-c7e58e4/myrealestate.in/storage/2021/10/home-insurance-myrealestate.jpg"
+        >
           <div class="service-row">
             <div class="service-icon">🛡️</div>
             <div>
@@ -640,7 +676,10 @@
         </div>
 
         <!-- PUC Portal -->
-        <div class="service-card">
+        <div
+          class="service-card"
+          data-bg="https://d3jbu7vaxvlagf.cloudfront.net/small/v2/category_media/basic_img_16883749037126.jpg"
+        >
           <div class="service-row">
             <div class="service-icon">
               <img
@@ -663,7 +702,10 @@
           </button>
         </div>
 
-        <div class="service-card">
+        <div
+          class="service-card"
+          data-bg="https://www.reliancegeneral.co.in/SiteAssets/RgiclAssets/images/blogs-images/rc-transfer-how-to-transfer-vehicle-ownership.webp"
+        >
           <div class="service-row">
             <div class="service-icon">🔧</div>
             <div>
@@ -721,8 +763,8 @@
     <!-- Featured Cars Section -->
     <section class="featured-cars-section">
       <div class="section-header">
-        <h2>Premium Pre-Owned Cars</h2>
-        <span class="section-subtitle"
+        <h2 style="color: black;">Premium Pre-Owned Cars</h2>
+        <span class="section-subtitle" style="color: black;"
           >Quality Certified Cars at Unbeatable Prices</span
         >
       </div>
@@ -781,7 +823,7 @@
       </div>
       <div class="brands-grid">
         <a
-          href="inventory.html?brand=Royal%20Enfield"
+          href="inventory.html?type=bike&brand=Royal%20Enfield"
           class="brand-card"
           style="text-decoration: none"
         >
@@ -795,13 +837,13 @@
           <h3>Royal Enfield</h3>
         </a>
         <a
-          href="inventory.html?brand=Bajaj"
+          href="inventory.html?type=bike&brand=Bajaj"
           class="brand-card"
           style="text-decoration: none"
         >
           <div class="brand-logo">
             <img
-              src="https://static.vecteezy.com/system/resources/previews/019/766/250/non_2x/bajaj-logo-bajaj-icon-transparent-free-png.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/7/70/Bajaj_Auto_logo.svg"
               alt="Bajaj logo"
               loading="lazy"
             />
@@ -809,13 +851,13 @@
           <h3>Bajaj</h3>
         </a>
         <a
-          href="inventory.html?brand=Hero"
+          href="inventory.html?type=bike&brand=Hero"
           class="brand-card"
           style="text-decoration: none"
         >
           <div class="brand-logo">
             <img
-              src="https://brandeps.com/logo-download/H/Hero-MotoCorp-logo-01.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/9/90/Hero_Motocorp_logo.svg"
               alt="Hero logo"
               loading="lazy"
             />
@@ -823,13 +865,13 @@
           <h3>Hero</h3>
         </a>
         <a
-          href="inventory.html?brand=Yamaha"
+          href="inventory.html?type=bike&brand=Yamaha"
           class="brand-card"
           style="text-decoration: none"
         >
           <div class="brand-logo">
             <img
-              src="https://brandlogos.net/wp-content/uploads/2014/10/yamaha_3d-logo_brandlogos.net_iwtkb.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/4/4d/Yamaha_logo.svg"
               alt="Yamaha logo"
               loading="lazy"
             />
@@ -837,13 +879,13 @@
           <h3>Yamaha</h3>
         </a>
         <a
-          href="inventory.html?brand=KTM"
+          href="inventory.html?type=bike&brand=KTM"
           class="brand-card"
           style="text-decoration: none"
         >
           <div class="brand-logo">
             <img
-              src="https://download.logo.wine/logo/KTM/KTM-Logo.wine.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/7/7e/KTM_logo.svg"
               alt="KTM logo"
               loading="lazy"
             />
@@ -851,21 +893,21 @@
           <h3>KTM</h3>
         </a>
         <a
-          href="inventory.html?brand=TVS"
+          href="inventory.html?type=bike&brand=TVS"
           class="brand-card"
           style="text-decoration: none"
         >
           <div class="brand-logo">
             <img
-              src="https://download.logo.wine/logo/TVS_Motor_Company/TVS_Motor_Company-Logo.wine.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/5/5f/TVS_Motor_Company_logo.svg"
               alt="TVS logo"
               loading="lazy"
             />
           </div>
-          <h3>TVS Motor</h3>
+          <h3>TVS</h3>
         </a>
         <a
-          href="inventory.html?brand=Honda"
+          href="inventory.html?type=bike&brand=Honda"
           class="brand-card"
           style="text-decoration: none"
         >
@@ -879,13 +921,13 @@
           <h3>Honda</h3>
         </a>
         <a
-          href="inventory.html?brand=Suzuki"
+          href="inventory.html?type=bike&brand=Suzuki"
           class="brand-card"
           style="text-decoration: none"
         >
           <div class="brand-logo">
             <img
-              src="https://images.seeklogo.com/logo-png/13/2/suzuki-logo-png_seeklogo-134277.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/4/45/Suzuki_logo.svg"
               alt="Suzuki logo"
               loading="lazy"
             />
@@ -893,27 +935,28 @@
           <h3>Suzuki</h3>
         </a>
         <a
-          href="inventory.html?brand=Jawa"
+          href="inventory.html?type=bike&brand=Jawa"
           class="brand-card"
           style="text-decoration: none"
         >
           <div class="brand-logo">
             <img
-              src="https://1000logos.net/wp-content/uploads/2021/04/Jawa-logo.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/1/14/Jawa_logo.svg"
               alt="Jawa logo"
               loading="lazy"
+              onerror="this.style.display='none'"
             />
           </div>
           <h3>Jawa</h3>
         </a>
         <a
-          href="inventory.html?brand=Harley-Davidson"
+          href="inventory.html?type=bike&brand=Harley-Davidson"
           class="brand-card"
           style="text-decoration: none"
         >
           <div class="brand-logo">
             <img
-              src="https://images.seeklogo.com/logo-png/21/2/harley-davidson-logo-png_seeklogo-216797.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/4/44/Harley-Davidson_logo.svg"
               alt="Harley-Davidson logo"
               loading="lazy"
             />
@@ -921,18 +964,60 @@
           <h3>Harley-Davidson</h3>
         </a>
         <a
-          href="inventory.html?brand=Kawasaki"
+          href="inventory.html?type=bike&brand=Kawasaki"
           class="brand-card"
           style="text-decoration: none"
         >
           <div class="brand-logo">
             <img
-              src="https://animationvisarts.com/wp-content/uploads/2023/11/image-16-1030x521.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/5/5b/Kawasaki_logo.svg"
               alt="Kawasaki logo"
               loading="lazy"
             />
           </div>
           <h3>Kawasaki</h3>
+        </a>
+        <a
+          href="inventory.html?type=bike&brand=Ducati"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/7/76/Ducati_logo.svg"
+              alt="Ducati logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Ducati</h3>
+        </a>
+        <a
+          href="inventory.html?type=bike&brand=Triumph"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/8/89/Triumph_Motorcycles_logo.svg"
+              alt="Triumph logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Triumph</h3>
+        </a>
+        <a
+          href="inventory.html?type=bike&brand=BMW"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/4/44/BMW.svg"
+              alt="BMW logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>BMW</h3>
         </a>
       </div>
     </section>
@@ -950,7 +1035,7 @@
         >
           <div class="brand-logo">
             <img
-              src="https://upload.wikimedia.org/wikipedia/en/thumb/3/39/Maruti_Suzuki_logo.svg/1200px-Maruti_Suzuki_logo.svg.png"
+              src="https://upload.wikimedia.org/wikipedia/en/3/39/Maruti_Suzuki_logo.svg"
               alt="Maruti Suzuki logo"
               loading="lazy"
             />
@@ -964,7 +1049,7 @@
         >
           <div class="brand-logo">
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Hyundai_Motor_Company_logo.svg/1200px-Hyundai_Motor_Company_logo.svg.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/3/36/Hyundai_Motor_Company_logo.svg"
               alt="Hyundai logo"
               loading="lazy"
             />
@@ -978,7 +1063,7 @@
         >
           <div class="brand-logo">
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Tata_Motors_logo.svg/1200px-Tata_Motors_logo.svg.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Tata_Motors_logo.svg"
               alt="Tata logo"
               loading="lazy"
             />
@@ -992,7 +1077,7 @@
         >
           <div class="brand-logo">
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Mahindra_logo.svg/1200px-Mahindra_logo.svg.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/3/3b/Mahindra_logo.svg"
               alt="Mahindra logo"
               loading="lazy"
             />
@@ -1006,7 +1091,7 @@
         >
           <div class="brand-logo">
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Toyota_logo.svg/1200px-Toyota_logo.svg.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/9/9d/Toyota_logo.svg"
               alt="Toyota logo"
               loading="lazy"
             />
@@ -1028,25 +1113,166 @@
           <h3>Honda</h3>
         </a>
         <a
+          href="inventory.html?type=car&brand=Kia"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/5/56/Kia_logo.svg"
+              alt="Kia logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Kia</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=Renault"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/7/77/Renault_2021_logo.svg"
+              alt="Renault logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Renault</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=Nissan"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/1/12/Nissan_logo.svg"
+              alt="Nissan logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Nissan</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=Volkswagen"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Volkswagen_logo_2019.svg"
+              alt="Volkswagen logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Volkswagen</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=Skoda"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/8/81/Škoda_Auto_logo.svg"
+              alt="Skoda logo"
+              loading="lazy"
+              onerror="this.style.display='none'"
+            />
+          </div>
+          <h3>Skoda</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=MG"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/3/34/MG_Motor_logo.svg"
+              alt="MG Motor logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>MG</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=Ford"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Ford_logo_flat.svg"
+              alt="Ford logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Ford</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=Jeep"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/7/79/Jeep_logo.svg"
+              alt="Jeep logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Jeep</h3>
+        </a>
+        <a
+          href="inventory.html?type=car&brand=Mercedes-Benz"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/9/90/Mercedes-Benz_logo_2010.svg"
+              alt="Mercedes-Benz logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Mercedes-Benz</h3>
+        </a>
+        <a
           href="inventory.html?type=car&brand=BMW"
           class="brand-card"
           style="text-decoration: none"
         >
           <div class="brand-logo">
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/1200px-BMW.svg.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/4/44/BMW.svg"
               alt="BMW logo"
               loading="lazy"
             />
           </div>
           <h3>BMW</h3>
         </a>
+        <a
+          href="inventory.html?type=car&brand=Audi"
+          class="brand-card"
+          style="text-decoration: none"
+        >
+          <div class="brand-logo">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/6/6f/Audi_logo_2016.svg"
+              alt="Audi logo"
+              loading="lazy"
+            />
+          </div>
+          <h3>Audi</h3>
+        </a>
       </div>
     </section>
     <section class="gallery-section">
       <div class="section-header">
-        <h2>Our Happy Customers</h2>
-        <span class="section-subtitle"
+        <h2 style="color: black">Our Happy Customers</h2>
+        <span class="section-subtitle" style="color: black"
           >Our Happy Customers second hand vehicle in Bihar</span
         >
       </div>
@@ -1286,15 +1512,15 @@
           <ul>
             <li>
               <a href="https://www.okmotors.in/index.html">Home</a>
-              >
+              
             </li>
             <li>
               <a href="https://www.okmotors.in/inventory.html">Buy Vehicle</a>
-              >
+              
             </li>
             <li>
               <a href="https://www.okmotors.in/sell.html">Sell Your Vehicle</a>
-              >
+              
             </li>
             <li>
               <a
@@ -1302,21 +1528,21 @@
                 aria-label="About Ok Motors"
                 >About Us</a
               >
-              >
+              
             </li>
             <li>
               <a href="https://www.okmotors.in/book.html" aria-label="Book Bike"
                 >Book Vehicle</a
               >
-              >
+              
             </li>
             <li>
               <a href="https://www.okmotors.in/updates.html">Updates</a>
-              >
+              
             </li>
             <li>
               <a href="https://www.okmotors.in/contact.html">Contact</a>
-              >
+              
             </li>
           </ul>
         </div>
@@ -1325,11 +1551,11 @@
           <ul>
             <li>
               <a href="https://www.okmotors.in/finance.html">Bike Finance</a>
-              >
+              
             </li>
             <li>
               <a href="./locations-bihar.html">Locations</a>
-              >
+              
             </li>
           </ul>
         </div>

@@ -1,0 +1,248 @@
+{
+  "brands": [
+    {
+      "make": "Royal Enfield",
+      "models": [
+        "Classic 350",
+        "Bullet 350",
+        "Meteor 350",
+        "Himalayan",
+        "Continental GT 650",
+        "Interceptor 650",
+        "Hunter 350",
+        "Scram 411"
+      ],
+      "bodyTypes": ["cruiser", "touring", "adventure"],
+      "keywords": [
+        "royal enfield",
+        "re",
+        "classic",
+        "bullet",
+        "himalayan",
+        "650",
+        "interceptor",
+        "continental gt"
+      ]
+    },
+    {
+      "make": "Bajaj",
+      "models": [
+        "Pulsar 150",
+        "Pulsar 200",
+        "Pulsar NS200",
+        "Pulsar RS200",
+        "Dominar 400",
+        "Avenger 220",
+        "CT 100",
+        "Platina 110"
+      ],
+      "bodyTypes": ["sport", "cruiser", "commuter"],
+      "keywords": ["bajaj", "pulsar", "dominar", "avenger", "platina", "ct"]
+    },
+    {
+      "make": "Hero",
+      "models": [
+        "Splendor Plus",
+        "HF Deluxe",
+        "Passion Pro",
+        "Glamour",
+        "Xtreme 160R",
+        "Xpulse 200",
+        "Maestro Edge",
+        "Pleasure Plus"
+      ],
+      "bodyTypes": ["commuter", "scooter", "adventure"],
+      "keywords": [
+        "hero",
+        "splendor",
+        "passion",
+        "glamour",
+        "xtreme",
+        "xpulse",
+        "maestro"
+      ]
+    },
+    {
+      "make": "Honda",
+      "models": [
+        "Activa 6G",
+        "Shine 100",
+        "SP 125",
+        "Unicorn",
+        "CB350",
+        "Hornet 2.0",
+        "Dio",
+        "CB300R"
+      ],
+      "bodyTypes": ["scooter", "commuter", "sport"],
+      "keywords": ["honda", "activa", "shine", "unicorn", "cb", "hornet", "dio"]
+    },
+    {
+      "make": "Yamaha",
+      "models": [
+        "FZ-S",
+        "FZS-FI",
+        "MT-15",
+        "R15 V4",
+        "Fascino 125",
+        "Ray ZR",
+        "Aerox 155",
+        "FZ 25"
+      ],
+      "bodyTypes": ["sport", "scooter", "commuter"],
+      "keywords": ["yamaha", "fz", "mt", "r15", "fascino", "ray", "aerox"]
+    },
+    {
+      "make": "Suzuki",
+      "models": [
+        "Access 125",
+        "Gixxer",
+        "Gixxer SF",
+        "Avenis",
+        "Burgman Street",
+        "V-Strom SX",
+        "Hayabusa",
+        "Intruder"
+      ],
+      "bodyTypes": ["scooter", "sport", "cruiser", "adventure"],
+      "keywords": [
+        "suzuki",
+        "access",
+        "gixxer",
+        "burgman",
+        "hayabusa",
+        "intruder",
+        "vstrom"
+      ]
+    },
+    {
+      "make": "KTM",
+      "models": [
+        "Duke 125",
+        "Duke 200",
+        "Duke 250",
+        "Duke 390",
+        "RC 125",
+        "RC 200",
+        "RC 390",
+        "Adventure 390"
+      ],
+      "bodyTypes": ["sport", "adventure"],
+      "keywords": ["ktm", "duke", "rc", "adventure", "ready to race"]
+    },
+    {
+      "make": "TVS",
+      "models": [
+        "Apache RTR 160",
+        "Apache RTR 200",
+        "Apache RR 310",
+        "Ntorq 125",
+        "Jupiter",
+        "Raider 125",
+        "XL100",
+        "iQube"
+      ],
+      "bodyTypes": ["sport", "scooter", "commuter"],
+      "keywords": ["tvs", "apache", "ntorq", "jupiter", "raider", "iqube"]
+    },
+    {
+      "make": "Jawa",
+      "models": ["Jawa 42", "Jawa Perak", "Jawa 350", "Jawa 42 Bobber"],
+      "bodyTypes": ["cruiser"],
+      "keywords": ["jawa", "perak", "bobber", "classic", "retro"]
+    },
+    {
+      "make": "Harley-Davidson",
+      "models": [
+        "Street 750",
+        "Iron 883",
+        "Forty-Eight",
+        "Street Bob",
+        "Fat Boy",
+        "Road King",
+        "Street Glide",
+        "Pan America 1250"
+      ],
+      "bodyTypes": ["cruiser", "touring"],
+      "keywords": [
+        "harley",
+        "davidson",
+        "harley davidson",
+        "iron",
+        "street",
+        "fat boy",
+        "road king"
+      ]
+    },
+    {
+      "make": "Kawasaki",
+      "models": [
+        "Ninja 300",
+        "Ninja 400",
+        "Ninja 650",
+        "Ninja ZX-6R",
+        "Ninja ZX-10R",
+        "Z650",
+        "Z900",
+        "Versys 650"
+      ],
+      "bodyTypes": ["sport", "touring"],
+      "keywords": ["kawasaki", "ninja", "z series", "versys", "zx"]
+    },
+    {
+      "make": "Ducati",
+      "models": [
+        "Panigale V2",
+        "Panigale V4",
+        "Monster",
+        "Scrambler",
+        "Multistrada V4",
+        "Diavel",
+        "SuperSport 950"
+      ],
+      "bodyTypes": ["sport", "touring", "cruiser"],
+      "keywords": [
+        "ducati",
+        "panigale",
+        "monster",
+        "scrambler",
+        "multistrada",
+        "diavel"
+      ]
+    },
+    {
+      "make": "Triumph",
+      "models": [
+        "Speed 400",
+        "Scrambler 400 X",
+        "Street Triple",
+        "Speed Twin",
+        "Bonneville",
+        "Tiger 900",
+        "Rocket 3"
+      ],
+      "bodyTypes": ["sport", "cruiser", "adventure", "touring"],
+      "keywords": [
+        "triumph",
+        "speed",
+        "scrambler",
+        "bonneville",
+        "tiger",
+        "rocket"
+      ]
+    },
+    {
+      "make": "BMW",
+      "models": [
+        "G 310 R",
+        "G 310 GS",
+        "F 900 R",
+        "S 1000 RR",
+        "R 1250 GS",
+        "R 18"
+      ],
+      "bodyTypes": ["sport", "adventure", "cruiser", "touring"],
+      "keywords": ["bmw", "gs", "rr", "adventure", "motorrad"]
+    }
+  ]
+}

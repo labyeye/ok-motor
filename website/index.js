@@ -34,43 +34,261 @@ function initMobileMenu() {
   }
 }
 
+// Store vehicle data globally
+let vehicleData = {
+  bikes: null,
+  cars: null,
+};
+
+// Load vehicle data from JSON files
+async function loadVehicleData() {
+  try {
+    const [bikesResponse, carsResponse] = await Promise.all([
+      fetch("./data/bikes-data.json"),
+      fetch("./data/cars-data.json"),
+    ]);
+
+    vehicleData.bikes = await bikesResponse.json();
+    vehicleData.cars = await carsResponse.json();
+
+    console.log("Vehicle data loaded successfully");
+    return true;
+  } catch (error) {
+    console.error("Error loading vehicle data:", error);
+    return false;
+  }
+}
+
+// Populate make dropdown based on vehicle type
+function populateMakeDropdown(vehicleType) {
+  const makeFilter = document.getElementById("makeFilter");
+  if (!makeFilter) return;
+
+  // Clear existing options except the first one
+  makeFilter.innerHTML = '<option value="">Select Make</option>';
+
+  const data = vehicleType === "bike" ? vehicleData.bikes : vehicleData.cars;
+  if (!data || !data.brands) return;
+
+  data.brands.forEach((brand) => {
+    const option = document.createElement("option");
+    option.value = brand.make;
+    option.textContent = brand.make;
+    option.setAttribute("data-type", vehicleType);
+    makeFilter.appendChild(option);
+  });
+}
+
+// Populate body dropdown based on vehicle type
+function populateBodyDropdown(vehicleType) {
+  const bodyFilter = document.getElementById("bodyFilter");
+  if (!bodyFilter) return;
+
+  // Clear existing options except the first one
+  bodyFilter.innerHTML = '<option value="">Any Body</option>';
+
+  const data = vehicleType === "bike" ? vehicleData.bikes : vehicleData.cars;
+  if (!data || !data.brands) return;
+
+  // Collect unique body types
+  const bodyTypes = new Set();
+  data.brands.forEach((brand) => {
+    if (brand.bodyTypes) {
+      brand.bodyTypes.forEach((type) => bodyTypes.add(type));
+    }
+  });
+
+  // Add options
+  Array.from(bodyTypes)
+    .sort()
+    .forEach((type) => {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+      option.setAttribute("data-type", vehicleType);
+      bodyFilter.appendChild(option);
+    });
+}
+
+// Populate model dropdown based on selected make
+function populateModelDropdown(make, vehicleType) {
+  const modelFilter = document.getElementById("modelFilter");
+  if (!modelFilter) return;
+
+  // Clear existing options
+  modelFilter.innerHTML = '<option value="">Select Model</option>';
+
+  if (!make) return;
+
+  const data = vehicleType === "bike" ? vehicleData.bikes : vehicleData.cars;
+  if (!data || !data.brands) return;
+
+  const brand = data.brands.find((b) => b.make === make);
+  if (!brand || !brand.models) return;
+
+  brand.models.forEach((model) => {
+    const option = document.createElement("option");
+    option.value = model;
+    option.textContent = model;
+    modelFilter.appendChild(option);
+  });
+}
+
 function initCategoryTabs() {
   const tabBtns = document.querySelectorAll(".tab-btn");
+  const makeFilter = document.getElementById("makeFilter");
+  const modelFilter = document.getElementById("modelFilter");
+
+  function updateFilters(vehicleType) {
+    populateMakeDropdown(vehicleType);
+    populateBodyDropdown(vehicleType);
+    if (modelFilter) {
+      modelFilter.innerHTML = '<option value="">Select Model</option>';
+    }
+  }
+
   tabBtns.forEach((btn) => {
     btn.addEventListener("click", function () {
       tabBtns.forEach((b) => b.classList.remove("active"));
       this.classList.add("active");
       const tab = this.getAttribute("data-tab");
       console.log("Selected tab:", tab);
+
+      // Update dropdowns based on selected tab
+      updateFilters(tab);
     });
   });
+
+  // Listen for make selection to populate models
+  if (makeFilter) {
+    makeFilter.addEventListener("change", function () {
+      const activeTab = document.querySelector(".tab-btn.active");
+      const vehicleType = activeTab
+        ? activeTab.getAttribute("data-tab")
+        : "bike";
+      populateModelDropdown(this.value, vehicleType);
+    });
+  }
+
+  // Initialize filters for the default active tab
+  const activeTab = document.querySelector(".tab-btn.active");
+  if (activeTab) {
+    const initialTab = activeTab.getAttribute("data-tab");
+    updateFilters(initialTab);
+  }
 }
 
 function initFilterSearch() {
-  const searchBtn = document.querySelector(".search-filters-btn");
+  const searchBtn = document.getElementById("searchCountBtn");
+  const makeFilter = document.getElementById("makeFilter");
+  const modelFilter = document.getElementById("modelFilter");
+  const bodyFilter = document.getElementById("bodyFilter");
+  const keywordFilter = document.getElementById("keywordFilter");
+
   if (searchBtn) {
-    searchBtn.addEventListener("click", () => {
-      const make = document.getElementById("makeFilter").value;
-      const model = document.getElementById("modelFilter").value;
-      const budget = document.getElementById("budgetFilter").value;
-      const state = document.getElementById("stateFilter").value;
+    searchBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      // Get active tab to determine vehicle type
+      const activeTab = document.querySelector(".tab-btn.active");
+      const vehicleType = activeTab
+        ? activeTab.getAttribute("data-tab")
+        : "bike";
+
+      const make = makeFilter ? makeFilter.value : "";
+      const model = modelFilter ? modelFilter.value : "";
+      const body = bodyFilter ? bodyFilter.value : "";
+      const keyword = keywordFilter
+        ? keywordFilter.value.trim().toLowerCase()
+        : "";
 
       const params = new URLSearchParams();
-      if (make) params.append("make", make);
-      if (model) params.append("model", model);
-      if (budget) params.append("budget", budget);
-      if (state) params.append("state", state);
 
-      window.location.href = `https://www.okmotors.in/inventory.html?${params.toString()}`;
+      // Add vehicle type
+      if (vehicleType) {
+        params.append("type", vehicleType);
+      }
+
+      // Add filters based on direct selection
+      if (make) params.append("brand", make);
+      if (model) params.append("model", model);
+      if (body) params.append("body", body);
+
+      // Handle keyword search - check if it matches any make, model, or keyword
+      if (keyword) {
+        const data =
+          vehicleType === "bike" ? vehicleData.bikes : vehicleData.cars;
+
+        if (data && data.brands) {
+          let matchFound = false;
+
+          // Search through brands
+          for (const brand of data.brands) {
+            // Check if keyword matches make
+            if (brand.make.toLowerCase().includes(keyword)) {
+              if (!make) params.set("brand", brand.make);
+              matchFound = true;
+              break;
+            }
+
+            // Check if keyword matches any model
+            if (brand.models) {
+              const matchingModel = brand.models.find((m) =>
+                m.toLowerCase().includes(keyword)
+              );
+              if (matchingModel) {
+                if (!make) params.set("brand", brand.make);
+                if (!model) params.set("model", matchingModel);
+                matchFound = true;
+                break;
+              }
+            }
+
+            // Check if keyword matches any brand keywords
+            if (brand.keywords) {
+              const keywordMatch = brand.keywords.some(
+                (k) =>
+                  k.toLowerCase().includes(keyword) ||
+                  keyword.includes(k.toLowerCase())
+              );
+              if (keywordMatch) {
+                if (!make) params.set("brand", brand.make);
+                matchFound = true;
+                break;
+              }
+            }
+          }
+        }
+
+        // Always add the keyword to general search
+        params.append("q", keyword);
+      }
+
+      // Redirect to inventory page with filters
+      window.location.href = `inventory.html?${params.toString()}`;
+    });
+  }
+
+  // Allow Enter key to trigger search in keyword field
+  if (keywordFilter) {
+    keywordFilter.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (searchBtn) searchBtn.click();
+      }
     });
   }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
+  // Load vehicle data first
+  await loadVehicleData();
+
   initStickyHeader();
   initMobileMenu();
   initCategoryTabs();
   initFilterSearch();
+  initServiceCardBackgrounds();
   initNavDropdownToggles();
 });
 
@@ -85,7 +303,11 @@ function initNavDropdownToggles() {
     if (window.innerWidth <= 1024) {
       const parent = a.closest && a.closest(".nav-dropdown");
 
-      if (parent && (a.classList.contains("dropdown-toggle") || a.classList.contains("nav-link"))) {
+      if (
+        parent &&
+        (a.classList.contains("dropdown-toggle") ||
+          a.classList.contains("nav-link"))
+      ) {
         e.preventDefault();
         parent.classList.toggle("open");
         return;
@@ -97,34 +319,6 @@ function initNavDropdownToggles() {
       if (mobileBtn) mobileBtn.setAttribute("aria-expanded", "false");
       document.body.style.overflow = "";
     }
-  });
-}
-
-function translatePage(language) {
-  if (language === "hi") document.body.classList.add("hindi-font");
-  else document.body.classList.remove("hindi-font");
-
-  const elements = document.querySelectorAll("[data-translate]");
-  elements.forEach((element) => {
-    const key = element.getAttribute("data-translate");
-    if (translations[language] && translations[language][key]) {
-      element.textContent = translations[language][key];
-    }
-  });
-
-  const popup = document.getElementById("languagePopup");
-  if (popup) popup.style.display = "none";
-}
-
-function initLanguage() {
-  const popup = document.getElementById("languagePopup");
-  if (popup) popup.style.display = "flex";
-
-  document.querySelectorAll(".language-btn").forEach((button) => {
-    button.addEventListener("click", function () {
-      const lang = this.getAttribute("data-lang");
-      translatePage(lang);
-    });
   });
 }
 
@@ -225,6 +419,31 @@ function initPreconnect() {
   });
 }
 
+// Initialize backgrounds for cards that have data-bg attribute
+function initServiceCardBackgrounds() {
+  try {
+    const cards = document.querySelectorAll('.service-card[data-bg]');
+    cards.forEach(card => {
+      const src = card.getAttribute('data-bg');
+      if (!src) return;
+      // Apply background
+      card.style.backgroundImage = `url('${src}')`;
+      card.classList.add('bg-cover');
+      // If developer wants no overlay, they can add class `no-overlay`
+      // Lazy-load background by creating an Image object
+      const img = new Image();
+      img.src = src;
+      img.onload = () => {
+        // fade-in effect
+        card.style.transition = 'background-image 200ms ease, opacity 220ms ease';
+        card.style.opacity = '1';
+      };
+    });
+  } catch (e) {
+    console.error('service card bg init error', e);
+  }
+}
+
 window.API_BASE = (function () {
   try {
     const host = window.location.hostname;
@@ -274,293 +493,49 @@ function initStatsObserver() {
   observer.observe(target);
 }
 
-const translations = {
-  en: {
-    "Bike Builders | Premium Pre-Owned Motorcycles in India":
-      "Bike Builders | Premium Pre-Owned Motorcycles in India",
-    Home: "Home",
-    Updates: "Updates",
-    "Book Bike": "Book Bike",
-    "Buy Bike": "Buy Bike",
-    "Sell Your Bike": "Sell Your Bike",
-    "About Us": "About Us",
-    Contact: "Contact",
-    "Get the Quote": "Get the Quote",
-    "Choose your preferred language": "Choose your preferred language",
-    "Ride Into Freedom with the Bike You've Always Wanted":
-      "Ride Into Freedom with the Bike You've Always Wanted",
-    "Get Your": "Get Your",
-    "Dream Bike": "Dream Bike",
-    Bike: "Bike",
-    "Refurbished Bikes": "Refurbished Bikes",
-    "Sell Bike": "Sell Bike",
-    "Bike Service": "Bike Service",
-    "Price Calculator": "Price Calculator",
-    "Bikes Sold": "Bikes Sold",
-    "Bikes Available": "Bikes Available",
-    "Happy Customers": "Happy Customers",
-    "Years Experience": "Years Experience",
-    "Our Services": "Our Services",
-    "Find your perfect pre-owned bike from our certified collection.":
-      "Find your perfect pre-owned bike from our certified collection.",
-    Explore: "Explore",
-    "Get the best price for your bike with our free valuation.":
-      "Get the best price for your bike with our free valuation.",
-    "Get Valuation": "Get Valuation",
-    "Professional and Best servicing, maintenance by certified technicians.":
-      "Professional and Best servicing, maintenance by certified technicians.",
-    "Book Service": "Book Service",
-    "Estimate your bike's value instantly based on model, year and condition.":
-      "Estimate your bike's value instantly based on model, year and condition.",
-    "Calculate Now": "Calculate Now",
-    "Choose Your Style": "Choose Your Style",
-    Scooter: "Scooter",
-    "Practical and fuel-efficient for city commuting.":
-      "Practical and fuel-efficient for city commuting.",
-    "View Scooters": "View Scooters",
-    Commuter: "Commuter",
-    "Reliable daily riders with great mileage.":
-      "Reliable daily riders with great mileage.",
-    "View Commuters": "View Commuters",
-    Sport: "Sport",
-    "High-performance machines.": "High-performance machines.",
-    "View Sports Bikes": "View Sports Bikes",
-    Tourer: "Tourer",
-    "Comfortable long-distance companions.":
-      "Comfortable long-distance companions.",
-    "View Tourers": "View Tourers",
-    "Featured Bikes": "Featured Bikes",
-    "View All": "View All",
-    "1st Owner": "1st Owner",
-    Petrol: "Petrol",
-    "6 months old": "6 months old",
-    "2 months old": "2 months old",
-    "View Details": "View Details",
-    "EMI: ₹8,999/month": "EMI: ₹8,999/month",
-    "Other Brands": "Other Brands",
-    "Ather Energy": "Ather Energy",
-    Bajaj: "Bajaj",
-    BMW: "BMW",
-    "Harley-Davidson": "Harley-Davidson",
-    Hero: "Hero",
-    Honda: "Honda",
-    Jawa: "Jawa",
-    Kawasaki: "Kawasaki",
-    KTM: "KTM",
-    "Mahindra Two Wheelers": "Mahindra Two Wheelers",
-    "Royal Enfield": "Royal Enfield",
-    Suzuki: "Suzuki",
-    "TVS Motor": "TVS Motor",
-    Yamaha: "Yamaha",
-    "HOW TO BUY YOUR DREAM BIKE": "HOW TO BUY YOUR DREAM BIKE",
-    "OUR HAPPY CUSTOMERS": "OUR HAPPY CUSTOMERS",
-    "At Bike Builders, we make buying your perfect bike simple and transparent. Our certified pre-owned bikes come with a comprehensive inspection report and warranty for complete peace of mind.":
-      "At Bike Builders, we make buying your perfect bike simple and transparent. Our certified pre-owned bikes come with a comprehensive inspection report and warranty for complete peace of mind.",
-    "BROWSE INVENTORY": "BROWSE INVENTORY",
-    "BOOK TEST RIDE": "BOOK TEST RIDE",
-    "GET TO KNOW YOUR RIDE": "GET TO KNOW YOUR RIDE",
-    "PAY & BOOK ONLINE OR VISIT SHOWROOM":
-      "PAY & BOOK ONLINE OR VISIT SHOWROOM",
-    "COMPLETE PURCHASE": "COMPLETE PURCHASE",
-    "HOW TO SELL YOUR USED BIKE": "HOW TO SELL YOUR USED BIKE",
-    "At Bike Builders, we provide the quickest and most hassle-free bike selling service. Getting a great deal on your bike can be tricky, which is why we value your bike based on its condition and current market value.":
-      "At Bike Builders, we provide the quickest and most hassle-free bike selling service. Getting a great deal on your bike can be tricky, which is why we value your bike based on its condition and current market value.",
-    "INSTANT VALUATION": "INSTANT VALUATION",
-    "BOOK INSPECTION": "BOOK INSPECTION",
-    "SELL YOUR BIKE": "SELL YOUR BIKE",
-    "What Our Riders Say": "What Our Riders Say",
-    "Mumbai, Maharashtra": "Mumbai, Maharashtra",
-    "Bangalore, Karnataka": "Bangalore, Karnataka",
-    "Delhi, NCR": "Delhi, NCR",
-    "Purchased: 3 months ago": "Purchased: 3 months ago",
-    "Verified Owner": "Verified Owner",
-    "Purchased: 6 months ago": "Purchased: 6 months ago",
-    "Sold: 1 month ago": "Sold: 1 month ago",
-    "Verified Seller": "Verified Seller",
-    "The buying process was completely transparent. I got a certified KTM Duke 390 at 15% below market price. The 150-point inspection report gave me complete confidence in my purchase.":
-      "The buying process was completely transparent. I got a certified KTM Duke 390 at 15% below market price. The 150-point inspection report gave me complete confidence in my purchase.",
-    "Excellent customer service and the bike quality is outstanding. The warranty coverage gave me peace of mind. Worth every rupee I spent!":
-      "Excellent customer service and the bike quality is outstanding. The warranty coverage gave me peace of mind. Worth every rupee I spent!",
-    "I sold my old bike through them and got ₹15,000 more than other dealers offered. The process was smooth and payment was instant. Highly recommended!":
-      "I sold my old bike through them and got ₹15,000 more than other dealers offered. The process was smooth and payment was instant. Highly recommended!",
-    "India's most trusted marketplace for premium pre-owned bikes since 2018.":
-      "India's most trusted marketplace for premium pre-owned bikes since 2018.",
-    "Quick Links": "Quick Links",
-    "Contact Us": "Contact Us",
-    "All rights reserved.": "All rights reserved.",
-    "Designed By Pixelate Nest": "Designed By Pixelate Nest",
-  },
-  hi: {
-    "Bike Builders | Premium Pre-Owned Motorcycles in India":
-      "बाइक बिल्डर्स | भारत में प्रीमियम सेकेंड हैंड बाइक्स",
-    Home: "होम",
-    Updates: "अपडेट्स",
-    "Buy Bike": "बाइक खरीदें",
-    "Sell Your Bike": "बाइक बेचें",
-    "About Us": "हमारे बारे में",
-    "Book Bike": "बाइक बुक करें",
-    Contact: "संपर्क करें",
-    "Get the Quote": "कीमत पता करें",
-    "Choose your preferred language": "अपनी पसंदीदा भाषा चुनें",
-
-    "Get Your": "अपनी पसंद ",
-    "Dream Bike": "की बाइक पाएं",
-    "Ride Into Freedom with the Bike You've Always Wanted":
-      "आपकी पसंद की बाइक के साथ आज़ादी की सवारी करें",
-    Bike: "बाइक",
-    "Refurbished Bikes": "पुनर्निर्मित बाइक्स",
-    "Sell Bike": "बाइक बेचें",
-    "Bike Service": "बाइक सर्विस",
-    "Price Calculator": "कीमत कैलकुलेटर",
-    "Bikes Sold": "बाइक बिक चुकी",
-    "Bikes Available": "बाइक उपलब्ध",
-    "Happy Customers": "खुश ग्राहक",
-    "Years Experience": "सालों का अनुभव",
-
-    "Our Services": "हमारी सेवाएं",
-    "Find your perfect pre-owned bike from our certified collection.":
-      "हमारे प्रमाणित संग्रह से अपनी पसंद की बाइक खोजें",
-    Explore: "देखें",
-    "Get the best price for your bike with our free valuation.":
-      "हमारे मुफ्त मूल्यांकन के साथ अपनी बाइक का सबसे अच्छा दाम पाएं",
-    "Get Valuation": "मूल्यांकन करें",
-    "Professional and Best servicing, maintenance by certified technicians.":
-      "प्रमाणित तकनीशियनों द्वारा पेशेवर और सर्वश्रेष्ठ सर्विसिंग, रखरखाव",
-    "Book Service": "सर्विस बुक करें",
-    "Estimate your bike's value instantly based on model, year and condition.":
-      "मॉडल, साल और हालत के आधार पर अपनी बाइक की कीमत का अनुमान लगाएं",
-    "Calculate Now": "अभी गणना करें",
-
-    "Choose Your Style": "अपनी पसंद चुनें",
-    Scooter: "स्कूटर",
-    "Practical and fuel-efficient for city commuting.":
-      "शहर में चलाने के लिए व्यावहारिक और कम ईंधन खपत",
-    "View Scooters": "स्कूटर देखें",
-    Commuter: "कम्यूटर",
-    "Reliable daily riders with great mileage.":
-      "रोजमर्रा की सवारी के लिए विश्वसनीय, बेहतर माइलेज",
-    "View Commuters": "कम्यूटर देखें",
-    Sport: "स्पोर्ट",
-    "High-performance machines.":
-      "एड्रेनालाईन के शौकीनों के लिए हाई-परफॉरमेंस बाइक",
-    "View Sports Bikes": "स्पोर्ट्स बाइक देखें",
-    Tourer: "टूरर",
-    "Comfortable long-distance companions.": "लंबी दूरी के लिए आरामदायक साथी",
-    "View Tourers": "टूरर देखें",
-
-    "Featured Bikes": "फीचर्ड बाइक्स",
-    "View All": "सभी देखें",
-    "1st Owner": "पहला मालिक",
-    Petrol: "पेट्रोल",
-    "6 months old": "6 महीने पुरानी",
-    "2 months old": "2 महीने पुरानी",
-    "View Details": "विवरण देखें",
-    "EMI: ₹8,999/month": "ईएमआई: ₹8,999/महीना",
-
-    "Other Brands": "अन्य ब्रांड्स",
-    "Ather Energy": "आदर एनर्जी",
-    Bajaj: "बजाज",
-    BMW: "बीएमडब्ल्यू",
-    "Harley-Davidson": "हार्ले-डेविडसन",
-    Hero: "हीरो",
-    Honda: "होंडा",
-    Jawa: "जावा",
-    Kawasaki: "कावासाकी",
-    KTM: "केटीएम",
-    "Mahindra Two Wheelers": "महिंद्रा टू व्हीलर्स",
-    "Royal Enfield": "रॉयल एनफील्ड",
-    Suzuki: "सुजुकी",
-    "TVS Motor": "टीवीएस मोटर",
-    Yamaha: "यामाहा",
-    "OUR HAPPY CUSTOMERS": "हमारे खुश ग्राहक",
-    "HOW TO BUY YOUR DREAM BIKE": "अपनी पसंद की बाइक कैसे खरीदें",
-    "At Bike Builders, we make buying your perfect bike simple and transparent. Our certified pre-owned bikes come with a comprehensive inspection report and warranty for complete peace of mind.":
-      "बाइक बिल्डर्स में, हम बाइक खरीदने को आसान और पारदर्शी बनाते हैं। हमारी प्रमाणित बाइक्स के साथ पूरी जांच रिपोर्ट और वारंटी मिलती है",
-    "BROWSE INVENTORY": "बाइक देखें",
-    "BOOK TEST RIDE": "टेस्ट राइड बुक करें",
-    "GET TO KNOW YOUR RIDE": "अपनी बाइक को जानें",
-    "PAY & BOOK ONLINE OR VISIT SHOWROOM": "ऑनलाइन भुगतान करें या शोरूम आएं",
-    "COMPLETE PURCHASE": "खरीदारी पूरी करें",
-
-    "HOW TO SELL YOUR USED BIKE": "अपनी पुरानी बाइक कैसे बेचें",
-    "At Bike Builders, we provide the quickest and most hassle-free bike selling service. Getting a great deal on your bike can be tricky, which is why we value your bike based on its condition and current market value.":
-      "बाइक बिल्डर्स में, हम सबसे तेज और आसान बाइक बेचने की सेवा देते हैं। हम आपकी बाइक की हालत और बाजार भाव के आधार पर सही कीमत देते हैं",
-    "INSTANT VALUATION": "तुरंत मूल्यांकन",
-    "BOOK INSPECTION": "जांच बुक करें",
-    "SELL YOUR BIKE": "अपनी बाइक बेचें",
-
-    "What Our Riders Say": "हमारे ग्राहक क्या कहते हैं",
-    "Mumbai, Maharashtra": "मुंबई, महाराष्ट्र",
-    "Bangalore, Karnataka": "बैंगलोर, कर्नाटक",
-    "Delhi, NCR": "दिल्ली, एनसीआर",
-    "Purchased: 3 months ago": "खरीदी: 3 महीने पहले",
-    "Verified Owner": "प्रमाणित मालिक",
-    "Purchased: 6 months ago": "खरीदी: 6 महीने पहले",
-    "Sold: 1 month ago": "बेची: 1 महीने पहले",
-    "Verified Seller": "प्रमाणित विक्रेता",
-    "The buying process was completely transparent. I got a certified KTM Duke 390 at 15% below market price. The 150-point inspection report gave me complete confidence in my purchase.":
-      "खरीद प्रक्रिया पूरी तरह पारदर्शी थी। मुझे KTM Duke 390 बाजार भाव से 15% कम में मिली। 150-पॉइंट जांच रिपोर्ट ने पूरा विश्वास दिलाया",
-    "Excellent customer service and the bike quality is outstanding. The warranty coverage gave me peace of mind. Worth every rupee I spent!":
-      "ग्राहक सेवा बेहतरीन और बाइक की क्वालिटी शानदार। वारंटी ने मन को शांति दी। हर पैसे के लायक!",
-    "I sold my old bike through them and got ₹15,000 more than other dealers offered. The process was smooth and payment was instant. Highly recommended!":
-      "मैंने अपनी पुरानी बाइक इनके जरिए बेची और ₹15,000 ज्यादा पाए। प्रक्रिया आसान थी और भुगतान तुरंत मिला। जरूर सलाह देंगे!",
-
-    "India's most trusted marketplace for premium pre-owned bikes since 2018.":
-      "2018 से प्रीमियम सेकेंड हैंड बाइक्स का सबसे भरोसेमंद प्लेटफॉर्म",
-    "Quick Links": "जल्दी लिंक्स",
-    "Contact Us": "संपर्क करें",
-    "All rights reserved.": "सभी अधिकार सुरक्षित",
-    "Designed By Pixelate Nest": "पिक्सेलेट नेस्ट द्वारा डिज़ाइन",
-  },
-};
-
-function updateMobileMenuTranslations() {
-  const mobileMenu = document.querySelector(".mobile-menu");
-  if (!mobileMenu) return;
-
-  const updateMobileMenu = () => {
-    const items = mobileMenu.querySelectorAll(".menu-item");
-    items.forEach((item) => {
-      const key = item.textContent.trim();
-      if (translations.hi[key]) item.setAttribute("data-translate", key);
-    });
-
-    const link = mobileMenu.querySelector(".login-link");
-    if (link) link.setAttribute("data-translate", "Get the Quote");
-    const button = mobileMenu.querySelector(".login-btn button");
-    if (button) button.setAttribute("data-translate", "Get the Quote");
-  };
-  updateMobileMenu();
-  setTimeout(updateMobileMenu, 500);
-}
-
 function initFeaturedSliders() {
   const carSlider = document.querySelector(".car-slider");
   const bikeSlider = document.querySelector(".bike-slider");
 
   if (carSlider) {
-    const carPrevBtn = carSlider.parentElement.querySelector(".slider-nav.prev");
-    const carNextBtn = carSlider.parentElement.querySelector(".slider-nav.next");
+    const carPrevBtn =
+      carSlider.parentElement.querySelector(".slider-nav.prev");
+    const carNextBtn =
+      carSlider.parentElement.querySelector(".slider-nav.next");
 
-    if (carPrevBtn) carPrevBtn.addEventListener("click", () => carSlider.scrollBy({ left: -300, behavior: "smooth" }));
-    if (carNextBtn) carNextBtn.addEventListener("click", () => carSlider.scrollBy({ left: 300, behavior: "smooth" }));
+    if (carPrevBtn)
+      carPrevBtn.addEventListener("click", () =>
+        carSlider.scrollBy({ left: -300, behavior: "smooth" })
+      );
+    if (carNextBtn)
+      carNextBtn.addEventListener("click", () =>
+        carSlider.scrollBy({ left: 300, behavior: "smooth" })
+      );
 
     fetchFeaturedVehicles("Car", carSlider);
   }
 
   if (bikeSlider) {
-    const bikePrevBtn = bikeSlider.parentElement.querySelector(".slider-nav.prev");
-    const bikeNextBtn = bikeSlider.parentElement.querySelector(".slider-nav.next");
+    const bikePrevBtn =
+      bikeSlider.parentElement.querySelector(".slider-nav.prev");
+    const bikeNextBtn =
+      bikeSlider.parentElement.querySelector(".slider-nav.next");
 
-    if (bikePrevBtn) bikePrevBtn.addEventListener("click", () => bikeSlider.scrollBy({ left: -300, behavior: "smooth" }));
-    if (bikeNextBtn) bikeNextBtn.addEventListener("click", () => bikeSlider.scrollBy({ left: 300, behavior: "smooth" }));
+    if (bikePrevBtn)
+      bikePrevBtn.addEventListener("click", () =>
+        bikeSlider.scrollBy({ left: -300, behavior: "smooth" })
+      );
+    if (bikeNextBtn)
+      bikeNextBtn.addEventListener("click", () =>
+        bikeSlider.scrollBy({ left: 300, behavior: "smooth" })
+      );
 
     fetchFeaturedVehicles("Bike", bikeSlider);
   }
 }
 
 function escapeHtml(text) {
-  const div = document.createElement('div');
+  const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
@@ -573,54 +548,72 @@ function fetchFeaturedVehicles(vehicleType, sliderEl) {
 
     if (Array.isArray(vehicle.images) && vehicle.images.length > 0) {
       images = vehicle.images
-        .map(img => {
-          if (typeof img === 'object' && img.url) return img.url;
-          if (typeof img === 'string') return img;
+        .map((img) => {
+          if (typeof img === "object" && img.url) return img.url;
+          if (typeof img === "string") return img;
           return null;
         })
-        .filter(url => url && url.trim() !== '');
+        .filter((url) => url && url.trim() !== "");
     }
 
     if (images.length === 0 && vehicle.primaryImage) {
-      if (typeof vehicle.primaryImage === 'object' && vehicle.primaryImage.url) {
+      if (
+        typeof vehicle.primaryImage === "object" &&
+        vehicle.primaryImage.url
+      ) {
         images.push(vehicle.primaryImage.url);
-      } else if (typeof vehicle.primaryImage === 'string' && vehicle.primaryImage.trim() !== '') {
+      } else if (
+        typeof vehicle.primaryImage === "string" &&
+        vehicle.primaryImage.trim() !== ""
+      ) {
         images.push(vehicle.primaryImage);
       }
     }
 
     if (images.length === 0 && vehicle.imageUrl) {
       if (Array.isArray(vehicle.imageUrl)) {
-        images = vehicle.imageUrl.filter(url => url && url.trim() !== '');
-      } else if (typeof vehicle.imageUrl === 'string' && vehicle.imageUrl.trim() !== '') {
+        images = vehicle.imageUrl.filter((url) => url && url.trim() !== "");
+      } else if (
+        typeof vehicle.imageUrl === "string" &&
+        vehicle.imageUrl.trim() !== ""
+      ) {
         images.push(vehicle.imageUrl);
       }
     }
 
-    return images.length > 0 ? images : ['https://via.placeholder.com/300?text=No+Image'];
+    return images.length > 0
+      ? images
+      : ["https://via.placeholder.com/300?text=No+Image"];
   }
 
-  fetch(`${API_BASE}/api/vehicles/public/listings?limit=8&vehicleType=${vehicleType}`)
-    .then(response => {
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  fetch(
+    `${API_BASE}/api/vehicles/public/listings?limit=8&vehicleType=${vehicleType}`
+  )
+    .then((response) => {
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
       return response.json();
     })
-    .then(data => {
+    .then((data) => {
       if (data.success && data.data && data.data.length > 0) {
-        const vehicles = data.data.map(v => {
+        const vehicles = data.data.map((v) => {
           return {
             ...v,
-            images: normalizeImages(v)
+            images: normalizeImages(v),
           };
         });
         displayFeaturedVehicles(vehicles, sliderEl, vehicleType);
       } else {
-        showFeaturedError(sliderEl, vehicleType, () => fetchFeaturedVehicles(vehicleType, sliderEl));
+        showFeaturedError(sliderEl, vehicleType, () =>
+          fetchFeaturedVehicles(vehicleType, sliderEl)
+        );
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error(`Error fetching ${vehicleType}:`, error);
-      showFeaturedError(sliderEl, vehicleType, () => fetchFeaturedVehicles(vehicleType, sliderEl));
+      showFeaturedError(sliderEl, vehicleType, () =>
+        fetchFeaturedVehicles(vehicleType, sliderEl)
+      );
     });
 }
 
@@ -651,18 +644,25 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
     }
 
     const images = vehicle.images || [];
-    const firstImage = images[0] || "https://via.placeholder.com/300?text=No+Image";
+    const firstImage =
+      images[0] || "https://via.placeholder.com/300?text=No+Image";
     const photoCount = images.length;
 
-    const vehicleName = escapeHtml(`${vehicle.brand || ''} ${vehicle.model || ''}`).trim();
-    const carBody = escapeHtml(vehicle.vehicleType || vehicleType || 'Vehicle');
-    const modelYear = escapeHtml(vehicle.modelYear || vehicle.year || 'N/A');
+    const vehicleName = escapeHtml(
+      `${vehicle.brand || ""} ${vehicle.model || ""}`
+    ).trim();
+    const carBody = escapeHtml(vehicle.vehicleType || vehicleType || "Vehicle");
+    const modelYear = escapeHtml(vehicle.modelYear || vehicle.year || "N/A");
     const kmDriven = (vehicle.kmDriven || 0).toLocaleString();
-    const ownership = formatOwnership(vehicle.ownership || vehicle.owner || "1");
-    const fuelType = escapeHtml(vehicle.fuelType || 'Petrol');
+    const ownership = formatOwnership(
+      vehicle.ownership || vehicle.owner || "1"
+    );
+    const fuelType = escapeHtml(vehicle.fuelType || "Petrol");
     const price = (vehicle.price || 0).toLocaleString();
     const downPayment = vehicle.downPayment || 0;
-    const emiAmount = Math.round(((vehicle.price || 0) - downPayment) / 36).toLocaleString();
+    const emiAmount = Math.round(
+      ((vehicle.price || 0) - downPayment) / 36
+    ).toLocaleString();
 
     card.innerHTML = `
       <div class="image-container">
@@ -699,14 +699,20 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
             <button class="view-btn" ${isDisabled ? "disabled" : ""}>
               ${isDisabled ? statusText : "View Details"}
             </button>
-            <button class="contact-btn" ${isDisabled ? "disabled" : ""}>Contact</button>
+            <button class="contact-btn" ${
+              isDisabled ? "disabled" : ""
+            }>Contact</button>
           </div>
         </div>
         <div class="action-icons">
-          <button class="icon-btn favorite-btn" aria-label="Add to favorites" ${isDisabled ? "disabled" : ""}>
+          <button class="icon-btn favorite-btn" aria-label="Add to favorites" ${
+            isDisabled ? "disabled" : ""
+          }>
             <i class="far fa-heart"></i>
           </button>
-          <button class="icon-btn share-btn" aria-label="Share" ${isDisabled ? "disabled" : ""}>
+          <button class="icon-btn share-btn" aria-label="Share" ${
+            isDisabled ? "disabled" : ""
+          }>
             <i class="fas fa-share-alt"></i>
           </button>
         </div>
@@ -729,7 +735,9 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
 
       if (contactBtn) {
         contactBtn.addEventListener("click", () => {
-          window.location.href = `contact.html?vehicle=${encodeURIComponent(vehicleName)}`;
+          window.location.href = `contact.html?vehicle=${encodeURIComponent(
+            vehicleName
+          )}`;
         });
       }
 
@@ -749,16 +757,21 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
         shareBtn.addEventListener("click", (e) => {
           e.stopPropagation();
           if (navigator.share) {
-            navigator.share({
-              title: vehicleName,
-              text: `Check out this ${vehicleName} for ₹${price}`,
-              url: window.location.href
-            }).catch(err => console.log('Error sharing:', err));
+            navigator
+              .share({
+                title: vehicleName,
+                text: `Check out this ${vehicleName} for ₹${price}`,
+                url: window.location.href,
+              })
+              .catch((err) => console.log("Error sharing:", err));
           } else {
             const url = window.location.href;
-            navigator.clipboard.writeText(url).then(() => {
-              alert('Link copied to clipboard!');
-            }).catch(err => console.log('Error copying:', err));
+            navigator.clipboard
+              .writeText(url)
+              .then(() => {
+                alert("Link copied to clipboard!");
+              })
+              .catch((err) => console.log("Error copying:", err));
           }
         });
       }
@@ -824,10 +837,11 @@ function showFeaturedError(sliderEl, vehicleType, retryFn) {
 
   if (retryFn) {
     const retryContainer = document.createElement("div");
-    retryContainer.style.cssText = "width: 100%; text-align: center; margin-top: 20px;";
+    retryContainer.style.cssText =
+      "width: 100%; text-align: center; margin-top: 20px;";
     retryContainer.innerHTML = `
       <button onclick="location.reload()" 
-              style="padding: 10px 20px; background: var(--primary-color, #d92b2b); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+              style="padding: 10px 20px; background: var(--primary-color, #1C7947); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
         Retry
       </button>
     `;
