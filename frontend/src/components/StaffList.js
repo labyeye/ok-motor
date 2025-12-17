@@ -37,7 +37,7 @@ const StaffList = () => {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const response = await axios.get("http://localhost:3500/api/users");
+        const response = await axios.get("https://ok-motor-51l3.vercel.app/api/users");
         setStaff(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         setError(
@@ -63,7 +63,7 @@ const StaffList = () => {
           return;
         }
 
-        await axios.delete(`http://localhost:3500/api/users/${id}`, {
+        await axios.delete(`https://ok-motor-51l3.vercel.app/api/users/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

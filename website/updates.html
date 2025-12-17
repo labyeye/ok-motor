@@ -73,7 +73,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link rel="preconnect" href="https://code.jquery.com" crossorigin />
-    <link rel="preconnect" href="http://localhost:3500" />
+    <link rel="preconnect" href="https://ok-motor-51l3.vercel.app" />
     <link rel="stylesheet" href="./globals.css" />
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./updates.css" />
@@ -207,7 +207,7 @@
         <a href="https://www.okmotors.in/index.html" class="header-logo">
           <img
             src="./assets/images/logoblack.png"
-            alt="Ok Motors Logo"
+            alt="Ok Motors - Latest Updates and News on Pre-Owned Bikes Cars and Services"
             itemprop="logo"
           />
         </a>
@@ -404,7 +404,7 @@
             <img
               src="./assets/images/okmotor.png"
               style="width: 220px"
-              alt="Bike Builders Logo"
+              alt="Ok Motors - India's Trusted Vehicle Portal for Premium Pre-Owned Bikes and Cars with 150-Point Inspection"
             />
           </div>
           <p>Bringing the future of bike riding to you today.</p>
@@ -421,7 +421,7 @@
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
                 style="width: 20px"
-                alt="Instagram — Bike Builders"
+                alt="Follow Ok Motors on Instagram - Stay updated with latest vehicle arrivals and offers"
               />
             </a>
             <a href="https://wa.me/918210283582">
@@ -522,7 +522,7 @@
             alert("Please fill all fields and select a rating.");
             return;
           }
-          fetch("http://localhost:3500/api/reviews", {
+          fetch("https://ok-motor-51l3.vercel.app/api/reviews", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name, message, rating }),
@@ -676,7 +676,7 @@
           } catch (e) {
             // ignore
           }
-          return "http://localhost:3500";
+          return "https://ok-motor-51l3.vercel.app";
         })();
 
         function normalizeImageUrl(url) {

@@ -422,25 +422,26 @@ function initPreconnect() {
 // Initialize backgrounds for cards that have data-bg attribute
 function initServiceCardBackgrounds() {
   try {
-    const cards = document.querySelectorAll('.service-card[data-bg]');
-    cards.forEach(card => {
-      const src = card.getAttribute('data-bg');
+    const cards = document.querySelectorAll(".service-card[data-bg]");
+    cards.forEach((card) => {
+      const src = card.getAttribute("data-bg");
       if (!src) return;
       // Apply background
       card.style.backgroundImage = `url('${src}')`;
-      card.classList.add('bg-cover');
+      card.classList.add("bg-cover");
       // If developer wants no overlay, they can add class `no-overlay`
       // Lazy-load background by creating an Image object
       const img = new Image();
       img.src = src;
       img.onload = () => {
         // fade-in effect
-        card.style.transition = 'background-image 200ms ease, opacity 220ms ease';
-        card.style.opacity = '1';
+        card.style.transition =
+          "background-image 200ms ease, opacity 220ms ease";
+        card.style.opacity = "1";
       };
     });
   } catch (e) {
-    console.error('service card bg init error', e);
+    console.error("service card bg init error", e);
   }
 }
 
@@ -450,7 +451,7 @@ window.API_BASE = (function () {
     if (host === "localhost" || host === "127.0.0.1")
       return `${window.location.protocol}//${host}:3500`;
   } catch (e) {}
-  return "http://localhost:3500";
+  return "https://ok-motor-51l3.vercel.app";
 })();
 
 window.dataLayer = window.dataLayer || [];
@@ -541,60 +542,51 @@ function escapeHtml(text) {
 }
 
 function fetchFeaturedVehicles(vehicleType, sliderEl) {
-  // Load from JSON data files instead of API
-  const dataFile = vehicleType === "Bike" ? "./data/bikes-data.json" : "./data/cars-data.json";
-  
-  fetch(dataFile)
+  // Load from backend API instead of JSON files
+  const API_BASE = window.API_BASE || "https://ok-motor-51l3.vercel.app";
+
+  fetch(
+    `${API_BASE}/api/vehicles/public/listings?limit=8&vehicleType=${vehicleType}`
+  )
     .then((response) => {
-      if (!response.ok) throw new Error(`Failed to load ${dataFile}`);
+      if (!response.ok) throw new Error(`Failed to load vehicles`);
       return response.json();
     })
     .then((data) => {
-      // Handle both direct array and {brands: [...]} object formats
-      const brands = Array.isArray(data) ? data : (data.brands || []);
-      
-      if (!Array.isArray(brands) || brands.length === 0) {
-        showFeaturedError(sliderEl, vehicleType, () =>
-          fetchFeaturedVehicles(vehicleType, sliderEl)
-        );
+      const vehicles = data.vehicles || [];
+
+      if (vehicles.length === 0) {
+        sliderEl.innerHTML =
+          '<div style="text-align:center; padding:40px; color:#666; font-size:18px;">Coming Soon</div>';
         return;
       }
 
-      // Convert JSON brand data to vehicle objects, take up to 8
-      const vehicles = [];
-      for (let i = 0; i < Math.min(brands.length, 8); i++) {
-        const brand = brands[i];
-        const brandName = brand.name || brand.make;
-        if (brand.models && brand.models.length > 0) {
-          const model = brand.models[0];
-          vehicles.push({
-            _id: `${vehicleType.toLowerCase()}-${brandName}-${model}`,
-            brand: brandName,
-            model: model,
-            vehicleType: vehicleType,
-            modelYear: new Date().getFullYear() - 2,
-            fuelType: "Petrol",
-            price: vehicleType === "Bike" 
-              ? Math.floor(Math.random() * 2000000) + 50000 
-              : Math.floor(Math.random() * 3000000) + 500000,
-            kmDriven: Math.floor(Math.random() * 80000) + 5000,
-            ownership: "1st",
-            images: [
-              `https://via.placeholder.com/400x300/cccccc/666666?text=${brandName}+${model}`,
-            ],
-            downPayment: 0,
-            status: "Available",
-          });
-        }
-      }
+      // Map vehicles to the expected format
+      const formattedVehicles = vehicles.map((v) => ({
+        _id: v._id,
+        brand: v.vehicleName || v.brand,
+        model: v.modelName || v.model,
+        vehicleType: v.vehicleType,
+        modelYear:
+          v.manufacturingYear || v.modelYear || new Date().getFullYear(),
+        year: v.manufacturingYear || v.modelYear,
+        fuelType: v.fuelType || "Petrol",
+        price: v.sellingPrice || v.expectedPrice || v.price || 0,
+        kmDriven: v.kmDriven || 0,
+        ownership: v.ownership || "1st",
+        owner: v.ownership || "1st",
+        images:
+          v.images && v.images.length > 0
+            ? v.images.map((img) =>
+                typeof img === "string" ? img : img.url || ""
+              )
+            : ["https://via.placeholder.com/400x300?text=No+Image"],
+        primaryImage: v.primaryImage,
+        downPayment: v.downPayment || 0,
+        status: v.availabilityStatus || "Available",
+      }));
 
-      if (vehicles.length > 0) {
-        displayFeaturedVehicles(vehicles, sliderEl, vehicleType);
-      } else {
-        showFeaturedError(sliderEl, vehicleType, () =>
-          fetchFeaturedVehicles(vehicleType, sliderEl)
-        );
-      }
+      displayFeaturedVehicles(formattedVehicles, sliderEl, vehicleType);
     })
     .catch((error) => {
       console.error(`Error fetching ${vehicleType}:`, error);
@@ -616,152 +608,103 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
     const card = document.createElement("div");
     card.className = "bike-card";
 
-    let statusClass = "status-available";
-    let statusText = "Available";
-    let isDisabled = false;
+    // Choose image
+    const imageUrl =
+      (vehicle.primaryImage && vehicle.primaryImage.url) ||
+      (vehicle.images && vehicle.images.length && vehicle.images[0]) ||
+      "https://via.placeholder.com/400x300/cccccc/666666?text=No+Image";
 
-    if (vehicle.status === "Sold Out" || vehicle.status === "sold") {
-      statusClass = "status-sold";
-      statusText = "Sold Out";
-      isDisabled = true;
-    } else if (vehicle.status === "Coming Soon") {
-      statusClass = "status-coming-soon";
-      statusText = "Coming Soon";
-      isDisabled = true;
-    }
+    // Photo count
+    const photos = vehicle.images ? vehicle.images.length : 0;
 
-    const images = vehicle.images || [];
-    const firstImage =
-      images[0] || "https://via.placeholder.com/300?text=No+Image";
-    const photoCount = images.length;
+    const statusBadge =
+      vehicle.status || vehicle.availabilityStatus || "Available";
+    const statusClass = statusBadge.toLowerCase().includes("sold")
+      ? "status-sold"
+      : "status-available";
 
-    const vehicleName = escapeHtml(
-      `${vehicle.brand || ""} ${vehicle.model || ""}`
-    ).trim();
-    const carBody = escapeHtml(vehicle.vehicleType || vehicleType || "Vehicle");
-    const modelYear = escapeHtml(vehicle.modelYear || vehicle.year || "N/A");
-    const kmDriven = (vehicle.kmDriven || 0).toLocaleString();
-    const ownership = formatOwnership(
-      vehicle.ownership || vehicle.owner || "1"
-    );
-    const fuelType = escapeHtml(vehicle.fuelType || "Petrol");
-    const price = (vehicle.price || 0).toLocaleString();
-    const downPayment = vehicle.downPayment || 0;
-    const emiAmount = Math.round(
-      ((vehicle.price || 0) - downPayment) / 36
-    ).toLocaleString();
+    const vehicleName =
+      (vehicle.brand || vehicle.vehicleName || "") +
+      " " +
+      (vehicle.model || vehicle.modelName || "");
 
     card.innerHTML = `
       <div class="image-container">
-        <img src="${firstImage}" 
-             alt="${vehicleName}" 
-             loading="lazy">
-        <div class="status-badge ${statusClass}">${statusText}</div>
-        <div class="photo-count">
-          <i class="fas fa-camera"></i> ${photoCount}
-        </div>
+        <span class="status-badge ${statusClass}">${statusBadge}</span>
+        ${photos > 0 ? `<span class="photo-count">📷 ${photos}</span>` : ""}
+        <img src="${imageUrl}" alt="${vehicleName.trim()}" />
       </div>
       <div class="card-content">
-        <div class="car-body">${carBody}</div>
-        <h3>${vehicleName}</h3>
-        <span class="model">${modelYear} Model</span>
+        <div class="car-body">${vehicle.vehicleType || vehicleType || ""}</div>
+        <h3>${vehicleName.trim()}</h3>
+        <span class="model">${vehicle.modelYear || vehicle.year || ""}</span>
         <div class="details">
           <div class="detail-item">
             <i class="fas fa-tachometer-alt"></i>
-            <span>${kmDriven} km</span>
+            <span>${
+              vehicle.kmDriven ? vehicle.kmDriven.toLocaleString() + " km" : "-"
+            }</span>
           </div>
           <div class="detail-item">
             <i class="fas fa-user"></i>
-            <span>${ownership}</span>
+            <span>${vehicle.ownership || vehicle.owner || "1st Owner"}</span>
           </div>
           <div class="detail-item">
             <i class="fas fa-gas-pump"></i>
-            <span>${fuelType}</span>
+            <span>${vehicle.fuelType || "Petrol"}</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-calendar-alt"></i>
+            <span>${
+              vehicle.modelYear
+                ? new Date().getFullYear() - vehicle.modelYear + " years"
+                : "-"
+            }</span>
           </div>
         </div>
         <div class="price-container">
-          <div class="price">₹${price}</div>
-          <div class="emi">EMI: ₹${emiAmount}/month</div>
+          <div class="price">₹${(vehicle.price || 0).toLocaleString()}</div>
+          <div class="emi">${
+            vehicle.downPayment
+              ? "Down: ₹" + vehicle.downPayment.toLocaleString()
+              : ""
+          } ${
+      vehicle.downPayment
+        ? "| EMI: ₹" +
+          Math.round(
+            ((vehicle.price || 0) - vehicle.downPayment) / 36
+          ).toLocaleString() +
+          "/month"
+        : ""
+    }</div>
           <div class="button-group">
-            <button class="view-btn" ${isDisabled ? "disabled" : ""}>
-              ${isDisabled ? statusText : "View Details"}
-            </button>
-            <button class="contact-btn" ${
-              isDisabled ? "disabled" : ""
-            }>Contact</button>
+            <button class="contact-btn" data-id="${
+              vehicle._id
+            }">BOOK NOW</button>
+            <button class="view-details-btn" data-id="${
+              vehicle._id
+            }">VIEW DETAILS</button>
           </div>
-        </div>
-        <div class="action-icons">
-          <button class="icon-btn favorite-btn" aria-label="Add to favorites" ${
-            isDisabled ? "disabled" : ""
-          }>
-            <i class="far fa-heart"></i>
-          </button>
-          <button class="icon-btn share-btn" aria-label="Share" ${
-            isDisabled ? "disabled" : ""
-          }>
-            <i class="fas fa-share-alt"></i>
-          </button>
         </div>
       </div>
     `;
 
     sliderEl.appendChild(card);
 
-    if (!isDisabled) {
-      const viewBtn = card.querySelector(".view-btn");
-      const contactBtn = card.querySelector(".contact-btn");
-      const favoriteBtn = card.querySelector(".favorite-btn");
-      const shareBtn = card.querySelector(".share-btn");
+    // Add event listeners
+    const contactBtn = card.querySelector(".contact-btn");
+    const detailsBtn = card.querySelector(".view-details-btn");
 
-      if (viewBtn) {
-        viewBtn.addEventListener("click", () => {
-          window.location.href = `vehicledetail.html?id=${vehicle._id || ""}`;
-        });
-      }
+    if (contactBtn) {
+      contactBtn.addEventListener("click", () => {
+        window.location.href = `book.html?vehicleId=${vehicle._id}`;
+      });
+    }
 
-      if (contactBtn) {
-        contactBtn.addEventListener("click", () => {
-          window.location.href = `contact.html?vehicle=${encodeURIComponent(
-            vehicleName
-          )}`;
-        });
-      }
-
-      if (favoriteBtn) {
-        favoriteBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          favoriteBtn.classList.toggle("active");
-          const icon = favoriteBtn.querySelector("i");
-          if (icon) {
-            icon.classList.toggle("far");
-            icon.classList.toggle("fas");
-          }
-        });
-      }
-
-      if (shareBtn) {
-        shareBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          if (navigator.share) {
-            navigator
-              .share({
-                title: vehicleName,
-                text: `Check out this ${vehicleName} for ₹${price}`,
-                url: window.location.href,
-              })
-              .catch((err) => console.log("Error sharing:", err));
-          } else {
-            const url = window.location.href;
-            navigator.clipboard
-              .writeText(url)
-              .then(() => {
-                alert("Link copied to clipboard!");
-              })
-              .catch((err) => console.log("Error copying:", err));
-          }
-        });
-      }
+    if (detailsBtn) {
+      detailsBtn.addEventListener("click", () => {
+        window.location.href = `vehicledetail.html?id=${vehicle._id}`;
+      });
     }
   });
 }
@@ -1079,10 +1022,10 @@ function attachStyleCarouselResizeHandler() {
 }
 
 function init() {
-  initLanguage();
+  // initLanguage(); // Removed - function doesn't exist
   initHeroSlider();
   initMobileMenu();
-  updateMobileMenuTranslations();
+  // updateMobileMenuTranslations(); // Removed - function doesn't exist
   initLazyLoading();
   initPreconnect();
   initFeaturedSliders();

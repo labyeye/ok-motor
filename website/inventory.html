@@ -87,7 +87,7 @@
         <a href="https://www.okmotors.in/index.html" class="header-logo">
           <img
             src="./assets/images/logoblack.png"
-            alt="Ok Motors Logo"
+            alt="Ok Motors - Browse Certified Pre-Owned Bikes and Cars Inventory with Warranty"
             itemprop="logo"
           />
         </a>
@@ -307,7 +307,7 @@
             <img
               src="./assets/images/okmotor.png"
               style="width: 220px"
-              alt="Ok Motors Logo"
+              alt="Ok Motors - India's Trusted Vehicle Portal for Premium Pre-Owned Bikes and Cars with 150-Point Inspection"
             />
           </div>
           <p>Bringing the future of bike riding to you today.</p>
@@ -322,6 +322,7 @@
               ><img
                 src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
                 style="width: 20px"
+                alt="Follow Ok Motors on Instagram - Latest inventory updates on bikes and cars"
             /></a>
             <a href="https://wa.me/918210283582"
               ><i class="fa-brands fa-whatsapp" style="color: #00a841"></i
@@ -431,74 +432,19 @@
           return new Intl.NumberFormat("en-IN").format(num);
         }
 
-        // Load vehicle data from JSON files
+        // Load vehicle data from backend API
         async function loadVehicleData() {
           try {
-            const bikesRes = await fetch("./data/bikes-data.json");
-            const carsRes = await fetch("./data/cars-data.json");
-            const bikesData = await bikesRes.json();
-            const carsData = await carsRes.json();
-
-            // Convert JSON data to vehicle-like objects for display
-            const bikesVehicles = [];
-            const carsVehicles = [];
-
-            // Handle both direct array and {brands: [...]} object formats
-            const bikesBrands = Array.isArray(bikesData) ? bikesData : (bikesData.brands || []);
-            const carsBrands = Array.isArray(carsData) ? carsData : (carsData.brands || []);
-
-            bikesBrands.forEach((brand) => {
-              const brandName = brand.name || brand.make;
-              if (brand.models && Array.isArray(brand.models)) {
-                brand.models.forEach((model) => {
-                  // Create a vehicle object from the bike data
-                  bikesVehicles.push({
-                    _id: `bike-${brandName}-${model}`,
-                    vehicleType: "Bike",
-                    vehicleName: brandName,
-                    modelName: model,
-                    bodyType: brand.bodyTypes && brand.bodyTypes[0] ? brand.bodyTypes[0] : "Bike",
-                    manufacturingYear: new Date().getFullYear() - 2,
-                    fuelType: "Petrol",
-                    sellingPrice: Math.floor(Math.random() * 2000000) + 50000,
-                    images: [
-                      {
-                        url: `https://via.placeholder.com/400x300/cccccc/666666?text=${brandName}+${model}`,
-                      },
-                    ],
-                  });
-                });
-              }
-            });
-
-            carsBrands.forEach((brand) => {
-              const brandName = brand.name || brand.make;
-              if (brand.models && Array.isArray(brand.models)) {
-                brand.models.forEach((model) => {
-                  // Create a vehicle object from the car data
-                  carsVehicles.push({
-                    _id: `car-${brandName}-${model}`,
-                    vehicleType: "Car",
-                    vehicleName: brandName,
-                    modelName: model,
-                    bodyType: brand.bodyTypes && brand.bodyTypes[0] ? brand.bodyTypes[0] : "Sedan",
-                    manufacturingYear: new Date().getFullYear() - 2,
-                    fuelType: "Petrol",
-                    sellingPrice: Math.floor(Math.random() * 3000000) + 500000,
-                    images: [
-                      {
-                        url: `https://via.placeholder.com/400x300/cccccc/666666?text=${brandName}+${model}`,
-                      },
-                    ],
-                  });
-                });
-              }
-            });
-
-            allVehicles = [...bikesVehicles, ...carsVehicles];
+            const API_BASE = "https://ok-motor-51l3.vercel.app";
+            const res = await fetch(`${API_BASE}/api/vehicles/public/listings?limit=100`);
+            if (!res.ok) throw new Error("Failed to fetch vehicles");
+            const data = await res.json();
+            
+            allVehicles = data.vehicles || [];
             return true;
           } catch (error) {
             console.error("Error loading vehicle data:", error);
+            grid.innerHTML = '<p style="padding:20px;color:#b00">Failed to load vehicles. Make sure backend is running on https://ok-motor-51l3.vercel.app</p>';
             return false;
           }
         }
@@ -692,15 +638,13 @@
           });
         }
 
-        // populate filter options from JSON data
+        // populate filter options from vehicles data
         async function populateFilters() {
           try {
-            // Extract unique brands, years, and types from allVehicles
-            const brands = [...new Set(allVehicles.map((v) => v.vehicleName))];
-            const years = [
-              ...new Set(allVehicles.map((v) => v.manufacturingYear)),
-            ].sort((a, b) => b - a);
-            const types = ["Car", "Bike"];
+            // Extract unique values from loaded vehicles
+            const brands = [...new Set(allVehicles.map((v) => v.vehicleName || v.brand))].filter(Boolean);
+            const years = [...new Set(allVehicles.map((v) => v.manufacturingYear || v.modelYear))].sort((a, b) => b - a);
+            const types = [...new Set(allVehicles.map((v) => v.vehicleType))].filter(Boolean);
 
             // Price ranges
             const priceContainer = document.getElementById("price-options");

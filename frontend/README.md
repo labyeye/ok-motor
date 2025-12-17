@@ -9,7 +9,7 @@ In the project directory, you can run:
 ### `npm start`
 
 Runs the app in the development mode.\
-Open [http://localhost:3500/](http://localhost:3500/) to view it in your browser.
+Open [https://ok-motor-51l3.vercel.app/](https://ok-motor-51l3.vercel.app/) to view it in your browser.
 
 The page will reload when you make changes.\
 You may also see any lint errors in the console.

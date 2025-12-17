@@ -8,6 +8,7 @@ const { protect } = require("../middleware/auth");
 router.get("/public/listings", vehicleController.getPublicVehicleListings);
 // Public filter data (brands, years, price ranges, types)
 router.get("/public/filters", vehicleController.getPublicFilters);
+// Note: /api/featured-bikes route removed - use /api/vehicles/public/listings instead
 
 // Protected routes - require authentication
 router.use(protect);

@@ -441,10 +441,12 @@ exports.getPublicVehicleListings = async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
+    // Relaxed filters - show all vehicles that are not deleted
     const conditions = {
-      isActive: true,
-      availabilityStatus: "Available",
-      visibility: "public",
+      $or: [
+        { isActive: { $ne: false } },
+        { isActive: { $exists: false } }
+      ]
     };
 
     // Optional filters: vehicleType (Car/Bike), vehicleName (brand), manufacturingYear, price range
