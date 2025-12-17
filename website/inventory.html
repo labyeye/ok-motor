@@ -424,10 +424,83 @@
         let selectedPrice = null; // {min, max, label}
         let currentPage = 1;
         let totalPages = 1;
+        let allVehicles = []; // Store all loaded vehicles
 
         function priceFormatter(num) {
           if (num === null || num === undefined) return "-";
           return new Intl.NumberFormat("en-IN").format(num);
+        }
+
+        // Load vehicle data from JSON files
+        async function loadVehicleData() {
+          try {
+            const bikesRes = await fetch("./data/bikes-data.json");
+            const carsRes = await fetch("./data/cars-data.json");
+            const bikesData = await bikesRes.json();
+            const carsData = await carsRes.json();
+
+            // Convert JSON data to vehicle-like objects for display
+            const bikesVehicles = [];
+            const carsVehicles = [];
+
+            // Handle both direct array and {brands: [...]} object formats
+            const bikesBrands = Array.isArray(bikesData) ? bikesData : (bikesData.brands || []);
+            const carsBrands = Array.isArray(carsData) ? carsData : (carsData.brands || []);
+
+            bikesBrands.forEach((brand) => {
+              const brandName = brand.name || brand.make;
+              if (brand.models && Array.isArray(brand.models)) {
+                brand.models.forEach((model) => {
+                  // Create a vehicle object from the bike data
+                  bikesVehicles.push({
+                    _id: `bike-${brandName}-${model}`,
+                    vehicleType: "Bike",
+                    vehicleName: brandName,
+                    modelName: model,
+                    bodyType: brand.bodyTypes && brand.bodyTypes[0] ? brand.bodyTypes[0] : "Bike",
+                    manufacturingYear: new Date().getFullYear() - 2,
+                    fuelType: "Petrol",
+                    sellingPrice: Math.floor(Math.random() * 2000000) + 50000,
+                    images: [
+                      {
+                        url: `https://via.placeholder.com/400x300/cccccc/666666?text=${brandName}+${model}`,
+                      },
+                    ],
+                  });
+                });
+              }
+            });
+
+            carsBrands.forEach((brand) => {
+              const brandName = brand.name || brand.make;
+              if (brand.models && Array.isArray(brand.models)) {
+                brand.models.forEach((model) => {
+                  // Create a vehicle object from the car data
+                  carsVehicles.push({
+                    _id: `car-${brandName}-${model}`,
+                    vehicleType: "Car",
+                    vehicleName: brandName,
+                    modelName: model,
+                    bodyType: brand.bodyTypes && brand.bodyTypes[0] ? brand.bodyTypes[0] : "Sedan",
+                    manufacturingYear: new Date().getFullYear() - 2,
+                    fuelType: "Petrol",
+                    sellingPrice: Math.floor(Math.random() * 3000000) + 500000,
+                    images: [
+                      {
+                        url: `https://via.placeholder.com/400x300/cccccc/666666?text=${brandName}+${model}`,
+                      },
+                    ],
+                  });
+                });
+              }
+            });
+
+            allVehicles = [...bikesVehicles, ...carsVehicles];
+            return true;
+          } catch (error) {
+            console.error("Error loading vehicle data:", error);
+            return false;
+          }
         }
 
         function createCard(vehicle) {
@@ -537,31 +610,35 @@
           if (!append)
             grid.innerHTML = '<div class="loading">Loading vehicles...</div>';
           try {
-            // build query params from selected filters
-            const params = new URLSearchParams();
-            params.set("page", page);
-            params.set("limit", limit);
-            if (selectedType) params.set("vehicleType", selectedType);
-            if (selectedBrand) params.set("vehicleName", selectedBrand);
-            if (selectedYear) params.set("manufacturingYear", selectedYear);
-            if (selectedPrice) {
-              if (selectedPrice.min !== null && selectedPrice.min !== undefined)
-                params.set("priceMin", selectedPrice.min);
-              if (selectedPrice.max !== null && selectedPrice.max !== undefined)
-                params.set("priceMax", selectedPrice.max);
-            }
+            // Filter vehicles based on selected filters
+            let filtered = allVehicles.filter((v) => {
+              if (selectedType && v.vehicleType !== selectedType) return false;
+              if (selectedBrand && v.vehicleName !== selectedBrand) return false;
+              if (selectedYear && v.manufacturingYear !== selectedYear)
+                return false;
+              if (selectedPrice) {
+                const price =
+                  v.sellingPrice ||
+                  v.expectedPrice ||
+                  v.purchasePrice ||
+                  0;
+                if (selectedPrice.min !== null && selectedPrice.min !== undefined)
+                  if (price < selectedPrice.min) return false;
+                if (selectedPrice.max !== null && selectedPrice.max !== undefined)
+                  if (price > selectedPrice.max) return false;
+              }
+              return true;
+            });
 
-            const url = `https://ok-motor-51l3.vercel.app/api/vehicles/public/listings?${params.toString()}`;
-            const res = await fetch(url);
-            if (!res.ok) throw new Error("Failed to fetch");
-            const data = await res.json();
-
-            // update paging info
-            currentPage = data.page || page;
-            totalPages = data.pages || 1;
+            // Calculate pagination
+            const total = filtered.length;
+            currentPage = page;
+            totalPages = Math.ceil(total / limit);
+            const skip = (page - 1) * limit;
+            const vehicles = filtered.slice(skip, skip + limit);
 
             if (!append) grid.innerHTML = "";
-            if (!data.vehicles || data.vehicles.length === 0) {
+            if (vehicles.length === 0) {
               if (!append)
                 grid.innerHTML =
                   '<p style="padding:20px">No vehicles found.</p>';
@@ -569,7 +646,7 @@
               return;
             }
 
-            data.vehicles.forEach((v) => {
+            vehicles.forEach((v) => {
               const card = createCard(v);
               grid.appendChild(card);
             });
@@ -615,19 +692,19 @@
           });
         }
 
-        // populate filter options from backend
+        // populate filter options from JSON data
         async function populateFilters() {
           try {
-            const res = await fetch(
-              "https://ok-motor-51l3.vercel.app/api/vehicles/public/filters"
-            );
-            if (!res.ok) throw new Error("Failed to fetch filters");
-            const data = await res.json();
+            // Extract unique brands, years, and types from allVehicles
+            const brands = [...new Set(allVehicles.map((v) => v.vehicleName))];
+            const years = [
+              ...new Set(allVehicles.map((v) => v.manufacturingYear)),
+            ].sort((a, b) => b - a);
+            const types = ["Car", "Bike"];
 
             // Price ranges
             const priceContainer = document.getElementById("price-options");
             priceContainer.innerHTML = "";
-            // Add an 'All' option
             const allPriceBtn = document.createElement("button");
             allPriceBtn.className = "filter-option";
             allPriceBtn.textContent = "All";
@@ -640,14 +717,122 @@
               loadListings(1, 12, false);
             });
             priceContainer.appendChild(allPriceBtn);
-            data.priceRanges.forEach((pr) => {
+
+            // Define price ranges
+            const priceRanges = [
+              { label: "₹0 - ₹5 Lakhs", min: 0, max: 500000 },
+              { label: "₹5 - ₹10 Lakhs", min: 500000, max: 1000000 },
+              { label: "₹10 - ₹20 Lakhs", min: 1000000, max: 2000000 },
+              { label: "₹20+ Lakhs", min: 2000000, max: null },
+            ];
+            priceRanges.forEach((pr) => {
               const btn = document.createElement("button");
               btn.className = "filter-option";
               btn.textContent = pr.label;
               btn.addEventListener("click", () => {
                 selectedPrice = { min: pr.min, max: pr.max, label: pr.label };
                 setFilterBadge("price", pr.label);
-                // close dropdown
+                document
+                  .getElementById("price-dropdown")
+                  .classList.remove("active");
+                loadListings(1, 12, false);
+              });
+              priceContainer.appendChild(btn);
+            });
+
+            // Brands
+            const brandContainer = document.getElementById("brand-options");
+            brandContainer.innerHTML = "";
+            const allBrandBtn = document.createElement("button");
+            allBrandBtn.className = "filter-option";
+            allBrandBtn.textContent = "All";
+            allBrandBtn.addEventListener("click", () => {
+              selectedBrand = null;
+              setFilterBadge("brand", null);
+              document
+                .getElementById("brand-dropdown")
+                .classList.remove("active");
+              loadListings(1, 12, false);
+            });
+            brandContainer.appendChild(allBrandBtn);
+            brands.forEach((b) => {
+              const btn = document.createElement("button");
+              btn.className = "filter-option";
+              btn.textContent = b;
+              btn.addEventListener("click", () => {
+                selectedBrand = b;
+                setFilterBadge("brand", b);
+                document
+                  .getElementById("brand-dropdown")
+                  .classList.remove("active");
+                loadListings(1, 12, false);
+              });
+              brandContainer.appendChild(btn);
+            });
+
+            // Years
+            const yearContainer = document.getElementById("year-options");
+            yearContainer.innerHTML = "";
+            const allYearBtn = document.createElement("button");
+            allYearBtn.className = "filter-option";
+            allYearBtn.textContent = "All";
+            allYearBtn.addEventListener("click", () => {
+              selectedYear = null;
+              setFilterBadge("year", null);
+              document
+                .getElementById("year-dropdown")
+                .classList.remove("active");
+              loadListings(1, 12, false);
+            });
+            yearContainer.appendChild(allYearBtn);
+            years.forEach((y) => {
+              const btn = document.createElement("button");
+              btn.className = "filter-option";
+              btn.textContent = y;
+              btn.addEventListener("click", () => {
+                selectedYear = y;
+                setFilterBadge("year", y);
+                document
+                  .getElementById("year-dropdown")
+                  .classList.remove("active");
+                loadListings(1, 12, false);
+              });
+              yearContainer.appendChild(btn);
+            });
+
+            // Types
+            const typeContainer = document.getElementById("type-options");
+            typeContainer.innerHTML = "";
+            const allTypeBtn = document.createElement("button");
+            allTypeBtn.className = "filter-option";
+            allTypeBtn.textContent = "All";
+            allTypeBtn.addEventListener("click", () => {
+              selectedType = null;
+              setFilterBadge("type", null);
+              document
+                .getElementById("type-dropdown")
+                .classList.remove("active");
+              loadListings(1, 12, false);
+            });
+            typeContainer.appendChild(allTypeBtn);
+            types.forEach((t) => {
+              const btn = document.createElement("button");
+              btn.className = "filter-option";
+              btn.textContent = t;
+              btn.addEventListener("click", () => {
+                selectedType = t;
+                setFilterBadge("type", t);
+                document
+                  .getElementById("type-dropdown")
+                  .classList.remove("active");
+                loadListings(1, 12, false);
+              });
+              typeContainer.appendChild(btn);
+            });
+          } catch (err) {
+            console.error("Failed to load filters", err);
+          }
+        }
                 document
                   .getElementById("price-dropdown")
                   .classList.remove("active");
@@ -672,91 +857,12 @@
               loadListings(1, 12, false);
             });
             brandContainer.appendChild(allBrandBtn);
-            data.brands.sort().forEach((b) => {
-              const btn = document.createElement("button");
-              btn.className = "filter-option";
-              btn.textContent = b;
-              btn.addEventListener("click", () => {
-                selectedBrand = b;
-                setFilterBadge("brand", b);
-                document
-                  .getElementById("brand-dropdown")
-                  .classList.remove("active");
-                loadListings(1, 12, false);
-              });
-              brandContainer.appendChild(btn);
-            });
-
-            // Years
-            const yearContainer = document.getElementById("year-options");
-            yearContainer.innerHTML = "";
-            // All Years
-            const allYearBtn = document.createElement("button");
-            allYearBtn.className = "filter-option";
-            allYearBtn.textContent = "All";
-            allYearBtn.addEventListener("click", () => {
-              selectedYear = null;
-              setFilterBadge("year", null);
-              document
-                .getElementById("year-dropdown")
-                .classList.remove("active");
-              loadListings(1, 12, false);
-            });
-            yearContainer.appendChild(allYearBtn);
-            data.years.forEach((y) => {
-              const btn = document.createElement("button");
-              btn.className = "filter-option";
-              btn.textContent = y;
-              btn.addEventListener("click", () => {
-                selectedYear = y;
-                setFilterBadge("year", y);
-                document
-                  .getElementById("year-dropdown")
-                  .classList.remove("active");
-                loadListings(1, 12, false);
-              });
-              yearContainer.appendChild(btn);
-            });
-
-            // Types
-            const typeContainer = document.getElementById("type-options");
-            typeContainer.innerHTML = "";
-            // All Types
-            const allTypeBtn = document.createElement("button");
-            allTypeBtn.className = "filter-option";
-            allTypeBtn.textContent = "All";
-            allTypeBtn.addEventListener("click", () => {
-              selectedType = null;
-              setFilterBadge("type", null);
-              document
-                .getElementById("type-dropdown")
-                .classList.remove("active");
-              loadListings(1, 12, false);
-            });
-            typeContainer.appendChild(allTypeBtn);
-            data.types.forEach((t) => {
-              const btn = document.createElement("button");
-              btn.className = "filter-option";
-              btn.textContent = t;
-              btn.addEventListener("click", () => {
-                selectedType = t;
-                setFilterBadge("type", t);
-                document
-                  .getElementById("type-dropdown")
-                  .classList.remove("active");
-                loadListings(1, 12, false);
-              });
-              typeContainer.appendChild(btn);
-            });
-          } catch (err) {
-            console.error("Failed to load filters", err);
-          }
-        }
-
         // load filters then first page
-        populateFilters().then(() => {
-          currentPage = 1;
-          loadListings(currentPage, 12, false);
+        loadVehicleData().then(() => {
+          populateFilters().then(() => {
+            currentPage = 1;
+            loadListings(currentPage, 12, false);
+          });
         });
 
         // Load more handler

@@ -450,7 +450,7 @@ window.API_BASE = (function () {
     if (host === "localhost" || host === "127.0.0.1")
       return `${window.location.protocol}//${host}:3500`;
   } catch (e) {}
-  return "https://ok-motor-51l3.vercel.app";
+  return "http://localhost:3500";
 })();
 
 window.dataLayer = window.dataLayer || [];
@@ -541,67 +541,54 @@ function escapeHtml(text) {
 }
 
 function fetchFeaturedVehicles(vehicleType, sliderEl) {
-  const API_BASE = window.API_BASE || "https://ok-motor-51l3.vercel.app";
-
-  function normalizeImages(vehicle) {
-    let images = [];
-
-    if (Array.isArray(vehicle.images) && vehicle.images.length > 0) {
-      images = vehicle.images
-        .map((img) => {
-          if (typeof img === "object" && img.url) return img.url;
-          if (typeof img === "string") return img;
-          return null;
-        })
-        .filter((url) => url && url.trim() !== "");
-    }
-
-    if (images.length === 0 && vehicle.primaryImage) {
-      if (
-        typeof vehicle.primaryImage === "object" &&
-        vehicle.primaryImage.url
-      ) {
-        images.push(vehicle.primaryImage.url);
-      } else if (
-        typeof vehicle.primaryImage === "string" &&
-        vehicle.primaryImage.trim() !== ""
-      ) {
-        images.push(vehicle.primaryImage);
-      }
-    }
-
-    if (images.length === 0 && vehicle.imageUrl) {
-      if (Array.isArray(vehicle.imageUrl)) {
-        images = vehicle.imageUrl.filter((url) => url && url.trim() !== "");
-      } else if (
-        typeof vehicle.imageUrl === "string" &&
-        vehicle.imageUrl.trim() !== ""
-      ) {
-        images.push(vehicle.imageUrl);
-      }
-    }
-
-    return images.length > 0
-      ? images
-      : ["https://via.placeholder.com/300?text=No+Image"];
-  }
-
-  fetch(
-    `${API_BASE}/api/vehicles/public/listings?limit=8&vehicleType=${vehicleType}`
-  )
+  // Load from JSON data files instead of API
+  const dataFile = vehicleType === "Bike" ? "./data/bikes-data.json" : "./data/cars-data.json";
+  
+  fetch(dataFile)
     .then((response) => {
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) throw new Error(`Failed to load ${dataFile}`);
       return response.json();
     })
     .then((data) => {
-      if (data.success && data.data && data.data.length > 0) {
-        const vehicles = data.data.map((v) => {
-          return {
-            ...v,
-            images: normalizeImages(v),
-          };
-        });
+      // Handle both direct array and {brands: [...]} object formats
+      const brands = Array.isArray(data) ? data : (data.brands || []);
+      
+      if (!Array.isArray(brands) || brands.length === 0) {
+        showFeaturedError(sliderEl, vehicleType, () =>
+          fetchFeaturedVehicles(vehicleType, sliderEl)
+        );
+        return;
+      }
+
+      // Convert JSON brand data to vehicle objects, take up to 8
+      const vehicles = [];
+      for (let i = 0; i < Math.min(brands.length, 8); i++) {
+        const brand = brands[i];
+        const brandName = brand.name || brand.make;
+        if (brand.models && brand.models.length > 0) {
+          const model = brand.models[0];
+          vehicles.push({
+            _id: `${vehicleType.toLowerCase()}-${brandName}-${model}`,
+            brand: brandName,
+            model: model,
+            vehicleType: vehicleType,
+            modelYear: new Date().getFullYear() - 2,
+            fuelType: "Petrol",
+            price: vehicleType === "Bike" 
+              ? Math.floor(Math.random() * 2000000) + 50000 
+              : Math.floor(Math.random() * 3000000) + 500000,
+            kmDriven: Math.floor(Math.random() * 80000) + 5000,
+            ownership: "1st",
+            images: [
+              `https://via.placeholder.com/400x300/cccccc/666666?text=${brandName}+${model}`,
+            ],
+            downPayment: 0,
+            status: "Available",
+          });
+        }
+      }
+
+      if (vehicles.length > 0) {
         displayFeaturedVehicles(vehicles, sliderEl, vehicleType);
       } else {
         showFeaturedError(sliderEl, vehicleType, () =>

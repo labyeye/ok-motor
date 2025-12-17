@@ -138,7 +138,7 @@ const AuthForm = ({ isLogin }) => {
           display: flex;
           min-height: 100vh;
           font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-          background-image: url("https://ik.imagekit.io/os1mzoooe/ChatGPT%20Image%20Jun%2022,%202025,%2001_51_38%20PM.png?updatedAt=1750580522377");
+          background-image: url("https://ik.imagekit.io/okmotors/ChatGPT%20Image%20Jun%2022,%202025,%2001_51_38%20PM.png?updatedAt=1750580522377");
           background-size: cover;
           background-position: center;
           background-repeat: no-repeat;

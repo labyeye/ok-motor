@@ -1333,16 +1333,16 @@ const BikeHistory = () => {
       const [buyLetters, sellLetters, serviceBills, advanceBills] =
         await Promise.all([
           axios.get(
-            `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${searchTerm}`
+            `http://localhost:3500/api/buy-letter/by-registration?registrationNumber=${searchTerm}`
           ),
           axios.get(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters/by-registration?registrationNumber=${searchTerm}`
+            `http://localhost:3500/api/sell-letters/by-registration?registrationNumber=${searchTerm}`
           ),
           axios.get(
-            `https://ok-motor-51l3.vercel.app/api/service-bills/by-registration?registrationNumber=${searchTerm}`
+            `http://localhost:3500/api/service-bills/by-registration?registrationNumber=${searchTerm}`
           ),
           axios.get(
-            `https://ok-motor-51l3.vercel.app/api/advance-bills/by-registration?registrationNumber=${searchTerm}`
+            `http://localhost:3500/api/advance-bills/by-registration?registrationNumber=${searchTerm}`
           ),
         ]);
 
@@ -1593,7 +1593,7 @@ const BikeHistory = () => {
         }
         return;
       } else if (type === "service") {
-        const endpoint = `https://ok-motor-51l3.vercel.app/api/service-bills/${id}/pdf`;
+        const endpoint = `http://localhost:3500/api/service-bills/${id}/pdf`;
         const response = await axios.get(endpoint, {
           responseType: "blob",
         });
@@ -1602,7 +1602,7 @@ const BikeHistory = () => {
         setPdfUrl(pdfUrl);
         setShowPdfModal(true);
       } else if (type === "advance") {
-        const endpoint = `https://ok-motor-51l3.vercel.app/api/advance-bills/${id}/pdf`;
+        const endpoint = `http://localhost:3500/api/advance-bills/${id}/pdf`;
         const response = await axios.get(endpoint, {
           responseType: "blob",
         });
@@ -1638,7 +1638,7 @@ const BikeHistory = () => {
         }
         return;
       } else if (type === "service") {
-        const endpoint = `https://ok-motor-51l3.vercel.app/api/service-bills/${id}/pdf`;
+        const endpoint = `http://localhost:3500/api/service-bills/${id}/pdf`;
         const response = await axios.get(endpoint, {
           responseType: "blob",
         });
@@ -1653,7 +1653,7 @@ const BikeHistory = () => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
       } else if (type === "advance") {
-        const endpoint = `https://ok-motor-51l3.vercel.app/api/advance-bills/${id}/download`;
+        const endpoint = `http://localhost:3500/api/advance-bills/${id}/download`;
         const response = await axios.get(endpoint, {
           responseType: "blob",
         });

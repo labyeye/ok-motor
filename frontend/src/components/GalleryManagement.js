@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 
-const API_BASE = "https://ok-motor-51l3.vercel.app";
+const API_BASE = "http://localhost:3500";
 
 const GalleryManagement = () => {
   const { user, logout } = useContext(AuthContext);
