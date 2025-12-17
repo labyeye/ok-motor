@@ -833,30 +833,7 @@
             console.error("Failed to load filters", err);
           }
         }
-                document
-                  .getElementById("price-dropdown")
-                  .classList.remove("active");
-                loadListings(1, 12, false);
-              });
-              priceContainer.appendChild(btn);
-            });
 
-            // Brands
-            const brandContainer = document.getElementById("brand-options");
-            brandContainer.innerHTML = "";
-            // All Brands option
-            const allBrandBtn = document.createElement("button");
-            allBrandBtn.className = "filter-option";
-            allBrandBtn.textContent = "All";
-            allBrandBtn.addEventListener("click", () => {
-              selectedBrand = null;
-              setFilterBadge("brand", null);
-              document
-                .getElementById("brand-dropdown")
-                .classList.remove("active");
-              loadListings(1, 12, false);
-            });
-            brandContainer.appendChild(allBrandBtn);
         // load filters then first page
         loadVehicleData().then(() => {
           populateFilters().then(() => {
