@@ -677,23 +677,7 @@
           },
         };
 
-        const preferredLanguage =
-          localStorage.getItem("preferredLanguage") || "en";
-
-        if (preferredLanguage !== "en") {
-          document.body.classList.add("hindi-font");
-          const elements = document.querySelectorAll("[data-translate]");
-          elements.forEach((element) => {
-            const key = element.getAttribute("data-translate");
-            if (
-              translations[preferredLanguage] &&
-              translations[preferredLanguage][key]
-            ) {
-              element.textContent = translations[preferredLanguage][key];
-            }
-          });
-
-          const formLabels = {
+        const formLabels = {
             "bike-brand": "Brand*",
             "bike-model": "Model*",
             "bike-year": "Year*",

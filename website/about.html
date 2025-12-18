@@ -258,7 +258,7 @@
               >
             </div>
           </div>
-          <!-- Vehicle Valuation dropdown -->
+          
         </nav>
 
         <div class="header-actions">
@@ -843,63 +843,7 @@
           },
         };
 
-        const preferredLanguage =
-          localStorage.getItem("preferredLanguage") || "en";
 
-        if (preferredLanguage !== "en") {
-          document.body.classList.add("hindi-font");
-          const elements = document.querySelectorAll("[data-translate]");
-          elements.forEach((element) => {
-            const key = element.getAttribute("data-translate");
-            if (
-              translations[preferredLanguage] &&
-              translations[preferredLanguage][key]
-            ) {
-              element.textContent = translations[preferredLanguage][key];
-            }
-          });
-
-          const formLabels = {
-            "bike-brand": "Brand*",
-            "bike-model": "Model*",
-            "bike-year": "Year*",
-            "bike-price": "Expected Price (₹)*",
-            "bike-images": "Upload Images (Max 5)*",
-            "seller-name": "Full Name*",
-            "seller-email": "Email*",
-            "seller-phone": "Phone Number*",
-          };
-
-          Object.entries(formLabels).forEach(([id, enText]) => {
-            const element = document.getElementById(id);
-            if (element && translations[preferredLanguage][enText]) {
-              const label = element
-                .closest(".form-group")
-                ?.querySelector("label");
-              if (label) {
-                label.textContent = translations[preferredLanguage][enText];
-              }
-              if (element.placeholder) {
-                element.placeholder = translations[preferredLanguage][enText];
-              }
-            }
-          });
-
-          const uiElements = {
-            "image-upload-label span": "Click to upload images",
-            "agree-terms-label":
-              "I agree to the terms and conditions and privacy policy*",
-            "submit-btn": "Get Instant Valuation",
-            "testimonials-title": "What Our Sellers Say",
-          };
-
-          Object.entries(uiElements).forEach(([selector, enText]) => {
-            const element = document.querySelector(selector);
-            if (element && translations[preferredLanguage][enText]) {
-              element.textContent = translations[preferredLanguage][enText];
-            }
-          });
-        }
       });
     </script>
     <script>

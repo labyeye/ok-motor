@@ -645,26 +645,7 @@
           },
         };
 
-        const preferredLanguage =
-          localStorage.getItem("preferredLanguage") || "en";
 
-        function translateText() {
-          if (preferredLanguage !== "en") {
-            document.body.classList.add("hindi-font");
-            const elements = document.querySelectorAll("[data-translate]");
-            elements.forEach((element) => {
-              const key = element.getAttribute("data-translate");
-              if (
-                translations[preferredLanguage] &&
-                translations[preferredLanguage][key]
-              ) {
-                element.textContent = translations[preferredLanguage][key];
-              }
-            });
-          }
-        }
-
-        translateText();
 
         // Determine API base dynamically (same logic as other pages)
         const API_BASE = (function () {
@@ -970,7 +951,7 @@
         <i class="fa-brands fa-whatsapp fa-bounce"></i>
       </a>
 
-      <!-- Call Button -->
+      
       <a
         href="#"
         class="floating-btn call-btn"

@@ -724,26 +724,6 @@
 
             // Enable auto-scroll for other cars
             enableAutoSlider();
-            // Translate newly added dynamic content to preferred language
-            try {
-              const preferred =
-                localStorage.getItem("preferredLanguage") || "en";
-              if (preferred && typeof translatePage === "function") {
-                // translate the section only to avoid re-running across whole page
-                const dynamicElems =
-                  otherCarsRow.querySelectorAll("[data-translate]");
-                dynamicElems.forEach((el) => {
-                  const key = el.getAttribute("data-translate");
-                  if (
-                    translations &&
-                    translations[preferred] &&
-                    translations[preferred][key]
-                  ) {
-                    el.textContent = translations[preferred][key];
-                  }
-                });
-              }
-            } catch (e) {}
           }
         });
 
