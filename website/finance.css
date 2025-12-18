@@ -26,11 +26,6 @@
   margin-bottom: 32px;
   color: black;
 }
-.dark-mode .process h2 {
-  text-align: center;
-  margin-bottom: 32px;
-  color: white;
-}
 
 /* Step description styling */
 
@@ -50,7 +45,7 @@
 }
 
 .process-card {
-  background: #ffffff;
+  background: #F6FAF7;
   border: 1px solid #e6e6e6;
   border-radius: 10px;
   padding: 18px;
@@ -91,23 +86,6 @@
   margin: 0;
   color: #333;
   line-height: 1.5;
-}
-
-/* Dark mode variants using .dark-mode (finance.html uses body.dark-mode) */
-.dark-mode .process-card {
-  background: #c65a18; /* dark card background */
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: none;
-}
-.dark-mode .card-icon {
-  background: rgba(255, 255, 255, 0.04);
-  color: #f8fafc;
-}
-.dark-mode .card-title {
-  color: #f8fafc;
-}
-.dark-mode .card-desc {
-  color: #cbd5e1;
 }
 
 /* Also provide compatibility for .dark-theme class used on other pages */

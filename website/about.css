@@ -132,7 +132,7 @@
 }
 
 .dark-mode .owner-content p {
-  color: rgba(255, 255, 255, 0.9);
+  color: #F6FAF7;
   line-height: 1.7;
   margin-bottom: 18px;
   font-size: 1rem;
@@ -148,7 +148,7 @@
 .stat-item {
   text-align: center;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.05);
+  background: #F6FAF7;;
   border-radius: 10px;
   min-width: 120px;
   flex: 1;
@@ -247,12 +247,12 @@
 .timeline-content {
   width: calc(50% - 40px);
   padding: 20px;
-  background: rgba(255, 255, 255, 0.05);
+  background: #F6FAF7;;
   border-radius: 15px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #F6FAF7;
 }
 
 .timeline-item:nth-child(odd) .timeline-content {
@@ -313,13 +313,13 @@
 }
 
 .value-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: #F6FAF7;;
   border-radius: 15px;
   padding: 30px 20px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #F6FAF7;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   text-align: center;
 }
@@ -327,7 +327,7 @@
 .value-card:hover {
   transform: translateY(-10px);
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-  background: rgba(255, 255, 255, 0.1);
+  background: #F6FAF7;
 }
 
 .value-icon {
