@@ -13,30 +13,9 @@
   z-index: 1;
 }
 
-.dark-mode .login-btn button {
-  background-color: var(--secondary-color) !important;
-  color: white !important;
-  border: 1px solid var(--primary-color);
-  border-radius: 25px;
-  padding: 8px 25px;
-  font-family: "Poppins", sans-serif;
-  font-size: 18px;
-  cursor: pointer;
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
-}
-
 .about-section {
   padding: 60px 5%;
   background-color: white;
-  position: relative;
-}
-
-.dark-mode .about-section {
-  padding: 60px 5%;
-  background-color: var(--secondary-color);
   position: relative;
 }
 
@@ -51,11 +30,6 @@
 
 .about-container h1 {
   color: black;
-  text-align: center;
-}
-
-.dark-mode .about-container h1 {
-  color: white;
   text-align: center;
 }
 
@@ -107,13 +81,6 @@
   position: relative;
 }
 
-.dark-mode .owner-content h2 {
-  font-size: 2.5rem;
-  margin-bottom: 30px;
-  color: white;
-  position: relative;
-}
-
 .owner-content h2::after {
   content: "";
   position: absolute;
@@ -126,13 +93,6 @@
 
 .owner-content p {
   color: rgba(0, 0, 0, 0.85);
-  line-height: 1.7;
-  margin-bottom: 18px;
-  font-size: 1rem;
-}
-
-.dark-mode .owner-content p {
-  color: #F6FAF7;
   line-height: 1.7;
   margin-bottom: 18px;
   font-size: 1rem;
@@ -169,12 +129,6 @@
   min-height: auto;
 }
 
-.dark-mode .milestones-section {
-  padding: 80px 5%;
-  background: #100f0f;
-  position: relative;
-}
-
 .milestones-section .section-header {
   margin-bottom: 60px;
   text-align: center;
@@ -184,17 +138,8 @@
   color: black;
 }
 
-.dark-mode .milestones-section .section-header h2 {
-  color: white;
-}
-
 .milestones-section .section-header p {
   color: black;
-  font-size: 1.1rem;
-}
-
-.dark-mode .milestones-section .section-header p {
-  color: var(--light-gray);
   font-size: 1.1rem;
 }
 
@@ -266,13 +211,6 @@
 
 .timeline-content h3 {
   color: black;
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 1.3rem;
-}
-
-.dark-mode .timeline-content h3 {
-  color: white;
   margin-top: 0;
   margin-bottom: 10px;
   font-size: 1.3rem;

@@ -16,20 +16,6 @@
   overflow: hidden;
   z-index: 1;
 }
-.dark-mode .login-btn button {
-  background-color: var(--secondary-color);
-  color: white;
-  border: 1px solid var(--primary-color);
-  border-radius: 25px;
-  padding: 8px 25px;
-  font-family: "Poppins", sans-serif;
-  font-size: 18px;
-  cursor: pointer;
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
-}
 
 .book-section {
   display: flex;
@@ -38,15 +24,6 @@
   padding: 2rem;
   min-height: 100vh;
   color: black;
-  z-index: 2;
-}
-.dark-mode .book-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem;
-  min-height: 100vh;
-  color: white;
   z-index: 2;
 }
 
@@ -62,23 +39,11 @@
   font-weight: 700;
   color: black;
 }
-.dark-mode .book-content h2 {
-  font-size: 2.5rem;
-  margin-bottom: 1.5rem;
-  font-weight: 700;
-  color: white;
-}
 .book-content p {
   font-size: 1.1rem;
   margin-bottom: 2rem;
   line-height: 1.6;
   color: black;
-}
-.dark-mode .book-content p {
-  font-size: 1.1rem;
-  margin-bottom: 2rem;
-  line-height: 1.6;
-  color: white;
 }
 
 .book-steps {
@@ -115,20 +80,10 @@
   font-weight: 600;
   color: black;
 }
-.dark-mode .step-content h4 {
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: white;
-}
 
 .step-content p {
   font-size: 0.9rem;
   color: rgba(0, 0, 0, 0.8);
-}
-.dark-mode .step-content p {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Form Styles - Matching getquote.html */

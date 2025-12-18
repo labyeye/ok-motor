@@ -88,23 +88,7 @@
   line-height: 1.5;
 }
 
-/* Also provide compatibility for .dark-theme class used on other pages */
-.dark-theme .process-card {
-  background: #0f1724;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-.dark-theme .card-icon {
-  background: rgba(255, 255, 255, 0.04);
-  color: #f8fafc;
-}
-.dark-theme .card-title {
-  color: #f8fafc;
-}
-.dark-theme .card-desc {
-  color: #cbd5e1;
-}
-
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .partners {
     flex-direction: row;
     overflow: auto;

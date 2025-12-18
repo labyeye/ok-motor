@@ -6,14 +6,6 @@
   color: black !important;
 }
 
-.dark-mode .nav-links a.active {
-  color: lightgray !important;
-}
-
-.dark-mode .page-title {
-  color: white !important;
-}
-
 .page-title {
   color: black !important;
 }
@@ -21,21 +13,6 @@
 .login-btn button {
   background-color: white !important;
   color: black !important;
-  border: 1px solid var(--primary-color);
-  border-radius: 25px;
-  padding: 8px 25px;
-  font-family: "Poppins", sans-serif;
-  font-size: 18px;
-  cursor: pointer;
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.dark-mode .login-btn button {
-  background-color: var(--secondary-color) !important;
-  color: white !important;
   border: 1px solid var(--primary-color);
   border-radius: 25px;
   padding: 8px 25px;
@@ -60,18 +37,6 @@
 
 }
 
-.dark-mode .sell-section {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  background: linear-gradient(135deg, var(--secondary-color) 0%, #1a1a1a 100%);
-  gap: 50px;
-  height: auto;
-  padding: 80px 5%;
-  position: relative;
-  overflow: hidden;
-}
-
 .sell-section::before {
   display: none
 }
@@ -93,26 +58,8 @@
   -webkit-text-fill-color: transparent;
 }
 
-.dark-mode .sell-content h2 {
-  text-align: left;
-  margin-bottom: 20px;
-  font-size: 2.5rem;
-  background: linear-gradient(90deg, #F6FAF7 0%, rgba(255, 255, 255, 0.7) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
 .sell-content p {
   color: rgba(0, 0, 0, 0.8);
-  line-height: 1.8;
-  margin-bottom: 30px;
-  font-size: 1.1rem;
-  max-width: 600px;
-}
-
-.dark-mode .sell-content p {
-  color: rgba(255, 255, 255, 0.8);
   line-height: 1.8;
   margin-bottom: 30px;
   font-size: 1.1rem;
@@ -158,20 +105,8 @@
   font-size: 1.1rem;
 }
 
-.dark-mode .step-content h4 {
-  color: white;
-  margin: 0 0 5px 0;
-  font-size: 1.1rem;
-}
-
 .step-content p {
   color: rgba(0, 0, 0, 0.7);
-  margin: 0;
-  font-size: 0.95rem;
-}
-
-.dark-mode .step-content p {
-  color: rgba(255, 255, 255, 0.7);
   margin: 0;
   font-size: 0.95rem;
 }
@@ -245,22 +180,6 @@
   margin: 20px 0;
 }
 
-.dark-mode .sell-form-container {
-  flex: 1;
-  min-width: 280px;
-  max-width: 100%;
-  position: relative;
-  z-index: 1;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 30px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  margin: 20px 0;
-  background: rgba(30, 30, 30, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
 .sell-form {
   display: flex;
   flex-direction: column;
@@ -271,14 +190,6 @@
 
 .sell-form h3 {
   color: black;
-  margin: 0 0 20px 0;
-  font-size: 1.5rem;
-  position: relative;
-  padding-bottom: 10px;
-}
-
-.dark-mode .sell-form h3 {
-  color: white;
   margin: 0 0 20px 0;
   font-size: 1.5rem;
   position: relative;
@@ -306,16 +217,6 @@
   font-size: 0.95rem;
 }
 
-.dark-mode .form-group label {
-  color: white;
-  font-size: 0.95rem;
-}
-
-.dark-mode .form-group label {
-  color: white;
-  font-size: 0.95rem;
-}
-
 .form-group label span {
   color: var(--primary-color);
 }
@@ -332,20 +233,6 @@
   font-size: 1rem;
   transition: all 0.3s;
 }
-
-.dark-mode .form-group input,
-.dark-mode .form-group select,
-.dark-mode .form-group textarea {
-  width: 90%;
-  padding: 12px 15px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  color: white;
-  font-size: 1rem;
-  transition: all 0.3s;
-}
-
 
 .form-group input:focus,
 .form-group select:focus,

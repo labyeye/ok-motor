@@ -826,7 +826,7 @@ body {
 
 .nav-item:hover,
 .nav-item.active {
-  color: var(--primary-color);
+  color: #303E27;
 }
 
 .nav-item::after {
@@ -836,7 +836,7 @@ body {
   left: 0;
   width: 0;
   height: 2px;
-  background: var(--primary-color);
+  background: #303E27;
   transition: width 0.3s;
 }
 
@@ -1542,7 +1542,7 @@ h2 {
 }
 
 .brand-card {
-  background: #F6FAF7;
+  background: white;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 15px;
@@ -1557,7 +1557,7 @@ h2 {
   transform: translateY(-5px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
   border-color: #F6FAF7;
-  background: #F6FAF7;
+  background: transparent;
 }
 
 .brand-logo {
@@ -1581,6 +1581,12 @@ h2 {
   font-size: 1.1rem;
   margin: 0;
   color: rgb(0, 0, 0);
+  font-weight: 500;
+}
+.brand-card:hover h3 {
+  font-size: 1.1rem;
+  margin: 0;
+  color: rgb(255, 255, 255);
   font-weight: 500;
 }
 
@@ -3470,11 +3476,6 @@ img {
   transform: scale(0.98);
 }
 
-.dark-mode .mobile-sticky-cta {
-  background: #1a1a1a;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-}
-
 /* ===========================
    Responsive Design - Phase 1
    =========================== */
@@ -3875,49 +3876,6 @@ img {
 .clear-all-filters:hover {
   background: #a01214;
   transform: translateY(-2px);
-}
-
-/* Dark Mode for Phase 2 */
-.dark-mode .price-quick-btn {
-  background: #2a2a2a;
-  border-color: #3a3a3a;
-  color: #e0e0e0;
-}
-
-.dark-mode .price-quick-btn.active {
-  background: linear-gradient(135deg, #CF1819 0%, #a01214 100%);
-  color: #F6FAF7;
-}
-
-.dark-mode .price-input {
-  background: #2a2a2a;
-  border-color: #3a3a3a;
-  color: #e0e0e0;
-}
-
-.dark-mode .recent-searches {
-  background: #2a2a2a;
-  border-color: #3a3a3a;
-}
-
-.dark-mode .recent-search-item:hover {
-  background: #333;
-}
-
-.dark-mode .popular-search-tag {
-  background: #2a2a2a;
-  border-color: #3a3a3a;
-  color: #e0e0e0;
-}
-
-.dark-mode .active-filters {
-  background: #2a2a2a;
-}
-
-.dark-mode .filter-pill {
-  background: #333;
-  border-color: #3a3a3a;
-  color: #e0e0e0;
 }
 
 /* Responsive for Phase 2 */
@@ -4384,50 +4342,6 @@ img {
   align-items: center;
   gap: 10px;
   font-weight: 600;
-}
-
-/* Dark Mode for Phase 3 */
-.dark-mode .finance-calculator-section {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-}
-
-.dark-mode .finance-calculator-container {
-  background: #2a2a2a;
-}
-
-.dark-mode .calc-input {
-  background: #333;
-  border-color: #444;
-  color: #e0e0e0;
-}
-
-.dark-mode .result-card {
-  background: #333;
-  border-color: #444;
-}
-
-.dark-mode .result-label {
-  color: #b0b0b0;
-}
-
-.dark-mode .result-value {
-  color: #e0e0e0;
-}
-
-.dark-mode .comparison-bar {
-  background: #1a1a1a;
-}
-
-.dark-mode .comparison-item {
-  background: #2a2a2a;
-}
-
-.dark-mode .form-group input,
-.dark-mode .form-group select,
-.dark-mode .form-group textarea {
-  background: #2a2a2a;
-  border-color: #3a3a3a;
-  color: #e0e0e0;
 }
 
 /* Responsive for Phase 3 */
