@@ -3,7 +3,54 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Inventory | Bike Builders</title>
+    <title>
+      Buy Certified Pre-Owned Bikes & Cars in Bihar | Ok Motors Inventory
+    </title>
+    <meta
+      name="description"
+      content="Browse certified pre-owned bikes and cars at Ok Motors - Quality used vehicles in Patna & Muzaffarpur with 150-point inspection, warranty, transparent pricing, and easy EMI options. Shop Royal Enfield, Bajaj, Hero, Maruti, Hyundai, Tata and more trusted brands."
+    />
+    <meta
+      name="keywords"
+      content="used bikes Bihar, used cars Bihar, pre-owned bikes Patna, certified bikes Muzaffarpur, second hand bikes, used Royal Enfield, used Bajaj, used cars Patna, Maruti used cars, pre-owned vehicles Bihar"
+    />
+    <link rel="canonical" href="https://www.okmotors.in/inventory.html" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.okmotors.in/inventory.html" />
+    <meta
+      property="og:title"
+      content="Buy Certified Pre-Owned Bikes & Cars in Bihar | Ok Motors Inventory"
+    />
+    <meta
+      property="og:description"
+      content="Browse certified pre-owned bikes and cars at Ok Motors with 150-point inspection, warranty and transparent pricing in Patna & Muzaffarpur."
+    />
+    <meta
+      property="og:image"
+      content="https://www.okmotors.in/assets/images/okmotor.png"
+    />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta
+      property="twitter:url"
+      content="https://www.okmotors.in/inventory.html"
+    />
+    <meta
+      property="twitter:title"
+      content="Buy Certified Pre-Owned Bikes & Cars in Bihar | Ok Motors"
+    />
+    <meta
+      property="twitter:description"
+      content="Browse certified pre-owned bikes and cars with warranty and inspection in Bihar."
+    />
+    <meta
+      property="twitter:image"
+      content="https://www.okmotors.in/assets/images/okmotor.png"
+    />
+
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
@@ -15,6 +62,54 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "Ok Motors",
+        "description": "Certified pre-owned bikes and cars in Bihar with warranty and inspection",
+        "url": "https://www.okmotors.in/inventory.html",
+        "telephone": "+91-72800-12222",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri",
+          "addressLocality": "Patna",
+          "addressRegion": "Bihar",
+          "postalCode": "800014",
+          "addressCountry": "IN"
+        },
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": "25.594095",
+          "longitude": "85.137566"
+        },
+        "areaServed": ["Patna", "Muzaffarpur", "Bihar"],
+        "priceRange": "₹₹",
+        "openingHoursSpecification": [
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": [
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday"
+            ],
+            "opens": "09:00",
+            "closes": "19:00"
+          }
+        ],
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.8",
+          "reviewCount": "2000"
+        }
+      }
+    </script>
+
     <style></style>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
@@ -209,13 +304,19 @@
       </div>
     </header>
 
-    <section class="hero-section">
+    <section
+      class="hero-section"
+      itemscope
+      itemtype="https://schema.org/ItemList"
+    >
       <div class="hero-background"></div>
       <div class="hero-container">
         <div class="hero-content">
           <span class="hero-label">Our Vehicles</span>
-          <h1>
-            <span class="hero-title-line1">Used Bike / Cars</span>
+          <h1 itemprop="name">
+            <span class="hero-title-line1"
+              >Certified Pre-Owned Bikes & Cars for Sale in Bihar</span
+            >
           </h1>
           <p class="hero-subtitle">
             Get basic details and get an estimated market price for your
@@ -228,13 +329,22 @@
     <div class="filters-container">
       <div class="desktop-filters">
         <div class="filter-group">
-          <button class="filter-btn" data-filter="all">
-            <i class="fas fa-th"></i> All Vehicles
+          <button
+            class="filter-btn"
+            data-filter="all"
+            aria-label="Show all vehicles"
+          >
+            <i class="fas fa-th" aria-hidden="true"></i> All Vehicles
           </button>
         </div>
         <div class="filter-group">
-          <button class="filter-btn" data-filter="price">
-            Price <i class="fas fa-chevron-down"></i>
+          <button
+            class="filter-btn"
+            data-filter="price"
+            aria-label="Filter by price range"
+            aria-expanded="false"
+          >
+            Price <i class="fas fa-chevron-down" aria-hidden="true"></i>
           </button>
           <div class="filter-dropdown" id="price-dropdown">
             <h4>Price Range</h4>
@@ -243,8 +353,13 @@
         </div>
 
         <div class="filter-group">
-          <button class="filter-btn" data-filter="brand">
-            Brand <i class="fas fa-chevron-down"></i>
+          <button
+            class="filter-btn"
+            data-filter="brand"
+            aria-label="Filter by brand"
+            aria-expanded="false"
+          >
+            Brand <i class="fas fa-chevron-down" aria-hidden="true"></i>
           </button>
           <div class="filter-dropdown" id="brand-dropdown">
             <h4>Brands</h4>
@@ -253,8 +368,13 @@
         </div>
 
         <div class="filter-group">
-          <button class="filter-btn" data-filter="year">
-            Year <i class="fas fa-chevron-down"></i>
+          <button
+            class="filter-btn"
+            data-filter="year"
+            aria-label="Filter by manufacturing year"
+            aria-expanded="false"
+          >
+            Year <i class="fas fa-chevron-down" aria-hidden="true"></i>
           </button>
           <div class="filter-dropdown" id="year-dropdown">
             <h4>Year</h4>
@@ -263,8 +383,13 @@
         </div>
 
         <div class="filter-group">
-          <button class="filter-btn" data-filter="type">
-            Type <i class="fas fa-chevron-down"></i>
+          <button
+            class="filter-btn"
+            data-filter="type"
+            aria-label="Filter by vehicle type"
+            aria-expanded="false"
+          >
+            Type <i class="fas fa-chevron-down" aria-hidden="true"></i>
           </button>
           <div class="filter-dropdown" id="type-dropdown">
             <h4>Type</h4>
@@ -275,9 +400,19 @@
     </div>
 
     <div class="bike-grid-container">
-      <div class="bike-grid" id="bike-grid"></div>
+      <div
+        class="bike-grid"
+        id="bike-grid"
+        role="list"
+        aria-label="Vehicle inventory listings"
+      ></div>
       <div class="load-more-container">
-        <button id="load-more-btn" class="load-more-btn" style="display: none">
+        <button
+          id="load-more-btn"
+          class="load-more-btn"
+          style="display: none"
+          aria-label="Load more vehicles"
+        >
           Load More
         </button>
       </div>
@@ -436,15 +571,18 @@
         async function loadVehicleData() {
           try {
             const API_BASE = "https://ok-motor-51l3.vercel.app";
-            const res = await fetch(`${API_BASE}/api/vehicles/public/listings?limit=100`);
+            const res = await fetch(
+              `${API_BASE}/api/vehicles/public/listings?limit=100`
+            );
             if (!res.ok) throw new Error("Failed to fetch vehicles");
             const data = await res.json();
-            
+
             allVehicles = data.vehicles || [];
             return true;
           } catch (error) {
             console.error("Error loading vehicle data:", error);
-            grid.innerHTML = '<p style="padding:20px;color:#b00">Failed to load vehicles. Make sure backend is running on https://ok-motor-51l3.vercel.app</p>';
+            grid.innerHTML =
+              '<p style="padding:20px;color:#b00">Failed to load vehicles. Make sure backend is running on https://ok-motor-51l3.vercel.app</p>';
             return false;
           }
         }
@@ -559,18 +697,22 @@
             // Filter vehicles based on selected filters
             let filtered = allVehicles.filter((v) => {
               if (selectedType && v.vehicleType !== selectedType) return false;
-              if (selectedBrand && v.vehicleName !== selectedBrand) return false;
+              if (selectedBrand && v.vehicleName !== selectedBrand)
+                return false;
               if (selectedYear && v.manufacturingYear !== selectedYear)
                 return false;
               if (selectedPrice) {
                 const price =
-                  v.sellingPrice ||
-                  v.expectedPrice ||
-                  v.purchasePrice ||
-                  0;
-                if (selectedPrice.min !== null && selectedPrice.min !== undefined)
+                  v.sellingPrice || v.expectedPrice || v.purchasePrice || 0;
+                if (
+                  selectedPrice.min !== null &&
+                  selectedPrice.min !== undefined
+                )
                   if (price < selectedPrice.min) return false;
-                if (selectedPrice.max !== null && selectedPrice.max !== undefined)
+                if (
+                  selectedPrice.max !== null &&
+                  selectedPrice.max !== undefined
+                )
                   if (price > selectedPrice.max) return false;
               }
               return true;
@@ -642,9 +784,17 @@
         async function populateFilters() {
           try {
             // Extract unique values from loaded vehicles
-            const brands = [...new Set(allVehicles.map((v) => v.vehicleName || v.brand))].filter(Boolean);
-            const years = [...new Set(allVehicles.map((v) => v.manufacturingYear || v.modelYear))].sort((a, b) => b - a);
-            const types = [...new Set(allVehicles.map((v) => v.vehicleType))].filter(Boolean);
+            const brands = [
+              ...new Set(allVehicles.map((v) => v.vehicleName || v.brand)),
+            ].filter(Boolean);
+            const years = [
+              ...new Set(
+                allVehicles.map((v) => v.manufacturingYear || v.modelYear)
+              ),
+            ].sort((a, b) => b - a);
+            const types = [
+              ...new Set(allVehicles.map((v) => v.vehicleType)),
+            ].filter(Boolean);
 
             // Price ranges
             const priceContainer = document.getElementById("price-options");
