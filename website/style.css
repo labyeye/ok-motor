@@ -737,7 +737,7 @@
 }
 
 .search-count-btn {
-  background: #1C7947;
+  background: #303E27;
   color: #fff;
   padding: 14px 22px;
   border: none;
@@ -800,7 +800,7 @@ body {
   top: 0;
   left: 0;
   width: 100%;
-  background: #1C7947;
+  background: #303E27;
   color: #fff;
   z-index: 1100;
   height: 40px;
@@ -1606,7 +1606,7 @@ h2 {
 
 
 .brands-section {
-  background: #1C7947;
+  background: #303E27;
   padding: 80px 5%;
   position: relative;
   overflow: hidden;
@@ -1916,7 +1916,7 @@ body.dark-mode .brand-card h3 {
 }
 
 .stats-section {
-  background: #1C7947;
+  background: #303E27;
   padding: 80px 5%;
   text-align: center;
   position: relative;
@@ -2919,7 +2919,7 @@ body.dark-mode .section-header h2 {
 }
 
 .footer {
-  background-color: #1C7947;
+  background-color: #303E27;
   color: white;
   padding: 60px 5% 20px;
 }
@@ -3352,7 +3352,7 @@ img {
   width: 80px;
   height: 80px;
   margin: 0 auto 20px;
-  background: #1C7947;
+  background: #303E27;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -3380,7 +3380,7 @@ img {
 .service-btn {
   margin-top: 20px;
   padding: 10px 25px;
-  background: #1C7947;
+  background: #303E27;
   color: white;
   border: none;
   border-radius: 25px;

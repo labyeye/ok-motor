@@ -771,7 +771,7 @@ function showFeaturedError(sliderEl, vehicleType, retryFn) {
       "width: 100%; text-align: center; margin-top: 20px;";
     retryContainer.innerHTML = `
       <button onclick="location.reload()" 
-              style="padding: 10px 20px; background: var(--primary-color, #1C7947); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+              style="padding: 10px 20px; background: var(--primary-color, #303E27); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
         Retry
       </button>
     `;
