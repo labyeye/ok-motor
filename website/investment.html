@@ -272,7 +272,44 @@
       itemscope
       itemtype="https://schema.org/WPHeader"
     >
-      <div class="hero-background"></div>
+      <div class="hero-slider">
+        <div
+          class="hero-slide active"
+          style="
+            background-image: url('https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg');
+          "
+        ></div>
+        <div
+          class="hero-slide"
+          style="
+            background-image: url('https://wallpapercave.com/wp/wp12477050.jpg');
+          "
+        ></div>
+        <div
+          class="hero-slide"
+          style="
+            background-image: url('https://www.bmw-m.com/content/dam/bmw/marketBMW_M/www_bmw-m_com/topics/magazine-article-pool/2024/wallpaper/m-wallpaper/3-0-csl/bmw-3-0-csl-mi-05.jpg');
+          "
+        ></div>
+        <div
+          class="hero-slide"
+          style="
+            background-image: url('https://wallpapers.com/images/hd/ktm-duke-390-front-angle-o247jx7vlg7ct83k.jpg');
+          "
+        ></div>
+        <div
+          class="hero-slide"
+          style="
+            background-image: url('https://www.hdwallpapers.in/download/bmw_f30_widebody_car_4k_8k_hd_cars-1366x768.jpg');
+          "
+        ></div>
+        <div
+          class="hero-slide"
+          style="
+            background-image: url('https://wallpapers.com/images/hd/ktm-duke-pictures-zapyw35oajg0sraj.jpg');
+          "
+        ></div>
+      </div>
       <div class="hero-overlay"></div>
       <div class="hero-container">
         <div class="hero-content">
@@ -288,6 +325,18 @@
         </div>
       </div>
     </section>
+    <script>
+      (function() {
+        const slides = document.querySelectorAll('.hero-slide');
+        let currentSlide = 0;
+        function nextSlide() {
+          slides[currentSlide].classList.remove('active');
+          currentSlide = (currentSlide + 1) % slides.length;
+          slides[currentSlide].classList.add('active');
+        }
+        setInterval(nextSlide, 5000);
+      })();
+    </script>
 
     <style>
       .mobile-action-banner {
