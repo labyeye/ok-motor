@@ -1086,19 +1086,42 @@ body {
   align-items: center;
 }
 
-.hero-background {
+.hero-slider {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  overflow-x: hidden;
-  background-image: url('./assets/mail.webp');
-  background-repeat: no-repeat;
+  z-index: 1;
+}
+
+.hero-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-size: cover;
   background-position: center center;
-  background-color: #000;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
   z-index: 1;
+}
+
+.hero-slide.active {
+  opacity: 1;
+  z-index: 2;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 3;
 }
 
 .hero-container {
@@ -1111,7 +1134,8 @@ body {
 }
 
 .hero-content {
-  max-width: 650px;
+  max-width: 100%;
+  width: 100%;
   animation: fadeInUp 0.8s ease forwards;
 }
 
@@ -1144,9 +1168,9 @@ body {
 
 .hero-title-line2 {
   display: block;
-  font-size: 4.5rem;
+  font-size: 6.0rem;
   font-weight: 800;
-  background: #fff;
+  background: #E7EAA8;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1583,6 +1607,7 @@ h2 {
   color: rgb(0, 0, 0);
   font-weight: 500;
 }
+
 .brand-card:hover h3 {
   font-size: 1.1rem;
   margin: 0;
@@ -1943,15 +1968,6 @@ h2 {
   font-weight: 600;
 }
 
-.services-section::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-}
 
 .services-container {
 
@@ -3096,7 +3112,7 @@ img {
 }
 
 .services-section {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
   align-items: center;
 }
