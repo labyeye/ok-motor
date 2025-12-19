@@ -791,7 +791,7 @@ body {
   padding: 2px 20px;
   border-radius: 10px;
   transform: translateY(-10px);
-  background-color: #fff;
+  background-color: transparent;
   transition: width 0.35s ease, padding 0.35s ease, border-radius 0.35s ease;
   will-change: width, padding;
 }
@@ -801,6 +801,7 @@ body {
 .header-logo img {
   height: 75px;
   width: 180px;
+  border-radius: 10px;
 }
 
 @media (max-width: 480px) {
@@ -817,7 +818,7 @@ body {
 }
 
 .nav-item {
-  color: #000;
+  color: #fff;
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
@@ -1240,7 +1241,16 @@ body {
   }
 
   .hero-title-line2 {
-    font-size: 2.2rem;
+    display: block;
+    font-size: 3.5rem;
+    font-weight: 800;
+    background: #E7EAA8;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeInUp 0.6s ease 0.4s forwards;
   }
 
   .hero-subtitle {
@@ -1271,6 +1281,7 @@ body {
   justify-content: center;
   transform: translateY(60px);
 }
+
 
 .tab-btn {
   background: transparent;
@@ -1339,7 +1350,13 @@ body {
   .category-tabs {
     flex-wrap: wrap;
     gap: 8px;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+    justify-content: center;
+    transform: translateY(0px) translateX(20px);
   }
+
 
   .tab-btn {
     padding: 10px 20px;
@@ -1387,7 +1404,7 @@ body {
   .category-filter-section {
     padding: 0px 16px 28px;
     transform: none;
-    background: transparent;
+    background: #F6FAF7;
     margin: auto;
     position: relative;
     z-index: 10;
@@ -2556,8 +2573,7 @@ input[type="range"]::-webkit-slider-thumb {
   }
 
   .section-subtitle {
-    text-align: center;
-    margin-top: -30px;
+    text-align: justify;
   }
 }
 
@@ -3022,7 +3038,6 @@ input[type="range"]::-webkit-slider-thumb {
 
 /* Make large fixed-width containers responsive and avoid forcing viewport width */
 .top-banner-container,
-.hero-container,
 .bike-slider-container,
 .brands-grid,
 .footer-content {
@@ -3070,9 +3085,13 @@ img {
 
 @media (max-width: 480px) {
 
-  .top-banner-container,
+  .top-banner-container {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
   .hero-container {
-
+    margin-top: 100px;
+    max-width: 400px;
     padding-left: 10px;
     padding-right: 10px;
   }
@@ -3135,6 +3154,13 @@ img {
   font-size: 1.1rem;
   color: black;
 }
+
+@media (max-width: 480px) {
+  .section-header p {
+    text-align: justify;
+  }
+}
+
 
 .services-grid {
   display: grid;
