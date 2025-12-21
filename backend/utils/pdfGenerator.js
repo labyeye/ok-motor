@@ -126,6 +126,8 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const locateLogo = () => {
       const candidates = [];
       if (process.env.LOGO_PATH) candidates.push(process.env.LOGO_PATH);
+      // Backend assets location (for Vercel deployment)
+      candidates.push(path.join(__dirname, "../assets/images/okmotorback.png"));
       // Common locations relative to this file
       candidates.push(path.join(__dirname, "../../frontend/src/images/okmotorback.png"));
       candidates.push(path.join(__dirname, "../../frontend/public/images/okmotorback.png"));

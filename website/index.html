@@ -62,7 +62,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link rel="preconnect" href="https://code.jquery.com" crossorigin />
-    <link rel="preconnect" href="https://ok-motor-51l3.vercel.app" />
+    <link rel="preconnect" href="http://localhost:3500" />
     <link
       rel="icon"
       type="image/svg+xml"
@@ -616,64 +616,60 @@
     </script>
     <section class="category-filter-section">
       <div class="category-tabs">
-        <button class="tab-btn" data-tab="car">Car</button>
-        <button class="tab-btn active" data-tab="bike">Bikes</button>
+        <button class="tab-btn" data-tab="car">Car Valuation</button>
+        <button class="tab-btn active" data-tab="bike">Bike Valuation</button>
       </div>
       <div class="filter-panel">
-        <div class="filter-row">
-          <div class="filter-card">
-            <label for="makeFilter">Make</label
-            ><select id="makeFilter" class="filter-select">
-              <option value="">Select Make</option>
-            </select>
+        <form id="valuationForm" class="valuation-form">
+          <div class="filter-row">
+            <div class="filter-card">
+              <label for="makeFilter">Make/Brand</label>
+              <select id="makeFilter" name="make" class="filter-select" required>
+                <option value="">Select Brand</option>
+              </select>
+            </div>
+            <div class="filter-card">
+              <label for="modelFilter">Model</label>
+              <select id="modelFilter" name="model" class="filter-select" required>
+                <option value="">Select Model</option>
+              </select>
+            </div>
+            <div class="filter-card">
+              <label for="yearFilter">Year</label>
+              <input id="yearFilter" name="year" class="filter-input" type="number" min="1990" max="2025" placeholder="e.g. 2019" required />
+            </div>
           </div>
-          <div class="filter-card">
-            <label for="modelFilter">Model</label
-            ><select id="modelFilter" class="filter-select">
-              <option value="">Select Model</option>
-            </select>
+          <div class="filter-row">
+            <div class="filter-card">
+              <label for="kmsFilter">Kilometers Driven</label>
+              <input id="kmsFilter" name="kms" class="filter-input" type="number" min="0" placeholder="e.g. 12000" required />
+            </div>
+            <div class="filter-card">
+              <label for="ownerFilter">Owner Count</label>
+              <select id="ownerFilter" name="owners" class="filter-select" required>
+                <option value="1">1st Owner</option>
+                <option value="2">2nd Owner</option>
+                <option value="3">3rd Owner</option>
+                <option value="4">4+ Owners</option>
+              </select>
+            </div>
+            <div class="filter-card">
+              <label for="conditionFilter">Condition</label>
+              <select id="conditionFilter" name="condition" class="filter-select" required>
+                <option value="excellent">Excellent</option>
+                <option value="good">Good</option>
+                <option value="fair">Fair</option>
+                <option value="poor">Poor</option>
+              </select>
+            </div>
           </div>
-          <div class="filter-card">
-            <label for="bodyFilter">Body</label
-            ><select id="bodyFilter" class="filter-select">
-              <option value="">Any Body</option>
-
-              <option value="scooter" data-type="bike">Scooter</option>
-              <option value="touring" data-type="bike">Touring</option>
-              <option value="adventure" data-type="bike">Adventure</option>
-
-              <option value="sedan" data-type="car">Sedan</option>
-              <option value="suv" data-type="car">SUV</option>
-              <option value="hatchback" data-type="car">Hatchback</option>
-              <option value="muv" data-type="car">MUV</option>
-              <option value="compact" data-type="car">Compact</option>
-              <option value="luxury" data-type="car">Luxury</option>
-            </select>
+          <div class="filter-actions">
+            <button type="submit" class="search-count-btn" id="getValuationBtn">
+              <i class="fas fa-calculator"></i>
+              <span>Get Valuation</span>
+            </button>
           </div>
-        </div>
-        <div class="filter-card">
-          <label for="keywordFilter">Keyword</label
-          ><input
-            id="keywordFilter"
-            class="filter-input"
-            type="text"
-            placeholder="Search by brand, model, year..."
-          />
-        </div>
-        <div class="filter-actions">
-          <button class="filter-toggle-btn" aria-label="Filters">
-            <i class="fas fa-sliders-h"></i></button
-          ><button class="search-count-btn" id="searchCountBtn">
-            <i class="fas fa-search"></i
-            ><span
-              class="count-label"
-              aria-live="polite"
-              data-count="0"
-              data-type="vehicle"
-              >Loading...</span
-            >
-          </button>
-        </div>
+        </form>
       </div>
     </section>
 
@@ -695,7 +691,7 @@
       <div class="services-grid">
         <div
           class="service-card"
-          data-bg="https://media.wired.com/photos/593257829be5e55af6c24476/3:2/w_2560%2Cc_limit/trafficlight-inline.jpg"
+          data-bg="https://wpblogassets.paytm.com/paytmblog/uploads/2022/01/21_Traffic-Fines_How-to-Check-and-Pay-Bangalore-Traffic-Fines-1-800x500.png"
         >
           <div class="service-row">
             <div class="service-icon">🚦</div>
@@ -717,7 +713,7 @@
 
         <div
           class="service-card"
-          data-bg="https://cdn-ilbompl.nitrocdn.com/ekftxraLRFUYZcKnOWazVKzvpTyQONCM/assets/images/optimized/rev-c7e58e4/myrealestate.in/storage/2021/10/home-insurance-myrealestate.jpg"
+          data-bg="https://bsmedia.business-standard.com/_media/bs/img/article/2024-11/17/full/1731861367-2866.jpg?im=FitAndFill=(826,465)"
         >
           <div class="service-row">
             <div class="service-icon">🛡️</div>
@@ -736,7 +732,7 @@
 
         <div
           class="service-card"
-          data-bg="https://d3jbu7vaxvlagf.cloudfront.net/small/v2/category_media/basic_img_16883749037126.jpg"
+          data-bg="https://wpblogassets.paytm.com/paytmblog/uploads/2023/11/Blog_Paytm_How-to-Get-PUC-or-Pollution-Under-Control-Certificate-for-Car.jpg"
         >
           <div class="service-row">
             <div class="service-icon">
@@ -1403,7 +1399,7 @@
             if (h === "localhost")
               return `${window.location.protocol}//${h}:2500`;
           } catch (e) {}
-          return "https://ok-motor-51l3.vercel.app";
+          return "http://localhost:3500";
         })();
         const galleryTrack = document.getElementById("galleryTrack");
         function loadGalleryImages() {
@@ -1771,14 +1767,15 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2023 Ok Motors. All rights reserved.</p>
+        <p>&copy; 1989 Ok Motors. All rights reserved.</p>
         <a href="https://www.pixelatenest.com/" style="color: #a9a9a9"
           >Designed By Pixelate Nest</a
         >
         >
       </div>
     </footer>
-    <script src="./index.js"></script>
+    <script src="./scroll-bg-handler.js"></script>
+    <script src="./index-valuation.js"></script>
     <script>
       // Dropdown toggle for mobile: toggle .open on nav-dropdown
       document.addEventListener("DOMContentLoaded", function () {
@@ -2120,7 +2117,7 @@
               return `${window.location.protocol}//${host}:2500`;
             }
           } catch (e) {}
-          return "https://ok-motor-51l3.vercel.app";
+          return "http://localhost:3500";
         })();
 
         const testimonialsContainer = document.getElementById(

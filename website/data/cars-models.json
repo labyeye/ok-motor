@@ -1,0 +1,256 @@
+{
+  "brands": [
+    {
+      "make": "Maruti",
+      "models": [
+        "Alto 800",
+        "Alto K10",
+        "S-Presso",
+        "Wagon R",
+        "Celerio",
+        "Swift",
+        "Dzire",
+        "Baleno",
+        "Ignis",
+        "Fronx",
+        "Vitara Brezza",
+        "Grand Vitara",
+        "Ertiga",
+        "XL6",
+        "Ciaz",
+        "S-Cross",
+        "Jimny",
+        "Eeco",
+        "Omni",
+        "Gypsy",
+        "800",
+        "Esteem",
+        "Zen",
+        "Ritz",
+        "A-Star",
+        "Versa",
+        "SX4"
+      ]
+    },
+    {
+      "make": "Hyundai",
+      "models": [
+        "Santro",
+        "i10",
+        "Grand i10",
+        "Grand i10 Nios",
+        "i20",
+        "i20 N Line",
+        "Aura",
+        "Verna",
+        "Elantra",
+        "Venue",
+        "Venue N Line",
+        "Creta",
+        "Creta N Line",
+        "Alcazar",
+        "Tucson",
+        "Exter",
+        "Ioniq 5",
+        "Kona Electric",
+        "Xcent",
+        "Elite i20",
+        "Eon"
+      ]
+    },
+    {
+      "make": "Tata",
+      "models": [
+        "Tiago",
+        "Tiago NRG",
+        "Tiago EV",
+        "Tigor",
+        "Tigor EV",
+        "Altroz",
+        "Altroz Racer",
+        "Punch",
+        "Punch EV",
+        "Nexon",
+        "Nexon EV",
+        "Harrier",
+        "Safari",
+        "Curvv",
+        "Curvv EV",
+        "Hexa",
+        "Aria",
+        "Nano",
+        "Indica",
+        "Indigo",
+        "Manza",
+        "Vista",
+        "Bolt",
+        "Zest",
+        "Sumo",
+        "Sumo Gold",
+        "Safari Storme"
+      ]
+    },
+    {
+      "make": "Mahindra",
+      "models": [
+        "XUV 3XO",
+        "XUV300",
+        "XUV400 EV",
+        "XUV500",
+        "XUV700",
+        "Scorpio",
+        "Scorpio N",
+        "Scorpio Classic",
+        "Thar",
+        "Thar Roxx",
+        "Bolero",
+        "Bolero Neo",
+        "Bolero Neo Plus",
+        "Marazzo",
+        "KUV100",
+        "TUV300",
+        "Verito",
+        "Quanto",
+        "Xylo",
+        "Logan",
+        "Renault Logan",
+        "e2o",
+        "Genio"
+      ]
+    },
+    {
+      "make": "Toyota",
+      "models": [
+        "Glanza",
+        "Urban Cruiser Taisor",
+        "Urban Cruiser Hyryder",
+        "Rumion",
+        "Innova Crysta",
+        "Innova Hycross",
+        "Fortuner",
+        "Fortuner Legender",
+        "Hilux",
+        "Land Cruiser",
+        "Land Cruiser 300",
+        "Camry",
+        "Vellfire",
+        "Etios",
+        "Etios Liva",
+        "Corolla Altis",
+        "Yaris",
+        "Qualis"
+      ]
+    },
+    {
+      "make": "Honda",
+      "models": [
+        "Amaze",
+        "City",
+        "City Hybrid",
+        "Elevate",
+        "Jazz",
+        "WR-V",
+        "CR-V",
+        "Civic",
+        "Accord",
+        "Brio",
+        "Mobilio",
+        "BR-V"
+      ]
+    },
+    {
+      "make": "Ford",
+      "models": [
+        "Figo",
+        "Aspire",
+        "Freestyle",
+        "EcoSport",
+        "Endeavour",
+        "Mustang",
+        "Fusion",
+        "Fiesta",
+        "Ikon",
+        "Escort"
+      ]
+    },
+    {
+      "make": "Volkswagen",
+      "models": [
+        "Polo",
+        "Ameo",
+        "Vento",
+        "Virtus",
+        "Taigun",
+        "Tiguan",
+        "T-Roc",
+        "Passat",
+        "Jetta",
+        "Beetle"
+      ]
+    },
+    {
+      "make": "Renault",
+      "models": [
+        "Kwid",
+        "Triber",
+        "Kiger",
+        "Duster",
+        "Captur",
+        "Lodgy",
+        "Fluence",
+        "Scala",
+        "Pulse",
+        "Koleos"
+      ]
+    },
+    {
+      "make": "Nissan",
+      "models": [
+        "Magnite",
+        "Kicks",
+        "X-Trail",
+        "Terrano",
+        "Sunny",
+        "Micra",
+        "Micra Active",
+        "Evalia",
+        "GT-R"
+      ]
+    },
+    {
+      "make": "Kia",
+      "models": [
+        "Sonet",
+        "Seltos",
+        "Carens",
+        "EV6",
+        "Carnival"
+      ]
+    },
+    {
+      "make": "Skoda",
+      "models": [
+        "Kushaq",
+        "Slavia",
+        "Kodiaq",
+        "Superb",
+        "Octavia",
+        "Rapid",
+        "Fabia",
+        "Yeti",
+        "Laura"
+      ]
+    },
+    {
+      "make": "MG",
+      "models": [
+        "Comet EV",
+        "ZS EV",
+        "Astor",
+        "Hector",
+        "Hector Plus",
+        "Gloster"
+      ]
+    }
+  ]
+}

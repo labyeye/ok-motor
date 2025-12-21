@@ -300,7 +300,7 @@ const AdvanceHistory = () => {
       }
       await simulateProgress();
       const response = await axios.get(
-        `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
+        `http://localhost:3500/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
           timeout: 30000,
@@ -374,7 +374,7 @@ const AdvanceHistory = () => {
         }
 
         await axios.delete(
-          `https://ok-motor-51l3.vercel.app/api/advance-bills/${id}`,
+          `http://localhost:3500/api/advance-bills/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

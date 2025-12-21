@@ -47,7 +47,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link rel="preconnect" href="https://code.jquery.com" crossorigin />
-    <link rel="preconnect" href="https://ok-motor-51l3.vercel.app" />
+    <link rel="preconnect" href="http://localhost:3500" />
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="about.css" />
 
@@ -611,12 +611,13 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2023 Ok Motors. All rights reserved.</p>
+        <p>&copy; 1989 Ok Motors. All rights reserved.</p>
         <a href="www.https://www.pixelatenest.com/" style="color: #a9a9a9"
           >Designed By Pixelate Nest</a
         >
       </div>
     </footer>
+    <script src="./scroll-bg-handler.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         function getInitials(name) {
@@ -674,7 +675,7 @@
             .join("");
         }
         function fetchTestimonials() {
-          fetch("https://ok-motor-51l3.vercel.app/api/reviews")
+          fetch("http://localhost:3500/api/reviews")
             .then((res) => res.json())
             .then((data) => {
               if (data.success && Array.isArray(data.reviews)) {
@@ -722,7 +723,7 @@
             alert("Please fill all fields and select a rating.");
             return;
           }
-          fetch("https://ok-motor-51l3.vercel.app/api/reviews", {
+          fetch("http://localhost:3500/api/reviews", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name, message, rating }),
@@ -817,8 +818,8 @@
             "Quick Links": "Quick Links",
             "Rambag Chowk, Rambag Road Kabristaan k bagal me, Gaushala Chowk Mandir , Muzaffarpur, Bihar 842002":
               "Rambag Chowk, Rambag Road Kabristaan k bagal me, Gaushala Chowk Mandir , Muzaffarpur, Bihar 842002",
-            "&copy; 2023 Ok Motors. All rights reserved.":
-              "&copy; 2023 Ok Motors. All rights reserved.",
+            "&copy; 1989 Ok Motors. All rights reserved.":
+              "&copy; 1989 Ok Motors. All rights reserved.",
             "Designed By Pixelate Nest": "Designed By Pixelate Nest",
             "Founder & CEO": "Founder & CEO",
             "12+": "12+",
@@ -879,8 +880,8 @@
             "Quick Links": "त्वरित लिंक",
             "Rambag Chowk, Rambag Road Kabristaan k bagal me, Gaushala Chowk Mandir , Muzaffarpur, Bihar 842002":
               "रामबाग चौक, रामबाग रोड कब्रिस्तान के बगल में, गौशाला चौक मंदिर, मुजफ्फरपुर, बिहार 842002",
-            "&copy; 2023 Ok Motors. All rights reserved.":
-              "&copy; 2023 Ok Motors. सर्वाधिकार सुरक्षित।",
+            "&copy; 1989 Ok Motors. All rights reserved.":
+              "&copy; 1989 Ok Motors. सर्वाधिकार सुरक्षित।",
             "Designed By Pixelate Nest":
               "पिक्सेलेट नेस्ट द्वारा डिज़ाइन किया गया",
             "Founder & CEO": "संस्थापक और सीईओ",

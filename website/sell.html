@@ -42,7 +42,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link rel="preconnect" href="https://code.jquery.com" crossorigin />
-    <link rel="preconnect" href="https://ok-motor-51l3.vercel.app" />
+    <link rel="preconnect" href="http://localhost:3500" />
     <link rel="stylesheet" href="sell.css" />
     <link rel="stylesheet" href="style.css" />
 
@@ -694,10 +694,11 @@
           </div>
         </div>
         <div class="footer-bottom">
-          <p>&copy; 2023 Ok Motors. All rights reserved.</p>
+          <p>&copy; 1989 Ok Motors. All rights reserved.</p>
           <a href="https://www.pixelatenest.com/" style="color: #a9a9a9">Designed By Pixelate Nest</a>
         </div>
       </footer>
+      <script src="./scroll-bg-handler.js"></script>
       <script>
         document.addEventListener("DOMContentLoaded", function () {
           const reviewModal = document.getElementById("reviewModal");
@@ -735,7 +736,7 @@
               alert("Please fill all fields and select a rating.");
               return;
             }
-            fetch("https://ok-motor-51l3.vercel.app/api/reviews", {
+            fetch("http://localhost:3500/api/reviews", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ name, message, rating }),
@@ -1140,7 +1141,7 @@
 
               // Submit to server
               const response = await fetch(
-                "https://ok-motor-51l3.vercel.app/api/sell-request",
+                "http://localhost:3500/api/sell-request",
                 {
                   method: "POST",
                   body: formData,

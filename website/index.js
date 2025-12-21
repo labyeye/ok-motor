@@ -451,7 +451,7 @@ window.API_BASE = (function () {
     if (host === "localhost" || host === "127.0.0.1")
       return `${window.location.protocol}//${host}:3500`;
   } catch (e) {}
-  return "https://ok-motor-51l3.vercel.app";
+  return "http://localhost:3500";
 })();
 
 window.dataLayer = window.dataLayer || [];
@@ -543,7 +543,7 @@ function escapeHtml(text) {
 
 function fetchFeaturedVehicles(vehicleType, sliderEl) {
   // Load from backend API instead of JSON files
-  const API_BASE = window.API_BASE || "https://ok-motor-51l3.vercel.app";
+  const API_BASE = window.API_BASE || "http://localhost:3500";
 
   fetch(
     `${API_BASE}/api/vehicles/public/listings?limit=8&vehicleType=${vehicleType}`

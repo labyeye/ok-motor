@@ -158,12 +158,6 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
-.hero-section {
-  position: relative;
-  width: 100%;
-  height: auto;
-  overflow: hidden;
-}
 
 .brand-logo {
   flex: 0 0 auto;

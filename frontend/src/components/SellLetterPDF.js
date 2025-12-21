@@ -141,7 +141,7 @@ const SellLetterForm = () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+      const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3500";
       const response = await axios.get(`${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -802,7 +802,7 @@ const SellLetterForm = () => {
       } else {
         // Use axios directly for web browser
         response = await axios.post(
-          "https://ok-motor-51l3.vercel.app/api/sell-letters",
+          "http://localhost:3500/api/sell-letters",
           dataToSave
         );
       }
@@ -871,7 +871,7 @@ const SellLetterForm = () => {
       } else {
         // Use axios directly for web browser
         response = await axios.post(
-          `https://ok-motor-51l3.vercel.app/api/sell-letters/generate-pdf?language=${language}`,
+          `http://localhost:3500/api/sell-letters/generate-pdf?language=${language}`,
           data,
           {
             responseType: "arraybuffer",
@@ -1500,7 +1500,7 @@ const SellLetterForm = () => {
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
       const response = await axios.get(
-        `https://ok-motor-51l3.vercel.app/api/sell-letters/vehicle-details?registrationNumber=${registrationNumber}`
+        `http://localhost:3500/api/sell-letters/vehicle-details?registrationNumber=${registrationNumber}`
       );
 
       if (response.data) {

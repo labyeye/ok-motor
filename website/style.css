@@ -581,16 +581,18 @@
   padding: 34px 28px 26px 28px;
   box-shadow: 0 24px 48px rgba(22, 28, 36, 0.08);
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 18px;
   transform: translateY(60px);
+  width: 100%;
 }
 
 .filter-row {
   display: flex;
   gap: 20px;
   align-items: flex-end;
-  flex: 1 1 auto;
+  flex: 1;
+  width: 100%;
   flex-wrap: nowrap;
 }
 
@@ -598,14 +600,14 @@
   display: flex;
   flex-direction: column;
   min-width: 180px;
-  flex: 0 0 220px;
+  flex: 1;
 }
 
 
 .filter-row .filter-card:nth-child(1),
 .filter-row .filter-card:nth-child(2),
 .filter-row .filter-card:nth-child(3) {
-  flex: 0 0 160px;
+  flex: 1;
   min-width: 140px;
 }
 
@@ -641,9 +643,11 @@
 
 .filter-actions {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
   gap: 16px;
-  margin-left: 12px;
+  width: 100%;
+  margin-top: 8px;
 }
 
 .filter-toggle-btn {
@@ -703,6 +707,13 @@ body {
   font-family: "Segoe UI", Helvetica, sans-serif;
   color: var(--text-color);
   overflow-x: hidden;
+  background-color: transparent;
+  transition: background-color 0.4s ease;
+}
+
+/* Scrolled state - white background */
+body.scrolled {
+  background-color: #ffffff;
 }
 
 
@@ -713,9 +724,15 @@ body {
   width: 100%;
   border-radius: 10px;
   z-index: 1000;
-
-  transition: box-shadow 0.35s ease, background-color 0.35s ease, transform 0.35s ease;
+  background-color: transparent;
+  transition: box-shadow 0.35s ease, background-color 0.4s ease, transform 0.35s ease;
   will-change: box-shadow, transform, background-color;
+}
+
+/* Scrolled state - white header */
+.site-header.scrolled {
+  background-color: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 
@@ -822,8 +839,13 @@ body {
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
-  transition: color 0.3s;
+  transition: color 0.4s ease;
   position: relative;
+}
+
+/* Scrolled state - black nav items */
+.site-header.scrolled .nav-item {
+  color: #222;
 }
 
 .nav-item:hover,
@@ -861,6 +883,12 @@ body {
   gap: 6px;
   color: inherit;
   text-decoration: none;
+  transition: color 0.4s ease;
+}
+
+/* Scrolled state - black dropdown links */
+.site-header.scrolled .nav-dropdown .nav-link {
+  color: #222;
 }
 
 .dropdown-menu {
@@ -1304,7 +1332,6 @@ body {
 
 .filter-panel {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   align-items: end;
 }
@@ -3089,6 +3116,7 @@ img {
     padding-left: 10px;
     padding-right: 10px;
   }
+
   .hero-container {
     margin-top: 100px;
     max-width: 400px;
@@ -4431,5 +4459,74 @@ img {
 
   .main-result .result-value {
     font-size: 2rem;
+  }
+}
+
+/* ========================================
+   VALUATION FORM STYLES
+   ======================================== */
+.valuation-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.valuation-form .filter-row {
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.valuation-form .filter-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.valuation-form .filter-select:focus,
+.valuation-form .filter-input:focus {
+  border-color: #303E27;
+  box-shadow: 0 0 0 3px rgba(48, 62, 39, 0.1);
+}
+
+.valuation-form .filter-select:required:invalid {
+  border-color: #ddd;
+}
+
+.valuation-form .search-count-btn {
+  min-width: 250px;
+  max-width: 350px;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.valuation-form .search-count-btn:hover {
+  background: #3d4f31;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(48, 62, 39, 0.2);
+}
+
+.valuation-form .search-count-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 980px) {
+  .valuation-form .filter-row {
+    flex-wrap: wrap;
+  }
+
+  .valuation-form .filter-card {
+    flex: 1 1 45%;
+    min-width: 140px;
+  }
+}
+
+@media (max-width: 640px) {
+  .valuation-form .filter-card {
+    flex: 1 1 100%;
+  }
+
+  .valuation-form .search-count-btn {
+    width: 100%;
   }
 }

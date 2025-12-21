@@ -5,6 +5,8 @@ const path = require("path");
 const locateLogoPath = () => {
   const candidates = [];
   if (process.env.LOGO_PATH) candidates.push(process.env.LOGO_PATH);
+  // Backend assets location (for Vercel deployment)
+  candidates.push(path.join(__dirname, "../assets/images/okmotorback.png"));
   candidates.push(path.join(__dirname, "../../frontend/src/images/okmotorback.png"));
   candidates.push(path.join(__dirname, "../../frontend/public/images/okmotorback.png"));
   candidates.push(path.join(__dirname, "../../frontend/public/okmotorback.png"));

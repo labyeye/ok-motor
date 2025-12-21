@@ -43,7 +43,7 @@ const VehicleHistory = () => {
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
 
-  const API_BASE = "https://ok-motor-51l3.vercel.app";
+  const API_BASE = "http://localhost:3500";
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);

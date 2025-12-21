@@ -303,19 +303,58 @@
         </div>
       </div>
     </header>
-
     <section
       class="hero-section"
       itemscope
       itemtype="https://schema.org/ItemList"
     >
-      <div class="hero-background"></div>
+      <div class="hero-slider">
+        <div
+          class="hero-slide active"
+          style="
+            background-image: url('https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg');
+          "
+        ></div>
+        <div
+          class="hero-slide"
+          style="
+            background-image: url('https://wallpapercave.com/wp/wp12477050.jpg');
+          "
+        ></div>
+        <div
+          class="hero-slide"
+          style="
+            background-image: url('https://www.bmw-m.com/content/dam/bmw/marketBMW_M/www_bmw-m_com/topics/magazine-article-pool/2024/wallpaper/m-wallpaper/3-0-csl/bmw-3-0-csl-mi-05.jpg');
+          "
+        ></div>
+        <div
+          class="hero-slide"
+          style="
+            background-image: url('https://wallpapers.com/images/hd/ktm-duke-390-front-angle-o247jx7vlg7ct83k.jpg');
+          "
+        ></div>
+        <div
+          class="hero-slide"
+          style="
+            background-image: url('https://www.hdwallpapers.in/download/bmw_f30_widebody_car_4k_8k_hd_cars-1366x768.jpg');
+          "
+        ></div>
+        <div
+          class="hero-slide"
+          style="
+            background-image: url('https://wallpapers.com/images/hd/ktm-duke-pictures-zapyw35oajg0sraj.jpg');
+          "
+        ></div>
+      </div>
       <div class="hero-container">
         <div class="hero-content">
           <span class="hero-label">Our Vehicles</span>
           <h1 itemprop="name">
             <span class="hero-title-line1"
-              >Certified Pre-Owned Bikes & Cars for Sale in Bihar</span
+              >Certified Pre-Owned</span
+            >
+            <span class="hero-title-line2"
+              >Bikes & Cars for Sale in Bihar</span
             >
           </h1>
           <p class="hero-subtitle">
@@ -325,6 +364,8 @@
         </div>
       </div>
     </section>
+
+    
 
     <div class="filters-container">
       <div class="desktop-filters">
@@ -518,12 +559,27 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2023 Ok Motors. All rights reserved.</p>
+        <p>&copy; 1989 Ok Motors. All rights reserved.</p>
         <a href="https://www.pixelatenest.com/" style="color: #a9a9a9"
           >Designed By Pixelate Nest</a
         >
       </div>
     </footer>
+    <script src="./scroll-bg-handler.js"></script>
+    <script>
+      (function () {
+        const slides = document.querySelectorAll(".hero-slide");
+        let currentSlide = 0;
+
+        function nextSlide() {
+          slides[currentSlide].classList.remove("active");
+          currentSlide = (currentSlide + 1) % slides.length;
+          slides[currentSlide].classList.add("active");
+        }
+
+        setInterval(nextSlide, 5000);
+      })();
+    </script>
 
     <script>
       // Filter dropdown toggle
@@ -570,7 +626,7 @@
         // Load vehicle data from backend API
         async function loadVehicleData() {
           try {
-            const API_BASE = "https://ok-motor-51l3.vercel.app";
+            const API_BASE = "http://localhost:3500";
             const res = await fetch(
               `${API_BASE}/api/vehicles/public/listings?limit=100`
             );
@@ -582,7 +638,7 @@
           } catch (error) {
             console.error("Error loading vehicle data:", error);
             grid.innerHTML =
-              '<p style="padding:20px;color:#b00">Failed to load vehicles. Make sure backend is running on https://ok-motor-51l3.vercel.app</p>';
+              '<p style="padding:20px;color:#b00">Failed to load vehicles. Make sure backend is running on http://localhost:3500</p>';
             return false;
           }
         }
