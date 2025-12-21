@@ -192,7 +192,7 @@ function calculateValuation(formData, vehicleType) {
     poor: 0.80,
   };
   price = price * (conditionFactors[condition] || 1.0);
-  };
+  
   price = price * (conditionFactors[condition] || 1.0);
 
   // Round to nearest thousand
