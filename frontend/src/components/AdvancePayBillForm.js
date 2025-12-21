@@ -294,7 +294,7 @@ const [formData, setFormData] = useState({
 
         // Always create new document (never update) - for versioning
         const saveResponse = await axios.post(
-          "http://localhost:3500/api/advance-bills",
+          "https://ok-motor-51l3.vercel.app/api/advance-bills",
           requestData,
           {
             headers: {
@@ -568,7 +568,7 @@ const [formData, setFormData] = useState({
       } else {
         // For download, save the bill first
         const saveResponse = await axios.post(
-          "http://localhost:3500/api/advance-bills",
+          "https://ok-motor-51l3.vercel.app/api/advance-bills",
           requestData,
           {
             headers: {
@@ -625,7 +625,7 @@ const [formData, setFormData] = useState({
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
       const response = await axios.get(
-        "http://localhost:3500/api/advance-bills/vehicle-details",
+        "https://ok-motor-51l3.vercel.app/api/advance-bills/vehicle-details",
         {
           params: { registrationNumber },
         }

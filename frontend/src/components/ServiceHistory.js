@@ -83,7 +83,7 @@ const ServiceHistory = () => {
           // ONLINE - Fetch from server
           // Fetch service bills
           const serviceResponse = await axios.get(
-            `http://localhost:3500/api/service-bills?page=${currentPage}`
+            `https://ok-motor-51l3.vercel.app/api/service-bills?page=${currentPage}`
           );
           setServiceBills(serviceResponse.data.data || serviceResponse.data);
           setTotalPages(serviceResponse.data.totalPages || 1);
@@ -96,7 +96,7 @@ const ServiceHistory = () => {
 
           // Fetch sell history (if needed)
           const sellResponse = await axios.get(
-            `http://localhost:3500/api/sell-letters`
+            `https://ok-motor-51l3.vercel.app/api/sell-letters`
           );
           setSellHistory(sellResponse.data.data || sellResponse.data);
         } else {
@@ -403,7 +403,7 @@ const ServiceHistory = () => {
       console.log('Token exists:', !!token);
       console.log('Token preview:', token ? `${token.substring(0, 20)}...` : 'No token');
       
-      const response = await axios.get('http://localhost:3500/api/auth/me');
+      const response = await axios.get('https://ok-motor-51l3.vercel.app/api/auth/me');
       console.log('Auth test successful:', response.data);
     } catch (error) {
       console.error('Auth test failed:', error);
@@ -434,7 +434,7 @@ const ServiceHistory = () => {
       console.log('User:', user);
 
       const response = await axios.get(
-        `http://localhost:3500/api/service-bills/${billId}/download`,
+        `https://ok-motor-51l3.vercel.app/api/service-bills/${billId}/download`,
         {
           responseType: "blob",
           timeout: 30000, // 30 second timeout
@@ -484,7 +484,7 @@ const ServiceHistory = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this service bill?")) {
       try {
-        await axios.delete(`http://localhost:3500/api/service-bills/${id}`);
+        await axios.delete(`https://ok-motor-51l3.vercel.app/api/service-bills/${id}`);
         setServiceBills(serviceBills.filter((bill) => bill._id !== id));
       } catch (error) {
         console.error("Error deleting service bill:", error);

@@ -42,7 +42,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link rel="preconnect" href="https://code.jquery.com" crossorigin />
-    <link rel="preconnect" href="http://localhost:3500" />
+    <link rel="preconnect" href="https://ok-motor-51l3.vercel.app" />
     <link rel="stylesheet" href="sell.css" />
     <link rel="stylesheet" href="style.css" />
 
@@ -736,7 +736,7 @@
               alert("Please fill all fields and select a rating.");
               return;
             }
-            fetch("http://localhost:3500/api/reviews", {
+            fetch("https://ok-motor-51l3.vercel.app/api/reviews", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ name, message, rating }),
@@ -1141,7 +1141,7 @@
 
               // Submit to server
               const response = await fetch(
-                "http://localhost:3500/api/sell-request",
+                "https://ok-motor-51l3.vercel.app/api/sell-request",
                 {
                   method: "POST",
                   body: formData,

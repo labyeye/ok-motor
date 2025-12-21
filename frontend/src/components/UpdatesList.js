@@ -114,7 +114,7 @@ const UpdatesList = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:3500/api/updates/admin", {
+      const res = await axios.get("https://ok-motor-51l3.vercel.app/api/updates/admin", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUpdates(res.data.data || []);
@@ -143,7 +143,7 @@ const UpdatesList = () => {
     if (!window.confirm("Delete this update?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:3500/api/updates/${id}`, {
+      await axios.delete(`https://ok-motor-51l3.vercel.app/api/updates/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchUpdates();
