@@ -13,13 +13,20 @@ const locateLogoPath = () => {
   candidates.push(path.join(__dirname, "../images/okmotorback.png"));
   candidates.push(path.join(__dirname, "../assets/okmotorback.png"));
 
+  console.log('Advance Bill - Searching for logo in candidate paths:');
   for (const p of candidates) {
     try {
-      if (p && fs.existsSync(p)) return p;
+      console.log(`  Checking: ${p}`);
+      if (p && fs.existsSync(p)) {
+        console.log(`  ✓ Found logo at: ${p}`);
+        return p;
+      }
     } catch (e) {
-      // ignore and continue
+      console.log(`  ✗ Error checking ${p}:`, e.message);
     }
   }
+  console.log('  ✗ No logo found in any candidate location');
+  console.log('  Current __dirname:', __dirname);
   return null;
 };
 

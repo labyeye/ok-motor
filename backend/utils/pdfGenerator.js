@@ -135,13 +135,19 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       candidates.push(path.join(__dirname, "../images/okmotorback.png"));
       candidates.push(path.join(__dirname, "../assets/okmotorback.png"));
 
+      console.log('Searching for logo in candidate paths:');
       for (const p of candidates) {
         try {
-          if (p && fs.existsSync(p)) return p;
+          console.log(`  Checking: ${p}`);
+          if (p && fs.existsSync(p)) {
+            console.log(`  ✓ Found logo at: ${p}`);
+            return p;
+          }
         } catch (e) {
-          // ignore and try next
+          console.log(`  ✗ Error checking ${p}:`, e.message);
         }
       }
+      console.log('  ✗ No logo found in any candidate location');
       return null;
     };
 
@@ -151,13 +157,15 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       try {
         const logoBytes = fs.readFileSync(logoLocation);
         logoImage = await pdfDoc.embedPng(logoBytes);
-        console.log('Loaded logo from', logoLocation);
+        console.log('Successfully loaded and embedded logo from', logoLocation);
       } catch (logoError) {
         console.error('Error embedding logo for PDF:', logoError.message);
+        console.error('Logo path attempted:', logoLocation);
         logoImage = null;
       }
     } else {
-      console.warn('No logo found in candidate locations, continuing without logo');
+      console.warn('⚠ No logo found in candidate locations, PDF will be generated without watermark');
+      console.warn('Current __dirname:', __dirname);
     }
 
     // Function to add watermark to a page

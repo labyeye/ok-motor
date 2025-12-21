@@ -1,0 +1,3 @@
+# Don't ignore assets folder - we need it for logos
+!assets/
+!assets/**
