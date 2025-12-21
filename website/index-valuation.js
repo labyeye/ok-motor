@@ -114,79 +114,84 @@ function calculateValuation(formData, vehicleType) {
 
   // ========================================
   // 1. BASE PRICE BY BRAND
+  // Updated to reflect realistic 2024-2025 market prices
   // ========================================
   let basePrice;
   if (vehicleType === "bike") {
     const bikePrices = {
-      KTM: 180000,
-      "Royal Enfield": 120000,
-      Yamaha: 90000,
-      Honda: 80000,
-      Bajaj: 60000,
-      Suzuki: 85000,
-      TVS: 55000,
-      Hero: 50000,
-      Kawasaki: 200000,
-      "Harley-Davidson": 800000,
-      Triumph: 250000,
+      KTM: 220000,
+      "Royal Enfield": 160000,
+      Yamaha: 110000,
+      Honda: 95000,
+      Bajaj: 75000,
+      Suzuki: 100000,
+      TVS: 70000,
+      Hero: 65000,
+      Kawasaki: 350000,
+      "Harley-Davidson": 1200000,
+      Triumph: 400000,
     };
-    basePrice = bikePrices[make] || 70000;
+    basePrice = bikePrices[make] || 85000;
   } else {
     const carPrices = {
-      Maruti: 300000,
-      Hyundai: 320000,
-      Tata: 250000,
-      Mahindra: 350000,
-      Toyota: 400000,
-      Honda: 380000,
-      Ford: 280000,
-      Volkswagen: 350000,
-      Renault: 260000,
-      Nissan: 270000,
-      Kia: 340000,
-      Skoda: 360000,
-      MG: 330000,
+      Maruti: 450000,
+      Hyundai: 500000,
+      Tata: 380000,
+      Mahindra: 520000,
+      Toyota: 650000,
+      Honda: 580000,
+      Ford: 420000,
+      Volkswagen: 550000,
+      Renault: 400000,
+      Nissan: 410000,
+      Kia: 550000,
+      Skoda: 560000,
+      MG: 520000,
     };
-    basePrice = carPrices[make] || 300000;
+    basePrice = carPrices[make] || 450000;
   }
 
   // ========================================
   // 2. AGE DEPRECIATION
-  // Bikes: 12% per year | Cars: 10% per year
+  // Bikes: 10% per year | Cars: 8% per year
+  // More conservative depreciation aligned with market
   // ========================================
   const age = Math.max(0, new Date().getFullYear() - year);
-  const depreciationRate = vehicleType === "bike" ? 0.12 : 0.1;
-  let price = basePrice * Math.max(0.2, 1 - age * depreciationRate);
+  const depreciationRate = vehicleType === "bike" ? 0.10 : 0.08;
+  let price = basePrice * Math.max(0.25, 1 - age * depreciationRate);
 
   // ========================================
   // 3. KILOMETERS DEPRECIATION
-  // Bikes: 50k threshold | Cars: 100k threshold
+  // Bikes: 40k threshold | Cars: 80k threshold
+  // Reduced impact for low-km vehicles
   // ========================================
-  const kmThreshold = vehicleType === "bike" ? 50000 : 100000;
-  const kmFactor = Math.max(0.6, 1 - (kms / kmThreshold) * 0.25);
-  price = price * kmFactor;
-
+  const kmThreshold = vehicleType === "bike" ? 40000 : 80000;
+  const kmFactor = Math.max(0.70, 1 - (kms / kmThreshold) * 0.20);
   // ========================================
   // 4. OWNER COUNT FACTOR
-  // 1st: 100% | 2nd: 90% | 3rd: 80% | 4+: 70%
+  // 1st: 100% | 2nd: 93% | 3rd: 85% | 4+: 75%
+  // Reduced penalty for multiple owners
   // ========================================
   const ownerFactors = {
     1: 1.0,
-    2: 0.9,
-    3: 0.8,
-    4: 0.7,
+    2: 0.93,
+    3: 0.85,
+    4: 0.75,
   };
-  price = price * (ownerFactors[owners] || 0.7);
+  price = price * (ownerFactors[owners] || 0.75);
 
   // ========================================
   // 5. CONDITION FACTOR
-  // Excellent: +8% | Good: 0% | Fair: -12% | Poor: -30%
+  // Excellent: +5% | Good: 0% | Fair: -8% | Poor: -20%
+  // More realistic condition impact
   // ========================================
   const conditionFactors = {
-    excellent: 1.08,
+    excellent: 1.05,
     good: 1.0,
-    fair: 0.88,
-    poor: 0.7,
+    fair: 0.92,
+    poor: 0.80,
+  };
+  price = price * (conditionFactors[condition] || 1.0);
   };
   price = price * (conditionFactors[condition] || 1.0);
 
