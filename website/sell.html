@@ -776,85 +776,6 @@
             });
           });
         });
-        document.addEventListener("DOMContentLoaded", function () {
-          const translations = {
-            en: {
-              Home: "Home",
-              "Buy Bike": "Buy Bike",
-              "Sell Your Bike": "Sell Your Bike",
-              "About Us": "About Us",
-              Updates: "Updates",
-              Contact: "Contact",
-              "Get the Quote": "Get the Quote",
-              "Bike Details": "Bike Details",
-              "Brand*": "Brand*",
-              "Model*": "Model*",
-              "Year*": "Year*",
-              "Price (₹)*": "Price (₹)*",
-              "Upload Images (Max 5)*": "Upload Images (Max 5)*",
-              "Click to upload images": "Click to upload images",
-              "Your Contact Information": "Your Contact Information",
-              "Full Name*": "Full Name*",
-              "Email*": "Email*",
-              "Phone Number*": "Phone Number*",
-              "I agree to the terms and conditions and privacy policy*":
-                "I agree to the terms and conditions and privacy policy*",
-              "Get Instant Valuation": "Get Instant Valuation",
-              "What Our Sellers Say": "What Our Sellers Say",
-              "Sell Your Bike in 3 Easy Steps":
-                "Sell Your Bike in 3 Easy Steps",
-              "We make selling your bike simple, fast, and transparent. Get an instant quote and complete the process in just a few clicks.":
-                "We make selling your bike simple, fast, and transparent. Get an instant quote and complete the process in just a few clicks.",
-              "Enter Your Bike Details": "Enter Your Bike Details",
-              "Fill out the form with your bike's specifications and condition.":
-                "Fill out the form with your bike's specifications and condition.",
-              "Get Instant Valuation": "Get Instant Valuation",
-              "Receive a fair market price based on current demand and condition.":
-                "Receive a fair market price based on current demand and condition.",
-              "Schedule Pickup & Get Paid": "Schedule Pickup & Get Paid",
-              "We handle all the paperwork and payment on the spot.":
-                "We handle all the paperwork and payment on the spot.",
-            },
-            hi: {
-              Home: "होम",
-              "Buy Bike": "खरीदें बाइक",
-              "Sell Your Bike": "अपनी बाइक बेचें",
-              "About Us": "हमारे बारे में",
-              Updates: "अपडेट्स",
-              Contact: "संपर्क करें",
-              "Get the Quote": "कीमत पता करें",
-              "Bike Details": "बाइक का विवरण",
-              "Brand*": "ब्रांड*",
-              "Model*": "मॉडल*",
-              "Year*": "साल*",
-              "Price (₹)*": "कीमत (₹)*",
-              "Upload Images (Max 5)*": "तस्वीरें अपलोड करें (अधिकतम 5)*",
-              "Click to upload images": "तस्वीरें अपलोड करने के लिए क्लिक करें",
-              "Your Contact Information": "आपकी संपर्क जानकारी",
-              "Full Name*": "पूरा नाम*",
-              "Email*": "ईमेल*",
-              "Phone Number*": "फोन नंबर*",
-              "I agree to the terms and conditions and privacy policy*":
-                "मैं नियम और शर्तें और गोपनीयता नीति से सहमत हूं*",
-              "Get Instant Valuation": "तुरंत मूल्यांकन प्राप्त करें",
-              "What Our Sellers Say": "हमारे विक्रेता क्या कहते हैं",
-              "Sell Your Bike in 3 Easy Steps": "अपनी बाइक बेचने में 3 सरल चरण",
-              "We make selling your bike simple, fast, and transparent. Get an instant quote and complete the process in just a few clicks.":
-                "हम अपनी बाइक बेचने को सरल, तेज़ और पारदर्शी बनाते हैं। तुरंत अनुमान प्राप्त करें और केवल कुछ क्लिक में पूरा प्रक्रिया पूरा करें।",
-              "Enter Your Bike Details": "अपनी बाइक की विवरण दर्ज करें",
-              "Fill out the form with your bike's specifications and condition.":
-                "अपनी बाइक की विवरण दर्ज करें और स्थिति को भी दर्ज करें।",
-              "Get Instant Valuation": "तुरंत मूल्यांकन प्राप्त करें",
-              "Receive a fair market price based on current demand and condition.":
-                "वर्तमान मांग और स्थिति के आधार पर एक विश्वसनीय मूल्यांकन प्राप्त करें।",
-              "Schedule Pickup & Get Paid": "पिकअप और भुगतान का अनुरोध करें",
-              "We handle all the paperwork and payment on the spot.":
-                "हम सभी कागजात और भुगतान को स्थानीय स्तर पर संभालते हैं।",
-            },
-          };
-
-
-        });
       </script>
       <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -1189,78 +1110,15 @@
         gtag("js", new Date());
         gtag("config", "G-ETL311CBE6");
       </script>
-      <script>
-        document.addEventListener("DOMContentLoaded", function () {
-          // Get modal elements
-          const whatsappModal = document.getElementById("whatsappModal");
-          const callModal = document.getElementById("callModal");
 
-          // Get trigger buttons
-          const whatsappTrigger = document.getElementById("whatsappTrigger");
-          const callTrigger = document.getElementById("callTrigger");
-
-          // Get close buttons
-          const closeButtons = document.getElementsByClassName("close");
-
-          // When user clicks WhatsApp button
-          whatsappTrigger.addEventListener("click", function (e) {
-            e.preventDefault();
-            whatsappModal.style.display = "block";
-          });
-
-          // When user clicks Call button
-          callTrigger.addEventListener("click", function (e) {
-            e.preventDefault();
-            callModal.style.display = "block";
-          });
-
-          // When user clicks on close button
-          Array.from(closeButtons).forEach((button) => {
-            button.addEventListener("click", function () {
-              whatsappModal.style.display = "none";
-              callModal.style.display = "none";
-            });
-          });
-
-          // When user clicks outside the modal
-          window.addEventListener("click", function (event) {
-            if (event.target == whatsappModal) {
-              whatsappModal.style.display = "none";
-            }
-            if (event.target == callModal) {
-              callModal.style.display = "none";
-            }
-          });
-
-          // Handle number selection for WhatsApp
-          const whatsappOptions =
-            whatsappModal.querySelectorAll(".number-option");
-          whatsappOptions.forEach((option) => {
-            option.addEventListener("click", function () {
-              const number = this.getAttribute("data-number");
-              window.open(`https://wa.me/${number}`, "_blank");
-              whatsappModal.style.display = "none";
-            });
-          });
-
-          // Handle number selection for Call
-          const callOptions = callModal.querySelectorAll(".number-option");
-          callOptions.forEach((option) => {
-            option.addEventListener("click", function () {
-              const number = this.getAttribute("data-number");
-              window.location.href = `tel:${number}`;
-              callModal.style.display = "none";
-            });
-          });
-        });
-      </script>
       <div class="floating-buttons">
         <a
-          href="#"
+          href="https://wa.me/918210283582"
+          target="_blank"
+          rel="noopener noreferrer"
           class="floating-btn whatsapp-btn"
           data-tooltip="Chat on WhatsApp"
           aria-label="Chat on WhatsApp"
-          id="whatsappTrigger"
         >
           <i class="fa-brands fa-whatsapp fa-bounce"></i>
         </a>
@@ -1269,11 +1127,10 @@
 
         
         <a
-          href="#"
+          href="tel:918210283582"
           class="floating-btn call-btn"
           data-tooltip="Call Us"
           aria-label="Call Us"
-          id="callTrigger"
         >
           <i class="fa-solid fa-phone-volume fa-shake"></i>
         </a>
@@ -1287,31 +1144,7 @@
         </a>
       </div>
 
-      <div id="whatsappModal" class="modal">
-        <div class="modal-content">
-          <span class="close">&times;</span>
-          <h3>Choose WhatsApp Number</h3>
-          <button class="number-option" data-number="918210283582">
-            +91 72800 12222
-          </button>
-          <button class="number-option" data-number="919876543210">
-            +91 72800 12222
-          </button>
-        </div>
-      </div>
 
-      <div id="callModal" class="modal">
-        <div class="modal-content">
-          <span class="close">&times;</span>
-          <h3>Choose Number to Call</h3>
-          <button class="number-option" data-number="918210283582">
-            +91 72800 12222
-          </button>
-          <button class="number-option" data-number="919876543210">
-            +91 72800 12222
-          </button>
-        </div>
-      </div>
     </div>
   </body>
 </html>

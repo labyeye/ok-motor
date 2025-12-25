@@ -758,54 +758,8 @@ function formatOwnership(owner) {
 }
 
 function initModals() {
-  const whatsappModal = document.getElementById("whatsappModal");
-  const callModal = document.getElementById("callModal");
-  if (!whatsappModal || !callModal) return;
-
-  const whatsappTrigger = document.getElementById("whatsappTrigger");
-  const callTrigger = document.getElementById("callTrigger");
-  const closeButtons = document.getElementsByClassName("close");
-
-  if (whatsappTrigger)
-    whatsappTrigger.addEventListener("click", (e) => {
-      e.preventDefault();
-      whatsappModal.style.display = "block";
-    });
-  if (callTrigger)
-    callTrigger.addEventListener("click", (e) => {
-      e.preventDefault();
-      callModal.style.display = "block";
-    });
-
-  Array.from(closeButtons).forEach((button) =>
-    button.addEventListener("click", () => {
-      if (whatsappModal) whatsappModal.style.display = "none";
-      if (callModal) callModal.style.display = "none";
-    })
-  );
-
-  window.addEventListener("click", (event) => {
-    if (event.target === whatsappModal) whatsappModal.style.display = "none";
-    if (event.target === callModal) callModal.style.display = "none";
-  });
-
-  const whatsappOptions = whatsappModal.querySelectorAll(".number-option");
-  whatsappOptions.forEach((option) =>
-    option.addEventListener("click", function () {
-      const number = this.getAttribute("data-number");
-      if (number) window.open(`https://wa.me/${number}`, "_blank");
-      whatsappModal.style.display = "none";
-    })
-  );
-
-  const callOptions = callModal.querySelectorAll(".number-option");
-  callOptions.forEach((option) =>
-    option.addEventListener("click", function () {
-      const number = this.getAttribute("data-number");
-      if (number) window.location.href = `tel:${number}`;
-      callModal.style.display = "none";
-    })
-  );
+  // All modals have been removed - direct links are used instead
+  return;
 }
 
 function initDarkMode() {

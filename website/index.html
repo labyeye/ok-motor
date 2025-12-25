@@ -162,37 +162,44 @@
         var mobileMenuBtn = document.getElementById("mobileMenuBtn"),
           headerNav = document.querySelector(".header-nav");
         if (!mobileMenuBtn || !headerNav) return;
-        
+
         function setAriaExpanded(isOpen) {
-          mobileMenuBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+          mobileMenuBtn.setAttribute(
+            "aria-expanded",
+            isOpen ? "true" : "false"
+          );
         }
-        
+
         mobileMenuBtn.addEventListener("click", function (e) {
           e.preventDefault();
           var isOpen = headerNav.classList.toggle("open");
           setAriaExpanded(isOpen);
           document.body.style.overflow = isOpen ? "hidden" : "";
         });
-        
+
         headerNav.addEventListener("click", function (e) {
           var link = e.target.closest && e.target.closest("a");
           if (!link) return;
-          
+
           var parentDropdown = link.closest && link.closest(".nav-dropdown");
-          if (parentDropdown && window.innerWidth <= 1024 && 
-              (link.classList.contains("dropdown-toggle") || link.classList.contains("nav-link"))) {
+          if (
+            parentDropdown &&
+            window.innerWidth <= 1024 &&
+            (link.classList.contains("dropdown-toggle") ||
+              link.classList.contains("nav-link"))
+          ) {
             e.preventDefault();
             parentDropdown.classList.toggle("open");
             return;
           }
-          
+
           if (window.innerWidth <= 1024) {
             headerNav.classList.remove("open");
             setAriaExpanded(false);
             document.body.style.overflow = "";
           }
         });
-        
+
         window.addEventListener("keydown", function (e) {
           if (e.key === "Escape" && headerNav.classList.contains("open")) {
             headerNav.classList.remove("open");
@@ -200,9 +207,12 @@
             document.body.style.overflow = "";
           }
         });
-        
+
         window.addEventListener("resize", function () {
-          if (window.innerWidth > 1024 && headerNav.classList.contains("open")) {
+          if (
+            window.innerWidth > 1024 &&
+            headerNav.classList.contains("open")
+          ) {
             headerNav.classList.remove("open");
             setAriaExpanded(false);
             document.body.style.overflow = "";
@@ -389,7 +399,7 @@
             class="mobile-action"
             >Buy Used Bike</a
           >
-          <a href="https://www.okmotors.in/insurance.html" class="mobile-action"
+          <a href="https://www.okmotors.in/insaurance.html" class="mobile-action"
             >Insurance &amp; POC</a
           >
           <a
@@ -1782,21 +1792,21 @@
     <script src="./index-valuation.js"></script>
     <div class="floating-buttons">
       <a
-        href="#"
+        href="https://wa.me/918210283582"
+        target="_blank"
+        rel="noopener noreferrer"
         class="floating-btn whatsapp-btn"
         data-tooltip="Chat on WhatsApp"
         aria-label="Chat on WhatsApp"
-        id="whatsappTrigger"
       >
         <i class="fa-brands fa-whatsapp fa-bounce"></i>
       </a>
 
       <a
-        href="#"
+        href="tel:918210283582"
         class="floating-btn call-btn"
         data-tooltip="Call Us"
         aria-label="Call Us"
-        id="callTrigger"
       >
         <i class="fa-solid fa-phone-volume fa-shake"></i>
       </a>
@@ -2021,19 +2031,6 @@
       </div>
     </div>
 
-    <div id="whatsappModal" class="modal">
-      <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3>Choose WhatsApp Number</h3>
-        <button class="number-option" data-number="918210283582">
-          +91 72800 12222
-        </button>
-        <button class="number-option" data-number="919876543210">
-          +91 72800 12222
-        </button>
-      </div>
-    </div>
-
     <div id="reviewModal" class="modal">
       <div class="modal-content">
         <span class="close" id="closeReviewModal">&times;</span>
@@ -2076,19 +2073,6 @@
             Thanks for your feedback!
           </div>
         </form>
-      </div>
-    </div>
-
-    <div id="callModal" class="modal">
-      <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3>Choose Number to Call</h3>
-        <button class="number-option" data-number="918210283582">
-          +91 72800 12222
-        </button>
-        <button class="number-option" data-number="919876543210">
-          +91 72800 12222
-        </button>
       </div>
     </div>
 
@@ -2688,14 +2672,19 @@
   </script>
 
   <div class="mobile-sticky-cta" id="mobileStickyBar">
-    <button class="sticky-cta-btn call-btn" onclick="openCallModal()">
+    <a href="tel:+918210283582" class="sticky-cta-btn call-btn">
       <i class="fas fa-phone"></i>
       <span>Call Now</span>
-    </button>
-    <button class="sticky-cta-btn whatsapp-btn" onclick="openWhatsAppModal()">
+    </a>
+    <a
+      href="https://wa.me/918210283582"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="sticky-cta-btn whatsapp-btn"
+    >
       <i class="fab fa-whatsapp"></i>
       <span>WhatsApp</span>
-    </button>
+    </a>
     <button
       class="sticky-cta-btn inventory-btn"
       onclick="location.href='inventory.html'"
