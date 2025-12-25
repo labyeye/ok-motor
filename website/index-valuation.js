@@ -1,436 +1,554 @@
-// ========================================
-// OK MOTORS - VALUATION SYSTEM
-// ========================================
+// Scope valuation features to avoid leaking globals that may collide
+(function () {
+  const API_BASE =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "https://ok-motor-51l3.vercel.app";
 
-function initStickyHeader() {
-  const header = document.getElementById("siteHeader");
-  if (!header) return;
-
-  window.addEventListener("scroll", () => {
-    if (window.scrollY > 50) {
-      header.classList.add("scrolled");
-    } else {
-      header.classList.remove("scrolled");
-    }
-  });
-}
-
-function initMobileMenu() {
-  const mobileBtn = document.getElementById("mobileMenuBtn");
-  const headerNav = document.querySelector(".header-nav");
-
-  if (mobileBtn && headerNav) {
-    mobileBtn.setAttribute("aria-expanded", "false");
-
-    mobileBtn.addEventListener("click", (ev) => {
-      ev.preventDefault();
-      const opened = headerNav.classList.toggle("open");
-      headerNav.classList.toggle("mobile-active", opened);
-      mobileBtn.setAttribute("aria-expanded", opened ? "true" : "false");
-      document.body.style.overflow = opened ? "hidden" : "";
-
-      const icon = mobileBtn.querySelector("i");
-      if (icon) {
-        icon.classList.toggle("fa-bars", !opened);
-        icon.classList.toggle("fa-times", opened);
-      }
-    });
-  }
-}
-
-// ========================================
-// VALUATION BRANDS AND MODELS DATA
-// ========================================
-let vehicleModelsData = {
-  bike: null,
-  car: null,
-};
-
-// Load models data from JSON files
-async function loadModelsData() {
-  try {
-    const [bikesResponse, carsResponse] = await Promise.all([
-      fetch("./data/bikes-models.json"),
-      fetch("./data/cars-models.json"),
-    ]);
-
-    vehicleModelsData.bike = await bikesResponse.json();
-    vehicleModelsData.car = await carsResponse.json();
-
-    console.log("Models data loaded successfully");
-    return true;
-  } catch (error) {
-    console.error("Error loading models data:", error);
-    return false;
-  }
-}
-
-const valuationBrands = {
-  bike: [
-    "KTM",
-    "Royal Enfield",
-    "Yamaha",
-    "Honda",
-    "Bajaj",
-    "Suzuki",
-    "TVS",
-    "Hero",
-    "Kawasaki",
-    "Harley-Davidson",
-    "Triumph",
-  ],
-  car: [
-    "Maruti",
-    "Hyundai",
-    "Tata",
-    "Mahindra",
-    "Toyota",
-    "Honda",
-    "Ford",
-    "Volkswagen",
-    "Renault",
-    "Nissan",
-    "Kia",
-    "Skoda",
-    "MG",
-  ],
-};
-
-// ========================================
-// VALUATION CALCULATION ENGINE
-// ========================================
-/**
- * Calculate vehicle valuation based on multiple factors
- * @param {Object} formData - Form data containing vehicle details
- * @param {string} vehicleType - 'bike' or 'car'
- * @returns {number} Estimated valuation in INR
- */
-function calculateValuation(formData, vehicleType) {
-  const make = formData.make;
-  const year = parseInt(formData.year) || new Date().getFullYear();
-  const kms = parseInt(formData.kms) || 0;
-  const owners = parseInt(formData.owners) || 1;
-  const condition = formData.condition;
-
-  // ========================================
-  // 1. BASE PRICE BY BRAND
-  // Updated to reflect realistic 2024-2025 market prices
-  // ========================================
-  let basePrice;
-  if (vehicleType === "bike") {
-    const bikePrices = {
-      KTM: 220000,
-      "Royal Enfield": 160000,
-      Yamaha: 110000,
-      Honda: 95000,
-      Bajaj: 75000,
-      Suzuki: 100000,
-      TVS: 70000,
-      Hero: 65000,
-      Kawasaki: 350000,
-      "Harley-Davidson": 1200000,
-      Triumph: 400000,
-    };
-    basePrice = bikePrices[make] || 85000;
-  } else {
-    const carPrices = {
-      Maruti: 450000,
-      Hyundai: 500000,
-      Tata: 380000,
-      Mahindra: 520000,
-      Toyota: 650000,
-      Honda: 580000,
-      Ford: 420000,
-      Volkswagen: 550000,
-      Renault: 400000,
-      Nissan: 410000,
-      Kia: 550000,
-      Skoda: 560000,
-      MG: 520000,
-    };
-    basePrice = carPrices[make] || 450000;
-  }
-
-  // ========================================
-  // 2. AGE DEPRECIATION
-  // Bikes: 10% per year | Cars: 8% per year
-  // More conservative depreciation aligned with market
-  // ========================================
-  const age = Math.max(0, new Date().getFullYear() - year);
-  const depreciationRate = vehicleType === "bike" ? 0.10 : 0.08;
-  let price = basePrice * Math.max(0.25, 1 - age * depreciationRate);
-
-  // ========================================
-  // 3. KILOMETERS DEPRECIATION
-  // Bikes: 40k threshold | Cars: 80k threshold
-  // Reduced impact for low-km vehicles
-  // ========================================
-  const kmThreshold = vehicleType === "bike" ? 40000 : 80000;
-  const kmFactor = Math.max(0.70, 1 - (kms / kmThreshold) * 0.20);
-  // ========================================
-  // 4. OWNER COUNT FACTOR
-  // 1st: 100% | 2nd: 93% | 3rd: 85% | 4+: 75%
-  // Reduced penalty for multiple owners
-  // ========================================
-  const ownerFactors = {
-    1: 1.0,
-    2: 0.93,
-    3: 0.85,
-    4: 0.75,
+  const vehicleModelsData = {
+    bike: null,
+    car: null,
   };
-  price = price * (ownerFactors[owners] || 0.75);
 
-  // ========================================
-  // 5. CONDITION FACTOR
-  // Excellent: +5% | Good: 0% | Fair: -8% | Poor: -20%
-  // More realistic condition impact
-  // ========================================
-  const conditionFactors = {
+  const valuationBrands = {
+    bike: [],
+    car: [
+      "Maruti",
+      "Hyundai",
+      "Tata",
+      "Mahindra",
+      "Toyota",
+      "Honda",
+      "Ford",
+      "Volkswagen",
+      "Renault",
+      "Nissan",
+      "Kia",
+      "Skoda",
+      "MG",
+    ],
+  };
+
+  const BRAND_PRICING = {
+    Hero: { base: 420, multiplier: 1.0 },
+    Bajaj: { base: 450, multiplier: 1.05 },
+    TVS: { base: 430, multiplier: 1.02 },
+    Honda: { base: 480, multiplier: 1.08 },
+    Suzuki: { base: 460, multiplier: 1.06 },
+    Yamaha: { base: 520, multiplier: 1.15 },
+    KTM: { base: 850, multiplier: 1.35 },
+    "Royal Enfield": { base: 680, multiplier: 1.25 },
+    Kawasaki: { base: 1200, multiplier: 1.8 },
+    "Harley-Davidson": { base: 2800, multiplier: 3.5 },
+    Triumph: { base: 2200, multiplier: 2.8 },
+    Ducati: { base: 2500, multiplier: 3.2 },
+    BMW: { base: 2300, multiplier: 3.0 },
+  };
+
+  const CONDITION_FACTORS = {
     excellent: 1.05,
     good: 1.0,
-    fair: 0.92,
-    poor: 0.80,
+    fair: 0.95,
+    poor: 0.85,
   };
-  price = price * (conditionFactors[condition] || 1.0);
-  
-  price = price * (conditionFactors[condition] || 1.0);
 
-  // Round to nearest thousand
-  return Math.round(price / 1000) * 1000;
-}
+  async function fetchBikeMakes() {
+    try {
+      const response = await fetch(`https://ok-motor-51l3.vercel.app/api/bikes/makes`);
+      const result = await response.json();
 
-// ========================================
-// UI FUNCTIONS
-// ========================================
+      if (result.success && result.data) {
+        return result.data;
+      }
 
-/**
- * Populate make/brand dropdown based on vehicle type
- */
-function populateMakeDropdown(vehicleType) {
-  const makeFilter = document.getElementById("makeFilter");
-  if (!makeFilter) return;
-
-  makeFilter.innerHTML = '<option value="">Select Brand</option>';
-
-  const brands = valuationBrands[vehicleType] || [];
-  brands.forEach((brand) => {
-    const option = document.createElement("option");
-    option.value = brand;
-    option.textContent = brand;
-    makeFilter.appendChild(option);
-  });
-}
-
-/**
- * Populate model dropdown based on selected make
- */
-function populateModelDropdown(selectedMake, vehicleType) {
-  const modelFilter = document.getElementById("modelFilter");
-  if (!modelFilter) return;
-
-  // Clear existing options
-  modelFilter.innerHTML = '<option value="">Select Model</option>';
-
-  if (!selectedMake) {
-    return;
+      return [
+        "Kawasaki",
+        "Yamaha",
+        "Honda",
+        "Suzuki",
+        "KTM",
+        "Royal Enfield",
+        "Bajaj",
+        "TVS",
+        "Hero",
+        "Harley-Davidson",
+        "Triumph",
+      ];
+    } catch (error) {
+      console.error("Error fetching bike makes:", error);
+      return [
+        "KTM",
+        "Royal Enfield",
+        "Yamaha",
+        "Honda",
+        "Bajaj",
+        "Suzuki",
+        "TVS",
+        "Hero",
+        "Kawasaki",
+        "Harley-Davidson",
+        "Triumph",
+      ];
+    }
   }
 
-  const data = vehicleModelsData[vehicleType];
-  if (!data || !data.brands) {
-    return;
+  async function fetchBikeModels(make) {
+    try {
+      const response = await fetch(
+        `https://ok-motor-51l3.vercel.app/api/bikes/models?make=${encodeURIComponent(
+          make
+        )}`
+      );
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        return result.data;
+      }
+
+      return [];
+    } catch (error) {
+      console.error("Error fetching bike models:", error);
+      return [];
+    }
   }
 
-  const brand = data.brands.find((b) => b.make === selectedMake);
-  if (brand && brand.models) {
-    brand.models.forEach((model) => {
+  async function fetchBikeDetails(make, model, year) {
+    try {
+      let url = `https://ok-motor-51l3.vercel.app/api/bikes?make=${encodeURIComponent(
+        make
+      )}`;
+      if (model) url += `&model=${encodeURIComponent(model)}`;
+      if (year) url += `&year=${year}`;
+
+      const response = await fetch(url);
+      const result = await response.json();
+
+      if (result.success && result.data && result.data.length > 0) {
+        return result.data[0];
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error fetching bike details:", error);
+      return null;
+    }
+  }
+
+  async function loadModelsData() {
+    try {
+      const carsResponse = await fetch("./data/cars-models.json");
+      vehicleModelsData.car = await carsResponse.json();
+
+      console.log("Models data loaded successfully");
+      return true;
+    } catch (error) {
+      console.error("Error loading models data:", error);
+      return false;
+    }
+  }
+
+  function calculateBikeBasePrice(apiData, make) {
+    const displacementMatch = apiData.displacement
+      ? apiData.displacement.match(/(\d+\.?\d*)/)
+      : null;
+    const cc = displacementMatch ? parseFloat(displacementMatch[0]) : 0;
+
+    const pricing = BRAND_PRICING[make] || { base: 430, multiplier: 1.0 };
+    let basePrice = cc * pricing.base * pricing.multiplier;
+
+    if (basePrice < 40000) basePrice = 40000;
+
+    console.log(
+      `Base Price: ${make} | CC: ${cc} | Price: ₹${basePrice.toFixed(0)}`
+    );
+
+    return basePrice;
+  }
+
+  function calculateCarBasePrice(vehicleType, make, model, year) {
+    const data = vehicleModelsData[vehicleType];
+    if (!data || !data.brands) return 100000;
+
+    const brand = data.brands.find((b) => b.make === make);
+    if (!brand || !brand.models) return 100000;
+
+    const modelData = brand.models.find((m) => m.name === model);
+    if (!modelData) return 100000;
+
+    if (modelData.yearPrices && modelData.yearPrices[year]) {
+      return modelData.yearPrices[year];
+    }
+
+    if (modelData.price) {
+      return modelData.price;
+    }
+
+    if (modelData.yearPrices) {
+      const availableYears = Object.keys(modelData.yearPrices)
+        .map((y) => parseInt(y))
+        .sort((a, b) => b - a);
+      const nearestYear = availableYears.reduce((prev, curr) =>
+        Math.abs(curr - year) < Math.abs(prev - year) ? curr : prev
+      );
+      return modelData.yearPrices[nearestYear];
+    }
+
+    return 100000;
+  }
+
+  function calculateAgeDepreciation(vehicleType, age) {
+    let depreciation = 0;
+
+    if (vehicleType === "bike") {
+      if (age === 0) {
+        depreciation = 0;
+      } else if (age <= 5) {
+        depreciation = age * 0.12;
+      } else if (age <= 10) {
+        depreciation = 0.6 + (age - 5) * 0.06;
+      } else {
+        depreciation = 0.6 + 0.3 + (age - 10) * 0.04;
+      }
+    } else {
+      if (age <= 5) {
+        depreciation = age * 0.12;
+      } else {
+        depreciation = 0.6 + (age - 5) * 0.05;
+      }
+    }
+
+    return Math.min(0.65, depreciation);
+  }
+
+  function calculateKmDepreciation(vehicleType, kms) {
+    if (vehicleType === "bike") {
+      if (kms <= 15000) return 0;
+      if (kms <= 30000) return 0.03;
+      if (kms <= 50000) return 0.06;
+      return 0.1;
+    } else {
+      if (kms <= 30000) return 0;
+      if (kms <= 60000) return 0.03;
+      if (kms <= 100000) return 0.06;
+      return 0.1;
+    }
+  }
+
+  async function calculateValuation(formData, vehicleType, apiData = null) {
+    const make = formData.make;
+    const model = formData.model;
+    const year = parseInt(formData.year) || new Date().getFullYear();
+    const kms = parseInt(formData.kms) || 0;
+    const owners = parseInt(formData.owners) || 1;
+    const condition = formData.condition || "good";
+
+    let basePrice = 100000;
+
+    if (vehicleType === "bike" && apiData) {
+      basePrice = calculateBikeBasePrice(apiData, make);
+    } else if (vehicleType === "car") {
+      basePrice = calculateCarBasePrice(vehicleType, make, model, year);
+    }
+
+    const age = Math.max(0, new Date().getFullYear() - year);
+    const ageDepreciation = calculateAgeDepreciation(vehicleType, age);
+    let price = basePrice * (1 - ageDepreciation);
+
+    const kmDepreciation = calculateKmDepreciation(vehicleType, kms);
+    price = price * (1 - kmDepreciation);
+
+    const ownerDepreciation = Math.min((owners - 1) * 0.03, 0.1);
+    price = price * (1 - ownerDepreciation);
+
+    price = price * (CONDITION_FACTORS[condition] || 1.0);
+
+    return Math.round(price / 100) * 100;
+  }
+
+  async function valuationPopulateMakeDropdown(vehicleType) {
+    const makeFilter = document.getElementById("makeFilter");
+    if (!makeFilter) return;
+
+    makeFilter.innerHTML = '<option value="">Select Brand</option>';
+
+    let brands = valuationBrands[vehicleType] || [];
+
+    if (vehicleType === "bike") {
+      brands = await fetchBikeMakes();
+      valuationBrands.bike = brands;
+    }
+
+    brands.forEach((brand) => {
       const option = document.createElement("option");
-      option.value = model;
-      option.textContent = model;
+      option.value = brand;
+      option.textContent = brand;
+      makeFilter.appendChild(option);
+    });
+  }
+
+  async function valuationPopulateModelDropdown(selectedMake, vehicleType) {
+    const modelFilter = document.getElementById("modelFilter");
+    const yearFilter = document.getElementById("yearFilter");
+
+    if (!modelFilter) return;
+
+    modelFilter.innerHTML = '<option value="">Select Model</option>';
+
+    if (yearFilter) {
+      yearFilter.innerHTML = '<option value="">Select Year</option>';
+    }
+
+    if (!selectedMake) {
+      return;
+    }
+
+    let models = [];
+
+    if (vehicleType === "bike") {
+      models = await fetchBikeModels(selectedMake);
+    } else {
+      const data = vehicleModelsData[vehicleType];
+      if (data && data.brands) {
+        const brand = data.brands.find((b) => b.make === selectedMake);
+        if (brand && brand.models) {
+          models = brand.models.map((modelData) =>
+            typeof modelData === "string" ? modelData : modelData.name
+          );
+        }
+      }
+    }
+
+    models.forEach((modelName) => {
+      const option = document.createElement("option");
+      option.value = modelName;
+      option.textContent = modelName;
       modelFilter.appendChild(option);
     });
   }
-}
 
-/**
- * Update filters when switching between bike/car tabs
- */
-function updateFilters(vehicleType) {
-  populateMakeDropdown(vehicleType);
-  // Reset model dropdown
-  const modelFilter = document.getElementById("modelFilter");
-  if (modelFilter) {
-    modelFilter.innerHTML = '<option value="">Select Model</option>';
-  }
-}
+  async function valuationPopulateYearDropdown(make, model, vehicleType) {
+    const yearFilter = document.getElementById("yearFilter");
+    if (!yearFilter) return;
 
-/**
- * Initialize category tabs (Bike/Car switcher)
- */
-function initCategoryTabs() {
-  const tabBtns = document.querySelectorAll(".tab-btn");
-  const makeFilter = document.getElementById("makeFilter");
+    yearFilter.innerHTML = '<option value="">Select Year</option>';
 
-  tabBtns.forEach((btn) => {
-    btn.addEventListener("click", function () {
-      tabBtns.forEach((b) => b.classList.remove("active"));
-      this.classList.add("active");
-      const tab = this.getAttribute("data-tab");
-      updateFilters(tab);
+    if (!make || !model) {
+      return;
+    }
+
+    let years = [];
+
+    if (vehicleType === "bike") {
+      try {
+        const response = await fetch(
+          `https://ok-motor-51l3.vercel.app/api/bikes?make=${encodeURIComponent(
+            make
+          )}&model=${encodeURIComponent(model)}`
+        );
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.length > 0) {
+          years = result.data
+            .map((bike) => bike.year)
+            .filter(Boolean)
+            .sort((a, b) => b - a);
+          years = [...new Set(years)];
+        }
+      } catch (error) {
+        console.error("Error fetching bike years:", error);
+      }
+    }
+
+    if (years.length === 0) {
+      const currentYear = new Date().getFullYear();
+      for (let year = currentYear; year >= 1990; year--) {
+        years.push(year);
+      }
+    }
+
+    years.forEach((year) => {
+      const option = document.createElement("option");
+      option.value = year;
+      option.textContent = year;
+      yearFilter.appendChild(option);
     });
+  }
+
+  function valuationUpdateFilters(vehicleType) {
+    valuationPopulateMakeDropdown(vehicleType);
+    const modelFilter = document.getElementById("modelFilter");
+    const yearFilter = document.getElementById("yearFilter");
+
+    if (modelFilter) {
+      modelFilter.innerHTML = '<option value="">Select Model</option>';
+    }
+    if (yearFilter) {
+      yearFilter.innerHTML = '<option value="">Select Year</option>';
+    }
+  }
+
+  function valuationInitCategoryTabs() {
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    const makeFilter = document.getElementById("makeFilter");
+    const modelFilter = document.getElementById("modelFilter");
+
+    tabBtns.forEach((btn) => {
+      btn.addEventListener("click", function () {
+        tabBtns.forEach((b) => b.classList.remove("active"));
+        this.classList.add("active");
+        const tab = this.getAttribute("data-tab");
+        valuationUpdateFilters(tab);
+      });
+    });
+
+    if (makeFilter) {
+      makeFilter.addEventListener("change", function () {
+        const activeTab = document.querySelector(".tab-btn.active");
+        const vehicleType = activeTab
+          ? activeTab.getAttribute("data-tab")
+          : "bike";
+        valuationPopulateModelDropdown(this.value, vehicleType);
+      });
+    }
+
+    if (modelFilter) {
+      modelFilter.addEventListener("change", function () {
+        const activeTab = document.querySelector(".tab-btn.active");
+        const vehicleType = activeTab
+          ? activeTab.getAttribute("data-tab")
+          : "bike";
+        const makeValue = makeFilter ? makeFilter.value : "";
+        valuationPopulateYearDropdown(makeValue, this.value, vehicleType);
+      });
+    }
+
+    const activeTab = document.querySelector(".tab-btn.active");
+    if (activeTab) {
+      const initialTab = activeTab.getAttribute("data-tab");
+      valuationUpdateFilters(initialTab);
+    }
+  }
+
+  function valuationInitValuationForm() {
+    const form = document.getElementById("valuationForm");
+
+    if (form) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const activeTab = document.querySelector(".tab-btn.active");
+        const vehicleType = activeTab
+          ? activeTab.getAttribute("data-tab")
+          : "bike";
+
+        const formData = new FormData(form);
+        const data = {
+          make: formData.get("make"),
+          model: formData.get("model"),
+          year: formData.get("year"),
+          kms: formData.get("kms"),
+          owners: 1,
+          condition: "good",
+        };
+
+        if (!data.make || !data.model || !data.year || !data.kms) {
+          alert("Please fill in all required fields");
+          return;
+        }
+
+        let apiData = null;
+        if (vehicleType === "bike") {
+          apiData = await fetchBikeDetails(data.make, data.model, data.year);
+        }
+
+        const estimatedValue = await calculateValuation(
+          data,
+          vehicleType,
+          apiData
+        );
+
+        sessionStorage.setItem(
+          "valuationData",
+          JSON.stringify({
+            ...data,
+            vehicleType: vehicleType,
+            estimatedValue: estimatedValue,
+          })
+        );
+
+        const targetPage =
+          vehicleType === "bike"
+            ? "used-bike-valuation.html"
+            : "used-car-valuation.html";
+
+        window.location.href = targetPage;
+      });
+    }
+  }
+
+  function displayValuationResult() {
+    const isValuationPage = window.location.pathname.includes("valuation.html");
+    if (!isValuationPage) return;
+
+    const valuationData = sessionStorage.getItem("valuationData");
+    if (!valuationData) return;
+
+    const data = JSON.parse(valuationData);
+
+    const form = document.querySelector("#bikeValForm, #carValForm");
+    if (form) {
+      const makeSelect = form.querySelector("#make");
+      const modelInput = form.querySelector("#model");
+      const yearInput = form.querySelector("#year");
+      const kmsInput = form.querySelector("#kms");
+      const conditionSelect = form.querySelector("#condition");
+
+      if (makeSelect) makeSelect.value = data.make || "";
+      if (modelInput) modelInput.value = data.model || "";
+      if (yearInput) yearInput.value = data.year || "";
+      if (kmsInput) kmsInput.value = data.kms || "";
+      if (conditionSelect) conditionSelect.value = data.condition || "";
+    }
+
+    const resultEl = document.getElementById("valuationResult");
+    if (resultEl && data.estimatedValue) {
+      resultEl.style.display = "block";
+      resultEl.innerHTML = `
+        <strong>Estimated Valuation:</strong> ₹ ${data.estimatedValue.toLocaleString(
+          "en-IN"
+        )}
+        <span style="display:block;color:#666;margin-top:6px;font-size:13px">
+          Based on: ${data.make} ${data.model} (${data.year}) • ${parseInt(
+        data.kms
+      ).toLocaleString("en-IN")} km • 
+          ${data.owners}${
+        data.owners == 1
+          ? "st"
+          : data.owners == 2
+          ? "nd"
+          : data.owners == 3
+          ? "rd"
+          : "th"
+      } Owner • 
+          ${
+            data.condition.charAt(0).toUpperCase() + data.condition.slice(1)
+          } Condition
+        </span>
+      `;
+
+      sessionStorage.removeItem("valuationData");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    await loadModelsData();
+
+    // Use namespaced valuation initializers to avoid collisions
+    valuationInitCategoryTabs();
+    valuationInitValuationForm();
+    displayValuationResult();
   });
 
-  // Listen for make selection to populate models
-  if (makeFilter) {
-    makeFilter.addEventListener("change", function () {
-      const activeTab = document.querySelector(".tab-btn.active");
-      const vehicleType = activeTab
-        ? activeTab.getAttribute("data-tab")
-        : "bike";
-      populateModelDropdown(this.value, vehicleType);
-    });
-  }
-  // Initialize with default active tab
-  const activeTab = document.querySelector(".tab-btn.active");
-  if (activeTab) {
-    const initialTab = activeTab.getAttribute("data-tab");
-    updateFilters(initialTab);
-  }
-}
-
-/**
- * Initialize valuation form submission
- */
-function initValuationForm() {
-  const form = document.getElementById("valuationForm");
-
-  if (form) {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-
-      // Get active tab to determine vehicle type
-      const activeTab = document.querySelector(".tab-btn.active");
-      const vehicleType = activeTab
-        ? activeTab.getAttribute("data-tab")
-        : "bike";
-
-      // Get form data
-      const formData = new FormData(form);
-      const data = {
-        make: formData.get("make"),
-        model: formData.get("model"),
-        year: formData.get("year"),
-        kms: formData.get("kms"),
-        owners: formData.get("owners"),
-        condition: formData.get("condition"),
-      };
-
-      // Validate required fields
-      if (!data.make || !data.model || !data.year || !data.kms) {
-        alert("Please fill in all required fields");
-        return;
-      }
-
-      // Calculate valuation
-      const estimatedValue = calculateValuation(data, vehicleType);
-
-      // Store data in sessionStorage for the valuation page
-      sessionStorage.setItem(
-        "valuationData",
-        JSON.stringify({
-          ...data,
-          vehicleType: vehicleType,
-          estimatedValue: estimatedValue,
-        })
-      );
-
-      // Redirect to respective valuation page
-      const targetPage =
-        vehicleType === "bike"
-          ? "used-bike-valuation.html"
-          : "used-car-valuation.html";
-
-      window.location.href = targetPage;
-    });
-  }
-}
-
-// ========================================
-// VALUATION PAGE - DISPLAY RESULT
-// ========================================
-
-/**
- * Display valuation result on the valuation page
- * This should be called on used-bike-valuation.html and used-car-valuation.html
- */
-function displayValuationResult() {
-  // Check if we're on a valuation page
-  const isValuationPage = window.location.pathname.includes("valuation.html");
-  if (!isValuationPage) return;
-
-  const valuationData = sessionStorage.getItem("valuationData");
-  if (!valuationData) return;
-
-  const data = JSON.parse(valuationData);
-
-  // Auto-fill the form if it exists
-  const form = document.querySelector("#bikeValForm, #carValForm");
-  if (form) {
-    const makeSelect = form.querySelector("#make");
-    const modelInput = form.querySelector("#model");
-    const yearInput = form.querySelector("#year");
-    const kmsInput = form.querySelector("#kms");
-    const conditionSelect = form.querySelector("#condition");
-
-    if (makeSelect) makeSelect.value = data.make || "";
-    if (modelInput) modelInput.value = data.model || "";
-    if (yearInput) yearInput.value = data.year || "";
-    if (kmsInput) kmsInput.value = data.kms || "";
-    if (conditionSelect) conditionSelect.value = data.condition || "";
-  }
-
-  // Display the result
-  const resultEl = document.getElementById("valuationResult");
-  if (resultEl && data.estimatedValue) {
-    resultEl.style.display = "block";
-    resultEl.innerHTML = `
-      <strong>Estimated Valuation:</strong> ₹ ${data.estimatedValue.toLocaleString(
-        "en-IN"
-      )}
-      <span style="display:block;color:#666;margin-top:6px;font-size:13px">
-        Based on: ${data.make} ${data.model} (${data.year}) • ${parseInt(
-      data.kms
-    ).toLocaleString("en-IN")} km • 
-        ${data.owners}${
-      data.owners == 1
-        ? "st"
-        : data.owners == 2
-        ? "nd"
-        : data.owners == 3
-        ? "rd"
-        : "th"
-    } Owner • 
-        ${
-          data.condition.charAt(0).toUpperCase() + data.condition.slice(1)
-        } Condition
-      </span>
-    `;
-
-    // Clear storage after display
-    sessionStorage.removeItem("valuationData");
-  }
-}
-
-// ========================================
-// INITIALIZATION
-// ========================================
-
-document.addEventListener("DOMContentLoaded", async () => {
-  // Load models data first
-  await loadModelsData();
-
-  initStickyHeader();
-  initMobileMenu();
-  initCategoryTabs();
-  initValuationForm();
-  displayValuationResult();
-});
+  // Expose only what's needed globally
+  window.calculateValuation = calculateValuation;
+  window.VALUATION_API_BASE = API_BASE;
+})();

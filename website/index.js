@@ -292,35 +292,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   initNavDropdownToggles();
 });
 
-function initNavDropdownToggles() {
-  const headerNav = document.querySelector(".header-nav");
-  if (!headerNav) return;
-
-  headerNav.addEventListener("click", function (e) {
-    const a = e.target.closest && e.target.closest("a");
-    if (!a) return;
-
-    if (window.innerWidth <= 1024) {
-      const parent = a.closest && a.closest(".nav-dropdown");
-
-      if (
-        parent &&
-        (a.classList.contains("dropdown-toggle") ||
-          a.classList.contains("nav-link"))
-      ) {
-        e.preventDefault();
-        parent.classList.toggle("open");
-        return;
-      }
-
-      const mobileBtn = document.getElementById("mobileMenuBtn");
-      headerNav.classList.remove("open");
-      headerNav.classList.remove("mobile-active");
-      if (mobileBtn) mobileBtn.setAttribute("aria-expanded", "false");
-      document.body.style.overflow = "";
-    }
-  });
-}
 
 function initHeroSlider() {
   const heroSlider = document.createElement("div");

@@ -12,6 +12,7 @@ const syncRoutes = require("./routes/syncRoutes");
 const vehicleRoutes = require("./routes/vehicleRoutes");
 const sellRequestRoutes = require("./routes/sellRequestRoutes");
 const updatesRoutes = require("./routes/updatesRoutes");
+const bikeRoutes = require("./routes/bikeRoutes");
 const { protect } = require("./middleware/auth");
 const cors = require("cors");
 const app = express();
@@ -111,6 +112,7 @@ app.use("/api/vehicles", vehicleRoutes); // Vehicle routes
 app.use("/api/gallery", require("./routes/galleryRoutes")); // Gallery routes
 app.use('/api/sell-request', sellRequestRoutes); // Sell form endpoints
 app.use('/api/updates', updatesRoutes); // Updates endpoints
+app.use('/api/bikes', bikeRoutes); // Bike API endpoints
 
 // Health check endpoint (also in syncRoutes but duplicated here for convenience)
 app.get("/api/health", (req, res) => {

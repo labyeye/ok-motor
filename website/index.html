@@ -156,64 +156,61 @@
         ]
       }
     </script>
+
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        var t = document.getElementById("mobileMenuBtn"),
-          n = document.querySelector(".header-nav");
-        if (!t || !n) return;
-        function s(e) {
-          t.setAttribute("aria-expanded", e ? "true" : "false");
+        var mobileMenuBtn = document.getElementById("mobileMenuBtn"),
+          headerNav = document.querySelector(".header-nav");
+        if (!mobileMenuBtn || !headerNav) return;
+        
+        function setAriaExpanded(isOpen) {
+          mobileMenuBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
         }
-        t.addEventListener("click", function (e) {
+        
+        mobileMenuBtn.addEventListener("click", function (e) {
           e.preventDefault();
-          var o = n.classList.toggle("open");
-          s(o);
-          document.body.style.overflow = o ? "hidden" : "";
-        }),
-          n.addEventListener("click", function (e) {
-            var o = e.target.closest && e.target.closest("a");
-            if (!o) return;
-            // Handle nav clicks: toggle dropdowns on mobile, only close nav for real navigation
-            var a = e.target.closest && e.target.closest("a");
-            if (!a) return;
-
-            // If this link belongs to a dropdown, toggle that dropdown instead of closing the menu
-            var parentDropdown = a.closest && a.closest(".nav-dropdown");
-            if (parentDropdown && window.innerWidth <= 1024) {
-              // If the clicked link is intended to open a submenu, stop navigation and toggle
-              if (
-                a.classList.contains("dropdown-toggle") ||
-                a.classList.contains("nav-link")
-              ) {
-                e.preventDefault();
-                parentDropdown.classList.toggle("open");
-                return;
-              }
-            }
-
-            // Otherwise it's a normal navigation link — close the mobile nav
-            if (window.innerWidth <= 1024) {
-              n.classList.remove("open");
-              s(false);
-              document.body.style.overflow = "";
-            }
-          }),
-          window.addEventListener("keydown", function (e) {
-            "Escape" === e.key &&
-              n.classList.contains("open") &&
-              (n.classList.remove("open"),
-              s(!1),
-              (document.body.style.overflow = ""));
-          }),
-          window.addEventListener("resize", function () {
-            window.innerWidth > 1024 &&
-              n.classList.contains("open") &&
-              (n.classList.remove("open"),
-              s(!1),
-              (document.body.style.overflow = ""));
-          });
+          var isOpen = headerNav.classList.toggle("open");
+          setAriaExpanded(isOpen);
+          document.body.style.overflow = isOpen ? "hidden" : "";
+        });
+        
+        headerNav.addEventListener("click", function (e) {
+          var link = e.target.closest && e.target.closest("a");
+          if (!link) return;
+          
+          var parentDropdown = link.closest && link.closest(".nav-dropdown");
+          if (parentDropdown && window.innerWidth <= 1024 && 
+              (link.classList.contains("dropdown-toggle") || link.classList.contains("nav-link"))) {
+            e.preventDefault();
+            parentDropdown.classList.toggle("open");
+            return;
+          }
+          
+          if (window.innerWidth <= 1024) {
+            headerNav.classList.remove("open");
+            setAriaExpanded(false);
+            document.body.style.overflow = "";
+          }
+        });
+        
+        window.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && headerNav.classList.contains("open")) {
+            headerNav.classList.remove("open");
+            setAriaExpanded(false);
+            document.body.style.overflow = "";
+          }
+        });
+        
+        window.addEventListener("resize", function () {
+          if (window.innerWidth > 1024 && headerNav.classList.contains("open")) {
+            headerNav.classList.remove("open");
+            setAriaExpanded(false);
+            document.body.style.overflow = "";
+          }
+        });
       });
     </script>
+
     <link rel="stylesheet" href="style.css" />
     <link
       rel="stylesheet"
@@ -624,45 +621,51 @@
           <div class="filter-row">
             <div class="filter-card">
               <label for="makeFilter">Make/Brand</label>
-              <select id="makeFilter" name="make" class="filter-select" required>
+              <select
+                id="makeFilter"
+                name="make"
+                class="filter-select"
+                required
+              >
                 <option value="">Select Brand</option>
               </select>
             </div>
             <div class="filter-card">
               <label for="modelFilter">Model</label>
-              <select id="modelFilter" name="model" class="filter-select" required>
+              <select
+                id="modelFilter"
+                name="model"
+                class="filter-select"
+                required
+              >
                 <option value="">Select Model</option>
               </select>
             </div>
             <div class="filter-card">
               <label for="yearFilter">Year</label>
-              <input id="yearFilter" name="year" class="filter-input" type="number" min="1990" max="2025" placeholder="e.g. 2019" required />
+              <select
+                id="yearFilter"
+                name="year"
+                class="filter-select"
+                required
+              >
+                <option value="">Select Year</option>
+              </select>
             </div>
-          </div>
-          <div class="filter-row">
             <div class="filter-card">
               <label for="kmsFilter">Kilometers Driven</label>
-              <input id="kmsFilter" name="kms" class="filter-input" type="number" min="0" placeholder="e.g. 12000" required />
-            </div>
-            <div class="filter-card">
-              <label for="ownerFilter">Owner Count</label>
-              <select id="ownerFilter" name="owners" class="filter-select" required>
-                <option value="1">1st Owner</option>
-                <option value="2">2nd Owner</option>
-                <option value="3">3rd Owner</option>
-                <option value="4">4+ Owners</option>
-              </select>
-            </div>
-            <div class="filter-card">
-              <label for="conditionFilter">Condition</label>
-              <select id="conditionFilter" name="condition" class="filter-select" required>
-                <option value="excellent">Excellent</option>
-                <option value="good">Good</option>
-                <option value="fair">Fair</option>
-                <option value="poor">Poor</option>
-              </select>
+              <input
+                id="kmsFilter"
+                name="kms"
+                class="filter-input"
+                type="number"
+                min="0"
+                placeholder="e.g. 12000"
+                required
+              />
             </div>
           </div>
+
           <div class="filter-actions">
             <button type="submit" class="search-count-btn" id="getValuationBtn">
               <i class="fas fa-calculator"></i>
@@ -1774,27 +1777,9 @@
         >
       </div>
     </footer>
-    <script src="./scroll-bg-handler.js"></script>
+    <script src="./index.js"></script>
+
     <script src="./index-valuation.js"></script>
-    <script>
-      // Dropdown toggle for mobile: toggle .open on nav-dropdown
-      document.addEventListener("DOMContentLoaded", function () {
-        document
-          .querySelectorAll(
-            ".nav-dropdown .dropdown-toggle, .nav-dropdown .nav-link"
-          )
-          .forEach(function (btn) {
-            btn.addEventListener("click", function (e) {
-              // only run when nav is in mobile mode (sidebar) or small screens
-              if (window.innerWidth <= 1024) {
-                e.preventDefault();
-                var parent = this.closest(".nav-dropdown");
-                if (parent) parent.classList.toggle("open");
-              }
-            });
-          });
-      });
-    </script>
     <div class="floating-buttons">
       <a
         href="#"
@@ -2106,6 +2091,7 @@
         </button>
       </div>
     </div>
+
     <script>
       // Dynamic Testimonials & Review Modal (improved)
       document.addEventListener("DOMContentLoaded", function () {
