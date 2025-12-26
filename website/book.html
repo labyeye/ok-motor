@@ -331,13 +331,13 @@
       </div>
     </section>
     <script>
-      (function() {
-        const slides = document.querySelectorAll('.hero-slide');
+      (function () {
+        const slides = document.querySelectorAll(".hero-slide");
         let currentSlide = 0;
         function nextSlide() {
-          slides[currentSlide].classList.remove('active');
+          slides[currentSlide].classList.remove("active");
           currentSlide = (currentSlide + 1) % slides.length;
-          slides[currentSlide].classList.add('active');
+          slides[currentSlide].classList.add("active");
         }
         setInterval(nextSlide, 5000);
       })();
@@ -346,11 +346,19 @@
     <div class="book-hero-section book-hero">
       <section class="book-section">
         <div class="book-content">
-          <h1>Book Your Dream Vehicle</h1>
+          <h1 class="page-title">
+            Book Your Dream Vehicle in Muzaffarpur — Ok Motors
+          </h1>
           <p class="lead-keywords">
             Book test rides, reserve certified pre-owned vehicles and secure
             your booking online in Muzaffarpur. Fast booking, UPI payments,
             doorstep test-rides, and verified second-hand vehicles across Bihar.
+          </p>
+
+          <h2>Book Your Vehicle in 3 Easy Steps</h2>
+          <p>
+            We make booking your vehicle simple, fast, and transparent. Get
+            instant confirmation and complete the process in just a few clicks.
           </p>
 
           <div class="book-steps">
@@ -364,17 +372,19 @@
             <div class="book-step">
               <div class="step-number">2</div>
               <div class="step-content">
-                <h4>Make Payment</h4>
-                <p>Pay the booking amount via UPI</p>
+                <h4>Enter Your Details</h4>
+                <p>
+                  Fill out the form with your contact information and
+                  preferences.
+                </p>
               </div>
             </div>
             <div class="book-step">
               <div class="step-number">3</div>
               <div class="step-content">
-                <h4>Complete Booking</h4>
+                <h4>Confirm Your Booking</h4>
                 <p>
-                  Submit your payment details and receive confirmation of your
-                  booking.
+                  Secure your slot with instant confirmation and secure payment.
                 </p>
               </div>
             </div>
@@ -383,8 +393,6 @@
 
         <div class="book-form-container" id="book-form">
           <form id="book-bike-form" class="book-form">
-            <h3>Vehicle Booking Form</h3>
-
             <div class="form-group">
               <label for="book-name">Full Name*</label>
 
@@ -428,7 +436,7 @@
               </select>
             </div>
 
-            <div class="form-group">
+            <div class="form-group full-width">
               <label>Payment Method</label>
               <div class="payment-methods">
                 <label class="payment-method">
@@ -440,7 +448,7 @@
                   />
                   <div class="payment-option">
                     <img
-                      src="https://m.economictimes.com/thumb/msid-74960608,width-1200,height-900,resizemode-4,imgsize-49172/upi-twitter.jpg"
+                      src="https://m.economictimes.com/thumb/msid-74960608,width-900,height-500,resizemode-4,imgsize-49172/upi-twitter.jpg"
                       alt="UPI Payment - Book your vehicle with secure UPI payment at Ok Motors"
                     />
                     <span>UPI</span>
@@ -449,10 +457,13 @@
               </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group full-width">
               <label>Payment QR Code</label>
               <div class="qr-code-container">
-                <img src="./assets/images/qe.jpeg" alt="Ok Motors Payment QR Code - Scan to book vehicle with UPI Google Pay PhonePe Paytm" />
+                <img
+                  src="./assets/images/qe.jpeg"
+                  alt="Ok Motors Payment QR Code - Scan to book vehicle with UPI Google Pay PhonePe Paytm"
+                />
                 <p>Scan this QR code to make payment</p>
               </div>
             </div>
@@ -481,7 +492,7 @@
               />
             </div>
 
-            <div class="form-group checkbox-group">
+            <div class="form-group checkbox-group full-width">
               <input
                 type="checkbox"
                 id="agree-terms-book"
@@ -622,6 +633,11 @@
             <ul>
               <li>
                 <a href="https://www.okmotors.in/finance.html">Bike Finance</a>
+              </li>
+              <li>
+                <a href="https://www.okmotors.in/terms.html"
+                  >Terms &amp; Conditions</a
+                >
               </li>
               <li>
                 <a href="https://www.okmotors.in/locations-bihar.html"
@@ -944,9 +960,9 @@
           <i class="fa-solid fa-motorcycle fa-shake"></i>
         </a>
       </div>
-
-
     </div>
     <script src="./scroll-bg-handler.js"></script>
+    <!-- Shared mobile sticky CTA across pages -->
+    <script src="./sticky-cta.js"></script>
   </body>
 </html>

@@ -82,37 +82,44 @@
         var mobileMenuBtn = document.getElementById("mobileMenuBtn"),
           headerNav = document.querySelector(".header-nav");
         if (!mobileMenuBtn || !headerNav) return;
-        
+
         function setAriaExpanded(isOpen) {
-          mobileMenuBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+          mobileMenuBtn.setAttribute(
+            "aria-expanded",
+            isOpen ? "true" : "false"
+          );
         }
-        
+
         mobileMenuBtn.addEventListener("click", function (e) {
           e.preventDefault();
           var isOpen = headerNav.classList.toggle("open");
           setAriaExpanded(isOpen);
           document.body.style.overflow = isOpen ? "hidden" : "";
         });
-        
+
         headerNav.addEventListener("click", function (e) {
           var link = e.target.closest && e.target.closest("a");
           if (!link) return;
-          
+
           var parentDropdown = link.closest && link.closest(".nav-dropdown");
-          if (parentDropdown && window.innerWidth <= 1024 && 
-              (link.classList.contains("dropdown-toggle") || link.classList.contains("nav-link"))) {
+          if (
+            parentDropdown &&
+            window.innerWidth <= 1024 &&
+            (link.classList.contains("dropdown-toggle") ||
+              link.classList.contains("nav-link"))
+          ) {
             e.preventDefault();
             parentDropdown.classList.toggle("open");
             return;
           }
-          
+
           if (window.innerWidth <= 1024) {
             headerNav.classList.remove("open");
             setAriaExpanded(false);
             document.body.style.overflow = "";
           }
         });
-        
+
         window.addEventListener("keydown", function (e) {
           if (e.key === "Escape" && headerNav.classList.contains("open")) {
             headerNav.classList.remove("open");
@@ -120,9 +127,12 @@
             document.body.style.overflow = "";
           }
         });
-        
+
         window.addEventListener("resize", function () {
-          if (window.innerWidth > 1024 && headerNav.classList.contains("open")) {
+          if (
+            window.innerWidth > 1024 &&
+            headerNav.classList.contains("open")
+          ) {
             headerNav.classList.remove("open");
             setAriaExpanded(false);
             document.body.style.overflow = "";
@@ -261,7 +271,6 @@
               >
             </div>
           </div>
-          
         </nav>
 
         <div class="header-actions">
@@ -336,13 +345,13 @@
       </div>
     </section>
     <script>
-      (function() {
-        const slides = document.querySelectorAll('.hero-slide');
+      (function () {
+        const slides = document.querySelectorAll(".hero-slide");
         let currentSlide = 0;
         function nextSlide() {
-          slides[currentSlide].classList.remove('active');
+          slides[currentSlide].classList.remove("active");
           currentSlide = (currentSlide + 1) % slides.length;
-          slides[currentSlide].classList.add('active');
+          slides[currentSlide].classList.add("active");
         }
         setInterval(nextSlide, 5000);
       })();
@@ -352,7 +361,10 @@
       <div class="about-container">
         <div class="owner-message">
           <div class="owner-image">
-            <img src="./assets/own.png" alt="Ok Motors Founder & CEO - Leading India's premier pre-owned vehicle marketplace" />
+            <img
+              src="./assets/own.png"
+              alt="Ok Motors Founder & CEO - Leading India's premier pre-owned vehicle marketplace"
+            />
             <div class="owner-signature">
               <p>Founder & CEO</p>
             </div>
@@ -596,6 +608,11 @@
           <ul>
             <li>
               <a href="https://www.okmotors.in/finance.html">Bike Finance</a>
+            </li>
+            <li>
+              <a href="https://www.okmotors.in/terms.html"
+                >Terms & Conditions</a
+              >
             </li>
             <li>
               <a href="https://www.okmotors.in/locations-bihar.html"
@@ -895,8 +912,6 @@
               "आज हमारे बाइक सवारी का भविष्य आपको लाने के लिए।",
           },
         };
-
-
       });
     </script>
 
@@ -999,10 +1014,15 @@
       });
     </script>
     <div class="floating-buttons">
-      <a href="https://wa.me/‪917280012222‬" target="_blank" rel="noopener noreferrer" class="sticky-cta-btn whatsapp-btn">
-      <i class="fab fa-whatsapp"></i>
-      <span>WhatsApp</span>
-    </a>
+      <a
+        href="https://wa.me/‪917280012222‬"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="sticky-cta-btn whatsapp-btn"
+      >
+        <i class="fab fa-whatsapp"></i>
+        <span>WhatsApp</span>
+      </a>
 
       <a
         href="tel:‪917280012222‬"
@@ -1024,5 +1044,7 @@
 
     <script src="./testimonials.js"></script>
     <script src="./index.js"></script>
+    <!-- Shared mobile sticky CTA across pages -->
+    <script src="./sticky-cta.js"></script>
   </body>
 </html>

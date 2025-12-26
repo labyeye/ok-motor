@@ -64,41 +64,7 @@
     </script>
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./finance.css" />
-    <style>
-      .partners {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 12px;
-        align-items: center;
-        margin: 18px 0;
-      }
-      .partner {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 12px;
-        background: #fff;
-        border-radius: 8px;
-        border: 1px solid #eee;
-        height: 100px;
-      }
-      .partner img {
-        max-width: 100%;
-        max-height: 76px;
-        width: auto;
-        height: auto;
-        object-fit: contain;
-        display: block;
-      }
-      @media (max-width: 520px) {
-        .partner {
-          height: 76px;
-        }
-        .partner img {
-          max-height: 56px;
-        }
-      }
-    </style>
+
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         var t = document.getElementById("mobileMenuBtn"),
@@ -279,7 +245,6 @@
               >
             </div>
           </div>
-          
         </nav>
 
         <div class="header-actions">
@@ -354,13 +319,13 @@
       </div>
     </section>
     <script>
-      (function() {
-        const slides = document.querySelectorAll('.hero-slide');
+      (function () {
+        const slides = document.querySelectorAll(".hero-slide");
         let currentSlide = 0;
         function nextSlide() {
-          slides[currentSlide].classList.remove('active');
+          slides[currentSlide].classList.remove("active");
           currentSlide = (currentSlide + 1) % slides.length;
-          slides[currentSlide].classList.add('active');
+          slides[currentSlide].classList.add("active");
         }
         setInterval(nextSlide, 5000);
       })();
@@ -492,10 +457,8 @@
     <footer class="footer">
       <div class="footer-content">
         <div class="footer-section">
-          <div class="footer-stars" style="margin: 10px 0">
-            <span class="star" style="color: gold; font-size: 1.5em"
-              ><i class="fa fa-star"></i
-            ></span>
+          <div class="footer-stars">
+            <span class="star"> <i class="fa fa-star"></i></span>
             <span class="star" style="color: gold; font-size: 1.5em"
               ><i class="fa fa-star"></i
             ></span>
@@ -572,6 +535,11 @@
           <ul>
             <li>
               <a href="https://www.okmotors.in/finance.html">Bike Finance</a>
+            </li>
+            <li>
+              <a href="https://www.okmotors.in/terms.html"
+                >Terms & Conditions</a
+              >
             </li>
             <li>
               <a href="https://www.okmotors.in/locations-bihar.html"
@@ -738,5 +706,7 @@
       });
     </script>
     <script src="/i18n.js"></script>
+    <!-- Shared mobile sticky CTA across pages -->
+    <script src="./sticky-cta.js"></script>
   </body>
 </html>

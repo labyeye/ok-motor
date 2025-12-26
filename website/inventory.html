@@ -350,12 +350,8 @@
         <div class="hero-content">
           <span class="hero-label">Our Vehicles</span>
           <h1 itemprop="name">
-            <span class="hero-title-line1"
-              >Certified Pre-Owned</span
-            >
-            <span class="hero-title-line2"
-              >Bikes & Cars for Sale in Bihar</span
-            >
+            <span class="hero-title-line1">Certified Pre-Owned</span>
+            <span class="hero-title-line2">Bikes & Cars for Sale in Bihar</span>
           </h1>
           <p class="hero-subtitle">
             Get basic details and get an estimated market price for your
@@ -364,8 +360,6 @@
         </div>
       </div>
     </section>
-
-    
 
     <div class="filters-container">
       <div class="desktop-filters">
@@ -544,6 +538,11 @@
               <a href="https://www.okmotors.in/finance.html">Bike Finance</a>
             </li>
             <li>
+              <a href="https://www.okmotors.in/terms.html"
+                >Terms & Conditions</a
+              >
+            </li>
+            <li>
               <a href="./locations-bihar.html">Locations</a>
             </li>
           </ul>
@@ -674,7 +673,9 @@
             </div>
             <div class="card-content">
               <div class="car-body">${vehicle.vehicleType || ""}</div>
-              <h3 class="vehicle-title">${vehicle.vehicleName || ""} ${vehicle.vehicleModel || ""}</h3>
+              <h3 class="vehicle-title">${vehicle.vehicleName || ""} ${
+            vehicle.vehicleModel || ""
+          }</h3>
               <div class="vehicle-meta">
                 <span class="year">${vehicle.manufacturingYear || "-"}</span>
               </div>
@@ -1003,5 +1004,7 @@
           });
       });
     </script>
+    <!-- Shared mobile sticky CTA across pages -->
+    <script src="./sticky-cta.js"></script>
   </body>
 </html>

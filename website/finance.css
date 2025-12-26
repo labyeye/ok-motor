@@ -88,6 +88,35 @@
   line-height: 1.5;
 }
 
+/* Footer stars styling */
+.footer-stars .star {
+  color: gold;
+  font-size: 1.5em;
+}
+
+/* Logo styling */
+.footer .logo img {
+  width: 220px;
+}
+
+/* Social icons styling */
+.social-icons a i {
+  color: #0400ff;
+}
+
+.social-icons a i.fa-whatsapp {
+  color: #00a841;
+}
+
+.social-icons a img {
+  width: 20px;
+}
+
+/* Footer bottom link */
+.footer-bottom a {
+  color: #a9a9a9;
+}
+
 @media (max-width: 768px) {
   .partners {
     flex-direction: row;

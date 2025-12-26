@@ -184,7 +184,9 @@
             class="mobile-action"
             >Buy Used Bike</a
           >
-          <a href="https://www.okmotors.in/insaurance.html" class="mobile-action"
+          <a
+            href="https://www.okmotors.in/insaurance.html"
+            class="mobile-action"
             >Insurance &amp; POC</a
           >
           <a
@@ -203,7 +205,7 @@
       .mobile-action-banner {
         display: none;
         width: 100%;
-        background: #303E27;
+        background: #303e27;
         align-items: center;
         z-index: 500;
         transform: translateY(-30px);
@@ -229,7 +231,7 @@
         font-size: 14px;
       }
       .mobile-search-btn {
-        background: var(--primary-color, #303E27);
+        background: var(--primary-color, #303e27);
         color: #fff;
         border: none;
         padding: 8px 10px;
@@ -358,13 +360,13 @@
       </div>
     </section>
     <script>
-      (function() {
-        const slides = document.querySelectorAll('.hero-slide');
+      (function () {
+        const slides = document.querySelectorAll(".hero-slide");
         let currentSlide = 0;
         function nextSlide() {
-          slides[currentSlide].classList.remove('active');
+          slides[currentSlide].classList.remove("active");
           currentSlide = (currentSlide + 1) % slides.length;
-          slides[currentSlide].classList.add('active');
+          slides[currentSlide].classList.add("active");
         }
         setInterval(nextSlide, 5000);
       })();
@@ -544,5 +546,7 @@
 
     <script src="./scroll-bg-handler.js"></script>
     <script src="./index.js"></script>
+    <!-- Shared mobile sticky CTA across pages -->
+    <script src="./sticky-cta.js"></script>
   </body>
 </html>

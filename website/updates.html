@@ -383,13 +383,13 @@
       </div>
     </section>
     <script>
-      (function() {
-        const slides = document.querySelectorAll('.hero-slide');
+      (function () {
+        const slides = document.querySelectorAll(".hero-slide");
         let currentSlide = 0;
         function nextSlide() {
-          slides[currentSlide].classList.remove('active');
+          slides[currentSlide].classList.remove("active");
           currentSlide = (currentSlide + 1) % slides.length;
-          slides[currentSlide].classList.add('active');
+          slides[currentSlide].classList.add("active");
         }
         setInterval(nextSlide, 5000);
       })();
@@ -510,6 +510,11 @@
           <ul>
             <li>
               <a href="https://www.okmotors.in/finance.html">Bike Finance</a>
+            </li>
+            <li>
+              <a href="https://www.okmotors.in/terms.html"
+                >Terms & Conditions</a
+              >
             </li>
             <li>
               <a href="https://www.okmotors.in/locations-bihar.html"
@@ -660,7 +665,7 @@
           .addEventListener("click", function () {
             mobileMenu.classList.remove("active");
           });
-        
+
         const API_BASE = (function () {
           try {
             const host = window.location.hostname;
@@ -887,15 +892,18 @@
           });
       });
     </script>
-    
 
     <div class="floating-buttons">
-      <a href="https://wa.me/‪917280012222‬" target="_blank" rel="noopener noreferrer" class="sticky-cta-btn whatsapp-btn">
-      <i class="fab fa-whatsapp"></i>
-      <span>WhatsApp</span>
-    </a>
+      <a
+        href="https://wa.me/‪917280012222‬"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="sticky-cta-btn whatsapp-btn"
+      >
+        <i class="fab fa-whatsapp"></i>
+        <span>WhatsApp</span>
+      </a>
 
-      
       <a
         href="tel:‪917280012222‬"
         class="floating-btn call-btn"
@@ -914,9 +922,8 @@
       </a>
     </div>
 
-    
-
-
     <script src="./scroll-bg-handler.js"></script>
+    <!-- Shared mobile sticky CTA across pages -->
+    <script src="./sticky-cta.js"></script>
   </body>
 </html>

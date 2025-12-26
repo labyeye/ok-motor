@@ -490,11 +490,36 @@
                   </tr>
                 </tbody>
               </table>
-              <div style="display: flex; gap: 16px; margin-top: 24px; justify-content: center">
-                <a href="https://www.okmotors.in/sell.html" class="search-count-btn" style="background: #0066cc; text-decoration: none; display: inline-block; padding: 12px 32px">
+              <div
+                style="
+                  display: flex;
+                  gap: 16px;
+                  margin-top: 24px;
+                  justify-content: center;
+                "
+              >
+                <a
+                  href="https://www.okmotors.in/sell.html"
+                  class="search-count-btn"
+                  style="
+                    background: #0066cc;
+                    text-decoration: none;
+                    display: inline-block;
+                    padding: 12px 32px;
+                  "
+                >
                   Sell <span id="sellVehicleName"></span>
                 </a>
-                <a href="https://www.okmotors.in/inventory.html" class="search-count-btn" style="background: #ff8800; text-decoration: none; display: inline-block; padding: 12px 32px">
+                <a
+                  href="https://www.okmotors.in/inventory.html"
+                  class="search-count-btn"
+                  style="
+                    background: #ff8800;
+                    text-decoration: none;
+                    display: inline-block;
+                    padding: 12px 32px;
+                  "
+                >
                   Buy used <span id="buyVehicleName"></span> in Bihar
                 </a>
               </div>
@@ -570,6 +595,11 @@
             <li>
               <a href="https://www.okmotors.in/finance.html">Bike Finance</a>
             </li>
+            <li>
+              <a href="https://www.okmotors.in/terms.html"
+                >Terms & Conditions</a
+              >
+            </li>
             <li><a href="./locations-bihar.html">Locations</a></li>
           </ul>
         </div>
@@ -601,9 +631,11 @@
       async function loadBikeMakes() {
         const makeSelect = document.getElementById("make");
         try {
-          const response = await fetch(`https://ok-motor-51l3.vercel.app/api/bikes/makes`);
+          const response = await fetch(
+            `https://ok-motor-51l3.vercel.app/api/bikes/makes`
+          );
           const result = await response.json();
-          
+
           if (result.success && result.data) {
             bikeMakes = result.data;
           } else {
@@ -617,7 +649,7 @@
               "Suzuki",
               "TVS",
               "Hero",
-              "Kawasaki"
+              "Kawasaki",
             ];
           }
         } catch (error) {
@@ -632,10 +664,10 @@
             "Suzuki",
             "TVS",
             "Hero",
-            "Kawasaki"
+            "Kawasaki",
           ];
         }
-        
+
         // Populate the dropdown
         makeSelect.innerHTML = '<option value="">Select Make</option>';
         bikeMakes.forEach((make) => {
@@ -650,20 +682,22 @@
       async function loadBikeYears(make, model) {
         const yearSelect = document.getElementById("year");
         yearSelect.innerHTML = '<option value="">Loading years...</option>';
-        
+
         try {
-          let url = `https://ok-motor-51l3.vercel.app/api/bikes?make=${encodeURIComponent(make)}`;
+          let url = `https://ok-motor-51l3.vercel.app/api/bikes?make=${encodeURIComponent(
+            make
+          )}`;
           if (model) url += `&model=${encodeURIComponent(model)}`;
-          
+
           const response = await fetch(url);
           const result = await response.json();
-          
+
           if (result.success && result.data && result.data.length > 0) {
             // Extract unique years from the results
-            const years = [...new Set(result.data.map(bike => bike.year))]
-              .filter(year => year && year !== "")
+            const years = [...new Set(result.data.map((bike) => bike.year))]
+              .filter((year) => year && year !== "")
               .sort((a, b) => b.localeCompare(a)); // Sort descending
-            
+
             yearSelect.innerHTML = '<option value="">Select Year</option>';
             years.forEach((year) => {
               const option = document.createElement("option");
@@ -671,17 +705,17 @@
               option.textContent = year;
               yearSelect.appendChild(option);
             });
-            
+
             return years;
           }
-          
+
           // Fallback to generate years if API doesn't return any
           const currentYear = new Date().getFullYear();
           const fallbackYears = [];
           for (let y = currentYear; y >= currentYear - 15; y--) {
             fallbackYears.push(y.toString());
           }
-          
+
           yearSelect.innerHTML = '<option value="">Select Year</option>';
           fallbackYears.forEach((year) => {
             const option = document.createElement("option");
@@ -689,18 +723,18 @@
             option.textContent = year;
             yearSelect.appendChild(option);
           });
-          
+
           return fallbackYears;
         } catch (error) {
           console.error("Error loading bike years:", error);
-          
+
           // Fallback to generate years
           const currentYear = new Date().getFullYear();
           const fallbackYears = [];
           for (let y = currentYear; y >= currentYear - 15; y--) {
             fallbackYears.push(y.toString());
           }
-          
+
           yearSelect.innerHTML = '<option value="">Select Year</option>';
           fallbackYears.forEach((year) => {
             const option = document.createElement("option");
@@ -708,7 +742,7 @@
             option.textContent = year;
             yearSelect.appendChild(option);
           });
-          
+
           return fallbackYears;
         }
       }
@@ -716,13 +750,17 @@
       // Load bike models for a specific make
       async function loadBikeModels(make) {
         try {
-          const response = await fetch(`https://ok-motor-51l3.vercel.app/api/bikes/models?make=${encodeURIComponent(make)}`);
+          const response = await fetch(
+            `https://ok-motor-51l3.vercel.app/api/bikes/models?make=${encodeURIComponent(
+              make
+            )}`
+          );
           const result = await response.json();
-          
+
           if (result.success && result.data) {
             return result.data;
           }
-          
+
           return [];
         } catch (error) {
           console.error("Error loading bike models:", error);
@@ -733,18 +771,20 @@
       // Fetch bike details from API
       async function fetchBikeData(make, model, year) {
         try {
-          let url = `https://ok-motor-51l3.vercel.app/api/bikes?make=${encodeURIComponent(make)}`;
+          let url = `https://ok-motor-51l3.vercel.app/api/bikes?make=${encodeURIComponent(
+            make
+          )}`;
           if (model) url += `&model=${encodeURIComponent(model)}`;
           if (year) url += `&year=${year}`;
-          
+
           const response = await fetch(url);
           const result = await response.json();
-          
+
           if (result.success && result.data && result.data.length > 0) {
             currentBikeData = result.data[0];
             return currentBikeData;
           }
-          
+
           return null;
         } catch (error) {
           console.error("Error fetching bike data:", error);
@@ -753,44 +793,48 @@
       }
 
       // Initialize on page load
-      document.addEventListener("DOMContentLoaded", function() {
+      document.addEventListener("DOMContentLoaded", function () {
         loadBikeMakes();
       });
 
       // Update models when make changes
-      document.getElementById("make").addEventListener("change", async function () {
-        const makeSelect = this.value;
-        const modelSelect = document.getElementById("model");
-        const yearSelect = document.getElementById("year");
+      document
+        .getElementById("make")
+        .addEventListener("change", async function () {
+          const makeSelect = this.value;
+          const modelSelect = document.getElementById("model");
+          const yearSelect = document.getElementById("year");
 
-        // Clear existing options
-        modelSelect.innerHTML = '<option value="">Select Model</option>';
-        yearSelect.innerHTML = '<option value="">Select Year</option>';
+          // Clear existing options
+          modelSelect.innerHTML = '<option value="">Select Model</option>';
+          yearSelect.innerHTML = '<option value="">Select Year</option>';
 
-        if (!makeSelect) return;
+          if (!makeSelect) return;
 
-        // Fetch and populate models
-        const models = await loadBikeModels(makeSelect);
-        models.forEach((modelName) => {
-          const option = document.createElement("option");
-          option.value = modelName;
-          option.textContent = modelName;
-          modelSelect.appendChild(option);
+          // Fetch and populate models
+          const models = await loadBikeModels(makeSelect);
+          models.forEach((modelName) => {
+            const option = document.createElement("option");
+            option.value = modelName;
+            option.textContent = modelName;
+            modelSelect.appendChild(option);
+          });
+
+          // Load years for the selected make
+          await loadBikeYears(makeSelect);
         });
-        
-        // Load years for the selected make
-        await loadBikeYears(makeSelect);
-      });
-      
+
       // Update years when model changes
-      document.getElementById("model").addEventListener("change", async function () {
-        const makeSelect = document.getElementById("make").value;
-        const modelSelect = this.value;
-        
-        if (makeSelect && modelSelect) {
-          await loadBikeYears(makeSelect, modelSelect);
-        }
-      });
+      document
+        .getElementById("model")
+        .addEventListener("change", async function () {
+          const makeSelect = document.getElementById("make").value;
+          const modelSelect = this.value;
+
+          if (makeSelect && modelSelect) {
+            await loadBikeYears(makeSelect, modelSelect);
+          }
+        });
 
       // Handle form submission
       document
@@ -881,5 +925,7 @@
           });
       });
     </script>
+    <!-- Shared mobile sticky CTA across pages -->
+    <script src="./sticky-cta.js"></script>
   </body>
 </html>

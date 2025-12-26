@@ -401,7 +401,7 @@
               Check Price
             </button>
           </div>
-          
+
           <div
             id="valuationResult"
             style="
@@ -413,37 +413,127 @@
               display: none;
             "
           >
-            <h3 style="margin: 0 0 16px; color: #222; text-align: center">Resale value of <span id="resultTitle"></span> in Bihar</h3>
-            <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05)">
-              <h4 style="margin: 0 0 16px; color: #222; text-align: center">Price of <span id="resultSubtitle"></span> in Bihar</h4>
-              <p style="color: #666; margin-bottom: 20px; text-align: center">The value given below is an estimated value only. Actual value may vary depending on the condition of the car and several other factors.</p>
+            <h3 style="margin: 0 0 16px; color: #222; text-align: center">
+              Resale value of <span id="resultTitle"></span> in Bihar
+            </h3>
+            <div
+              style="
+                background: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+              "
+            >
+              <h4 style="margin: 0 0 16px; color: #222; text-align: center">
+                Price of <span id="resultSubtitle"></span> in Bihar
+              </h4>
+              <p style="color: #666; margin-bottom: 20px; text-align: center">
+                The value given below is an estimated value only. Actual value
+                may vary depending on the condition of the car and several other
+                factors.
+              </p>
               <table style="width: 100%; border-collapse: collapse">
                 <thead>
                   <tr style="background: #f5f5f5">
-                    <th style="padding: 12px; text-align: left; color: #c91919; font-weight: 700; border-bottom: 2px solid #e0e0e0">Condition</th>
-                    <th style="padding: 12px; text-align: right; color: #c91919; font-weight: 700; border-bottom: 2px solid #e0e0e0">Current Market Value</th>
+                    <th
+                      style="
+                        padding: 12px;
+                        text-align: left;
+                        color: #c91919;
+                        font-weight: 700;
+                        border-bottom: 2px solid #e0e0e0;
+                      "
+                    >
+                      Condition
+                    </th>
+                    <th
+                      style="
+                        padding: 12px;
+                        text-align: right;
+                        color: #c91919;
+                        font-weight: 700;
+                        border-bottom: 2px solid #e0e0e0;
+                      "
+                    >
+                      Current Market Value
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr style="border-bottom: 1px solid #f0f0f0">
                     <td style="padding: 12px; color: #222">Fair</td>
-                    <td style="padding: 12px; text-align: right; font-weight: 700; color: #222" id="priceFair">Rs. 0</td>
+                    <td
+                      style="
+                        padding: 12px;
+                        text-align: right;
+                        font-weight: 700;
+                        color: #222;
+                      "
+                      id="priceFair"
+                    >
+                      Rs. 0
+                    </td>
                   </tr>
                   <tr style="border-bottom: 1px solid #f0f0f0">
                     <td style="padding: 12px; color: #222">Good</td>
-                    <td style="padding: 12px; text-align: right; font-weight: 700; color: #222" id="priceGood">Rs. 0</td>
+                    <td
+                      style="
+                        padding: 12px;
+                        text-align: right;
+                        font-weight: 700;
+                        color: #222;
+                      "
+                      id="priceGood"
+                    >
+                      Rs. 0
+                    </td>
                   </tr>
                   <tr>
                     <td style="padding: 12px; color: #222">Excellent</td>
-                    <td style="padding: 12px; text-align: right; font-weight: 700; color: #222" id="priceExcellent">Rs. 0</td>
+                    <td
+                      style="
+                        padding: 12px;
+                        text-align: right;
+                        font-weight: 700;
+                        color: #222;
+                      "
+                      id="priceExcellent"
+                    >
+                      Rs. 0
+                    </td>
                   </tr>
                 </tbody>
               </table>
-              <div style="display: flex; gap: 16px; margin-top: 24px; justify-content: center">
-                <a href="https://www.okmotors.in/sell.html" class="search-count-btn" style="background: #0066cc; text-decoration: none; display: inline-block; padding: 12px 32px">
+              <div
+                style="
+                  display: flex;
+                  gap: 16px;
+                  margin-top: 24px;
+                  justify-content: center;
+                "
+              >
+                <a
+                  href="https://www.okmotors.in/sell.html"
+                  class="search-count-btn"
+                  style="
+                    background: #0066cc;
+                    text-decoration: none;
+                    display: inline-block;
+                    padding: 12px 32px;
+                  "
+                >
                   Sell <span id="sellVehicleName"></span>
                 </a>
-                <a href="https://www.okmotors.in/inventory.html" class="search-count-btn" style="background: #ff8800; text-decoration: none; display: inline-block; padding: 12px 32px">
+                <a
+                  href="https://www.okmotors.in/inventory.html"
+                  class="search-count-btn"
+                  style="
+                    background: #ff8800;
+                    text-decoration: none;
+                    display: inline-block;
+                    padding: 12px 32px;
+                  "
+                >
                   Buy used <span id="buyVehicleName"></span> in Bihar
                 </a>
               </div>
@@ -519,6 +609,11 @@
             <li>
               <a href="https://www.okmotors.in/finance.html">Bike Finance</a>
             </li>
+            <li>
+              <a href="https://www.okmotors.in/terms.html"
+                >Terms & Conditions</a
+              >
+            </li>
             <li><a href="./locations-bihar.html">Locations</a></li>
           </ul>
         </div>
@@ -544,81 +639,102 @@
     <script>
       // Load car models data
       let carsData = null;
-      
-      fetch('./data/cars-models.json')
-        .then(response => response.json())
-        .then(data => {
+
+      fetch("./data/cars-models.json")
+        .then((response) => response.json())
+        .then((data) => {
           carsData = data;
         })
-        .catch(error => console.error('Error loading cars data:', error));
-      
+        .catch((error) => console.error("Error loading cars data:", error));
+
       // Update models when make changes
-      document.getElementById('make').addEventListener('change', function() {
+      document.getElementById("make").addEventListener("change", function () {
         const makeSelect = this.value;
-        const modelSelect = document.getElementById('model');
-        
+        const modelSelect = document.getElementById("model");
+
         // Clear existing options
         modelSelect.innerHTML = '<option value="">Select Model</option>';
-        
+
         if (!makeSelect || !carsData) return;
-        
+
         // Find brand and populate models
-        const brand = carsData.brands.find(b => b.make === makeSelect);
+        const brand = carsData.brands.find((b) => b.make === makeSelect);
         if (brand && brand.models) {
-          brand.models.forEach(modelData => {
-            const option = document.createElement('option');
-            const modelName = typeof modelData === 'string' ? modelData : modelData.name;
+          brand.models.forEach((modelData) => {
+            const option = document.createElement("option");
+            const modelName =
+              typeof modelData === "string" ? modelData : modelData.name;
             option.value = modelName;
             option.textContent = modelName;
             modelSelect.appendChild(option);
           });
         }
       });
-      
+
       // Use shared calculateValuation function from index-valuation.js
       document
         .getElementById("carValForm")
         .addEventListener("submit", function (e) {
           e.preventDefault();
-          
+
           const make = document.getElementById("make").value.trim();
           const model = document.getElementById("model").value.trim();
-          const year = parseInt(document.getElementById("year").value, 10) || new Date().getFullYear();
+          const year =
+            parseInt(document.getElementById("year").value, 10) ||
+            new Date().getFullYear();
           const kms = parseInt(document.getElementById("kms").value, 10) || 0;
-          
+
           if (!make || !year) {
             alert("Please fill in all required fields");
             return;
           }
-          
+
           const baseData = {
             make: make,
             model: model,
             year: year,
             kms: kms,
-            owners: 1
+            owners: 1,
           };
 
           // Calculate for all three conditions
-          const priceFair = calculateValuation({ ...baseData, condition: 'fair' }, 'car');
-          const priceGood = calculateValuation({ ...baseData, condition: 'good' }, 'car');
-          const priceExcellent = calculateValuation({ ...baseData, condition: 'excellent' }, 'car');
-          
+          const priceFair = calculateValuation(
+            { ...baseData, condition: "fair" },
+            "car"
+          );
+          const priceGood = calculateValuation(
+            { ...baseData, condition: "good" },
+            "car"
+          );
+          const priceExcellent = calculateValuation(
+            { ...baseData, condition: "excellent" },
+            "car"
+          );
+
           const resultEl = document.getElementById("valuationResult");
-          const titleText = `${make} ${model || ''} ${year}`.trim();
-          
-          document.getElementById("resultTitle").textContent = titleText + " car";
-          document.getElementById("resultSubtitle").textContent = `${year} model ${titleText}`;
-          document.getElementById("priceFair").textContent = `Rs. ${priceFair.toLocaleString()}`;
-          document.getElementById("priceGood").textContent = `Rs. ${priceGood.toLocaleString()}`;
-          document.getElementById("priceExcellent").textContent = `Rs. ${priceExcellent.toLocaleString()}`;
-          
+          const titleText = `${make} ${model || ""} ${year}`.trim();
+
+          document.getElementById("resultTitle").textContent =
+            titleText + " car";
+          document.getElementById(
+            "resultSubtitle"
+          ).textContent = `${year} model ${titleText}`;
+          document.getElementById(
+            "priceFair"
+          ).textContent = `Rs. ${priceFair.toLocaleString()}`;
+          document.getElementById(
+            "priceGood"
+          ).textContent = `Rs. ${priceGood.toLocaleString()}`;
+          document.getElementById(
+            "priceExcellent"
+          ).textContent = `Rs. ${priceExcellent.toLocaleString()}`;
+
           // Update CTA buttons
           document.getElementById("sellVehicleName").textContent = titleText;
           document.getElementById("buyVehicleName").textContent = titleText;
-          
+
           resultEl.style.display = "block";
-          resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          resultEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
         });
 
       // mobile dropdown toggle
@@ -638,5 +754,7 @@
           });
       });
     </script>
+    <!-- Shared mobile sticky CTA across pages -->
+    <script src="./sticky-cta.js"></script>
   </body>
 </html>

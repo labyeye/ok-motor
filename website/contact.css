@@ -7,7 +7,7 @@
 
 .login-btn button {
   background-color: white !important;
-  color: black !important;
+  color: white !important;
   border: 1px solid var(--primary-color);
   border-radius: 25px;
   padding: 8px 25px;
@@ -21,9 +21,9 @@
 }
 
 .contact-section {
-  background-color: white;
+  background-color: transparent;
   padding: 10px 1%;
-  color: black;
+  color: white;
 }
 
 .section-header {
@@ -57,41 +57,26 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 15px;
-  padding: 40px 30px;
   text-align: center;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
   overflow: hidden;
+  
 }
 
-/* Make cards narrower and square while preserving layout */
 .contact-left .contact-card {
   max-width: 320px;
-  /* control card width */
-  height: 300px;
+  height: 330px;
   margin: 0 auto;
-  /* center inside left column */
   aspect-ratio: 1 / 1;
-  /* make the card square */
   display: flex;
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
   flex-direction: column;
   justify-content: center;
-  /* vertically center content */
   padding: 24px;
-  /* slightly reduced padding for square fit */
 }
 
-.contact-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-}
 
 .contact-card:hover {
   transform: translateY(-10px) scale(1.03);
@@ -103,7 +88,7 @@
   width: 70px;
   height: 70px;
   margin: 0 auto 25px;
-  background: linear-gradient(135deg, var(--primary-color), #CF1819);
+  background:  #303e26;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -117,7 +102,7 @@
   width: 70px;
   height: 70px;
   margin: 0 auto 25px;
-  background: linear-gradient(135deg, #00bc22);
+  background: #303e26;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -131,7 +116,7 @@
   width: 70px;
   height: 70px;
   margin: 0 auto 25px;
-  background: white;
+  background: #303e26;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -148,7 +133,7 @@
 .contact-card h3 {
   font-size: 1.5rem;
   margin-bottom: 15px;
-  color: black;
+  color: #303e26;
   position: relative;
 }
 
@@ -160,7 +145,7 @@
   transform: translateX(-50%);
   width: 40px;
   height: 2px;
-  background: linear-gradient(90deg, var(--primary-color), #CF1819);
+  background: #303e26;
   transition: width 0.4s;
 }
 
@@ -169,7 +154,7 @@
 }
 
 .contact-card p {
-  color: rgba(0, 0, 0, 0.7);
+  color: #303e26;
   line-height: 1.6;
   margin-bottom: 15px;
   font-size: 1rem;
@@ -177,13 +162,13 @@
 }
 
 .contact-card:hover p {
-  color: black;
+  color: #303e26;
 }
 
 .contact-btn {
   display: inline-block;
   padding: 12px 25px;
-  background: linear-gradient(90deg, var(--primary-color), #CF1819);
+  background: #303e26;
   color: white;
   border-radius: 30px;
   text-decoration: none;
@@ -306,6 +291,11 @@
   /* make right (map) wider */
   flex: 0 0 62%;
   min-width: 280px;
+}
+@media (max-width: 480px) {
+  .contact-right{
+    display: none;
+  }
 }
 
 .contact-left .contact-cards {

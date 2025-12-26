@@ -1,107 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Invest with Ok Motors</title>
+    <title>Terms & Conditions | Ok Motors</title>
     <meta
       name="description"
-      content="Invest in Ok Motors — see how your money could grow and contact us to get started."
+      content="Ok Motors terms and conditions covering guarantees, servicing, warranty, and buyer responsibilities."
     />
-    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="preload"
+      href="style.css"
+      as="style"
+      onload="this.rel='stylesheet'"
+    />
+    <link rel="stylesheet" href="./inventory.css" />
+    <noscript><link rel="stylesheet" href="style.css" /></noscript>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="./assets/images/logoblack.png"
-    />
-    <style>
-      /* Page-specific small tweaks */
-      .invest-hero {
-        padding: 72px 18px 40px;
-        text-align: center;
-        background: linear-gradient(180deg, #fff 0%, #fafafa 100%);
-      }
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var mobileMenuBtn = document.getElementById("mobileMenuBtn"),
+          headerNav = document.querySelector(".header-nav");
+        if (!mobileMenuBtn || !headerNav) return;
 
-      .invest-hero h1 {
-        margin: 0 0 12px;
-        font-size: 2rem;
-        color: var(--primary-color, #cf1819);
-      }
+        function setAriaExpanded(isOpen) {
+          mobileMenuBtn.setAttribute(
+            "aria-expanded",
+            isOpen ? "true" : "false"
+          );
+        }
 
-      .invest-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 18px;
-        max-width: 1100px;
-        margin: 32px auto;
-        padding: 0 18px;
-      }
+        mobileMenuBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          var isOpen = headerNav.classList.toggle("open");
+          setAriaExpanded(isOpen);
+          document.body.style.overflow = isOpen ? "hidden" : "";
+        });
 
-      .invest-card {
-        background: #fff;
-        border-radius: 10px;
-        padding: 18px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-      }
+        headerNav.addEventListener("click", function (e) {
+          var link = e.target.closest && e.target.closest("a");
+          if (!link) return;
 
-      .calculator {
-        max-width: 820px;
-        margin: 18px auto 40px;
-        padding: 18px;
-        background: #fff;
-        border-radius: 10px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-      }
+          var parentDropdown = link.closest && link.closest(".nav-dropdown");
+          if (
+            parentDropdown &&
+            window.innerWidth <= 1024 &&
+            (link.classList.contains("dropdown-toggle") ||
+              link.classList.contains("nav-link"))
+          ) {
+            e.preventDefault();
+            parentDropdown.classList.toggle("open");
+            return;
+          }
 
-      .calculator label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 6px;
-      }
-      .calculator input {
-        width: 100%;
-        padding: 10px 12px;
-        border-radius: 8px;
-        border: 1px solid #e6e6e6;
-        margin-bottom: 12px;
-      }
+          if (window.innerWidth <= 1024) {
+            headerNav.classList.remove("open");
+            setAriaExpanded(false);
+            document.body.style.overflow = "";
+          }
+        });
 
-      .calc-row {
-        display: flex;
-        gap: 12px;
-      }
-      .calc-row .col {
-        flex: 1;
-      }
+        window.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && headerNav.classList.contains("open")) {
+            headerNav.classList.remove("open");
+            setAriaExpanded(false);
+            document.body.style.overflow = "";
+          }
+        });
 
-      .result {
-        margin-top: 14px;
-        font-weight: 700;
-        color: #222;
-      }
-
-      .cta {
-        display: flex;
-        justify-content: center;
-        margin: 28px 0;
-      }
-      .cta a {
-        background: var(--primary-color, #cf1819);
-        color: #fff;
-        padding: 12px 18px;
-        border-radius: 10px;
-        text-decoration: none;
-        font-weight: 700;
-      }
-    </style>
+        window.addEventListener("resize", function () {
+          if (
+            window.innerWidth > 1024 &&
+            headerNav.classList.contains("open")
+          ) {
+            headerNav.classList.remove("open");
+            setAriaExpanded(false);
+            document.body.style.overflow = "";
+          }
+        });
+      });
+    </script>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="./terms.css" />
   </head>
-  <body>
+  <body itemscope itemtype="https://schema.org/WebPage">
     <div class="top-banner" id="topBanner" role="banner">
       <div class="top-banner-container">
         <div class="top-banner-left">
@@ -237,6 +224,27 @@
           </button>
         </div>
       </div>
+
+      <div
+        class="mobile-search-bar"
+        id="mobileSearchBar"
+        role="search"
+        aria-label="Search inventory (mobile)"
+      >
+        <form class="mobile-search-form" action="inventory.html" method="get">
+          <input
+            id="mobileSearchInput"
+            name="q"
+            type="search"
+            placeholder="Search bikes, brands or models"
+            aria-label="Search bikes"
+          />
+          <button type="submit" class="mobile-search-btn" aria-label="Search">
+            <i class="fas fa-search"></i>
+          </button>
+        </form>
+      </div>
+
       <div
         class="mobile-action-banner"
         id="mobileActionBanner"
@@ -269,6 +277,137 @@
       </div>
     </header>
 
+    <style>
+      .mobile-action-banner {
+        display: none;
+        width: 100%;
+        background: #303e27;
+        align-items: center;
+        z-index: 500;
+        transform: translateY(-30px);
+      }
+      .mobile-search-bar {
+        display: none;
+        width: 100%;
+        background: #fff;
+        z-index: 600;
+        padding: 6px 12px;
+        transform: translateY(-30px);
+      }
+      .mobile-search-form {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .mobile-search-form input[type="search"] {
+        flex: 1;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid #e6e6e6;
+        font-size: 14px;
+      }
+      .mobile-search-btn {
+        background: var(--primary-color, #303e27);
+        color: #fff;
+        border: none;
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mobile-action-container {
+        display: flex;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .mobile-action {
+        flex: 0 0 auto;
+        color: #f6faf7;
+        padding: 8px 10px;
+        border-radius: 18px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      @media (max-width: 1024px) {
+        .mobile-action-banner {
+          display: flex;
+          justify-content: space-between;
+        }
+        .mobile-search-bar {
+          display: block;
+        }
+      }
+
+      .service-card.bg-cover {
+        color: #fff;
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+      }
+      .service-card .service-row {
+        position: relative;
+        z-index: 2;
+      }
+      .service-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgb(34, 34, 34);
+        opacity: 0.9;
+        z-index: 1;
+        pointer-events: none;
+        transition: opacity 180ms ease;
+      }
+      .service-card .service-btn {
+        background: rgba(255, 255, 255, 0.9);
+        color: #222;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        z-index: 2;
+      }
+    </style>
+
+    <script>
+      (function () {
+        try {
+          var banner = document.getElementById("mobileActionBanner");
+          var closeBtn = document.getElementById("mobileBannerClose");
+          if (!banner || !closeBtn) return;
+
+          function updateVisibility() {
+            var isMobile = window.matchMedia("(max-width:1024px)").matches;
+            var dismissed =
+              localStorage.getItem("mobileActionBannerDismissed") === "1";
+            if (isMobile && !dismissed) {
+              banner.setAttribute("aria-hidden", "false");
+            } else {
+              banner.setAttribute("aria-hidden", "true");
+            }
+          }
+
+          closeBtn.addEventListener("click", function () {
+            banner.setAttribute("aria-hidden", "true");
+            try {
+              localStorage.setItem("mobileActionBannerDismissed", "1");
+            } catch (e) {}
+          });
+
+          window.addEventListener("resize", updateVisibility);
+          window.addEventListener("orientationchange", updateVisibility);
+          document.addEventListener("DOMContentLoaded", updateVisibility);
+          updateVisibility();
+        } catch (e) {
+          console.error("mobile banner init error", e);
+        }
+      })();
+    </script>
     <section
       class="hero-section"
       itemscope
@@ -317,12 +456,11 @@
         <div class="hero-content">
           <span class="hero-label">India's Trusted Vehicle Portal</span>
           <h1 itemprop="headline">
-            <span class="hero-title-line1">Invest With</span>
-            <span class="hero-title-line2">Ok Motors</span>
+            <span class="hero-title-line1">Terms &</span>
+            <span class="hero-title-line2">Conditions</span>
           </h1>
           <p class="hero-subtitle">
-            Partner with a trusted marketplace to grow your capital through
-            vehicle sourcing and sales.
+            Ride into freedom with the vehicle you've always wanted
           </p>
         </div>
       </div>
@@ -331,144 +469,92 @@
       (function () {
         const slides = document.querySelectorAll(".hero-slide");
         let currentSlide = 0;
+
         function nextSlide() {
           slides[currentSlide].classList.remove("active");
           currentSlide = (currentSlide + 1) % slides.length;
           slides[currentSlide].classList.add("active");
         }
-        setInterval(nextSlide, 5000);
+
+        setInterval(nextSlide, 4000);
       })();
     </script>
 
-    <style>
-      .mobile-action-banner {
-        display: none;
-        width: 100%;
-        background: #303e27;
-        align-items: center;
-        z-index: 500;
-        transform: translateY(-10px);
-      }
-      .mobile-action-container {
-        display: flex;
-        overflow: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      .mobile-action {
-        flex: 0 0 auto;
-        color: white;
-        padding: 8px 10px;
-        border-radius: 18px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 11px;
-        white-space: nowrap;
-      }
-      @media (max-width: 1024px) {
-        .mobile-action-banner {
-          display: flex;
-          justify-content: space-between;
-        }
-      }
-    </style>
+    <main class="main">
+      <section class="section" aria-labelledby="terms-heading">
+        <h2 id="terms-heading">Guarantee and Warranty</h2>
+        <ol>
+          <li>
+            The Seller provides a three-month guarantee on the overall engine of
+            the vehicle, starting from the date of delivery.
+          </li>
+          <li>
+            The Seller further provides a warranty on the engine for a period of
+            6 months to 1 year, starting from the date of delivery. This
+            warranty covers any defects in the engine that may affect its
+            performance or functionality.
+          </li>
+          <li>
+            Please note that the guarantee does not cover the clutch plate. Any
+            repairs or replacements required for the clutch plate shall be the
+            sole responsibility of the Buyer.
+          </li>
+        </ol>
 
-    <script>
-      (function () {
-        try {
-          var banner = document.getElementById("mobileActionBanner");
-          var closeBtn = document.getElementById("mobileBannerClose");
-          if (!banner || !closeBtn) return;
+        <div class="note">
+          During the three-month guarantee period, it is mandatory for the Buyer
+          to schedule and complete monthly servicing of the vehicle. Failure to
+          do so may result in the expiration of the guarantee. However, the
+          warranty (as mentioned in point 2) will still be available to the
+          Buyer.
+        </div>
 
-          // Only show on small screens; CSS handles visual hide/show, but
-          // use aria-hidden for assistive tech and avoid unnecessary DOM focus.
-          function updateVisibility() {
-            var isMobile = window.matchMedia("(max-width:1024px)").matches;
-            var dismissed =
-              localStorage.getItem("mobileActionBannerDismissed") === "1";
-            if (isMobile && !dismissed) {
-              banner.setAttribute("aria-hidden", "false");
-            } else {
-              banner.setAttribute("aria-hidden", "true");
-            }
-          }
+        <p>
+          The initial three services come to you as a heartfelt gift, with no
+          cost involved, apart from the nominal charge for the engine oil if any
+          changes are required. However, for any additional spare parts,
+          excluding the engine itself, a reasonable fee will be applicable. In
+          addition, we kindly request a modest 50% labor charge to be included,
+          ensuring our dedicated team's exceptional service and attention to
+          detail.
+        </p>
 
-          closeBtn.addEventListener("click", function () {
-            banner.setAttribute("aria-hidden", "true");
-            try {
-              localStorage.setItem("mobileActionBannerDismissed", "1");
-            } catch (e) {}
-          });
+        <p class="note">
+          We kindly request your esteemed presence to provide us with the
+          cherished photocopies of the sell letter and transfer challan, as they
+          hold great significance in completing the process seamlessly. Your
+          cooperation in this regard is deeply appreciated.
+        </p>
 
-          // Recompute on resize/orientation change
-          window.addEventListener("resize", updateVisibility);
-          window.addEventListener("orientationchange", updateVisibility);
-          document.addEventListener("DOMContentLoaded", updateVisibility);
-          updateVisibility();
-        } catch (e) {
-          console.error("mobile banner init error", e);
-        }
-      })();
-    </script>
+        <p>
+          In the event any potential defects are discovered post-purchase of the
+          vehicle, we humbly request you to promptly lodge a complaint via the
+          registered mobile number or email within a generous timeframe of 24
+          hours. Failure to adhere to this guideline may regrettably result in
+          the company incurring repair costs. Your timely communication is
+          greatly valued, fostering a harmonious partnership.
+        </p>
 
-    <main>
-      <section class="invest-hero">
-        <h1>Invest with Ok Motors</h1>
-        <p style="max-width: 780px; margin: 0 auto; color: #444">
-          Put your money to work in a growing, trusted vehicle marketplace. See
-          below how an investment grows over time and the benefits you receive
-          when you partner with Ok Motors.
+        <p>
+          Once the issue has been addressed and resolved, the customer is kindly
+          requested to affix their signature at the relevant section on the bill
+          copy, acknowledging their satisfaction with the service provided.
         </p>
       </section>
-
-      <section class="invest-grid">
-        <div class="invest-card">
-          <h3>What happens when you invest</h3>
-          <ul>
-            <li>
-              We use funds to expand inventory and certified inspection
-              capabilities.
-            </li>
-            <li>
-              Investments increase buying power, enabling better wholesale
-              acquisition.
-            </li>
-            <li>
-              Higher inventory turnover and marketing improves sales velocity
-              and margin.
-            </li>
-          </ul>
-        </div>
-
-        <div class="invest-card">
-          <h3>How returns are generated</h3>
-          <ol>
-            <li>Purchase, certify and list quality pre-owned vehicles.</li>
-            <li>
-              Sell at improved margins through improved sourcing and marketing.
-            </li>
-            <li>
-              Share a portion of profits or growth according to the agreement.
-            </li>
-          </ol>
-        </div>
-
-        <div class="invest-card">
-          <h3>Benefits to investors</h3>
-          <ul>
-            <li>Quarterly updates and transparent reports.</li>
-            <li>Priority access to vehicle auctions and buy-backs.</li>
-            <li>Direct line to our team for purchase & exit coordination.</li>
-          </ul>
-        </div>
-      </section>
-
-      <div class="cta">
-        <a href="contact.html" aria-label="Contact us about investing"
-          >Contact Us to Invest</a
-        >
-      </div>
     </main>
+    <script>
+      (function () {
+        const header = document.getElementById("siteHeader");
+        if (!header) return;
 
+        const toggleScrolled = () => {
+          header.classList.toggle("scrolled", window.scrollY > 50);
+        };
+
+        window.addEventListener("scroll", toggleScrolled);
+        toggleScrolled();
+      })();
+    </script>
     <footer class="footer">
       <div class="footer-content">
         <div class="footer-section">
@@ -493,7 +579,7 @@
             <img
               src="./assets/images/okmotor.png"
               style="width: 220px"
-              alt="Ok Motors Logo"
+              alt="Ok Motors - India's Trusted Vehicle Portal for Premium Pre-Owned Bikes and Cars with 150-Point Inspection"
             />
           </div>
           <p>Bringing the future of bike riding to you today.</p>
@@ -505,10 +591,14 @@
             <a
               href="https://www.instagram.com/ok_motors_patna?igsh=MXdiYzU1NDZ6ankxZw%3D%3D"
               aria-label="Visit our Instagram profile"
-              ><img
+            >
+              <img
                 src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+                alt="Instagram"
                 style="width: 20px"
-            /></a>
+                loading="lazy"
+              />
+            </a>
             <a href="https://wa.me/‪917280012222‬"
               ><i class="fa-brands fa-whatsapp" style="color: #00a841"></i
             ></a>
@@ -579,69 +669,6 @@
         >
       </div>
     </footer>
-
-    <script>
-      document.getElementById("year").textContent = new Date().getFullYear();
-
-      function formatINR(x) {
-        return (
-          "₹" + Number(x).toLocaleString("en-IN", { maximumFractionDigits: 2 })
-        );
-      }
-
-      function calculate() {
-        const P = Number(document.getElementById("principal").value) || 0;
-        const r = Number(document.getElementById("rate").value) / 100 || 0;
-        const n = Number(document.getElementById("years").value) || 0;
-        if (P <= 0 || n <= 0) {
-          document.getElementById("result").textContent =
-            "Enter a positive investment and duration.";
-          document.getElementById("schedule").innerHTML = "";
-          return;
-        }
-        const FV = P * Math.pow(1 + r, n);
-        document.getElementById(
-          "result"
-        ).textContent = `Estimated value after ${n} year(s): ${formatINR(
-          FV.toFixed(2)
-        )}`;
-
-        // build yearly schedule
-        let html =
-          '<table style="width:100%;border-collapse:collapse;margin-top:8px"><thead><tr style="text-align:left"><th>Year</th><th>Value</th></tr></thead><tbody>';
-        let val = P;
-        for (let i = 1; i <= n; i++) {
-          val = val * (1 + r);
-          html += `<tr><td style="padding:6px 0;border-top:1px solid #f0f0f0">${i}</td><td style="padding:6px 0;border-top:1px solid #f0f0f0">${formatINR(
-            val.toFixed(2)
-          )}</td></tr>`;
-        }
-        html += "</tbody></table>";
-        document.getElementById("schedule").innerHTML = html;
-      }
-
-      document
-        .getElementById("calcBtn")
-        .addEventListener("click", function (e) {
-          e.preventDefault();
-          calculate();
-        });
-      document
-        .getElementById("resetBtn")
-        .addEventListener("click", function (e) {
-          e.preventDefault();
-          document.getElementById("principal").value = 100000;
-          document.getElementById("rate").value = 12;
-          document.getElementById("years").value = 5;
-          document.getElementById("result").textContent = "";
-          document.getElementById("schedule").innerHTML = "";
-        });
-
-      // initial calculate
-      calculate();
-    </script>
-    <script src="./scroll-bg-handler.js"></script>
-    <!-- Shared mobile sticky CTA across pages -->
-    <script src="./sticky-cta.js"></script>
+    <script></script>
   </body>
 </html>
