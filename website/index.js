@@ -543,9 +543,9 @@ function fetchFeaturedVehicles(vehicleType, sliderEl) {
         year: v.manufacturingYear || v.modelYear,
         fuelType: v.fuelType || "Petrol",
         price: v.sellingPrice || v.expectedPrice || v.price || 0,
-        kmDriven: v.kmDriven || 0,
-        ownership: v.ownership || "1st",
-        owner: v.ownership || "1st",
+        kmDriven: v.kilometersRun || v.kmDriven || 0,
+        ownership: v.ownershipNumber || v.ownership || "1st",
+        owner: v.ownershipNumber || v.ownership || "1st",
         images:
           v.images && v.images.length > 0
             ? v.images.map((img) =>
@@ -611,21 +611,21 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
         <span class="model">${vehicle.modelYear || vehicle.year || ""}</span>
         <div class="details">
           <div class="detail-item">
-            <i class="fas fa-tachometer-alt"></i>
+            <i class="fas fa-tachometer-alt" style="color: white;"></i>
             <span>${
               vehicle.kmDriven ? vehicle.kmDriven.toLocaleString() + " km" : "-"
             }</span>
           </div>
           <div class="detail-item">
-            <i class="fas fa-user"></i>
+            <i class="fas fa-user" style="color: white;"></i>
             <span>${vehicle.ownership || vehicle.owner || "1st Owner"}</span>
           </div>
           <div class="detail-item">
-            <i class="fas fa-gas-pump"></i>
+            <i class="fas fa-gas-pump" style="color: white;"></i>
             <span>${vehicle.fuelType || "Petrol"}</span>
           </div>
-          <div class="detail-item">
-            <i class="fas fa-calendar-alt"></i>
+          <div class="detail-item" style="color: white;">
+            <i class="fas fa-calendar-alt" style="color: white;"></i>
             <span>${
               vehicle.modelYear
                 ? new Date().getFullYear() - vehicle.modelYear + " years"
@@ -1559,5 +1559,36 @@ window.openTestDriveModal = function() {
     modal.style.display = 'block';
   }
 };
+
+// Scroll animation for service cards
+function initScrollAnimations() {
+  const serviceCards = document.querySelectorAll('.services-grid .service-card');
+  
+  if (serviceCards.length === 0) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animate-on-scroll');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  });
+
+  serviceCards.forEach((card) => {
+    observer.observe(card);
+  });
+}
+
+// Initialize scroll animations when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initScrollAnimations);
+} else {
+  initScrollAnimations();
+}
+
 
 

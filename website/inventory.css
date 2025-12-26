@@ -843,7 +843,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 /* Vehicle Card Styles */
 .bike-card {
-  background: #F6FAF7;
+  background: #303E26;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -936,7 +936,7 @@ input[type="range"]::-webkit-slider-thumb {
 .bike-card .car-body {
   display: inline-block;
   padding: 4px 10px;
-  background: rgba(255, 107, 0, 0.1);
+  background: white;
   color: #303E27;
   font-size: 11px;
   font-weight: 700;
@@ -1000,7 +1000,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .bike-card .detail-item span {
   font-weight: 600;
-  color: #212529;
+  color: white;
   font-size: 13px;
 }
 
@@ -1013,7 +1013,7 @@ input[type="range"]::-webkit-slider-thumb {
 .bike-card .price {
   font-size: 20px;
   font-weight: 800;
-  color: #303E27;
+  color: white;
   margin-bottom: 4px;
   display: flex;
   align-items: center;
@@ -1021,7 +1021,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .bike-card .emi {
-  color: #6c757d;
+  color: white;
   font-size: 12px;
   margin-bottom: 12px;
 }
@@ -1064,7 +1064,6 @@ input[type="range"]::-webkit-slider-thumb {
 .bike-card .contact-btn {
   background: #B4BB72;
   color: white;
-  box-shadow: 0 0px 10px #B4BB72;
 }
 
 .bike-card .contact-btn:hover {
