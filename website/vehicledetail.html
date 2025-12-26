@@ -130,7 +130,7 @@
         <a href="https://www.okmotors.in/index.html" class="header-logo">
           <img
             src="./assets/images/logoblack.png"
-            alt="Ok Motors - View Detailed Vehicle Specifications with Photos and Warranty"
+            alt="Ok Motors Logo"
             itemprop="logo"
           />
         </a>
@@ -198,7 +198,7 @@
               >
             </div>
           </div>
-          <a href="https://www.okmotors.in/book.html" class="nav-item"
+          <a href="https://www.okmotors.in/sell.html" class="nav-item"
             >Sell Your Vehicle</a
           >
           <a href="https://www.okmotors.in/about.html" class="nav-item"
@@ -252,95 +252,122 @@
       </div>
     </header>
 
-    <div class="hero-section inventory-hero" id="maincontent">
+    <div class="inventory-hero" id="maincontent">
       <div class="vehicle-main-section">
         <div class="vehicle-content-row">
+          <!-- Left: Image Gallery -->
           <div class="vehicle-image-block">
             <img
               id="mainVehicleImg"
               class="vehicle-main-img"
               src="assets/owner.png"
-              alt="Premium pre-owned vehicle at Ok Motors - Certified with 150-point inspection and warranty"
+              alt="Premium pre-owned vehicle at Ok Motors"
             />
             <div class="vehicle-thumbnails" id="vehicleThumbnails"></div>
           </div>
+
+          <!-- Right: Vehicle Details -->
           <div class="vehicle-details-block">
-            <div class="vehicle-title" id="vehicleTitle">Car Brand Model</div>
-            <div class="vehicle-model" id="vehicleModel">2022 Model</div>
-            <div class="vehicle-details-grid">
-              <div class="vehicle-detail-item">
-                <div class="detail-label">
-                  <i class="fas fa-tachometer-alt"></i>
-                  <span>Vehicle Driven</span>
-                </div>
-                <div class="detail-value" id="vehicleKm">0 km</div>
-              </div>
-              <div class="vehicle-detail-item">
-                <div class="detail-label">
-                  <i class="fas fa-user"></i>
-                  <span>Ownership</span>
-                </div>
-                <div class="detail-value" id="vehicleOwner">1st Owner</div>
-              </div>
-              <div class="vehicle-detail-item">
-                <div class="detail-label">
-                  <i class="fas fa-gas-pump"></i>
-                  <span>Fuel Type</span>
-                </div>
-                <div class="detail-value" id="vehicleFuel">Petrol</div>
-              </div>
-              <div class="vehicle-detail-item">
-                <div class="detail-label">
-                  <i class="fas fa-palette"></i>
-                  <span>Vehicle Color</span>
-                </div>
-                <div class="detail-value" id="vehicleColor">Color</div>
-              </div>
-              <div class="vehicle-detail-item">
-                <div class="detail-label">
-                  <i class="fas fa-id-card"></i>
-                  <span>Registration Year</span>
-                </div>
-                <div class="detail-value" id="vehicleRegYear">Reg Year</div>
-              </div>
-              <div class="vehicle-detail-item">
-                <div class="detail-label">
-                  <i class="fas fa-calendar-alt"></i>
-                  <span>Model Year</span>
-                </div>
-                <div class="detail-value" id="vehicleModelYear">Model Year</div>
+            <!-- Title & Model -->
+            <h1 class="vehicle-title" id="vehicleTitle">Vehicle Brand Model</h1>
+            <p class="vehicle-subtitle" id="vehicleModel">2022 Model</p>
+
+            <!-- Price Box -->
+            <div class="price-box">
+              <div class="price-label">Price</div>
+              <div class="price-row">
+                <span class="vehicle-price" id="vehiclePrice">₹0</span>
               </div>
             </div>
-            <div class="vehicle-price" id="vehiclePrice">₹0</div>
-            <div class="vehicle-emi" id="vehicleEmi">
-              Down: ₹0 | EMI: ₹0/month
+
+            <!-- Key Specifications -->
+            <div class="specs-section">
+              <h3 class="specs-title">Key Specifications</h3>
+              <div class="specs-grid">
+                <div class="spec-item">
+                  <i class="fas fa-tachometer-alt spec-icon"></i>
+                  <div class="spec-content">
+                    <div class="spec-label">Kilometers</div>
+                    <div class="spec-value" id="vehicleKm">0 km</div>
+                  </div>
+                </div>
+                <div class="spec-item">
+                  <i class="fas fa-user spec-icon"></i>
+                  <div class="spec-content">
+                    <div class="spec-label">Ownership</div>
+                    <div class="spec-value" id="vehicleOwner">1st Owner</div>
+                  </div>
+                </div>
+                <div class="spec-item">
+                  <i class="fas fa-gas-pump spec-icon"></i>
+                  <div class="spec-content">
+                    <div class="spec-label">Fuel Type</div>
+                    <div class="spec-value" id="vehicleFuel">Petrol</div>
+                  </div>
+                </div>
+                <div class="spec-item">
+                  <i class="fas fa-palette spec-icon"></i>
+                  <div class="spec-content">
+                    <div class="spec-label">Color</div>
+                    <div class="spec-value" id="vehicleColor">-</div>
+                  </div>
+                </div>
+                <div class="spec-item">
+                  <i class="fas fa-calendar-alt spec-icon"></i>
+                  <div class="spec-content">
+                    <div class="spec-label">Registration Year</div>
+                    <div class="spec-value" id="vehicleRegYear">-</div>
+                  </div>
+                </div>
+                <div class="spec-item">
+                  <i class="fas fa-calendar-check spec-icon"></i>
+                  <div class="spec-content">
+                    <div class="spec-label">Model Year</div>
+                    <div class="spec-value" id="vehicleModelYear">-</div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div style="display: flex; gap: 12px; flex-wrap: wrap">
+
+            <!-- Action Buttons -->
+            <div class="cta-section">
               <button
-                class="add-to-cart-btn"
-                onclick="window.location.href='book.html'"
-                aria-label="Book Now"
+                class="btn-primary"
+                onclick="window.location.href='tel:+917280012222'"
               >
-                Book Now
+                <i class="fas fa-phone"></i> Call Now
               </button>
-              <a
-                href="https://www.okmotors.in/inventory.html"
-                class="back-btn"
-                style="
-                  align-self: center;
-                  display: inline-flex;
-                  align-items: center;
-                  justify-content: center;
-                  padding: 12px 18px;
-                  border-radius: 999px;
-                  text-decoration: none;
-                "
-                >Back to inventory</a
+              <button
+                class="btn-secondary"
+                onclick="window.open('https://wa.me/917280012222', '_blank')"
               >
+                <i class="fab fa-whatsapp"></i> WhatsApp
+              </button>
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="trust-badges">
+              <div class="badge-item">
+                <i class="fas fa-shield-alt"></i>
+                <span>Verified Documents</span>
+              </div>
+              <div class="badge-item">
+                <i class="fas fa-certificate"></i>
+                <span>Quality Checked</span>
+              </div>
+              <div class="badge-item">
+                <i class="fas fa-award"></i>
+                <span>Best Price</span>
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- Additional Details Section -->
+        
       </div>
+
+      <!-- Why Choose Section -->
       <div class="why-choose-row">
         <div class="why-choose-item">
           <i class="fas fa-shield-alt"></i> Verified Documents
@@ -355,17 +382,11 @@
           <i class="fas fa-heart"></i> Trusted Seller
         </div>
       </div>
-      <div class="other-cars-section">
-        <h2 class="other-cars-title">Other Cars You May Like</h2>
-        <div class="other-cars-row" id="otherCarsRow"></div>
-      </div>
+      
     </div>
     <script>
       // API Configuration
-      const API_BASE_URL =
-        window.location.hostname === "localhost"
-          ? "http://localhost:2500"
-          : "http://localhost:2500"; // Replace with your Vercel backend URL
+      const API_BASE_URL = "https://ok-motor-51l3.vercel.app";
 
       // Helper function to get the correct image URL
       function getImageUrl(imagePath) {
@@ -394,11 +415,14 @@
 
       // Helper Functions
       function formatOwnership(owner) {
-        if (owner === "1" || owner.includes("1st")) return "1st Owner";
-        if (owner === "2" || owner.includes("2nd")) return "2nd Owner";
-        if (owner === "3" || owner.includes("3+") || owner.includes("3rd"))
+        // Convert to string if it's a number
+        const ownerStr = String(owner);
+        
+        if (ownerStr === "1" || ownerStr.includes("1st")) return "1st Owner";
+        if (ownerStr === "2" || ownerStr.includes("2nd")) return "2nd Owner";
+        if (ownerStr === "3" || ownerStr.includes("3+") || ownerStr.includes("3rd"))
           return "3+ Owner";
-        return owner;
+        return ownerStr;
       }
 
       function normalizeImagePath(img) {
@@ -437,49 +461,183 @@
 
         function populateCar(car) {
           if (!car) return;
-          document.getElementById("vehicleTitle").textContent = `${
-            car.brand || car.make || ""
-          } ${car.model || ""}`;
-          document.getElementById("vehicleModel").textContent = `${
-            car.modelYear || ""
-          } Model`;
-          document.getElementById("vehicleKm").textContent = `${(
-            car.kmDriven || 0
-          ).toLocaleString()} km`;
-          document.getElementById("vehicleOwner").textContent = formatOwnership(
-            car.ownership || "1"
-          );
-          document.getElementById("vehicleFuel").textContent =
-            car.fuelType || "Petrol";
-          document.getElementById("vehicleColor").textContent = car.color || "";
-          document.getElementById("vehicleRegYear").textContent =
-            car.registrationYear || "";
-          document.getElementById("vehiclePrice").textContent = `₹${(
-            car.sellingPrice ||
-            car.price ||
-            0
-          ).toLocaleString()}`;
-          document.getElementById("vehicleEmi").textContent = `Down: ₹${(
-            car.downPayment || 0
-          ).toLocaleString()} | EMI: ₹${Math.round(
-            ((car.sellingPrice || car.price || 0) - (car.downPayment || 0)) / 36
-          ).toLocaleString()}/month`;
+
+          // Debug log to check the data structure
+          console.log("Vehicle data received:", car);
+          console.log("Images array:", car.images);
+
+          // Basic Info
+          const vehicleTitle = document.getElementById("vehicleTitle");
+          if (vehicleTitle) {
+            vehicleTitle.textContent = `${
+              car.brand || car.make || car.vehicleName || ""
+            } ${car.model || car.vehicleModel || ""}`;
+          }
+          const vehicleModel = document.getElementById("vehicleModel");
+          if (vehicleModel) {
+            vehicleModel.textContent = `${
+              car.modelYear || car.year || car.manufacturingYear || ""
+            } Model`;
+          }
+
+          // Primary Details
+          const vehicleKm = document.getElementById("vehicleKm");
+          if (vehicleKm) {
+            vehicleKm.textContent = `${(
+              car.kilometersRun ||
+              car.kmDriven ||
+              car.kmsDriven ||
+              0
+            ).toLocaleString()} km`;
+          }
+          const vehicleOwner = document.getElementById("vehicleOwner");
+          if (vehicleOwner) {
+            vehicleOwner.textContent = formatOwnership(
+              car.ownershipNumber || car.ownership || "1"
+            );
+          }
+          const vehicleFuel = document.getElementById("vehicleFuel");
+          if (vehicleFuel) {
+            vehicleFuel.textContent = car.fuelType || "Petrol";
+          }
+          const vehicleColor = document.getElementById("vehicleColor");
+          if (vehicleColor) {
+            vehicleColor.textContent = car.vehicleColor || car.color || "-";
+          }
+          const vehicleRegYear = document.getElementById("vehicleRegYear");
+          if (vehicleRegYear) {
+            vehicleRegYear.textContent = car.registrationYear || "-";
+          }
+          const vehicleModelYear = document.getElementById("vehicleModelYear");
+          if (vehicleModelYear) {
+            vehicleModelYear.textContent = car.manufacturingYear || car.modelYear || car.year || "-";
+          }
+
+          // Price & EMI
+          const price = car.sellingPrice || car.expectedPrice || car.price || 0;
+          const vehiclePrice = document.getElementById("vehiclePrice");
+          if (vehiclePrice) {
+            vehiclePrice.textContent = `₹${price.toLocaleString()}`;
+          }
+
+          const downPayment = car.downPayment || 0;
+          const emiAmount =
+            car.emi || car.emiAmount || Math.round((price - downPayment) / 36);
+          const vehicleEmi = document.getElementById("vehicleEmi");
+          if (vehicleEmi) {
+            vehicleEmi.textContent = `EMI starts at ₹${emiAmount.toLocaleString()}/month`;
+          }
+
+          // Additional Details - Show only if data exists
+          let hasAdditionalDetails = false;
+          const additionalSection =
+            document.getElementById("additionalDetails");
+
+          if (car.registrationNumber) {
+            const vehicleRegNumber = document.getElementById("vehicleRegNumber");
+            const regNumberItem = document.getElementById("regNumberItem");
+            if (vehicleRegNumber && regNumberItem) {
+              vehicleRegNumber.textContent = car.registrationNumber;
+              regNumberItem.style.display = "block";
+              hasAdditionalDetails = true;
+            }
+          }
+
+          if (car.chassisNumber) {
+            const vehicleChassis = document.getElementById("vehicleChassis");
+            const chassisItem = document.getElementById("chassisItem");
+            if (vehicleChassis && chassisItem) {
+              vehicleChassis.textContent = car.chassisNumber;
+              chassisItem.style.display = "block";
+              hasAdditionalDetails = true;
+            }
+          }
+
+          if (car.engineNumber) {
+            const vehicleEngine = document.getElementById("vehicleEngine");
+            const engineItem = document.getElementById("engineItem");
+            if (vehicleEngine && engineItem) {
+              vehicleEngine.textContent = car.engineNumber;
+              engineItem.style.display = "block";
+              hasAdditionalDetails = true;
+            }
+          }
+
+          if (car.status || car.availabilityStatus) {
+            const vehicleStatus = document.getElementById("vehicleStatus");
+            const statusItem = document.getElementById("statusItem");
+            if (vehicleStatus && statusItem) {
+              vehicleStatus.textContent = car.status || car.availabilityStatus || "Available";
+              statusItem.style.display = "block";
+              hasAdditionalDetails = true;
+            }
+          }
+
+          if (car.vehicleType) {
+            const vehicleType = document.getElementById("vehicleType");
+            const vehicleTypeItem = document.getElementById("vehicleTypeItem");
+            if (vehicleType && vehicleTypeItem) {
+              vehicleType.textContent = car.vehicleType;
+              vehicleTypeItem.style.display = "block";
+              hasAdditionalDetails = true;
+            }
+          }
+
+          if (car.daysOld) {
+            const daysText =
+              car.daysOld === 1 ? "1 day ago" : `${car.daysOld} days ago`;
+            const vehicleDaysOld = document.getElementById("vehicleDaysOld");
+            const daysOldItem = document.getElementById("daysOldItem");
+            if (vehicleDaysOld && daysOldItem) {
+              vehicleDaysOld.textContent = daysText;
+              daysOldItem.style.display = "block";
+              hasAdditionalDetails = true;
+            }
+          }
+
+          if (hasAdditionalDetails && additionalSection) {
+            additionalSection.style.display = "block";
+          }
 
           // collect images from possible fields (photos, imageUrl, images, image)
           let images = [];
-          if (car.photos && Array.isArray(car.photos) && car.photos.length)
-            images = car.photos.slice();
-          else if (
+          if (car.images && Array.isArray(car.images) && car.images.length) {
+            // Handle array of image objects (from Vehicle model) or URLs
+            images = car.images.map((img) => {
+              // If it's an object with url property, extract url
+              if (typeof img === "object" && img.url) {
+                return img.url;
+              }
+              // Otherwise treat it as a string URL
+              return img;
+            });
+          } else if (
+            car.photos &&
+            Array.isArray(car.photos) &&
+            car.photos.length
+          ) {
+            images = car.photos.map((img) =>
+              typeof img === "object" && img.url ? img.url : img
+            );
+          } else if (
             car.imageUrl &&
             Array.isArray(car.imageUrl) &&
             car.imageUrl.length
-          )
-            images = car.imageUrl.slice();
-          else if (car.images && Array.isArray(car.images) && car.images.length)
-            images = car.images.slice();
-          else if (car.image)
-            images = Array.isArray(car.image) ? car.image.slice() : [car.image];
+          ) {
+            images = car.imageUrl.map((img) =>
+              typeof img === "object" && img.url ? img.url : img
+            );
+          } else if (car.image) {
+            const imgArray = Array.isArray(car.image) ? car.image : [car.image];
+            images = imgArray.map((img) =>
+              typeof img === "object" && img.url ? img.url : img
+            );
+          }
           if (!images || images.length === 0) images = ["assets/owner.png"];
+          
+          // Debug log for extracted image URLs
+          console.log('Extracted image URLs:', images);
+          
           const mainImg = document.getElementById("mainVehicleImg");
           const thumbnails = document.getElementById("vehicleThumbnails");
           thumbnails.innerHTML = "";
@@ -566,27 +724,60 @@
               const transformed = {
                 _id: vehicle._id,
                 id: vehicle._id,
-                brand: vehicle.make || vehicle.brand,
-                model: vehicle.model,
-                modelYear: vehicle.year,
-                price: vehicle.sellingPrice || vehicle.price,
-                kmDriven: vehicle.kmsDriven || vehicle.kmDriven,
+                brand: vehicle.vehicleName || vehicle.make || vehicle.brand,
+                model: vehicle.vehicleModel || vehicle.model,
+                modelYear: vehicle.manufacturingYear || vehicle.year,
+                year: vehicle.manufacturingYear || vehicle.year,
+                manufacturingYear: vehicle.manufacturingYear || vehicle.year,
+                price:
+                  vehicle.sellingPrice ||
+                  vehicle.expectedPrice ||
+                  vehicle.price,
+                sellingPrice: vehicle.sellingPrice || vehicle.expectedPrice,
+                kmDriven:
+                  vehicle.kilometersRun ||
+                  vehicle.kmsDriven ||
+                  vehicle.kmDriven,
+                kmsDriven:
+                  vehicle.kilometersRun ||
+                  vehicle.kmsDriven ||
+                  vehicle.kmDriven,
+                kilometersRun:
+                  vehicle.kilometersRun ||
+                  vehicle.kmsDriven ||
+                  vehicle.kmDriven,
                 ownership: vehicle.ownershipNumber || vehicle.ownership,
+                ownershipNumber: vehicle.ownershipNumber || vehicle.ownership,
                 fuelType: vehicle.fuelType,
                 status: vehicle.availabilityStatus || vehicle.status,
-                downPayment: vehicle.downPayment,
-                emiAmount: vehicle.emiAmount,
+                availabilityStatus:
+                  vehicle.availabilityStatus || vehicle.status,
+                downPayment: vehicle.downPayment || 0,
+                emiAmount: vehicle.emi || vehicle.emiAmount,
+                emi: vehicle.emi || vehicle.emiAmount,
                 daysOld: vehicle.daysOld,
                 registrationNumber: vehicle.registrationNumber,
+                registrationYear: vehicle.registrationYear,
                 chassisNumber: vehicle.chassisNumber,
                 engineNumber: vehicle.engineNumber,
-                color: vehicle.color,
-                // Convert ImageKit images array to imageUrl array
-                imageUrl: vehicle.images
-                  ? vehicle.images.map((img) => img.url)
+                color: vehicle.vehicleColor || vehicle.color,
+                vehicleColor: vehicle.vehicleColor || vehicle.color,
+                vehicleType: vehicle.vehicleType,
+                // Handle images array - extract URLs from image objects
+                images: Array.isArray(vehicle.images)
+                  ? vehicle.images.map((img) =>
+                      typeof img === "object" && img.url ? img.url : img
+                    )
                   : [],
-                photos: vehicle.images
-                  ? vehicle.images.map((img) => img.url)
+                imageUrl: Array.isArray(vehicle.images)
+                  ? vehicle.images.map((img) =>
+                      typeof img === "object" && img.url ? img.url : img
+                    )
+                  : [],
+                photos: Array.isArray(vehicle.images)
+                  ? vehicle.images.map((img) =>
+                      typeof img === "object" && img.url ? img.url : img
+                    )
                   : [],
               };
               populateCar(transformed);
@@ -614,10 +805,20 @@
               if (vehicle._id && vehicle._id === (carIdFromQuery() || ""))
                 return;
 
-              // Get ImageKit image URL
+              // Get image URL
               let imgSrc = "assets/owner.png";
-              if (vehicle.images && vehicle.images.length > 0) {
-                imgSrc = vehicle.images[0].url;
+              if (
+                vehicle.images &&
+                Array.isArray(vehicle.images) &&
+                vehicle.images.length > 0
+              ) {
+                // Images array contains objects with url property or direct URLs
+                const firstImage = vehicle.images[0];
+                if (typeof firstImage === "object" && firstImage.url) {
+                  imgSrc = firstImage.url;
+                } else if (typeof firstImage === "string") {
+                  imgSrc = firstImage;
+                }
               } else if (vehicle.imageUrl && vehicle.imageUrl[0]) {
                 const candidate = vehicle.imageUrl[0];
                 if (
@@ -650,21 +851,32 @@
               card.innerHTML = `
                 <div class="image-container">
                   <img src="${imgSrc}" alt="${
-                vehicle.make || vehicle.brand || ""
-              } ${vehicle.model || ""}" class="other-car-img" />
+                vehicle.vehicleName || vehicle.make || vehicle.brand || ""
+              } ${
+                vehicle.vehicleModel || vehicle.model || ""
+              }" class="other-car-img" />
                   <div class="status-badge ${statusClass}">${
                 vehicle.availabilityStatus || vehicle.status || "Available"
               }</div>
                 </div>
                 <div class="card-content">
-                  <h3>${vehicle.make || vehicle.brand || "Unknown Brand"} ${
-                vehicle.model || "Unknown Model"
+                  <h3>${
+                    vehicle.vehicleName ||
+                    vehicle.make ||
+                    vehicle.brand ||
+                    "Unknown Brand"
+                  } ${
+                vehicle.vehicleModel || vehicle.model || "Unknown Model"
               }</h3>
                   <span class="model">${
-                    vehicle.year || vehicle.modelYear || "-"
+                    vehicle.manufacturingYear ||
+                    vehicle.year ||
+                    vehicle.modelYear ||
+                    "-"
                   } Model</span>
                   <div class="details">
                     <div class="detail-item"><i class="fas fa-tachometer-alt"></i> <span>${(
+                      vehicle.kilometersRun ||
                       vehicle.kmsDriven ||
                       vehicle.kmDriven ||
                       0
@@ -1150,5 +1362,58 @@
     <script src="./scroll-bg-handler.js"></script>
     <!-- Shared mobile sticky CTA across pages -->
     <script src="./sticky-cta.js"></script>
+
+    <div class="floating-buttons">
+      <a
+        href="https://wa.me/‪917280012222‬"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="floating-btn whatsapp-btn"
+        data-tooltip="Chat on WhatsApp"
+        aria-label="Chat on WhatsApp"
+      >
+        <i class="fa-brands fa-whatsapp fa-bounce"></i>
+      </a>
+
+      <a
+        href="tel:‪917280012222‬"
+        class="floating-btn call-btn"
+        data-tooltip="Call Us"
+        aria-label="Call Us"
+      >
+        <i class="fa-solid fa-phone-volume fa-shake"></i>
+      </a>
+      <a
+        href="https://www.google.com/maps?sca_esv=4c83e8cc851d4e9c&output=search&q=ok+motors+patna&source=lnms&fbs=AIIjpHxU7SXXniUZfeShr2fp4giZjSkgYzz5-5RrRWAIniWd7tzPwkE1KJWcRvaH01D-XV_XTVF-oSHL9JOIxmL0R4GkuY9Ar8W99bwwQ14xcD0j0-9I5KjJHo6wL7kT0Ululu02A-ewzjsOIVTMwsfsXbtnd6Er_2puXFaaKkVfthyKNdbUXBhjk-l06dwi7lEztu56kIX6Pg_5RAhZ7c2jrbDeYpxtw&entry=mc&ved=1t:200715&ictx=111"
+        class="floating-btn call-btn"
+        data-tooltip="Visit Us"
+        aria-label="Visit Us"
+      >
+        <i class="fa-solid fa-motorcycle fa-shake"></i>
+      </a>
+    </div>
+
+    <div class="mobile-sticky-cta" id="mobileStickyBar">
+      <a href="tel:+‪917280012222‬" class="sticky-cta-btn call-btn">
+        <i class="fas fa-phone"></i>
+        <span>Call Now</span>
+      </a>
+      <a
+        href="https://wa.me/‪917280012222‬"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="sticky-cta-btn whatsapp-btn"
+      >
+        <i class="fab fa-whatsapp"></i>
+        <span>WhatsApp</span>
+      </a>
+      <button
+        class="sticky-cta-btn inventory-btn"
+        onclick="location.href='inventory.html'"
+      >
+        <i class="fas fa-car"></i>
+        <span>View All</span>
+      </button>
+    </div>
   </body>
 </html>

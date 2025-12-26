@@ -127,7 +127,6 @@ input[type="range"]::-webkit-slider-thumb {
   .bike-slider img,
   .image-container img {
     width: 100% !important;
-    height: 300px !important;
     display: block;
     margin: 0 auto;
     border-radius: 6px;
@@ -450,7 +449,6 @@ input[type="range"]::-webkit-slider-thumb {
 
   .bike-grid-container {
     width: 100% !important;
-    padding-right: 0 !important;
   }
 
 }
@@ -1002,7 +1000,7 @@ input[type="range"]::-webkit-slider-thumb {
 /* Details Grid */
 .bike-card .details {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   margin: 12px 0;
   padding: 12px 0;
@@ -1124,7 +1122,7 @@ input[type="range"]::-webkit-slider-thumb {
   }
 
   .bike-card .details {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -1217,20 +1215,54 @@ input[type="range"]::-webkit-slider-thumb {
 @media (max-width: 575px) {
   .bike-grid {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 1px;
   }
 
   .bike-card {
-    height: auto;
+    height: 80%;
     max-width: 100%;
+    flex-direction: row;
+    margin-bottom: 0;
   }
 
   .bike-card .image-container {
-    height: 220px;
+    height: 100%;
+    width: 40%;
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .bike-card .status-badge{
+    display: none;
+  }
+
+  .bike-card .photo-count{
+    display: none;
+  }
+
+  .bike-card .image-container img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0;
   }
 
   .bike-card .card-content {
-    padding: 16px;
+    padding: 8px 12px;
+  }
+
+  .bike-card .title-row {
+    flex-direction: row;
+    display: flex;
+  }
+
+  .bike-card .car-body {
+    display: none;
+  }
+
+  .bike-card .vehicle-meta {
+    display: none;
   }
 
   .bike-card h3 {
@@ -1241,19 +1273,38 @@ input[type="range"]::-webkit-slider-thumb {
     font-size: 14px;
   }
 
+  .bike-card h3.vehicle-title {
+      font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 6px;
+  line-height: 1.4;
+  padding: 0px 0px;
+  border-radius: 8px;
+  text-align: center;
+  }
+
+  .bike-card .price-container {
+    align-items: start;
+  }
+
   .bike-card .details {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     margin: 14px 0;
     padding: 14px 0;
+    border-top: none;
+    border-bottom: none;
+    margin-top: -10px;
+    display: none;
   }
 
   .bike-card .detail-item {
-    font-size: 12px;
+    font-size: 10px;
   }
 
   .bike-card .detail-item i {
-    font-size: 16px;
+    font-size: 12px;
   }
 
   .bike-card .detail-item span {
@@ -1261,7 +1312,13 @@ input[type="range"]::-webkit-slider-thumb {
   }
 
   .bike-card .price {
-    font-size: 22px;
+    font-size: 17px;
+    margin-top: -10px;
+    text-align: center;
+  }
+
+  .bike-card .contact-btn{
+    display: none;
   }
 
   .bike-card .emi {
@@ -1274,8 +1331,8 @@ input[type="range"]::-webkit-slider-thumb {
   }
 
   .bike-card .button-group button {
-    padding: 12px 18px;
-    font-size: 13px;
+    padding: 7px 4px;
+    font-size: 10px;
   }
 }
 

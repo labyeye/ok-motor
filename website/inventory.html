@@ -672,13 +672,17 @@
           }" />
             </div>
             <div class="card-content">
-              <div class="car-body">${vehicle.vehicleType || ""}</div>
+                              <div class="car-body">${vehicle.vehicleType || ""}</div>
+
+              <div class="title-row">
               <h3 class="vehicle-title">${vehicle.vehicleName || ""} ${
             vehicle.vehicleModel || ""
           }</h3>
-              <div class="vehicle-meta">
+          <div class="vehicle-meta">
                 <span class="year">${vehicle.manufacturingYear || "-"}</span>
               </div>
+                </div>
+              
               <div class="details">
                 <div class="detail-item"><i class="fas fa-tachometer-alt" style="color:#fff"></i><span>${
                   vehicle.kilometersRun
@@ -740,8 +744,9 @@
           });
 
           detailsBtn.addEventListener("click", () => {
-            // open a details page (create route as needed)
-            window.location.href = `vehicle-details.html?id=${vehicle._id}`;
+            // Pass vehicle data to detail page via URL params
+            const vehicleData = encodeURIComponent(JSON.stringify(vehicle));
+            window.location.href = `vehicledetail.html?car=${vehicleData}`;
           });
 
           return div;
