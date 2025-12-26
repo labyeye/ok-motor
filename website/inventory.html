@@ -673,27 +673,27 @@
           }" />
             </div>
             <div class="card-content">
-              <div class="car-body">${vehicle.bodyType || ""}</div>
-              <h3>${vehicle.vehicleName || ""} ${
-            vehicle.vehicleModel || ""
-          }</h3>
-              <span class="model">${vehicle.manufacturingYear || ""}</span>
+              <div class="car-body">${vehicle.vehicleType || ""}</div>
+              <h3 class="vehicle-title">${vehicle.vehicleName || ""} ${vehicle.vehicleModel || ""}</h3>
+              <div class="vehicle-meta">
+                <span class="year">${vehicle.manufacturingYear || "-"}</span>
+              </div>
               <div class="details">
-                <div class="detail-item"><i class="fas fa-tachometer-alt"></i><span>${
+                <div class="detail-item"><i class="fas fa-tachometer-alt" style="color:#fff"></i><span>${
                   vehicle.kilometersRun
                     ? priceFormatter(vehicle.kilometersRun) + " km"
                     : "-"
                 }</span></div>
-                <div class="detail-item"><i class="fas fa-user"></i><span>${
+                <div class="detail-item"><i class="fas fa-user" style="color:#fff"></i><span>${
                   vehicle.ownershipNumber
                     ? vehicle.ownershipNumber +
                       (vehicle.ownershipNumber === 1 ? "st Owner" : "th Owner")
                     : "-"
                 }</span></div>
-                <div class="detail-item"><i class="fas fa-gas-pump"></i><span>${
+                <div class="detail-item"><i class="fas fa-gas-pump" style="color:#fff"></i><span>${
                   vehicle.fuelType || "-"
                 }</span></div>
-                <div class="detail-item"><i class="fas fa-calendar-alt"></i><span>${
+                <div class="detail-item"><i class="fas fa-calendar-alt" style="color:#fff"></i><span>${
                   vehicle.manufacturingYear
                     ? new Date().getFullYear() -
                       vehicle.manufacturingYear +

@@ -850,7 +850,7 @@ input[type="range"]::-webkit-slider-thumb {
   border: 1px solid #f0f0f0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  height: 500px;
+  height: 580px;
   display: flex;
   flex-direction: column;
 }
@@ -957,18 +957,46 @@ input[type="range"]::-webkit-slider-thumb {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
 }
 
-/* Model/Subtitle */
-.bike-card .model {
+.bike-card h3.vehicle-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 6px;
+  line-height: 1.4;
+  padding: 12px 10px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.bike-card .vehicle-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   color: #6c757d;
-  font-size: 13px;
+  font-size: 12px;
   margin-bottom: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex-wrap: wrap;
+}
+
+.bike-card .vehicle-meta .year {
+  font-weight: 600;
+  color: white;
+}
+
+.bike-card .vehicle-meta .separator {
+  color: #d0d0d0;
+}
+
+.bike-card .vehicle-meta .ownership-badge {
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 /* Details Grid */

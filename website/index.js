@@ -292,7 +292,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   initNavDropdownToggles();
 });
 
-
 function initHeroSlider() {
   const heroSlider = document.createElement("div");
   heroSlider.className = "hero-slider";
@@ -535,8 +534,8 @@ function fetchFeaturedVehicles(vehicleType, sliderEl) {
       // Map vehicles to the expected format
       const formattedVehicles = vehicles.map((v) => ({
         _id: v._id,
-        brand: v.vehicleName || v.brand,
-        model: v.modelName || v.model,
+        brand: v.vehicleName || "",
+        model: v.vehicleModel || "",
         vehicleType: v.vehicleType,
         modelYear:
           v.manufacturingYear || v.modelYear || new Date().getFullYear(),
@@ -555,9 +554,7 @@ function fetchFeaturedVehicles(vehicleType, sliderEl) {
         primaryImage: v.primaryImage,
         downPayment: v.downPayment || 0,
         status: v.availabilityStatus || "Available",
-      }));
-
-      displayFeaturedVehicles(formattedVehicles, sliderEl, vehicleType);
+      }));      displayFeaturedVehicles(formattedVehicles, sliderEl, vehicleType);
     })
     .catch((error) => {
       console.error(`Error fetching ${vehicleType}:`, error);
@@ -607,8 +604,10 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
       </div>
       <div class="card-content">
         <div class="car-body">${vehicle.vehicleType || vehicleType || ""}</div>
-        <h3>${vehicleName.trim()}</h3>
-        <span class="model">${vehicle.modelYear || vehicle.year || ""}</span>
+        <h3 class="vehicle-title">${vehicle.brand || ""} ${vehicle.model || ""}</h3>
+        <div class="vehicle-meta">
+          <span class="year">${vehicle.modelYear || vehicle.year || "-"}</span>
+        </div>
         <div class="details">
           <div class="detail-item">
             <i class="fas fa-tachometer-alt" style="color: white;"></i>
@@ -618,7 +617,7 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
           </div>
           <div class="detail-item">
             <i class="fas fa-user" style="color: white;"></i>
-            <span>${vehicle.ownership || vehicle.owner || "1st Owner"}</span>
+            <span>${vehicle.ownership || vehicle.owner || "1st Owner"} Owner</span>
           </div>
           <div class="detail-item">
             <i class="fas fa-gas-pump" style="color: white;"></i>
@@ -972,28 +971,29 @@ document.addEventListener("DOMContentLoaded", init);
    Phase 2: Price Range Filter
    =========================== */
 function initPriceRangeFilter() {
-  const minPriceInput = document.getElementById('minPrice');
-  const maxPriceInput = document.getElementById('maxPrice');
-  const minPriceSlider = document.getElementById('minPriceSlider');
-  const maxPriceSlider = document.getElementById('maxPriceSlider');
-  const quickBtns = document.querySelectorAll('.price-quick-btn');
+  const minPriceInput = document.getElementById("minPrice");
+  const maxPriceInput = document.getElementById("maxPrice");
+  const minPriceSlider = document.getElementById("minPriceSlider");
+  const maxPriceSlider = document.getElementById("maxPriceSlider");
+  const quickBtns = document.querySelectorAll(".price-quick-btn");
 
-  if (!minPriceInput || !maxPriceInput || !minPriceSlider || !maxPriceSlider) return;
+  if (!minPriceInput || !maxPriceInput || !minPriceSlider || !maxPriceSlider)
+    return;
 
   // Sync inputs with sliders
-  minPriceInput.addEventListener('input', (e) => {
+  minPriceInput.addEventListener("input", (e) => {
     const value = parseInt(e.target.value) || 0;
     minPriceSlider.value = value;
     updatePriceRange();
   });
 
-  maxPriceInput.addEventListener('input', (e) => {
+  maxPriceInput.addEventListener("input", (e) => {
     const value = parseInt(e.target.value) || 1000000;
     maxPriceSlider.value = value;
     updatePriceRange();
   });
 
-  minPriceSlider.addEventListener('input', (e) => {
+  minPriceSlider.addEventListener("input", (e) => {
     const value = parseInt(e.target.value);
     minPriceInput.value = value;
     if (value > parseInt(maxPriceSlider.value)) {
@@ -1003,7 +1003,7 @@ function initPriceRangeFilter() {
     updatePriceRange();
   });
 
-  maxPriceSlider.addEventListener('input', (e) => {
+  maxPriceSlider.addEventListener("input", (e) => {
     const value = parseInt(e.target.value);
     maxPriceInput.value = value;
     if (value < parseInt(minPriceSlider.value)) {
@@ -1014,19 +1014,19 @@ function initPriceRangeFilter() {
   });
 
   // Quick filter buttons
-  quickBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      quickBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
+  quickBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      quickBtns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+
       const min = btn.dataset.min;
       const max = btn.dataset.max;
-      
+
       minPriceInput.value = min;
       maxPriceInput.value = max;
       minPriceSlider.value = min;
       maxPriceSlider.value = max;
-      
+
       updatePriceRange();
       updateActiveFilters();
     });
@@ -1041,51 +1041,53 @@ function initPriceRangeFilter() {
    Phase 2: Smart Search Features
    =========================== */
 function initSmartSearch() {
-  const keywordInput = document.getElementById('keywordFilter');
-  const recentSearchesDiv = document.getElementById('recentSearches');
-  const recentSearchesList = document.getElementById('recentSearchesList');
-  const clearSearchesBtn = document.getElementById('clearSearches');
-  const popularTags = document.querySelectorAll('.popular-search-tag');
+  const keywordInput = document.getElementById("keywordFilter");
+  const recentSearchesDiv = document.getElementById("recentSearches");
+  const recentSearchesList = document.getElementById("recentSearchesList");
+  const clearSearchesBtn = document.getElementById("clearSearches");
+  const popularTags = document.querySelectorAll(".popular-search-tag");
 
   if (!keywordInput) return;
 
   // Load recent searches from localStorage
-  let recentSearches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+  let recentSearches = JSON.parse(
+    localStorage.getItem("recentSearches") || "[]"
+  );
 
   // Show recent searches on focus
-  keywordInput.addEventListener('focus', () => {
+  keywordInput.addEventListener("focus", () => {
     if (recentSearches.length > 0) {
       displayRecentSearches();
-      recentSearchesDiv.style.display = 'block';
+      recentSearchesDiv.style.display = "block";
     }
   });
 
   // Hide on blur (with delay for click events)
-  keywordInput.addEventListener('blur', () => {
+  keywordInput.addEventListener("blur", () => {
     setTimeout(() => {
-      recentSearchesDiv.style.display = 'none';
+      recentSearchesDiv.style.display = "none";
     }, 200);
   });
 
   // Save search on Enter
-  keywordInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && keywordInput.value.trim()) {
+  keywordInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter" && keywordInput.value.trim()) {
       saveRecentSearch(keywordInput.value.trim());
     }
   });
 
   // Clear recent searches
   if (clearSearchesBtn) {
-    clearSearchesBtn.addEventListener('click', () => {
+    clearSearchesBtn.addEventListener("click", () => {
       recentSearches = [];
-      localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
-      recentSearchesDiv.style.display = 'none';
+      localStorage.setItem("recentSearches", JSON.stringify(recentSearches));
+      recentSearchesDiv.style.display = "none";
     });
   }
 
   // Popular search tags
-  popularTags.forEach(tag => {
-    tag.addEventListener('click', () => {
+  popularTags.forEach((tag) => {
+    tag.addEventListener("click", () => {
       const keyword = tag.dataset.keyword;
       keywordInput.value = keyword;
       saveRecentSearch(keyword);
@@ -1095,21 +1097,25 @@ function initSmartSearch() {
 
   function saveRecentSearch(search) {
     // Remove if already exists
-    recentSearches = recentSearches.filter(s => s !== search);
+    recentSearches = recentSearches.filter((s) => s !== search);
     // Add to beginning
     recentSearches.unshift(search);
     // Keep only last 5
     recentSearches = recentSearches.slice(0, 5);
-    localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
+    localStorage.setItem("recentSearches", JSON.stringify(recentSearches));
   }
 
   function displayRecentSearches() {
-    recentSearchesList.innerHTML = recentSearches.map(search => `
+    recentSearchesList.innerHTML = recentSearches
+      .map(
+        (search) => `
       <div class="recent-search-item" onclick="document.getElementById('keywordFilter').value='${search}'; updateActiveFilters();">
         <i class="fas fa-history"></i>
         <span>${search}</span>
       </div>
-    `).join('');
+    `
+      )
+      .join("");
   }
 }
 
@@ -1118,26 +1124,26 @@ function initSmartSearch() {
    =========================== */
 function initFilterPersistence() {
   const filterElements = {
-    type: document.querySelector('.tab-btn.active'),
-    make: document.getElementById('makeFilter'),
-    model: document.getElementById('modelFilter'),
-    body: document.getElementById('bodyFilter'),
-    keyword: document.getElementById('keywordFilter'),
-    minPrice: document.getElementById('minPrice'),
-    maxPrice: document.getElementById('maxPrice')
+    type: document.querySelector(".tab-btn.active"),
+    make: document.getElementById("makeFilter"),
+    model: document.getElementById("modelFilter"),
+    body: document.getElementById("bodyFilter"),
+    keyword: document.getElementById("keywordFilter"),
+    minPrice: document.getElementById("minPrice"),
+    maxPrice: document.getElementById("maxPrice"),
   };
 
   // Load saved filters on page load
   loadSavedFilters();
 
   // Save filters on change
-  Object.values(filterElements).forEach(el => {
+  Object.values(filterElements).forEach((el) => {
     if (el) {
-      el.addEventListener('change', () => {
+      el.addEventListener("change", () => {
         saveFilters();
         updateActiveFilters();
       });
-      el.addEventListener('input', () => {
+      el.addEventListener("input", () => {
         saveFilters();
         updateActiveFilters();
       });
@@ -1145,8 +1151,8 @@ function initFilterPersistence() {
   });
 
   // Tab buttons
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
       saveFilters();
       updateActiveFilters();
     });
@@ -1154,21 +1160,23 @@ function initFilterPersistence() {
 
   function saveFilters() {
     const filters = {
-      type: document.querySelector('.tab-btn.active')?.dataset.tab || 'bike',
-      make: filterElements.make?.value || '',
-      model: filterElements.model?.value || '',
-      body: filterElements.body?.value || '',
-      keyword: filterElements.keyword?.value || '',
-      minPrice: filterElements.minPrice?.value || '0',
-      maxPrice: filterElements.maxPrice?.value || '1000000'
+      type: document.querySelector(".tab-btn.active")?.dataset.tab || "bike",
+      make: filterElements.make?.value || "",
+      model: filterElements.model?.value || "",
+      body: filterElements.body?.value || "",
+      keyword: filterElements.keyword?.value || "",
+      minPrice: filterElements.minPrice?.value || "0",
+      maxPrice: filterElements.maxPrice?.value || "1000000",
     };
-    localStorage.setItem('vehicleFilters', JSON.stringify(filters));
+    localStorage.setItem("vehicleFilters", JSON.stringify(filters));
   }
 
   function loadSavedFilters() {
     try {
-      const savedFilters = JSON.parse(localStorage.getItem('vehicleFilters') || '{}');
-      
+      const savedFilters = JSON.parse(
+        localStorage.getItem("vehicleFilters") || "{}"
+      );
+
       if (savedFilters.make && filterElements.make) {
         filterElements.make.value = savedFilters.make;
       }
@@ -1183,83 +1191,93 @@ function initFilterPersistence() {
       }
       if (savedFilters.minPrice && filterElements.minPrice) {
         filterElements.minPrice.value = savedFilters.minPrice;
-        document.getElementById('minPriceSlider').value = savedFilters.minPrice;
+        document.getElementById("minPriceSlider").value = savedFilters.minPrice;
       }
       if (savedFilters.maxPrice && filterElements.maxPrice) {
         filterElements.maxPrice.value = savedFilters.maxPrice;
-        document.getElementById('maxPriceSlider').value = savedFilters.maxPrice;
+        document.getElementById("maxPriceSlider").value = savedFilters.maxPrice;
       }
 
       updateActiveFilters();
     } catch (e) {
-      console.error('Error loading saved filters:', e);
+      console.error("Error loading saved filters:", e);
     }
   }
 }
 
 function updateActiveFilters() {
-  const activeFiltersDiv = document.getElementById('activeFilters');
-  const filterPillsDiv = document.getElementById('filterPills');
-  
+  const activeFiltersDiv = document.getElementById("activeFilters");
+  const filterPillsDiv = document.getElementById("filterPills");
+
   if (!activeFiltersDiv || !filterPillsDiv) return;
 
   const filters = [];
-  
-  // Check each filter
-  const make = document.getElementById('makeFilter')?.value;
-  const model = document.getElementById('modelFilter')?.value;
-  const body = document.getElementById('bodyFilter')?.value;
-  const keyword = document.getElementById('keywordFilter')?.value;
-  const minPrice = document.getElementById('minPrice')?.value;
-  const maxPrice = document.getElementById('maxPrice')?.value;
 
-  if (make) filters.push({ label: `Make: ${make}`, value: 'make' });
-  if (model) filters.push({ label: `Model: ${model}`, value: 'model' });
-  if (body) filters.push({ label: `Body: ${body}`, value: 'body' });
-  if (keyword) filters.push({ label: `Search: ${keyword}`, value: 'keyword' });
+  // Check each filter
+  const make = document.getElementById("makeFilter")?.value;
+  const model = document.getElementById("modelFilter")?.value;
+  const body = document.getElementById("bodyFilter")?.value;
+  const keyword = document.getElementById("keywordFilter")?.value;
+  const minPrice = document.getElementById("minPrice")?.value;
+  const maxPrice = document.getElementById("maxPrice")?.value;
+
+  if (make) filters.push({ label: `Make: ${make}`, value: "make" });
+  if (model) filters.push({ label: `Model: ${model}`, value: "model" });
+  if (body) filters.push({ label: `Body: ${body}`, value: "body" });
+  if (keyword) filters.push({ label: `Search: ${keyword}`, value: "keyword" });
   if (minPrice && parseInt(minPrice) > 0) {
-    filters.push({ label: `Min: ₹${formatPrice(minPrice)}`, value: 'minPrice' });
+    filters.push({
+      label: `Min: ₹${formatPrice(minPrice)}`,
+      value: "minPrice",
+    });
   }
   if (maxPrice && parseInt(maxPrice) < 1000000) {
-    filters.push({ label: `Max: ₹${formatPrice(maxPrice)}`, value: 'maxPrice' });
+    filters.push({
+      label: `Max: ₹${formatPrice(maxPrice)}`,
+      value: "maxPrice",
+    });
   }
 
   if (filters.length > 0) {
-    filterPillsDiv.innerHTML = filters.map(f => `
+    filterPillsDiv.innerHTML = filters
+      .map(
+        (f) => `
       <div class="filter-pill">
         <span>${f.label}</span>
         <button class="filter-pill-remove" onclick="removeFilter('${f.value}')">
           <i class="fas fa-times"></i>
         </button>
       </div>
-    `).join('');
-    activeFiltersDiv.style.display = 'flex';
+    `
+      )
+      .join("");
+    activeFiltersDiv.style.display = "flex";
   } else {
-    activeFiltersDiv.style.display = 'none';
+    activeFiltersDiv.style.display = "none";
   }
 }
 
 function removeFilter(filterType) {
-  switch(filterType) {
-    case 'make':
-      document.getElementById('makeFilter').value = '';
+  switch (filterType) {
+    case "make":
+      document.getElementById("makeFilter").value = "";
       break;
-    case 'model':
-      document.getElementById('modelFilter').value = '';
+    case "model":
+      document.getElementById("modelFilter").value = "";
       break;
-    case 'body':
-      document.getElementById('bodyFilter').value = '';
+    case "body":
+      document.getElementById("bodyFilter").value = "";
       break;
-    case 'keyword':
-      document.getElementById('keywordFilter').value = '';
+    case "keyword":
+      document.getElementById("keywordFilter").value = "";
       break;
-    case 'minPrice':
-      document.getElementById('minPrice').value = '0';
-      document.getElementById('minPriceSlider').value = '0';
+    case "minPrice":
+      document.getElementById("minPrice").value = "0";
+      document.getElementById("minPriceSlider").value = "0";
       break;
-    case 'maxPrice':
-      document.getElementById('maxPrice').value = '1000000';
-      document.getElementById('maxPriceSlider').value = '1000000';
+    case "maxPrice":
+      document.getElementById("maxPrice").value = "1000000";
+      document.getElementById("maxPriceSlider").value = "1000000";
       break;
   }
   updateActiveFilters();
@@ -1269,29 +1287,31 @@ function removeFilter(filterType) {
 function formatPrice(price) {
   const num = parseInt(price);
   if (num >= 100000) {
-    return (num / 100000).toFixed(1) + 'L';
+    return (num / 100000).toFixed(1) + "L";
   } else if (num >= 1000) {
-    return (num / 1000).toFixed(0) + 'K';
+    return (num / 1000).toFixed(0) + "K";
   }
   return num.toString();
 }
 
 // Clear all filters button
-document.addEventListener('DOMContentLoaded', () => {
-  const clearAllBtn = document.getElementById('clearAllFilters');
+document.addEventListener("DOMContentLoaded", () => {
+  const clearAllBtn = document.getElementById("clearAllFilters");
   if (clearAllBtn) {
-    clearAllBtn.addEventListener('click', () => {
-      document.getElementById('makeFilter').value = '';
-      document.getElementById('modelFilter').value = '';
-      document.getElementById('bodyFilter').value = '';
-      document.getElementById('keywordFilter').value = '';
-      document.getElementById('minPrice').value = '0';
-      document.getElementById('maxPrice').value = '1000000';
-      document.getElementById('minPriceSlider').value = '0';
-      document.getElementById('maxPriceSlider').value = '1000000';
-      document.querySelectorAll('.price-quick-btn').forEach(btn => btn.classList.remove('active'));
+    clearAllBtn.addEventListener("click", () => {
+      document.getElementById("makeFilter").value = "";
+      document.getElementById("modelFilter").value = "";
+      document.getElementById("bodyFilter").value = "";
+      document.getElementById("keywordFilter").value = "";
+      document.getElementById("minPrice").value = "0";
+      document.getElementById("maxPrice").value = "1000000";
+      document.getElementById("minPriceSlider").value = "0";
+      document.getElementById("maxPriceSlider").value = "1000000";
+      document
+        .querySelectorAll(".price-quick-btn")
+        .forEach((btn) => btn.classList.remove("active"));
       updateActiveFilters();
-      localStorage.removeItem('vehicleFilters');
+      localStorage.removeItem("vehicleFilters");
     });
   }
 });
@@ -1300,84 +1320,91 @@ document.addEventListener('DOMContentLoaded', () => {
    Phase 3: Finance Calculator
    =========================== */
 function initFinanceCalculator() {
-  const loanAmount = document.getElementById('loanAmount');
-  const loanAmountSlider = document.getElementById('loanAmountSlider');
-  const downPayment = document.getElementById('downPayment');
-  const downPaymentSlider = document.getElementById('downPaymentSlider');
-  const interestRate = document.getElementById('interestRate');
-  const interestRateSlider = document.getElementById('interestRateSlider');
-  const tenureBtns = document.querySelectorAll('.tenure-btn');
+  const loanAmount = document.getElementById("loanAmount");
+  const loanAmountSlider = document.getElementById("loanAmountSlider");
+  const downPayment = document.getElementById("downPayment");
+  const downPaymentSlider = document.getElementById("downPaymentSlider");
+  const interestRate = document.getElementById("interestRate");
+  const interestRateSlider = document.getElementById("interestRateSlider");
+  const tenureBtns = document.querySelectorAll(".tenure-btn");
 
   if (!loanAmount || !downPayment || !interestRate) return;
 
   let selectedTenure = 12;
 
   // Sync inputs with sliders
-  loanAmount.addEventListener('input', (e) => {
+  loanAmount.addEventListener("input", (e) => {
     loanAmountSlider.value = e.target.value;
     calculateEMI();
   });
 
-  loanAmountSlider.addEventListener('input', (e) => {
+  loanAmountSlider.addEventListener("input", (e) => {
     loanAmount.value = e.target.value;
     calculateEMI();
   });
 
-  downPayment.addEventListener('input', (e) => {
+  downPayment.addEventListener("input", (e) => {
     downPaymentSlider.value = e.target.value;
     calculateEMI();
   });
 
-  downPaymentSlider.addEventListener('input', (e) => {
+  downPaymentSlider.addEventListener("input", (e) => {
     downPayment.value = e.target.value;
     calculateEMI();
   });
 
-  interestRate.addEventListener('input', (e) => {
+  interestRate.addEventListener("input", (e) => {
     interestRateSlider.value = e.target.value;
     calculateEMI();
   });
 
-  interestRateSlider.addEventListener('input', (e) => {
+  interestRateSlider.addEventListener("input", (e) => {
     interestRate.value = e.target.value;
     calculateEMI();
   });
 
   // Tenure buttons
-  tenureBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      tenureBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+  tenureBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      tenureBtns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
       selectedTenure = parseInt(btn.dataset.months);
       calculateEMI();
     });
   });
 
   function calculateEMI() {
-    const principal = parseFloat(loanAmount.value) - parseFloat(downPayment.value);
+    const principal =
+      parseFloat(loanAmount.value) - parseFloat(downPayment.value);
     const rate = parseFloat(interestRate.value) / 100 / 12;
     const months = selectedTenure;
 
     if (principal <= 0 || rate <= 0 || months <= 0) return;
 
     // EMI = [P x R x (1+R)^N]/[(1+R)^N-1]
-    const emi = (principal * rate * Math.pow(1 + rate, months)) / (Math.pow(1 + rate, months) - 1);
+    const emi =
+      (principal * rate * Math.pow(1 + rate, months)) /
+      (Math.pow(1 + rate, months) - 1);
     const totalAmount = emi * months;
     const totalInterest = totalAmount - principal;
 
-    document.getElementById('emiAmount').textContent = '₹' + Math.round(emi).toLocaleString('en-IN');
-    document.getElementById('principalAmount').textContent = '₹' + Math.round(principal).toLocaleString('en-IN');
-    document.getElementById('totalInterest').textContent = '₹' + Math.round(totalInterest).toLocaleString('en-IN');
-    document.getElementById('totalAmount').textContent = '₹' + Math.round(totalAmount).toLocaleString('en-IN');
+    document.getElementById("emiAmount").textContent =
+      "₹" + Math.round(emi).toLocaleString("en-IN");
+    document.getElementById("principalAmount").textContent =
+      "₹" + Math.round(principal).toLocaleString("en-IN");
+    document.getElementById("totalInterest").textContent =
+      "₹" + Math.round(totalInterest).toLocaleString("en-IN");
+    document.getElementById("totalAmount").textContent =
+      "₹" + Math.round(totalAmount).toLocaleString("en-IN");
   }
 
   calculateEMI();
 }
 
 function openFinanceModal() {
-  const modal = document.getElementById('financeModal');
+  const modal = document.getElementById("financeModal");
   if (modal) {
-    modal.style.display = 'block';
+    modal.style.display = "block";
   }
 }
 
@@ -1386,77 +1413,87 @@ function openFinanceModal() {
    =========================== */
 function initVehicleComparison() {
   let comparisonList = [];
-  const comparisonBar = document.getElementById('comparisonBar');
-  const comparisonItems = document.getElementById('comparisonItems');
-  const compareCount = document.getElementById('compareCount');
-  const compareBtn = document.getElementById('compareVehiclesBtn');
+  const comparisonBar = document.getElementById("comparisonBar");
+  const comparisonItems = document.getElementById("comparisonItems");
+  const compareCount = document.getElementById("compareCount");
+  const compareBtn = document.getElementById("compareVehiclesBtn");
 
   if (!comparisonBar) return;
 
   // Add comparison checkboxes to vehicle cards (if they exist)
-  document.querySelectorAll('.vehicle-card, .bike-card').forEach(card => {
-    if (!card.querySelector('.compare-checkbox')) {
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.className = 'compare-checkbox';
-      checkbox.style.position = 'absolute';
-      checkbox.style.top = '10px';
-      checkbox.style.right = '10px';
-      checkbox.style.width = '20px';
-      checkbox.style.height = '20px';
-      checkbox.style.cursor = 'pointer';
-      
-      checkbox.addEventListener('change', (e) => {
-        const vehicleName = card.querySelector('h3')?.textContent || 'Vehicle';
-        const vehiclePrice = card.querySelector('.price')?.textContent || 'N/A';
-        
+  document.querySelectorAll(".vehicle-card, .bike-card").forEach((card) => {
+    if (!card.querySelector(".compare-checkbox")) {
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "compare-checkbox";
+      checkbox.style.position = "absolute";
+      checkbox.style.top = "10px";
+      checkbox.style.right = "10px";
+      checkbox.style.width = "20px";
+      checkbox.style.height = "20px";
+      checkbox.style.cursor = "pointer";
+
+      checkbox.addEventListener("change", (e) => {
+        const vehicleName = card.querySelector("h3")?.textContent || "Vehicle";
+        const vehiclePrice = card.querySelector(".price")?.textContent || "N/A";
+
         if (e.target.checked) {
           if (comparisonList.length < 3) {
-            comparisonList.push({ name: vehicleName, price: vehiclePrice, element: card });
+            comparisonList.push({
+              name: vehicleName,
+              price: vehiclePrice,
+              element: card,
+            });
             updateComparisonBar();
           } else {
             e.target.checked = false;
-            alert('You can compare up to 3 vehicles only');
+            alert("You can compare up to 3 vehicles only");
           }
         } else {
-          comparisonList = comparisonList.filter(v => v.name !== vehicleName);
+          comparisonList = comparisonList.filter((v) => v.name !== vehicleName);
           updateComparisonBar();
         }
       });
-      
-      card.style.position = 'relative';
+
+      card.style.position = "relative";
       card.appendChild(checkbox);
     }
   });
 
   function updateComparisonBar() {
     if (comparisonList.length > 0) {
-      comparisonBar.classList.add('show');
-      comparisonItems.innerHTML = comparisonList.map(v => `
+      comparisonBar.classList.add("show");
+      comparisonItems.innerHTML = comparisonList
+        .map(
+          (v) => `
         <div class="comparison-item">
           <span>${v.name}</span>
           <button class="comparison-item-remove" onclick="removeFromComparison('${v.name}')">
             <i class="fas fa-times"></i>
           </button>
         </div>
-      `).join('');
+      `
+        )
+        .join("");
       compareCount.textContent = comparisonList.length;
     } else {
-      comparisonBar.classList.remove('show');
+      comparisonBar.classList.remove("show");
     }
   }
 
-  window.removeFromComparison = function(name) {
-    comparisonList = comparisonList.filter(v => v.name !== name);
-    const checkbox = document.querySelector(`.vehicle-card .compare-checkbox, .bike-card .compare-checkbox`);
+  window.removeFromComparison = function (name) {
+    comparisonList = comparisonList.filter((v) => v.name !== name);
+    const checkbox = document.querySelector(
+      `.vehicle-card .compare-checkbox, .bike-card .compare-checkbox`
+    );
     if (checkbox) checkbox.checked = false;
     updateComparisonBar();
   };
 
   if (compareBtn) {
-    compareBtn.addEventListener('click', () => {
+    compareBtn.addEventListener("click", () => {
       if (comparisonList.length < 2) {
-        alert('Please select at least 2 vehicles to compare');
+        alert("Please select at least 2 vehicles to compare");
         return;
       }
       showComparisonModal();
@@ -1464,11 +1501,13 @@ function initVehicleComparison() {
   }
 
   function showComparisonModal() {
-    const modal = document.getElementById('comparisonModal');
-    const grid = document.getElementById('comparisonGrid');
-    
+    const modal = document.getElementById("comparisonModal");
+    const grid = document.getElementById("comparisonGrid");
+
     if (modal && grid) {
-      grid.innerHTML = comparisonList.map(v => `
+      grid.innerHTML = comparisonList
+        .map(
+          (v) => `
         <div class="comparison-vehicle-card">
           <h3>${v.name}</h3>
           <div class="comparison-spec-row">
@@ -1480,8 +1519,10 @@ function initVehicleComparison() {
             <span class="comparison-spec-value">Available</span>
           </div>
         </div>
-      `).join('');
-      modal.style.display = 'block';
+      `
+        )
+        .join("");
+      modal.style.display = "block";
     }
   }
 }
@@ -1491,92 +1532,97 @@ function initVehicleComparison() {
    =========================== */
 function initEnhancedForms() {
   // Finance Form
-  const financeForm = document.getElementById('financeForm');
+  const financeForm = document.getElementById("financeForm");
   if (financeForm) {
-    financeForm.addEventListener('submit', (e) => {
+    financeForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const formData = new FormData(financeForm);
       const data = Object.fromEntries(formData);
-      
+
       // Here you would send to your API
-      console.log('Finance Application:', data);
-      
-      document.getElementById('financeSuccess').style.display = 'flex';
+      console.log("Finance Application:", data);
+
+      document.getElementById("financeSuccess").style.display = "flex";
       setTimeout(() => {
-        document.getElementById('financeModal').style.display = 'none';
+        document.getElementById("financeModal").style.display = "none";
         financeForm.reset();
-        document.getElementById('financeSuccess').style.display = 'none';
+        document.getElementById("financeSuccess").style.display = "none";
       }, 3000);
     });
   }
 
   // Test Drive Form
-  const testDriveForm = document.getElementById('testDriveForm');
+  const testDriveForm = document.getElementById("testDriveForm");
   if (testDriveForm) {
     // Set minimum date to today
-    const dateInput = document.getElementById('testDriveDate');
+    const dateInput = document.getElementById("testDriveDate");
     if (dateInput) {
-      const today = new Date().toISOString().split('T')[0];
-      dateInput.setAttribute('min', today);
+      const today = new Date().toISOString().split("T")[0];
+      dateInput.setAttribute("min", today);
     }
 
-    testDriveForm.addEventListener('submit', (e) => {
+    testDriveForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const formData = new FormData(testDriveForm);
       const data = Object.fromEntries(formData);
-      
+
       // Here you would send to your API
-      console.log('Test Drive Booking:', data);
-      
-      document.getElementById('testDriveSuccess').style.display = 'flex';
+      console.log("Test Drive Booking:", data);
+
+      document.getElementById("testDriveSuccess").style.display = "flex";
       setTimeout(() => {
-        document.getElementById('testDriveModal').style.display = 'none';
+        document.getElementById("testDriveModal").style.display = "none";
         testDriveForm.reset();
-        document.getElementById('testDriveSuccess').style.display = 'none';
+        document.getElementById("testDriveSuccess").style.display = "none";
       }, 3000);
     });
   }
 
   // Add modal close functionality
-  document.querySelectorAll('.modal .close').forEach(closeBtn => {
-    closeBtn.addEventListener('click', function() {
-      this.closest('.modal').style.display = 'none';
+  document.querySelectorAll(".modal .close").forEach((closeBtn) => {
+    closeBtn.addEventListener("click", function () {
+      this.closest(".modal").style.display = "none";
     });
   });
 
   // Close modal when clicking outside
-  window.addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal')) {
-      e.target.style.display = 'none';
+  window.addEventListener("click", (e) => {
+    if (e.target.classList.contains("modal")) {
+      e.target.style.display = "none";
     }
   });
 }
 
 // Global function to open test drive modal
-window.openTestDriveModal = function() {
-  const modal = document.getElementById('testDriveModal');
+window.openTestDriveModal = function () {
+  const modal = document.getElementById("testDriveModal");
   if (modal) {
-    modal.style.display = 'block';
+    modal.style.display = "block";
   }
 };
 
 // Scroll animation for service cards
 function initScrollAnimations() {
-  const serviceCards = document.querySelectorAll('.services-grid .service-card');
-  
+  const serviceCards = document.querySelectorAll(
+    ".services-grid .service-card"
+  );
+
   if (serviceCards.length === 0) return;
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('animate-on-scroll');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-  });
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("animate-on-scroll");
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px",
+    }
+  );
 
   serviceCards.forEach((card) => {
     observer.observe(card);
@@ -1584,11 +1630,8 @@ function initScrollAnimations() {
 }
 
 // Initialize scroll animations when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initScrollAnimations);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initScrollAnimations);
 } else {
   initScrollAnimations();
 }
-
-
-
