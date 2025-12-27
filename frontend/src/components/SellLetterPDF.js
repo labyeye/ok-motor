@@ -1900,13 +1900,13 @@ const SellLetterForm = () => {
                   >
                     <option value="">
                       {loadingVehicles ? "Loading vehicles..." : "-- Select Vehicle or Enter Manually --"}
-                    </option>
+                      </option>
                     {vehicles.map((vehicle) => (
                       <option key={vehicle._id} value={vehicle._id}>
                         {vehicle.vehicleName} {vehicle.vehicleModel} - {vehicle.registrationNumber}
                         {vehicle.vehicleVariant ? ` (${vehicle.vehicleVariant})` : ""}
                       </option>
-                          const [previewLanguage, setPreviewLanguage] = useState("english");
+                    ))}
                   </select>
                 </div>
               </div>
