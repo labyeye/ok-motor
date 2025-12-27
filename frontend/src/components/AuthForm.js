@@ -85,7 +85,6 @@ const AuthForm = ({ isLogin }) => {
               />
             </div>
 
-            {/* Password Field */}
             <div
               className={`input-group ${
                 focusedField === "password" ? "focused" : ""
@@ -112,7 +111,6 @@ const AuthForm = ({ isLogin }) => {
               </button>
             </div>
 
-            {/* Submit Button */}
             <button
               type="button"
               onClick={onSubmit}
@@ -399,7 +397,6 @@ const AuthForm = ({ isLogin }) => {
           }
         }
 
-        /* Mobile Responsive */
         @media (max-width: 767px) {
           .auth-content {
             padding: 1.5rem;

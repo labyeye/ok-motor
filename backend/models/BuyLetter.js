@@ -1,15 +1,14 @@
-// models/BuyLetter.js
+
 const mongoose = require("mongoose");
 
 const BuyLetterSchema = new mongoose.Schema({
-  // Vehicle Reference - New system
+  
   vehicle: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Vehicle",
     index: true,
   },
 
-  // Seller Information
   sellerName: { type: String, required: true },
   sellerFatherName: { type: String, required: true },
   sellerCurrentAddress: { type: String, required: true },
@@ -18,15 +17,13 @@ const BuyLetterSchema = new mongoose.Schema({
   selleraadharphone: { type: String },
   selleraadharphone2: { type: String },
 
-  // Vehicle Information - Legacy fields (kept for backward compatibility)
-  // If vehicle reference is provided, these should be auto-populated from Vehicle model
   vehicleName: { type: String },
   vehicleModel: { type: String },
   vehicleColor: { type: String },
   registrationNumber: {
     type: String,
     unique: true,
-    sparse: true, // Allow null values and still maintain uniqueness for non-null
+    sparse: true, 
   },
   chassisNumber: { type: String },
   engineNumber: { type: String },
@@ -36,24 +33,20 @@ const BuyLetterSchema = new mongoose.Schema({
     enum: ["running", "notRunning"],
   },
 
-  // Buyer Information
   buyerName: { type: String, required: true },
   buyerFatherName: { type: String, required: true },
   buyerCurrentAddress: { type: String, required: true },
   buyernames: { type: String },
   buyerphone: { type: String },
 
-  //Witness Information
   witnessname: { type: String },
   witnessphone: { type: String },
 
   dealername: { type: String },
   dealeraddress: { type: String },
 
-  //Return Information
   returnpersonname: { type: String },
 
-  // Sale Details
   saleDate: { type: Date, required: true },
   saleTime: { type: String },
   saleAmount: { type: Number, required: true },
@@ -65,11 +58,9 @@ const BuyLetterSchema = new mongoose.Schema({
   todayDate: { type: Date },
   todayTime: { type: String },
 
-  // Additional Information
   documentsVerified1: { type: Boolean, default: true },
   note: { type: String },
 
-  // Versioning fields - to track document history
   originalDocumentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "BuyLetter",
@@ -84,10 +75,8 @@ const BuyLetterSchema = new mongoose.Schema({
   editedAt: { type: Date },
   editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
-  // Reference to user who created it
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
-  // PDF generation info
   pdfUrl: { type: String },
   createdAt: { type: Date, default: Date.now },
 });

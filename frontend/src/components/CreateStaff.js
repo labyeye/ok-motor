@@ -27,7 +27,6 @@ const CreateStaff = () => {
   const navigate = useNavigate();
   const { user,logout } = useContext(AuthContext);
 
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -38,7 +37,6 @@ const CreateStaff = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  // Menu state management
   const [activeMenu, setActiveMenu] = useState("Create Staff ID");
   const [expandedMenus, setExpandedMenus] = useState({});
 
@@ -78,7 +76,7 @@ const CreateStaff = () => {
         navigate("/staff/list");
       }, 1500);
     } catch (err) {
-      // Handle authentication errors
+      
       if (err.response?.status === 401) {
         setError("Your session has expired. Please login again.");
         logout();
@@ -101,7 +99,6 @@ const CreateStaff = () => {
     navigate("/login");
   };
 
-  // Toggle menu expansion
   const toggleMenu = (menuName) => {
     setExpandedMenus((prev) => ({
       ...prev,
@@ -109,7 +106,6 @@ const CreateStaff = () => {
     }));
   };
 
-  // Handle menu clicks
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
     const actualPath = typeof path === 'function' ? path(user?.role) : path;
@@ -202,7 +198,7 @@ const CreateStaff = () => {
 
   return (
     <div style={styles.container}>
-      {/* Sidebar */}
+      {}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
            <img src={logo} alt="logo" style={{width: '14.5rem', height: '10.5rem', color: '#7c3aed'}} />
@@ -277,7 +273,7 @@ const CreateStaff = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>

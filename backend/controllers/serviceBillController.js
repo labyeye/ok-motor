@@ -58,7 +58,7 @@ exports.getVehicleDetails = async (req, res) => {
     });
   }
 };
-// Create a new service bill
+
 exports.createServiceBill = async (req, res) => {
   console.log("Creating service bill...");
   try {
@@ -66,11 +66,10 @@ exports.createServiceBill = async (req, res) => {
     
     console.log("Received service bill data:", JSON.stringify({ serviceItems, ...otherData }, null, 2));
 
-    // If vehicle reference is provided, auto-populate vehicle details
     if (otherData.vehicle) {
       const vehicle = await Vehicle.findById(otherData.vehicle);
       if (vehicle) {
-        // Auto-populate vehicle fields from Vehicle model
+        
         otherData.vehicleType = vehicle.vehicleType?.toLowerCase();
         otherData.vehicleBrand = vehicle.vehicleName;
         otherData.vehicleModel = vehicle.vehicleModel;
@@ -81,7 +80,6 @@ exports.createServiceBill = async (req, res) => {
       }
     }
 
-    // Validate required fields
     const requiredFields = ['customerName', 'customerPhone', 'customerAddress', 'vehicleBrand', 'vehicleModel', 'registrationNumber'];
     const missingFields = requiredFields.filter(field => !otherData[field]);
     if (missingFields.length > 0) {
@@ -91,8 +89,6 @@ exports.createServiceBill = async (req, res) => {
       });
     }
 
-    // Calculate amounts. Use item.amount when provided (actual charged amount),
-    // otherwise fall back to rate * quantity so discounts can be represented.
     const totalAmount = serviceItems.reduce((sum, item) => {
       const qty = parseFloat(item.quantity) || 0;
       const rate = parseFloat(item.rate) || 0;
@@ -105,8 +101,6 @@ exports.createServiceBill = async (req, res) => {
     const grandTotal = totalAmount + taxAmount - (parseFloat(otherData.discount) || 0);
     const balanceDue = grandTotal - (parseFloat(otherData.advancePaid) || 0);
 
-    // Ensure service items have an amount field when not provided so downstream
-    // consumers (PDF, UI) can rely on a concrete value.
     const normalizedServiceItems = serviceItems.map(item => {
       const qty = parseFloat(item.quantity) || 0;
       const rate = parseFloat(item.rate) || 0;
@@ -134,7 +128,6 @@ exports.createServiceBill = async (req, res) => {
     const serviceBill = new ServiceBill(serviceBillData);
     await serviceBill.save();
 
-    // Generate PDF asynchronously to avoid blocking the response
     try {
       const { pdfUrl, filePath } = await generateServiceBillPDF(serviceBill);
       serviceBill.pdfUrl = pdfUrl;
@@ -142,7 +135,7 @@ exports.createServiceBill = async (req, res) => {
       await serviceBill.save();
     } catch (pdfError) {
       console.error("PDF generation failed:", pdfError);
-      // Don't fail the entire request if PDF generation fails
+      
     }
 
     console.log("Service bill created successfully:", serviceBill._id);
@@ -159,10 +152,9 @@ exports.createServiceBill = async (req, res) => {
   }
 };
 
-// Get all service bills
 exports.getServiceBills = async (req, res) => {
   try {
-    // Staff and admin can see all bills, others only their own
+    
     const query = (req.user.role === 'staff' || req.user.role === 'admin')
       ? {}
       : { user: req.user.id };
@@ -182,7 +174,7 @@ exports.getServiceBills = async (req, res) => {
     });
   }
 };
-// Add to serviceBillController.js
+
 exports.getServiceBillsByRegistration = async (req, res) => {
   try {
     const { registrationNumber } = req.query;
@@ -213,7 +205,6 @@ exports.getServiceBillsByRegistration = async (req, res) => {
   }
 };
 
-// Preview service bill PDF without saving to database
 exports.previewServiceBillPDF = async (req, res) => {
   console.log("Generating preview PDF...");
   console.log("User making request:", req.user.email);
@@ -222,8 +213,7 @@ exports.previewServiceBillPDF = async (req, res) => {
   
   try {
     const serviceBillData = req.body;
-    
-    // Validate required fields
+
     if (!serviceBillData.customerName || !serviceBillData.serviceItems) {
       console.log("Missing required fields:", {
         customerName: !!serviceBillData.customerName,
@@ -233,13 +223,11 @@ exports.previewServiceBillPDF = async (req, res) => {
         message: "Missing required fields: customerName and serviceItems are required"
       });
     }
-    
-  // Create a temporary service bill object (not saved to database)
-    // Ensure all numeric fields are properly converted
+
     const tempServiceBill = {
       ...serviceBillData,
-      _id: "preview", // Temporary ID for preview
-      // Convert numeric fields to ensure they're numbers
+      _id: "preview", 
+      
       totalAmount: parseFloat(serviceBillData.totalAmount) || 0,
       taxAmount: parseFloat(serviceBillData.taxAmount) || 0,
       discount: parseFloat(serviceBillData.discount) || 0,
@@ -247,7 +235,7 @@ exports.previewServiceBillPDF = async (req, res) => {
       advancePaid: parseFloat(serviceBillData.advancePaid) || 0,
       balanceDue: parseFloat(serviceBillData.balanceDue) || 0,
       taxRate: parseFloat(serviceBillData.taxRate) || 0,
-      // Ensure service items have proper numeric values and an amount field
+      
       serviceItems: serviceBillData.serviceItems.map(item => {
         const quantity = parseFloat(item.quantity) || 0;
         const rate = parseFloat(item.rate) || 0;
@@ -275,14 +263,12 @@ exports.previewServiceBillPDF = async (req, res) => {
       }))
     });
 
-    // Generate PDF directly without saving to database
-    const pdfBuffer = await generateServiceBillPDF(tempServiceBill, true); // true indicates return buffer
+    const pdfBuffer = await generateServiceBillPDF(tempServiceBill, true); 
 
     console.log("PDF generated successfully, buffer size:", pdfBuffer.length);
     console.log("PDF buffer type:", typeof pdfBuffer);
     console.log("PDF buffer constructor:", pdfBuffer.constructor.name);
 
-    // Send PDF directly as response
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'inline; filename=service-bill-preview.pdf');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -294,8 +280,7 @@ exports.previewServiceBillPDF = async (req, res) => {
   } catch (error) {
     console.error("Error generating preview PDF:", error);
     console.error("Error stack:", error.stack);
-    
-    // Send a more detailed error response
+
     res.status(500).json({ 
       message: "Error generating preview PDF",
       error: error.message,
@@ -304,19 +289,17 @@ exports.previewServiceBillPDF = async (req, res) => {
   }
 };
 
-// Add this to your serviceBillController.js
 exports.downloadServiceBillPDF = async (req, res) => {
   console.log("Downloading service bill PDF for ID:", req.params.id);
   console.log("User making request:", req.user.email);
   
   try {
-    // Allow admin to download any bill, staff to download their own or bills with visibility 'staff'
+    
     let query = { _id: req.params.id };
     if (req.user.role === 'admin' || req.user.role === 'staff') {
-      // Admin and staff can download any bill
-      // No extra filter
+
     } else {
-      // Other users: only their own bills
+      
       query.user = req.user.id;
     }
 
@@ -329,10 +312,8 @@ exports.downloadServiceBillPDF = async (req, res) => {
       });
     }
 
-    // Generate PDF directly from service bill data
-    const pdfBuffer = await generateServiceBillPDF(serviceBill, true); // true indicates return buffer
+    const pdfBuffer = await generateServiceBillPDF(serviceBill, true); 
 
-    // Send PDF directly as response
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=service-bill-${serviceBill.billNumber || serviceBill._id}.pdf`);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -350,16 +331,16 @@ exports.downloadServiceBillPDF = async (req, res) => {
     });
   }
 };
-// Get single service bill
+
 exports.getServiceBill = async (req, res) => {
   try {
     const serviceBill = await ServiceBill.findOne({
       _id: req.params.id,
       $or: [
-        { user: req.user.id }, // Records created by the current user
-        { visibility: 'staff' }, // Or records marked as visible to staff
-        // Or if staff should see all records for the registration number:
-        ...(req.user.role === 'staff' ? [{}] : []) // Staff can see all matching registration numbers
+        { user: req.user.id }, 
+        { visibility: 'staff' }, 
+        
+        ...(req.user.role === 'staff' ? [{}] : []) 
       ]
     });
 
@@ -382,10 +363,9 @@ exports.getServiceBill = async (req, res) => {
   }
 };
 
-// Update service bill
 exports.updateServiceBill = async (req, res) => {
   try {
-    // Allow staff and admin to update their own bills
+    
     let query = { _id: req.params.id };
     if (req.user.role !== 'admin') {
       query.user = req.user._id;
@@ -399,10 +379,8 @@ exports.updateServiceBill = async (req, res) => {
       });
     }
 
-    // Update fields
     serviceBill = Object.assign(serviceBill, req.body);
 
-    // Recalculate amounts if relevant fields are updated
     if (
       req.body.serviceItems ||
       req.body.discount ||
@@ -429,7 +407,6 @@ exports.updateServiceBill = async (req, res) => {
 
     await serviceBill.save();
 
-    // Regenerate PDF if needed
     if (
       req.body.serviceItems ||
       req.body.taxRate ||
@@ -453,7 +430,6 @@ exports.updateServiceBill = async (req, res) => {
   }
 };
 
-// Delete service bill
 exports.deleteServiceBill = async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
@@ -483,16 +459,15 @@ exports.deleteServiceBill = async (req, res) => {
   }
 };
 
-// Generate PDF for service bill
 exports.generateServiceBillPDF = async (req, res) => {
   try {
     const serviceBill = await ServiceBill.findOne({
       _id: req.params.id,
       $or: [
-        { user: req.user.id }, // Records created by the current user
-        { visibility: 'staff' }, // Or records marked as visible to staff
-        // Or if staff should see all records for the registration number:
-        ...(req.user.role === 'staff' ? [{}] : []) // Staff can see all matching registration numbers
+        { user: req.user.id }, 
+        { visibility: 'staff' }, 
+        
+        ...(req.user.role === 'staff' ? [{}] : []) 
       ]
     });
 
@@ -519,12 +494,10 @@ exports.generateServiceBillPDF = async (req, res) => {
   }
 };
 
-// Generate PDF buffer for offline use
 exports.generatePDFBuffer = async (req, res) => {
   try {
     const serviceBillData = req.body;
-    
-    // Validate required fields
+
     if (!serviceBillData.serviceItems || !Array.isArray(serviceBillData.serviceItems)) {
       return res.status(400).json({
         success: false,
@@ -532,7 +505,6 @@ exports.generatePDFBuffer = async (req, res) => {
       });
     }
 
-    // Generate PDF buffer without saving to database
     const pdfBuffer = await generateServiceBillPDF(serviceBillData, true);
 
     res.set({

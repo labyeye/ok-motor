@@ -1,16 +1,15 @@
-// models/AdvanceBill.js
+
 const mongoose = require("mongoose");
 
 const advanceBillSchema = new mongoose.Schema(
   {
-    // Vehicle Reference - New system
+    
     vehicle: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Vehicle",
       index: true,
     },
 
-    // Customer Information
     customerName: {
       type: String,
       required: true,
@@ -40,7 +39,6 @@ const advanceBillSchema = new mongoose.Schema(
       maxlength: 50,
     },
 
-    // Vehicle Information - Legacy fields (kept for backward compatibility)
     vehicleType: {
       type: String,
       enum: ["bike", "scooter", "car", "other"],
@@ -80,7 +78,6 @@ const advanceBillSchema = new mongoose.Schema(
       default: 0,
     },
 
-    // Service Information
     serviceDate: {
       type: Date,
       required: true,
@@ -91,7 +88,6 @@ const advanceBillSchema = new mongoose.Schema(
       required: true,
     },
 
-    // Payment Information
     totalAmount: {
       type: Number,
       required: true,
@@ -129,14 +125,12 @@ const advanceBillSchema = new mongoose.Schema(
     },
     pdfUrl: { type: String },
 
-    // Bill Information
     billNumber: {
       type: String,
       unique: true,
       sparse: true,
     },
 
-    // Version tracking fields
     originalDocumentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "AdvanceBill",
@@ -157,14 +151,12 @@ const advanceBillSchema = new mongoose.Schema(
       ref: "User",
     },
 
-    // User who created this bill
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
 
-    // Status
     status: {
       type: String,
       enum: ["pending", "completed", "cancelled"],
@@ -176,7 +168,6 @@ const advanceBillSchema = new mongoose.Schema(
   }
 );
 
-// Pre-save middleware to calculate amounts and generate unique bill number
 advanceBillSchema.pre("save", async function (next) {
   try {
     if (
@@ -184,7 +175,7 @@ advanceBillSchema.pre("save", async function (next) {
       this.isModified("advancePaid") ||
       this.isModified("discount")
     ) {
-      // Calculate grand total with discount
+      
       this.grandTotal = this.totalAmount - (this.discount || 0);
       this.balanceDue = this.grandTotal - this.advancePaid;
     }
@@ -199,8 +190,7 @@ advanceBillSchema.pre("save", async function (next) {
           .toString()
           .padStart(4, "0");
         const candidate = `ADV-${year}-${random}`;
-        // Check uniqueness
-        // eslint-disable-next-line no-await-in-loop
+
         const existing = await this.constructor
           .findOne({ billNumber: candidate })
           .lean()
@@ -213,7 +203,7 @@ advanceBillSchema.pre("save", async function (next) {
       }
 
       if (!this.billNumber) {
-        // Fallback to timestamp-based bill number to guarantee uniqueness
+        
         this.billNumber = `ADV-${year}-${Date.now().toString().slice(-8)}`;
       }
     }
@@ -224,19 +214,16 @@ advanceBillSchema.pre("save", async function (next) {
   }
 });
 
-// Virtual for formatted total amount
 advanceBillSchema.virtual("formattedTotalAmount").get(function () {
   const val = this.totalAmount != null ? Number(this.totalAmount) : 0;
   return `₹${val.toFixed(2)}`;
 });
 
-// Virtual for formatted advance paid
 advanceBillSchema.virtual("formattedAdvancePaid").get(function () {
   const val = this.advancePaid != null ? Number(this.advancePaid) : 0;
   return `₹${val.toFixed(2)}`;
 });
 
-// Virtual for formatted balance due
 advanceBillSchema.virtual("formattedBalanceDue").get(function () {
   const val = this.balanceDue != null ? Number(this.balanceDue) : 0;
   return `₹${val.toFixed(2)}`;
@@ -246,11 +233,9 @@ advanceBillSchema.virtual("formattedDiscount").get(function () {
   return `₹${val.toFixed(2)}`;
 });
 
-// Ensure virtuals are included in JSON output
 advanceBillSchema.set("toJSON", { virtuals: true });
 advanceBillSchema.set("toObject", { virtuals: true });
 
-// Index for faster queries
 advanceBillSchema.index({ user: 1, createdAt: -1 });
 advanceBillSchema.index({ billNumber: 1 });
 advanceBillSchema.index({ registrationNumber: 1 });

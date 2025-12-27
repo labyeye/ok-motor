@@ -5,12 +5,10 @@ import AuthContext from "../context/AuthContext";
 const PrivateRoute = ({ children, roles }) => {
   const { user, loading } = useContext(AuthContext);
 
-  // Development helper: Log authentication state
   if (process.env.NODE_ENV === "development") {
     console.log("PrivateRoute Debug:", { user, loading, roles });
   }
 
-  // Show loading spinner while checking authentication
   if (loading) {
     return (
       <div
@@ -44,7 +42,6 @@ const PrivateRoute = ({ children, roles }) => {
     );
   }
 
-  // If no user in context, but we have cached user data in localStorage, allow offline access.
   let effectiveUser = user;
   if (!effectiveUser) {
     const cached = localStorage.getItem("cachedUser");

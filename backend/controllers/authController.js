@@ -2,9 +2,6 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const asyncHandler = require('express-async-handler');
 
-// @desc    Authenticate user & get token
-// @route   POST /api/auth/login
-// @access  Public
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -24,9 +21,6 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Register a new user (only admin can do this)
-// @route   POST /api/auth/register
-// @access  Private/Admin
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -58,7 +52,6 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// Generate JWT
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: '30d'

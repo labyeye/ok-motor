@@ -1,4 +1,4 @@
-// BuyLetterHistory.js
+
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -43,7 +43,7 @@ const BuyLetterHistory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  // Remove modal state for editing
+  
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -60,12 +60,11 @@ const BuyLetterHistory = () => {
     const fetchBuyLetters = async () => {
       try {
         setLoading(true);
-        
-        // Check if online
+
         const isOnline = navigator.onLine;
         
         if (isOnline) {
-          // ONLINE - Fetch from server
+          
           const response = await axios.get(
             `https://ok-motor-51l3.vercel.app/api/buy-letter?page=${currentPage}`,
             {
@@ -76,18 +75,18 @@ const BuyLetterHistory = () => {
           setBuyLetters(response.data.buyLetters);
           setTotalPages(response.data.pages);
         } else {
-          // OFFLINE - Fetch from local storage
+          
           console.log('Offline mode - loading from local storage');
           const offlineStorage = (await import('../services/offlineStorage')).default;
           const result = await offlineStorage.find('buyLetters');
           
           if (result.success && result.data) {
-            // Sort by creation date (newest first)
+            
             const sortedData = result.data.sort((a, b) => 
               new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
             );
             setBuyLetters(sortedData);
-            setTotalPages(1); // No pagination for offline data
+            setTotalPages(1); 
           } else {
             setBuyLetters([]);
             setTotalPages(1);
@@ -95,8 +94,7 @@ const BuyLetterHistory = () => {
         }
       } catch (error) {
         console.error("Error details:", error.response?.data || error.message);
-        
-        // If online fetch fails, try offline as fallback
+
         if (navigator.onLine) {
           console.log('Online fetch failed, trying offline fallback');
           try {
@@ -205,11 +203,9 @@ const BuyLetterHistory = () => {
 
     const [hour, minute] = timeString.split(":").map(Number);
 
-    // Convert to 12-hour format with leading zeros and proper AM/PM
-    const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
+    const hours12 = hour % 12 || 12; 
     const ampm = hour >= 12 ? "PM" : "AM";
 
-    // Add leading zero to hours and minutes if needed
     const formattedHours = String(hours12).padStart(2, "0");
     const formattedMinutes = String(minute).padStart(2, "0");
 
@@ -271,7 +267,7 @@ const BuyLetterHistory = () => {
         { name: "Advance History", path: "/advance/history" },
       ],
     },
-    // Add the conditional check here
+    
     ...(user?.role !== "staff"
       ? [
           {
@@ -317,7 +313,7 @@ const BuyLetterHistory = () => {
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    // Handle both string paths and function paths
+    
     const actualPath = typeof path === "function" ? path(user?.role) : path;
     navigate(actualPath);
   };
@@ -515,14 +511,11 @@ const BuyLetterHistory = () => {
       setIsDownloading(true);
       setDownloadProgress(0);
 
-      // Simulate progress
       await simulateProgress();
 
-      // Use the new PDF template loader
       const existingPdfBytes = await loadPDFTemplate('buyletter.pdf');
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      
-      // Format all data for PDF
+
       const formattedData = {
         ...letter,
         buyerName1: letter.buyerName,
@@ -544,7 +537,6 @@ const BuyLetterHistory = () => {
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
       };
 
-      // Fill all form fields
       for (const [fieldName, position] of Object.entries(fieldPositions)) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
@@ -591,7 +583,6 @@ const BuyLetterHistory = () => {
       setIsDownloading(true);
       setDownloadProgress(0);
 
-      // Simulate progress
       await simulateProgress();
       const englishTemplateUrl = "/templates/englishbuyletter.pdf";
       const existingPdfBytes = await fetch(englishTemplateUrl).then((res) =>
@@ -673,7 +664,6 @@ const BuyLetterHistory = () => {
     );
     const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
-    // Header with logo
     page.drawRectangle({
       x: 0,
       y: 780,
@@ -758,7 +748,6 @@ const BuyLetterHistory = () => {
       font: font,
     });
 
-    // Divider line
     page.drawLine({
       start: { x: 50, y: 710 },
       end: { x: 545, y: 710 },
@@ -766,7 +755,6 @@ const BuyLetterHistory = () => {
       color: rgb(0.8, 0.8, 0.8),
     });
 
-    // Customer Information section
     page.drawText("CUSTOMER DETAILS", {
       x: 50,
       y: 690,
@@ -903,7 +891,6 @@ const BuyLetterHistory = () => {
       }
       if (currentLine) lines.push(currentLine);
 
-      // Draw each line
       lines.forEach((line, lineIndex) => {
         page.drawText(line, {
           x: xPos,
@@ -962,7 +949,6 @@ const BuyLetterHistory = () => {
       }
     );
 
-    // Terms and Conditions section
     page.drawText("TERMS & CONDITIONS", {
       x: 40,
       y: 430,
@@ -995,7 +981,6 @@ const BuyLetterHistory = () => {
       });
     });
 
-    // Seller Signature
     page.drawText("Seller Signature", {
       x: 110,
       y: 170,
@@ -1060,7 +1045,7 @@ const BuyLetterHistory = () => {
         const isOnline = navigator.onLine;
         
         if (isOnline) {
-          // ONLINE - Delete from server
+          
           if (!token) {
             alert("You are not authenticated. Please login again.");
             logout();
@@ -1076,7 +1061,7 @@ const BuyLetterHistory = () => {
           setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
           alert("Buy letter deleted successfully!");
         } else {
-          // OFFLINE - Delete from local storage
+          
           const offlineStorage = (await import('../services/offlineStorage')).default;
           const result = await offlineStorage.deleteById('buyLetters', id);
           
@@ -1090,7 +1075,6 @@ const BuyLetterHistory = () => {
       } catch (error) {
         console.error("Error deleting buy letter:", error);
 
-        // Handle authentication errors
         if (error.response?.status === 401) {
           alert("Your session has expired. Please login again.");
           logout();
@@ -1143,7 +1127,7 @@ const BuyLetterHistory = () => {
         ></div>
       )}
 
-      {/* Sidebar */}
+      {}
       <div
         style={{
           ...styles.sidebar,
@@ -1166,7 +1150,7 @@ const BuyLetterHistory = () => {
               width: "100%",
               maxWidth: "25rem",
               height: "9rem",
-              objectFit: "cover", // match CSS
+              objectFit: "cover", 
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
@@ -1187,7 +1171,7 @@ const BuyLetterHistory = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
-                    // Pass the path as-is (could be string or function)
+                    
                     handleMenuClick(item.name, item.path);
                   }
                 }}
@@ -1245,7 +1229,7 @@ const BuyLetterHistory = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
@@ -1325,7 +1309,7 @@ const BuyLetterHistory = () => {
                           >
                             <Download size={16} />
                           </button>
-                          {/* Only show Edit and Delete buttons if user is not staff */}
+                          {}
                           {user?.role !== "staff" && (
                             <>
                               <button

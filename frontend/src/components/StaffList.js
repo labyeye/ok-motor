@@ -27,12 +27,11 @@ const StaffList = () => {
   const navigate = useNavigate();
   const { user,logout } = useContext(AuthContext);
 
-
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeMenu, setActiveMenu] = useState("Staff");
-  const [expandedMenus, setExpandedMenus] = useState({ Staff: true }); // Staff menu starts expanded
+  const [expandedMenus, setExpandedMenus] = useState({ Staff: true }); 
 
   useEffect(() => {
     const fetchStaff = async () => {
@@ -70,7 +69,7 @@ const StaffList = () => {
         });
         setStaff(staff.filter((user) => user._id !== id));
       } catch (err) {
-        // Handle authentication errors
+        
         if (err.response?.status === 401) {
           setError("Your session has expired. Please login again.");
           logout();
@@ -94,14 +93,12 @@ const StaffList = () => {
     }));
   };
 
-  // Handle menu clicks
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
     const actualPath = typeof path === 'function' ? path(user?.role) : path;
     navigate(actualPath);
   };
 
-  // In the menuItems array (around line 250 in BuyLetterPDF.js)
   const menuItems = [
     {
       name: "Dashboard",
@@ -157,7 +154,7 @@ const StaffList = () => {
         { name: "Advance History", path: "/advance/history" },
       ],
     },
-    // Add the conditional check here
+    
     ...(user?.role !== "staff"
       ? [
           {
@@ -193,7 +190,7 @@ const StaffList = () => {
 
   return (
     <div style={styles.container}>
-      {/* Sidebar */}
+      {}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
            <img src={logo} alt="logo" style={{width: '14.5rem', height: '10.5rem', color: '#7c3aed'}} />
@@ -212,7 +209,7 @@ const StaffList = () => {
         if (item.submenu) {
           toggleMenu(item.name);
         } else {
-          // Pass the path as-is (could be string or function)
+          
           handleMenuClick(item.name, item.path);
         }
       }}
@@ -265,7 +262,7 @@ const StaffList = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>

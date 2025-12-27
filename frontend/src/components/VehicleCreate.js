@@ -39,7 +39,6 @@ const VehicleCreate = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // detect edit mode via query param ?vehicleId=
   const searchParams = new URLSearchParams(location.search);
   const editVehicleId = searchParams.get("vehicleId");
 
@@ -92,7 +91,7 @@ const VehicleCreate = () => {
   const formatDateForInput = (d) => {
     if (!d) return "";
     try {
-      // Normalize to yyyy-MM-dd for <input type="date" />
+      
       return new Date(d).toISOString().slice(0, 10);
     } catch (err) {
       return "";
@@ -107,7 +106,6 @@ const VehicleCreate = () => {
       });
       const v = resp.data;
 
-      // Map vehicle fields into formData shape
       setFormData((prev) => ({
         ...prev,
         vehicleType: v.vehicleType || prev.vehicleType,
@@ -145,7 +143,6 @@ const VehicleCreate = () => {
         isActive: typeof v.isActive === "boolean" ? v.isActive : prev.isActive,
       }));
 
-      // populate uploaded images
       setUploadedImages(v.images || (v.primaryImage ? [v.primaryImage] : []));
     } catch (err) {
       console.error("Failed to load vehicle for edit:", err);
@@ -274,12 +271,12 @@ const VehicleCreate = () => {
     setUploadingImages(true);
 
     try {
-      // Upload files sequentially to get fresh auth for each
+      
       const results = [];
 
       for (const file of files) {
         try {
-          // Get FRESH auth for EACH file to avoid token reuse
+          
           const auth = await getImageKitAuth();
 
           if (!auth || !auth.token || !auth.signature || !auth.expire) {
@@ -332,7 +329,6 @@ const VehicleCreate = () => {
           );
         } catch (fileError) {
           console.error(`Failed to upload ${file.name}:`, fileError);
-          // Continue with other files even if one fails
           alert(
             `Failed to upload ${file.name}: ${
               fileError.response?.data?.message || fileError.message

@@ -37,9 +37,6 @@ const GalleryManagement = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
 
-  // We no longer upload directly from the frontend to ImageKit.
-  // Files will be POSTed to the backend which will upload to ImageKit securely.
-
   useEffect(() => {
     if (user?.role !== "admin") {
       navigate("/");
@@ -82,7 +79,6 @@ const GalleryManagement = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // Build a single FormData and send all files to the backend upload endpoint
       const fd = new FormData();
       files.forEach((f) => fd.append("files", f));
 
@@ -233,7 +229,7 @@ const GalleryManagement = () => {
 
   return (
     <div style={styles.container}>
-      {/* Sidebar */}
+      {}
       <div
         style={{
           ...styles.sidebar,
@@ -318,7 +314,7 @@ const GalleryManagement = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         {isMobile && (
           <div style={styles.mobileHeader}>
@@ -621,7 +617,6 @@ const styles = {
   },
 };
 
-// Mobile responsive styles
 if (window.innerWidth <= 768) {
   styles.sidebar.width = "100%";
   styles.mainContent.marginLeft = "0";

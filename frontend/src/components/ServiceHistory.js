@@ -1,4 +1,4 @@
-// ServiceHistory.js
+
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import {
@@ -47,7 +47,6 @@ const ServiceHistory = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
-  // Add this near the top of your component with other utility functions
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -75,36 +74,31 @@ const ServiceHistory = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // Check if online
+
         const isOnline = navigator.onLine;
 
         if (isOnline) {
-          // ONLINE - Fetch from server
-          // Fetch service bills
+
           const serviceResponse = await axios.get(
             `https://ok-motor-51l3.vercel.app/api/service-bills?page=${currentPage}`
           );
           setServiceBills(serviceResponse.data.data || serviceResponse.data);
           setTotalPages(serviceResponse.data.totalPages || 1);
 
-          // Fetch purchase history (if needed)
           const purchaseResponse = await axios.get(
             `${config.API_BASE_URL}/buy-letter`
           );
           setPurchaseHistory(purchaseResponse.data.data || purchaseResponse.data);
 
-          // Fetch sell history (if needed)
           const sellResponse = await axios.get(
             `https://ok-motor-51l3.vercel.app/api/sell-letters`
           );
           setSellHistory(sellResponse.data.data || sellResponse.data);
         } else {
-          // OFFLINE - Fetch from local storage
+          
           console.log('Offline mode - loading service bills from local storage');
           const offlineStorage = (await import('../services/offlineStorage')).default;
-          
-          // Fetch service bills
+
           const serviceResult = await offlineStorage.find('serviceBills');
           if (serviceResult.success && serviceResult.data) {
             const sortedData = serviceResult.data.sort((a, b) => 
@@ -114,16 +108,14 @@ const ServiceHistory = () => {
           } else {
             setServiceBills([]);
           }
-          
-          // Fetch buy letters
+
           const buyResult = await offlineStorage.find('buyLetters');
           if (buyResult.success && buyResult.data) {
             setPurchaseHistory(buyResult.data);
           } else {
             setPurchaseHistory([]);
           }
-          
-          // Fetch sell letters
+
           const sellResult = await offlineStorage.find('sellLetters');
           if (sellResult.success && sellResult.data) {
             setSellHistory(sellResult.data);
@@ -135,8 +127,7 @@ const ServiceHistory = () => {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        
-        // If online fetch fails, try offline as fallback
+
         if (navigator.onLine) {
           console.log('Online fetch failed, trying offline fallback');
           try {
@@ -186,7 +177,6 @@ const ServiceHistory = () => {
     const term = e.target.value;
     setSearchTerm(term);
 
-    // If the search term is a registration number and has at least 3 characters
     if (term.length >= 3) {
       setShowVehicleHistory(true);
     } else {
@@ -417,7 +407,7 @@ const ServiceHistory = () => {
     await simulateProgress();
 
     try {
-      // Check if user is authenticated
+      
       const token = localStorage.getItem('token');
       if (!token) {
         alert("You are not authenticated. Please login again.");
@@ -426,10 +416,8 @@ const ServiceHistory = () => {
         return;
       }
 
-      // Test authentication first
       await testAuth();
 
-      // Debug: Log token info
       console.log('Token exists:', !!token);
       console.log('User:', user);
 
@@ -437,7 +425,7 @@ const ServiceHistory = () => {
         `https://ok-motor-51l3.vercel.app/api/service-bills/${billId}/download`,
         {
           responseType: "blob",
-          timeout: 30000, // 30 second timeout
+          timeout: 30000, 
         }
       );
 
@@ -451,8 +439,7 @@ const ServiceHistory = () => {
     } catch (error) {
       console.error("Error downloading PDF:", error);
       console.error("Error response:", error.response);
-      
-      // Handle specific errors
+
       if (error.response?.status === 401) {
         alert("Your session has expired. Please login again.");
         logout();
@@ -625,7 +612,7 @@ const ServiceHistory = () => {
         ></div>
       )}
 
-      {/* Sidebar */}
+      {}
       <div style={{
         ...styles.sidebar,
         ...(isMobile
@@ -646,7 +633,7 @@ const ServiceHistory = () => {
               width: "100%",
               maxWidth: "25rem",
               height: "9rem",
-              objectFit: "cover", // match CSS
+              objectFit: "cover", 
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
@@ -724,7 +711,7 @@ const ServiceHistory = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
@@ -755,7 +742,7 @@ const ServiceHistory = () => {
             </div>
           ) : showVehicleHistory ? (
             <>
-              {/* 1. Purchase History Table - Always shown with heading */}
+              {}
               <div style={{ marginBottom: "32px" }}>
                 <h3
                   style={{
@@ -808,7 +795,7 @@ const ServiceHistory = () => {
                 )}
               </div>
 
-              {/* 2. Sell History Table - Always shown with heading */}
+              {}
               <div style={{ marginBottom: "32px" }}>
                 <h3
                   style={{
@@ -861,7 +848,7 @@ const ServiceHistory = () => {
                 )}
               </div>
 
-              {/* 3. Service History Table - Always shown with heading */}
+              {}
               <div style={{ marginBottom: "32px" }}>
                 <h3
                   style={{

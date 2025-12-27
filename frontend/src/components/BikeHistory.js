@@ -1,4 +1,4 @@
-// BikeHistory.js
+
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
@@ -45,7 +45,6 @@ const BikeHistory = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
 
-  // Helper functions for PDF generation
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -183,7 +182,6 @@ const BikeHistory = () => {
           ?.join("-") || ""
       : "";
 
-  // Buy Letter Field Positions
   const buyLetterFieldPositions = {
     sellerName: { x: 34, y: 632, size: 11 },
     sellerFatherName: { x: 322, y: 632, size: 11 },
@@ -221,7 +219,6 @@ const BikeHistory = () => {
     note: { x: 60, y: 18, size: 10 },
   };
 
-  // Sell Letter Field Positions
   const sellLetterFieldPositions = {
     vehicleName: { x: 303, y: 696, size: 11 },
     vehicleModel: { x: 39, y: 674, size: 11 },
@@ -250,10 +247,9 @@ const BikeHistory = () => {
     note: { x: 60, y: 33, size: 10 },
   };
 
-  // PDF Generation Functions
   const downloadBuyLetterPDF = async (letter) => {
     try {
-      // Use the new PDF template loader
+      
       const existingPdfBytes = await loadPDFTemplate('buyletter.pdf');
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       
@@ -274,7 +270,7 @@ const BikeHistory = () => {
         saleAmount: formatRupee(letter.saleAmount),
         vehiclekm: formatKm(letter.vehiclekm),
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
-        // Additional fields from BuyLetter model
+        
         dealername: letter.dealername || "",
         dealeraddress: letter.dealeraddress || "",
         selleraadhar: letter.selleraadhar || "",
@@ -287,7 +283,6 @@ const BikeHistory = () => {
         note: letter.note || "",
       };
 
-      // Fill all form fields
       for (const [fieldName, position] of Object.entries(buyLetterFieldPositions)) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
@@ -299,7 +294,6 @@ const BikeHistory = () => {
         }
       }
 
-      // Add amount in words after sale amount
       const saleAmountText = formattedData.saleAmount || "";
       const saleAmountWidth = saleAmountText.length * (buyLetterFieldPositions.saleAmount.size / 2);
       const amountInWordsX = buyLetterFieldPositions.saleAmount.x + saleAmountWidth + 1.4 * (buyLetterFieldPositions.saleAmount.size / 2);
@@ -311,7 +305,6 @@ const BikeHistory = () => {
         color: rgb(0, 0, 0),
       });
 
-      // Add invoice page for buy letters
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
@@ -334,7 +327,7 @@ const BikeHistory = () => {
 
   const downloadSellLetterPDF = async (letter) => {
     try {
-      // Use the new PDF template loader
+      
       const existingPdfBytes = await loadPDFTemplate('sellletter.pdf');
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       
@@ -351,7 +344,7 @@ const BikeHistory = () => {
         previousTime: formatTime12Hour(letter.previousTime || letter.todayTime || "12:00"),
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
         saleAmount: formatRupee(letter.saleAmount),
-        // Additional fields from SellLetter model
+        
         buyerPhone: letter.buyerPhone || "",
         buyerPhone2: letter.buyerPhone2 || "",
         buyerAadhar: letter.buyerAadhar || "",
@@ -360,7 +353,6 @@ const BikeHistory = () => {
         note: letter.note || "",
       };
 
-      // Fill all form fields
       for (const [fieldName, position] of Object.entries(sellLetterFieldPositions)) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
@@ -372,7 +364,6 @@ const BikeHistory = () => {
         }
       }
 
-      // Add amount in words after sale amount
       if (formattedData.saleAmount && formattedData.amountInWords) {
         const page = pdfDoc.getPages()[0];
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -381,10 +372,9 @@ const BikeHistory = () => {
         const xBase = sellLetterFieldPositions.saleAmount.x;
         const yBase = sellLetterFieldPositions.saleAmount.y;
 
-        // Draw Amount in Words right next to it
         const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
         page.drawText(formattedData.amountInWords, {
-          x: xBase + saleTextWidth + 8, // 8px padding
+          x: xBase + saleTextWidth + 8, 
           y: yBase,
           size: 10,
           color: rgb(0, 0, 0),
@@ -392,7 +382,6 @@ const BikeHistory = () => {
         });
       }
 
-      // Add invoice page for sell letters
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoiceForSell(invoicePage, pdfDoc, letter);
 
@@ -413,7 +402,6 @@ const BikeHistory = () => {
     }
   };
 
-  // Draw Vehicle Invoice for Buy Letters
   const drawVehicleInvoice = async (page, pdfDoc, letter) => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -423,7 +411,6 @@ const BikeHistory = () => {
     );
     const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
-    // Header with logo
     page.drawRectangle({
       x: 0,
       y: 780,
@@ -508,7 +495,6 @@ const BikeHistory = () => {
       font: font,
     });
 
-    // Divider line
     page.drawLine({
       start: { x: 50, y: 710 },
       end: { x: 545, y: 710 },
@@ -516,7 +502,6 @@ const BikeHistory = () => {
       color: rgb(0.8, 0.8, 0.8),
     });
 
-    // Customer Information section
     page.drawText("CUSTOMER DETAILS", {
       x: 50,
       y: 690,
@@ -662,7 +647,6 @@ const BikeHistory = () => {
       }
       if (currentLine) lines.push(currentLine);
 
-      // Draw each line
       lines.forEach((line, lineIndex) => {
         page.drawText(line, {
           x: xPos,
@@ -721,7 +705,6 @@ const BikeHistory = () => {
       }
     );
 
-    // Terms and Conditions section
     page.drawText("TERMS & CONDITIONS", {
       x: 40,
       y: 430,
@@ -754,7 +737,6 @@ const BikeHistory = () => {
       });
     });
 
-    // Additional Notes
     if (letter.note) {
       page.drawText("ADDITIONAL NOTES", {
         x: 40,
@@ -764,7 +746,6 @@ const BikeHistory = () => {
         font: boldFont,
       });
 
-      // Handle long notes by wrapping text
       const noteText = letter.note;
       const maxNoteWidth = 500;
       const noteLines = [];
@@ -794,7 +775,6 @@ const BikeHistory = () => {
       });
     }
 
-    // Seller Signature
     page.drawText("Seller Signature", {
       x: 110,
       y: 170,
@@ -852,7 +832,6 @@ const BikeHistory = () => {
     );
   };
 
-  // Draw Vehicle Invoice for Sell Letters (matching SellLetterHistory.js)
   const drawVehicleInvoiceForSell = async (page, pdfDoc, letter) => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -862,7 +841,6 @@ const BikeHistory = () => {
     );
     const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
-    // Header with logo
     page.drawRectangle({
       x: 0,
       y: 780,
@@ -947,7 +925,6 @@ const BikeHistory = () => {
       font: font,
     });
 
-    // Divider line
     page.drawLine({
       start: { x: 50, y: 710 },
       end: { x: 545, y: 710 },
@@ -955,7 +932,6 @@ const BikeHistory = () => {
       color: rgb(0.8, 0.8, 0.8),
     });
 
-    // Customer Information section (Buyer details for sell letter)
     page.drawText("BUYER DETAILS", {
       x: 50,
       y: 690,
@@ -1108,7 +1084,6 @@ const BikeHistory = () => {
       }
       if (currentLine) lines.push(currentLine);
 
-      // Draw each line
       lines.forEach((line, lineIndex) => {
         page.drawText(line, {
           x: xPos,
@@ -1168,7 +1143,6 @@ const BikeHistory = () => {
       }
     );
 
-    // Warranty and Guarantee Certificate section
     page.drawRectangle({
       x: 0,
       y: 335,
@@ -1192,7 +1166,6 @@ const BikeHistory = () => {
       font: font,
     });
 
-    // Terms and Conditions section with warranty details
     page.drawText("TERMS & CONDITIONS", {
       x: 50,
       y: 305,
@@ -1227,7 +1200,6 @@ const BikeHistory = () => {
       });
     });
 
-    // Additional Notes
     if (letter.note) {
       page.drawText("ADDITIONAL NOTES", {
         x: 40,
@@ -1237,7 +1209,6 @@ const BikeHistory = () => {
         font: boldFont,
       });
 
-      // Handle long notes by wrapping text
       const noteText = letter.note;
       const maxNoteWidth = 500;
       const noteLines = [];
@@ -1267,7 +1238,6 @@ const BikeHistory = () => {
       });
     }
 
-    // Signature lines
     page.drawText("Buyer Signature", {
       x: 120,
       y: 70,
@@ -1346,7 +1316,6 @@ const BikeHistory = () => {
           ),
         ]);
 
-      // Handle potential errors in individual requests
       const buyData =
         buyLetters.status === 200
           ? Array.isArray(buyLetters.data)
@@ -1417,10 +1386,9 @@ const BikeHistory = () => {
     }
   }, [searchTerm]);
 
-  // Preview PDF functions for buy and sell letters
   const previewBuyLetterPDF = async (letter) => {
     try {
-      // Use the new PDF template loader
+      
       const existingPdfBytes = await loadPDFTemplate('buyletter.pdf');
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       
@@ -1441,7 +1409,7 @@ const BikeHistory = () => {
         saleAmount: formatRupee(letter.saleAmount),
         vehiclekm: formatKm(letter.vehiclekm),
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
-        // Additional fields from BuyLetter model
+        
         dealername: letter.dealername || "",
         dealeraddress: letter.dealeraddress || "",
         selleraadhar: letter.selleraadhar || "",
@@ -1454,7 +1422,6 @@ const BikeHistory = () => {
         note: letter.note || "",
       };
 
-      // Fill all form fields
       for (const [fieldName, position] of Object.entries(buyLetterFieldPositions)) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
@@ -1466,7 +1433,6 @@ const BikeHistory = () => {
         }
       }
 
-      // Add amount in words after sale amount
       const saleAmountText = formattedData.saleAmount || "";
       const saleAmountWidth = saleAmountText.length * (buyLetterFieldPositions.saleAmount.size / 2);
       const amountInWordsX = buyLetterFieldPositions.saleAmount.x + saleAmountWidth + 1.4 * (buyLetterFieldPositions.saleAmount.size / 2);
@@ -1478,15 +1444,13 @@ const BikeHistory = () => {
         color: rgb(0, 0, 0),
       });
 
-      // Add invoice page for buy letters
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
-      
-      // Show in modal instead of downloading
+
       setPdfUrl(url);
       setShowPdfModal(true);
     } catch (error) {
@@ -1497,7 +1461,7 @@ const BikeHistory = () => {
 
   const previewSellLetterPDF = async (letter) => {
     try {
-      // Use the new PDF template loader
+      
       const existingPdfBytes = await loadPDFTemplate('sellletter.pdf');
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       
@@ -1514,7 +1478,7 @@ const BikeHistory = () => {
         previousTime: formatTime12Hour(letter.previousTime || letter.todayTime || "12:00"),
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
         saleAmount: formatRupee(letter.saleAmount),
-        // Additional fields from SellLetter model
+        
         buyerPhone: letter.buyerPhone || "",
         buyerPhone2: letter.buyerPhone2 || "",
         buyerAadhar: letter.buyerAadhar || "",
@@ -1523,7 +1487,6 @@ const BikeHistory = () => {
         note: letter.note || "",
       };
 
-      // Fill all form fields
       for (const [fieldName, position] of Object.entries(sellLetterFieldPositions)) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
@@ -1535,7 +1498,6 @@ const BikeHistory = () => {
         }
       }
 
-      // Add amount in words after sale amount
       if (formattedData.saleAmount && formattedData.amountInWords) {
         const page = pdfDoc.getPages()[0];
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -1544,10 +1506,9 @@ const BikeHistory = () => {
         const xBase = sellLetterFieldPositions.saleAmount.x;
         const yBase = sellLetterFieldPositions.saleAmount.y;
 
-        // Draw Amount in Words right next to it
         const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
         page.drawText(formattedData.amountInWords, {
-          x: xBase + saleTextWidth + 8, // 8px padding
+          x: xBase + saleTextWidth + 8, 
           y: yBase,
           size: 10,
           color: rgb(0, 0, 0),
@@ -1555,15 +1516,13 @@ const BikeHistory = () => {
         });
       }
 
-      // Add invoice page for sell letters
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoiceForSell(invoicePage, pdfDoc, letter);
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
-      
-      // Show in modal instead of downloading
+
       setPdfUrl(url);
       setShowPdfModal(true);
     } catch (error) {
@@ -1575,7 +1534,7 @@ const BikeHistory = () => {
   const fetchPdf = async (id, type) => {
     try {
       if (type === "buy") {
-        // For buy letters, find the letter data and generate PDF preview
+        
         const letter = bikeHistory.find(item => item._id === id && item.type === "buy");
         if (letter) {
           await previewBuyLetterPDF(letter);
@@ -1584,7 +1543,7 @@ const BikeHistory = () => {
         }
         return;
       } else if (type === "sell") {
-        // For sell letters, find the letter data and generate PDF preview
+        
         const letter = bikeHistory.find(item => item._id === id && item.type === "sell");
         if (letter) {
           await previewSellLetterPDF(letter);
@@ -1620,7 +1579,7 @@ const BikeHistory = () => {
   const downloadPdf = async (id, type, fileName) => {
     try {
       if (type === "buy") {
-        // For buy letters, find the letter data and generate PDF
+        
         const letter = bikeHistory.find(item => item._id === id && item.type === "buy");
         if (letter) {
           await downloadBuyLetterPDF(letter);
@@ -1629,7 +1588,7 @@ const BikeHistory = () => {
         }
         return;
       } else if (type === "sell") {
-        // For sell letters, find the letter data and generate PDF
+        
         const letter = bikeHistory.find(item => item._id === id && item.type === "sell");
         if (letter) {
           await downloadSellLetterPDF(letter);
@@ -1747,7 +1706,7 @@ const BikeHistory = () => {
 
   const getFileName = (item) => {
     const registrationNumber = searchTerm.replace(/\s+/g, '_');
-    const date = new Date(item.date).toLocaleDateString('en-IN').replace(/\//g, '-');
+    const date = new Date(item.date).toLocaleDateString('en-IN').replace(/\
     
     switch (item.type) {
       case "buy":
@@ -1881,7 +1840,7 @@ const BikeHistory = () => {
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    // Handle both string paths and function paths
+    
     const actualPath = typeof path === "function" ? path(user?.role) : path;
     navigate(actualPath);
   };
@@ -1953,7 +1912,7 @@ const BikeHistory = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
-                    // Pass the path as-is (could be string or function)
+                    
                     handleMenuClick(item.name, item.path);
                   }
                 }}
@@ -2013,7 +1972,6 @@ const BikeHistory = () => {
 
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
-          
 
           <div style={styles.searchContainer}>
             <div style={styles.searchInputContainer}>
@@ -2117,7 +2075,7 @@ const BikeHistory = () => {
         </div>
       </div>
 
-      {/* PDF Preview Modal */}
+      { }
       {showPdfModal && (
         <div style={styles.pdfModalOverlay}>
           <div style={styles.pdfModalContainer}>
@@ -2437,7 +2395,7 @@ const styles = {
     gap: "8px",
     alignItems: "center",
   },
-  // PDF Modal Styles
+  
   pdfModalOverlay: {
     position: "fixed",
     top: 0,

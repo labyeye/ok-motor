@@ -6,9 +6,6 @@ const getUsers = asyncHandler(async (req, res) => {
   res.json(users);
 });
 
-// @desc    Create a new staff user
-// @route   POST /api/users
-// @access  Private/Admin
 const createUser = asyncHandler(async (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -41,9 +38,6 @@ const createUser = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Update user
-// @route   PUT /api/users/:id
-// @access  Private/Admin
 const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
 
@@ -73,9 +67,6 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Delete user
-// @route   DELETE /api/users/:id
-// @access  Private/Admin
 const deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
 

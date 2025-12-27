@@ -1,4 +1,4 @@
-// utils/pdfGenerator.js
+
 const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
@@ -7,7 +7,7 @@ const formatTime12Hour = (timeString) => {
   try {
     if (!timeString) return "";
 
-    // Handle Date objects
+    
     if (timeString instanceof Date) {
       const hours = timeString.getHours();
       const minutes = timeString.getMinutes();
@@ -19,14 +19,14 @@ const formatTime12Hour = (timeString) => {
       )} ${ampm}`;
     }
 
-    // Handle string inputs
+    
     if (typeof timeString === "string") {
-      // Check if it's already in 12-hour format
+      
       if (timeString.includes("AM") || timeString.includes("PM")) {
         return timeString;
       }
 
-      // Handle ISO format or HH:MM format
+      
       const date = new Date(timeString);
       if (!isNaN(date.getTime())) {
         const hours = date.getHours();
@@ -39,7 +39,7 @@ const formatTime12Hour = (timeString) => {
         )} ${ampm}`;
       }
 
-      // Handle simple HH:MM strings
+      
       const [hour, minute] = timeString.split(":").map(Number);
       if (!isNaN(hour)) {
         const hours12 = hour % 12 || 12;
@@ -59,12 +59,12 @@ const formatTime12Hour = (timeString) => {
 
 exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
   try {
-    // Defensive: convert Mongoose doc to plain object
+    
     if (serviceBill && typeof serviceBill.toObject === "function") {
       serviceBill = serviceBill.toObject();
     }
 
-    // Validate input
+    
     if (!serviceBill || typeof serviceBill !== "object") {
       throw new Error("Invalid serviceBill parameter: must be an object");
     }
@@ -72,7 +72,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       throw new Error("Invalid serviceBill: serviceItems must be an array");
     }
 
-    // Parse all numeric fields safely
+    
     const validatedServiceBill = {
       ...serviceBill,
       totalAmount: parseFloat(serviceBill.totalAmount) || 0,
@@ -101,7 +101,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     };
     serviceBill = validatedServiceBill;
 
-    // Set defaults for missing string fields
+    
     serviceBill.paymentMethod = serviceBill.paymentMethod || "cash";
     serviceBill.paymentStatus = serviceBill.paymentStatus || "pending";
     serviceBill.vehicleType = serviceBill.vehicleType || "bike";
@@ -113,7 +113,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     serviceBill.vehicleBrand = serviceBill.vehicleBrand || "";
     serviceBill.vehicleModel = serviceBill.vehicleModel || "";
 
-    // PDF generation
+    
     const pdfDoc = await PDFDocument.create();
     const pages = [];
     let currentPage = pdfDoc.addPage([595, 842]);
@@ -122,13 +122,13 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const font = await pdfDoc.embedFont("Helvetica");
     const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
 
-    // Load logo from multiple possible locations (source, public, env override)
+    
     const locateLogo = () => {
       const candidates = [];
       if (process.env.LOGO_PATH) candidates.push(process.env.LOGO_PATH);
-      // Backend assets location (for Vercel deployment)
+      
       candidates.push(path.join(__dirname, "../assets/images/okmotorback.png"));
-      // Common locations relative to this file
+      
       candidates.push(path.join(__dirname, "../../frontend/src/images/okmotorback.png"));
       candidates.push(path.join(__dirname, "../../frontend/public/images/okmotorback.png"));
       candidates.push(path.join(__dirname, "../../frontend/public/okmotorback.png"));
@@ -168,7 +168,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       console.warn('Current __dirname:', __dirname);
     }
 
-    // Function to add watermark to a page
+    
     const addWatermark = (page) => {
       if (logoImage) {
         console.log("Drawing watermark logo at x:280, y:200, size:450x400");
@@ -185,7 +185,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       }
     };
 
-    // Function to add page number to a page
+    
     const addPageNumber = (page, currentPageNum, totalPages) => {
       page.drawText(`${currentPageNum}/${totalPages}`, {
         x: 550,
@@ -196,10 +196,10 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     };
 
-    // Add watermark to first page
+    
     addWatermark(currentPage);
 
-    // Header Section
+    
     currentPage.drawRectangle({
       x: 0,
       y: 780,
@@ -229,7 +229,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    // Title Section
+    
     currentPage.drawRectangle({
       x: 0,
       y: 750,
@@ -246,7 +246,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    // Invoice Info
+    
     const invoiceNumber =
       serviceBill.billNumber ||
       `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)
@@ -261,7 +261,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: font,
     });
 
-    // Use India Standard Time (Asia/Kolkata) for printed date/time so server TZ doesn't affect output
+    
     const now = new Date();
     const istDateStr = now.toLocaleDateString("en-IN", {
       timeZone: "Asia/Kolkata",
@@ -284,7 +284,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       }
     );
 
-    // Divider
+    
     currentPage.drawLine({
       start: { x: 50, y: 710 },
       end: { x: 545, y: 710 },
@@ -292,7 +292,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.8, 0.8, 0.8),
     });
 
-    // Business Information (if enabled)
+    
     if (Boolean(serviceBill.taxEnabled)) {
       currentPage.drawText("BUSINESS INFORMATION", {
         x: 50,
@@ -335,13 +335,13 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         });
       });
 
-      // Adjust Y positions for other sections
+      
       var customerY = 600;
     } else {
       var customerY = 690;
     }
 
-    // Customer Information
+    
     currentPage.drawText("CUSTOMER DETAILS", {
       x: 50,
       y: customerY,
@@ -403,7 +403,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    // Vehicle condition
+    
     currentPage.drawRectangle({
       x: leftColumnX,
       y: columnY - 30,
@@ -464,7 +464,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     });
 
-    // Right Column - Service Information
+    
     currentPage.drawText("SERVICE DETAILS", {
       x: rightColumnX,
       y: columnY,
@@ -510,7 +510,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       },
     ];
 
-    // Draw the first three service details
+    
     serviceDetails.forEach((detail, index) => {
       currentPage.drawText(detail.label, {
         x: rightColumnX + 10,
@@ -529,7 +529,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     });
 
-    // Immediately after service type, add custom description if applicable
+    
     const isCustomService =
       serviceBill.serviceType &&
       serviceBill.serviceType.toLowerCase() === "custom";
@@ -548,7 +548,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: fontBold,
       });
 
-      // Handle multi-line description
+      
       const description = serviceBill.customServiceDescription;
       const maxCharsPerLine = 30;
       const descLines = [];
@@ -567,15 +567,15 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     }
 
-    // Service Items Table with pagination
+    
     const itemsStartY = columnY - 140;
-    const minItemsFirstPage = 25; // Minimum items to show on first page
-    const maxItemsPerPage = 25; // Items per page after first page
+    const minItemsFirstPage = 25; 
+    const maxItemsPerPage = 25; 
     let currentY = itemsStartY;
     let currentPageItems = 0;
     let isFirstPage = true;
 
-    // Draw title only on first page
+    
     if (serviceBill.serviceItems.length > 0) {
       currentPage.drawText("SERVICE ITEMS", {
         x: 50,
@@ -587,7 +587,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       currentY -= 20;
     }
 
-    // Function to draw table headers (added Discount column)
+    
     const drawServiceItemHeaders = (page, y) => {
       const serviceHeaders = [
         "#",
@@ -597,7 +597,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         "Disc Rs.",
         "Amount Rs.",
       ];
-      // positions: index, desc, qty, rate, discount, amount
+      
       const serviceHeaderPositions = [60, 100, 300, 350, 400, 470];
 
       serviceHeaders.forEach((header, index) => {
@@ -611,24 +611,24 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     };
 
-    // Draw headers on first page
+    
     drawServiceItemHeaders(currentPage, currentY);
     currentY -= 20;
 
-    // Draw all service items with pagination
-    // Ensure serviceItems is an array and has valid items
+    
+    
     if (!Array.isArray(serviceBill.serviceItems)) {
       console.warn("serviceItems is not an array:", serviceBill.serviceItems);
       return;
     }
 
     serviceBill.serviceItems.forEach((item, index) => {
-      // Ensure item has required properties
+      
       if (!item || typeof item !== "object") {
         console.warn("Invalid service item at index", index, ":", item);
         return;
       }
-      // Check if we need a new page
+      
       const shouldCreateNewPage =
         (!isFirstPage && currentPageItems >= maxItemsPerPage) ||
         (isFirstPage &&
@@ -636,20 +636,20 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
           currentY < 300);
 
       if (shouldCreateNewPage) {
-        // Create new page
+        
         currentPage = pdfDoc.addPage([595, 842]);
         pages.push(currentPage);
-        addWatermark(currentPage); // Add watermark to new page
+        addWatermark(currentPage); 
         isFirstPage = false;
-        currentY = 780; // Start near top of new page
+        currentY = 780; 
         currentPageItems = 0;
 
-        // Draw headers on new page
+        
         drawServiceItemHeaders(currentPage, currentY);
         currentY -= 20;
       }
 
-      // Draw item number
+      
       currentPage.drawText((index + 1).toString(), {
         x: 60,
         y: currentY,
@@ -658,7 +658,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      // Handle description wrapping
+      
       const description = item.description;
       const maxWidth = 180;
       const lines = [];
@@ -676,7 +676,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       }
       if (currentLine) lines.push(currentLine);
 
-      // Draw description lines
+      
       lines.forEach((line, lineIndex) => {
         currentPage.drawText(line, {
           x: 100,
@@ -689,7 +689,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
       const descHeight = Math.max(lines.length * 12, 12);
 
-      // Draw quantity, rate, discount and amount
+      
       currentPage.drawText(item.quantity.toString(), {
         x: 300,
         y: currentY,
@@ -698,7 +698,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      // Ensure rate is a number and handle potential string values
+      
       const rate = parseFloat(item.rate) || 0;
       currentPage.drawText(rate.toFixed(2), {
         x: 350,
@@ -708,14 +708,14 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      // Compute amount (already validated earlier) and per-unit charged amount
+      
       const amount = parseFloat(item.amount) || 0;
       const qty = parseFloat(item.quantity) || 0;
       const perUnitAmount = qty > 0 ? amount / qty : rate;
-      // Discount per unit = rate - perUnitAmount (how much less than rate we charged)
+      
       const discountPerUnit = rate - perUnitAmount;
 
-      // Draw discount per unit
+      
       currentPage.drawText(discountPerUnit.toFixed(2), {
         x: 400,
         y: currentY,
@@ -736,18 +736,18 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       currentPageItems++;
     });
 
-    // Ensure we have enough space for totals and footer (about 300pt)
+    
     if (currentY < 300) {
       currentPage = pdfDoc.addPage([595, 842]);
       pages.push(currentPage);
-      addWatermark(currentPage); // Add watermark to new page
-      currentY = 700; // Start lower on new page to leave room
+      addWatermark(currentPage); 
+      currentY = 700; 
     }
 
-    // Use dynamic Y position for all totals and subsequent sections
+    
     let sectionY = currentY;
 
-    // Totals Section
+    
     currentPage.drawText("Subtotal:", {
       x: 350,
       y: sectionY,
@@ -784,7 +784,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       sectionY -= 20;
     }
 
-    // Discount
+    
     let discountAmount = 0;
     let discountLabel = "Discount:";
     if (serviceBill.discountType === "percentage") {
@@ -810,7 +810,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
     sectionY -= 20;
 
-    // Advance Paid
+    
     currentPage.drawText("Advance Paid:", {
       x: 350,
       y: sectionY,
@@ -828,7 +828,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
     sectionY -= 20;
 
-    // Balance Due
+    
     currentPage.drawText("Balance Due:", {
       x: 350,
       y: sectionY,
@@ -863,7 +863,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     sectionY -= 40;
-    // Payment Information
+    
     currentPage.drawText("Payment Method:", {
       x: 50,
       y: sectionY,
@@ -899,7 +899,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     );
     sectionY -= 20;
 
-    // Issues / Notes / Warranty - dynamic wrapping and spacing
+    
     const labelX = 50;
     const contentX = 150;
     const rightMargin = 545;
@@ -923,7 +923,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
           if (currentLine) {
             lines.push(currentLine);
           }
-          // If single word longer than maxWidth, split by characters
+          
           if (font.widthOfTextAtSize(word, size) > maxWidth) {
             let sub = "";
             for (const ch of word) {
@@ -954,7 +954,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const notesLines = wrapTextByWidth(notes, contentWidth, font, fontSize);
     const warrantyLines = wrapTextByWidth(warranty, contentWidth, font, fontSize);
 
-    // Ensure we have enough space; if not, add a page
+    
     const neededHeight =
       (issuesLines.length > 0 ? (issuesLines.length + 1) * lineHeight + 8 : 0) +
       (notesLines.length > 0 ? (notesLines.length + 1) * lineHeight + 8 : 0) +
@@ -1035,15 +1035,15 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       cursorY -= 8;
     }
 
-    // move sectionY down for any following content (footer etc.)
+    
     sectionY = cursorY;
 
-    // Grand Total at the very end
+    
 
-    // Footer with Signatures
+    
     const footerY = 80;
 
-    // Customer Signature
+    
     currentPage.drawText("Customer Signature", {
       x: 100,
       y: footerY,
@@ -1059,7 +1059,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.6, 0.6, 0.6),
     });
 
-    // Authorized Signatory
+    
     currentPage.drawText("Authorized Signatory", {
       x: 350,
       y: footerY,
@@ -1075,7 +1075,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.6, 0.6, 0.6),
     });
 
-    // Thank you message
+    
     currentPage.drawText("Thank you for your business!", {
       x: 220,
       y: footerY - 30,
@@ -1084,7 +1084,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    // Company info
+    
     currentPage.drawText(
       "OK MOTORS | Pillar num.53, Bailey Rd,  Raja Bazar,  Patna, Bihar 800014",
       {
@@ -1096,7 +1096,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       }
     );
 
-    // Add page numbers to all pages
+    
     const totalPages = pages.length;
     pages.forEach((page, index) => {
       addPageNumber(page, index + 1, totalPages);
@@ -1105,7 +1105,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const pdfBytes = await pdfDoc.save();
     console.log("PDF saved, bytes length:", pdfBytes.length);
 
-    // Always return buffer, never write to disk (Vercel-compatible)
+    
     console.log("Returning buffer for download/preview (Vercel-compatible)");
     return Buffer.from(pdfBytes);
   } catch (error) {

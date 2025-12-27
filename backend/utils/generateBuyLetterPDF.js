@@ -1,4 +1,4 @@
-// utils/generateBuyLetterPDF.js
+
 const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
@@ -142,7 +142,7 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
   try {
     console.log("Starting PDF generation for buy letter:", buyLetterData._id || "new letter");
 
-    // Load PDF template
+    
     const templatePath = language === "hindi"
       ? path.join(__dirname, "../../frontend/public/templates/buyletter.pdf")
       : path.join(__dirname, "../../frontend/public/templates/englishbuyletter.pdf");
@@ -155,7 +155,7 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const firstPage = pdfDoc.getPages()[0];
 
-    // Format data
+    
     const formattedData = {
       ...buyLetterData,
       saleDate: formatDate(buyLetterData.saleDate),
@@ -169,7 +169,7 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
       amountInWords: formatIndianAmountInWords(buyLetterData.saleAmount),
     };
 
-    // Field positions for Hindi template
+    
     const fieldPositions = {
       sellerName: { x: 34, y: 632, size: 11 },
       sellerFatherName: { x: 322, y: 632, size: 11 },
@@ -207,7 +207,7 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
       note: { x: 58, y: 18, size: 10 },
     };
 
-    // Fill all form fields
+    
     for (const [fieldName, position] of Object.entries(fieldPositions)) {
       if (fieldName === "selleraadharphone" && formattedData.selleraadharphone) {
         const combinedPhones = `${formattedData.selleraadharphone}${
@@ -229,7 +229,7 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
       }
     }
 
-    // Add amount in words
+    
     const saleAmountText = formattedData.saleAmount || "";
     const saleAmountWidth = saleAmountText.length * (fieldPositions.saleAmount.size / 2);
     const amountInWordsX = fieldPositions.saleAmount.x + saleAmountWidth + 1.4 * (fieldPositions.saleAmount.size / 2);
@@ -241,9 +241,9 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
       color: rgb(0, 0, 0),
     });
 
-    // Add invoice page
+    
     const invoicePage = pdfDoc.addPage([595, 842]);
-    // Add basic invoice content (simplified)
+    
     invoicePage.drawText("Vehicle Invoice", {
       x: 250,
       y: 800,
@@ -255,7 +255,7 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
       const pdfBytes = await pdfDoc.save();
       return Buffer.from(pdfBytes);
     } else {
-      // Save to file and return filename
+      
       const uploadDir = path.join(__dirname, "../uploads/buy-letters");
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });

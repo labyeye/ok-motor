@@ -1,4 +1,4 @@
-// routes/syncRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const asyncHandler = require('express-async-handler');
@@ -8,7 +8,6 @@ const SellLetter = require('../models/SellLetter');
 const ServiceBill = require('../models/ServiceBill');
 const AdvanceBill = require('../models/AdvanceBill');
 
-// Model mapping
 const modelMap = {
   buyLetters: BuyLetter,
   sellLetters: SellLetter,
@@ -16,11 +15,6 @@ const modelMap = {
   advanceBills: AdvanceBill
 };
 
-/**
- * @route   POST /api/sync/:collection
- * @desc    Sync offline data for a specific collection
- * @access  Private
- */
 router.post('/:collection', protect, asyncHandler(async (req, res) => {
   const { collection } = req.params;
   const { documents } = req.body;
@@ -46,16 +40,14 @@ router.post('/:collection', protect, asyncHandler(async (req, res) => {
   try {
     for (const doc of documents) {
       try {
-        // Remove offline-specific fields
+        
         const { synced, localOnly, syncedAt, ...cleanDoc } = doc;
 
-        // Validate _id format (must be 24 character hex string)
         const isValidObjectId = doc._id && 
                                 typeof doc._id === 'string' && 
                                 doc._id.length === 24 && 
                                 /^[0-9a-fA-F]{24}$/.test(doc._id);
 
-        // Check if document already exists
         let existingDoc = null;
         if (isValidObjectId) {
           try {
@@ -67,22 +59,19 @@ router.post('/:collection', protect, asyncHandler(async (req, res) => {
         }
 
         if (existingDoc) {
-          // Update existing document
+          
           Object.assign(existingDoc, cleanDoc);
           existingDoc.updatedAt = new Date();
           await existingDoc.save();
           syncedIds.push(doc._id);
         } else {
-          // Create new document
-          const newDoc = new Model(cleanDoc);
           
-          // Only set _id if it's a valid ObjectId format
+          const newDoc = new Model(cleanDoc);
+
           if (isValidObjectId) {
             newDoc._id = doc._id;
           }
-          // Otherwise, let MongoDB generate a new _id
-          
-          // Add user field if not present (required by most models)
+
           if (!newDoc.user && req.user && req.user.id) {
             newDoc.user = req.user.id;
           }
@@ -119,11 +108,6 @@ router.post('/:collection', protect, asyncHandler(async (req, res) => {
   }
 }));
 
-/**
- * @route   GET /api/sync/status
- * @desc    Get sync status for all collections
- * @access  Private
- */
 router.get('/status', protect, asyncHandler(async (req, res) => {
   try {
     const status = {};
@@ -155,11 +139,6 @@ router.get('/status', protect, asyncHandler(async (req, res) => {
   }
 }));
 
-/**
- * @route   POST /api/sync/batch
- * @desc    Sync multiple collections in one request
- * @access  Private
- */
 router.post('/batch', protect, asyncHandler(async (req, res) => {
   const { collections } = req.body;
 
@@ -246,11 +225,6 @@ router.post('/batch', protect, asyncHandler(async (req, res) => {
   });
 }));
 
-/**
- * @route   GET /api/health
- * @desc    Health check endpoint for network detection
- * @access  Public
- */
 router.get('/health', (req, res) => {
   res.json({ 
     success: true, 

@@ -1,4 +1,3 @@
-// src/components/NetworkStatus.js
 import React, { useState, useEffect } from 'react';
 import networkService from '../services/networkService';
 import syncService from '../services/syncService';
@@ -11,12 +10,10 @@ const NetworkStatus = () => {
   const [unsyncedCount, setUnsyncedCount] = useState(0);
 
   useEffect(() => {
-    // Subscribe to network changes
     const unsubscribeNetwork = networkService.subscribe((online) => {
       setIsOnline(online);
     });
 
-    // Subscribe to sync events
     const unsubscribeSync = syncService.subscribe((event, data) => {
       if (event === 'sync-start') {
         setIsSyncing(true);

@@ -1,16 +1,15 @@
-// models/SellLetter.js
+
 const mongoose = require("mongoose");
 
 const SellLetterSchema = new mongoose.Schema(
   {
-    // Vehicle Reference - New system
+    
     vehicle: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Vehicle",
       index: true,
     },
 
-    // Vehicle Information - Legacy fields (kept for backward compatibility)
     vehicleName: { type: String },
     vehicleModel: { type: String },
     vehicleColor: { type: String },
@@ -20,7 +19,6 @@ const SellLetterSchema = new mongoose.Schema(
     vehiclekm: { type: String },
     vehicleCondition: { type: String, enum: ["running", "notRunning"] },
 
-    // Buyer Information (named as seller in form but actually buyer)
     buyerName: { type: String, required: true },
     buyerFatherName: { type: String, required: true },
     buyerAddress: { type: String, required: true },
@@ -28,7 +26,6 @@ const SellLetterSchema = new mongoose.Schema(
     buyerPhone2: { type: String, required: true },
     buyerAadhar: { type: String, required: true },
 
-    // Sale Details
     saleDate: { type: Date, required: true, default: Date.now },
     saleTime: { type: String },
     saleAmount: { type: Number, required: true },
@@ -42,15 +39,13 @@ const SellLetterSchema = new mongoose.Schema(
     previousDate: { type: Date },
     previousTime: { type: String },
 
-    // Witness Information
     witnessName: { type: String, required: true },
     witnessPhone: { type: String, required: true },
-    // Legal Terms
+    
     note: { type: String },
 
     documentsVerified: { type: Boolean, default: true },
 
-    // Versioning fields - to track document history
     originalDocumentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "SellLetter",
@@ -65,7 +60,6 @@ const SellLetterSchema = new mongoose.Schema(
     editedAt: { type: Date },
     editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
-    // Reference to user who created it
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }

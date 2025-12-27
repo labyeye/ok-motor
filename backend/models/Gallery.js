@@ -33,7 +33,6 @@ const gallerySchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Index for faster queries
 gallerySchema.index({ isActive: 1, orderIndex: 1 });
 
 module.exports = mongoose.model('Gallery', gallerySchema);

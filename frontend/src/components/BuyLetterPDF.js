@@ -60,7 +60,6 @@ const BuyLetterForm = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [loadingVehicles, setLoadingVehicles] = useState(false);
 
-  // Helper function to format date for input field (YYYY-MM-DD)
   const formatDateForInput = (dateString) => {
     if (!dateString) return new Date().toISOString().split("T")[0];
     try {
@@ -72,7 +71,6 @@ const BuyLetterForm = () => {
     }
   };
 
-  // Helper function to format time for input field (HH:MM)
   const formatTimeForInput = (timeString) => {
     if (!timeString) {
       return new Date().toLocaleTimeString("en-GB", {
@@ -81,11 +79,9 @@ const BuyLetterForm = () => {
         minute: "2-digit",
       });
     }
-    // If it's already in HH:MM format, return as is
     if (/^\d{2}:\d{2}$/.test(timeString)) {
       return timeString;
     }
-    // Try to parse and format
     try {
       const date = new Date(timeString);
       if (!isNaN(date.getTime())) {
@@ -96,7 +92,6 @@ const BuyLetterForm = () => {
         });
       }
     } catch (error) {}
-    // Fallback to current time
     return new Date().toLocaleTimeString("en-GB", {
       hour12: false,
       hour: "2-digit",
@@ -108,12 +103,10 @@ const BuyLetterForm = () => {
     editLetter
       ? {
           ...editLetter,
-          // Ensure dates are properly formatted for input fields
           saleDate: formatDateForInput(editLetter.saleDate),
           todayDate: formatDateForInput(editLetter.todayDate),
           saleTime: formatTimeForInput(editLetter.saleTime),
           todayTime: formatTimeForInput(editLetter.todayTime),
-          // Ensure all fields are populated
           sellerFatherName: editLetter.sellerFatherName || "",
           buyerFatherName: editLetter.buyerFatherName || "",
           vehicleCondition: editLetter.vehicleCondition || "running",
@@ -179,7 +172,6 @@ const BuyLetterForm = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Fetch available vehicles from inventory
   const fetchVehicles = async () => {
     try {
       setLoadingVehicles(true);
@@ -199,7 +191,6 @@ const BuyLetterForm = () => {
     }
   };
 
-  // Handle vehicle selection from dropdown
   const handleVehicleSelect = (e) => {
     const vehicleId = e.target.value;
     setSelectedVehicleId(vehicleId);
@@ -471,12 +462,8 @@ const BuyLetterForm = () => {
       setIsSaving(true);
       let response;
 
-      // Check if we're in Electron
       const isElectron = window.electronAPI !== undefined;
 
-      // VERSIONING: Always create new document, never update
-      // If editing, create a new version with reference to original
-      // Remove ALL MongoDB-specific fields to avoid duplicate key errors
       const {
         _id,
         __v,
@@ -489,7 +476,6 @@ const BuyLetterForm = () => {
 
       const dataToSave = {
         ...formDataWithoutId,
-        // Add version tracking fields
         ...(editLetter?._id && {
           originalDocumentId: editLetter.originalDocumentId || editLetter._id,
           previousVersionId: editLetter._id,
@@ -504,12 +490,9 @@ const BuyLetterForm = () => {
         }),
       };
 
-      // Always create new document (never update)
       if (isElectron) {
-        // Use apiService for Electron (handles offline)
         response = await apiService.post("/api/buy-letter", dataToSave);
       } else {
-        // Use apiService (handles online/offline uniformly)
         response = await apiService.post("/api/buy-letters", dataToSave);
       }
 
@@ -544,8 +527,6 @@ const BuyLetterForm = () => {
       setIsDownloading(true);
       setIsDownloading(true);
       setIsSaving(true);
-
-      // Always save or update before generating PDF
       const savedLetter = await saveBuyLetter();
       if (selectedLanguage === "hindi") {
         await fillAndDownloadHindiPdf();
@@ -754,17 +735,14 @@ const BuyLetterForm = () => {
       await simulateProgress();
       setIsSaving(true);
 
-      // Check if we're in Electron
       const isElectron = window.electronAPI !== undefined;
 
       let existingLetter;
       if (isElectron) {
-        // Use apiService for Electron (handles offline)
         existingLetter = await apiService.get(
           `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`
         );
       } else {
-        // Use apiService in browser as well (will route online when available)
         existingLetter = await apiService.get(
           `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`
         );
@@ -775,12 +753,9 @@ const BuyLetterForm = () => {
         savedLetterData = existingLetter.data[0];
       } else {
         let response;
-        // Use apiService for both electron and browser to ensure consistent behavior
         response = await apiService.post("/api/buy-letters", formData);
         savedLetterData = response.data;
       }
-
-      // Use the new PDF template loader
       const existingPdfBytes = await loadPDFTemplate("buyletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
@@ -798,7 +773,6 @@ const BuyLetterForm = () => {
         vehiclekm: formatKm(formData.vehiclekm),
         amountInWords: formatIndianAmountInWords(formData.saleAmount),
       };
-      // defaults for witness fields
       formattedData.witnessname =
         formattedData.witnessname && String(formattedData.witnessname).trim()
           ? formattedData.witnessname
@@ -869,7 +843,6 @@ const BuyLetterForm = () => {
         if (saveRes && saveRes.success && window.electronAPI) {
           alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
         } else {
-          // fallback to download
           saveAs(blob, filename);
         }
       } catch (err) {
@@ -1107,8 +1080,6 @@ const BuyLetterForm = () => {
 
       const templateName =
         language === "hindi" ? "buyletter.pdf" : "englishbuyletter.pdf";
-
-      // Use the new PDF template loader
       const existingPdfBytes = await loadPDFTemplate(templateName);
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
@@ -2177,7 +2148,6 @@ const BuyLetterForm = () => {
                     onFocus={() => setFocusedInput("vehiclekm")}
                     onBlur={() => {
                       if (formData.vehiclekm !== "") {
-                        // Format the vehiclekm if needed
                       }
                       setFocusedInput(null);
                     }}

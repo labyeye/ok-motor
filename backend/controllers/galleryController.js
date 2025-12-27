@@ -1,14 +1,12 @@
 const Gallery = require('../models/Gallery');
 const ImageKit = require('imagekit');
 
-// Initialize ImageKit
 const imagekit = new ImageKit({
   publicKey: process.env.IMAGEKIT_PUBLIC_KEY || 'your_public_key',
   privateKey: process.env.IMAGEKIT_PRIVATE_KEY || 'your_private_key',
   urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/your_imagekit_id',
 });
 
-// Get all active gallery images
 exports.getGalleryImages = async (req, res) => {
   try {
     const images = await Gallery.find({ isActive: true })
@@ -30,7 +28,6 @@ exports.getGalleryImages = async (req, res) => {
   }
 };
 
-// Get all gallery images (including inactive) - Admin only
 exports.getAllGalleryImages = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -65,7 +62,6 @@ exports.getAllGalleryImages = async (req, res) => {
   }
 };
 
-// Get ImageKit authentication parameters
 exports.getImageKitAuth = async (req, res) => {
   try {
     const authenticationParameters = imagekit.getAuthenticationParameters();
@@ -83,7 +79,6 @@ exports.getImageKitAuth = async (req, res) => {
   }
 };
 
-// Upload gallery images from server (accepts multipart/form-data files)
 exports.uploadGalleryFiles = async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
@@ -94,7 +89,7 @@ exports.uploadGalleryFiles = async (req, res) => {
     const savedImages = [];
 
     for (const file of req.files) {
-      // file.buffer contains the file data (multer memoryStorage)
+      
       const uploadResult = await imagekit.upload({
         file: file.buffer,
         fileName: file.originalname,
@@ -120,7 +115,6 @@ exports.uploadGalleryFiles = async (req, res) => {
   }
 };
 
-// Upload gallery image
 exports.uploadGalleryImage = async (req, res) => {
   try {
     const { imageUrl, imageKitFileId, title, altText, orderIndex } = req.body;
@@ -158,7 +152,6 @@ exports.uploadGalleryImage = async (req, res) => {
   }
 };
 
-// Update gallery image
 exports.updateGalleryImage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -195,7 +188,6 @@ exports.updateGalleryImage = async (req, res) => {
   }
 };
 
-// Delete gallery image
 exports.deleteGalleryImage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -209,12 +201,11 @@ exports.deleteGalleryImage = async (req, res) => {
       });
     }
 
-    // Delete from ImageKit
     try {
       await imagekit.deleteFile(image.imageKitFileId);
     } catch (imagekitError) {
       console.error('Error deleting from ImageKit:', imagekitError);
-      // Continue with database deletion even if ImageKit deletion fails
+      
     }
 
     await image.deleteOne();
@@ -233,10 +224,9 @@ exports.deleteGalleryImage = async (req, res) => {
   }
 };
 
-// Bulk update order
 exports.updateGalleryOrder = async (req, res) => {
   try {
-    const { images } = req.body; // Array of { id, orderIndex }
+    const { images } = req.body; 
 
     if (!Array.isArray(images)) {
       return res.status(400).json({

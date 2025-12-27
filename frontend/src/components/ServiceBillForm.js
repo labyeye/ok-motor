@@ -77,7 +77,7 @@ const ServiceBillForm = () => {
     serviceType: "regular",
     serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
     discount: 0,
-    discountType: "fixed", // "fixed" or "percentage"
+    discountType: "fixed", 
     discountPercentage: 0,
     taxRate: 0,
     paymentMethod: "cash",
@@ -96,12 +96,10 @@ const ServiceBillForm = () => {
       0
     );
 
-    // Only calculate tax if tax is enabled
     const taxAmount = data.taxEnabled
       ? ((data.taxRate || 0) / 100) * totalAmount
       : 0;
 
-    // Calculate discount based on type
     let discountAmount = 0;
     if (data.discountType === "percentage") {
       discountAmount = ((data.discountPercentage || 0) / 100) * totalAmount;
@@ -156,7 +154,7 @@ const ServiceBillForm = () => {
       items[index] = {
         ...items[index],
         rate: cleanedValue,
-        // Auto-fill amount based on rate * quantity, but keep amount editable
+        
         amount: newAmount,
       };
 
@@ -192,14 +190,12 @@ const ServiceBillForm = () => {
       return;
     }
 
-    // Normal handling for other fields
     const items = [...formData.serviceItems];
     items[index] = {
       ...items[index],
       [name]: name === "quantity" ? parseFloat(value) || 1 : value,
     };
 
-    // Don't auto-calculate amount for quantity changes either
     setFormData({
       ...formData,
       serviceItems: items,
@@ -246,7 +242,6 @@ const ServiceBillForm = () => {
       [name]: val,
     };
 
-    // Always recalculate amounts, but calculateAmounts will handle taxEnabled check
     Object.assign(newData, calculateAmounts(newData));
 
     setFormData(newData);
@@ -254,7 +249,6 @@ const ServiceBillForm = () => {
   const validateForm = () => {
     const errors = {};
 
-    // required fields
     if (!formData.customerName.trim())
       errors.customerName = "Customer name is required";
     if (!formData.customerPhone.trim())
@@ -268,12 +262,10 @@ const ServiceBillForm = () => {
     if (!formData.registrationNumber.trim())
       errors.registrationNumber = "Registration number is required";
 
-    // Validate phone number format
     if (formData.customerPhone && !/^\d{10}$/.test(formData.customerPhone)) {
       errors.customerPhone = "Phone number must be 10 digits";
     }
 
-    // Validate service items
     formData.serviceItems.forEach((item, index) => {
       if (!item.description.trim()) {
         errors[`serviceItems[${index}].description`] =
@@ -295,7 +287,6 @@ const ServiceBillForm = () => {
     return Object.keys(errors).length === 0 ? null : errors;
   };
 
-  // Load data from localStorage on component mount
   useEffect(() => {
     if (location.state && location.state.bill) {
       const bill = location.state.bill;
@@ -319,7 +310,6 @@ const ServiceBillForm = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Modified handleSaveAndDownload function with offline support
   const handleSaveAndDownload = async () => {
     if (isSaving) return;
     setIsSaving(true);
@@ -336,7 +326,6 @@ const ServiceBillForm = () => {
       const token = localStorage.getItem("token");
       const isOnline = navigator.onLine;
 
-      // Format dates and ensure numeric fields
       const formattedData = {
         ...formData,
         serviceDate: new Date(formData.serviceDate).toISOString(),
@@ -347,7 +336,7 @@ const ServiceBillForm = () => {
           rate: parseFloat(item.rate) || 0,
         })),
         user: user._id,
-        // VERSIONING: Add version tracking fields
+        
         ...(formData._id && {
           originalDocumentId: formData.originalDocumentId || formData._id,
           previousVersionId: formData._id,
@@ -366,14 +355,12 @@ const ServiceBillForm = () => {
       let pdfBlob;
 
       if (!isOnline) {
-        // OFFLINE MODE - Save to offline storage (always create new)
+        
         console.log("Offline mode - saving to local storage");
 
-        // Import offline storage
         const offlineStorage = (await import("../services/offlineStorage"))
           .default;
 
-        // Always create new version, never update
         const result = await offlineStorage.create(
           "serviceBills",
           formattedData
@@ -393,7 +380,6 @@ const ServiceBillForm = () => {
           throw new Error(result.error || "Failed to save offline");
         }
 
-        // Generate PDF locally using pdfService
         const pdfService = (await import("../services/pdfService")).default;
         const pdfResult = await pdfService.generateServiceBillPDF({
           ...formattedData,
@@ -415,7 +401,6 @@ const ServiceBillForm = () => {
           throw new Error(pdfResult.error || "Failed to generate PDF");
         }
 
-        // Clear form after successful save
         setFormData({
           taxEnabled: false,
           businessName: "",
@@ -453,7 +438,7 @@ const ServiceBillForm = () => {
           warrantyInfo: "",
         });
       } else {
-        // ONLINE MODE - Save to server (always create new version)
+        
         if (!token) {
           alert("Authentication required. Please login again.");
           logout();
@@ -462,7 +447,7 @@ const ServiceBillForm = () => {
         }
 
         try {
-          // Always create new document (never update) - for versioning
+          
           const saveResponse = await retryRequest(() =>
             axios.post(`${API_BASE_URL}/service-bills`, formattedData, {
               headers: {
@@ -477,7 +462,6 @@ const ServiceBillForm = () => {
           }
           billId = saveResponse.data.data._id;
 
-          // Generate PDF using pdfService (consistent with offline mode)
           const pdfService = (await import("../services/pdfService")).default;
           const pdfResult = await pdfService.generateServiceBillPDF({
             ...formattedData,
@@ -504,7 +488,6 @@ const ServiceBillForm = () => {
             alert("Service bill saved and downloaded successfully!");
           }
 
-          // Clear form after successful save
           setFormData({
             taxEnabled: false,
             businessName: "",
@@ -701,8 +684,6 @@ const ServiceBillForm = () => {
     },
   };
 
-  // Retry mechanism for failed requests
-  // Helper to wait for a given number of milliseconds
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const retryRequest = async (
@@ -719,7 +700,6 @@ const ServiceBillForm = () => {
           throw error;
         }
 
-        // Only retry on 503 errors or network errors
         if (
           error.response?.status === 503 ||
           error.code === "ECONNABORTED" ||
@@ -727,7 +707,7 @@ const ServiceBillForm = () => {
         ) {
           console.log(`Attempt ${attempt} failed, retrying in ${delay}ms...`);
           await wait(delay);
-          delay *= 2; // Exponential backoff
+          delay *= 2; 
         } else {
           throw error;
         }
@@ -756,7 +736,6 @@ const ServiceBillForm = () => {
         return;
       }
 
-      // Format dates properly before sending and ensure numeric fields are numbers
       const formattedBillData = {
         ...billData,
         serviceDate: new Date(billData.serviceDate).toISOString(),
@@ -766,7 +745,7 @@ const ServiceBillForm = () => {
           billData.customServiceDescription ||
           formData.customServiceDescription,
         user: user._id,
-        // Ensure all numeric fields are numbers
+        
         totalAmount: parseFloat(billData.totalAmount) || 0,
         taxAmount: parseFloat(billData.taxAmount) || 0,
         discount: parseFloat(billData.discount) || 0,
@@ -774,7 +753,7 @@ const ServiceBillForm = () => {
         advancePaid: parseFloat(billData.advancePaid) || 0,
         balanceDue: parseFloat(billData.balanceDue) || 0,
         taxRate: parseFloat(billData.taxRate) || 0,
-        // Ensure service items have proper numeric values
+        
         serviceItems: billData.serviceItems.map((item) => ({
           ...item,
           quantity: parseFloat(item.quantity) || 0,
@@ -782,7 +761,6 @@ const ServiceBillForm = () => {
         })),
       };
 
-      // Log the formatted data for debugging
       console.log("Formatted bill data for API:", {
         serviceItemsCount: formattedBillData.serviceItems.length,
         sampleItem: formattedBillData.serviceItems[0],
@@ -795,7 +773,7 @@ const ServiceBillForm = () => {
       });
 
       if (forPreview) {
-        // For preview, generate PDF without saving to database
+        
         console.log(
           "Making service bill preview request to:",
           `${API_BASE_URL}/service-bills/preview`
@@ -812,7 +790,7 @@ const ServiceBillForm = () => {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
               },
-              timeout: 30000, // 30 second timeout
+              timeout: 30000, 
             }
           )
         );
@@ -831,14 +809,14 @@ const ServiceBillForm = () => {
         setPreviewPdf(url);
         setShowPreviewModal(true);
       } else {
-        // For download, save the bill first
+        
         const saveResponse = await retryRequest(() =>
           axios.post(`${API_BASE_URL}/service-bills`, formattedBillData, {
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-            timeout: 30000, // 30 second timeout
+            timeout: 30000, 
           })
         );
 
@@ -854,7 +832,7 @@ const ServiceBillForm = () => {
               Authorization: `Bearer ${token}`,
               Accept: "application/pdf",
             },
-            timeout: 30000, // 30 second timeout
+            timeout: 30000, 
           })
         );
 
@@ -878,7 +856,6 @@ const ServiceBillForm = () => {
     } catch (error) {
       console.error("Error generating PDF:", error);
 
-      // Handle authentication errors
       if (error.response?.status === 401) {
         alert("Your session has expired. Please login again.");
         logout();
@@ -886,7 +863,6 @@ const ServiceBillForm = () => {
         return;
       }
 
-      // Handle 503 Service Unavailable
       if (error.response?.status === 503) {
         alert(
           "Server is temporarily unavailable. Please try again in a few moments. If the problem persists, the server might be restarting."
@@ -974,7 +950,6 @@ const ServiceBillForm = () => {
       ],
     },
 
-    // Add the conditional check here
     ...(user?.role !== "staff"
       ? [
           {
@@ -1074,7 +1049,7 @@ const ServiceBillForm = () => {
         ></div>
       )}
 
-      {/* Sidebar */}
+      {}
       <div
         style={{
           ...styles.sidebar,
@@ -1097,7 +1072,7 @@ const ServiceBillForm = () => {
               width: "100%",
               maxWidth: "25rem",
               height: "9rem",
-              objectFit: "cover", // match CSS
+              objectFit: "cover", 
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
@@ -1118,7 +1093,7 @@ const ServiceBillForm = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
-                    // Pass the path as-is (could be string or function)
+                    
                     handleMenuClick(item.name, item.path);
                   }
                 }}
@@ -1176,7 +1151,7 @@ const ServiceBillForm = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
@@ -1187,7 +1162,7 @@ const ServiceBillForm = () => {
           </div>
 
           <form style={styles.form}>
-            {/* Customer Information */}
+            {}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <User style={styles.sectionIcon} /> Customer Information
@@ -1259,7 +1234,7 @@ const ServiceBillForm = () => {
               </div>
             </div>
 
-            {/* Vehicle Information */}
+            {}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <Car style={styles.sectionIcon} /> Vehicle Information
@@ -1377,12 +1352,12 @@ const ServiceBillForm = () => {
               </div>
             </div>
 
-            {/* Service Details */}
+            {}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <Wrench style={styles.sectionIcon} /> Service Details
               </h2>
-              {/* Service Details */}
+              {}
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
@@ -1444,7 +1419,7 @@ const ServiceBillForm = () => {
                   </select>
                 </div>
 
-                {/* Add this conditional field */}
+                {}
                 {formData.serviceType === "custom" && (
                   <div style={styles.formField}>
                     <label style={styles.formLabel}>
@@ -1465,14 +1440,14 @@ const ServiceBillForm = () => {
               </div>
             </div>
 
-            {/* Service Items */}
+            {}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <ShoppingCart style={styles.sectionIcon} /> Service Items
               </h2>
               <div style={{ marginBottom: "20px" }}>
                 {formData.serviceItems.map((item, index) => (
-                  // compute responsive styles per-row so mobile stacks fields
+                  
                   <div
                     key={index}
                     className="service-item-row"
@@ -1520,7 +1495,7 @@ const ServiceBillForm = () => {
                         required
                         maxLength={10}
                         onKeyDown={(e) => {
-                          // Allow only numbers and decimal point
+                          
                           if (
                             !/[0-9.]/.test(e.key) &&
                             e.key !== "Backspace" &&
@@ -1528,7 +1503,7 @@ const ServiceBillForm = () => {
                           ) {
                             e.preventDefault();
                           }
-                          // Move to next field on Enter
+                          
                           if (e.key === "Enter") {
                             e.preventDefault();
                             const nextField = e.target
@@ -1588,7 +1563,7 @@ const ServiceBillForm = () => {
                         required
                         maxLength={10}
                         onKeyDown={(e) => {
-                          // Allow only numbers and decimal point
+                          
                           if (
                             !/[0-9.]/.test(e.key) &&
                             e.key !== "Backspace" &&
@@ -1596,7 +1571,7 @@ const ServiceBillForm = () => {
                           ) {
                             e.preventDefault();
                           }
-                          // Move to next field on Enter
+                          
                           if (e.key === "Enter") {
                             e.preventDefault();
                             const nextField = e.target
@@ -1615,7 +1590,7 @@ const ServiceBillForm = () => {
                           ? { ...styles.removeItemButton, alignSelf: "flex-end", marginTop: 8 }
                           : styles.removeItemButton
                       }
-                      tabIndex={-1} // Remove from tab order since we have keyboard shortcut
+                      tabIndex={-1} 
                     >
                       <Trash size={16} />
                     </button>
@@ -1631,13 +1606,13 @@ const ServiceBillForm = () => {
               </div>
             </div>
 
-            {/* Payment Information */}
+            {}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <IndianRupee style={styles.sectionIcon} /> Payment Information
               </h2>
               <div style={styles.formGrid}>
-                {/* Add this toggle switch at the top of the payment section */}
+                {}
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
@@ -1653,12 +1628,10 @@ const ServiceBillForm = () => {
                           const newData = {
                             ...formData,
                             taxEnabled: enabling,
-                            // Reset tax rate to 18 when enabling, 0 when disabling
+                            
                             taxRate: enabling ? 18 : 0,
                           };
 
-                          // If enabling and business details already present, show fields.
-                          // Otherwise keep them collapsed until user chooses to add details.
                           if (enabling) {
                             const hasBusinessInfo = Boolean(
                               formData.businessName ||
@@ -1682,7 +1655,7 @@ const ServiceBillForm = () => {
                 </div>
                 {formData.taxEnabled && (
                   <>
-                    {/* If business fields are collapsed, show a compact CTA */}
+                    {}
                     {!showBusinessFields &&
                       !(
                         formData.businessName ||
@@ -1721,7 +1694,7 @@ const ServiceBillForm = () => {
                             value={formData.businessName}
                             onChange={(e) => {
                               handleChange(e);
-                              // ensure fields stay visible when user types
+                              
                               setShowBusinessFields(true);
                             }}
                             onInput={handleInput}
@@ -1987,7 +1960,7 @@ const ServiceBillForm = () => {
               </div>
             </div>
 
-            {/* Additional Information */}
+            {}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <AlertCircle style={styles.sectionIcon} /> Additional
@@ -2071,7 +2044,7 @@ const ServiceBillForm = () => {
           <div
             style={{
               ...styles.modalContent,
-              // Make modal responsive: full-width on small screens, constrained on desktop
+              
               width: isMobile ? "95vw" : "800px",
               maxWidth: isMobile ? "95vw" : "90%",
               height: isMobile ? "80vh" : undefined,
@@ -2114,13 +2087,13 @@ const ServiceBillForm = () => {
             <button
               style={styles.modalCloseButton}
               onClick={() => {
-                // revoke blob url to free memory
+                
                 try {
                   if (previewPdf) {
                     URL.revokeObjectURL(previewPdf);
                   }
                 } catch (e) {
-                  // ignore
+                  
                 }
                 setPreviewPdf(null);
                 setShowPreviewModal(false);
@@ -2444,7 +2417,7 @@ const styles = {
     marginBottom: "40px",
     paddingBottom: "24px",
     borderBottom: "1px solid #e2e8f0",
-    // Removed unsupported pseudo-selector
+    
   },
   sectionTitle: {
     fontSize: "1.25rem",

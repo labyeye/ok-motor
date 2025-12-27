@@ -1,19 +1,25 @@
 const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
-// Logo path will be resolved from several candidate locations (env override allowed)
+
 const locateLogoPath = () => {
   const candidates = [];
   if (process.env.LOGO_PATH) candidates.push(process.env.LOGO_PATH);
-  // Backend assets location (for Vercel deployment)
+
   candidates.push(path.join(__dirname, "../assets/images/okmotorback.png"));
-  candidates.push(path.join(__dirname, "../../frontend/src/images/okmotorback.png"));
-  candidates.push(path.join(__dirname, "../../frontend/public/images/okmotorback.png"));
-  candidates.push(path.join(__dirname, "../../frontend/public/okmotorback.png"));
+  candidates.push(
+    path.join(__dirname, "../../frontend/src/images/okmotorback.png")
+  );
+  candidates.push(
+    path.join(__dirname, "../../frontend/public/images/okmotorback.png")
+  );
+  candidates.push(
+    path.join(__dirname, "../../frontend/public/okmotorback.png")
+  );
   candidates.push(path.join(__dirname, "../images/okmotorback.png"));
   candidates.push(path.join(__dirname, "../assets/okmotorback.png"));
 
-  console.log('Advance Bill - Searching for logo in candidate paths:');
+  console.log("Advance Bill - Searching for logo in candidate paths:");
   for (const p of candidates) {
     try {
       console.log(`  Checking: ${p}`);
@@ -25,49 +31,53 @@ const locateLogoPath = () => {
       console.log(`  ✗ Error checking ${p}:`, e.message);
     }
   }
-  console.log('  ✗ No logo found in any candidate location');
-  console.log('  Current __dirname:', __dirname);
+  console.log("  ✗ No logo found in any candidate location");
+  console.log("  Current __dirname:", __dirname);
   return null;
 };
-
 
 const formatTime12Hour = (timeString) => {
   try {
     if (!timeString) return "";
-    
-    // Handle Date objects
+
     if (timeString instanceof Date) {
       const hours = timeString.getHours();
       const minutes = timeString.getMinutes();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const ampm = hours >= 12 ? "PM" : "AM";
       const hours12 = hours % 12 || 12;
-      return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
+      return `${String(hours12).padStart(2, "0")}:${String(minutes).padStart(
+        2,
+        "0"
+      )} ${ampm}`;
     }
-    
-    // Handle string inputs
-    if (typeof timeString === 'string') {
-      // Check if it's already in 12-hour format
-      if (timeString.includes('AM') || timeString.includes('PM')) {
+
+    if (typeof timeString === "string") {
+      if (timeString.includes("AM") || timeString.includes("PM")) {
         return timeString;
       }
-      
+
       const date = new Date(timeString);
       if (!isNaN(date.getTime())) {
         const hours = date.getHours();
         const minutes = date.getMinutes();
-        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const ampm = hours >= 12 ? "PM" : "AM";
         const hours12 = hours % 12 || 12;
-        return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
+        return `${String(hours12).padStart(2, "0")}:${String(minutes).padStart(
+          2,
+          "0"
+        )} ${ampm}`;
       }
-      
-      const [hour, minute] = timeString.split(':').map(Number);
+
+      const [hour, minute] = timeString.split(":").map(Number);
       if (!isNaN(hour)) {
         const hours12 = hour % 12 || 12;
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        return `${String(hours12).padStart(2, '0')}:${String(minute || 0).padStart(2, '0')} ${ampm}`;
+        const ampm = hour >= 12 ? "PM" : "AM";
+        return `${String(hours12).padStart(2, "0")}:${String(
+          minute || 0
+        ).padStart(2, "0")} ${ampm}`;
       }
     }
-    
+
     return "";
   } catch (error) {
     console.error("Error formatting time:", error);
@@ -78,8 +88,8 @@ const formatTime12Hour = (timeString) => {
 const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
   try {
     console.log("Starting PDF generation for:", advanceBill._id || "new bill");
-    // Defensive: convert Mongoose document to plain object if necessary
-    if (advanceBill && typeof advanceBill.toObject === 'function') {
+
+    if (advanceBill && typeof advanceBill.toObject === "function") {
       advanceBill = advanceBill.toObject();
     }
 
@@ -92,12 +102,11 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     const formatKm = (val) => {
       if (val === undefined || val === null) return "0.00";
 
-      // Convert to number and divide by 100 if stored in cents format
       const num =
         typeof val === "string"
           ? parseFloat(val.replace(/,/g, ""))
           : Number(val);
-      const actualKm = num; // Add this division
+      const actualKm = num;
 
       return isNaN(actualKm)
         ? "0.00"
@@ -125,7 +134,6 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       return `Rs.${formatRupee(val)}`;
     };
 
-    // Optimize logo loading - attempt to locate from candidates and embed
     let logoImage = null;
     try {
       const logoPath = locateLogoPath();
@@ -137,16 +145,17 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         console.warn("Logo file not found in candidate locations");
       }
     } catch (logoError) {
-      console.warn("Logo not found, continuing without logo:", logoError.message);
+      console.warn(
+        "Logo not found, continuing without logo:",
+        logoError.message
+      );
       logoImage = null;
     }
 
-    // Pre-calculate common values for better performance
     const pageWidth = 595;
     const pageHeight = 842;
     const margin = 50;
 
-    // Header Section
     page.drawRectangle({
       x: 0,
       y: 780,
@@ -155,7 +164,6 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       color: rgb(0.047, 0.098, 0.196),
     });
 
-    // Draw logo if available
     if (logoImage) {
       page.drawImage(logoImage, {
         x: 50,
@@ -163,8 +171,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         width: 160,
         height: 130,
       });
-      
-      // Add single watermark logo (optimized)
+
       page.drawImage(logoImage, {
         x: 200,
         y: 250,
@@ -183,7 +190,6 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    // Title Section
     page.drawRectangle({
       x: 0,
       y: 750,
@@ -200,7 +206,6 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    // Invoice Info
     const invoiceNumber =
       advanceBill.billNumber ||
       `ADV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)
@@ -215,7 +220,6 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       font: font,
     });
 
-    // Use India Standard Time (Asia/Kolkata) for printed date/time
     const now = new Date();
     const istDateStr = now.toLocaleDateString("en-IN", {
       timeZone: "Asia/Kolkata",
@@ -235,24 +239,21 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       font: font,
     });
 
-    // Divider
     page.drawLine({
       start: { x: 50, y: 710 },
       end: { x: 545, y: 710 },
       thickness: 1,
       color: rgb(0.8, 0.8, 0.8),
     });
-     page.drawRectangle({
+    page.drawRectangle({
       x: 0,
       y: 685,
       width: 595,
       height: 20,
       color: rgb(0.9, 0.9, 0.9),
-      opacity:0.6,
+      opacity: 0.6,
     });
 
-
-    // Customer Information
     const customerY = 690;
     page.drawText("CUSTOMER DETAILS", {
       x: 50,
@@ -272,7 +273,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
 
     const customerAddress = advanceBill.customerAddress || "N/A";
     const customerAddressLines = [];
-    // Break address into readable lines (wrap at ~45 chars)
+
     for (let i = 0; i < customerAddress.length; i += 45) {
       customerAddressLines.push(customerAddress.substring(i, i + 45));
     }
@@ -308,10 +309,9 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       width: 595,
       height: 20,
       color: rgb(0.9, 0.9, 0.9),
-      opacity:0.6,
+      opacity: 0.6,
     });
 
-    // Vehicle Information
     const vehicleY = customerY - 80;
     page.drawText("VEHICLE DETAILS", {
       x: 50,
@@ -364,10 +364,9 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       width: 595,
       height: 20,
       color: rgb(0.9, 0.9, 0.9),
-      opacity:0.6,
+      opacity: 0.6,
     });
 
-    // Service Dates
     const serviceY = vehicleY - 140;
     page.drawText("ADVANCE PAYMENT DATES", {
       x: 50,
@@ -377,7 +376,6 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    // Service Date
     page.drawText("Advance Payment Date:", {
       x: 60,
       y: serviceY - 25,
@@ -386,17 +384,19 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    page.drawText(new Date(
-      advanceBill.serviceDate || Date.now()
-    ).toLocaleDateString("en-IN"), {
-      x: 180,
-      y: serviceY - 25,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
+    page.drawText(
+      new Date(advanceBill.serviceDate || Date.now()).toLocaleDateString(
+        "en-IN"
+      ),
+      {
+        x: 180,
+        y: serviceY - 25,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      }
+    );
 
-    // Delivery Date on the same row
     page.drawText("Delivery Date:", {
       x: 350,
       y: serviceY - 25,
@@ -405,25 +405,27 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    page.drawText(new Date(
-      advanceBill.deliveryDate || Date.now() + 86400000
-    ).toLocaleDateString("en-IN"), {
-      x: 420,
-      y: serviceY - 25,
-      size: 10,
-      color: rgb(0.2, 0.2, 0.2),
-      font: font,
-    });
+    page.drawText(
+      new Date(
+        advanceBill.deliveryDate || Date.now() + 86400000
+      ).toLocaleDateString("en-IN"),
+      {
+        x: 420,
+        y: serviceY - 25,
+        size: 10,
+        color: rgb(0.2, 0.2, 0.2),
+        font: font,
+      }
+    );
     page.drawRectangle({
       x: 0,
       y: 415,
       width: 595,
       height: 20,
       color: rgb(0.9, 0.9, 0.9),
-      opacity:0.6,
+      opacity: 0.6,
     });
 
-    // Payment Information
     const paymentY = serviceY - 50;
     page.drawText("PAYMENT INFORMATION", {
       x: 50,
@@ -433,16 +435,16 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    // Convert all amounts to numbers first
-    // Parse numeric fields safely and provide sensible defaults
     const totalAmount = parseFloat(advanceBill.totalAmount) || 0;
     const advancePaid = parseFloat(advanceBill.advancePaid) || 0;
-    const grandTotal = (advanceBill.grandTotal !== undefined && advanceBill.grandTotal !== null)
-      ? parseFloat(advanceBill.grandTotal) || totalAmount
-      : totalAmount;
-    const balanceDue = (advanceBill.balanceDue !== undefined && advanceBill.balanceDue !== null)
-      ? parseFloat(advanceBill.balanceDue) || (grandTotal - advancePaid)
-      : (grandTotal - advancePaid);
+    const grandTotal =
+      advanceBill.grandTotal !== undefined && advanceBill.grandTotal !== null
+        ? parseFloat(advanceBill.grandTotal) || totalAmount
+        : totalAmount;
+    const balanceDue =
+      advanceBill.balanceDue !== undefined && advanceBill.balanceDue !== null
+        ? parseFloat(advanceBill.balanceDue) || grandTotal - advancePaid
+        : grandTotal - advancePaid;
 
     const paymentDetails = [
       { label: "Total Amount:", value: formatRupeeWithSymbol(totalAmount) },
@@ -484,12 +486,11 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       width: 595,
       height: 20,
       color: rgb(0.9, 0.9, 0.9),
-      opacity:0.6,
+      opacity: 0.6,
     });
 
-    // Note Section (if note exists)
-    let termsY = 250; // Default position
-    
+    let termsY = 250;
+
     if (advanceBill.note && advanceBill.note.trim()) {
       const noteY = 290;
       page.drawText("NOTE", {
@@ -500,11 +501,10 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         font: fontBold,
       });
 
-      // Split note into lines if it's too long
       const noteText = advanceBill.note.trim();
       const maxLineLength = 160;
       const noteLines = [];
-      
+
       for (let i = 0; i < noteText.length; i += maxLineLength) {
         noteLines.push(noteText.substring(i, i + maxLineLength));
       }
@@ -519,18 +519,17 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         });
       });
 
-      // Adjust terms position based on note length
-      termsY = noteY - 20 - (noteLines.length * 12) - 20;
-      
+      termsY = noteY - 20 - noteLines.length * 12 - 20;
+
       page.drawRectangle({
         x: 0,
         y: termsY - 5,
         width: 595,
         height: 20,
         color: rgb(0.9, 0.9, 0.9),
-        opacity:0.6,
+        opacity: 0.6,
       });
-      
+
       page.drawText("TERMS AND CONDITIONS", {
         x: 50,
         y: termsY,
@@ -539,16 +538,15 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         font: fontBold,
       });
     } else {
-      // If no note, keep original terms position
       page.drawRectangle({
         x: 0,
         y: termsY + 20,
         width: 595,
         height: 20,
         color: rgb(0.9, 0.9, 0.9),
-        opacity:0.6,
+        opacity: 0.6,
       });
-      
+
       page.drawText("TERMS AND CONDITIONS", {
         x: 50,
         y: termsY,
@@ -566,7 +564,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       "5. Original invoice must be presented for vehicle collection.",
       "6. Warranty applies only to parts replaced by us and for the specified period.",
       "7. This is an advance payment invoice only, not the final bill.",
-      "8. Paper Work (Insaurance, Pollution etc.) will be charged separately."
+      "8. Paper Work (Insaurance, Pollution etc.) will be charged separately.",
     ];
 
     termsAndConditions.forEach((term, index) => {
@@ -579,7 +577,6 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       });
     });
 
-    // Footer with Signatures
     const footerY = 60;
     page.drawText("Customer Signature", {
       x: 100,
@@ -640,23 +637,25 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       const fallbackDir = path.join(os.tmpdir(), "advance-bills");
       const filename = `advance-bill-${advanceBill._id}.pdf`;
 
-      // Try primary uploads directory first, fall back to OS tmpdir if write fails (e.g., read-only FS)
       try {
         if (!fs.existsSync(uploadDir)) {
           fs.mkdirSync(uploadDir, { recursive: true });
         }
         const filePath = path.join(uploadDir, filename);
         fs.writeFileSync(filePath, pdfBytes);
-        return filename; // Return just the filename
+        return filename;
       } catch (err) {
-        console.warn("Primary upload directory write failed, falling back to tmpdir:", err.message);
+        console.warn(
+          "Primary upload directory write failed, falling back to tmpdir:",
+          err.message
+        );
         try {
           if (!fs.existsSync(fallbackDir)) {
             fs.mkdirSync(fallbackDir, { recursive: true });
           }
           const fallbackPath = path.join(fallbackDir, filename);
           fs.writeFileSync(fallbackPath, pdfBytes);
-          return filename; // Return filename; route will check fallback location
+          return filename;
         } catch (err2) {
           console.error("Failed to write PDF to fallback tmpdir:", err2);
           throw new Error(`PDF generation failed: ${err2.message}`);

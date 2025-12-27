@@ -1,4 +1,4 @@
-// routes/sellLetter.js
+
 const express = require('express');
 const router = express.Router();
 const { protect ,admin} = require('../middleware/auth');
@@ -14,16 +14,13 @@ const {
 } = require('../controllers/sellLetterController');
 const generateSellLetterPDF = require("../utils/generateSellLetterPDF");
 
-// Protect all routes
 router.use(protect);
 
-// Generate PDF buffer route (for offline use)
 router.post("/generate-pdf", protect, async (req, res) => {
   try {
     const { language = "hindi" } = req.query;
     const sellLetterData = req.body;
 
-    // Validate required fields
     if (!sellLetterData) {
       return res.status(400).json({
         success: false,
@@ -31,7 +28,6 @@ router.post("/generate-pdf", protect, async (req, res) => {
       });
     }
 
-    // Generate PDF buffer without saving to database
     const pdfBuffer = await generateSellLetterPDF(sellLetterData, true, language);
 
     res.set({
@@ -50,11 +46,9 @@ router.post("/generate-pdf", protect, async (req, res) => {
   }
 });
 
-// Specific routes first
-router.route('/by-registration').get(getSellLettersByRegistration); // Changed from /get-sell
-router.route('/my-letters').get(getMySellLetters); // Changed from /my-letters
+router.route('/by-registration').get(getSellLettersByRegistration); 
+router.route('/my-letters').get(getMySellLetters); 
 
-// General routes
 router.route('/')
   .post(createSellLetter)
   .get(getSellLetters);

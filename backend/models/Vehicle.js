@@ -1,21 +1,20 @@
-// models/Vehicle.js
+
 const mongoose = require("mongoose");
 
 const VehicleSchema = new mongoose.Schema(
   {
-    // Vehicle Type - Primary Classification
+    
     vehicleType: {
       type: String,
       required: true,
       enum: ["Car", "Bike"],
     },
 
-    // Basic Vehicle Information
     vehicleName: {
       type: String,
       required: true,
       trim: true,
-    }, // Brand/Make
+    }, 
     vehicleModel: {
       type: String,
       required: true,
@@ -32,7 +31,6 @@ const VehicleSchema = new mongoose.Schema(
       max: new Date().getFullYear() + 1,
     },
 
-    // Vehicle Specifications
     vehicleColor: {
       type: String,
       required: true,
@@ -50,15 +48,13 @@ const VehicleSchema = new mongoose.Schema(
       type: Number,
       min: 1,
       max: 10,
-    }, // 1st owner, 2nd owner, etc.
+    }, 
 
-    // Odometer Reading
     kilometersRun: {
       type: Number,
       min: 0,
     },
 
-    // Vehicle Condition
     vehicleCondition: {
       type: String,
       required: true,
@@ -66,7 +62,6 @@ const VehicleSchema = new mongoose.Schema(
       default: "running",
     },
 
-    // Registration & Legal Documents
     registrationNumber: {
       type: String,
       required: true,
@@ -89,7 +84,6 @@ const VehicleSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // Insurance Details
     insuranceStatus: {
       type: String,
       enum: ["Valid", "Expired", "Not Available"],
@@ -106,7 +100,6 @@ const VehicleSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // Additional Vehicle Details
     seatingCapacity: {
       type: Number,
       min: 1,
@@ -114,9 +107,8 @@ const VehicleSchema = new mongoose.Schema(
     bodyType: {
       type: String,
       trim: true,
-    }, // Sedan, SUV, Hatchback, Sports Bike, Cruiser, etc.
+    }, 
 
-    // Pricing Information
     purchasePrice: {
       type: Number,
       min: 0,
@@ -125,7 +117,7 @@ const VehicleSchema = new mongoose.Schema(
       type: Number,
       min: 0,
     },
-    // Down payment and EMI information for frontend display
+    
     downPayment: {
       type: Number,
       min: 0,
@@ -139,14 +131,12 @@ const VehicleSchema = new mongoose.Schema(
       min: 0,
     },
 
-    // Vehicle Status
     availabilityStatus: {
       type: String,
       enum: ["Available", "Sold", "Reserved", "Under Service", "Not for Sale"],
       default: "Available",
     },
 
-    // ImageKit Integration - Multiple Images
     images: [
       {
         url: {
@@ -166,14 +156,12 @@ const VehicleSchema = new mongoose.Schema(
       },
     ],
 
-    // Featured/Primary Image
     primaryImage: {
       url: String,
       fileId: String,
       thumbnailUrl: String,
     },
 
-    // Additional Information
     description: {
       type: String,
       maxlength: 1000,
@@ -182,29 +170,25 @@ const VehicleSchema = new mongoose.Schema(
       {
         type: String,
       },
-    ], // AC, Power Steering, ABS, etc.
+    ], 
 
-    // Reference to user who added it
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
 
-    // Visibility for staff access
     visibility: {
       type: String,
       enum: ["private", "staff", "public"],
       default: "staff",
     },
 
-    // Tracking
     isActive: {
       type: Boolean,
       default: true,
     },
 
-    // Notes for internal use
     internalNotes: {
       type: String,
       maxlength: 500,
@@ -215,20 +199,17 @@ const VehicleSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for better query performance
 VehicleSchema.index({ vehicleType: 1, availabilityStatus: 1 });
 VehicleSchema.index({ registrationNumber: 1 });
 VehicleSchema.index({ chassisNumber: 1 });
 VehicleSchema.index({ createdAt: -1 });
 
-// Virtual for full vehicle name
 VehicleSchema.virtual("fullName").get(function () {
   return `${this.vehicleName} ${this.vehicleModel} ${
     this.vehicleVariant || ""
   }`.trim();
 });
 
-// Ensure virtuals are included in JSON
 VehicleSchema.set("toJSON", { virtuals: true });
 VehicleSchema.set("toObject", { virtuals: true });
 

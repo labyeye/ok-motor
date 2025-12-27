@@ -3,25 +3,23 @@ const SellLetter = require("../models/SellLetter");
 const Service = require("../models/ServiceBill");
 const Advance = require("../models/AdvanceBill");
 const mongoose = require("mongoose");
-// Helper function to get monthly data
+
 const getMonthlyData = async (model, matchCriteria = {}) => {
   const currentDate = new Date();
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(currentDate.getMonth() - 6);
 
-  // Determine the amount field based on model type
   let amountField;
   if (model.modelName === "BuyLetter" || model.modelName === "SellLetter") {
     amountField = "$saleAmount";
   } else if (model.modelName === "ServiceBill") {
-    amountField = "$grandTotal"; // Fixed: using grandTotal for service bills
+    amountField = "$grandTotal"; 
   } else if (model.modelName === "AdvanceBill") {
     amountField = "$advancePaid";
   } else {
     amountField = "$amount";
   }
 
-  // Determine date field based on model type
   const dateField =
     model.modelName === "ServiceBill" || model.modelName === "AdvanceBill"
       ? "$serviceDate"
@@ -82,7 +80,6 @@ const getMonthlyData = async (model, matchCriteria = {}) => {
 const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
   let selectFields = "customerName date amount";
 
-  // Model-specific field selections and transformations
   if (model.modelName === "BuyLetter") {
     return model
       .find(matchCriteria)
@@ -157,7 +154,7 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
 };
 exports.getOwnerDashboardStats = async (req, res) => {
   try {
-    // Staff and admin see all, others only their own
+    
     const isPrivileged = req.user.role === 'staff' || req.user.role === 'admin';
     const buyMatch = isPrivileged ? {} : { user: mongoose.Types.ObjectId(req.user.id) };
     const sellMatch = isPrivileged ? {} : { user: mongoose.Types.ObjectId(req.user.id) };
@@ -200,7 +197,6 @@ exports.getOwnerDashboardStats = async (req, res) => {
         getMonthlyData(Service, serviceMatch),
       ]);
 
-    // Get recent transactions
     const [recentBuy, recentSell, recentService, recentAdvance] =
       await Promise.all([
         getRecentTransactions(BuyLetter, 3, {
@@ -217,7 +213,6 @@ exports.getOwnerDashboardStats = async (req, res) => {
         }),
       ]);
 
-    // Combine monthly data
     const monthlyData = [];
     const months = [
       ...new Set([
@@ -232,7 +227,6 @@ exports.getOwnerDashboardStats = async (req, res) => {
       const sellMonth = monthlySellData.find((item) => item.month === month);
       const serviceMonth = monthlyServiceData.find((item) => item.month === month);
 
-      // For the profit calculation in monthly data
       monthlyData.push({
         month,
         buy: buyMonth ? buyMonth.count : 0,
@@ -251,8 +245,7 @@ exports.getOwnerDashboardStats = async (req, res) => {
     const totalSellValue = sellStats.length > 0 ? sellStats[0].totalAmount : 0;
     const totalServices = serviceStats.length > 0 ? serviceStats[0].count : 0;
     const totalServiceValue = serviceStats.length > 0 ? serviceStats[0].totalAmount : 0;
-    
-    // Calculate detailed revenue breakdown
+
     const totalRevenue = totalSellValue + totalServiceValue;
     const totalExpenses = totalBuyValue;
     const profit = totalRevenue - totalExpenses;
@@ -317,7 +310,7 @@ exports.getDashboardStats = async (req, res) => {
             $group: {
               _id: null,
               count: { $sum: 1 },
-              totalValue: { $sum: "$grandTotal" }, // Fixed: using grandTotal
+              totalValue: { $sum: "$grandTotal" }, 
             },
           },
         ]),
@@ -326,7 +319,6 @@ exports.getDashboardStats = async (req, res) => {
         getMonthlyData(Service),
       ]);
 
-    // Get recent transactions
     const [recentBuy, recentSell, recentService, recentAdvance] =
       await Promise.all([
         getRecentTransactions(BuyLetter),
@@ -335,7 +327,6 @@ exports.getDashboardStats = async (req, res) => {
         getRecentTransactions(Advance, 2),
       ]);
 
-    // Combine monthly data
     const monthlyData = [];
     const months = [
       ...new Set([
@@ -368,26 +359,25 @@ exports.getDashboardStats = async (req, res) => {
     const totalSellValue = sellStats.length > 0 ? sellStats[0].totalValue : 0;
     const totalServices = serviceStats.length > 0 ? serviceStats[0].count : 0;
     const totalServiceValue = serviceStats.length > 0 ? serviceStats[0].totalValue : 0;
-    
-    // Calculate detailed revenue breakdown
+
     const totalRevenue = totalSellValue + totalServiceValue;
     const totalExpenses = totalBuyValue;
     const profit = totalRevenue - totalExpenses;
     const profitPercentage = totalExpenses > 0 ? (profit / totalExpenses) * 100 : 0;
 
     if (req.user.role === 'staff') {
-      // Staff only sees counts
+      
       res.status(200).json({
         success: true,
         data: {
           totalBuyLetters,
           totalSellLetters,
           totalServices,
-          totalAdvanceBills: recentAdvance.length, // Count of advance bills
+          totalAdvanceBills: recentAdvance.length, 
         },
       });
     } else {
-      // Admin/owner sees full stats
+      
       res.status(200).json({
         success: true,
         data: {

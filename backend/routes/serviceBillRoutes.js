@@ -3,7 +3,6 @@ const router = express.Router();
 const serviceBillController = require("../controllers/serviceBillController");
 const { protect, admin } = require("../middleware/auth");
 
-// Debug endpoint - no authentication required
 router.get("/debug", (req, res) => {
   res.json({ 
     message: "Service bill API is working", 
@@ -21,12 +20,10 @@ router
   .get(protect, serviceBillController.getServiceBills)
   .post(protect, serviceBillController.createServiceBill);
 
-// Preview route (doesn't save to database)
 router
   .route("/preview")
   .post(protect, serviceBillController.previewServiceBillPDF);
 
-// Generate PDF buffer route (for offline use)
 router
   .route("/generate-pdf")
   .post(protect, serviceBillController.generatePDFBuffer);
@@ -35,7 +32,6 @@ router
   .route("/by-registration")
   .get(protect, serviceBillController.getServiceBillsByRegistration);
 
-// Add more specific routes before the generic /:id route
 router
   .route("/:id/pdf")
   .get(protect, serviceBillController.generateServiceBillPDF);
@@ -44,7 +40,6 @@ router
   .route("/:id/download")
   .get(protect, serviceBillController.downloadServiceBillPDF);
 
-// Generic /:id route should come last
 router
   .route("/:id")
   .get(protect, serviceBillController.getServiceBill)

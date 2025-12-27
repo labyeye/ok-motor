@@ -11,11 +11,10 @@ exports.createBuyLetter = async (req, res) => {
       visibility: req.body.visibility || 'private' 
     };
 
-    // If vehicle reference is provided, auto-populate vehicle details
     if (buyLetterData.vehicle) {
       const vehicle = await Vehicle.findById(buyLetterData.vehicle);
       if (vehicle) {
-        // Auto-populate vehicle fields from Vehicle model
+        
         buyLetterData.vehicleName = vehicle.vehicleName;
         buyLetterData.vehicleModel = vehicle.vehicleModel;
         buyLetterData.vehicleColor = vehicle.vehicleColor;
@@ -66,7 +65,7 @@ exports.getBuyLetters = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .populate('user', 'name role')
-      .populate('vehicle'); // Populate vehicle details
+      .populate('vehicle'); 
 
     const total = await BuyLetter.countDocuments(conditions);
 
@@ -108,10 +107,10 @@ exports.getBuyLetterById = async (req, res) => {
     const buyLetter = await BuyLetter.findOne({
       _id: req.params.id,
       $or: [
-        { user: req.user.id }, // Records created by the current user
-        { visibility: "staff" }, // Or records marked as visible to staff
-        // Or if staff should see all records for the registration number:
-        ...(req.user.role === "staff" ? [{}] : []), // Staff can see all matching registration numbers
+        { user: req.user.id }, 
+        { visibility: "staff" }, 
+        
+        ...(req.user.role === "staff" ? [{}] : []), 
       ],
     });
 
@@ -195,10 +194,10 @@ exports.saveBuyLetterPDF = async (req, res) => {
     const buyLetter = await BuyLetter.findOne({
       _id: id,
       $or: [
-        { user: req.user.id }, // Records created by the current user
-        { visibility: "staff" }, // Or records marked as visible to staff
-        // Or if staff should see all records for the registration number:
-        ...(req.user.role === "staff" ? [{}] : []), // Staff can see all matching registration numbers
+        { user: req.user.id }, 
+        { visibility: "staff" }, 
+        
+        ...(req.user.role === "staff" ? [{}] : []), 
       ],
     });
 

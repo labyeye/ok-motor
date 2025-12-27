@@ -73,7 +73,7 @@ const SellRequests = () => {
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // update local list
+      
       setRequests((prev) =>
         prev.map((p) => (p._id === id ? res.data.data : p))
       );
@@ -190,7 +190,7 @@ const SellRequests = () => {
 
       {isSidebarOpen && isMobile && <div style={styles.sidebarOverlay} onClick={() => setIsSidebarOpen(false)}></div>}
 
-      {/* Sidebar */}
+      {}
       <div
         style={{
           ...styles.sidebar,
@@ -288,7 +288,7 @@ const SellRequests = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
@@ -308,7 +308,7 @@ const SellRequests = () => {
             </div>
           </div>
 
-          {/* Table area */}
+          {}
           <div className="card" style={{ padding: 16 }}>
             {loading ? (
               <p>Loading...</p>

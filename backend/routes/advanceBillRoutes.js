@@ -1,4 +1,4 @@
-// routes/advanceBills.js
+
 const express = require("express");
 const router = express.Router();
 const generateAdvanceBillPDF = require("../utils/generateAdvanceBillPDF");
@@ -10,12 +10,11 @@ const Vehicle = require("../models/Vehicle");
 const path = require("path");
 const fs = require("fs");
 
-// Preview route (doesn't save to database)
 router.post("/preview", protect, async (req, res) => {
   try {
-    // Increase timeout for PDF generation
-    req.setTimeout(120000); // 2 minutes
-    res.setTimeout(120000); // 2 minutes
+    
+    req.setTimeout(120000); 
+    res.setTimeout(120000); 
     
     console.log("Generating advance bill preview PDF...");
     console.log("User making request:", req.user.email);
@@ -23,21 +22,18 @@ router.post("/preview", protect, async (req, res) => {
     console.log("Request body:", JSON.stringify(req.body, null, 2));
     
     const advanceBillData = req.body;
-    
-    // Create a temporary advance bill object (not saved to database)
+
     const tempAdvanceBill = {
       ...advanceBillData,
-      _id: "preview", // Temporary ID for preview
+      _id: "preview", 
     };
 
-    // Generate PDF directly without saving to database
-    const pdfBuffer = await generateAdvanceBillPDF(tempAdvanceBill, true); // true indicates return buffer
+    const pdfBuffer = await generateAdvanceBillPDF(tempAdvanceBill, true); 
 
     console.log("PDF generated successfully, buffer size:", pdfBuffer.length);
     console.log("PDF buffer type:", typeof pdfBuffer);
     console.log("PDF buffer constructor:", pdfBuffer.constructor.name);
 
-    // Send PDF directly as response
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'inline; filename=advance-bill-preview.pdf');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -57,16 +53,15 @@ router.post("/preview", protect, async (req, res) => {
   }
 });
 
-// PDF preview for existing advance bill (similar to service bills)
 router.get("/:id/pdf", protect, async (req, res) => {
   try {
     const { id } = req.params;
     const advanceBill = await AdvanceBill.findOne({
       _id: id,
       $or: [
-        { user: req.user.id }, // Records created by the current user
-        { visibility: 'staff' }, // Or records marked as visible to staff
-        // Or if staff/admin should see all records:
+        { user: req.user.id }, 
+        { visibility: 'staff' }, 
+        
         ...(req.user.role === 'staff' || req.user.role === 'admin' ? [{}] : [])
       ]
     });
@@ -78,17 +73,14 @@ router.get("/:id/pdf", protect, async (req, res) => {
       });
     }
 
-    // Generate PDF buffer for preview
     const pdfBuffer = await generateAdvanceBillPDF(advanceBill, true);
 
-    // Set headers for PDF preview (inline display)
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       `inline; filename="advance-bill-preview-${id}.pdf"`
     );
 
-    // Send the PDF buffer
     res.send(pdfBuffer);
   } catch (error) {
     console.error("Error generating PDF preview:", error);
@@ -126,7 +118,7 @@ router.get("/pdf/:filename", protect, async (req, res) => {
     res.status(500).json({ message: "Error serving PDF" });
   }
 });
-// Add this route to advanceBillRoutes.js
+
 router.get("/by-registration", protect, async (req, res) => {
   try {
     const { registrationNumber } = req.query;
@@ -222,7 +214,7 @@ router.get("/vehicle-details", protect, async (req, res) => {
     });
   }
 });
-// Delete advance bill
+
 router.delete("/:id", protect, async (req, res) => {
   try {
     const advanceBill = await AdvanceBill.findById(req.params.id);
@@ -234,7 +226,6 @@ router.delete("/:id", protect, async (req, res) => {
       });
     }
 
-    // Check if user is authorized to delete (either owner or admin)
     if (advanceBill.user.toString() !== req.user.id && req.user.role !== "admin") {
       return res.status(401).json({
         success: false,
@@ -268,14 +259,12 @@ router.post("/", protect, async (req, res) => {
       "totalAmount",
     ];
 
-    // Build advance bill data safely
     const advanceBillData = Object.assign({}, req.body);
-    
-    // If vehicle reference is provided, auto-populate vehicle details
+
     if (advanceBillData.vehicle) {
       const vehicle = await Vehicle.findById(advanceBillData.vehicle);
       if (vehicle) {
-        // Auto-populate vehicle fields from Vehicle model
+        
         advanceBillData.vehicleType = vehicle.vehicleType?.toLowerCase();
         advanceBillData.vehicleBrand = vehicle.vehicleName;
         advanceBillData.vehicleModel = vehicle.vehicleModel;
@@ -299,12 +288,10 @@ router.post("/", protect, async (req, res) => {
     advanceBillData.createdAt = new Date();
     advanceBillData.updatedAt = new Date();
 
-    // Ensure numeric values are numbers (store as numbers, not formatted strings)
     const totalAmount = parseFloat(advanceBillData.totalAmount) || 0;
     const advancePaid = parseFloat(advanceBillData.advancePaid) || 0;
     const discount = parseFloat(advanceBillData.discount) || 0;
 
-    // Calculate amounts
     const grandTotalNum = totalAmount - discount;
     const balanceDueNum = grandTotalNum - advancePaid;
 
@@ -314,11 +301,9 @@ router.post("/", protect, async (req, res) => {
     advanceBillData.grandTotal = grandTotalNum;
     advanceBillData.balanceDue = balanceDueNum;
 
-    // Save to database
     const advanceBill = new AdvanceBill(advanceBillData);
     const savedBill = await advanceBill.save();
 
-    // Generate and attach PDF (filename returned)
     const filename = await generateAdvanceBillPDF(savedBill, false);
 
     if (filename) {
@@ -340,18 +325,14 @@ router.post("/", protect, async (req, res) => {
   }
 });
 
-// Specific routes must come before generic /:id route to avoid conflicts
-
-// Generate PDF buffer route (for offline use)
 router.post("/generate-pdf", protect, async (req, res) => {
   try {
-    // Increase timeout for PDF generation
-    req.setTimeout(120000); // 2 minutes
-    res.setTimeout(120000); // 2 minutes
+    
+    req.setTimeout(120000); 
+    res.setTimeout(120000); 
     
     const advanceBillData = req.body;
-    
-    // Validate required fields
+
     if (!advanceBillData) {
       return res.status(400).json({
         success: false,
@@ -359,7 +340,6 @@ router.post("/generate-pdf", protect, async (req, res) => {
       });
     }
 
-    // Generate PDF buffer without saving to database
     const pdfBuffer = await generateAdvanceBillPDF(advanceBillData, true);
 
     res.set({
@@ -378,16 +358,15 @@ router.post("/generate-pdf", protect, async (req, res) => {
   }
 });
 
-// Download advance bill PDF (specific route)
 router.get("/:id/download", protect, async (req, res) => {
   try {
     const { id } = req.params;
     const advanceBill = await AdvanceBill.findOne({
       _id: id,
       $or: [
-        { user: req.user.id }, // Records created by the current user
-        { visibility: 'staff' }, // Or records marked as visible to staff
-        // Or if staff/admin should see all records:
+        { user: req.user.id }, 
+        { visibility: 'staff' }, 
+        
         ...(req.user.role === 'staff' || req.user.role === 'admin' ? [{}] : [])
       ]
     });
@@ -399,17 +378,14 @@ router.get("/:id/download", protect, async (req, res) => {
       });
     }
 
-    // Generate PDF buffer
     const pdfBuffer = await generateAdvanceBillPDF(advanceBill, true);
 
-    // Set headers for PDF download
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="advance-bill-${id}.pdf"`
     );
 
-    // Send the PDF buffer
     res.send(pdfBuffer);
   } catch (error) {
     console.error("Error generating PDF:", error);
@@ -422,10 +398,9 @@ router.get("/:id/download", protect, async (req, res) => {
   }
 });
 
-// Get all advance bills
 router.get("/", protect, async (req, res) => {
   try {
-  // Staff and admin can see all bills, others only their own
+  
   const userRole = req.user && req.user.role;
   const userId = req.user && (req.user.id || req.user._id);
   if (!req.user) console.warn('Advance bills list requested without req.user set');

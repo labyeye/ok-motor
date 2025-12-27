@@ -2,19 +2,17 @@ const SellLetter = require("../models/SellLetter");
 const BuyLetter = require("../models/BuyLetter");
 const Vehicle = require("../models/Vehicle");
 
-// Create a new sell letter
 exports.createSellLetter = async (req, res) => {
   try {
     const sellLetterData = {
       ...req.body,
-      user: req.user.id // Just assign the current user
+      user: req.user.id 
     };
 
-    // If vehicle reference is provided, auto-populate vehicle details
     if (sellLetterData.vehicle) {
       const vehicle = await Vehicle.findById(sellLetterData.vehicle);
       if (vehicle) {
-        // Auto-populate vehicle fields from Vehicle model
+        
         sellLetterData.vehicleName = vehicle.vehicleName;
         sellLetterData.vehicleModel = vehicle.vehicleModel;
         sellLetterData.vehicleColor = vehicle.vehicleColor;
@@ -40,11 +38,11 @@ exports.createSellLetter = async (req, res) => {
     }
     res.status(500).json({ 
       message: "Server Error",
-      error: error.message // Include the actual error message
+      error: error.message 
     });
   }
 };
-// Add to sellLetterController.js
+
 exports.getVehicleDetails = async (req, res) => {
   try {
     const { registrationNumber } = req.query;
@@ -55,7 +53,6 @@ exports.getVehicleDetails = async (req, res) => {
       });
     }
 
-    // Search in both buy and sell letters and vehicles
     const [buyLetters, sellLetters, vehicles] = await Promise.all([
       BuyLetter.find({
         registrationNumber: new RegExp(registrationNumber, "i"),
@@ -81,7 +78,6 @@ exports.getVehicleDetails = async (req, res) => {
       }).sort({ createdAt: -1 }).limit(1)
     ]);
 
-    // Prioritize Vehicle model, then buy letters, then sell letters
     const vehicleRecord = vehicles[0] || buyLetters[0] || sellLetters[0];
     
     if (!vehicleRecord) {
@@ -90,7 +86,6 @@ exports.getVehicleDetails = async (req, res) => {
       });
     }
 
-    // Extract relevant vehicle details
     const vehicleDetails = {
       vehicleName: vehicleRecord.vehicleName,
       vehicleModel: vehicleRecord.vehicleModel,
@@ -99,7 +94,7 @@ exports.getVehicleDetails = async (req, res) => {
       chassisNumber: vehicleRecord.chassisNumber,
       engineNumber: vehicleRecord.engineNumber,
       vehiclekm: vehicleRecord.vehiclekm,
-      // Add any other relevant fields
+      
     };
 
     res.json(vehicleDetails);
@@ -111,10 +106,10 @@ exports.getVehicleDetails = async (req, res) => {
     });
   }
 };
-// Get all sell letters (with optional filtering)
+
 exports.getSellLetters = async (req, res) => {
   try {
-    // You might want to add filtering options here
+    
         const sellLetters = await SellLetter.find()
       .sort({ createdAt: -1 })
       .select("-__v")
@@ -125,7 +120,7 @@ exports.getSellLetters = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
-// Add to sellLetterController.js
+
 exports.getSellLettersByRegistration = async (req, res) => {
   try {
     const { registrationNumber } = req.query;
@@ -138,9 +133,9 @@ exports.getSellLettersByRegistration = async (req, res) => {
     const sellLetters = await SellLetter.find({
       registrationNumber: new RegExp(registrationNumber, "i"),
       $or: [
-        { user: req.user.id }, // Records created by the current user
-        { visibility: "staff" }, // Or records marked as visible to staff
-        ...(req.user.role === "staff" ? [{}] : []), // Staff can see all matching registration numbers
+        { user: req.user.id }, 
+        { visibility: "staff" }, 
+        ...(req.user.role === "staff" ? [{}] : []), 
       ],
     })
       .sort({ createdAt: -1 })
@@ -156,9 +151,9 @@ exports.getMySellLetters = async (req, res) => {
   try {
     const sellLetters = await SellLetter.find({
       $or: [
-        { user: req.user.id }, // Records created by the current user
-        { visibility: "staff" }, // Or records marked as visible to staff
-        ...(req.user.role === "staff" ? [{}] : []), // Staff can see all matching registration numbers
+        { user: req.user.id }, 
+        { visibility: "staff" }, 
+        ...(req.user.role === "staff" ? [{}] : []), 
       ],
     })
       .sort({ createdAt: -1 })
@@ -176,10 +171,10 @@ exports.getSellLetterById = async (req, res) => {
     const sellLetter = await SellLetter.findOne({
       _id: req.params.id,
       $or: [
-        { user: req.user.id }, // Records created by the current user
-        { visibility: 'staff' }, // Or records marked as visible to staff
-        // Or if staff should see all records for the registration number:
-        ...(req.user.role === 'staff' ? [{}] : []) // Staff can see all matching registration numbers
+        { user: req.user.id }, 
+        { visibility: 'staff' }, 
+        
+        ...(req.user.role === 'staff' ? [{}] : []) 
       ]
     });
 
@@ -194,7 +189,6 @@ exports.getSellLetterById = async (req, res) => {
   }
 };
 
-// Update a sell letter
 exports.updateSellLetter = async (req, res) => {
   try {
     if (req.user.role !== "admin") {
@@ -224,7 +218,6 @@ exports.updateSellLetter = async (req, res) => {
   }
 };
 
-// Delete a sell letter
 exports.deleteSellLetter = async (req, res) => {
   try {
     if (req.user.role !== "admin") {

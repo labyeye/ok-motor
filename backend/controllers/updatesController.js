@@ -10,7 +10,6 @@ const imagekit = new ImageKit({
   urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
 });
 
-// Convert multer memory buffer to base64 data URI and upload
 const uploadFilesToImageKit = async (files = []) => {
   const uploaded = [];
   for (const file of files) {
@@ -31,9 +30,6 @@ const uploadFilesToImageKit = async (files = []) => {
   return uploaded;
 };
 
-// @desc Create update (admin)
-// @route POST /api/updates
-// @access Admin
 const createUpdate = asyncHandler(async (req, res) => {
   try {
     const { title, shortDescription, status } = req.body;
@@ -61,11 +57,9 @@ const createUpdate = asyncHandler(async (req, res) => {
   }
 });
 
-// Public: Get active updates (used by website)
-// Admin: if requested via admin route, see getAllUpdates
 const getActiveUpdates = asyncHandler(async (req, res) => {
   const updates = await Updates.find({ isDeleted: false, status: 'Active' }).sort({ createdAt: -1 });
-  // Map to include `poster` for compatibility with existing website
+  
   const mapped = updates.map((u) => ({
     _id: u._id,
     title: u.title,
@@ -78,17 +72,11 @@ const getActiveUpdates = asyncHandler(async (req, res) => {
   res.json(mapped);
 });
 
-// @desc Get all updates (admin)
-// @route GET /api/updates/admin
-// @access Admin
 const getAllUpdatesAdmin = asyncHandler(async (req, res) => {
   const updates = await Updates.find({ isDeleted: false }).sort({ createdAt: -1 });
   res.json({ success: true, data: updates });
 });
 
-// @desc Get single update (public if active, admin otherwise)
-// @route GET /api/updates/:id
-// @access Public / Admin
 const getUpdate = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const update = await Updates.findById(id);
@@ -98,7 +86,6 @@ const getUpdate = asyncHandler(async (req, res) => {
     return res.json({ success: true, data: update });
   }
 
-  // If not active, only allow admin
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith('Bearer ')) {
     return res.status(403).json({ success: false, message: 'Not authorized' });
@@ -114,9 +101,6 @@ const getUpdate = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc Update update (admin)
-// @route PUT /api/updates/:id
-// @access Admin
 const updateUpdate = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
@@ -124,7 +108,6 @@ const updateUpdate = asyncHandler(async (req, res) => {
     const update = await Updates.findById(id);
     if (!update || update.isDeleted) return res.status(404).json({ success: false, message: 'Update not found' });
 
-    // Handle new files (append)
     const files = req.files || [];
     if (files.length) {
       const images = await uploadFilesToImageKit(files);
@@ -143,9 +126,6 @@ const updateUpdate = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc Soft delete update (admin)
-// @route DELETE /api/updates/:id
-// @access Admin
 const deleteUpdate = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const update = await Updates.findById(id);

@@ -381,12 +381,10 @@ const AdvanceHistory = () => {
             },
           }
         );
-        // Remove from UI
         setAdvanceBills(advanceBills.filter((bill) => bill._id !== id));
       } catch (error) {
         console.error("Error deleting advance bill:", error);
 
-        // Handle authentication errors
         if (error.response?.status === 401) {
           alert("Your session has expired. Please login again.");
           logout();
@@ -485,9 +483,9 @@ const AdvanceHistory = () => {
         ]
       : []),
     {
-      name: 'Gallery',
+      name: "Gallery",
       icon: Image,
-      path: '/gallery/manage',
+      path: "/gallery/manage",
     },
     {
       name: "Vehicle History",
@@ -515,14 +513,18 @@ const AdvanceHistory = () => {
   };
 
   return (
-    <div style={{
-      ...styles.container,
-      paddingTop: isMobile ? "80px" : "0",
-    }}>
-      <div style={{
-        ...styles.topBar,
-        display: isMobile && !isSidebarOpen ? "block" : "none",
-      }}>
+    <div
+      style={{
+        ...styles.container,
+        paddingTop: isMobile ? "80px" : "0",
+      }}
+    >
+      <div
+        style={{
+          ...styles.topBar,
+          display: isMobile && !isSidebarOpen ? "block" : "none",
+        }}
+      >
         <div
           style={{
             ...styles.hamburgerMenu,
@@ -541,19 +543,21 @@ const AdvanceHistory = () => {
         ></div>
       )}
 
-      {/* Sidebar */}
-      <div style={{
-        ...styles.sidebar,
-        ...(isMobile
-          ? {
-              transform: isSidebarOpen
-                ? "translateX(0)"
-                : "translateX(-100%)",
-              position: "fixed",
-              zIndex: 15,
-            }
-          : {}),
-      }}>
+      {}
+      <div
+        style={{
+          ...styles.sidebar,
+          ...(isMobile
+            ? {
+                transform: isSidebarOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
+                position: "fixed",
+                zIndex: 15,
+              }
+            : {}),
+        }}
+      >
         <div style={styles.sidebarHeader}>
           <img
             src={logo}
@@ -562,7 +566,7 @@ const AdvanceHistory = () => {
               width: "100%",
               maxWidth: "25rem",
               height: "9rem",
-              objectFit: "cover", // match CSS
+              objectFit: "cover",
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
@@ -640,7 +644,7 @@ const AdvanceHistory = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
@@ -661,7 +665,6 @@ const AdvanceHistory = () => {
                 style={styles.searchInput}
               />
             </div>
-            
           </div>
 
           {loading ? (

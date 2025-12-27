@@ -43,7 +43,7 @@ const SellLetterHistory = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
-  // Remove modal state for editing
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
@@ -75,7 +75,6 @@ const SellLetterHistory = () => {
     note: { x: 60, y: 33, size: 10 },
   };
 
-  // English template field positions - copied from SellLetterPDF
   const englishFieldPositions = {
     vehicleName: { x: 284, y: 680, size: 11 },
     vehicleModel: { x: 93, y: 660, size: 11 },
@@ -116,25 +115,25 @@ const SellLetterHistory = () => {
     const fetchSellLetters = async () => {
       setLoading(true);
       try {
-        // Check if online
+        
         const isOnline = navigator.onLine;
 
         if (isOnline) {
-          // ONLINE - Fetch from server
+          
           const response = await axios.get(
             `https://ok-motor-51l3.vercel.app/api/sell-letters/my-letters?page=${currentPage}`,
             { headers: {} }
           );
           setSellLetters(response.data);
         } else {
-          // OFFLINE - Fetch from local storage
+          
           console.log("Offline mode - loading sell letters from local storage");
           const offlineStorage = (await import("../services/offlineStorage"))
             .default;
           const result = await offlineStorage.find("sellLetters");
 
           if (result.success && result.data) {
-            // Sort by creation date (newest first)
+            
             const sortedData = result.data.sort(
               (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
             );
@@ -146,7 +145,6 @@ const SellLetterHistory = () => {
       } catch (error) {
         console.error("Error fetching sell letters:", error);
 
-        // If online fetch fails, try offline as fallback
         if (navigator.onLine) {
           console.log("Online fetch failed, trying offline fallback");
           try {
@@ -322,11 +320,9 @@ const SellLetterHistory = () => {
 
     const [hour, minute] = timeString.split(":").map(Number);
 
-    // Convert to 12-hour format with leading zeros and proper AM/PM
-    const hours12 = hour % 12 || 12; // Convert 0 to 12 for 12-hour format
+    const hours12 = hour % 12 || 12; 
     const ampm = hour >= 12 ? "PM" : "AM";
 
-    // Add leading zero to hours and minutes if needed
     const formattedHours = String(hours12).padStart(2, "0");
     const formattedMinutes = String(minute).padStart(2, "0");
 
@@ -408,14 +404,11 @@ const SellLetterHistory = () => {
       setIsDownloading(true);
       setDownloadProgress(0);
 
-      // Simulate progress
       await simulateProgress();
 
-      // Use the new PDF template loader
       const existingPdfBytes = await loadPDFTemplate("sellletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-      // Create vehicle invoice page
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
@@ -434,7 +427,7 @@ const SellLetterHistory = () => {
         previousTime: formatTime12Hour(
           letter.previousTime || letter.todayTime || "12:00"
         ),
-        amountInWords: formatIndianAmountInWords(letter.saleAmount), // Amount in words
+        amountInWords: formatIndianAmountInWords(letter.saleAmount), 
         saleAmount: formatRupee(letter.saleAmount),
         sellerphone: letter.sellerphone || "9876543210",
         selleraadhar: letter.selleraadhar || "764465626571",
@@ -512,9 +505,9 @@ const SellLetterHistory = () => {
         buyerName1: letter.buyerName,
         buyerName2: letter.buyerName,
         saleDate: formatDate(letter.saleDate),
-        saleTime: formatTime12Hour(letter.saleTime), // Use 12-hour format
-        amountInWords: formatIndianAmountInWords(letter.saleAmount), // Amount in words
-        saleAmount: formatRupee(letter.saleAmount), // Formatted amount
+        saleTime: formatTime12Hour(letter.saleTime), 
+        amountInWords: formatIndianAmountInWords(letter.saleAmount), 
+        saleAmount: formatRupee(letter.saleAmount), 
         todayTime: formatTime12Hour(letter.todayTime || "12:00"),
         previousDate: formatDate(
           letter.previousDate || letter.todayDate || new Date()
@@ -522,7 +515,7 @@ const SellLetterHistory = () => {
         previousTime: formatTime12Hour(
           letter.previousTime || letter.todayTime || "12:00"
         ),
-        vehiclekm: formatKm(letter.vehiclekm), // Formatted KM
+        vehiclekm: formatKm(letter.vehiclekm), 
         sellerphone: letter.sellerphone || "9876543210",
         selleraadhar: letter.selleraadhar || "764465626571",
       };
@@ -587,13 +580,12 @@ const SellLetterHistory = () => {
   const drawVehicleInvoice = async (page, pdfDoc, letter) => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const logoUrl = logo1; // Use your imported logo
+    const logoUrl = logo1; 
     const logoImageBytes = await fetch(logoUrl).then((res) =>
       res.arrayBuffer()
     );
-    const logoImage = await pdfDoc.embedPng(logoImageBytes); // or embedJpg if using JPEG
+    const logoImage = await pdfDoc.embedPng(logoImageBytes); 
 
-    // Header background
     page.drawRectangle({
       x: 0,
       y: 780,
@@ -745,7 +737,6 @@ const SellLetterHistory = () => {
       font: font,
     });
 
-    // Vehicle Information section
     page.drawText("VEHICLE DETAILS", {
       x: 50,
       y: 620,
@@ -754,7 +745,6 @@ const SellLetterHistory = () => {
       font: boldFont,
     });
 
-    // Vehicle details table header
     page.drawRectangle({
       x: 50,
       y: 590,
@@ -785,7 +775,6 @@ const SellLetterHistory = () => {
     });
     const lineHeight = 12;
 
-    // Vehicle details row
     const vehicleValues = [
       letter.vehicleName || "N/A",
       letter.vehicleModel || "N/A",
@@ -819,7 +808,6 @@ const SellLetterHistory = () => {
       }
       if (currentLine) lines.push(currentLine);
 
-      // Draw each line
       lines.forEach((line, lineIndex) => {
         page.drawText(line, {
           x: xPos,
@@ -831,7 +819,6 @@ const SellLetterHistory = () => {
       });
     });
 
-    // Sale Information section
     page.drawText("SALE INFORMATION", {
       x: 50,
       y: 515,
@@ -968,7 +955,6 @@ const SellLetterHistory = () => {
       });
     });
 
-    // Seller Signature
     page.drawText("Buyer Signature", {
       x: 120,
       y: 70,
@@ -999,7 +985,6 @@ const SellLetterHistory = () => {
       color: rgb(0.6, 0.6, 0.6),
     });
 
-    // Footer
     page.drawLine({
       start: { x: 50, y: 55 },
       end: { x: 545, y: 55 },
@@ -1034,7 +1019,7 @@ const SellLetterHistory = () => {
         const isOnline = navigator.onLine;
 
         if (isOnline) {
-          // ONLINE - Delete from server
+          
           if (!token) {
             alert("You are not authenticated. Please login again.");
             logout();
@@ -1050,7 +1035,7 @@ const SellLetterHistory = () => {
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
           alert("Sell letter deleted successfully!");
         } else {
-          // OFFLINE - Delete from local storage
+          
           const offlineStorage = (await import("../services/offlineStorage"))
             .default;
           const result = await offlineStorage.deleteById("sellLetters", id);
@@ -1069,7 +1054,6 @@ const SellLetterHistory = () => {
       } catch (error) {
         console.error("Error deleting sell letter:", error);
 
-        // Handle authentication errors
         if (error.response?.status === 401) {
           alert("Your session has expired. Please login again.");
           logout();
@@ -1088,7 +1072,7 @@ const SellLetterHistory = () => {
   };
 
   const handleEdit = (letter) => {
-    // Navigate to SellLetterPDF.js for editing, passing letter data via state
+    
     navigate("/sell/create", { state: { editLetter: letter } });
   };
   const handleLogout = () => {
@@ -1183,7 +1167,7 @@ const SellLetterHistory = () => {
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    // Handle both string paths and function paths
+    
     const actualPath = typeof path === "function" ? path(user?.role) : path;
     navigate(actualPath);
   };
@@ -1219,7 +1203,7 @@ const SellLetterHistory = () => {
         ></div>
       )}
 
-      {/* Sidebar - same as SellLetterForm */}
+      {}
       <div
         style={{
           ...styles.sidebar,
@@ -1242,7 +1226,7 @@ const SellLetterHistory = () => {
               width: "100%",
               maxWidth: "25rem",
               height: "9rem",
-              objectFit: "cover", // match CSS
+              objectFit: "cover", 
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
@@ -1263,7 +1247,7 @@ const SellLetterHistory = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
-                    // Pass the path as-is (could be string or function)
+                    
                     handleMenuClick(item.name, item.path);
                   }
                 }}
@@ -1321,7 +1305,7 @@ const SellLetterHistory = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
@@ -1347,7 +1331,7 @@ const SellLetterHistory = () => {
           {loading ? (
             <div style={styles.loadingContainer}>
               <p>Loading sell letters...</p>
-              {/* You can add a spinner here */}
+              {}
             </div>
           ) : filteredLetters.length === 0 ? (
             <div style={styles.emptyState}>
@@ -1504,7 +1488,7 @@ const SellLetterHistory = () => {
             onClose={() => setIsDownloading(false)}
           />
         )}
-        {/* Edit modal removed; navigation now handles editing */}
+        {}
       </div>
     </div>
   );

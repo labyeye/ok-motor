@@ -355,7 +355,7 @@ const CreateUpdate = () => {
                   />
                 </div>
               ))}
-              {/* also show existing images (from url strings) */}
+              {}
               {preview.length === 0 &&
                 preview !== null &&
                 Array.isArray(preview) &&

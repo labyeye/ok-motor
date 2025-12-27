@@ -89,10 +89,8 @@ const [formData, setFormData] = useState({
     }
   }, [navigate]);
 
-  // Use axios directly - no need for httpClient wrapper
-
   const calculateAmounts = (data) => {
-    // Handle formatted values with commas and progressive formatting
+    
     const total = parseFloat(String(data.totalAmount).replace(/,/g, '')) || 0;
     const advance = parseFloat(String(data.advancePaid).replace(/,/g, '')) || 0;
     const discount = parseFloat(data.discount) || 0;
@@ -109,16 +107,15 @@ const [formData, setFormData] = useState({
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // For amount fields, allow only numbers and dot, but do not format aggressively
     let cleanedValue = value;
     if (["totalAmount", "advancePaid", "kmReading"].includes(name)) {
       cleanedValue = value.replace(/[^0-9.]/g, "");
-      // Only allow one dot
+      
       const dotCount = (cleanedValue.match(/\./g) || []).length;
       if (dotCount > 1) {
         cleanedValue = cleanedValue.replace(/\.(?=.*\.)/, "");
       }
-      // Limit to 2 decimal places
+      
       if (cleanedValue.includes(".")) {
         const parts = cleanedValue.split(".");
         if (parts[1].length > 2) {
@@ -140,7 +137,6 @@ const [formData, setFormData] = useState({
     setFormData(updatedData);
   };
 
-  // Optionally, you can format onBlur for amount fields
   const handleBlur = (e) => {
     const { name, value } = e.target;
     if (["totalAmount", "advancePaid"].includes(name)) {
@@ -158,13 +154,9 @@ const [formData, setFormData] = useState({
     }
   };
 
-  // Function to generate PDF buffer for offline use
-  
-
   const handleSaveAndDownload = async () => {
-    if (isSaving) return; // Prevent multiple clicks
+    if (isSaving) return; 
 
-    // List of required fields for Advance Bill
     const requiredFields = [
       "customerName", "customerPhone", "customerAddress", "vehicleType", 
       "vehicleBrand", "vehicleModel", "registrationNumber", "totalAmount"
@@ -176,7 +168,7 @@ const [formData, setFormData] = useState({
     
     if (missing.length > 0) {
       alert(`Please fill all required fields before saving/downloading. Missing: ${missing.join(", ")}`);
-      return; // Block download/save if any required field is missing
+      return; 
     }
 
     setIsSaving(true);
@@ -193,7 +185,6 @@ const [formData, setFormData] = useState({
         return;
       }
 
-      // Start progress simulation
       const progressPromise = simulateProgress();
 
       const isOnline = networkService.getStatus();
@@ -207,7 +198,7 @@ const [formData, setFormData] = useState({
         balanceDue: parseFloat(formData.balanceDue) || 0,
         kmReading: parseFloat(formData.kmReading) || 0,
         discount: parseFloat(formData.discount) || 0,
-        // VERSIONING: Add version tracking fields
+        
         ...(formData._id && {
           originalDocumentId: formData.originalDocumentId || formData._id,
           previousVersionId: formData._id,
@@ -226,10 +217,9 @@ const [formData, setFormData] = useState({
       let pdfBlob;
 
       if (!isOnline) {
-        // OFFLINE MODE - Save to offline storage
+        
         console.log('Offline mode - saving to local storage');
 
-        // Always create new version, never update
         const result = await offlineStorage.create('advanceBills', requestData);
         if (result.success) {
           billId = result.data._id;
@@ -242,7 +232,6 @@ const [formData, setFormData] = useState({
           throw new Error(result.error || 'Failed to save offline');
         }
 
-        // Generate PDF locally using pdfService
         const pdfResult = await pdfService.generateAdvanceBillPDF({
           ...requestData,
           _id: billId,
@@ -255,7 +244,6 @@ const [formData, setFormData] = useState({
           throw new Error(pdfResult.error || 'Failed to generate PDF');
         }
 
-        // Wait for progress to complete
         await progressPromise;
 
         if (pdfResult.saved && window.electronAPI) {
@@ -264,7 +252,6 @@ const [formData, setFormData] = useState({
           saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
         }
 
-        // Clear form after successful save
         setFormData({
           customerName: "",
           customerPhone: "",
@@ -289,10 +276,9 @@ const [formData, setFormData] = useState({
         });
 
       } else {
-        // ONLINE MODE - Save to server
+        
         console.log('Online mode - saving to server');
 
-        // Always create new document (never update) - for versioning
         const saveResponse = await axios.post(
           "https://ok-motor-51l3.vercel.app/api/advance-bills",
           requestData,
@@ -310,7 +296,6 @@ const [formData, setFormData] = useState({
 
         billId = saveResponse.data.data._id;
 
-        // Generate PDF using pdfService
         const pdfResult = await pdfService.generateAdvanceBillPDF({
           ...requestData,
           _id: billId,
@@ -323,7 +308,6 @@ const [formData, setFormData] = useState({
           throw new Error(pdfResult.error || 'Failed to generate PDF');
         }
 
-        // Wait for progress to complete
         await progressPromise;
 
         if (pdfResult.saved && window.electronAPI) {
@@ -338,7 +322,6 @@ const [formData, setFormData] = useState({
           alert("Advance bill saved and downloaded successfully!");
         }
 
-        // Clear form after successful save
         setFormData({
           customerName: "",
           customerPhone: "",
@@ -365,8 +348,7 @@ const [formData, setFormData] = useState({
 
     } catch (error) {
       console.error("Error in save and download:", error);
-      
-      // Handle authentication errors
+
       if (error.response?.status === 401) {
         alert("Your session has expired. Please login again.");
         logout();
@@ -529,7 +511,6 @@ const [formData, setFormData] = useState({
     try {
       setShowLoadingOverlay(true);
 
-      // Validate required fields
       if (!billData.customerName || !billData.customerPhone) {
         alert("Please fill in required customer information");
         return;
@@ -543,10 +524,8 @@ const [formData, setFormData] = useState({
         return;
       }
 
-      // Calculate final amounts before sending
       const calculated = calculateAmounts(billData);
 
-      // Prepare data with user ID and calculated amounts
       const requestData = {
         ...billData,
         user: user._id,
@@ -555,7 +534,7 @@ const [formData, setFormData] = useState({
       };
 
       if (forPreview) {
-        // Generate PDF using pdfService (works offline too)
+        
         const pdfResult = await pdfService.generateAdvanceBillPDF(requestData);
         
         if (pdfResult.success) {
@@ -566,7 +545,7 @@ const [formData, setFormData] = useState({
           throw new Error(pdfResult.error || 'Failed to generate PDF');
         }
       } else {
-        // For download, save the bill first
+        
         const saveResponse = await axios.post(
           "https://ok-motor-51l3.vercel.app/api/advance-bills",
           requestData,
@@ -584,7 +563,6 @@ const [formData, setFormData] = useState({
 
         const billId = saveResponse.data.data._id;
 
-        // Generate PDF using pdfService with saved bill ID
         const pdfResult = await pdfService.generateAdvanceBillPDF({
           ...requestData,
           _id: billId,
@@ -603,8 +581,7 @@ const [formData, setFormData] = useState({
       }
     } catch (error) {
       console.error("Error generating PDF:", error);
-      
-      // Handle authentication errors
+
       if (error.response?.status === 401) {
         alert("Your session has expired. Please login again.");
         logout();
@@ -830,7 +807,7 @@ const [formData, setFormData] = useState({
               width: "100%",
               maxWidth: "25rem",
               height: "9rem",
-              objectFit: "cover", // match CSS
+              objectFit: "cover", 
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
@@ -939,7 +916,7 @@ const [formData, setFormData] = useState({
                     value={formData.customerName}
                     onFocus={() => setFocusedInput("customerName")}
                     onChange={handleChange}
-                    // ...existing code...
+                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "customerName"
@@ -961,7 +938,7 @@ const [formData, setFormData] = useState({
                     value={formData.customerPhone}
                     onFocus={() => setFocusedInput("customerPhone")}
                     onChange={handleChange}
-                    // ...existing code...
+                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "customerPhone"
@@ -983,7 +960,7 @@ const [formData, setFormData] = useState({
                     value={formData.customerAddress}
                     onFocus={() => setFocusedInput("customerAddress")}
                     onChange={handleChange}
-                    // ...existing code...
+                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "customerAddress"
@@ -1005,7 +982,7 @@ const [formData, setFormData] = useState({
                     value={formData.customerEmail}
                     onFocus={() => setFocusedInput("customerEmail")}
                     onChange={handleChange}
-                    // ...existing code...
+                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "customerEmail"
@@ -1052,7 +1029,7 @@ const [formData, setFormData] = useState({
                     value={formData.vehicleBrand}
                     onFocus={() => setFocusedInput("vehicleBrand")}
                     onChange={handleChange}
-                    // ...existing code...
+                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "vehicleBrand"
@@ -1074,7 +1051,7 @@ const [formData, setFormData] = useState({
                     value={formData.vehicleModel}
                     onFocus={() => setFocusedInput("vehicleModel")}
                     onChange={handleChange}
-                    // ...existing code...
+                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "vehicleModel"
@@ -1095,7 +1072,7 @@ const [formData, setFormData] = useState({
                     name="registrationNumber"
                     value={formData.registrationNumber}
                     onChange={handleChange}
-                    // ...existing code...
+                    
                     onBlur={(e) => {
                       if (e.target.value.trim() !== "") {
                         fetchVehicleDetails(e.target.value.trim());
@@ -1128,7 +1105,7 @@ const [formData, setFormData] = useState({
                     value={formData.chassisNumber}
                     onFocus={() => setFocusedInput("chassisNumber")}
                     onChange={handleChange}
-                    // ...existing code...
+                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "chassisNumber"
@@ -1149,7 +1126,7 @@ const [formData, setFormData] = useState({
                     value={formData.engineNumber}
                     onFocus={() => setFocusedInput("engineNumber")}
                     onChange={handleChange}
-                    // ...existing code...
+                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "engineNumber"

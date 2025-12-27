@@ -1,22 +1,20 @@
-// models/ServiceBill.js
+
 const mongoose = require("mongoose");
 
 const ServiceBillSchema = new mongoose.Schema(
   {
-    // Vehicle Reference - New system
+    
     vehicle: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Vehicle",
       index: true,
     },
 
-    // Customer Information
     customerName: { type: String, required: true },
     customerPhone: { type: String, required: true },
     customerAddress: { type: String, required: true },
     customerEmail: { type: String },
 
-    // Vehicle Information - Legacy fields (kept for backward compatibility)
     vehicleType: {
       type: String,
       enum: ["bike", "scooter", "car", "other"],
@@ -28,7 +26,6 @@ const ServiceBillSchema = new mongoose.Schema(
     engineNumber: { type: String },
     kmReading: { type: Number },
 
-    // Service Details
     serviceDate: { type: Date, required: true, default: Date.now },
     deliveryDate: { type: Date, required: true },
     serviceType: {
@@ -52,15 +49,14 @@ const ServiceBillSchema = new mongoose.Schema(
       default: "fixed",
     },
     discountPercentage: { type: Number, default: 0 },
-    taxEnabled: { type: Boolean, default: false }, // New field for tax toggle
-    businessName: { type: String }, // New field
-    businessGSTIN: { type: String }, // New field
-    businessAddress: { type: String }, // New field
-    taxRate: { type: Number, default: 18 }, // Default GST rate
+    taxEnabled: { type: Boolean, default: false }, 
+    businessName: { type: String }, 
+    businessGSTIN: { type: String }, 
+    businessAddress: { type: String }, 
+    taxRate: { type: Number, default: 18 }, 
     taxAmount: { type: Number, required: true },
     grandTotal: { type: Number, required: true },
 
-    // Payment Information
     paymentMethod: {
       type: String,
       required: true,
@@ -75,14 +71,12 @@ const ServiceBillSchema = new mongoose.Schema(
     },
     advancePaid: { type: Number, default: 0 },
     balanceDue: { type: Number, required: true },
-    customServiceDescription: { type: String }, // Add this line
+    customServiceDescription: { type: String }, 
 
-    // Additional Information
     issuesReported: { type: String },
     technicianNotes: { type: String },
     warrantyInfo: { type: String },
 
-    // Versioning fields - to track document history
     originalDocumentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ServiceBill",
@@ -97,21 +91,18 @@ const ServiceBillSchema = new mongoose.Schema(
     editedAt: { type: Date },
     editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
-    // Reference to user who created it
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
 
-    // Visibility for staff access
     visibility: {
       type: String,
       enum: ["admin", "staff", "all"],
       default: "staff",
     },
 
-    // PDF generation info
     pdfUrl: { type: String },
     billNumber: { type: String, unique: true },
     createdAt: { type: Date, default: Date.now },
@@ -119,7 +110,6 @@ const ServiceBillSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Pre-save hook to generate bill number
 ServiceBillSchema.pre("save", async function (next) {
   if (!this.billNumber) {
     let billNumber;
@@ -133,7 +123,6 @@ ServiceBillSchema.pre("save", async function (next) {
           .toString()
           .padStart(5, "0")}`;
 
-        // Check if this bill number already exists
         const existing = await this.constructor.findOne({ billNumber });
         if (!existing) {
           this.billNumber = billNumber;
@@ -143,7 +132,7 @@ ServiceBillSchema.pre("save", async function (next) {
       } catch (error) {
         attempts++;
         if (attempts >= maxAttempts) {
-          // Fallback to timestamp-based bill number
+          
           this.billNumber = `SRV-${new Date().getFullYear()}-${Date.now()
             .toString()
             .slice(-5)}`;
@@ -153,7 +142,6 @@ ServiceBillSchema.pre("save", async function (next) {
     }
   }
 
-  // Calculate amounts if service items are modified
   if (
     this.isModified("serviceItems") ||
     this.isModified("discount") ||
@@ -167,7 +155,6 @@ ServiceBillSchema.pre("save", async function (next) {
     );
     this.taxAmount = (this.taxRate / 100) * this.totalAmount;
 
-    // Calculate discount based on type
     let discountAmount = 0;
     if (this.discountType === "percentage") {
       discountAmount = (this.discountPercentage / 100) * this.totalAmount;

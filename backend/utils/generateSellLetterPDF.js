@@ -1,4 +1,4 @@
-// utils/generateSellLetterPDF.js
+
 const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
@@ -142,7 +142,7 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
   try {
     console.log("Starting PDF generation for sell letter:", sellLetterData._id || "new letter");
 
-    // Load PDF template
+    
     const templatePath = language === "hindi"
       ? path.join(__dirname, "../../frontend/public/templates/sellletter.pdf")
       : path.join(__dirname, "../../frontend/public/templates/englishsell.pdf");
@@ -155,7 +155,7 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const firstPage = pdfDoc.getPages()[0];
 
-    // Format data
+    
     const formattedData = {
       ...sellLetterData,
       buyerName1: sellLetterData.buyerName,
@@ -171,7 +171,7 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
       previousTime: formatTime(sellLetterData.previousTime || sellLetterData.todayTime || "12:00"),
     };
 
-    // Field positions
+    
     const hindiFieldPositions = {
       vehicleName: { x: 303, y: 696, size: 11 },
       vehicleModel: { x: 39, y: 674, size: 11 },
@@ -230,7 +230,7 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
 
     const positions = language === "hindi" ? hindiFieldPositions : englishFieldPositions;
 
-    // Add amount in words
+    
     const saleAmountText = formattedData.saleAmount || "";
     const saleAmountWidth = saleAmountText.length * (positions.saleAmount.size / 2);
     const amountInWordsX = positions.saleAmount.x + saleAmountWidth + 1 * (positions.saleAmount.size / 1);
@@ -242,7 +242,7 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
       color: rgb(0, 0, 0),
     });
 
-    // Fill all form fields
+    
     for (const [fieldName, position] of Object.entries(positions)) {
       if (fieldName === "buyerPhone" && formattedData.buyerPhone) {
         const combinedPhones = `${formattedData.buyerPhone}${
@@ -264,9 +264,9 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
       }
     }
 
-    // Add invoice page
+    
     const invoicePage = pdfDoc.addPage([595, 842]);
-    // Add basic invoice content (simplified)
+    
     invoicePage.drawText("Vehicle Invoice", {
       x: 250,
       y: 800,
@@ -278,7 +278,7 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
       const pdfBytes = await pdfDoc.save();
       return Buffer.from(pdfBytes);
     } else {
-      // Save to file and return filename
+      
       const uploadDir = path.join(__dirname, "../uploads/sell-letters");
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });

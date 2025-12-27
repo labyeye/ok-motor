@@ -48,7 +48,7 @@ const SellLetterForm = () => {
   const { user, logout } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Create Sell Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
-  // Ref to ensure saveToDatabase is only executed once per create action
+  
   const savePromiseRef = useRef(null);
   const saveResultRef = useRef(null);
   const [createdId, setCreatedId] = useState(null);
@@ -66,8 +66,7 @@ const SellLetterForm = () => {
 
   const location = useLocation();
   const editLetter = location.state?.editLetter;
-  
-  // Vehicle selection from inventory
+
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [loadingVehicles, setLoadingVehicles] = useState(false);
@@ -136,7 +135,6 @@ const SellLetterForm = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Fetch available vehicles from inventory
   const fetchVehicles = async () => {
     try {
       setLoadingVehicles(true);
@@ -153,7 +151,6 @@ const SellLetterForm = () => {
     }
   };
 
-  // Handle vehicle selection from dropdown
   const handleVehicleSelect = (e) => {
     const vehicleId = e.target.value;
     setSelectedVehicleId(vehicleId);
@@ -240,7 +237,7 @@ const SellLetterForm = () => {
       };
 
       setFormData(defaultFormData);
-      // Reset saved/create guards
+      
       setCreatedId(null);
       saveResultRef.current = null;
       savePromiseRef.current = null;
@@ -538,7 +535,7 @@ const SellLetterForm = () => {
           formData.previousTime || formData.todayTime || "12:00"
         ),
       };
-      // default witness values when empty
+      
       formattedData.witnessName =
         formattedData.witnessName && String(formattedData.witnessName).trim()
           ? formattedData.witnessName
@@ -547,7 +544,7 @@ const SellLetterForm = () => {
         formattedData.witnessPhone && String(formattedData.witnessPhone).trim()
           ? formattedData.witnessPhone
           : "0000000000";
-      // ...existing code...
+      
       const positions =
         language === "hindi" ? hindiFieldPositions : englishFieldPositions;
 
@@ -564,10 +561,10 @@ const SellLetterForm = () => {
             color: rgb(0, 0, 0),
           });
         } else if (fieldName === "amountInWords" && formattedData[fieldName]) {
-          // Dynamically position amountInWords after saleAmount
+          
           const saleAmountText = formattedData.saleAmount || "";
           const saleAmountFontSize = positions.saleAmount?.size || 11;
-          // Estimate width: each character ~0.6 * fontSize
+          
           const saleAmountWidth =
             saleAmountText.length * saleAmountFontSize * 0.6;
           const dynamicX =
@@ -773,14 +770,12 @@ const SellLetterForm = () => {
       }
 
       let response;
-      // Check if we're in Electron
+      
       const isElectron = window.electronAPI !== undefined;
 
-      // VERSIONING: Always create new document, never update
-      // If editing, create a new version with reference to original
       const dataToSave = {
         ...formData,
-        // Add version tracking fields
+        
         ...(editLetter?._id && {
           originalDocumentId: editLetter.originalDocumentId || editLetter._id,
           previousVersionId: editLetter._id,
@@ -795,12 +790,11 @@ const SellLetterForm = () => {
         }),
       };
 
-      // Always create new document (never update)
       if (isElectron) {
-        // Use apiService for Electron (handles offline)
+        
         response = await apiService.post("/api/sell-letters", dataToSave);
       } else {
-        // Use axios directly for web browser
+        
         response = await axios.post(
           "https://ok-motor-51l3.vercel.app/api/sell-letters",
           dataToSave
@@ -832,7 +826,7 @@ const SellLetterForm = () => {
         alert(
           "No internet connection. Sell letter will be saved when connection is restored."
         );
-        return true; // Allow download to proceed
+        return true; 
       }
 
       if (error.response) {
@@ -855,12 +849,12 @@ const SellLetterForm = () => {
 
   const generatePDFBuffer = async (data, language = "hindi") => {
     try {
-      // Check if we're in Electron
+      
       const isElectron = window.electronAPI !== undefined;
 
       let response;
       if (isElectron) {
-        // Use apiService for Electron (handles offline)
+        
         response = await apiService.post(
           `/api/sell-letters/generate-pdf?language=${language}`,
           data,
@@ -869,7 +863,7 @@ const SellLetterForm = () => {
           }
         );
       } else {
-        // Use axios directly for web browser
+        
         response = await axios.post(
           `https://ok-motor-51l3.vercel.app/api/sell-letters/generate-pdf?language=${language}`,
           data,
@@ -900,7 +894,7 @@ const SellLetterForm = () => {
   const handleSaveAndDownload = async () => {
     try {
       setIsSaving(true);
-      // List of required fields for Sell Letter
+      
       const requiredFields = [
         "vehicleName",
         "vehicleModel",
@@ -933,26 +927,24 @@ const SellLetterForm = () => {
             ", "
           )}`
         );
-        return; // Block download/save if any required field is missing
+        return; 
       }
 
-      // Always save or update before generating PDF
       let savedLetter;
 
-      // For new creates, guard against duplicate POSTs when user double-clicks
       if (saveResultRef.current && !editLetter?._id && !createdId) {
-        // Reuse already saved result
+        
         savedLetter = saveResultRef.current;
       } else if (savePromiseRef.current && !editLetter?._id && !createdId) {
-        // Wait for in-flight save
+        
         savedLetter = await savePromiseRef.current;
       } else {
-        // Perform new save/update
+        
         savePromiseRef.current = saveToDatabase();
         try {
           savedLetter = await savePromiseRef.current;
           if (!editLetter?._id && !createdId) {
-            // Only cache result for new creates, not updates
+            
             saveResultRef.current = savedLetter;
           }
         } finally {
@@ -961,7 +953,7 @@ const SellLetterForm = () => {
       }
 
       if (!savedLetter) throw new Error("Failed to save sell letter");
-      // If we created a new letter, store its id so subsequent clicks update instead of creating duplicates
+      
       const newId = savedLetter._id || savedLetter?.data?._id;
       if (newId && !createdId) setCreatedId(newId);
       if (selectedLanguage === "hindi") {
@@ -1522,7 +1514,6 @@ const SellLetterForm = () => {
 
       await simulateProgress();
 
-      // Use the new PDF template loader
       const existingPdfBytes = await loadPDFTemplate("sellletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
@@ -1583,7 +1574,7 @@ const SellLetterForm = () => {
           fieldName === "amountInWords" &&
           formattedLetter.amountInWords
         ) {
-          // Dynamic X position for amountInWords (Hindi)
+          
           const saleAmountText = formattedLetter.saleAmount || "";
           const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
           const saleAmountWidth = font.widthOfTextAtSize(
@@ -1635,7 +1626,6 @@ const SellLetterForm = () => {
 
       await simulateProgress();
 
-      // Use the new PDF template loader
       const existingPdfBytes = await loadPDFTemplate("englishsell.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
@@ -1688,7 +1678,7 @@ const SellLetterForm = () => {
           fieldName === "amountInWords" &&
           formattedLetter.amountInWords
         ) {
-          // Dynamic X position for amountInWords (English)
+          
           const saleAmountText = formattedLetter.saleAmount || "";
           const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
           const saleAmountWidth = font.widthOfTextAtSize(
@@ -1769,7 +1759,7 @@ const SellLetterForm = () => {
         ></div>
       )}
 
-      {/* Sidebar */}
+      {}
       <div
         style={{
           ...styles.sidebar,
@@ -1870,7 +1860,7 @@ const SellLetterForm = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>
@@ -1891,7 +1881,7 @@ const SellLetterForm = () => {
           </div>
 
           <form className="form" style={styles.form}>
-            {/* Vehicle Selection from Inventory */}
+            {}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <Car style={styles.sectionIcon} /> Select Vehicle from Inventory (Optional)
@@ -2132,7 +2122,7 @@ const SellLetterForm = () => {
               </div>
             </div>
 
-            {/* Seller Information Section - Updated */}
+            {}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <User style={styles.sectionIcon} /> Buyer Information
@@ -2937,7 +2927,7 @@ const styles = {
     transition: "all 0.2s ease",
     appearance: "none",
     backgroundImage:
-      "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")",
+      "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http:
     backgroundRepeat: "no-repeat",
     backgroundPosition: "right 0.5rem center",
     backgroundSize: "1em",

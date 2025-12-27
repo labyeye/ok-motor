@@ -632,7 +632,7 @@ const VehicleHistory = () => {
             </div>
           </div>
 
-          {/* Filters */}
+          {}
           <div style={styles.filters}>
             <div style={styles.searchBox}>
               <Search size={20} style={styles.searchIcon} />
@@ -668,7 +668,7 @@ const VehicleHistory = () => {
             </select>
           </div>
 
-          {/* Vehicle List */}
+          {}
           {loading ? (
             <div style={styles.loading}>Loading vehicles...</div>
           ) : (
@@ -924,7 +924,7 @@ const VehicleHistory = () => {
                 )}
               </div>
 
-              {/* Pagination */}
+              {}
               {totalPages > 1 && (
                 <div style={styles.pagination}>
                   <button
