@@ -16,7 +16,7 @@
     />
     <link rel="canonical" href="https://www.okmotors.in/inventory.html" />
 
-    <!-- Open Graph / Facebook -->
+    
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.okmotors.in/inventory.html" />
     <meta
@@ -32,7 +32,7 @@
       content="https://www.okmotors.in/assets/images/okmotor.png"
     />
 
-    <!-- Twitter -->
+    
     <meta property="twitter:card" content="summary_large_image" />
     <meta
       property="twitter:url"
@@ -63,7 +63,7 @@
       rel="stylesheet"
     />
 
-    <!-- Structured Data -->
+    
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -581,7 +581,6 @@
     </script>
 
     <script>
-      // Filter dropdown toggle
       document.querySelectorAll(".filter-btn").forEach((btn) => {
         btn.addEventListener("click", function () {
           const dropdown = this.nextElementSibling;
@@ -589,14 +588,12 @@
             dropdown.classList.toggle("active");
           }
 
-          // Close other dropdowns
           document.querySelectorAll(".filter-dropdown").forEach((d) => {
             if (d !== dropdown) d.classList.remove("active");
           });
         });
       });
 
-      // Close dropdowns when clicking outside
       document.addEventListener("click", function (e) {
         if (!e.target.closest(".filter-group")) {
           document.querySelectorAll(".filter-dropdown").forEach((d) => {
@@ -605,10 +602,8 @@
         }
       });
 
-      // Fetch and render public vehicle listings
       document.addEventListener("DOMContentLoaded", function () {
         const grid = document.getElementById("bike-grid");
-        // Selected filter state
         let selectedBrand = null;
         let selectedYear = null;
         let selectedType = null;
@@ -622,7 +617,6 @@
           return new Intl.NumberFormat("en-IN").format(num);
         }
 
-        // Load vehicle data from backend API
         async function loadVehicleData() {
           try {
             const API_BASE = "https://ok-motor-51l3.vercel.app";
@@ -646,7 +640,6 @@
           const div = document.createElement("div");
           div.className = "bike-card";
 
-          // Choose image
           const imageUrl =
             (vehicle.primaryImage && vehicle.primaryImage.url) ||
             (vehicle.images &&
@@ -654,7 +647,6 @@
               vehicle.images[0].url) ||
             "https://via.placeholder.com/400x300/cccccc/666666?text=No+Image";
 
-          // Photo count
           const photos = vehicle.images ? vehicle.images.length : 0;
 
           div.innerHTML = `
@@ -734,17 +726,14 @@
             </div>
           `;
 
-          // Add event listeners for actions (delegated would be better for many cards)
           const contactBtn = div.querySelector(".contact-btn");
           const detailsBtn = div.querySelector(".view-details-btn");
 
           contactBtn.addEventListener("click", () => {
-            // simple action: open mailto or booking page
             window.location.href = `book.html?vehicleId=${vehicle._id}`;
           });
 
           detailsBtn.addEventListener("click", () => {
-            // Pass vehicle data to detail page via URL params
             const vehicleData = encodeURIComponent(JSON.stringify(vehicle));
             window.location.href = `vehicledetail.html?car=${vehicleData}`;
           });
@@ -756,7 +745,6 @@
           if (!append)
             grid.innerHTML = '<div class="loading">Loading vehicles...</div>';
           try {
-            // Filter vehicles based on selected filters
             let filtered = allVehicles.filter((v) => {
               if (selectedType && v.vehicleType !== selectedType) return false;
               if (selectedBrand && v.vehicleName !== selectedBrand)
@@ -780,7 +768,6 @@
               return true;
             });
 
-            // Calculate pagination
             const total = filtered.length;
             currentPage = page;
             totalPages = Math.ceil(total / limit);
@@ -801,7 +788,6 @@
               grid.appendChild(card);
             });
 
-            // show/hide load more
             const loadMoreBtn = document.getElementById("load-more-btn");
             if (currentPage < totalPages) {
               loadMoreBtn.style.display = "inline-block";
@@ -816,13 +802,11 @@
           }
         }
 
-        // helper: update filter button label/badge
         function setFilterBadge(filterKey, label) {
           const btn = document.querySelector(
             `.filter-btn[data-filter="${filterKey}"]`
           );
           if (!btn) return;
-          // remove existing badge if any
           const old = btn.querySelector(".filter-badge");
           if (old) old.remove();
           if (!label) return;
@@ -832,7 +816,6 @@
           btn.appendChild(span);
           span.querySelector(".clear-filter").addEventListener("click", (e) => {
             e.stopPropagation();
-            // clear corresponding filter
             if (filterKey === "brand") selectedBrand = null;
             if (filterKey === "year") selectedYear = null;
             if (filterKey === "type") selectedType = null;
@@ -842,10 +825,8 @@
           });
         }
 
-        // populate filter options from vehicles data
         async function populateFilters() {
           try {
-            // Extract unique values from loaded vehicles
             const brands = [
               ...new Set(allVehicles.map((v) => v.vehicleName || v.brand)),
             ].filter(Boolean);
@@ -858,7 +839,6 @@
               ...new Set(allVehicles.map((v) => v.vehicleType)),
             ].filter(Boolean);
 
-            // Price ranges
             const priceContainer = document.getElementById("price-options");
             priceContainer.innerHTML = "";
             const allPriceBtn = document.createElement("button");
@@ -874,7 +854,6 @@
             });
             priceContainer.appendChild(allPriceBtn);
 
-            // Define price ranges
             const priceRanges = [
               { label: "₹0 - ₹5 Lakhs", min: 0, max: 500000 },
               { label: "₹5 - ₹10 Lakhs", min: 500000, max: 1000000 },
@@ -896,7 +875,6 @@
               priceContainer.appendChild(btn);
             });
 
-            // Brands
             const brandContainer = document.getElementById("brand-options");
             brandContainer.innerHTML = "";
             const allBrandBtn = document.createElement("button");
@@ -926,7 +904,6 @@
               brandContainer.appendChild(btn);
             });
 
-            // Years
             const yearContainer = document.getElementById("year-options");
             yearContainer.innerHTML = "";
             const allYearBtn = document.createElement("button");
@@ -956,7 +933,6 @@
               yearContainer.appendChild(btn);
             });
 
-            // Types
             const typeContainer = document.getElementById("type-options");
             typeContainer.innerHTML = "";
             const allTypeBtn = document.createElement("button");
@@ -990,7 +966,6 @@
           }
         }
 
-        // load filters then first page
         loadVehicleData().then(() => {
           populateFilters().then(() => {
             currentPage = 1;
@@ -998,7 +973,6 @@
           });
         });
 
-        // Load more handler
         document
           .getElementById("load-more-btn")
           .addEventListener("click", () => {
@@ -1009,7 +983,6 @@
           });
       });
     </script>
-    <!-- Shared mobile sticky CTA across pages -->
     <script src="./sticky-cta.js"></script>
   </body>
 </html>

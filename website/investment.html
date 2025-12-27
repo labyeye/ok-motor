@@ -21,7 +21,7 @@
       href="./assets/images/logoblack.png"
     />
     <style>
-      /* Page-specific small tweaks */
+      
       .invest-hero {
         padding: 72px 18px 40px;
         text-align: center;
@@ -379,8 +379,7 @@
           var closeBtn = document.getElementById("mobileBannerClose");
           if (!banner || !closeBtn) return;
 
-          // Only show on small screens; CSS handles visual hide/show, but
-          // use aria-hidden for assistive tech and avoid unnecessary DOM focus.
+          function updateVisibility() {
           function updateVisibility() {
             var isMobile = window.matchMedia("(max-width:1024px)").matches;
             var dismissed =
@@ -399,7 +398,6 @@
             } catch (e) {}
           });
 
-          // Recompute on resize/orientation change
           window.addEventListener("resize", updateVisibility);
           window.addEventListener("orientationchange", updateVisibility);
           document.addEventListener("DOMContentLoaded", updateVisibility);
@@ -606,7 +604,7 @@
           FV.toFixed(2)
         )}`;
 
-        // build yearly schedule
+        
         let html =
           '<table style="width:100%;border-collapse:collapse;margin-top:8px"><thead><tr style="text-align:left"><th>Year</th><th>Value</th></tr></thead><tbody>';
         let val = P;
@@ -637,11 +635,9 @@
           document.getElementById("schedule").innerHTML = "";
         });
 
-      // initial calculate
       calculate();
     </script>
     <script src="./scroll-bg-handler.js"></script>
-    <!-- Shared mobile sticky CTA across pages -->
     <script src="./sticky-cta.js"></script>
   </body>
 </html>

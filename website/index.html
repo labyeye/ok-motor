@@ -520,8 +520,6 @@
           var closeBtn = document.getElementById("mobileBannerClose");
           if (!banner || !closeBtn) return;
 
-          // Only show on small screens; CSS handles visual hide/show, but
-          // use aria-hidden for assistive tech and avoid unnecessary DOM focus.
           function updateVisibility() {
             var isMobile = window.matchMedia("(max-width:1024px)").matches;
             var dismissed =
@@ -540,7 +538,6 @@
             } catch (e) {}
           });
 
-          // Recompute on resize/orientation change
           window.addEventListener("resize", updateVisibility);
           window.addEventListener("orientationchange", updateVisibility);
           document.addEventListener("DOMContentLoaded", updateVisibility);
@@ -609,7 +606,6 @@
       </div>
     </section>
     <script>
-      // Auto hero slider
       (function () {
         const slides = document.querySelectorAll(".hero-slide");
         let currentSlide = 0;
@@ -1741,7 +1737,6 @@
       ></div>
     </section>
 
-    <!-- Premium Products Section -->
     
 
     <footer class="footer">
@@ -2149,9 +2144,7 @@
     </div>
 
     <script>
-      // Dynamic Testimonials & Review Modal (improved)
       document.addEventListener("DOMContentLoaded", function () {
-        // compute API base (same logic used elsewhere)
         const API_BASE = (function () {
           try {
             const host = window.location.hostname;
@@ -2204,7 +2197,6 @@
             .replace(/'/g, "&#39;");
         }
 
-        // builds slider grouping reviews into slides (slideSize items)
         function renderTestimonialsSlider(reviews) {
           testimonialsContainer.innerHTML = "";
           testimonialNav.innerHTML = "";
@@ -2214,7 +2206,6 @@
             return;
           }
 
-          // determine slide size responsive
           const slideSize = window.innerWidth >= 900 ? 3 : 1;
           const slides = [];
           for (let i = 0; i < reviews.length; i += slideSize) {
@@ -2229,14 +2220,12 @@
             slide.className = "testimonial-slide";
             group.forEach((r) => slide.appendChild(createTestimonialEl(r)));
             slider.appendChild(slide);
-            // dot
             const dot = document.createElement("div");
             dot.className = "testimonial-dot" + (sidx === 0 ? " active" : "");
             dot.dataset.idx = sidx;
             testimonialNav.appendChild(dot);
           });
 
-          // controls
           const controls = document.createElement("div");
           controls.className = "testimonial-controls";
           controls.innerHTML = `<button class="testimonial-prev" aria-label="Previous reviews">&#10094;</button><button class="testimonial-next" aria-label="Next reviews">&#10095;</button>`;
@@ -2268,7 +2257,6 @@
             d.addEventListener("click", () => showSlide(i))
           );
 
-          // rebuild on resize (debounced)
           let resizeTimer;
           window.addEventListener("resize", () => {
             clearTimeout(resizeTimer);
@@ -2279,7 +2267,6 @@
           });
         }
 
-        // wire review modal open/close and footer stars
         const reviewModal = document.getElementById("reviewModal");
         const openReviewModalBtn = document.getElementById("openReviewModal");
         const closeReviewModalBtn = document.getElementById("closeReviewModal");
@@ -2305,7 +2292,6 @@
           )
         );
 
-        // star rating inside modal
         const starRating = document.getElementById("starRating");
         const reviewRatingInput = document.getElementById("reviewRating");
         if (starRating) {
@@ -2320,7 +2306,6 @@
           });
         }
 
-        // submit review
         const reviewForm = document.getElementById("reviewForm");
         reviewForm.addEventListener("submit", function (e) {
           e.preventDefault();
@@ -2346,7 +2331,6 @@
                     "none";
                   reviewModal.style.display = "none";
                   reviewForm.reset();
-                  // clear star selection
                   if (starRating)
                     Array.from(starRating.children).forEach((s) =>
                       s.classList.remove("selected")
@@ -2359,13 +2343,10 @@
             .catch(() => alert("Failed to submit review."));
         });
 
-        // initial load
-        // Prefetch bikes/featured data into localStorage so inventory can read it later
         function prefetchInventoryCache() {
           try {
             const maxAge = 5 * 60 * 1000; // 5 minutes
             const now = Date.now();
-            // bikes
             const bikesTS = localStorage.getItem("cachedBikesTS");
             if (!bikesTS || now - parseInt(bikesTS, 10) > maxAge) {
               fetch(API_BASE + "/api/bikes")
@@ -2381,7 +2362,6 @@
                 .catch(() => {});
             }
 
-            // featured bikes
             const featTS = localStorage.getItem("cachedFeaturedTS");
             if (!featTS || now - parseInt(featTS, 10) > maxAge) {
               fetch(API_BASE + "/api/featured-bikes")
@@ -2400,11 +2380,9 @@
                 .catch(() => {});
             }
           } catch (e) {
-            /* ignore */
           }
         }
         prefetchInventoryCache();
-        // Update the search-count button with live counts from the Vehicle model
         function updateSearchCount() {
           try {
             const btn = document.getElementById("searchCountBtn");
@@ -2424,17 +2402,14 @@
               return;
             }
 
-            // primary try: vehicles endpoint (uses Vehicle model on backend)
             const endpoints = ["/api/vehicles", "/api/bikes", "/api/bikes"];
             const tryEndpoint = (i) => {
               if (i >= endpoints.length) {
-                // all endpoints tried -> show zeros
                 const zeroCounts = { total: 0, cars: 0, bikes: 0 };
                 try {
                   localStorage.setItem(cacheKey, JSON.stringify(zeroCounts));
                   localStorage.setItem(cacheTSKey, String(Date.now()));
                 } catch (e) {
-                  /* ignore storage errors */
                 }
                 applyCount(zeroCounts);
                 return;
@@ -2450,13 +2425,11 @@
                     list = data.bikes;
                   else if (Array.isArray(data)) list = data;
 
-                  // If response is not an array, try the next endpoint
                   if (!Array.isArray(list)) {
                     tryEndpoint(i + 1);
                     return;
                   }
 
-                  // list is an array (may be empty). Compute counts (0 is valid)
                   const counts = { total: list.length, cars: 0, bikes: 0 };
                   list.forEach((v) => {
                     const t = (
@@ -2484,7 +2457,6 @@
                     }
                   });
 
-                  // heuristics if classification still ambiguous and list has items
                   if (
                     counts.cars === 0 &&
                     counts.bikes === 0 &&
@@ -2506,7 +2478,7 @@
                     localStorage.setItem(cacheKey, JSON.stringify(counts));
                     localStorage.setItem(cacheTSKey, String(Date.now()));
                   } catch (e) {
-                    /* ignore storage errors */
+                    
                   }
                   applyCount(counts);
                 })
@@ -2557,14 +2529,11 @@
 
             tryEndpoint(0);
           } catch (e) {
-            // silent
           }
         }
 
-        // wire tab clicks to refresh the search count
         document.querySelectorAll(".category-tabs .tab-btn").forEach((t) => {
           t.addEventListener("click", function () {
-            // toggle active state (mirrors existing tab code)
             document
               .querySelectorAll(".category-tabs .tab-btn")
               .forEach((b) => b.classList.remove("active"));
@@ -2573,7 +2542,6 @@
           });
         });
 
-        // initial call
         updateSearchCount();
       });
     </script>
@@ -2599,7 +2567,6 @@
           let scrollHandler = null;
 
           function buildDots() {
-            // don't build twice
             if (section.querySelector(".services-dots") || cards.length <= 1)
               return;
             dotsEl = document.createElement("div");
@@ -2617,7 +2584,6 @@
             });
             section.appendChild(dotsEl);
 
-            // update active on scroll
             scrollHandler = debounce(function () {
               const scrollLeft = container.scrollLeft;
               let closest = 0;
@@ -2637,7 +2603,6 @@
             container.addEventListener("scroll", scrollHandler, {
               passive: true,
             });
-            // initial set
             setTimeout(() => {
               if (scrollHandler) scrollHandler();
             }, 60);
@@ -2658,10 +2623,8 @@
             else removeDots();
           }
 
-          // init on load
           refresh();
 
-          // watch resize to toggle
           let rt;
           window.addEventListener("resize", function () {
             clearTimeout(rt);
@@ -2676,8 +2639,6 @@
     </script>
   </body>
   <script>
-    // Client-side fallback: intercept internal link clicks to detect missing pages
-    // If a clicked internal .html page responds with 404, navigate to /404.html
     (function () {
       function isInternalHtmlLink(href) {
         try {
@@ -2697,10 +2658,8 @@
           if (!a) return;
           const href = a.getAttribute("href");
           if (!href) return;
-          // ignore external and anchor links
           if (!isInternalHtmlLink(href)) return;
 
-          // let browser handle special clicks (new tab, modifier keys)
           if (
             e.defaultPrevented ||
             e.button !== 0 ||
@@ -2711,10 +2670,8 @@
           )
             return;
 
-          // Prevent navigation until we know the target exists
           e.preventDefault();
 
-          // Make a HEAD request to check existence; fall back to GET if HEAD is blocked
           const targetUrl = new URL(href, location.href).href;
           fetch(targetUrl, { method: "HEAD", cache: "no-store" })
             .then(function (res) {
@@ -2723,7 +2680,6 @@
               } else if (res.ok || res.status === 200) {
                 window.location.href = targetUrl;
               } else {
-                // for other statuses, try GET as a last resort
                 return fetch(targetUrl, {
                   method: "GET",
                   cache: "no-store",
@@ -2734,7 +2690,6 @@
               }
             })
             .catch(function () {
-              // network error or CORS; fall back to normal navigation
               window.location.href = targetUrl;
             });
         },
@@ -2743,7 +2698,6 @@
     })();
   </script>
 
-  <!-- Shared mobile sticky CTA across pages -->
   <script src="./sticky-cta.js"></script>
 
   <div class="mobile-sticky-cta" id="mobileStickyBar">

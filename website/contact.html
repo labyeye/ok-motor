@@ -73,7 +73,6 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
     <style>
-      /* Two-column layout: left = stacked cards, right = map */
       .contact-grid {
         display: flex;
         gap: 24px;
@@ -82,12 +81,11 @@
         padding: 20px;
       }
       .contact-left {
-        /* left column with cards: narrower */
         flex: 0 0 38%;
         min-width: 260px;
       }
       .contact-right {
-        /* right column with map: wider */
+        
         flex: 0 0 62%;
         min-width: 280px;
       }
@@ -450,7 +448,6 @@
                   });
                 });
               });
-              // Submit review
               const reviewForm = document.getElementById("reviewForm");
               reviewForm.addEventListener("submit", function (e) {
                 e.preventDefault();
@@ -484,7 +481,6 @@
                   })
                   .catch(() => alert("Failed to submit review."));
               });
-              // Open modal button (add anywhere you want, e.g. after testimonials)
               const testimonialsSection = document.querySelector(
                 ".testimonials-section"
               );
@@ -496,7 +492,6 @@
                 };
                 testimonialsSection.appendChild(openBtn);
               }
-              // Make footer stars open the review modal and pre-select rating
               const footerStars = document.querySelectorAll(
                 ".footer-stars .star"
               );
@@ -565,7 +560,6 @@
                 "mobileDarkModeToggle"
               );
 
-              // Check for saved user preference or system preference
               function checkDarkModePreference() {
                 const savedTheme = localStorage.getItem("theme");
                 const systemPrefersDark =
@@ -582,10 +576,8 @@
                 }
               }
 
-              // Initialize dark mode
               checkDarkModePreference();
 
-              // Desktop toggle
               if (darkModeToggle) {
                 darkModeToggle.addEventListener("change", function () {
                   if (this.checked) {
@@ -595,14 +587,12 @@
                     document.body.classList.remove("dark-mode");
                     localStorage.setItem("theme", "light");
                   }
-                  // Sync mobile toggle
                   if (mobileDarkModeToggle) {
                     mobileDarkModeToggle.checked = this.checked;
                   }
                 });
               }
 
-              // Mobile toggle
               if (mobileDarkModeToggle) {
                 mobileDarkModeToggle.addEventListener("change", function () {
                   if (this.checked) {
@@ -612,20 +602,17 @@
                     document.body.classList.remove("dark-mode");
                     localStorage.setItem("theme", "light");
                   }
-                  // Sync desktop toggle
                   if (darkModeToggle) {
                     darkModeToggle.checked = this.checked;
                   }
                 });
               }
 
-              // Watch for system theme changes
               window
                 .matchMedia("(prefers-color-scheme: dark)")
                 .addEventListener("change", (e) => {
                   const newColorScheme = e.matches ? "dark" : "light";
                   if (!localStorage.getItem("theme")) {
-                    // Only if user hasn't set a preference
                     if (newColorScheme === "dark") {
                       document.body.classList.add("dark-mode");
                       if (darkModeToggle) darkModeToggle.checked = true;
@@ -643,7 +630,6 @@
           </script>
 
           <script src="./index.js"></script>
-          <!-- Shared mobile sticky CTA across pages -->
           <script src="./sticky-cta.js"></script>
           <script
             async

@@ -106,7 +106,6 @@
         background: rgba(255, 255, 255, 0.1);
       }
 
-      /* Offer type indicators */
       .offer-badge {
         position: absolute;
         top: 15px;
@@ -542,7 +541,6 @@
     </footer>
     <script src="./testimonials.js"></script>
     <script>
-      // Dynamic testimonials fetch
       document.addEventListener("DOMContentLoaded", function () {
         const reviewModal = document.getElementById("reviewModal");
         const closeReviewModalBtn = reviewModal.querySelector(".close");
@@ -554,7 +552,6 @@
             reviewModal.style.display = "none";
           }
         });
-        // Star rating logic
         const stars = reviewModal.querySelectorAll(".star");
         const ratingInput = document.getElementById("reviewRating");
         stars.forEach((star) => {
@@ -566,7 +563,6 @@
             });
           });
         });
-        // Submit review
         const reviewForm = document.getElementById("reviewForm");
         reviewForm.addEventListener("submit", function (e) {
           e.preventDefault();
@@ -596,14 +592,12 @@
             })
             .catch(() => alert("Failed to submit review."));
         });
-        // Open modal button (add anywhere you want, e.g. after testimonials)
         const openBtn = document.createElement("button");
         openBtn.className = "review-btn";
         openBtn.onclick = () => {
           reviewModal.style.display = "block";
         };
         document.querySelector(".testimonials-section").appendChild(openBtn);
-        // Make footer stars open the review modal and pre-select rating
         const footerStars = document.querySelectorAll(".footer-stars .star");
         footerStars.forEach((fs, idx) => {
           fs.addEventListener("click", () => {
@@ -646,7 +640,6 @@
 
         document.body.appendChild(mobileMenu);
 
-        // add bottom contact block to mobile menu
         const contactBottom = document.createElement("div");
         contactBottom.className = "contact-bottom";
         contactBottom.innerHTML = `
@@ -673,7 +666,6 @@
               return `${window.location.protocol}//${host}:2500`;
             }
           } catch (e) {
-            // ignore
           }
           return "https://ok-motor-51l3.vercel.app";
         })();
@@ -690,7 +682,6 @@
           return API_BASE + "/uploads/" + url.replace(/^\/+/, "");
         }
 
-        // Fetch backend config first to determine whether Cloudinary is enabled.
         fetch(API_BASE + "/api/config")
           .then((r) => r.json())
           .then((cfg) => {
@@ -703,7 +694,6 @@
               .then((updates) => ({ updates, USE_CLOUDINARY }));
           })
           .catch((cfgErr) => {
-            // On config failure, fetch updates without cloud filtering
             return fetch(API_BASE + "/api/updates")
               .then((res) => {
                 if (!res.ok) throw new Error("Network response was not ok");
@@ -722,7 +712,6 @@
               return;
             }
 
-            // Render updates, skipping local posters if cloud is enabled
             const visibleUpdates = updates.filter((u) => {
               const posterUrl = normalizeImageUrl(u.poster);
               if (!posterUrl) return false;
@@ -774,7 +763,6 @@
             `;
           });
       });
-      // Dark / Light theme toggle initialization
       (function () {
         const toggle = document.getElementById("darkModeToggle");
         if (!toggle) return;
@@ -801,7 +789,6 @@
           localStorage.setItem(THEME_KEY, newTheme);
         });
 
-        // If user hasn't selected a preference, follow system changes
         try {
           const mql = window.matchMedia("(prefers-color-scheme: dark)");
           mql.addEventListener &&
@@ -809,9 +796,7 @@
               if (!localStorage.getItem(THEME_KEY))
                 apply(e.matches ? "dark" : "light");
             });
-        } catch (e) {
-          /* ignore */
-        }
+        } catch (e) {}
       })();
     </script>
     <script>
@@ -821,7 +806,6 @@
           "mobileDarkModeToggle"
         );
 
-        // Check for saved user preference or system preference
         function checkDarkModePreference() {
           const savedTheme = localStorage.getItem("theme");
           const systemPrefersDark =
@@ -835,10 +819,8 @@
           }
         }
 
-        // Initialize dark mode
         checkDarkModePreference();
 
-        // Desktop toggle
         if (darkModeToggle) {
           darkModeToggle.addEventListener("change", function () {
             if (this.checked) {
@@ -848,14 +830,12 @@
               document.body.classList.remove("dark-mode");
               localStorage.setItem("theme", "light");
             }
-            // Sync mobile toggle
             if (mobileDarkModeToggle) {
               mobileDarkModeToggle.checked = this.checked;
             }
           });
         }
 
-        // Mobile toggle
         if (mobileDarkModeToggle) {
           mobileDarkModeToggle.addEventListener("change", function () {
             if (this.checked) {
@@ -865,20 +845,17 @@
               document.body.classList.remove("dark-mode");
               localStorage.setItem("theme", "light");
             }
-            // Sync desktop toggle
             if (darkModeToggle) {
               darkModeToggle.checked = this.checked;
             }
           });
         }
 
-        // Watch for system theme changes
         window
           .matchMedia("(prefers-color-scheme: dark)")
           .addEventListener("change", (e) => {
             const newColorScheme = e.matches ? "dark" : "light";
             if (!localStorage.getItem("theme")) {
-              // Only if user hasn't set a preference
               if (newColorScheme === "dark") {
                 document.body.classList.add("dark-mode");
                 if (darkModeToggle) darkModeToggle.checked = true;
@@ -923,7 +900,6 @@
     </div>
 
     <script src="./scroll-bg-handler.js"></script>
-    <!-- Shared mobile sticky CTA across pages -->
     <script src="./sticky-cta.js"></script>
   </body>
 </html>

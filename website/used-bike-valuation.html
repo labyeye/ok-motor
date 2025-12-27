@@ -20,7 +20,6 @@
       href="https://www.okmotors.in/used-bike-valuation.html"
     />
 
-    <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta
       property="og:url"
@@ -39,7 +38,6 @@
       content="https://www.okmotors.in/assets/images/okmotor.png"
     />
 
-    <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta
       property="twitter:url"
@@ -623,11 +621,9 @@
     <script src="./scroll-bg-handler.js"></script>
     <script src="./index-valuation.js"></script>
     <script>
-      // API_BASE is already defined in index-valuation.js
       let bikeMakes = [];
       let currentBikeData = null;
-
-      // Load bike makes from API
+      
       async function loadBikeMakes() {
         const makeSelect = document.getElementById("make");
         try {
@@ -639,7 +635,7 @@
           if (result.success && result.data) {
             bikeMakes = result.data;
           } else {
-            // Fallback to default makes
+            
             bikeMakes = [
               "KTM",
               "Royal Enfield",
@@ -654,7 +650,6 @@
           }
         } catch (error) {
           console.error("Error loading bike makes:", error);
-          // Fallback to default makes
           bikeMakes = [
             "KTM",
             "Royal Enfield",
@@ -668,7 +663,7 @@
           ];
         }
 
-        // Populate the dropdown
+        
         makeSelect.innerHTML = '<option value="">Select Make</option>';
         bikeMakes.forEach((make) => {
           const option = document.createElement("option");
@@ -678,7 +673,6 @@
         });
       }
 
-      // Load available years for a specific make and model
       async function loadBikeYears(make, model) {
         const yearSelect = document.getElementById("year");
         yearSelect.innerHTML = '<option value="">Loading years...</option>';
@@ -693,7 +687,7 @@
           const result = await response.json();
 
           if (result.success && result.data && result.data.length > 0) {
-            // Extract unique years from the results
+            
             const years = [...new Set(result.data.map((bike) => bike.year))]
               .filter((year) => year && year !== "")
               .sort((a, b) => b.localeCompare(a)); // Sort descending
@@ -709,7 +703,6 @@
             return years;
           }
 
-          // Fallback to generate years if API doesn't return any
           const currentYear = new Date().getFullYear();
           const fallbackYears = [];
           for (let y = currentYear; y >= currentYear - 15; y--) {
@@ -728,7 +721,6 @@
         } catch (error) {
           console.error("Error loading bike years:", error);
 
-          // Fallback to generate years
           const currentYear = new Date().getFullYear();
           const fallbackYears = [];
           for (let y = currentYear; y >= currentYear - 15; y--) {
@@ -747,7 +739,6 @@
         }
       }
 
-      // Load bike models for a specific make
       async function loadBikeModels(make) {
         try {
           const response = await fetch(
@@ -768,7 +759,6 @@
         }
       }
 
-      // Fetch bike details from API
       async function fetchBikeData(make, model, year) {
         try {
           let url = `https://ok-motor-51l3.vercel.app/api/bikes?make=${encodeURIComponent(
@@ -792,12 +782,10 @@
         }
       }
 
-      // Initialize on page load
       document.addEventListener("DOMContentLoaded", function () {
         loadBikeMakes();
       });
 
-      // Update models when make changes
       document
         .getElementById("make")
         .addEventListener("change", async function () {
@@ -805,13 +793,11 @@
           const modelSelect = document.getElementById("model");
           const yearSelect = document.getElementById("year");
 
-          // Clear existing options
           modelSelect.innerHTML = '<option value="">Select Model</option>';
           yearSelect.innerHTML = '<option value="">Select Year</option>';
 
           if (!makeSelect) return;
 
-          // Fetch and populate models
           const models = await loadBikeModels(makeSelect);
           models.forEach((modelName) => {
             const option = document.createElement("option");
@@ -820,11 +806,9 @@
             modelSelect.appendChild(option);
           });
 
-          // Load years for the selected make
           await loadBikeYears(makeSelect);
         });
 
-      // Update years when model changes
       document
         .getElementById("model")
         .addEventListener("change", async function () {
@@ -836,7 +820,6 @@
           }
         });
 
-      // Handle form submission
       document
         .getElementById("bikeValForm")
         .addEventListener("submit", async function (e) {
@@ -854,7 +837,6 @@
             return;
           }
 
-          // Fetch bike data from API
           const bikeData = await fetchBikeData(make, model, year);
 
           const baseData = {
@@ -865,7 +847,6 @@
             owners: 1,
           };
 
-          // Calculate for all three conditions (pass bike data to calculation)
           const priceFair = await calculateValuation(
             { ...baseData, condition: "fair" },
             "bike",
@@ -900,7 +881,6 @@
             "priceExcellent"
           ).textContent = `Rs. ${priceExcellent.toLocaleString()}`;
 
-          // Update CTA buttons
           document.getElementById("sellVehicleName").textContent = titleText;
           document.getElementById("buyVehicleName").textContent = titleText;
 
@@ -908,7 +888,6 @@
           resultEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
         });
 
-      // mobile dropdown toggle
       document.addEventListener("DOMContentLoaded", function () {
         document
           .querySelectorAll(
@@ -925,7 +904,6 @@
           });
       });
     </script>
-    <!-- Shared mobile sticky CTA across pages -->
     <script src="./sticky-cta.js"></script>
   </body>
 </html>

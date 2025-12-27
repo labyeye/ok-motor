@@ -750,7 +750,6 @@
             reviewModal.style.display = "block";
           };
           document.querySelector(".testimonials-section").appendChild(openBtn);
-          // Make footer stars open the review modal and pre-select rating
           const footerStars = document.querySelectorAll(".footer-stars .star");
           footerStars.forEach((fs, idx) => {
             fs.addEventListener("click", () => {
@@ -773,7 +772,6 @@
             "mobileDarkModeToggle"
           );
 
-          // Check for saved user preference or system preference
           function checkDarkModePreference() {
             const savedTheme = localStorage.getItem("theme");
             const systemPrefersDark =
@@ -787,10 +785,8 @@
             }
           }
 
-          // Initialize dark mode
           checkDarkModePreference();
 
-          // Desktop toggle
           if (darkModeToggle) {
             darkModeToggle.addEventListener("change", function () {
               if (this.checked) {
@@ -800,14 +796,12 @@
                 document.body.classList.remove("dark-mode");
                 localStorage.setItem("theme", "light");
               }
-              // Sync mobile toggle
               if (mobileDarkModeToggle) {
                 mobileDarkModeToggle.checked = this.checked;
               }
             });
           }
 
-          // Mobile toggle
           if (mobileDarkModeToggle) {
             mobileDarkModeToggle.addEventListener("change", function () {
               if (this.checked) {
@@ -817,20 +811,17 @@
                 document.body.classList.remove("dark-mode");
                 localStorage.setItem("theme", "light");
               }
-              // Sync desktop toggle
               if (darkModeToggle) {
                 darkModeToggle.checked = this.checked;
               }
             });
           }
 
-          // Watch for system theme changes
           window
             .matchMedia("(prefers-color-scheme: dark)")
             .addEventListener("change", (e) => {
               const newColorScheme = e.matches ? "dark" : "light";
               if (!localStorage.getItem("theme")) {
-                // Only if user hasn't set a preference
                 if (newColorScheme === "dark") {
                   document.body.classList.add("dark-mode");
                   if (darkModeToggle) darkModeToggle.checked = true;
@@ -878,7 +869,6 @@
 
           document.body.appendChild(mobileMenu);
 
-          // add bottom contact block to mobile menu
           const contactBottom = document.createElement("div");
           contactBottom.className = "contact-bottom";
           contactBottom.innerHTML = `
@@ -995,7 +985,6 @@
               }
             });
 
-            // Scroll to first invalid field
             if (firstInvalidField) {
               firstInvalidField.scrollIntoView({
                 behavior: "smooth",
@@ -1007,11 +996,9 @@
             return isValid;
           }
 
-          // Form submission handler
           form.addEventListener("submit", async function (e) {
             e.preventDefault();
 
-            // Validate form
             if (!validateForm()) {
               showMessage(
                 "Please fill all required fields marked with *",
@@ -1023,22 +1010,18 @@
             const submitBtn = form.querySelector('button[type="submit"]');
             const originalBtnText = submitBtn.textContent;
 
-            // Disable button and show loading state
             submitBtn.disabled = true;
             submitBtn.innerHTML =
               '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
             try {
-              // Create FormData object
               const formData = new FormData();
 
-              // Add form fields
               const formFields = form.querySelectorAll(
                 "input, select, textarea"
               );
               formFields.forEach((field) => {
                 if (field.type === "file") {
-                  // Handle file inputs
                   for (let i = 0; i < field.files.length; i++) {
                     formData.append("images", field.files[i]);
                   }
@@ -1049,7 +1032,6 @@
                 }
               });
 
-              // Submit to server
               const response = await fetch(
                 "https://ok-motor-51l3.vercel.app/api/sell-request",
                 {
@@ -1084,14 +1066,12 @@
                 "error"
               );
             } finally {
-              // Reset button state
               submitBtn.disabled = false;
               submitBtn.innerHTML = originalBtnText;
             }
           });
         });
 
-        // Google Analytics
         window.dataLayer = window.dataLayer || [];
         function gtag() {
           dataLayer.push(arguments);
@@ -1130,7 +1110,6 @@
         </a>
       </div>
     </div>
-    <!-- Shared mobile sticky CTA across pages -->
     <script src="./sticky-cta.js"></script>
   </body>
 </html>

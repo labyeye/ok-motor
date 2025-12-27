@@ -20,7 +20,6 @@
       href="https://www.okmotors.in/used-car-valuation.html"
     />
 
-    <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta
       property="og:url"
@@ -39,7 +38,6 @@
       content="https://www.okmotors.in/assets/images/okmotor.png"
     />
 
-    <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta
       property="twitter:url"
@@ -637,7 +635,6 @@
     <script src="./scroll-bg-handler.js"></script>
     <script src="./index-valuation.js"></script>
     <script>
-      // Load car models data
       let carsData = null;
 
       fetch("./data/cars-models.json")
@@ -647,17 +644,14 @@
         })
         .catch((error) => console.error("Error loading cars data:", error));
 
-      // Update models when make changes
       document.getElementById("make").addEventListener("change", function () {
         const makeSelect = this.value;
         const modelSelect = document.getElementById("model");
 
-        // Clear existing options
         modelSelect.innerHTML = '<option value="">Select Model</option>';
 
         if (!makeSelect || !carsData) return;
 
-        // Find brand and populate models
         const brand = carsData.brands.find((b) => b.make === makeSelect);
         if (brand && brand.models) {
           brand.models.forEach((modelData) => {
@@ -671,7 +665,6 @@
         }
       });
 
-      // Use shared calculateValuation function from index-valuation.js
       document
         .getElementById("carValForm")
         .addEventListener("submit", function (e) {
@@ -697,7 +690,6 @@
             owners: 1,
           };
 
-          // Calculate for all three conditions
           const priceFair = calculateValuation(
             { ...baseData, condition: "fair" },
             "car"
@@ -729,7 +721,6 @@
             "priceExcellent"
           ).textContent = `Rs. ${priceExcellent.toLocaleString()}`;
 
-          // Update CTA buttons
           document.getElementById("sellVehicleName").textContent = titleText;
           document.getElementById("buyVehicleName").textContent = titleText;
 
@@ -737,7 +728,6 @@
           resultEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
         });
 
-      // mobile dropdown toggle
       document.addEventListener("DOMContentLoaded", function () {
         document
           .querySelectorAll(
@@ -754,7 +744,6 @@
           });
       });
     </script>
-    <!-- Shared mobile sticky CTA across pages -->
     <script src="./sticky-cta.js"></script>
   </body>
 </html>

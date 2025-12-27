@@ -27,9 +27,7 @@
             "@type": "LocalBusiness",
             "@id": "https://www.okmotors.in/#patna",
             "name": "Ok Motors - Patna",
-      <script src="./scroll-bg-handler.js">
-    </script>
-    <!-- Shared mobile sticky CTA across pages -->
+      <script src="./scroll-bg-handler.js"></script>
     <script src="./sticky-cta.js"></script>
     "address": { "@type": "PostalAddress", "addressLocality": "Patna",
     "addressRegion": "Bihar", "addressCountry": "IN" }, "url":
@@ -687,7 +685,6 @@
           "mobileDarkModeToggle"
         );
 
-        // Check for saved user preference or system preference
         function checkDarkModePreference() {
           const savedTheme = localStorage.getItem("theme");
           const systemPrefersDark =
@@ -701,10 +698,8 @@
           }
         }
 
-        // Initialize dark mode
         checkDarkModePreference();
 
-        // Desktop toggle
         if (darkModeToggle) {
           darkModeToggle.addEventListener("change", function () {
             if (this.checked) {
@@ -714,14 +709,12 @@
               document.body.classList.remove("dark-mode");
               localStorage.setItem("theme", "light");
             }
-            // Sync mobile toggle
             if (mobileDarkModeToggle) {
               mobileDarkModeToggle.checked = this.checked;
             }
           });
         }
 
-        // Mobile toggle
         if (mobileDarkModeToggle) {
           mobileDarkModeToggle.addEventListener("change", function () {
             if (this.checked) {
@@ -731,20 +724,17 @@
               document.body.classList.remove("dark-mode");
               localStorage.setItem("theme", "light");
             }
-            // Sync desktop toggle
             if (darkModeToggle) {
               darkModeToggle.checked = this.checked;
             }
           });
         }
 
-        // Watch for system theme changes
         window
           .matchMedia("(prefers-color-scheme: dark)")
           .addEventListener("change", (e) => {
             const newColorScheme = e.matches ? "dark" : "light";
             if (!localStorage.getItem("theme")) {
-              // Only if user hasn't set a preference
               if (newColorScheme === "dark") {
                 document.body.classList.add("dark-mode");
                 if (darkModeToggle) darkModeToggle.checked = true;

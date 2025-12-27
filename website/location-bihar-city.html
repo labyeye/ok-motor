@@ -48,7 +48,6 @@
     />
 
     <script>
-      // Helper to parse query params
       function getQueryParam(name) {
         const params = new URLSearchParams(window.location.search);
         return params.get(name);
@@ -70,7 +69,6 @@
             return;
           }
 
-          // Update title and meta
           document.title = city.name + " — Second Hand Bikes | Ok Motors";
           const desc = document.querySelector('meta[name="description"]');
           if (desc)
@@ -79,7 +77,6 @@
               city.description ||
                 `Find second hand bikes in ${city.name}. Verified pre-owned bikes, local inspections and finance options.`
             );
-          // set meta keywords
           let kw = document.querySelector('meta[name="keywords"]');
           if (!kw) {
             kw = document.createElement("meta");
@@ -91,7 +88,6 @@
             city.keywords ||
               `second hand bike in ${city.name}, used bike ${city.name}`
           );
-          // Set canonical
           let link = document.querySelector('link[rel="canonical"]');
           if (!link) {
             link = document.createElement("link");
@@ -103,9 +99,8 @@
             `https://www.okmotors.in/second-hand-bikes-${city.slug}.html`
           );
 
-          // Render content (include description, keywords and CTA to inventory)
           const container = document.getElementById("main");
-          // build an extended SEO paragraph by combining the provided description and keywords
+          
           const keywordsText = (city.keywords || "")
             .split(",")
             .map((k) => k.trim())
@@ -454,7 +449,6 @@
       </div>
     </footer>
     <script src="./scroll-bg-handler.js"></script>
-    <!-- Shared mobile sticky CTA across pages -->
     <script src="./sticky-cta.js"></script>
   </body>
 </html>

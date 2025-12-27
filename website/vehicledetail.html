@@ -255,7 +255,7 @@
     <div class="inventory-hero" id="maincontent">
       <div class="vehicle-main-section">
         <div class="vehicle-content-row">
-          <!-- Left: Image Gallery -->
+          
           <div class="vehicle-image-block">
             <img
               id="mainVehicleImg"
@@ -266,13 +266,13 @@
             <div class="vehicle-thumbnails" id="vehicleThumbnails"></div>
           </div>
 
-          <!-- Right: Vehicle Details -->
+          
           <div class="vehicle-details-block">
-            <!-- Title & Model -->
+            
             <h1 class="vehicle-title" id="vehicleTitle">Vehicle Brand Model</h1>
             <p class="vehicle-subtitle" id="vehicleModel">2022 Model</p>
 
-            <!-- Price Box -->
+            
             <div class="price-box">
               <div class="price-label">Price</div>
               <div class="price-row">
@@ -280,7 +280,7 @@
               </div>
             </div>
 
-            <!-- Key Specifications -->
+            
             <div class="specs-section">
               <h3 class="specs-title">Key Specifications</h3>
               <div class="specs-grid">
@@ -329,7 +329,7 @@
               </div>
             </div>
 
-            <!-- Action Buttons -->
+            
             <div class="cta-section">
               <button
                 class="btn-primary"
@@ -345,7 +345,7 @@
               </button>
             </div>
 
-            <!-- Trust Badges -->
+            
             <div class="trust-badges">
               <div class="badge-item">
                 <i class="fas fa-shield-alt"></i>
@@ -363,11 +363,9 @@
           </div>
         </div>
 
-        <!-- Additional Details Section -->
         
       </div>
 
-      <!-- Why Choose Section -->
       <div class="why-choose-row">
         <div class="why-choose-item">
           <i class="fas fa-shield-alt"></i> Verified Documents
@@ -385,14 +383,11 @@
       
     </div>
     <script>
-      // API Configuration
       const API_BASE_URL = "https://ok-motor-51l3.vercel.app";
 
-      // Helper function to get the correct image URL
       function getImageUrl(imagePath) {
         if (!imagePath) return "assets/placeholder.png";
 
-        // If it's already a full URL (Cloudinary or other CDN), use it as-is
         if (
           imagePath.startsWith("http://") ||
           imagePath.startsWith("https://")
@@ -400,12 +395,10 @@
           return imagePath;
         }
 
-        // For local filenames, construct the full URL
         const filename = imagePath.startsWith("carimages/")
           ? imagePath.replace("carimages/", "")
           : imagePath;
 
-        // Check if it's a local asset
         if (filename.startsWith("assets/")) {
           return filename;
         }
@@ -413,9 +406,7 @@
         return `${API_BASE_URL}/carimages/${filename}`;
       }
 
-      // Helper Functions
       function formatOwnership(owner) {
-        // Convert to string if it's a number
         const ownerStr = String(owner);
         
         if (ownerStr === "1" || ownerStr.includes("1st")) return "1st Owner";
@@ -448,7 +439,6 @@
         }
       }
 
-      // Load Car Data — support both full object in ?car=... and id in ?id=...
       (function () {
         const params = new URLSearchParams(window.location.search);
         const carFromQuery = (function () {
@@ -462,11 +452,9 @@
         function populateCar(car) {
           if (!car) return;
 
-          // Debug log to check the data structure
           console.log("Vehicle data received:", car);
           console.log("Images array:", car.images);
 
-          // Basic Info
           const vehicleTitle = document.getElementById("vehicleTitle");
           if (vehicleTitle) {
             vehicleTitle.textContent = `${
@@ -480,7 +468,6 @@
             } Model`;
           }
 
-          // Primary Details
           const vehicleKm = document.getElementById("vehicleKm");
           if (vehicleKm) {
             vehicleKm.textContent = `${(
@@ -513,7 +500,6 @@
             vehicleModelYear.textContent = car.manufacturingYear || car.modelYear || car.year || "-";
           }
 
-          // Price & EMI
           const price = car.sellingPrice || car.expectedPrice || car.price || 0;
           const vehiclePrice = document.getElementById("vehiclePrice");
           if (vehiclePrice) {
@@ -528,7 +514,6 @@
             vehicleEmi.textContent = `EMI starts at ₹${emiAmount.toLocaleString()}/month`;
           }
 
-          // Additional Details - Show only if data exists
           let hasAdditionalDetails = false;
           const additionalSection =
             document.getElementById("additionalDetails");
@@ -599,16 +584,12 @@
             additionalSection.style.display = "block";
           }
 
-          // collect images from possible fields (photos, imageUrl, images, image)
           let images = [];
           if (car.images && Array.isArray(car.images) && car.images.length) {
-            // Handle array of image objects (from Vehicle model) or URLs
             images = car.images.map((img) => {
-              // If it's an object with url property, extract url
               if (typeof img === "object" && img.url) {
                 return img.url;
               }
-              // Otherwise treat it as a string URL
               return img;
             });
           } else if (
@@ -635,7 +616,6 @@
           }
           if (!images || images.length === 0) images = ["assets/owner.png"];
           
-          // Debug log for extracted image URLs
           console.log('Extracted image URLs:', images);
           
           const mainImg = document.getElementById("mainVehicleImg");
@@ -712,7 +692,6 @@
           populateCar(carFromQuery);
         } else if (params.get("id")) {
           const id = params.get("id");
-          // Fetch vehicle details from Vehicle API
           fetch(`${API_BASE_URL}/api/vehicles/${id}`)
             .then((res) => {
               if (!res.ok) throw new Error("Vehicle not found");
@@ -720,7 +699,6 @@
             })
             .then((data) => {
               const vehicle = data.vehicle || data;
-              // Transform Vehicle model to expected format
               const transformed = {
                 _id: vehicle._id,
                 id: vehicle._id,
@@ -763,7 +741,6 @@
                 color: vehicle.vehicleColor || vehicle.color,
                 vehicleColor: vehicle.vehicleColor || vehicle.color,
                 vehicleType: vehicle.vehicleType,
-                // Handle images array - extract URLs from image objects
                 images: Array.isArray(vehicle.images)
                   ? vehicle.images.map((img) =>
                       typeof img === "object" && img.url ? img.url : img
@@ -790,7 +767,6 @@
             });
         }
       })();
-      // Fetch other vehicles from backend and show in slider
       fetch(`${API_BASE_URL}/api/vehicles/public/listings`)
         .then((response) => response.json())
         .then((data) => {
@@ -805,14 +781,12 @@
               if (vehicle._id && vehicle._id === (carIdFromQuery() || ""))
                 return;
 
-              // Get image URL
               let imgSrc = "assets/owner.png";
               if (
                 vehicle.images &&
                 Array.isArray(vehicle.images) &&
                 vehicle.images.length > 0
               ) {
-                // Images array contains objects with url property or direct URLs
                 const firstImage = vehicle.images[0];
                 if (typeof firstImage === "object" && firstImage.url) {
                   imgSrc = firstImage.url;
@@ -910,7 +884,6 @@
                 </div>
               `;
 
-              // Add event listeners
               setTimeout(() => {
                 const viewDetailsBtn = card.querySelector(".view-details-btn");
                 const contactBtn = card.querySelector(".contact-btn");
@@ -918,7 +891,6 @@
                 if (viewDetailsBtn && !viewDetailsBtn.disabled) {
                   viewDetailsBtn.onclick = (e) => {
                     e.stopPropagation();
-                    // Navigate by vehicle ID instead of query string
                     window.location.href = `vehicledetail.html?id=${vehicle._id}`;
                   };
                 }
@@ -934,12 +906,10 @@
               otherCarsRow.appendChild(card);
             });
 
-            // Enable auto-scroll for other cars
             enableAutoSlider();
           }
         });
 
-      // Auto-scroll functionality
       function enableAutoSlider() {
         const row = document.getElementById("otherCarsRow");
         if (!row) return;
@@ -977,15 +947,11 @@
           }, 3000);
         });
       }
-      // Duplicate rendering of "other cars" removed. The initial fetch above
-      // already populates `otherCarsRow` and calls `enableAutoSlider()`.
-      // --- THUMBNAIL SLIDER LOGIC ---
       (function () {
         const mainImg = document.getElementById("mainVehicleImg");
         const thumbnails = document.getElementById("vehicleThumbnails");
         if (!mainImg || !thumbnails) return;
 
-        // Prevent initializing the thumbnail scroll more than once
         if (
           thumbnails.dataset.sliderInitialized === "true" ||
           thumbnails.querySelector(".vehicle-thumbnails-scroll")
@@ -997,7 +963,6 @@
           const thumbs = Array.from(thumbnails.querySelectorAll("img"));
           if (thumbs.length <= 5) return;
 
-          // Wrap thumbnails in scroll container
           const scrollContainer = document.createElement("div");
           scrollContainer.className = "vehicle-thumbnails-scroll";
           scrollContainer.style.overflowX = "auto";
@@ -1019,7 +984,6 @@
               img.classList.toggle("selected", idx === currentMainIdx);
             });
             mainImg.src = thumbs[currentMainIdx].src;
-            // Scroll thumbnail strip to keep selected in view
             const thumbWidth = thumbs[0].offsetWidth + 12;
             const visibleStart = scrollContainer.scrollLeft;
             const visibleEnd = visibleStart + scrollContainer.offsetWidth;
@@ -1034,7 +998,6 @@
           }
           updateThumbs();
 
-          // Clicking a thumbnail changes main image
           thumbs.forEach((img, idx) => {
             img.onclick = function () {
               currentMainIdx = idx;
@@ -1042,7 +1005,6 @@
             };
           });
 
-          // Create slider buttons
           const prevBtn = document.createElement("button");
           prevBtn.className = "slider-btn prev";
           prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
@@ -1066,7 +1028,6 @@
           thumbnails.appendChild(prevBtn);
           thumbnails.appendChild(nextBtn);
 
-          // Show/hide buttons on main image hover
           const imageBlock = mainImg.closest(".vehicle-image-block");
           if (imageBlock) {
             imageBlock.addEventListener("mouseenter", () => {
@@ -1321,7 +1282,6 @@
     <script src="/vehicledetail.js"></script>
     <script>
       (function () {
-        // Theme toggle wiring for the checkbox #darkModeToggle
         const CHECK_ID = "darkModeToggle";
         const STORAGE_KEY = "siteTheme"; // same key used by other theme script
         const checkbox = document.getElementById(CHECK_ID);
@@ -1333,11 +1293,9 @@
           try {
             localStorage.setItem(STORAGE_KEY, theme);
           } catch (e) {}
-          // Keep checkbox in sync
           if (checkbox) checkbox.checked = theme === "dark";
         }
 
-        // Initialize from saved preference or system preference
         try {
           const saved = localStorage.getItem(STORAGE_KEY);
           if (saved) applyTheme(saved);
@@ -1348,10 +1306,8 @@
             applyTheme(prefersDark ? "dark" : "light");
           }
         } catch (e) {
-          // fallback: do nothing
         }
 
-        // Listen for checkbox changes
         if (checkbox) {
           checkbox.addEventListener("change", function () {
             applyTheme(checkbox.checked ? "dark" : "light");
@@ -1360,7 +1316,7 @@
       })();
     </script>
     <script src="./scroll-bg-handler.js"></script>
-    <!-- Shared mobile sticky CTA across pages -->
+    
     <script src="./sticky-cta.js"></script>
 
     <div class="floating-buttons">
