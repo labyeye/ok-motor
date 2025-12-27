@@ -967,7 +967,28 @@
         }
 
         loadVehicleData().then(() => {
+          const params = new URLSearchParams(window.location.search || "");
+          const maxPriceParam = params.get("maxPrice") || params.get("priceMax") || params.get("max");
+          const typeParam = params.get("type");
+          const brandParam = params.get("brand");
+
+          if (typeParam) selectedType = typeParam;
+          if (brandParam) selectedBrand = brandParam;
+          if (maxPriceParam) {
+            const max = parseInt(maxPriceParam, 10);
+            if (!isNaN(max)) {
+              selectedPrice = {
+                min: 0,
+                max: max,
+                label: `Less than ₹${new Intl.NumberFormat("en-IN").format(max)}`,
+              };
+            }
+          }
+
           populateFilters().then(() => {
+            if (selectedPrice) setFilterBadge("price", selectedPrice.label);
+            if (selectedType) setFilterBadge("type", selectedType);
+            if (selectedBrand) setFilterBadge("brand", selectedBrand);
             currentPage = 1;
             loadListings(currentPage, 12, false);
           });
