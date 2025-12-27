@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
@@ -249,10 +248,9 @@ const BikeHistory = () => {
 
   const downloadBuyLetterPDF = async (letter) => {
     try {
-      
-      const existingPdfBytes = await loadPDFTemplate('buyletter.pdf');
+      const existingPdfBytes = await loadPDFTemplate("buyletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      
+
       const formattedData = {
         ...letter,
         buyerName1: letter.buyerName,
@@ -270,7 +268,7 @@ const BikeHistory = () => {
         saleAmount: formatRupee(letter.saleAmount),
         vehiclekm: formatKm(letter.vehiclekm),
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
-        
+
         dealername: letter.dealername || "",
         dealeraddress: letter.dealeraddress || "",
         selleraadhar: letter.selleraadhar || "",
@@ -283,7 +281,9 @@ const BikeHistory = () => {
         note: letter.note || "",
       };
 
-      for (const [fieldName, position] of Object.entries(buyLetterFieldPositions)) {
+      for (const [fieldName, position] of Object.entries(
+        buyLetterFieldPositions
+      )) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
@@ -295,8 +295,12 @@ const BikeHistory = () => {
       }
 
       const saleAmountText = formattedData.saleAmount || "";
-      const saleAmountWidth = saleAmountText.length * (buyLetterFieldPositions.saleAmount.size / 2);
-      const amountInWordsX = buyLetterFieldPositions.saleAmount.x + saleAmountWidth + 1.4 * (buyLetterFieldPositions.saleAmount.size / 2);
+      const saleAmountWidth =
+        saleAmountText.length * (buyLetterFieldPositions.saleAmount.size / 2);
+      const amountInWordsX =
+        buyLetterFieldPositions.saleAmount.x +
+        saleAmountWidth +
+        1.4 * (buyLetterFieldPositions.saleAmount.size / 2);
 
       pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
         x: amountInWordsX,
@@ -311,10 +315,12 @@ const BikeHistory = () => {
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
+
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `buy_letter_${letter.registrationNumber}_${formatDate(letter.date)}.pdf`;
+      link.download = `buy_letter_${letter.registrationNumber}_${formatDate(
+        letter.date
+      )}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -327,10 +333,9 @@ const BikeHistory = () => {
 
   const downloadSellLetterPDF = async (letter) => {
     try {
-      
-      const existingPdfBytes = await loadPDFTemplate('sellletter.pdf');
+      const existingPdfBytes = await loadPDFTemplate("sellletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      
+
       const formattedData = {
         ...letter,
         buyerName1: letter.buyerName,
@@ -340,11 +345,15 @@ const BikeHistory = () => {
         vehiclekm: formatKm(letter.vehiclekm),
         todayDate: formatDate(letter.todayDate || new Date()),
         todayTime: formatTime12Hour(letter.todayTime || "12:00"),
-        previousDate: formatDate(letter.previousDate || letter.todayDate || new Date()),
-        previousTime: formatTime12Hour(letter.previousTime || letter.todayTime || "12:00"),
+        previousDate: formatDate(
+          letter.previousDate || letter.todayDate || new Date()
+        ),
+        previousTime: formatTime12Hour(
+          letter.previousTime || letter.todayTime || "12:00"
+        ),
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
         saleAmount: formatRupee(letter.saleAmount),
-        
+
         buyerPhone: letter.buyerPhone || "",
         buyerPhone2: letter.buyerPhone2 || "",
         buyerAadhar: letter.buyerAadhar || "",
@@ -353,7 +362,9 @@ const BikeHistory = () => {
         note: letter.note || "",
       };
 
-      for (const [fieldName, position] of Object.entries(sellLetterFieldPositions)) {
+      for (const [fieldName, position] of Object.entries(
+        sellLetterFieldPositions
+      )) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
@@ -374,7 +385,7 @@ const BikeHistory = () => {
 
         const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
         page.drawText(formattedData.amountInWords, {
-          x: xBase + saleTextWidth + 8, 
+          x: xBase + saleTextWidth + 8,
           y: yBase,
           size: 10,
           color: rgb(0, 0, 0),
@@ -388,10 +399,12 @@ const BikeHistory = () => {
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
+
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `sell_letter_${letter.registrationNumber}_${formatDate(letter.date)}.pdf`;
+      link.download = `sell_letter_${letter.registrationNumber}_${formatDate(
+        letter.date
+      )}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -987,7 +1000,7 @@ const BikeHistory = () => {
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
-    
+
     if (letter.buyerPhone2) {
       page.drawText(`, ${letter.buyerPhone2}`, {
         x: 440,
@@ -1294,7 +1307,7 @@ const BikeHistory = () => {
       }
     );
   };
-  
+
   const fetchBikeHistory = useCallback(async () => {
     if (!searchTerm.trim()) return;
 
@@ -1388,10 +1401,9 @@ const BikeHistory = () => {
 
   const previewBuyLetterPDF = async (letter) => {
     try {
-      
-      const existingPdfBytes = await loadPDFTemplate('buyletter.pdf');
+      const existingPdfBytes = await loadPDFTemplate("buyletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      
+
       const formattedData = {
         ...letter,
         buyerName1: letter.buyerName,
@@ -1409,7 +1421,7 @@ const BikeHistory = () => {
         saleAmount: formatRupee(letter.saleAmount),
         vehiclekm: formatKm(letter.vehiclekm),
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
-        
+
         dealername: letter.dealername || "",
         dealeraddress: letter.dealeraddress || "",
         selleraadhar: letter.selleraadhar || "",
@@ -1422,7 +1434,9 @@ const BikeHistory = () => {
         note: letter.note || "",
       };
 
-      for (const [fieldName, position] of Object.entries(buyLetterFieldPositions)) {
+      for (const [fieldName, position] of Object.entries(
+        buyLetterFieldPositions
+      )) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
@@ -1434,8 +1448,12 @@ const BikeHistory = () => {
       }
 
       const saleAmountText = formattedData.saleAmount || "";
-      const saleAmountWidth = saleAmountText.length * (buyLetterFieldPositions.saleAmount.size / 2);
-      const amountInWordsX = buyLetterFieldPositions.saleAmount.x + saleAmountWidth + 1.4 * (buyLetterFieldPositions.saleAmount.size / 2);
+      const saleAmountWidth =
+        saleAmountText.length * (buyLetterFieldPositions.saleAmount.size / 2);
+      const amountInWordsX =
+        buyLetterFieldPositions.saleAmount.x +
+        saleAmountWidth +
+        1.4 * (buyLetterFieldPositions.saleAmount.size / 2);
 
       pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
         x: amountInWordsX,
@@ -1461,10 +1479,9 @@ const BikeHistory = () => {
 
   const previewSellLetterPDF = async (letter) => {
     try {
-      
-      const existingPdfBytes = await loadPDFTemplate('sellletter.pdf');
+      const existingPdfBytes = await loadPDFTemplate("sellletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      
+
       const formattedData = {
         ...letter,
         buyerName1: letter.buyerName,
@@ -1474,11 +1491,15 @@ const BikeHistory = () => {
         vehiclekm: formatKm(letter.vehiclekm),
         todayDate: formatDate(letter.todayDate || new Date()),
         todayTime: formatTime12Hour(letter.todayTime || "12:00"),
-        previousDate: formatDate(letter.previousDate || letter.todayDate || new Date()),
-        previousTime: formatTime12Hour(letter.previousTime || letter.todayTime || "12:00"),
+        previousDate: formatDate(
+          letter.previousDate || letter.todayDate || new Date()
+        ),
+        previousTime: formatTime12Hour(
+          letter.previousTime || letter.todayTime || "12:00"
+        ),
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
         saleAmount: formatRupee(letter.saleAmount),
-        
+
         buyerPhone: letter.buyerPhone || "",
         buyerPhone2: letter.buyerPhone2 || "",
         buyerAadhar: letter.buyerAadhar || "",
@@ -1487,7 +1508,9 @@ const BikeHistory = () => {
         note: letter.note || "",
       };
 
-      for (const [fieldName, position] of Object.entries(sellLetterFieldPositions)) {
+      for (const [fieldName, position] of Object.entries(
+        sellLetterFieldPositions
+      )) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
@@ -1508,7 +1531,7 @@ const BikeHistory = () => {
 
         const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
         page.drawText(formattedData.amountInWords, {
-          x: xBase + saleTextWidth + 8, 
+          x: xBase + saleTextWidth + 8,
           y: yBase,
           size: 10,
           color: rgb(0, 0, 0),
@@ -1534,8 +1557,9 @@ const BikeHistory = () => {
   const fetchPdf = async (id, type) => {
     try {
       if (type === "buy") {
-        
-        const letter = bikeHistory.find(item => item._id === id && item.type === "buy");
+        const letter = bikeHistory.find(
+          (item) => item._id === id && item.type === "buy"
+        );
         if (letter) {
           await previewBuyLetterPDF(letter);
         } else {
@@ -1543,8 +1567,9 @@ const BikeHistory = () => {
         }
         return;
       } else if (type === "sell") {
-        
-        const letter = bikeHistory.find(item => item._id === id && item.type === "sell");
+        const letter = bikeHistory.find(
+          (item) => item._id === id && item.type === "sell"
+        );
         if (letter) {
           await previewSellLetterPDF(letter);
         } else {
@@ -1579,8 +1604,9 @@ const BikeHistory = () => {
   const downloadPdf = async (id, type, fileName) => {
     try {
       if (type === "buy") {
-        
-        const letter = bikeHistory.find(item => item._id === id && item.type === "buy");
+        const letter = bikeHistory.find(
+          (item) => item._id === id && item.type === "buy"
+        );
         if (letter) {
           await downloadBuyLetterPDF(letter);
         } else {
@@ -1588,8 +1614,9 @@ const BikeHistory = () => {
         }
         return;
       } else if (type === "sell") {
-        
-        const letter = bikeHistory.find(item => item._id === id && item.type === "sell");
+        const letter = bikeHistory.find(
+          (item) => item._id === id && item.type === "sell"
+        );
         if (letter) {
           await downloadSellLetterPDF(letter);
         } else {
@@ -1603,8 +1630,8 @@ const BikeHistory = () => {
         });
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const url = URL.createObjectURL(pdfBlob);
-        
-        const link = document.createElement('a');
+
+        const link = document.createElement("a");
         link.href = url;
         link.download = fileName || `service-bill-${id}.pdf`;
         document.body.appendChild(link);
@@ -1618,8 +1645,8 @@ const BikeHistory = () => {
         });
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const url = URL.createObjectURL(pdfBlob);
-        
-        const link = document.createElement('a');
+
+        const link = document.createElement("a");
         link.href = url;
         link.download = fileName || `advance-receipt-${id}.pdf`;
         document.body.appendChild(link);
@@ -1705,9 +1732,11 @@ const BikeHistory = () => {
   };
 
   const getFileName = (item) => {
-    const registrationNumber = searchTerm.replace(/\s+/g, '_');
-    const date = new Date(item.date).toLocaleDateString('en-IN').replace(/\
-    
+    const registrationNumber = searchTerm.replace(/\s+/g, "_");
+    const date = new Date(item.date)
+      .toLocaleDateString("en-IN")
+      .replace(/\//g, "-");
+
     switch (item.type) {
       case "buy":
         return `Buy_Letter_${registrationNumber}_${date}.pdf`;
@@ -1840,20 +1869,24 @@ const BikeHistory = () => {
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    
+
     const actualPath = typeof path === "function" ? path(user?.role) : path;
     navigate(actualPath);
   };
 
   return (
-    <div style={{
-      ...styles.container,
-      paddingTop: isMobile ? "80px" : "0",
-    }}>
-      <div style={{
-        ...styles.topBar,
-        display: isMobile && !isSidebarOpen ? "block" : "none",
-      }}>
+    <div
+      style={{
+        ...styles.container,
+        paddingTop: isMobile ? "80px" : "0",
+      }}
+    >
+      <div
+        style={{
+          ...styles.topBar,
+          display: isMobile && !isSidebarOpen ? "block" : "none",
+        }}
+      >
         <div
           style={{
             ...styles.hamburgerMenu,
@@ -1872,18 +1905,20 @@ const BikeHistory = () => {
         ></div>
       )}
 
-      <div style={{
-        ...styles.sidebar,
-        ...(isMobile
-          ? {
-              transform: isSidebarOpen
-                ? "translateX(0)"
-                : "translateX(-100%)",
-              position: "fixed",
-              zIndex: 15,
-            }
-          : {}),
-      }}>
+      <div
+        style={{
+          ...styles.sidebar,
+          ...(isMobile
+            ? {
+                transform: isSidebarOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
+                position: "fixed",
+                zIndex: 15,
+              }
+            : {}),
+        }}
+      >
         <div style={styles.sidebarHeader}>
           <img
             src={logo}
@@ -1912,7 +1947,6 @@ const BikeHistory = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
-                    
                     handleMenuClick(item.name, item.path);
                   }
                 }}
@@ -1972,7 +2006,6 @@ const BikeHistory = () => {
 
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
-
           <div style={styles.searchContainer}>
             <div style={styles.searchInputContainer}>
               <Search size={18} style={styles.searchIcon} />
@@ -2057,7 +2090,13 @@ const BikeHistory = () => {
                             View
                           </button>
                           <button
-                            onClick={() => downloadPdf(item._id, item.type, getFileName(item))}
+                            onClick={() =>
+                              downloadPdf(
+                                item._id,
+                                item.type,
+                                getFileName(item)
+                              )
+                            }
                             style={styles.downloadButton}
                             title="Download PDF"
                           >
@@ -2075,7 +2114,7 @@ const BikeHistory = () => {
         </div>
       </div>
 
-      { }
+      {}
       {showPdfModal && (
         <div style={styles.pdfModalOverlay}>
           <div style={styles.pdfModalContainer}>
@@ -2395,7 +2434,7 @@ const styles = {
     gap: "8px",
     alignItems: "center",
   },
-  
+
   pdfModalOverlay: {
     position: "fixed",
     top: 0,

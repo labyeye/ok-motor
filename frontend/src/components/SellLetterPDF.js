@@ -1906,7 +1906,7 @@ const SellLetterForm = () => {
                         {vehicle.vehicleName} {vehicle.vehicleModel} - {vehicle.registrationNumber}
                         {vehicle.vehicleVariant ? ` (${vehicle.vehicleVariant})` : ""}
                       </option>
-                    ))}
+                          const [previewLanguage, setPreviewLanguage] = useState("english");
                   </select>
                 </div>
               </div>
@@ -2926,8 +2926,7 @@ const styles = {
     backgroundColor: "#f8fafc",
     transition: "all 0.2s ease",
     appearance: "none",
-    backgroundImage:
-      "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http:
+    backgroundImage: "none",
     backgroundRepeat: "no-repeat",
     backgroundPosition: "right 0.5rem center",
     backgroundSize: "1em",
