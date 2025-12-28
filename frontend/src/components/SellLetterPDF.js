@@ -773,8 +773,11 @@ const SellLetterForm = () => {
       
       const isElectron = window.electronAPI !== undefined;
 
+      // Remove server-managed identifiers/fields to avoid duplicate key errors when versioning
+      const { _id: _omitId, __v: _omitV, createdAt: _omitCreatedAt, updatedAt: _omitUpdatedAt, user: _omitUser, ...cleanFormData } = formData || {};
+
       const dataToSave = {
-        ...formData,
+        ...cleanFormData,
         
         ...(editLetter?._id && {
           originalDocumentId: editLetter.originalDocumentId || editLetter._id,
@@ -836,7 +839,9 @@ const SellLetterForm = () => {
             .join("\n");
           alert(`Validation errors:\n${errorMessages}`);
         } else {
-          alert(error.response.data.message || "Failed to save sell letter.");
+          const serverMsg = error.response.data.message || "Failed to save sell letter.";
+          const keyInfo = error.response.data.error ? `\nDetails: ${JSON.stringify(error.response.data.error)}` : "";
+          alert(`${serverMsg}${keyInfo}`);
         }
       } else {
         alert("Failed to save sell letter. Please try again.");
