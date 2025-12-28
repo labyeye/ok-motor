@@ -33,6 +33,14 @@
     sep2.textContent = " \u2022 ";
     content.appendChild(sep2);
     content.appendChild(segment());
+    var sep2 = document.createElement("span");
+    sep2.textContent = " \u2022 ";
+    content.appendChild(sep2);
+    content.appendChild(segment());
+    var sep2 = document.createElement("span");
+    sep2.textContent = " \u2022 ";
+    content.appendChild(sep2);
+    content.appendChild(segment());
 
     wrap.appendChild(content);
     banner.innerHTML = "";

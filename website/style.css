@@ -8,17 +8,17 @@
   background: #303e27;
   color: #fff;
   font-size: 14px;
-}
-
-#topBanner .marquee-wrap {
   overflow: hidden;
 }
 
 #topBanner .marquee-content {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   white-space: nowrap;
-  padding: 6px 0;
-  animation: banner-marquee 18s linear infinite;
+  gap: 40px;
+  padding: 6px 24px;
+  /* slowed down for full-width readable sweep */
+  animation: banner-marquee 65s linear infinite;
 }
 
 #topBanner .marquee-content span {
@@ -31,7 +31,7 @@
 }
 
 @keyframes banner-marquee {
-  0% { transform: translateX(-100%); }
+  0% { transform: translateX(0%); }
   100% { transform: translateX(100%); }
 }
 
@@ -567,20 +567,19 @@
 }
 
 .category-tabs .tab-btn {
-  background: #fff;
+  background: #072022;
   border: none;
   padding: 14px 44px;
   font-weight: 800;
-  color: #222;
+  color: #fff;
   border-radius: 10px 10px 0 0;
   cursor: pointer;
   position: relative;
 }
 
 .category-tabs .tab-btn.active {
-  background: #072022;
-
-  color: #fff;
+  background: #fff;
+  color: #072022;
 }
 
 .category-tabs .tab-btn.active::after {
