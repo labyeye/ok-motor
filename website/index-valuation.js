@@ -325,44 +325,18 @@
     });
   }
 
-  async function valuationPopulateYearDropdown(make, model, vehicleType) {
+  function valuationPopulateYearDropdown() {
     const yearFilter = document.getElementById("yearFilter");
     if (!yearFilter) return;
 
     yearFilter.innerHTML = '<option value="">Select Year</option>';
 
-    if (!make || !model) {
-      return;
-    }
-
-    let years = [];
-
-    if (vehicleType === "bike") {
-      try {
-        const response = await fetch(
-          `https://ok-motor-51l3.vercel.app/api/bikes?make=${encodeURIComponent(
-            make
-          )}&model=${encodeURIComponent(model)}`
-        );
-        const result = await response.json();
-
-        if (result.success && result.data && result.data.length > 0) {
-          years = result.data
-            .map((bike) => bike.year)
-            .filter(Boolean)
-            .sort((a, b) => b - a);
-          years = [...new Set(years)];
-        }
-      } catch (error) {
-        console.error("Error fetching bike years:", error);
-      }
-    }
-
-    if (years.length === 0) {
-      const currentYear = new Date().getFullYear();
-      for (let year = currentYear; year >= 1990; year--) {
-        years.push(year);
-      }
+    // Always show all years from current year back to 1990
+    // This allows selection of registration year (which may differ from manufacturing year)
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let year = currentYear; year >= 1990; year--) {
+      years.push(year);
     }
 
     years.forEach((year) => {
@@ -376,14 +350,13 @@
   function valuationUpdateFilters(vehicleType) {
     valuationPopulateMakeDropdown(vehicleType);
     const modelFilter = document.getElementById("modelFilter");
-    const yearFilter = document.getElementById("yearFilter");
 
     if (modelFilter) {
       modelFilter.innerHTML = '<option value="">Select Model</option>';
     }
-    if (yearFilter) {
-      yearFilter.innerHTML = '<option value="">Select Year</option>';
-    }
+    
+    // Populate year dropdown with all years immediately
+    valuationPopulateYearDropdown();
   }
 
   function valuationInitCategoryTabs() {
@@ -412,12 +385,7 @@
 
     if (modelFilter) {
       modelFilter.addEventListener("change", function () {
-        const activeTab = document.querySelector(".tab-btn.active");
-        const vehicleType = activeTab
-          ? activeTab.getAttribute("data-tab")
-          : "bike";
-        const makeValue = makeFilter ? makeFilter.value : "";
-        valuationPopulateYearDropdown(makeValue, this.value, vehicleType);
+        // Year dropdown is now always populated, no need to reload
       });
     }
 

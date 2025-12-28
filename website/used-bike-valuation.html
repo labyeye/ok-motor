@@ -784,6 +784,7 @@
 
       document.addEventListener("DOMContentLoaded", function () {
         loadBikeMakes();
+        loadBikeYears();
       });
 
       document
@@ -791,10 +792,8 @@
         .addEventListener("change", async function () {
           const makeSelect = this.value;
           const modelSelect = document.getElementById("model");
-          const yearSelect = document.getElementById("year");
 
           modelSelect.innerHTML = '<option value="">Select Model</option>';
-          yearSelect.innerHTML = '<option value="">Select Year</option>';
 
           if (!makeSelect) return;
 
@@ -805,19 +804,12 @@
             option.textContent = modelName;
             modelSelect.appendChild(option);
           });
-
-          await loadBikeYears(makeSelect);
         });
 
       document
         .getElementById("model")
         .addEventListener("change", async function () {
-          const makeSelect = document.getElementById("make").value;
-          const modelSelect = this.value;
-
-          if (makeSelect && modelSelect) {
-            await loadBikeYears(makeSelect, modelSelect);
-          }
+          // Year dropdown is now always populated, no need to reload
         });
 
       document

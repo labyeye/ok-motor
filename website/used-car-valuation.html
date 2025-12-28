@@ -351,15 +351,9 @@
 
             <div>
               <label for="year">Year of Registration</label>
-              <input
-                id="year"
-                name="year"
-                type="number"
-                min="1990"
-                max="2025"
-                class="filter-input"
-                placeholder="e.g. 2018"
-              />
+              <select id="year" name="year" class="filter-select" required>
+                <option value="">Select Year</option>
+              </select>
             </div>
 
             <div>
@@ -643,6 +637,27 @@
           carsData = data;
         })
         .catch((error) => console.error("Error loading cars data:", error));
+
+      // Populate year dropdown on page load
+      function loadYears() {
+        const yearSelect = document.getElementById("year");
+        yearSelect.innerHTML = '<option value="">Select Year</option>';
+
+        // Always show all years from current year back to 1990
+        // This allows selection of registration year (which may differ from manufacturing year)
+        const currentYear = new Date().getFullYear();
+        for (let year = currentYear; year >= 1990; year--) {
+          const option = document.createElement("option");
+          option.value = year;
+          option.textContent = year;
+          yearSelect.appendChild(option);
+        }
+      }
+
+      // Load years on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        loadYears();
+      });
 
       document.getElementById("make").addEventListener("change", function () {
         const makeSelect = this.value;
