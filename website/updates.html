@@ -74,7 +74,6 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link rel="preconnect" href="https://code.jquery.com" crossorigin />
     <link rel="preconnect" href="https://ok-motor-51l3.vercel.app" />
-    <link rel="stylesheet" href="./globals.css" />
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./updates.css" />
     <link
@@ -133,6 +132,9 @@
         background: #ff5722;
         color: white;
       }
+
+      /* Update card styles moved to updates.css for better maintainability */
+
     </style>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
@@ -592,12 +594,17 @@
             })
             .catch(() => alert("Failed to submit review."));
         });
-        const openBtn = document.createElement("button");
-        openBtn.className = "review-btn";
-        openBtn.onclick = () => {
-          reviewModal.style.display = "block";
-        };
-        document.querySelector(".testimonials-section").appendChild(openBtn);
+        const testimonialsSection = document.querySelector(
+          ".testimonials-section"
+        );
+        if (testimonialsSection) {
+          const openBtn = document.createElement("button");
+          openBtn.className = "review-btn";
+          openBtn.onclick = () => {
+            reviewModal.style.display = "block";
+          };
+          testimonialsSection.appendChild(openBtn);
+        }
         const footerStars = document.querySelectorAll(".footer-stars .star");
         footerStars.forEach((fs, idx) => {
           fs.addEventListener("click", () => {
@@ -612,134 +619,263 @@
           });
         });
       });
+      // Consolidated DOMContentLoaded handler
       document.addEventListener("DOMContentLoaded", function () {
+        // === Mobile Menu Toggle ===
         const toggleBtn = document.createElement("button");
         toggleBtn.className = "mobile-menu-toggle";
         toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
 
         const navbar = document.querySelector(".navbar");
-        navbar.appendChild(toggleBtn);
+        if (navbar) {
+          navbar.appendChild(toggleBtn);
+        }
 
         const mobileMenu = document.createElement("div");
         mobileMenu.className = "mobile-menu";
-        mobileMenu.innerHTML = `<button class="close-btn"><i class="fas fa-times"></i></button>
-          <ul class="nav-links">
-            <li><a href="https://www.okmotors.in/" class="active">Home</a></li>
-            <li><a href="https://www.okmotors.in/inventory.html">Buy Bike</a></li>
-            <li><a href="https://www.okmotors.in/sell.html">Sell Your Bike</a></li>
-            <li><a href="https://www.okmotors.in/about.html" aria-label="About Ok Motors">About Us</a></li>
-            <li><a href="https://www.okmotors.in/book.html" aria-label="Book Bike">Book Vehicle</a></li>
-            <li><a href="https://www.okmotors.in/updates.html">Updates</a></li>
-            <li><a href="https://www.okmotors.in/contact.html">Contact</a></li>
-          </ul>
-          <div class="login-btn">
-            <button>Get the Quote</button>
-          </div>
-          
-          `;
+        mobileMenu.innerHTML = `
+    <button class="close-btn"><i class="fas fa-times"></i></button>
+    <ul class="nav-links">
+      <li><a href="https://www.okmotors.in/" class="active">Home</a></li>
+      <li><a href="https://www.okmotors.in/inventory.html">Buy Bike</a></li>
+      <li><a href="https://www.okmotors.in/sell.html">Sell Your Bike</a></li>
+      <li><a href="https://www.okmotors.in/about.html">About Us</a></li>
+      <li><a href="https://www.okmotors.in/book.html">Book Vehicle</a></li>
+      <li><a href="https://www.okmotors.in/updates.html">Updates</a></li>
+      <li><a href="https://www.okmotors.in/contact.html">Contact</a></li>
+    </ul>
+    <div class="login-btn">
+      <button>Get the Quote</button>
+    </div>
+  `;
 
         document.body.appendChild(mobileMenu);
 
         const contactBottom = document.createElement("div");
         contactBottom.className = "contact-bottom";
         contactBottom.innerHTML = `
-          <div class="phone"><i class="fas fa-phone"></i><span>(+91) 98358 44897</span></div>
-                    <div class="phone"><i class="fas fa-phone"></i><span>(+91) 82102 83582</span></div>
-
-        `;
+    <div class="phone"><i class="fas fa-phone"></i><span>(+91) 98358 44897</span></div>
+    <div class="phone"><i class="fas fa-phone"></i><span>(+91) 82102 83582</span></div>
+  `;
         mobileMenu.appendChild(contactBottom);
 
         toggleBtn.addEventListener("click", function () {
           mobileMenu.classList.add("active");
         });
 
-        mobileMenu
-          .querySelector(".close-btn")
-          .addEventListener("click", function () {
+        const closeBtn = mobileMenu.querySelector(".close-btn");
+        if (closeBtn) {
+          closeBtn.addEventListener("click", function () {
             mobileMenu.classList.remove("active");
           });
-
-        const API_BASE = (function () {
-          try {
-            const host = window.location.hostname;
-            if (host === "localhost") {
-              return `${window.location.protocol}//${host}:2500`;
-            }
-          } catch (e) {
-          }
-          return "https://ok-motor-51l3.vercel.app";
-        })();
-
-        function normalizeImageUrl(url) {
-          if (!url) return url;
-          if (
-            /^https?:\/\//i.test(url) ||
-            url.startsWith("data:") ||
-            url.startsWith("//")
-          )
-            return url;
-          if (url.startsWith("/")) return API_BASE + url;
-          return API_BASE + "/uploads/" + url.replace(/^\/+/, "");
         }
 
-        fetch(API_BASE + "/api/config")
-          .then((r) => r.json())
-          .then((cfg) => {
-            const USE_CLOUDINARY = cfg && cfg.success && cfg.cloudinary;
-            return fetch(API_BASE + "/api/updates")
-              .then((res) => {
-                if (!res.ok) throw new Error("Network response was not ok");
-                return res.json();
-              })
-              .then((updates) => ({ updates, USE_CLOUDINARY }));
-          })
-          .catch((cfgErr) => {
-            return fetch(API_BASE + "/api/updates")
-              .then((res) => {
-                if (!res.ok) throw new Error("Network response was not ok");
-                return res.json();
-              })
-              .then((updates) => ({ updates, USE_CLOUDINARY: false }));
-          })
-          .then(({ updates, USE_CLOUDINARY }) => {
-            const container = document.getElementById("updates-container");
-            container.innerHTML = "";
+        // === Dark Mode Setup ===
+        const darkModeToggle = document.getElementById("darkModeToggle");
+        const mobileDarkModeToggle = document.getElementById(
+          "mobileDarkModeToggle"
+        );
 
-            if (!updates || updates.length === 0) {
-              container.innerHTML = `
-                <p class="no-offers">${translations[preferredLanguage]["No current offers available. Check back later!"]}</p>
-              `;
+        function checkDarkModePreference() {
+          const savedTheme = localStorage.getItem("theme");
+          const systemPrefersDark =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+          if (savedTheme === "dark" || (!savedTheme && systemPrefersDark)) {
+            document.body.classList.add("dark-mode");
+            if (darkModeToggle) darkModeToggle.checked = true;
+            if (mobileDarkModeToggle) mobileDarkModeToggle.checked = true;
+          }
+        }
+
+        checkDarkModePreference();
+
+        if (darkModeToggle) {
+          darkModeToggle.addEventListener("change", function () {
+            if (this.checked) {
+              document.body.classList.add("dark-mode");
+              localStorage.setItem("theme", "dark");
+            } else {
+              document.body.classList.remove("dark-mode");
+              localStorage.setItem("theme", "light");
+            }
+            if (mobileDarkModeToggle) {
+              mobileDarkModeToggle.checked = this.checked;
+            }
+          });
+        }
+
+        if (mobileDarkModeToggle) {
+          mobileDarkModeToggle.addEventListener("change", function () {
+            if (this.checked) {
+              document.body.classList.add("dark-mode");
+              localStorage.setItem("theme", "dark");
+            } else {
+              document.body.classList.remove("dark-mode");
+              localStorage.setItem("theme", "light");
+            }
+            if (darkModeToggle) {
+              darkModeToggle.checked = this.checked;
+            }
+          });
+        }
+
+        window
+          .matchMedia("(prefers-color-scheme: dark)")
+          .addEventListener("change", (e) => {
+            const newColorScheme = e.matches ? "dark" : "light";
+            if (!localStorage.getItem("theme")) {
+              if (newColorScheme === "dark") {
+                document.body.classList.add("dark-mode");
+                if (darkModeToggle) darkModeToggle.checked = true;
+                if (mobileDarkModeToggle) mobileDarkModeToggle.checked = true;
+              } else {
+                document.body.classList.remove("dark-mode");
+                if (darkModeToggle) darkModeToggle.checked = false;
+                if (mobileDarkModeToggle) mobileDarkModeToggle.checked = false;
+              }
+            }
+          });
+
+        // === Review Modal Setup ===
+        const reviewModal = document.getElementById("reviewModal");
+        const closeReviewModalBtn = reviewModal?.querySelector(".close");
+
+        if (closeReviewModalBtn) {
+          closeReviewModalBtn.addEventListener("click", () => {
+            reviewModal.style.display = "none";
+          });
+        }
+
+        window.addEventListener("click", function (event) {
+          if (event.target == reviewModal) {
+            reviewModal.style.display = "none";
+          }
+        });
+
+        const stars = reviewModal?.querySelectorAll(".star") || [];
+        const ratingInput = document.getElementById("reviewRating");
+
+        stars.forEach((star) => {
+          star.addEventListener("click", function () {
+            const val = this.getAttribute("data-value");
+            if (ratingInput) ratingInput.value = val;
+            stars.forEach((s, i) => {
+              s.classList.toggle("selected", i < val);
+            });
+          });
+        });
+
+        const reviewForm = document.getElementById("reviewForm");
+        if (reviewForm) {
+          reviewForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const name = document.getElementById("reviewName")?.value.trim();
+            const message = document
+              .getElementById("reviewMessage")
+              ?.value.trim();
+            const rating = Number(
+              document.getElementById("reviewRating")?.value
+            );
+
+            if (!name || !message || !rating) {
+              alert("Please fill all fields and select a rating.");
               return;
             }
 
-            const visibleUpdates = updates.filter((u) => {
-              const posterUrl = normalizeImageUrl(u.poster);
-              if (!posterUrl) return false;
-              if (USE_CLOUDINARY) return /^https?:\/\//i.test(posterUrl);
-              return true;
+            fetch("https://ok-motor-51l3.vercel.app/api/reviews", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, message, rating }),
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.success) {
+                  reviewModal.style.display = "none";
+                  reviewForm.reset();
+                  if (ratingInput) ratingInput.value = 0;
+                  stars.forEach((s) => s.classList.remove("selected"));
+                  if (typeof fetchTestimonials === "function") {
+                    fetchTestimonials();
+                  }
+                } else {
+                  alert("Failed to submit review.");
+                }
+              })
+              .catch(() => alert("Failed to submit review."));
+          });
+        }
+
+        const testimonialsSection = document.querySelector(
+          ".testimonials-section"
+        );
+        if (testimonialsSection && reviewModal) {
+          const openBtn = document.createElement("button");
+          openBtn.className = "review-btn";
+          openBtn.onclick = () => {
+            reviewModal.style.display = "block";
+          };
+          testimonialsSection.appendChild(openBtn);
+        }
+
+        const footerStars = document.querySelectorAll(".footer-stars .star");
+        footerStars.forEach((fs, idx) => {
+          fs.addEventListener("click", () => {
+            if (reviewModal) reviewModal.style.display = "block";
+            const ratingInput = document.getElementById("reviewRating");
+            const modalStars = reviewModal?.querySelectorAll(".star") || [];
+            const val = idx + 1;
+            if (ratingInput) ratingInput.value = val;
+            modalStars.forEach((s, i) =>
+              s.classList.toggle("selected", i < val)
+            );
+          });
+        });
+      });
+      function normalizeImageUrl(url) {
+        if (!url) return url;
+        if (
+          /^https?:\/\//i.test(url) ||
+          url.startsWith("data:") ||
+          url.startsWith("//")
+        )
+          return url;
+        if (url.startsWith("/")) return "https://ok-motor-51l3.vercel.app" + url;
+        return "https://ok-motor-51l3.vercel.app/uploads/" + url.replace(/^\/+/, "");
+      }
+      // Fetch and render updates (simplified, no config dependency)
+      fetch("https://ok-motor-51l3.vercel.app/api/updates")
+        .then((res) => {
+          if (!res.ok) throw new Error("Network response was not ok");
+          return res.json();
+        })
+        .then((updates) => {
+          const container = document.getElementById("updates-container");
+          container.innerHTML = "";
+
+          if (!updates || updates.length === 0) {
+            container.innerHTML = `
+                <p class="no-offers">No current offers available. Check back later!</p>
+              `;
+            return;
+          }
+          const placeholderPoster = "./assets/images/logoblack.png";
+
+          updates.forEach((u, index) => {
+            const date = new Date(u.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             });
 
-            if (visibleUpdates.length === 0) {
-              container.innerHTML = `
-                <p class="no-offers">${translations[preferredLanguage]["No current offers available. Check back later!"]}</p>
-              `;
-              return;
-            }
-
-            visibleUpdates.forEach((u, index) => {
-              const date = new Date(u.createdAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              });
-
-              const card = document.createElement("div");
-              card.className = "update-card";
-              card.style.animationDelay = `${index * 0.05}s`;
-              card.innerHTML = `
-                <img src="${normalizeImageUrl(u.poster)}" alt="${
-                u.title
-              }" class="update-poster" />
+            const card = document.createElement("div");
+            card.className = "update-card";
+            card.style.animationDelay = `${index * 0.05}s`;
+            card.innerHTML = `
+                <img src="${
+                  normalizeImageUrl(u.poster) || placeholderPoster
+                }" alt="${u.title || "Update"}" class="update-poster" />
                 <div class="update-meta">
                   <div class="update-date">${date}</div>
                   <h3 class="update-title">${u.title}</h3>
@@ -750,19 +886,19 @@
                   }
                 </div>
               `;
-              container.appendChild(card);
-            });
-          })
-          .catch((error) => {
-            console.error("Error fetching updates:", error);
-            const container = document.getElementById("updates-container");
-            container.innerHTML = `
+            container.appendChild(card);
+          });
+        })
+        .catch((error) => {
+          console.error("Error fetching updates:", error);
+          const container = document.getElementById("updates-container");
+          container.innerHTML = `
               <p class="error-message">
-                ${translations[preferredLanguage]["Failed to load updates. Please try again later."]}
+                Failed to load updates. Please try again later.
               </p>
             `;
-          });
-      });
+        });
+
       (function () {
         const toggle = document.getElementById("darkModeToggle");
         if (!toggle) return;

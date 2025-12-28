@@ -1,5 +1,6 @@
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
+import config from "../config/environment";
 import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -114,7 +115,7 @@ const UpdatesList = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem("token");
-      const res = await axios.get("https://ok-motor-51l3.vercel.app/api/updates/admin", {
+      const res = await axios.get(`${config.API_BASE_URL}/updates/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUpdates(res.data.data || []);
@@ -143,7 +144,7 @@ const UpdatesList = () => {
     if (!window.confirm("Delete this update?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`https://ok-motor-51l3.vercel.app/api/updates/${id}`, {
+      await axios.delete(`${config.API_BASE_URL}/updates/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchUpdates();
@@ -156,7 +157,7 @@ const UpdatesList = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:2500/api/updates/${id}`,
+        `${config.API_BASE_URL}/updates/${id}`,
         { status: current === "Active" ? "Inactive" : "Active" },
         {
           headers: { Authorization: `Bearer ${token}` },

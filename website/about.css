@@ -88,7 +88,7 @@
   left: 0;
   width: 80px;
   height: 3px;
-  background: linear-gradient(90deg, var(--primary-color), #CF1819);
+  background: linear-gradient(90deg, var(--primary-color), #cf1819);
 }
 
 .owner-content p {
@@ -108,7 +108,7 @@
 .stat-item {
   text-align: center;
   padding: 20px;
-  background: #F6FAF7;;
+  background: #f6faf7;
   border-radius: 10px;
   min-width: 120px;
   flex: 1;
@@ -157,9 +157,7 @@
   transform: translateX(-50%);
   width: 3px;
   height: 100%;
-  background: linear-gradient(to bottom,
-      var(--primary-color),
-      rgba(163, 41, 25, 0.3));
+  background: linear-gradient(to bottom, #e7eaa8, #303e27);
 }
 
 .timeline-item {
@@ -181,23 +179,23 @@
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--primary-color);
-  color: white;
+  background: #303e27;
+  color: #e7eaa8;
   padding: 10px 20px;
   border-radius: 25px;
   font-weight: 700;
-  box-shadow: 0 5px 15px rgba(163, 41, 25, 0.3);
+  box-shadow: 0 5px 15px rgba(231, 234, 168, 0.3);
 }
 
 .timeline-content {
   width: calc(50% - 40px);
   padding: 20px;
-  background: #F6FAF7;;
+  background: #f6faf7;
   border-radius: 15px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid #F6FAF7;
+  border: 1px solid #f6faf7;
 }
 
 .timeline-item:nth-child(odd) .timeline-content {
@@ -251,13 +249,13 @@
 }
 
 .value-card {
-  background: #F6FAF7;;
+  background: #f6faf7;
   border-radius: 15px;
   padding: 30px 20px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid #F6FAF7;
+  border: 1px solid #f6faf7;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   text-align: center;
 }
@@ -265,16 +263,14 @@
 .value-card:hover {
   transform: translateY(-10px);
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-  background: #F6FAF7;
+  background: #f6faf7;
 }
 
 .value-icon {
   width: 70px;
   height: 70px;
   margin: 0 auto 20px;
-  background: linear-gradient(135deg,
-      rgba(163, 41, 25, 0.2) 0%,
-      transparent 100%);
+  background: #e7eaa8;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -285,7 +281,7 @@
 }
 
 .value-card:hover .value-icon {
-  background: linear-gradient(135deg, var(--primary-color), #CF1819);
+  background: linear-gradient(135deg, #e7eaa8, #303e27);
   color: white;
   transform: rotate(15deg) scale(1.1);
 }
@@ -306,7 +302,7 @@
   transform: translateX(-50%);
   width: 40px;
   height: 2px;
-  background: linear-gradient(90deg, var(--primary-color), #CF1819);
+  background: linear-gradient(90deg, #e7eaa8, #303e27);
   transition: width 0.4s;
 }
 
@@ -323,7 +319,7 @@
 }
 
 .value-card:hover p {
-  color: white;
+  color: #303e27;
 }
 
 /* Responsive Styles */
@@ -352,7 +348,6 @@
 }
 
 @media (max-width: 768px) {
- 
   .timeline::before {
     left: 30px;
   }

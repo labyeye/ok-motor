@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
+import config from "../config/environment";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -130,7 +131,7 @@ const CreateUpdate = () => {
   const fetchExisting = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:2500/api/updates/admin", {
+      const res = await axios.get(`${config.API_BASE_URL}/updates/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const found = res.data.data.find((u) => u._id === id);
@@ -162,14 +163,14 @@ const CreateUpdate = () => {
       fd.append("shortDescription", shortDescription);
       images.forEach((img) => fd.append("images", img));
       if (id) {
-        await axios.put(`http://localhost:2500/api/updates/${id}`, fd, {
+        await axios.put(`${config.API_BASE_URL}/updates/${id}`, fd, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
         });
       } else {
-        await axios.post("http://localhost:2500/api/updates", fd, {
+        await axios.post(`${config.API_BASE_URL}/updates`, fd, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
