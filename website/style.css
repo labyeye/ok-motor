@@ -2,6 +2,39 @@
   --primary-color: #cf1819;
 }
 
+/* Top Banner Marquee */
+#topBanner {
+  width: 100%;
+  background: #303e27;
+  color: #fff;
+  font-size: 14px;
+}
+
+#topBanner .marquee-wrap {
+  overflow: hidden;
+}
+
+#topBanner .marquee-content {
+  display: inline-block;
+  white-space: nowrap;
+  padding: 6px 0;
+  animation: banner-marquee 18s linear infinite;
+}
+
+#topBanner .marquee-content span {
+  margin-right: 48px;
+}
+
+#topBanner .marquee-content a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+@keyframes banner-marquee {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 .search-count-btn .count-label {
   letter-spacing: 0.6px;
 }

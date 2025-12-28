@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   Settings,
+  Megaphone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
@@ -312,6 +313,11 @@ const AdminPage = () => {
         { name: "Create Update", path: "/updates/create" },
         { name: "Updates List", path: "/updates" },
       ],
+    },
+    {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
     },
     {
       name: "Service",

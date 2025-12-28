@@ -14,6 +14,7 @@ import {
   Bike,
   Settings,
   ShipWheel,
+  Megaphone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "../images/company.png";
@@ -141,6 +142,11 @@ const StaffPage = () => {
         { name: "Sell Letter History", path: "/sell/history" },
         { name: "Sell Requests", path: "/sell/requests" },
       ],
+    },
+    {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
     },
     {
       name: "Service",

@@ -20,6 +20,7 @@ import {
   Settings,
   RefreshCw,
   Image,
+  Megaphone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -453,6 +454,11 @@ const AdvanceHistory = () => {
         { name: "Create Update", path: "/updates/create" },
         { name: "Updates List", path: "/updates" },
       ],
+    },
+    {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
     },
     {
       name: "Service",

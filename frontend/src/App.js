@@ -24,6 +24,7 @@ import ServiceHistory from "./components/ServiceHistory";
 import AdvancePayBillForm from "./components/AdvancePayBillForm";
 import AdvanceHistory from "./components/AdvanceHistory";
 import SettingsPage from "./pages/SettingsPage";
+import AnnouncementPage from "./pages/AnnouncementPage";
 import VehicleCreate from "./components/VehicleCreate";
 import VehicleHistory from "./components/VehicleHistory";
 import GalleryManagement from "./components/GalleryManagement";
@@ -279,6 +280,14 @@ function App() {
             element={
               <PrivateRoute roles={["admin", "staff"]}>
                 <SettingsPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/announcements"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <AnnouncementPage />
               </PrivateRoute>
             }
           />

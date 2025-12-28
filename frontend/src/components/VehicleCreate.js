@@ -20,6 +20,7 @@ import {
   Save,
   User,
   RefreshCw,
+  Megaphone,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -188,6 +189,11 @@ const VehicleCreate = () => {
         { name: "Create Update", path: "/updates/create" },
         { name: "Updates List", path: "/updates" },
       ],
+    },
+    {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
     },
     {
       name: "Service",

@@ -17,6 +17,7 @@ import {
   Settings,
   RefreshCw,
   Image,
+  Megaphone,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
@@ -72,6 +73,11 @@ const UpdatesList = () => {
         { name: "Create Update", path: "/updates/create" },
         { name: "Updates List", path: "/updates" },
       ],
+    },
+    {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
     },
     {
       name: "Service",

@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Settings,
+  Megaphone,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
@@ -25,6 +26,7 @@ import offlineStorage from '../services/offlineStorage';
 import logo from '../images/company.png';
 import fileSaveService from '../services/fileSaveService';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
+import AnnouncementManager from '../components/AnnouncementManager';
 
 const SettingsPage = () => {
   const { user, logout } = useContext(AuthContext);
@@ -75,6 +77,11 @@ const SettingsPage = () => {
         { name: 'Sell Letter History', path: '/sell/history' },
         { name: 'Sell Requests', path: '/sell/requests' },
       ],
+    },
+    {
+      name: 'Announcements',
+      icon: Megaphone,
+      path: '/announcements',
     },
     {
       name: 'Service',
@@ -919,6 +926,14 @@ const SettingsPage = () => {
                   Export all offline data as a JSON backup file
                 </p>
               </section>
+
+              {/* Announcements (Admin only) */}
+              {user?.role === 'admin' && (
+                <section style={{ marginBottom: '2rem', paddingBottom: '2rem' }}>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#374151', marginBottom: '1rem' }}>Announcements</h2>
+                  <AnnouncementManager />
+                </section>
+              )}
 
               {/* Default PDF Save Locations */}
               {window.electronAPI && (

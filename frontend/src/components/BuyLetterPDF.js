@@ -30,6 +30,7 @@ import {
   Settings,
   ShipWheel,
   RefreshCw,
+  Megaphone,
 } from "lucide-react";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
@@ -628,6 +629,11 @@ const BuyLetterForm = () => {
         { name: "Create Update", path: "/updates/create" },
         { name: "Updates List", path: "/updates" },
       ],
+    },
+    {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
     },
     {
       name: "Service",

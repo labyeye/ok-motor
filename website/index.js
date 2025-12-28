@@ -34,6 +34,57 @@ function initMobileMenu() {
   }
 }
 
+function initNavDropdownToggles() {
+  const mobileBtn = document.getElementById("mobileMenuBtn");
+  const nav = document.querySelector(".header-nav");
+  if (!nav) return;
+
+  const setAria = (open) => {
+    if (mobileBtn) mobileBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+
+  nav.addEventListener("click", (ev) => {
+    const anchor = ev.target.closest && ev.target.closest("a");
+    if (!anchor) return;
+    const parent = anchor.closest && anchor.closest(".nav-dropdown");
+    const isMobile = window.innerWidth <= 1024;
+
+    // Toggle dropdowns on mobile without leaving the page
+    if (
+      parent &&
+      isMobile &&
+      (anchor.classList.contains("dropdown-toggle") || anchor.classList.contains("nav-link"))
+    ) {
+      ev.preventDefault();
+      parent.classList.toggle("open");
+      return;
+    }
+
+    // Close menu after navigation on mobile
+    if (isMobile) {
+      nav.classList.remove("open", "mobile-active");
+      document.body.style.overflow = "";
+      setAria(false);
+    }
+  });
+
+  window.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape" && nav.classList.contains("open")) {
+      nav.classList.remove("open", "mobile-active");
+      document.body.style.overflow = "";
+      setAria(false);
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 1024 && nav.classList.contains("open")) {
+      nav.classList.remove("open", "mobile-active");
+      document.body.style.overflow = "";
+      setAria(false);
+    }
+  });
+}
+
 // Store vehicle data globally
 let vehicleData = {
   bikes: null,
@@ -1635,3 +1686,5 @@ if (document.readyState === "loading") {
 } else {
   initScrollAnimations();
 }
+
+// Top banner announcement is handled by shared top-banner.js across pages

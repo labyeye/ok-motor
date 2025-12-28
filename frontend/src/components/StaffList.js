@@ -18,7 +18,8 @@ import {
   Trash2,
   UserPlus,
   Settings,
-  RefreshCw
+  RefreshCw,
+  Megaphone
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import logo from '../images/company.png';
@@ -137,6 +138,11 @@ const StaffList = () => {
         { name: "Create Update", path: "/updates/create" },
         { name: "Updates List", path: "/updates" },
       ],
+    },
+    {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
     },
     {
       name: "Service",
