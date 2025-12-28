@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/software",
+      "destination": "https://okmotors-software.vercel.app"
+    },
+    {
+      "source": "/software/:path*",
+      "destination": "https://okmotors-software.vercel.app/:path*"
+    }
+  ]
+}

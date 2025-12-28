@@ -21,7 +21,6 @@
       href="./assets/images/logoblack.png"
     />
     <style>
-      
       .invest-hero {
         padding: 72px 18px 40px;
         text-align: center;
@@ -100,14 +99,18 @@
         font-weight: 700;
       }
     </style>
-    
+
     <script src="./top-banner.js" defer></script>
   </head>
   <body>
     <div class="top-banner" id="topBanner" role="banner">
       <div class="top-banner-container">
         <div class="top-banner-left" id="topBannerMessage"></div>
-        <div class="top-banner-right" id="topBannerActions" aria-hidden="true"></div>
+        <div
+          class="top-banner-right"
+          id="topBannerActions"
+          aria-hidden="true"
+        ></div>
       </div>
     </div>
     <header class="site-header" id="siteHeader">
@@ -371,9 +374,8 @@
         try {
           var banner = document.getElementById("mobileActionBanner");
           var closeBtn = document.getElementById("mobileBannerClose");
-          if (!banner || !closeBtn) return;
+          if (!banner) return;
 
-          function updateVisibility() {
           function updateVisibility() {
             var isMobile = window.matchMedia("(max-width:1024px)").matches;
             var dismissed =
@@ -385,12 +387,14 @@
             }
           }
 
-          closeBtn.addEventListener("click", function () {
-            banner.setAttribute("aria-hidden", "true");
-            try {
-              localStorage.setItem("mobileActionBannerDismissed", "1");
-            } catch (e) {}
-          });
+          if (closeBtn) {
+            closeBtn.addEventListener("click", function () {
+              banner.setAttribute("aria-hidden", "true");
+              try {
+                localStorage.setItem("mobileActionBannerDismissed", "1");
+              } catch (e) {}
+            });
+          }
 
           window.addEventListener("resize", updateVisibility);
           window.addEventListener("orientationchange", updateVisibility);
@@ -598,7 +602,6 @@
           FV.toFixed(2)
         )}`;
 
-        
         let html =
           '<table style="width:100%;border-collapse:collapse;margin-top:8px"><thead><tr style="text-align:left"><th>Year</th><th>Value</th></tr></thead><tbody>';
         let val = P;
@@ -636,5 +639,3 @@
     <script src="./index.js"></script>
   </body>
 </html>
-
-
