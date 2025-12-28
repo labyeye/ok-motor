@@ -3,7 +3,7 @@ const router = express.Router();
 const {
   getBikeDetails,
   getBikeMakes,
-  getBikeModels
+  getBikeModels,
 } = require("../controllers/bikeController");
 
 router.get("/", getBikeDetails);

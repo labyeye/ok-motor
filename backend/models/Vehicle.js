@@ -1,9 +1,7 @@
-
 const mongoose = require("mongoose");
 
 const VehicleSchema = new mongoose.Schema(
   {
-    
     vehicleType: {
       type: String,
       required: true,
@@ -14,7 +12,7 @@ const VehicleSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-    }, 
+    },
     vehicleModel: {
       type: String,
       required: true,
@@ -48,7 +46,7 @@ const VehicleSchema = new mongoose.Schema(
       type: Number,
       min: 1,
       max: 10,
-    }, 
+    },
 
     kilometersRun: {
       type: Number,
@@ -107,7 +105,7 @@ const VehicleSchema = new mongoose.Schema(
     bodyType: {
       type: String,
       trim: true,
-    }, 
+    },
 
     purchasePrice: {
       type: Number,
@@ -117,7 +115,7 @@ const VehicleSchema = new mongoose.Schema(
       type: Number,
       min: 0,
     },
-    
+
     downPayment: {
       type: Number,
       min: 0,
@@ -170,7 +168,7 @@ const VehicleSchema = new mongoose.Schema(
       {
         type: String,
       },
-    ], 
+    ],
 
     user: {
       type: mongoose.Schema.Types.ObjectId,

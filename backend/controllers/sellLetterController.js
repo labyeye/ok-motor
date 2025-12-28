@@ -4,6 +4,9 @@ const Vehicle = require("../models/Vehicle");
 
 exports.createSellLetter = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authorized, no user" });
+    }
     const sellLetterData = {
       ...req.body,
       user: req.user.id 
@@ -29,13 +32,23 @@ exports.createSellLetter = async (req, res) => {
     const savedSellLetter = await sellLetter.save();
     res.status(201).json(savedSellLetter);
   } catch (error) {
-    console.error("Detailed error:", error);
+    console.error("Detailed error creating sell letter:", error);
     if (error.name === 'ValidationError') {
       return res.status(400).json({ 
         message: "Validation Error",
         errors: error.errors 
       });
     }
+
+    // Handle common mongoose cast errors or duplicate key errors explicitly
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid value provided', error: error.message });
+    }
+
+    if (error.code && error.code === 11000) {
+      return res.status(409).json({ message: 'Duplicate key error', error: error.keyValue });
+    }
+
     res.status(500).json({ 
       message: "Server Error",
       error: error.message 
@@ -191,27 +204,21 @@ exports.getSellLetterById = async (req, res) => {
 
 exports.updateSellLetter = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res
-        .status(403)
-        .json({ message: "Not authorized to update sell letters" });
-    }
-    let sellLetter = await SellLetter.findOne({
-      _id: req.params.id,
-      user: req.user.id,
-    });
+    // Only admin should reach this function (route applies `admin` middleware).
+    // Lookup by id so admins can update any sell letter.
+    const sellLetter = await SellLetter.findById(req.params.id);
 
     if (!sellLetter) {
       return res.status(404).json({ message: "Sell letter not found" });
     }
 
-    sellLetter = await SellLetter.findByIdAndUpdate(
+    const updated = await SellLetter.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
       { new: true, runValidators: true }
     );
 
-    res.json(sellLetter);
+    res.json(updated);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
@@ -220,15 +227,8 @@ exports.updateSellLetter = async (req, res) => {
 
 exports.deleteSellLetter = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res
-        .status(403)
-        .json({ message: "Not authorized to update sell letters" });
-    }
-    const sellLetter = await SellLetter.findOne({
-      _id: req.params.id,
-      user: req.user.id,
-    });
+    // Admin-only action (route uses `admin` middleware). Find by id.
+    const sellLetter = await SellLetter.findById(req.params.id);
 
     if (!sellLetter) {
       return res.status(404).json({ message: "Sell letter not found" });

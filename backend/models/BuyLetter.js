@@ -1,8 +1,6 @@
-
 const mongoose = require("mongoose");
 
 const BuyLetterSchema = new mongoose.Schema({
-  
   vehicle: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Vehicle",
@@ -23,7 +21,7 @@ const BuyLetterSchema = new mongoose.Schema({
   registrationNumber: {
     type: String,
     unique: true,
-    sparse: true, 
+    sparse: true,
   },
   chassisNumber: { type: String },
   engineNumber: { type: String },

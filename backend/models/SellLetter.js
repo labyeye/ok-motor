@@ -1,9 +1,7 @@
-
 const mongoose = require("mongoose");
 
 const SellLetterSchema = new mongoose.Schema(
   {
-    
     vehicle: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Vehicle",
@@ -41,7 +39,7 @@ const SellLetterSchema = new mongoose.Schema(
 
     witnessName: { type: String, required: true },
     witnessPhone: { type: String, required: true },
-    
+
     note: { type: String },
 
     documentsVerified: { type: Boolean, default: true },

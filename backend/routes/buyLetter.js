@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { protect ,admin} = require("../middleware/auth");
+const { protect, admin } = require("../middleware/auth");
 const {
   createBuyLetter,
   getBuyLetters,
@@ -21,7 +21,7 @@ router.post("/generate-pdf", protect, async (req, res) => {
     if (!buyLetterData) {
       return res.status(400).json({
         success: false,
-        message: "Buy letter data is required"
+        message: "Buy letter data is required",
       });
     }
 
@@ -38,7 +38,7 @@ router.post("/generate-pdf", protect, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error generating PDF",
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -49,7 +49,7 @@ router.route("/by-registration").get(getBuyLettersByRegistration);
 router
   .route("/:id")
   .get(getBuyLetterById)
-  .put(admin,updateBuyLetter)
-  .delete(admin,deleteBuyLetter);
+  .put(admin, updateBuyLetter)
+  .delete(admin, deleteBuyLetter);
 
 module.exports = router;

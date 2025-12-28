@@ -1,9 +1,7 @@
-
 const mongoose = require("mongoose");
 
 const advanceBillSchema = new mongoose.Schema(
   {
-    
     vehicle: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Vehicle",
@@ -175,7 +173,6 @@ advanceBillSchema.pre("save", async function (next) {
       this.isModified("advancePaid") ||
       this.isModified("discount")
     ) {
-      
       this.grandTotal = this.totalAmount - (this.discount || 0);
       this.balanceDue = this.grandTotal - this.advancePaid;
     }
@@ -203,7 +200,6 @@ advanceBillSchema.pre("save", async function (next) {
       }
 
       if (!this.billNumber) {
-        
         this.billNumber = `ADV-${year}-${Date.now().toString().slice(-8)}`;
       }
     }

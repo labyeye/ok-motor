@@ -1,9 +1,7 @@
-
 const mongoose = require("mongoose");
 
 const ServiceBillSchema = new mongoose.Schema(
   {
-    
     vehicle: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Vehicle",
@@ -49,11 +47,11 @@ const ServiceBillSchema = new mongoose.Schema(
       default: "fixed",
     },
     discountPercentage: { type: Number, default: 0 },
-    taxEnabled: { type: Boolean, default: false }, 
-    businessName: { type: String }, 
-    businessGSTIN: { type: String }, 
-    businessAddress: { type: String }, 
-    taxRate: { type: Number, default: 18 }, 
+    taxEnabled: { type: Boolean, default: false },
+    businessName: { type: String },
+    businessGSTIN: { type: String },
+    businessAddress: { type: String },
+    taxRate: { type: Number, default: 18 },
     taxAmount: { type: Number, required: true },
     grandTotal: { type: Number, required: true },
 
@@ -71,7 +69,7 @@ const ServiceBillSchema = new mongoose.Schema(
     },
     advancePaid: { type: Number, default: 0 },
     balanceDue: { type: Number, required: true },
-    customServiceDescription: { type: String }, 
+    customServiceDescription: { type: String },
 
     issuesReported: { type: String },
     technicianNotes: { type: String },
@@ -132,7 +130,6 @@ ServiceBillSchema.pre("save", async function (next) {
       } catch (error) {
         attempts++;
         if (attempts >= maxAttempts) {
-          
           this.billNumber = `SRV-${new Date().getFullYear()}-${Date.now()
             .toString()
             .slice(-5)}`;
