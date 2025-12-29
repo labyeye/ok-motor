@@ -1,55 +1,56 @@
 .process-timeline-section {
-    padding: 60px 20px;
-    background: #f8f9fb;
-    overflow: hidden;
+  padding: 60px 20px;
+  background: #f8f9fb;
+  overflow: hidden;
 }
 
 .timeline-container {
-    position: relative;
-    max-width: 1300px;
-    margin: 0 auto;
-    padding: 20px 0;
+  position: relative;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 0;
 }
 
 .timeline-path {
-    display: none;
+  display: none;
 }
 
 .timeline-steps {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 80px 60px;
-    z-index: 1;
-    padding: 40px 20px;
+  position: relative;
+  display: grid;
+  /* show all steps in a single row on large screens (supports 6 items) */
+  grid-template-columns: repeat(6, 1fr);
+  gap: 36px 32px;
+  z-index: 1;
+  padding: 22px 12px;
 }
 
 .timeline-step {
-    text-align: center;
-    background: transparent;
-    padding: 0;
-    border-radius: 0;
-    box-shadow: none;
-    transition: all 0.3s ease;
-    position: relative;
+  text-align: center;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .timeline-step:hover .step-icon-wrapper {
-    transform: scale(1.05);
+  transform: scale(1.05);
 }
 
 /* Small dotted circle above icon */
 .timeline-step::before {
-    content: '';
-    position: absolute;
-    top: -35px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 12px;
-    height: 12px;
-    border: 2px dashed #cbd5e1;
-    border-radius: 50%;
-    background: transparent;
+  content: "";
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 50%;
+  background: transparent;
 }
 
 /* Horizontal dashed connector line (only for items 1,2 and 4,5) */
@@ -57,90 +58,213 @@
 .timeline-step:nth-child(2)::after,
 .timeline-step:nth-child(4)::after,
 .timeline-step:nth-child(5)::after {
-    content: '';
-    position: absolute;
-    top: 75px;
-    left: calc(50% + 50px);
-    width: calc(100% + 10px);
-    height: 2px;
-    background-image: repeating-linear-gradient(to right,
-            #cbd5e1 0,
-            #cbd5e1 8px,
-            transparent 8px,
-            transparent 16px);
+  content: "";
+  position: absolute;
+  /* center the dashed connector vertically relative to the step */
+  top: 50%;
+  transform: translateY(-50%);
+  left: calc(50% + 44px);
+  width: calc(100% + 10px);
+  height: 2px;
+  background-image: repeating-linear-gradient(
+    to right,
+    #cbd5e1 0,
+    #cbd5e1 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  z-index: 1;
+}
+
+/* Remove fragmented per-step connectors and draw a single continuous dashed line */
+.timeline-step::after {
+  display: none !important;
+}
+
+.timeline-steps::before {
+  content: "";
+  position: absolute;
+  left: 48px;
+  right: 48px;
+  /* position roughly at the vertical center of the icon circles */
+  top: 54px;
+  height: 2px;
+  background-image: repeating-linear-gradient(
+    to right,
+    #cbd5e1 0,
+    #cbd5e1 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  z-index: -1;
+}
+
+@media (max-width: 600px) {
+  /* hide the long connector on stacked layout */
+  .timeline-steps::before {
+    display: none;
+  }
 }
 
 .step-icon-wrapper {
-    width: 100px;
-    height: 100px;
-    margin: 0 auto 24px;
-    background: #e8f2f8;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 16px rgba(11, 111, 178, 0.08);
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 18px;
+  background: #e8f2f8;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(11, 111, 178, 0.08);
+  z-index: 2; /* keep the circle above the connector */
 }
 
 .step-icon-wrapper i {
-    font-size: 36px;
-    color: #1e293b;
+  font-size: 30px;
+  color: #1e293b;
 }
 
 .timeline-step h4 {
-    margin: 0 0 12px;
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #1e293b;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .timeline-step p {
-    margin: 0;
-    color: #64748b;
-    font-size: 0.95rem;
-    line-height: 1.6;
-    max-width: 280px;
-    margin: 0 auto;
+  margin: 0;
+  color: #64748b;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  max-width: 220px;
+  margin: 0 auto;
 }
 
 .why {
-    margin: 28px 0;
+  margin: 28px 0;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1200px) {
+  .timeline-steps {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px 24px;
+  }
+}
+
+@media (max-width: 900px) {
+  .timeline-steps {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .timeline-steps {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .timeline-step {
+    padding: 24px 16px;
+  }
+
+  .step-icon-wrapper {
+    width: 60px;
+    height: 60px;
+  }
+
+  .step-icon-wrapper i {
+    font-size: 24px;
+  }
+
+  .hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* CTA button used on service pages */
+.cta-whatsapp {
+  display: inline-block;
+  background: #303e27;
+  color: #e6e6e6;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.18);
+}
+.cta-whatsapp:hover {
+  filter: brightness(0.95);
+}
+
+/* Mobile action banner / search styles (moved from inline in pages) */
+.mobile-action-banner {
+  display: none;
+  width: 100%;
+  background: #303e27;
+  align-items: center;
+  z-index: 500;
+  transform: translateY(-30px);
+}
+.mobile-search-bar {
+  display: none;
+  width: 100%;
+  background: #fff;
+  z-index: 600;
+  padding: 6px 12px;
+  transform: translateY(-30px);
+}
+.mobile-search-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.mobile-search-form input[type="search"] {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #e6e6e6;
+  font-size: 14px;
+}
+.mobile-search-btn {
+  background: var(--primary-color, #303e27);
+  color: #fff;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.mobile-action-container {
+  display: flex;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.mobile-action {
+  flex: 0 0 auto;
+  color: white;
+  padding: 8px 10px;
+  border-radius: 18px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 11px;
+  white-space: nowrap;
+}
+@media (max-width: 1024px) {
+  .mobile-action-banner {
     display: flex;
-    gap: 18px;
-    flex-wrap: wrap
-}
-
-@media (max-width:900px) {
-    .timeline-steps {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 40px 20px;
-    }
-}
-
-@media (max-width:600px) {
-    .timeline-steps {
-        grid-template-columns: 1fr;
-        gap: 32px;
-    }
-
-    .timeline-step {
-        padding: 24px 16px;
-    }
-
-    .step-icon-wrapper {
-        width: 60px;
-        height: 60px;
-    }
-
-    .step-icon-wrapper i {
-        font-size: 24px;
-    }
-
-    .hero {
-        flex-direction: column;
-        align-items: flex-start
-    }
+    justify-content: space-between;
+  }
+  .mobile-search-bar {
+    display: block;
+  }
 }

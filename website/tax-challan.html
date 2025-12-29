@@ -251,115 +251,14 @@
       </div>
     </header>
 
-    <style>
-      .mobile-action-banner {
-        display: none;
-        width: 100%;
-        background: #303e27;
-        align-items: center;
-        z-index: 500;
-        transform: translateY(-30px);
-      }
-      .mobile-search-bar {
-        display: none;
-        width: 100%;
-        background: #fff;
-        z-index: 600;
-        padding: 6px 12px;
-        transform: translateY(-30px);
-      }
-      .mobile-search-form {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-      }
-      .mobile-search-form input[type="search"] {
-        flex: 1;
-        padding: 8px 10px;
-        border-radius: 8px;
-        border: 1px solid #e6e6e6;
-        font-size: 14px;
-      }
-      .mobile-search-btn {
-        background: var(--primary-color, #303e27);
-        color: #fff;
-        border: none;
-        padding: 8px 10px;
-        border-radius: 8px;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .mobile-action-container {
-        display: flex;
-        overflow: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      .mobile-action {
-        flex: 0 0 auto;
-        color: white;
-        padding: 8px 10px;
-        border-radius: 18px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 11px;
-        white-space: nowrap;
-      }
-      @media (max-width: 1024px) {
-        .mobile-action-banner {
-          display: flex;
-          justify-content: space-between;
-        }
-        .mobile-search-bar {
-          display: block;
-        }
-      }
-    </style>
+    <!-- Page-specific styles moved to rto-services.css -->
 
     <section
       class="hero-section"
       itemscope
       itemtype="https://schema.org/WPHeader"
     >
-      <div class="hero-slider">
-        <div
-          class="hero-slide active"
-          style="
-            background-image: url('https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg');
-          "
-        ></div>
-        <div
-          class="hero-slide"
-          style="
-            background-image: url('https://wallpapercave.com/wp/wp12477050.jpg');
-          "
-        ></div>
-        <div
-          class="hero-slide"
-          style="
-            background-image: url('https://www.bmw-m.com/content/dam/bmw/marketBMW_M/www_bmw-m_com/topics/magazine-article-pool/2024/wallpaper/m-wallpaper/3-0-csl/bmw-3-0-csl-mi-05.jpg');
-          "
-        ></div>
-        <div
-          class="hero-slide"
-          style="
-            background-image: url('https://wallpapers.com/images/hd/ktm-duke-390-front-angle-o247jx7vlg7ct83k.jpg');
-          "
-        ></div>
-        <div
-          class="hero-slide"
-          style="
-            background-image: url('https://www.hdwallpapers.in/download/bmw_f30_widebody_car_4k_8k_hd_cars-1366x768.jpg');
-          "
-        ></div>
-        <div
-          class="hero-slide"
-          style="
-            background-image: url('https://wallpapers.com/images/hd/ktm-duke-pictures-zapyw35oajg0sraj.jpg');
-          "
-        ></div>
-      </div>
+      <div class="hero-slide active" style="background-image: url('https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg');"></div>
       <div class="hero-overlay"></div>
       <div class="hero-container">
         <div class="hero-content">
@@ -375,18 +274,7 @@
         </div>
       </div>
     </section>
-    <script>
-      (function () {
-        const slides = document.querySelectorAll(".hero-slide");
-        let currentSlide = 0;
-        function nextSlide() {
-          slides[currentSlide].classList.remove("active");
-          currentSlide = (currentSlide + 1) % slides.length;
-          slides[currentSlide].classList.add("active");
-        }
-        setInterval(nextSlide, 5000);
-      })();
-    </script>
+
 
     <section aria-labelledby="services-title" class="process-timeline-section">
       <h1
@@ -472,6 +360,16 @@
             </p>
           </article>
         </div>
+      </div>
+      <div style="text-align:center; margin:22px 0 36px;">
+        <a
+          href="https://wa.me/917280012222?text=Hello%20Ok%20Motors%20I%20need%20help%20with%20challan"
+          class="cta-whatsapp"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Pay Traffic Challan"
+          >Pay Traffic Challan</a
+        >
       </div>
     </section>
 
