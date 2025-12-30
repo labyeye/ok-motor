@@ -790,30 +790,30 @@ const BikeHistory = () => {
 
     page.drawText("Seller Signature", {
       x: 110,
-      y: 170,
+      y: 120,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 60, y: 185 },
-      end: { x: 250, y: 185 },
+      start: { x: 60, y: 115 },
+      end: { x: 250, y: 115 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
 
     page.drawText("Authorized Signatory", {
       x: 350,
-      y: 170,
+      y: 120,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 310, y: 185 },
-      end: { x: 500, y: 185 },
+      start: { x: 310, y: 115 },
+      end: { x: 500, y: 115 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });

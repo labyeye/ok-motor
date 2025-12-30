@@ -1356,6 +1356,7 @@ const SellLetterHistory = () => {
                     <tr>
                       <th style={styles.tableHeader}>Buyer</th>
                       <th style={styles.tableHeader}>Vehicle Model</th>
+                      <th style={styles.tableHeader}>Vehicle</th>
                       <th style={styles.tableHeader}>Vehicle Reg No</th>
                       <th style={styles.tableHeader}>Amount</th>
                       <th style={styles.tableHeader}>Date</th>
@@ -1368,6 +1369,7 @@ const SellLetterHistory = () => {
                       <tr key={letter._id} style={styles.tableRow}>
                         <td style={styles.tableCell}>{letter.buyerName}</td>
                         <td style={styles.tableCell}>{letter.vehicleModel}</td>
+                        <td style={styles.tableCell}>{`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim()}</td>
                         <td style={styles.tableCell}>
                           {letter.registrationNumber}
                         </td>

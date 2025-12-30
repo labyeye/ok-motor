@@ -983,30 +983,30 @@ const BuyLetterHistory = () => {
 
     page.drawText("Seller Signature", {
       x: 110,
-      y: 170,
+      y: 120,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 60, y: 185 },
-      end: { x: 250, y: 185 },
+      start: { x: 60, y: 115 },
+      end: { x: 250, y: 115 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
 
     page.drawText("Authorized Signatory", {
       x: 350,
-      y: 170,
+      y: 120,
       size: 10,
       color: rgb(0.4, 0.4, 0.4),
       font: font,
     });
 
     page.drawLine({
-      start: { x: 310, y: 185 },
-      end: { x: 500, y: 185 },
+      start: { x: 310, y: 115 },
+      end: { x: 500, y: 115 },
       thickness: 1,
       color: rgb(0.6, 0.6, 0.6),
     });
@@ -1267,7 +1267,8 @@ const BuyLetterHistory = () => {
                   <thead>
                     <tr>
                       <th style={styles.tableHeader}>Seller Name</th>
-                      <th style={styles.tableHeader}>Vehicle Model</th>
+                      <th style={styles.tableHeader}>Vehicle Year</th>
+                      <th style={styles.tableHeader}>Vehicle</th>
                       <th style={styles.tableHeader}>Vehicle Reg No</th>
                       <th style={styles.tableHeader}>Buyer Name</th>
                       <th style={styles.tableHeader}>Sale Amount</th>
@@ -1279,12 +1280,13 @@ const BuyLetterHistory = () => {
                   <tbody>
                     {filteredLetters.map((letter) => (
                       <tr key={letter._id} style={styles.tableRow}>
-                        <td style={styles.tableCell}>{letter.sellerName}</td>
-                        <td style={styles.tableCell}>{letter.vehicleModel}</td>
-                        <td style={styles.tableCell}>
-                          {letter.registrationNumber}
-                        </td>
-                        <td style={styles.tableCell}>{letter.buyerName}</td>
+                          <td style={styles.tableCell}>{letter.sellerName}</td>
+                          <td style={styles.tableCell}>{letter.vehicleModel}</td>
+                          <td style={styles.tableCell}>{`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim()}</td>
+                          <td style={styles.tableCell}>
+                            {letter.registrationNumber}
+                          </td>
+                          <td style={styles.tableCell}>{letter.buyerName}</td>
                         <td style={styles.tableCell}>
                           ₹
                           {new Intl.NumberFormat("en-IN").format(
