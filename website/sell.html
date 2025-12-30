@@ -129,7 +129,11 @@
     <div class="top-banner" id="topBanner" role="banner">
       <div class="top-banner-container">
         <div class="top-banner-left" id="topBannerMessage"></div>
-        <div class="top-banner-right" id="topBannerActions" aria-hidden="true"></div>
+        <div
+          class="top-banner-right"
+          id="topBannerActions"
+          aria-hidden="true"
+        ></div>
       </div>
     </div>
 
@@ -219,9 +223,28 @@
           <a href="https://www.okmotors.in/about.html" class="nav-item"
             >About Us</a
           >
-          <a href="https://www.okmotors.in/book.html" class="nav-item"
-            >Book Vehicle</a
-          >
+          <div class="nav-item nav-dropdown" aria-haspopup="true">
+            <a href="#" class="nav-link dropdown-toggle"
+              >Services
+              <i
+                class="fa fa-caret-down"
+                aria-hidden="true"
+                style="margin-left: 6px"
+              ></i
+            ></a>
+            <div
+              class="dropdown-menu"
+              role="menu"
+              aria-label="Services submenu"
+            >
+              <a class="dropdown-item" href="tax-challan.html"
+                >Traffic Challan</a
+              >
+              <a class="dropdown-item" href="insaurance.html">Insurance</a>
+              <a class="dropdown-item" href="rto-services.html">RTO Services</a>
+              <a class="dropdown-item" href="puc.html">PUC Certificate</a>
+            </div>
+          </div>
           <a href="https://www.okmotors.in/finance.html" class="nav-item"
             >Bike Finance</a
           >
@@ -632,11 +655,16 @@
                 >
               </li>
               <li>
-                <a
-                  href="https://www.okmotors.in/book.html"
-                  aria-label="Book Bike"
-                  >Book Vehicle</a
-                >
+                <a href="tax-challan.html">Traffic Challan</a>
+              </li>
+              <li>
+                <a href="insaurance.html">Insurance</a>
+              </li>
+              <li>
+                <a href="rto-services.html">RTO Services</a>
+              </li>
+              <li>
+                <a href="puc.html">PUC Certificate</a>
               </li>
               <li>
                 <a href="https://www.okmotors.in/updates.html">Updates</a>
@@ -849,7 +877,16 @@
                   <a href="https://www.okmotors.in/about.html" aria-label="About Ok Motors">About Us</a>
                 </li>
                 <li>
-                  <a href="https://www.okmotors.in/book.html" aria-label="Book Bike">Book Vehicle</a>
+                  <a href="tax-challan.html">Traffic Challan</a>
+                </li>
+                <li>
+                  <a href="insaurance.html">Insurance</a>
+                </li>
+                <li>
+                  <a href="rto-services.html">RTO Services</a>
+                </li>
+                <li>
+                  <a href="puc.html">PUC Certificate</a>
                 </li>
                       <li><a href="https://www.okmotors.in/updates.html">Updates</a></li>
               <li><a href="https://www.okmotors.in/contact.html">Contact</a></li>
@@ -1107,5 +1144,3 @@
     <script src="./index.js"></script>
   </body>
 </html>
-
-
