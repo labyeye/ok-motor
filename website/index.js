@@ -654,7 +654,6 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
         <img src="${imageUrl}" alt="${vehicleName.trim()}" />
       </div>
       <div class="card-content">
-        <div class="car-body">${vehicle.vehicleType || vehicleType || ""}</div>
         <h3 class="vehicle-title">${vehicle.brand || ""} ${vehicle.model || ""}</h3>
         <div class="vehicle-meta">
           <span class="year">${vehicle.modelYear || vehicle.year || "-"}</span>
