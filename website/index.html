@@ -1590,14 +1590,8 @@
     </section>
     <script>
       (function () {
-        const API_BASE = (function () {
-          try {
-            const h = window.location.hostname;
-            if (h === "localhost")
-              return `${window.location.protocol}//${h}:2500`;
-          } catch (e) {}
-          return "https://ok-motor-51l3.vercel.app";
-        })();
+        const API_BASE = "https://ok-motor-51l3.vercel.app";
+        
         const galleryTrack = document.getElementById("galleryTrack");
         function loadGalleryImages() {
           fetch(API_BASE + "/api/gallery")

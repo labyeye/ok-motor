@@ -564,7 +564,7 @@ function escapeHtml(text) {
 
 function fetchFeaturedVehicles(vehicleType, sliderEl) {
   // Load from backend API instead of JSON files
-  const API_BASE = window.API_BASE || "https://ok-motor-51l3.vercel.app";
+  const API_BASE = "https://ok-motor-51l3.vercel.app";
 
   fetch(
     `${API_BASE}/api/vehicles/public/listings?limit=8&vehicleType=${vehicleType}`
