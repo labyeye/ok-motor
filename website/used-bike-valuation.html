@@ -217,16 +217,16 @@
               aria-label="Services submenu"
             >
               <a class="dropdown-item" href="tax-challan.html"
-                >Traffic Challan</a
+                >TRAFFIC CHALLAN</a
               >
               <a class="dropdown-item" href="insaurance.html"
-                >Insurance</a
+                >INSURANCE</a
               >
               <a class="dropdown-item" href="rto-services.html"
-                >RTO Services</a
+                >RTO SERVICES</a
               >
               <a class="dropdown-item" href="puc.html"
-                >PUC Certificate</a
+                >PUC CRTIFICATE</a
               >
             </div>
           </div>
@@ -694,6 +694,20 @@
 
       async function loadBikeYears(make, model) {
         const yearSelect = document.getElementById("year");
+        
+        // If no make provided, show all years from current back to 1990
+        if (!make) {
+          yearSelect.innerHTML = '<option value="">Select Year</option>';
+          const currentYear = new Date().getFullYear();
+          for (let year = currentYear; year >= 1990; year--) {
+            const option = document.createElement("option");
+            option.value = year;
+            option.textContent = year;
+            yearSelect.appendChild(option);
+          }
+          return;
+        }
+        
         yearSelect.innerHTML = '<option value="">Loading years...</option>';
 
         try {
@@ -828,7 +842,12 @@
       document
         .getElementById("model")
         .addEventListener("change", async function () {
-          // Year dropdown is now always populated, no need to reload
+          const makeSelect = document.getElementById("make").value;
+          const modelSelect = this.value;
+          
+          if (makeSelect && modelSelect) {
+            await loadBikeYears(makeSelect, modelSelect);
+          }
         });
 
       document

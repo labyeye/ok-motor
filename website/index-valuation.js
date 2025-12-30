@@ -293,11 +293,9 @@
 
     modelFilter.innerHTML = '<option value="">Select Model</option>';
 
-    if (yearFilter) {
-      yearFilter.innerHTML = '<option value="">Select Year</option>';
-    }
-
     if (!selectedMake) {
+      // If no make selected, populate year dropdown with all years
+      valuationPopulateYearDropdown();
       return;
     }
 
@@ -323,6 +321,9 @@
       option.textContent = modelName;
       modelFilter.appendChild(option);
     });
+    
+    // Repopulate year dropdown after models are loaded
+    valuationPopulateYearDropdown();
   }
 
   function valuationPopulateYearDropdown() {
