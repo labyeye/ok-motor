@@ -5053,6 +5053,13 @@ img {
   color: #fff;
   margin: 0 0 12px;
 }
+  .product-strip .strip-price {
+    color: #e7eaa8;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 16px;
+    letter-spacing: 0.5px;
+  }
 .product-strip .strip-cta {
   display: inline-block;
   padding: 10px 18px;
