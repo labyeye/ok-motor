@@ -18,7 +18,7 @@ export const loadPDFTemplate = async (templateName) => {
     } else {
       // Web browser - use fetch
       console.log('Loading PDF template via fetch:', templateName);
-      const templateUrl = `/templates/${templateName}`;
+      const templateUrl = `/software/templates/${templateName}`;
       const response = await fetch(templateUrl);
       
       if (!response.ok) {
