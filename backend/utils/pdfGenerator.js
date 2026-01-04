@@ -293,7 +293,8 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     
-    if (Boolean(serviceBill.taxEnabled)) {
+    const showBusinessInfo = Boolean(serviceBill.taxEnabled) && (serviceBill.businessGSTIN && serviceBill.businessGSTIN.toString().trim() !== "");
+    if (showBusinessInfo) {
       currentPage.drawText("BUSINESS INFORMATION", {
         x: 50,
         y: 690,
