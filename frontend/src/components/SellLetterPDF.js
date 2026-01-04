@@ -59,6 +59,7 @@ const SellLetterForm = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [errors, setErrors] = useState({});
   const [focusedInput, setFocusedInput] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -252,7 +253,22 @@ const SellLetterForm = () => {
 
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
-
+    // clear field error when user types
+    if (name) {
+      setErrors((prev) => {
+        if (!prev || !prev[name]) return prev;
+        const next = { ...prev };
+        delete next[name];
+        try {
+          const el = document.querySelector(`[name="${name}"]`);
+          if (el) {
+            el.style.borderColor = "";
+            el.style.boxShadow = "";
+          }
+        } catch (err) {}
+        return next;
+      });
+    }
     setFormData((prev) => {
       const newData = {
         ...prev,
@@ -278,6 +294,46 @@ const SellLetterForm = () => {
       return newData;
     });
   }, []);
+
+  const validateForm = () => {
+    const requiredFields = [
+      "vehicleName",
+      "vehicleModel",
+      "vehicleColor",
+      "registrationNumber",
+      "chassisNumber",
+      "engineNumber",
+      "vehiclekm",
+      "buyerName",
+      "buyerFatherName",
+      "buyerAddress",
+      "buyerPhone",
+      "saleDate",
+      "saleTime",
+      "saleAmount",
+      "paymentMethod",
+      "todayDate",
+      "todayTime",
+      "witnessName",
+      "witnessPhone",
+    ];
+    const errs = {};
+    requiredFields.forEach((field) => {
+      const val = formData[field];
+      if (val === undefined || val === null || String(val).trim() === "") {
+        errs[field] = `This ${field} is required`;
+        try {
+          const el = document.querySelector(`[name="${field}"]`);
+          if (el) {
+            el.style.borderColor = "#ef4444";
+            el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
+          }
+        } catch (err) {}
+      }
+    });
+    setErrors(errs);
+    return errs;
+  };
   const DownloadProgressModal = ({ progress, onClose }) => {
     return (
       <div style={modalStyles.overlay}>
@@ -900,39 +956,11 @@ const SellLetterForm = () => {
     try {
       setIsSaving(true);
       
-      const requiredFields = [
-        "vehicleName",
-        "vehicleModel",
-        "vehicleColor",
-        "registrationNumber",
-        "chassisNumber",
-        "engineNumber",
-        "vehiclekm",
-        "buyerName",
-        "buyerFatherName",
-        "buyerAddress",
-        "buyerPhone",
-        "saleDate",
-        "saleTime",
-        "saleAmount",
-        "paymentMethod",
-        "todayDate",
-        "todayTime",
-        "witnessName",
-        "witnessPhone",
-      ];
-      const missing = requiredFields.filter(
-        (field) =>
-          !formData[field] ||
-          (typeof formData[field] === "string" && formData[field].trim() === "")
-      );
-      if (missing.length > 0) {
-        alert(
-          `Please fill all required fields before saving/downloading. Missing: ${missing.join(
-            ", "
-          )}`
-        );
-        return; 
+      // validate required fields before proceeding
+      const errs = validateForm();
+      if (Object.keys(errs).length > 0) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
       }
 
       let savedLetter;
@@ -1886,7 +1914,23 @@ const SellLetterForm = () => {
           </div>
 
           <form className="form" style={styles.form}>
-            {}
+            {Object.keys(errors || {}).length > 0 && (
+              <div style={{
+                backgroundColor: "#fff1f0",
+                border: "1px solid #fecaca",
+                color: "#7f1d1d",
+                padding: "12px",
+                borderRadius: "6px",
+                marginBottom: "16px",
+              }}>
+                <strong>Please fix the following errors:</strong>
+                <ul style={{ margin: "8px 0 0 16px" }}>
+                  {Object.entries(errors).map(([k, v]) => (
+                    <li key={k}>{v}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <Car style={styles.sectionIcon} /> Select Vehicle from Inventory (Optional)

@@ -47,6 +47,7 @@ const AdvancePayBillForm = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [errors, setErrors] = useState({});
 const [formData, setFormData] = useState({
     customerName: "",
     customerPhone: "",
@@ -135,6 +136,22 @@ const [formData, setFormData] = useState({
     }
 
     setFormData(updatedData);
+    // clear validation error for this field
+    if (name) {
+      setErrors((prev) => {
+        if (!prev || !prev[name]) return prev;
+        const next = { ...prev };
+        delete next[name];
+        try {
+          const el = document.querySelector(`[name="${name}"]`);
+          if (el) {
+            el.style.borderColor = "";
+            el.style.boxShadow = "";
+          }
+        } catch (err) {}
+        return next;
+      });
+    }
   };
 
   const handleBlur = (e) => {
@@ -154,21 +171,42 @@ const [formData, setFormData] = useState({
     }
   };
 
-  const handleSaveAndDownload = async () => {
-    if (isSaving) return; 
-
+  const validateForm = () => {
     const requiredFields = [
-      "customerName", "customerPhone", "customerAddress", "vehicleType", 
-      "vehicleBrand", "vehicleModel", "registrationNumber", "totalAmount"
+      "customerName",
+      "customerPhone",
+      "customerAddress",
+      "vehicleType",
+      "vehicleBrand",
+      "vehicleModel",
+      "registrationNumber",
+      "totalAmount",
     ];
-    
-    const missing = requiredFields.filter(field => 
-      !formData[field] || (typeof formData[field] === "string" && formData[field].trim() === "")
-    );
-    
-    if (missing.length > 0) {
-      alert(`Please fill all required fields before saving/downloading. Missing: ${missing.join(", ")}`);
-      return; 
+    const errs = {};
+    requiredFields.forEach((field) => {
+      const val = formData[field];
+      if (val === undefined || val === null || String(val).trim() === "") {
+        errs[field] = `This ${field} is required`;
+        try {
+          const el = document.querySelector(`[name="${field}"]`);
+          if (el) {
+            el.style.borderColor = "#ef4444";
+            el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
+          }
+        } catch (err) {}
+      }
+    });
+    setErrors(errs);
+    return errs;
+  };
+
+  const handleSaveAndDownload = async () => {
+    if (isSaving) return;
+
+    const errs = validateForm();
+    if (Object.keys(errs).length > 0) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
     }
 
     setIsSaving(true);
@@ -900,6 +938,23 @@ const [formData, setFormData] = useState({
           </div>
 
           <form style={styles.form}>
+            {Object.keys(errors || {}).length > 0 && (
+              <div style={{
+                backgroundColor: "#fff1f0",
+                border: "1px solid #fecaca",
+                color: "#7f1d1d",
+                padding: "12px",
+                borderRadius: "6px",
+                marginBottom: "16px",
+              }}>
+                <strong>Please fix the following errors:</strong>
+                <ul style={{ margin: "8px 0 0 16px" }}>
+                  {Object.entries(errors).map(([k, v]) => (
+                    <li key={k}>{v}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <User style={styles.sectionIcon} /> Customer Information

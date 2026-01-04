@@ -237,6 +237,29 @@ const ServiceBillForm = () => {
     const { name, value, type } = e.target;
     const val = type === "number" ? parseFloat(value) || 0 : value;
 
+    // clear validation error for this field when user types
+    if (name) {
+      setErrors((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev };
+        if (next[name]) delete next[name];
+        // also handle array-style keys like serviceItems[0].description
+        Object.keys(next).forEach((k) => {
+          if (k.startsWith(name + "[") || k.includes(name)) {
+            delete next[k];
+          }
+        });
+        try {
+          const el = document.querySelector(`[name="${name}"]`);
+          if (el) {
+            el.style.borderColor = "";
+            el.style.boxShadow = "";
+          }
+        } catch (err) {}
+        return next;
+      });
+    }
+
     const newData = {
       ...formData,
       [name]: val,
@@ -246,45 +269,63 @@ const ServiceBillForm = () => {
 
     setFormData(newData);
   };
+  const [errors, setErrors] = useState({});
+
   const validateForm = () => {
-    const errors = {};
+    const errs = {};
 
-    if (!formData.customerName.trim())
-      errors.customerName = "Customer name is required";
-    if (!formData.customerPhone.trim())
-      errors.customerPhone = "Customer phone is required";
-    if (!formData.customerAddress.trim())
-      errors.customerAddress = "Customer address is required";
-    if (!formData.vehicleBrand.trim())
-      errors.vehicleBrand = "Vehicle brand is required";
-    if (!formData.vehicleModel.trim())
-      errors.vehicleModel = "Vehicle model is required";
-    if (!formData.registrationNumber.trim())
-      errors.registrationNumber = "Registration number is required";
+    if (!formData.customerName || !formData.customerName.trim())
+      errs.customerName = "Customer name is required";
+    if (!formData.customerPhone || !formData.customerPhone.trim())
+      errs.customerPhone = "Customer phone is required";
+    if (!formData.customerAddress || !formData.customerAddress.trim())
+      errs.customerAddress = "Customer address is required";
+    if (!formData.vehicleBrand || !formData.vehicleBrand.trim())
+      errs.vehicleBrand = "Vehicle brand is required";
+    if (!formData.vehicleModel || !formData.vehicleModel.trim())
+      errs.vehicleModel = "Vehicle model is required";
+    if (!formData.registrationNumber || !formData.registrationNumber.trim())
+      errs.registrationNumber = "Registration number is required";
 
-    if (formData.customerPhone && !/^\d{10}$/.test(formData.customerPhone)) {
-      errors.customerPhone = "Phone number must be 10 digits";
+    if (
+      formData.customerPhone &&
+      !/^\d{10}$/.test(String(formData.customerPhone))
+    ) {
+      errs.customerPhone = "Phone number must be 10 digits";
     }
 
     formData.serviceItems.forEach((item, index) => {
-      if (!item.description.trim()) {
-        errors[`serviceItems[${index}].description`] =
+      if (!item.description || !item.description.trim()) {
+        errs[`serviceItems[${index}].description`] =
           "Description is required";
       }
       if (!item.rate || isNaN(item.rate) || Number(item.rate) <= 0) {
-        errors[`serviceItems[${index}].rate`] = "Valid rate is required";
+        errs[`serviceItems[${index}].rate`] = "Valid rate is required";
       }
       if (
         !item.quantity ||
         isNaN(item.quantity) ||
         Number(item.quantity) <= 0
       ) {
-        errors[`serviceItems[${index}].quantity`] =
+        errs[`serviceItems[${index}].quantity`] =
           "Valid quantity is required";
       }
     });
 
-    return Object.keys(errors).length === 0 ? null : errors;
+    // highlight fields in DOM
+    Object.keys(errs).forEach((key) => {
+      try {
+        // for array keys like serviceItems[0].description, try to find by name
+        const el = document.querySelector(`[name="${key}"]`) || document.querySelector(`[name^="serviceItems"]`);
+        if (el) {
+          el.style.borderColor = "#ef4444";
+          el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
+        }
+      } catch (err) {}
+    });
+
+    setErrors(errs);
+    return Object.keys(errs).length === 0 ? null : errs;
   };
 
   useEffect(() => {
@@ -1162,7 +1203,23 @@ const ServiceBillForm = () => {
           </div>
 
           <form style={styles.form}>
-            {}
+            {Object.keys(errors || {}).length > 0 && (
+              <div style={{
+                backgroundColor: "#fff1f0",
+                border: "1px solid #fecaca",
+                color: "#7f1d1d",
+                padding: "12px",
+                borderRadius: "6px",
+                marginBottom: "16px",
+              }}>
+                <strong>Please fix the following errors:</strong>
+                <ul style={{ margin: "8px 0 0 16px" }}>
+                  {Object.entries(errors).map(([k, v]) => (
+                    <li key={k}>{v}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <User style={styles.sectionIcon} /> Customer Information
