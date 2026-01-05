@@ -45,6 +45,7 @@ const BuyLetterForm = () => {
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
+  const [errors, setErrors] = useState({});
   const [previewPdf, setPreviewPdf] = useState(null);
   const [previewLanguage, setPreviewLanguage] = useState("hindi");
   const [selectedLanguage, setSelectedLanguage] = useState("hindi");
@@ -53,7 +54,6 @@ const BuyLetterForm = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
-  const [errors, setErrors] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const location = useLocation();
@@ -173,6 +173,61 @@ const BuyLetterForm = () => {
     fetchVehicles();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const validateForm = () => {
+    const requiredFields = [
+      "sellerName",
+      "sellerCurrentAddress",
+      "vehicleName",
+      "vehicleModel",
+      "registrationNumber",
+      "chassisNumber",
+      "engineNumber",
+      "vehiclekm",
+      "buyerName",
+      "buyerCurrentAddress",
+      "buyerPhone",
+      "saleAmount",
+    ];
+
+    const errs = {};
+    requiredFields.forEach((field) => {
+      const val = formData[field];
+      if (val === undefined || val === null || String(val).trim() === "") {
+        errs[field] = `This ${field} is required`;
+        try {
+          const el = document.querySelector(`[name="${field}"]`);
+          if (el) {
+            el.style.borderColor = "#ef4444";
+            el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
+          }
+        } catch (err) {}
+      }
+    });
+
+    try {
+      setErrors(errs);
+    } catch (err) {}
+
+    const keys = Object.keys(errs);
+    if (keys.length > 0) {
+      const firstKey = keys[0];
+      try {
+        alert(errs[firstKey] || "Please fill required fields");
+      } catch (err) {}
+      try {
+        const el = document.querySelector(`[name="${firstKey}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.focus();
+          el.style.borderColor = "#ef4444";
+          el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
+        }
+      } catch (err) {}
+    }
+
+    return errs;
+  };
 
   const fetchVehicles = async () => {
     try {
@@ -526,14 +581,10 @@ const BuyLetterForm = () => {
 
   const handleSaveAndDownload = async () => {
     try {
-      // validate required fields before attempting save/download
+      // validate form and focus first missing field if any
       const errs = validateForm();
-      if (Object.keys(errs).length > 0) {
-        // don't proceed if validation failed
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return;
-      }
-
+      if (Object.keys(errs || {}).length > 0) return;
+      setIsDownloading(true);
       setIsDownloading(true);
       setIsSaving(true);
       const savedLetter = await saveBuyLetter();
@@ -563,22 +614,7 @@ const BuyLetterForm = () => {
   };
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
-    // clear error for this field as user edits
-    if (name) {
-      setErrors((prev) => {
-        if (!prev || !prev[name]) return prev;
-        const next = { ...prev };
-        delete next[name];
-        try {
-          const el = document.querySelector(`[name="${name}"]`);
-          if (el) {
-            el.style.borderColor = "";
-            el.style.boxShadow = "";
-          }
-        } catch (err) {}
-        return next;
-      });
-    }
+
     setFormData((prev) => {
       const newData = {
         ...prev,
@@ -613,35 +649,6 @@ const BuyLetterForm = () => {
       return newData;
     });
   }, []);
-
-  const validateForm = () => {
-    const required = {
-      sellerName: "Seller Name",
-      sellerCurrentAddress: "Seller Current Address",
-      vehicleName: "Vehicle Brand",
-      registrationNumber: "Registration Number",
-      chassisNumber: "Chassis Number",
-      engineNumber: "Engine Number",
-      buyerName: "Buyer Name",
-      saleAmount: "Sale Amount",
-    };
-    const errs = {};
-    Object.keys(required).forEach((key) => {
-      const val = formData[key];
-      if (val === undefined || val === null || String(val).trim() === "") {
-        errs[key] = `This ${required[key]} is required`;
-        try {
-          const el = document.querySelector(`[name="${key}"]`);
-          if (el) {
-            el.style.borderColor = "#ef4444";
-            el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
-          }
-        } catch (err) {}
-      }
-    });
-    setErrors(errs);
-    return errs;
-  };
 
   const menuItems = [
     {
@@ -1135,6 +1142,14 @@ const BuyLetterForm = () => {
       setShowLoadingOverlay(true);
       setPreviewLanguage(language);
       setIsGeneratingPreview(true);
+
+      // validate before preview
+      const errs = validateForm();
+      if (Object.keys(errs || {}).length > 0) {
+        setIsGeneratingPreview(false);
+        setShowLoadingOverlay(false);
+        return;
+      }
 
       const templateName =
         language === "hindi" ? "buyletter.pdf" : "englishbuyletter.pdf";
@@ -1768,23 +1783,6 @@ const BuyLetterForm = () => {
           </div>
 
           <form className="form" style={styles.form}>
-            {Object.keys(errors || {}).length > 0 && (
-              <div style={{
-                backgroundColor: "#fff1f0",
-                border: "1px solid #fecaca",
-                color: "#7f1d1d",
-                padding: "12px",
-                borderRadius: "6px",
-                marginBottom: "16px",
-              }}>
-                <strong>Please fix the following errors:</strong>
-                <ul style={{ margin: "8px 0 0 16px" }}>
-                  {Object.entries(errors).map(([k, v]) => (
-                    <li key={k}>{v}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
             {/* Vehicle Selection from Inventory */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
@@ -2871,7 +2869,7 @@ const styles = {
     zIndex: 1000,
   },
   inputFocused: {
-    backgroundColor: "yellow",
+    backgroundColor: "#fff5f5",
   },
 
   modalContent: {

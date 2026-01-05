@@ -1,4 +1,4 @@
-import  { useState, useContext, useEffect, useCallback } from "react";
+import { useState, useContext, useEffect, useCallback } from "react";
 import { saveAs } from "file-saver";
 import {
   FileText,
@@ -48,7 +48,7 @@ const AdvancePayBillForm = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [errors, setErrors] = useState({});
-const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     customerName: "",
     customerPhone: "",
     customerAddress: "",
@@ -91,9 +91,8 @@ const [formData, setFormData] = useState({
   }, [navigate]);
 
   const calculateAmounts = (data) => {
-    
-    const total = parseFloat(String(data.totalAmount).replace(/,/g, '')) || 0;
-    const advance = parseFloat(String(data.advancePaid).replace(/,/g, '')) || 0;
+    const total = parseFloat(String(data.totalAmount).replace(/,/g, "")) || 0;
+    const advance = parseFloat(String(data.advancePaid).replace(/,/g, "")) || 0;
     const discount = parseFloat(data.discount) || 0;
 
     const grandTotal = total - discount;
@@ -111,12 +110,12 @@ const [formData, setFormData] = useState({
     let cleanedValue = value;
     if (["totalAmount", "advancePaid", "kmReading"].includes(name)) {
       cleanedValue = value.replace(/[^0-9.]/g, "");
-      
+
       const dotCount = (cleanedValue.match(/\./g) || []).length;
       if (dotCount > 1) {
         cleanedValue = cleanedValue.replace(/\.(?=.*\.)/, "");
       }
-      
+
       if (cleanedValue.includes(".")) {
         const parts = cleanedValue.split(".");
         if (parts[1].length > 2) {
@@ -197,6 +196,28 @@ const [formData, setFormData] = useState({
       }
     });
     setErrors(errs);
+
+    // if there are errors, show alert and focus first missing field after user OKs alert
+    const keys = Object.keys(errs);
+    if (keys.length > 0) {
+      const firstKey = keys[0];
+      try {
+        alert(errs[firstKey] || "Please fill required fields");
+      } catch (err) {}
+
+      try {
+        const el = document.querySelector(`[name="${firstKey}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.focus();
+          el.style.borderColor = "#ef4444";
+          el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
+        }
+      } catch (err) {
+        // ignore
+      }
+    }
+
     return errs;
   };
 
@@ -219,7 +240,7 @@ const [formData, setFormData] = useState({
       if (!token) {
         alert("You are not authenticated. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
@@ -230,13 +251,15 @@ const [formData, setFormData] = useState({
       const requestData = {
         ...formData,
         user: user._id,
-        totalAmount: parseFloat(String(formData.totalAmount).replace(/,/g, '')) || 0,
-        advancePaid: parseFloat(String(formData.advancePaid).replace(/,/g, '')) || 0,
+        totalAmount:
+          parseFloat(String(formData.totalAmount).replace(/,/g, "")) || 0,
+        advancePaid:
+          parseFloat(String(formData.advancePaid).replace(/,/g, "")) || 0,
         grandTotal: parseFloat(formData.grandTotal) || 0,
         balanceDue: parseFloat(formData.balanceDue) || 0,
         kmReading: parseFloat(formData.kmReading) || 0,
         discount: parseFloat(formData.discount) || 0,
-        
+
         ...(formData._id && {
           originalDocumentId: formData.originalDocumentId || formData._id,
           previousVersionId: formData._id,
@@ -255,37 +278,43 @@ const [formData, setFormData] = useState({
       let pdfBlob;
 
       if (!isOnline) {
-        
-        console.log('Offline mode - saving to local storage');
+        console.log("Offline mode - saving to local storage");
 
-        const result = await offlineStorage.create('advanceBills', requestData);
+        const result = await offlineStorage.create("advanceBills", requestData);
         if (result.success) {
           billId = result.data._id;
           if (formData._id) {
-            alert("Advance bill saved as new version offline! Will sync when online.");
+            alert(
+              "Advance bill saved as new version offline! Will sync when online."
+            );
           } else {
-            alert("Advance bill saved offline successfully! Will sync when online.");
+            alert(
+              "Advance bill saved offline successfully! Will sync when online."
+            );
           }
         } else {
-          throw new Error(result.error || 'Failed to save offline');
+          throw new Error(result.error || "Failed to save offline");
         }
 
         const pdfResult = await pdfService.generateAdvanceBillPDF({
           ...requestData,
           _id: billId,
-          billNumber: `ADV-${new Date().getFullYear()}-${billId.substring(0, 4)}`
+          billNumber: `ADV-${new Date().getFullYear()}-${billId.substring(
+            0,
+            4
+          )}`,
         });
 
         if (pdfResult.success) {
           pdfBlob = pdfResult.blob;
         } else {
-          throw new Error(pdfResult.error || 'Failed to generate PDF');
+          throw new Error(pdfResult.error || "Failed to generate PDF");
         }
 
         await progressPromise;
 
         if (pdfResult.saved && window.electronAPI) {
-          alert(`PDF saved to ${pdfResult.savedPath || 'default PDF folder'}`);
+          alert(`PDF saved to ${pdfResult.savedPath || "default PDF folder"}`);
         } else {
           saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
         }
@@ -303,7 +332,9 @@ const [formData, setFormData] = useState({
           engineNumber: "",
           kmReading: "",
           serviceDate: new Date().toISOString().split("T")[0],
-          deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+          deliveryDate: new Date(Date.now() + 86400000)
+            .toISOString()
+            .split("T")[0],
           totalAmount: 0,
           advancePaid: 0,
           grandTotal: 0,
@@ -312,10 +343,8 @@ const [formData, setFormData] = useState({
           paymentMethod: "cash",
           note: "",
         });
-
       } else {
-        
-        console.log('Online mode - saving to server');
+        console.log("Online mode - saving to server");
 
         const saveResponse = await axios.post(
           "https://ok-motor-51l3.vercel.app/api/advance-bills",
@@ -337,25 +366,27 @@ const [formData, setFormData] = useState({
         const pdfResult = await pdfService.generateAdvanceBillPDF({
           ...requestData,
           _id: billId,
-          billNumber: saveResponse.data.data.billNumber
+          billNumber: saveResponse.data.data.billNumber,
         });
 
         if (pdfResult.success) {
           pdfBlob = pdfResult.blob;
         } else {
-          throw new Error(pdfResult.error || 'Failed to generate PDF');
+          throw new Error(pdfResult.error || "Failed to generate PDF");
         }
 
         await progressPromise;
 
         if (pdfResult.saved && window.electronAPI) {
-          alert(`PDF saved to ${pdfResult.savedPath || 'default PDF folder'}`);
+          alert(`PDF saved to ${pdfResult.savedPath || "default PDF folder"}`);
         } else {
           saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
         }
 
         if (formData._id) {
-          alert("Advance bill saved as new version! Original remains unchanged.");
+          alert(
+            "Advance bill saved as new version! Original remains unchanged."
+          );
         } else {
           alert("Advance bill saved and downloaded successfully!");
         }
@@ -373,7 +404,9 @@ const [formData, setFormData] = useState({
           engineNumber: "",
           kmReading: "",
           serviceDate: new Date().toISOString().split("T")[0],
-          deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+          deliveryDate: new Date(Date.now() + 86400000)
+            .toISOString()
+            .split("T")[0],
           totalAmount: 0,
           advancePaid: 0,
           grandTotal: 0,
@@ -383,14 +416,13 @@ const [formData, setFormData] = useState({
           note: "",
         });
       }
-
     } catch (error) {
       console.error("Error in save and download:", error);
 
       if (error.response?.status === 401) {
         alert("Your session has expired. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
       } else if (error.response?.status === 403) {
         alert("You don't have permission to create advance bills.");
       } else {
@@ -423,11 +455,7 @@ const [formData, setFormData] = useState({
         <div style={modalStyles.modal}>
           <div style={modalStyles.header}>
             <div style={modalStyles.logoContainer}>
-              <img 
-                src={logo1} 
-                alt="OK Motor Logo" 
-                style={modalStyles.logo}
-              />
+              <img src={logo1} alt="OK Motor Logo" style={modalStyles.logo} />
             </div>
             <h2 style={modalStyles.title}>Generating Advance Bill PDF</h2>
           </div>
@@ -558,7 +586,7 @@ const [formData, setFormData] = useState({
       if (!token) {
         alert("You are not authenticated. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
@@ -572,18 +600,16 @@ const [formData, setFormData] = useState({
       };
 
       if (forPreview) {
-        
         const pdfResult = await pdfService.generateAdvanceBillPDF(requestData);
-        
+
         if (pdfResult.success) {
           const pdfUrl = URL.createObjectURL(pdfResult.blob);
           setPreviewPdf(pdfUrl);
           setShowPreviewModal(true);
         } else {
-          throw new Error(pdfResult.error || 'Failed to generate PDF');
+          throw new Error(pdfResult.error || "Failed to generate PDF");
         }
       } else {
-        
         const saveResponse = await axios.post(
           "https://ok-motor-51l3.vercel.app/api/advance-bills",
           requestData,
@@ -604,17 +630,19 @@ const [formData, setFormData] = useState({
         const pdfResult = await pdfService.generateAdvanceBillPDF({
           ...requestData,
           _id: billId,
-          billNumber: saveResponse.data.data.billNumber
+          billNumber: saveResponse.data.data.billNumber,
         });
 
         if (pdfResult.success) {
           if (pdfResult.saved && window.electronAPI) {
-            alert(`PDF saved to ${pdfResult.savedPath || 'default PDF folder'}`);
+            alert(
+              `PDF saved to ${pdfResult.savedPath || "default PDF folder"}`
+            );
           } else {
             saveAs(pdfResult.blob, `advance-bill-${billId}.pdf`);
           }
         } else {
-          throw new Error(pdfResult.error || 'Failed to generate PDF');
+          throw new Error(pdfResult.error || "Failed to generate PDF");
         }
       }
     } catch (error) {
@@ -623,7 +651,7 @@ const [formData, setFormData] = useState({
       if (error.response?.status === 401) {
         alert("Your session has expired. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
       } else if (error.response?.status === 403) {
         alert("You don't have permission to create advance bills.");
       } else {
@@ -743,9 +771,9 @@ const [formData, setFormData] = useState({
         ]
       : []),
     {
-      name: 'Gallery',
+      name: "Gallery",
       icon: Image,
-      path: '/gallery/manage',
+      path: "/gallery/manage",
     },
     {
       name: "Vehicle History",
@@ -799,14 +827,18 @@ const [formData, setFormData] = useState({
   }
 
   return (
-    <div style={{
-      ...styles.container,
-      paddingTop: isMobile ? "80px" : "0",
-    }}>
-      <div style={{
-        ...styles.topBar,
-        display: isMobile && !isSidebarOpen ? "block" : "none",
-      }}>
+    <div
+      style={{
+        ...styles.container,
+        paddingTop: isMobile ? "80px" : "0",
+      }}
+    >
+      <div
+        style={{
+          ...styles.topBar,
+          display: isMobile && !isSidebarOpen ? "block" : "none",
+        }}
+      >
         <div
           style={{
             ...styles.hamburgerMenu,
@@ -845,7 +877,7 @@ const [formData, setFormData] = useState({
               width: "100%",
               maxWidth: "25rem",
               height: "9rem",
-              objectFit: "cover", 
+              objectFit: "cover",
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
@@ -930,23 +962,25 @@ const [formData, setFormData] = useState({
               <div>
                 <h1 style={styles.pageTitle}>Create Advance Payment Invoice</h1>
                 <p style={styles.pageSubtitle}>
-                  Fill in the details to generate an advance payment invoice for the
-                  vehicle
+                  Fill in the details to generate an advance payment invoice for
+                  the vehicle
                 </p>
-              </div>              
+              </div>
             </div>
           </div>
 
           <form style={styles.form}>
             {Object.keys(errors || {}).length > 0 && (
-              <div style={{
-                backgroundColor: "#fff1f0",
-                border: "1px solid #fecaca",
-                color: "#7f1d1d",
-                padding: "12px",
-                borderRadius: "6px",
-                marginBottom: "16px",
-              }}>
+              <div
+                style={{
+                  backgroundColor: "#fff1f0",
+                  border: "1px solid #fecaca",
+                  color: "#7f1d1d",
+                  padding: "12px",
+                  borderRadius: "6px",
+                  marginBottom: "16px",
+                }}
+              >
                 <strong>Please fix the following errors:</strong>
                 <ul style={{ margin: "8px 0 0 16px" }}>
                   {Object.entries(errors).map(([k, v]) => (
@@ -971,7 +1005,6 @@ const [formData, setFormData] = useState({
                     value={formData.customerName}
                     onFocus={() => setFocusedInput("customerName")}
                     onChange={handleChange}
-                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "customerName"
@@ -993,7 +1026,6 @@ const [formData, setFormData] = useState({
                     value={formData.customerPhone}
                     onFocus={() => setFocusedInput("customerPhone")}
                     onChange={handleChange}
-                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "customerPhone"
@@ -1015,7 +1047,6 @@ const [formData, setFormData] = useState({
                     value={formData.customerAddress}
                     onFocus={() => setFocusedInput("customerAddress")}
                     onChange={handleChange}
-                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "customerAddress"
@@ -1037,7 +1068,6 @@ const [formData, setFormData] = useState({
                     value={formData.customerEmail}
                     onFocus={() => setFocusedInput("customerEmail")}
                     onChange={handleChange}
-                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "customerEmail"
@@ -1084,7 +1114,6 @@ const [formData, setFormData] = useState({
                     value={formData.vehicleBrand}
                     onFocus={() => setFocusedInput("vehicleBrand")}
                     onChange={handleChange}
-                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "vehicleBrand"
@@ -1106,7 +1135,6 @@ const [formData, setFormData] = useState({
                     value={formData.vehicleModel}
                     onFocus={() => setFocusedInput("vehicleModel")}
                     onChange={handleChange}
-                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "vehicleModel"
@@ -1127,7 +1155,6 @@ const [formData, setFormData] = useState({
                     name="registrationNumber"
                     value={formData.registrationNumber}
                     onChange={handleChange}
-                    
                     onBlur={(e) => {
                       if (e.target.value.trim() !== "") {
                         fetchVehicleDetails(e.target.value.trim());
@@ -1160,7 +1187,6 @@ const [formData, setFormData] = useState({
                     value={formData.chassisNumber}
                     onFocus={() => setFocusedInput("chassisNumber")}
                     onChange={handleChange}
-                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "chassisNumber"
@@ -1181,7 +1207,6 @@ const [formData, setFormData] = useState({
                     value={formData.engineNumber}
                     onFocus={() => setFocusedInput("engineNumber")}
                     onChange={handleChange}
-                    
                     style={{
                       ...styles.formInput,
                       ...(focusedInput === "engineNumber"
@@ -1272,7 +1297,7 @@ const [formData, setFormData] = useState({
                     value={formData.totalAmount}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    onFocus={e => {
+                    onFocus={(e) => {
                       setFocusedInput("totalAmount");
                       if (formData.totalAmount === "0.00") {
                         setFormData({ ...formData, totalAmount: "" });
@@ -1318,7 +1343,7 @@ const [formData, setFormData] = useState({
                     value={formData.advancePaid}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    onFocus={e => {
+                    onFocus={(e) => {
                       setFocusedInput("advancePaid");
                       if (formData.advancePaid === "0.00") {
                         setFormData({ ...formData, advancePaid: "" });
@@ -1468,7 +1493,7 @@ const [formData, setFormData] = useState({
                 </div>
               )}
             </div>
-            
+
             <button
               style={styles.modalCloseButton}
               onClick={() => {
@@ -1633,7 +1658,7 @@ const styles = {
     padding: "16px 0",
   },
   inputFocused: {
-    backgroundColor: "yellow",
+    backgroundColor: "#fff5f5",
   },
   menuItem: {
     display: "flex",

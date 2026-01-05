@@ -2,6 +2,7 @@ import React, { useState, useContext, useCallback, useEffect } from "react";
 import { saveAs } from "file-saver";
 import axios from "axios";
 import fileSaveService from "../services/fileSaveService";
+import apiService from "../services/apiService";
 import {
   FileText,
   ArrowLeft,
@@ -77,7 +78,7 @@ const ServiceBillForm = () => {
     serviceType: "regular",
     serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
     discount: 0,
-    discountType: "fixed", 
+    discountType: "fixed",
     discountPercentage: 0,
     taxRate: 0,
     paymentMethod: "cash",
@@ -119,23 +120,49 @@ const ServiceBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/advance-bills/vehicle-details`,
-        {
-          params: { registrationNumber },
-          headers: {},
-        }
+      // Use unified apiService so Authorization header and offline handling are applied
+      const vehicleResp = await apiService.get(
+        `/api/advance-bills/vehicle-details?registrationNumber=${encodeURIComponent(
+          registrationNumber
+        )}`
       );
 
-      if (response.data) {
-        setFormData((prev) => ({
-          ...prev,
-          vehicleBrand: response.data.vehicleName || "",
-          vehicleModel: response.data.vehicleModel || "",
-          registrationNumber: response.data.registrationNumber || "",
-          kmReading: response.data.vehiclekm || "",
-        }));
+      // Try to fetch sell-letter for this registration to autofill buyer details
+      let sellLetters = [];
+      try {
+        const sellResp = await apiService.get(
+          `/api/sell-letters/by-registration?registrationNumber=${encodeURIComponent(
+            registrationNumber
+          )}`
+        );
+        // apiService returns the body directly (array of sell letters)
+        sellLetters = Array.isArray(sellResp) ? sellResp : sellResp.data || [];
+      } catch (err) {
+        // Non-fatal: if sell-letter lookup fails just continue with vehicle info
+        console.warn("Sell-letter lookup failed:", err.message || err);
+        sellLetters = [];
       }
+
+      const vehicleData = vehicleResp || {};
+      const latestSell =
+        sellLetters && sellLetters.length > 0 ? sellLetters[0] : null;
+
+      setFormData((prev) => ({
+        ...prev,
+        vehicleBrand:
+          vehicleData.vehicleName ||
+          vehicleData.vehicleBrand ||
+          prev.vehicleBrand,
+        vehicleModel: vehicleData.vehicleModel || prev.vehicleModel,
+        registrationNumber:
+          vehicleData.registrationNumber || registrationNumber,
+        kmReading: vehicleData.vehiclekm || prev.kmReading,
+        // If there is a sell-letter, autofill customer fields from buyer info
+        customerName: latestSell?.buyerName || prev.customerName,
+        customerPhone: latestSell?.buyerPhone || prev.customerPhone,
+        customerAddress: latestSell?.buyerAddress || prev.customerAddress,
+        customerEmail: prev.customerEmail || "NA",
+      }));
     } catch (error) {
       console.error("Error fetching vehicle details:", error);
     }
@@ -154,7 +181,7 @@ const ServiceBillForm = () => {
       items[index] = {
         ...items[index],
         rate: cleanedValue,
-        
+
         amount: newAmount,
       };
 
@@ -296,8 +323,7 @@ const ServiceBillForm = () => {
 
     formData.serviceItems.forEach((item, index) => {
       if (!item.description || !item.description.trim()) {
-        errs[`serviceItems[${index}].description`] =
-          "Description is required";
+        errs[`serviceItems[${index}].description`] = "Description is required";
       }
       if (!item.rate || isNaN(item.rate) || Number(item.rate) <= 0) {
         errs[`serviceItems[${index}].rate`] = "Valid rate is required";
@@ -307,8 +333,7 @@ const ServiceBillForm = () => {
         isNaN(item.quantity) ||
         Number(item.quantity) <= 0
       ) {
-        errs[`serviceItems[${index}].quantity`] =
-          "Valid quantity is required";
+        errs[`serviceItems[${index}].quantity`] = "Valid quantity is required";
       }
     });
 
@@ -316,7 +341,9 @@ const ServiceBillForm = () => {
     Object.keys(errs).forEach((key) => {
       try {
         // for array keys like serviceItems[0].description, try to find by name
-        const el = document.querySelector(`[name="${key}"]`) || document.querySelector(`[name^="serviceItems"]`);
+        const el =
+          document.querySelector(`[name="${key}"]`) ||
+          document.querySelector(`[name^="serviceItems"]`);
         if (el) {
           el.style.borderColor = "#ef4444";
           el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
@@ -360,7 +387,64 @@ const ServiceBillForm = () => {
     try {
       const errors = validateForm();
       if (errors) {
-        alert("Please fix the form errors before submitting");
+        // Show first error message, then focus+scroll to that field and highlight it
+        const firstKey = Object.keys(errors)[0];
+        try {
+          alert(
+            errors[firstKey] || "Please fix the form errors before submitting"
+          );
+        } catch (err) {
+          // fallback
+          alert("Please fix the form errors before submitting");
+        }
+
+        setTimeout(() => {
+          try {
+            const key = firstKey;
+            // handle array-style keys like serviceItems[0].description
+            if (key && key.startsWith("serviceItems[")) {
+              const m = key.match(/serviceItems\[(\d+)\]\.([^\]]+)/);
+              if (m) {
+                const idx = parseInt(m[1], 10);
+                const field = m[2];
+                const elems = document.querySelectorAll(`[name="${field}"]`);
+                if (elems && elems[idx]) {
+                  const el = elems[idx];
+                  el.focus();
+                  el.scrollIntoView({ behavior: "smooth", block: "center" });
+                  el.style.borderColor = "#ef4444";
+                  el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
+                  return;
+                }
+              }
+            }
+
+            const el = document.querySelector(`[name="${firstKey}"]`);
+            if (el) {
+              el.focus();
+              el.scrollIntoView({ behavior: "smooth", block: "center" });
+              el.style.borderColor = "#ef4444";
+              el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
+            } else {
+              // fallback: try to find by common field names
+              const fallback = document.querySelector(
+                '[name="customerName"], [name="customerPhone"], [name="customerAddress"]'
+              );
+              if (fallback) {
+                fallback.focus();
+                fallback.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+                fallback.style.borderColor = "#ef4444";
+                fallback.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
+              }
+            }
+          } catch (err) {
+            console.warn("Failed to focus first error field", err);
+          }
+        }, 100);
+
         return;
       }
 
@@ -377,7 +461,7 @@ const ServiceBillForm = () => {
           rate: parseFloat(item.rate) || 0,
         })),
         user: user._id,
-        
+
         ...(formData._id && {
           originalDocumentId: formData.originalDocumentId || formData._id,
           previousVersionId: formData._id,
@@ -396,7 +480,6 @@ const ServiceBillForm = () => {
       let pdfBlob;
 
       if (!isOnline) {
-        
         console.log("Offline mode - saving to local storage");
 
         const offlineStorage = (await import("../services/offlineStorage"))
@@ -434,7 +517,9 @@ const ServiceBillForm = () => {
         if (pdfResult.success) {
           pdfBlob = pdfResult.blob;
           if (pdfResult.saved && window.electronAPI) {
-            alert(`PDF saved to ${pdfResult.savedPath || 'default PDF folder'}`);
+            alert(
+              `PDF saved to ${pdfResult.savedPath || "default PDF folder"}`
+            );
           } else {
             saveAs(pdfBlob, `service-bill-${billId}.pdf`);
           }
@@ -479,7 +564,6 @@ const ServiceBillForm = () => {
           warrantyInfo: "",
         });
       } else {
-        
         if (!token) {
           alert("Authentication required. Please login again.");
           logout();
@@ -488,7 +572,6 @@ const ServiceBillForm = () => {
         }
 
         try {
-          
           const saveResponse = await retryRequest(() =>
             axios.post(`${API_BASE_URL}/service-bills`, formattedData, {
               headers: {
@@ -513,7 +596,9 @@ const ServiceBillForm = () => {
           if (pdfResult.success) {
             pdfBlob = pdfResult.blob;
             if (pdfResult.saved && window.electronAPI) {
-              alert(`PDF saved to ${pdfResult.savedPath || 'default PDF folder'}`);
+              alert(
+                `PDF saved to ${pdfResult.savedPath || "default PDF folder"}`
+              );
             } else {
               saveAs(pdfBlob, `service-bill-${billId}.pdf`);
             }
@@ -748,7 +833,7 @@ const ServiceBillForm = () => {
         ) {
           console.log(`Attempt ${attempt} failed, retrying in ${delay}ms...`);
           await wait(delay);
-          delay *= 2; 
+          delay *= 2;
         } else {
           throw error;
         }
@@ -786,7 +871,7 @@ const ServiceBillForm = () => {
           billData.customServiceDescription ||
           formData.customServiceDescription,
         user: user._id,
-        
+
         totalAmount: parseFloat(billData.totalAmount) || 0,
         taxAmount: parseFloat(billData.taxAmount) || 0,
         discount: parseFloat(billData.discount) || 0,
@@ -794,7 +879,7 @@ const ServiceBillForm = () => {
         advancePaid: parseFloat(billData.advancePaid) || 0,
         balanceDue: parseFloat(billData.balanceDue) || 0,
         taxRate: parseFloat(billData.taxRate) || 0,
-        
+
         serviceItems: billData.serviceItems.map((item) => ({
           ...item,
           quantity: parseFloat(item.quantity) || 0,
@@ -814,7 +899,6 @@ const ServiceBillForm = () => {
       });
 
       if (forPreview) {
-        
         console.log(
           "Making service bill preview request to:",
           `${API_BASE_URL}/service-bills/preview`
@@ -831,7 +915,7 @@ const ServiceBillForm = () => {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
               },
-              timeout: 30000, 
+              timeout: 30000,
             }
           )
         );
@@ -850,14 +934,13 @@ const ServiceBillForm = () => {
         setPreviewPdf(url);
         setShowPreviewModal(true);
       } else {
-        
         const saveResponse = await retryRequest(() =>
           axios.post(`${API_BASE_URL}/service-bills`, formattedBillData, {
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-            timeout: 30000, 
+            timeout: 30000,
           })
         );
 
@@ -873,7 +956,7 @@ const ServiceBillForm = () => {
               Authorization: `Bearer ${token}`,
               Accept: "application/pdf",
             },
-            timeout: 30000, 
+            timeout: 30000,
           })
         );
 
@@ -883,14 +966,18 @@ const ServiceBillForm = () => {
         const filename = `service-bill-${billId}.pdf`;
         try {
           const arrayBuf = await pdfResponse.data.arrayBuffer();
-          const saveRes = await fileSaveService.savePdfToDefaultDir(filename, arrayBuf, 'service');
+          const saveRes = await fileSaveService.savePdfToDefaultDir(
+            filename,
+            arrayBuf,
+            "service"
+          );
           if (saveRes && saveRes.success && window.electronAPI) {
-            alert(`PDF saved to ${saveRes.path || 'default PDF folder'}`);
+            alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
           } else {
             saveAs(pdfBlob, filename);
           }
         } catch (err) {
-          console.warn('Silent save failed for service bill:', err);
+          console.warn("Silent save failed for service bill:", err);
           saveAs(pdfBlob, filename);
         }
       }
@@ -1004,9 +1091,9 @@ const ServiceBillForm = () => {
         ]
       : []),
     {
-      name: 'Gallery',
+      name: "Gallery",
       icon: Image,
-      path: '/gallery/manage',
+      path: "/gallery/manage",
     },
     {
       name: "Vehicle History",
@@ -1113,7 +1200,7 @@ const ServiceBillForm = () => {
               width: "100%",
               maxWidth: "25rem",
               height: "9rem",
-              objectFit: "cover", 
+              objectFit: "cover",
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
@@ -1134,7 +1221,6 @@ const ServiceBillForm = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
-                    
                     handleMenuClick(item.name, item.path);
                   }
                 }}
@@ -1204,14 +1290,16 @@ const ServiceBillForm = () => {
 
           <form style={styles.form}>
             {Object.keys(errors || {}).length > 0 && (
-              <div style={{
-                backgroundColor: "#fff1f0",
-                border: "1px solid #fecaca",
-                color: "#7f1d1d",
-                padding: "12px",
-                borderRadius: "6px",
-                marginBottom: "16px",
-              }}>
+              <div
+                style={{
+                  backgroundColor: "#fff1f0",
+                  border: "1px solid #fecaca",
+                  color: "#7f1d1d",
+                  padding: "12px",
+                  borderRadius: "6px",
+                  marginBottom: "16px",
+                }}
+              >
                 <strong>Please fix the following errors:</strong>
                 <ul style={{ margin: "8px 0 0 16px" }}>
                   {Object.entries(errors).map(([k, v]) => (
@@ -1504,17 +1592,26 @@ const ServiceBillForm = () => {
               </h2>
               <div style={{ marginBottom: "20px" }}>
                 {formData.serviceItems.map((item, index) => (
-                  
                   <div
                     key={index}
                     className="service-item-row"
                     style={
                       isMobile
-                        ? { ...styles.serviceItemRow, flexDirection: "column", alignItems: "stretch" }
+                        ? {
+                            ...styles.serviceItemRow,
+                            flexDirection: "column",
+                            alignItems: "stretch",
+                          }
                         : styles.serviceItemRow
                     }
                   >
-                    <div style={isMobile ? { ...styles.serviceItemField, width: "100%" } : styles.serviceItemField}>
+                    <div
+                      style={
+                        isMobile
+                          ? { ...styles.serviceItemField, width: "100%" }
+                          : styles.serviceItemField
+                      }
+                    >
                       <label style={styles.formLabel}>
                         Description || विवरण
                       </label>
@@ -1529,13 +1626,21 @@ const ServiceBillForm = () => {
                         style={{
                           ...styles.formInput,
                           width: isMobile ? "80%" : styles.formInput.width,
-                          ...(focusedInput === "description" ? styles.inputFocused : {}),
+                          ...(focusedInput === "description"
+                            ? styles.inputFocused
+                            : {}),
                         }}
                         required
                         maxLength={30}
                       />
                     </div>
-                    <div style={isMobile ? { ...styles.serviceItemField, width: "100%" } : styles.serviceItemField}>
+                    <div
+                      style={
+                        isMobile
+                          ? { ...styles.serviceItemField, width: "100%" }
+                          : styles.serviceItemField
+                      }
+                    >
                       <label style={styles.formLabel}>Rate (₹) || दर (₹)</label>
                       <input
                         type="text"
@@ -1547,12 +1652,13 @@ const ServiceBillForm = () => {
                         style={{
                           ...styles.formInput,
                           width: isMobile ? "80%" : styles.formInput.width,
-                          ...(focusedInput === "rate" ? styles.inputFocused : {}),
+                          ...(focusedInput === "rate"
+                            ? styles.inputFocused
+                            : {}),
                         }}
                         required
                         maxLength={10}
                         onKeyDown={(e) => {
-                          
                           if (
                             !/[0-9.]/.test(e.key) &&
                             e.key !== "Backspace" &&
@@ -1560,7 +1666,7 @@ const ServiceBillForm = () => {
                           ) {
                             e.preventDefault();
                           }
-                          
+
                           if (e.key === "Enter") {
                             e.preventDefault();
                             const nextField = e.target
@@ -1572,7 +1678,13 @@ const ServiceBillForm = () => {
                       />
                     </div>
 
-                    <div style={isMobile ? { ...styles.serviceItemField, width: "100%" } : styles.serviceItemField}>
+                    <div
+                      style={
+                        isMobile
+                          ? { ...styles.serviceItemField, width: "100%" }
+                          : styles.serviceItemField
+                      }
+                    >
                       <label style={styles.formLabel}>Qty || मात्रा</label>
                       <input
                         type="number"
@@ -1584,7 +1696,9 @@ const ServiceBillForm = () => {
                         style={{
                           ...styles.formInput,
                           width: isMobile ? "80%" : styles.formInput.width,
-                          ...(focusedInput === "quantity" ? styles.inputFocused : {}),
+                          ...(focusedInput === "quantity"
+                            ? styles.inputFocused
+                            : {}),
                         }}
                         min="1"
                         required
@@ -1601,7 +1715,13 @@ const ServiceBillForm = () => {
                       />
                     </div>
 
-                    <div style={isMobile ? { ...styles.serviceItemField, width: "100%" } : styles.serviceItemField}>
+                    <div
+                      style={
+                        isMobile
+                          ? { ...styles.serviceItemField, width: "100%" }
+                          : styles.serviceItemField
+                      }
+                    >
                       <label style={styles.formLabel}>
                         Amount (₹) || राशि (₹)
                       </label>
@@ -1615,12 +1735,13 @@ const ServiceBillForm = () => {
                         style={{
                           ...styles.formInput,
                           width: isMobile ? "80%" : styles.formInput.width,
-                          ...(focusedInput === "amount" ? styles.inputFocused : {}),
+                          ...(focusedInput === "amount"
+                            ? styles.inputFocused
+                            : {}),
                         }}
                         required
                         maxLength={10}
                         onKeyDown={(e) => {
-                          
                           if (
                             !/[0-9.]/.test(e.key) &&
                             e.key !== "Backspace" &&
@@ -1628,7 +1749,7 @@ const ServiceBillForm = () => {
                           ) {
                             e.preventDefault();
                           }
-                          
+
                           if (e.key === "Enter") {
                             e.preventDefault();
                             const nextField = e.target
@@ -1644,10 +1765,14 @@ const ServiceBillForm = () => {
                       onClick={() => removeServiceItem(index)}
                       style={
                         isMobile
-                          ? { ...styles.removeItemButton, alignSelf: "flex-end", marginTop: 8 }
+                          ? {
+                              ...styles.removeItemButton,
+                              alignSelf: "flex-end",
+                              marginTop: 8,
+                            }
                           : styles.removeItemButton
                       }
-                      tabIndex={-1} 
+                      tabIndex={-1}
                     >
                       <Trash size={16} />
                     </button>
@@ -1685,7 +1810,7 @@ const ServiceBillForm = () => {
                           const newData = {
                             ...formData,
                             taxEnabled: enabling,
-                            
+
                             taxRate: enabling ? 18 : 0,
                           };
 
@@ -1751,7 +1876,7 @@ const ServiceBillForm = () => {
                             value={formData.businessName}
                             onChange={(e) => {
                               handleChange(e);
-                              
+
                               setShowBusinessFields(true);
                             }}
                             onInput={handleInput}
@@ -2101,7 +2226,7 @@ const ServiceBillForm = () => {
           <div
             style={{
               ...styles.modalContent,
-              
+
               width: isMobile ? "95vw" : "800px",
               maxWidth: isMobile ? "95vw" : "90%",
               height: isMobile ? "80vh" : undefined,
@@ -2144,14 +2269,11 @@ const ServiceBillForm = () => {
             <button
               style={styles.modalCloseButton}
               onClick={() => {
-                
                 try {
                   if (previewPdf) {
                     URL.revokeObjectURL(previewPdf);
                   }
-                } catch (e) {
-                  
-                }
+                } catch (e) {}
                 setPreviewPdf(null);
                 setShowPreviewModal(false);
               }}
@@ -2276,7 +2398,7 @@ const styles = {
     zIndex: 1000,
   },
   inputFocused: {
-    backgroundColor: "yellow",
+    backgroundColor: "#fff5f5",
   },
   modalContent: {
     backgroundColor: "#ffffff",
@@ -2474,7 +2596,6 @@ const styles = {
     marginBottom: "40px",
     paddingBottom: "24px",
     borderBottom: "1px solid #e2e8f0",
-    
   },
   sectionTitle: {
     fontSize: "1.25rem",

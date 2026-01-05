@@ -14,7 +14,7 @@
         return `${window.location.protocol}//${host}:2500`;
       }
     } catch (e) {}
-    return "http://localhost:3500";
+    return "https://ok-motor-51l3.vercel.app";
   }
 
   const API_BASE = computeApiBase();

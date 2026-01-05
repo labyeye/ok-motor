@@ -1,10 +1,4 @@
-import  {
-  useState,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-} from "react";
+import { useState, useCallback, useContext, useEffect, useRef } from "react";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
 import axios from "axios";
@@ -48,7 +42,7 @@ const SellLetterForm = () => {
   const { user, logout } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Create Sell Letter");
   const [expandedMenus, setExpandedMenus] = useState({});
-  
+
   const savePromiseRef = useRef(null);
   const saveResultRef = useRef(null);
   const [createdId, setCreatedId] = useState(null);
@@ -141,9 +135,12 @@ const SellLetterForm = () => {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
       const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
-      const response = await axios.get(`${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(
+        `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setVehicles(response.data.vehicles || []);
     } catch (error) {
       console.error("Error fetching vehicles:", error);
@@ -155,11 +152,11 @@ const SellLetterForm = () => {
   const handleVehicleSelect = (e) => {
     const vehicleId = e.target.value;
     setSelectedVehicleId(vehicleId);
-    
+
     if (vehicleId) {
-      const vehicle = vehicles.find(v => v._id === vehicleId);
+      const vehicle = vehicles.find((v) => v._id === vehicleId);
       if (vehicle) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           vehicleName: vehicle.vehicleName || "",
           vehicleModel: vehicle.vehicleModel || "",
@@ -238,7 +235,7 @@ const SellLetterForm = () => {
       };
 
       setFormData(defaultFormData);
-      
+
       setCreatedId(null);
       saveResultRef.current = null;
       savePromiseRef.current = null;
@@ -332,6 +329,25 @@ const SellLetterForm = () => {
       }
     });
     setErrors(errs);
+
+    const keys = Object.keys(errs);
+    if (keys.length > 0) {
+      const firstKey = keys[0];
+      try {
+        alert(errs[firstKey] || "Please fill required fields");
+      } catch (err) {}
+
+      try {
+        const el = document.querySelector(`[name="${firstKey}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.focus();
+          el.style.borderColor = "#ef4444";
+          el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
+        }
+      } catch (err) {}
+    }
+
     return errs;
   };
   const DownloadProgressModal = ({ progress, onClose }) => {
@@ -518,9 +534,9 @@ const SellLetterForm = () => {
       ],
     },
     {
-      name: 'Gallery',
+      name: "Gallery",
       icon: Image,
-      path: '/gallery/manage',
+      path: "/gallery/manage",
     },
     {
       name: "Vehicle History",
@@ -560,7 +576,20 @@ const SellLetterForm = () => {
 
       if (emptyFields.length > 0) {
         setMissingFields(emptyFields);
-        alert("Please fill all required fields before preview.");
+        // alert and then focus first missing field
+        try {
+          alert("Please fill all required fields before preview.");
+        } catch (err) {}
+        try {
+          const first = emptyFields[0];
+          const el = document.querySelector(`[name="${first}"]`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.focus();
+            el.style.borderColor = "#ef4444";
+            el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
+          }
+        } catch (err) {}
         return;
       }
 
@@ -591,7 +620,7 @@ const SellLetterForm = () => {
           formData.previousTime || formData.todayTime || "12:00"
         ),
       };
-      
+
       formattedData.witnessName =
         formattedData.witnessName && String(formattedData.witnessName).trim()
           ? formattedData.witnessName
@@ -600,7 +629,7 @@ const SellLetterForm = () => {
         formattedData.witnessPhone && String(formattedData.witnessPhone).trim()
           ? formattedData.witnessPhone
           : "0000000000";
-      
+
       const positions =
         language === "hindi" ? hindiFieldPositions : englishFieldPositions;
 
@@ -617,10 +646,9 @@ const SellLetterForm = () => {
             color: rgb(0, 0, 0),
           });
         } else if (fieldName === "amountInWords" && formattedData[fieldName]) {
-          
           const saleAmountText = formattedData.saleAmount || "";
           const saleAmountFontSize = positions.saleAmount?.size || 11;
-          
+
           const saleAmountWidth =
             saleAmountText.length * saleAmountFontSize * 0.6;
           const dynamicX =
@@ -818,23 +846,44 @@ const SellLetterForm = () => {
       const missingFields = requiredFields.filter((field) => !formData[field]);
 
       if (missingFields.length > 0) {
-        alert(
-          `Please fill in all required fields: ${missingFields.join(", ")}`
-        );
+        const msg = `Please fill in all required fields: ${missingFields.join(
+          ", "
+        )}`;
+        try {
+          alert(msg);
+        } catch (err) {}
+        // focus first missing field
+        try {
+          const first = missingFields[0];
+          const el = document.querySelector(`[name="${first}"]`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.focus();
+            el.style.borderColor = "#ef4444";
+            el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
+          }
+        } catch (err) {}
         setIsSaving(false);
         return false;
       }
 
       let response;
-      
+
       const isElectron = window.electronAPI !== undefined;
 
       // Remove server-managed identifiers/fields to avoid duplicate key errors when versioning
-      const { _id: _omitId, __v: _omitV, createdAt: _omitCreatedAt, updatedAt: _omitUpdatedAt, user: _omitUser, ...cleanFormData } = formData || {};
+      const {
+        _id: _omitId,
+        __v: _omitV,
+        createdAt: _omitCreatedAt,
+        updatedAt: _omitUpdatedAt,
+        user: _omitUser,
+        ...cleanFormData
+      } = formData || {};
 
       const dataToSave = {
         ...cleanFormData,
-        
+
         ...(editLetter?._id && {
           originalDocumentId: editLetter.originalDocumentId || editLetter._id,
           previousVersionId: editLetter._id,
@@ -850,16 +899,14 @@ const SellLetterForm = () => {
       };
 
       if (isElectron) {
-        
         response = await apiService.post("/api/sell-letters", dataToSave);
       } else {
-        
         response = await axios.post(
           "https://ok-motor-51l3.vercel.app/api/sell-letters",
           dataToSave
         );
       }
-      
+
       if (editLetter?._id) {
         alert("Sell letter saved as new version! Original remains unchanged.");
       } else {
@@ -885,7 +932,7 @@ const SellLetterForm = () => {
         alert(
           "No internet connection. Sell letter will be saved when connection is restored."
         );
-        return true; 
+        return true;
       }
 
       if (error.response) {
@@ -895,8 +942,11 @@ const SellLetterForm = () => {
             .join("\n");
           alert(`Validation errors:\n${errorMessages}`);
         } else {
-          const serverMsg = error.response.data.message || "Failed to save sell letter.";
-          const keyInfo = error.response.data.error ? `\nDetails: ${JSON.stringify(error.response.data.error)}` : "";
+          const serverMsg =
+            error.response.data.message || "Failed to save sell letter.";
+          const keyInfo = error.response.data.error
+            ? `\nDetails: ${JSON.stringify(error.response.data.error)}`
+            : "";
           alert(`${serverMsg}${keyInfo}`);
         }
       } else {
@@ -910,12 +960,10 @@ const SellLetterForm = () => {
 
   const generatePDFBuffer = async (data, language = "hindi") => {
     try {
-      
       const isElectron = window.electronAPI !== undefined;
 
       let response;
       if (isElectron) {
-        
         response = await apiService.post(
           `/api/sell-letters/generate-pdf?language=${language}`,
           data,
@@ -924,7 +972,6 @@ const SellLetterForm = () => {
           }
         );
       } else {
-        
         response = await axios.post(
           `https://ok-motor-51l3.vercel.app/api/sell-letters/generate-pdf?language=${language}`,
           data,
@@ -955,7 +1002,7 @@ const SellLetterForm = () => {
   const handleSaveAndDownload = async () => {
     try {
       setIsSaving(true);
-      
+
       // validate required fields before proceeding
       const errs = validateForm();
       if (Object.keys(errs).length > 0) {
@@ -966,18 +1013,14 @@ const SellLetterForm = () => {
       let savedLetter;
 
       if (saveResultRef.current && !editLetter?._id && !createdId) {
-        
         savedLetter = saveResultRef.current;
       } else if (savePromiseRef.current && !editLetter?._id && !createdId) {
-        
         savedLetter = await savePromiseRef.current;
       } else {
-        
         savePromiseRef.current = saveToDatabase();
         try {
           savedLetter = await savePromiseRef.current;
           if (!editLetter?._id && !createdId) {
-            
             saveResultRef.current = savedLetter;
           }
         } finally {
@@ -986,7 +1029,7 @@ const SellLetterForm = () => {
       }
 
       if (!savedLetter) throw new Error("Failed to save sell letter");
-      
+
       const newId = savedLetter._id || savedLetter?.data?._id;
       if (newId && !createdId) setCreatedId(newId);
       if (selectedLanguage === "hindi") {
@@ -1607,7 +1650,6 @@ const SellLetterForm = () => {
           fieldName === "amountInWords" &&
           formattedLetter.amountInWords
         ) {
-          
           const saleAmountText = formattedLetter.saleAmount || "";
           const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
           const saleAmountWidth = font.widthOfTextAtSize(
@@ -1633,17 +1675,23 @@ const SellLetterForm = () => {
         }
       }
       const pdfBytes = await pdfDoc.save();
-      const filename = `vehicle_sale_agreement_hindi_${formData.registrationNumber || "document"}.pdf`;
+      const filename = `vehicle_sale_agreement_hindi_${
+        formData.registrationNumber || "document"
+      }.pdf`;
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       try {
-        const saveRes = await fileSaveService.savePdfToDefaultDir(filename, pdfBytes, 'sell');
+        const saveRes = await fileSaveService.savePdfToDefaultDir(
+          filename,
+          pdfBytes,
+          "sell"
+        );
         if (saveRes && saveRes.success && window.electronAPI) {
-          alert(`PDF saved to ${saveRes.path || 'default PDF folder'}`);
+          alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
         } else {
           saveAs(blob, filename);
         }
       } catch (err) {
-        console.warn('Silent save failed for sell letter (hi):', err);
+        console.warn("Silent save failed for sell letter (hi):", err);
         saveAs(blob, filename);
       }
     } catch (error) {
@@ -1711,7 +1759,6 @@ const SellLetterForm = () => {
           fieldName === "amountInWords" &&
           formattedLetter.amountInWords
         ) {
-          
           const saleAmountText = formattedLetter.saleAmount || "";
           const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
           const saleAmountWidth = font.widthOfTextAtSize(
@@ -1737,17 +1784,23 @@ const SellLetterForm = () => {
       }
 
       const pdfBytes = await pdfDoc.save();
-      const filenameEn = `vehicle_sale_agreement_english_${formData.registrationNumber || "document"}.pdf`;
+      const filenameEn = `vehicle_sale_agreement_english_${
+        formData.registrationNumber || "document"
+      }.pdf`;
       const blobEn = new Blob([pdfBytes], { type: "application/pdf" });
       try {
-        const saveRes = await fileSaveService.savePdfToDefaultDir(filenameEn, pdfBytes, 'sell');
+        const saveRes = await fileSaveService.savePdfToDefaultDir(
+          filenameEn,
+          pdfBytes,
+          "sell"
+        );
         if (saveRes && saveRes.success && window.electronAPI) {
-          alert(`PDF saved to ${saveRes.path || 'default PDF folder'}`);
+          alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
         } else {
           saveAs(blobEn, filenameEn);
         }
       } catch (err) {
-        console.warn('Silent save failed for sell letter (en):', err);
+        console.warn("Silent save failed for sell letter (en):", err);
         saveAs(blobEn, filenameEn);
       }
     } catch (error) {
@@ -1915,14 +1968,16 @@ const SellLetterForm = () => {
 
           <form className="form" style={styles.form}>
             {Object.keys(errors || {}).length > 0 && (
-              <div style={{
-                backgroundColor: "#fff1f0",
-                border: "1px solid #fecaca",
-                color: "#7f1d1d",
-                padding: "12px",
-                borderRadius: "6px",
-                marginBottom: "16px",
-              }}>
+              <div
+                style={{
+                  backgroundColor: "#fff1f0",
+                  border: "1px solid #fecaca",
+                  color: "#7f1d1d",
+                  padding: "12px",
+                  borderRadius: "6px",
+                  marginBottom: "16px",
+                }}
+              >
                 <strong>Please fix the following errors:</strong>
                 <ul style={{ margin: "8px 0 0 16px" }}>
                   {Object.entries(errors).map(([k, v]) => (
@@ -1933,7 +1988,8 @@ const SellLetterForm = () => {
             )}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
-                <Car style={styles.sectionIcon} /> Select Vehicle from Inventory (Optional)
+                <Car style={styles.sectionIcon} /> Select Vehicle from Inventory
+                (Optional)
               </h2>
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
@@ -1948,30 +2004,38 @@ const SellLetterForm = () => {
                     disabled={loadingVehicles}
                   >
                     <option value="">
-                      {loadingVehicles ? "Loading vehicles..." : "-- Select Vehicle or Enter Manually --"}
-                      </option>
+                      {loadingVehicles
+                        ? "Loading vehicles..."
+                        : "-- Select Vehicle or Enter Manually --"}
+                    </option>
                     {vehicles.map((vehicle) => (
                       <option key={vehicle._id} value={vehicle._id}>
-                        {vehicle.vehicleName} {vehicle.vehicleModel} - {vehicle.registrationNumber}
-                        {vehicle.vehicleVariant ? ` (${vehicle.vehicleVariant})` : ""}
+                        {vehicle.vehicleName} {vehicle.vehicleModel} -{" "}
+                        {vehicle.registrationNumber}
+                        {vehicle.vehicleVariant
+                          ? ` (${vehicle.vehicleVariant})`
+                          : ""}
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
               {selectedVehicleId && (
-                <div style={{
-                  padding: "12px",
-                  backgroundColor: "#f0f9ff",
-                  borderRadius: "8px",
-                  marginTop: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}>
+                <div
+                  style={{
+                    padding: "12px",
+                    backgroundColor: "#f0f9ff",
+                    borderRadius: "8px",
+                    marginTop: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
                   <CheckCircle size={20} style={{ color: "#3b82f6" }} />
                   <span style={{ fontSize: "0.875rem", color: "#1e293b" }}>
-                    Vehicle details auto-filled. You can modify them below if needed.
+                    Vehicle details auto-filled. You can modify them below if
+                    needed.
                   </span>
                 </div>
               )}
@@ -3070,7 +3134,7 @@ const styles = {
     height: "16px",
   },
   inputFocused: {
-    backgroundColor: "yellow",
+    backgroundColor: "#fff5f5",
   },
 
   formPreviewContainer: {
