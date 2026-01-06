@@ -1317,6 +1317,131 @@ const ServiceBillForm = () => {
             )}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
+                <Car style={styles.sectionIcon} /> Vehicle Information
+              </h2>
+              <div style={styles.formGrid}>
+                <div style={styles.formField}>
+                  <label style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        fontSize: "0.875rem",
+                        fontWeight: "bold",
+                        color: "#1e293b",
+                        marginBottom: "8px",
+                      }}>
+                    <Car style={styles.formIcon} />
+                    Registration Number || रजिस्ट्रेशन नंबर
+                  </label>
+                  <input
+                    type="text"
+                    name="registrationNumber"
+                    value={formData.registrationNumber}
+                    onChange={handleChange}
+                    onInput={handleInput}
+                    onBlur={(e) => {
+                      if (e.target.value.trim() !== "") {
+                        fetchVehicleDetails(e.target.value.trim());
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && e.target.value.trim() !== "") {
+                        fetchVehicleDetails(e.target.value.trim());
+                      }
+                    }}
+                    onFocus={() => setFocusedInput("registrationNumber")}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "registrationNumber"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
+                    required
+                    maxLength={15}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Car style={styles.formIcon} />
+                    Vehicle Type || वाहन का प्रकार
+                  </label>
+                  <select
+                    name="vehicleType"
+                    value={formData.vehicleType}
+                    onChange={handleChange}
+                    style={styles.formSelect}
+                    required
+                  >
+                    <option value="bike">Bike</option>
+                    <option value="scooter">Scooter</option>
+                    <option value="car">Car</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Car style={styles.formIcon} />
+                    Vehicle Brand || वाहन का ब्रांड
+                  </label>
+                  <input
+                    type="text"
+                    name="vehicleBrand"
+                    value={formData.vehicleBrand}
+                    onChange={handleChange}
+                    onInput={handleInput}
+                    style={styles.formInput}
+                    required
+                    maxLength={25}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Car style={styles.formIcon} />
+                    Vehicle Model || वाहन का मॉडल
+                  </label>
+                  <input
+                    type="text"
+                    name="vehicleModel"
+                    value={formData.vehicleModel}
+                    onChange={handleChange}
+                    onInput={handleInput}
+                    style={styles.formInput}
+                    required
+                    maxLength={25}
+                  />
+                </div>
+                
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Car style={styles.formIcon} />
+                    KM Reading || किलोमीटर पढ़ाई
+                  </label>
+                  <input
+                    type="text"
+                    name="kmReading"
+                    value={formData.kmReading}
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      setFormData((prev) => ({
+                        ...prev,
+                        kmReading: rawValue,
+                      }));
+                    }}
+                    onFocus={() => setFocusedInput("kmReading")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "kmReading"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
+                    placeholder="e.g. 36,000.00"
+                  />
+                </div>
+              </div>
+            </div>
+            <div style={styles.formSection}>
+              <h2 style={styles.sectionTitle}>
                 <User style={styles.sectionIcon} /> Customer Information
               </h2>
               <div style={styles.formGrid}>
@@ -1381,124 +1506,6 @@ const ServiceBillForm = () => {
                     onInput={handleInput}
                     style={styles.formInput}
                     maxLength={30}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {}
-            <div style={styles.formSection}>
-              <h2 style={styles.sectionTitle}>
-                <Car style={styles.sectionIcon} /> Vehicle Information
-              </h2>
-              <div style={styles.formGrid}>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Car style={styles.formIcon} />
-                    Vehicle Type || वाहन का प्रकार
-                  </label>
-                  <select
-                    name="vehicleType"
-                    value={formData.vehicleType}
-                    onChange={handleChange}
-                    style={styles.formSelect}
-                    required
-                  >
-                    <option value="bike">Bike</option>
-                    <option value="scooter">Scooter</option>
-                    <option value="car">Car</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Car style={styles.formIcon} />
-                    Vehicle Brand || वाहन का ब्रांड
-                  </label>
-                  <input
-                    type="text"
-                    name="vehicleBrand"
-                    value={formData.vehicleBrand}
-                    onChange={handleChange}
-                    onInput={handleInput}
-                    style={styles.formInput}
-                    required
-                    maxLength={25}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Car style={styles.formIcon} />
-                    Vehicle Model || वाहन का मॉडल
-                  </label>
-                  <input
-                    type="text"
-                    name="vehicleModel"
-                    value={formData.vehicleModel}
-                    onChange={handleChange}
-                    onInput={handleInput}
-                    style={styles.formInput}
-                    required
-                    maxLength={25}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Car style={styles.formIcon} />
-                    Registration Number || रजिस्ट्रेशन नंबर
-                  </label>
-                  <input
-                    type="text"
-                    name="registrationNumber"
-                    value={formData.registrationNumber}
-                    onChange={handleChange}
-                    onInput={handleInput}
-                    onBlur={(e) => {
-                      if (e.target.value.trim() !== "") {
-                        fetchVehicleDetails(e.target.value.trim());
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && e.target.value.trim() !== "") {
-                        fetchVehicleDetails(e.target.value.trim());
-                      }
-                    }}
-                    onFocus={() => setFocusedInput("registrationNumber")}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "registrationNumber"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                    required
-                    maxLength={15}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Car style={styles.formIcon} />
-                    KM Reading || किलोमीटर पढ़ाई
-                  </label>
-                  <input
-                    type="text"
-                    name="kmReading"
-                    value={formData.kmReading}
-                    onChange={(e) => {
-                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
-                      setFormData((prev) => ({
-                        ...prev,
-                        kmReading: rawValue,
-                      }));
-                    }}
-                    onFocus={() => setFocusedInput("kmReading")}
-                    onBlur={() => setFocusedInput(null)}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "kmReading"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                    placeholder="e.g. 36,000.00"
                   />
                 </div>
               </div>
@@ -1948,7 +1955,7 @@ const ServiceBillForm = () => {
                                 ? styles.inputFocused
                                 : {}),
                             }}
-                            maxLength={11}
+                            maxLength={18}
                           />
                         </div>
                         <div style={styles.formField}>
@@ -1977,7 +1984,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Sub Total (₹) || कुल राशि (₹)
+                    Sub Total (₹) || कुल राशि
                   </label>
                   <input
                     type="number"
@@ -2013,7 +2020,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Tax Amount (₹) || कर राशि (₹)
+                    Tax Amount (₹) || कर राशि
                   </label>
                   <input
                     type="number"
@@ -2085,7 +2092,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Grand Total (₹) || कुल राशि (₹)
+                    Grand Total (₹) || कुल राशि
                   </label>
                   <input
                     type="number"
@@ -2126,7 +2133,7 @@ const ServiceBillForm = () => {
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <IndianRupee style={styles.formIcon} />
-                    Balance Due (₹) || बैलेंस डु (₹)
+                    Balance Due (₹) || बैलेंस डु
                   </label>
                   <input
                     type="number"
@@ -2649,7 +2656,7 @@ const styles = {
   },
   formGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
     gap: "20px",
   },
   formField: {

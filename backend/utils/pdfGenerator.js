@@ -1,4 +1,3 @@
-
 const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
@@ -7,7 +6,6 @@ const formatTime12Hour = (timeString) => {
   try {
     if (!timeString) return "";
 
-    
     if (timeString instanceof Date) {
       const hours = timeString.getHours();
       const minutes = timeString.getMinutes();
@@ -19,14 +17,11 @@ const formatTime12Hour = (timeString) => {
       )} ${ampm}`;
     }
 
-    
     if (typeof timeString === "string") {
-      
       if (timeString.includes("AM") || timeString.includes("PM")) {
         return timeString;
       }
 
-      
       const date = new Date(timeString);
       if (!isNaN(date.getTime())) {
         const hours = date.getHours();
@@ -39,7 +34,6 @@ const formatTime12Hour = (timeString) => {
         )} ${ampm}`;
       }
 
-      
       const [hour, minute] = timeString.split(":").map(Number);
       if (!isNaN(hour)) {
         const hours12 = hour % 12 || 12;
@@ -59,12 +53,10 @@ const formatTime12Hour = (timeString) => {
 
 exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
   try {
-    
     if (serviceBill && typeof serviceBill.toObject === "function") {
       serviceBill = serviceBill.toObject();
     }
 
-    
     if (!serviceBill || typeof serviceBill !== "object") {
       throw new Error("Invalid serviceBill parameter: must be an object");
     }
@@ -72,7 +64,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       throw new Error("Invalid serviceBill: serviceItems must be an array");
     }
 
-    
     const validatedServiceBill = {
       ...serviceBill,
       totalAmount: parseFloat(serviceBill.totalAmount) || 0,
@@ -101,7 +92,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     };
     serviceBill = validatedServiceBill;
 
-    
     serviceBill.paymentMethod = serviceBill.paymentMethod || "cash";
     serviceBill.paymentStatus = serviceBill.paymentStatus || "pending";
     serviceBill.vehicleType = serviceBill.vehicleType || "bike";
@@ -113,7 +103,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     serviceBill.vehicleBrand = serviceBill.vehicleBrand || "";
     serviceBill.vehicleModel = serviceBill.vehicleModel || "";
 
-    
     const pdfDoc = await PDFDocument.create();
     const pages = [];
     let currentPage = pdfDoc.addPage([595, 842]);
@@ -122,20 +111,25 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const font = await pdfDoc.embedFont("Helvetica");
     const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
 
-    
     const locateLogo = () => {
       const candidates = [];
       if (process.env.LOGO_PATH) candidates.push(process.env.LOGO_PATH);
-      
+
       candidates.push(path.join(__dirname, "../assets/images/okmotorback.png"));
-      
-      candidates.push(path.join(__dirname, "../../frontend/src/images/okmotorback.png"));
-      candidates.push(path.join(__dirname, "../../frontend/public/images/okmotorback.png"));
-      candidates.push(path.join(__dirname, "../../frontend/public/okmotorback.png"));
+
+      candidates.push(
+        path.join(__dirname, "../../frontend/src/images/okmotorback.png")
+      );
+      candidates.push(
+        path.join(__dirname, "../../frontend/public/images/okmotorback.png")
+      );
+      candidates.push(
+        path.join(__dirname, "../../frontend/public/okmotorback.png")
+      );
       candidates.push(path.join(__dirname, "../images/okmotorback.png"));
       candidates.push(path.join(__dirname, "../assets/okmotorback.png"));
 
-      console.log('Searching for logo in candidate paths:');
+      console.log("Searching for logo in candidate paths:");
       for (const p of candidates) {
         try {
           console.log(`  Checking: ${p}`);
@@ -147,7 +141,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
           console.log(`  ✗ Error checking ${p}:`, e.message);
         }
       }
-      console.log('  ✗ No logo found in any candidate location');
+      console.log("  ✗ No logo found in any candidate location");
       return null;
     };
 
@@ -157,18 +151,19 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       try {
         const logoBytes = fs.readFileSync(logoLocation);
         logoImage = await pdfDoc.embedPng(logoBytes);
-        console.log('Successfully loaded and embedded logo from', logoLocation);
+        console.log("Successfully loaded and embedded logo from", logoLocation);
       } catch (logoError) {
-        console.error('Error embedding logo for PDF:', logoError.message);
-        console.error('Logo path attempted:', logoLocation);
+        console.error("Error embedding logo for PDF:", logoError.message);
+        console.error("Logo path attempted:", logoLocation);
         logoImage = null;
       }
     } else {
-      console.warn('⚠ No logo found in candidate locations, PDF will be generated without watermark');
-      console.warn('Current __dirname:', __dirname);
+      console.warn(
+        "⚠ No logo found in candidate locations, PDF will be generated without watermark"
+      );
+      console.warn("Current __dirname:", __dirname);
     }
 
-    
     const addWatermark = (page) => {
       if (logoImage) {
         console.log("Drawing watermark logo at x:280, y:200, size:450x400");
@@ -185,7 +180,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       }
     };
 
-    
     const addPageNumber = (page, currentPageNum, totalPages) => {
       page.drawText(`${currentPageNum}/${totalPages}`, {
         x: 550,
@@ -196,10 +190,8 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     };
 
-    
     addWatermark(currentPage);
 
-    
     currentPage.drawRectangle({
       x: 0,
       y: 780,
@@ -223,13 +215,21 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     currentPage.drawText("UDAYAM-BR-26-0028550", {
       x: 400,
-      y: 800,
+      y: 815,
       size: 14,
       color: rgb(0.8, 0.8, 0.8),
       font: fontBold,
     });
+    if (serviceBill.taxEnabled) {
+      currentPage.drawText("GSTIN: 10BZFPR3150P1Z8", {
+        x: 400,
+        y: 795,
+        size: 14,
+        color: rgb(0.8, 0.8, 0.8),
+        font: fontBold,
+      });
+    }
 
-    
     currentPage.drawRectangle({
       x: 0,
       y: 750,
@@ -246,7 +246,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    
     const invoiceNumber =
       serviceBill.billNumber ||
       `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)
@@ -261,7 +260,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: font,
     });
 
-    
     const now = new Date();
     const istDateStr = now.toLocaleDateString("en-IN", {
       timeZone: "Asia/Kolkata",
@@ -273,18 +271,14 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       hour12: true,
     }).format(now);
 
-    currentPage.drawText(
-      `Date: ${istDateStr} Time: ${istTimeStr}`,
-      {
-        x: 400,
-        y: 720,
-        size: 10,
-        color: rgb(0.2, 0.2, 0.2),
-        font: font,
-      }
-    );
+    currentPage.drawText(`Date: ${istDateStr} Time: ${istTimeStr}`, {
+      x: 400,
+      y: 720,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
 
-    
     currentPage.drawLine({
       start: { x: 50, y: 710 },
       end: { x: 545, y: 710 },
@@ -292,12 +286,12 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.8, 0.8, 0.8),
     });
 
-    
     // Show business info only when tax is enabled AND the client explicitly
     // requested inclusion via `includeBusinessInPdf`. Previously we required
     // GSTIN to be present; now the toggle controls visibility and fields
     // will fall back to "N/A" when missing.
-    const showBusinessInfo = Boolean(serviceBill.taxEnabled) &&
+    const showBusinessInfo =
+      Boolean(serviceBill.taxEnabled) &&
       Boolean(serviceBill.includeBusinessInPdf);
     if (showBusinessInfo) {
       currentPage.drawText("BUSINESS INFORMATION", {
@@ -341,13 +335,11 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         });
       });
 
-      
       var customerY = 600;
     } else {
       var customerY = 690;
     }
 
-    
     currentPage.drawText("CUSTOMER DETAILS", {
       x: 50,
       y: customerY,
@@ -387,7 +379,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
-
     currentPage.drawText(`Email: ${serviceBill.customerEmail || "N/A"}`, {
       x: 350,
       y: customerY - 40,
@@ -395,7 +386,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.2, 0.2, 0.2),
       font: font,
     });
-
     const columnY = customerY - 80;
     const leftColumnX = 50;
     const rightColumnX = 300;
@@ -409,7 +399,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    
     currentPage.drawRectangle({
       x: leftColumnX,
       y: columnY - 30,
@@ -470,7 +459,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     });
 
-    
     currentPage.drawText("SERVICE DETAILS", {
       x: rightColumnX,
       y: columnY,
@@ -516,7 +504,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       },
     ];
 
-    
     serviceDetails.forEach((detail, index) => {
       currentPage.drawText(detail.label, {
         x: rightColumnX + 10,
@@ -535,7 +522,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     });
 
-    
     const isCustomService =
       serviceBill.serviceType &&
       serviceBill.serviceType.toLowerCase() === "custom";
@@ -554,7 +540,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: fontBold,
       });
 
-      
       const description = serviceBill.customServiceDescription;
       const maxCharsPerLine = 30;
       const descLines = [];
@@ -573,15 +558,13 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     }
 
-    
     const itemsStartY = columnY - 140;
-    const minItemsFirstPage = 25; 
-    const maxItemsPerPage = 25; 
+    const minItemsFirstPage = 25;
+    const maxItemsPerPage = 25;
     let currentY = itemsStartY;
     let currentPageItems = 0;
     let isFirstPage = true;
 
-    
     if (serviceBill.serviceItems.length > 0) {
       currentPage.drawText("SERVICE ITEMS", {
         x: 50,
@@ -593,7 +576,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       currentY -= 20;
     }
 
-    
     const drawServiceItemHeaders = (page, y) => {
       const serviceHeaders = [
         "#",
@@ -603,7 +585,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         "Disc Rs.",
         "Amount Rs.",
       ];
-      
+
       const serviceHeaderPositions = [60, 100, 300, 350, 400, 470];
 
       serviceHeaders.forEach((header, index) => {
@@ -617,24 +599,20 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     };
 
-    
     drawServiceItemHeaders(currentPage, currentY);
     currentY -= 20;
 
-    
-    
     if (!Array.isArray(serviceBill.serviceItems)) {
       console.warn("serviceItems is not an array:", serviceBill.serviceItems);
       return;
     }
 
     serviceBill.serviceItems.forEach((item, index) => {
-      
       if (!item || typeof item !== "object") {
         console.warn("Invalid service item at index", index, ":", item);
         return;
       }
-      
+
       const shouldCreateNewPage =
         (!isFirstPage && currentPageItems >= maxItemsPerPage) ||
         (isFirstPage &&
@@ -642,20 +620,17 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
           currentY < 300);
 
       if (shouldCreateNewPage) {
-        
         currentPage = pdfDoc.addPage([595, 842]);
         pages.push(currentPage);
-        addWatermark(currentPage); 
+        addWatermark(currentPage);
         isFirstPage = false;
-        currentY = 780; 
+        currentY = 780;
         currentPageItems = 0;
 
-        
         drawServiceItemHeaders(currentPage, currentY);
         currentY -= 20;
       }
 
-      
       currentPage.drawText((index + 1).toString(), {
         x: 60,
         y: currentY,
@@ -664,7 +639,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      
       const description = item.description;
       const maxWidth = 180;
       const lines = [];
@@ -682,7 +656,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       }
       if (currentLine) lines.push(currentLine);
 
-      
       lines.forEach((line, lineIndex) => {
         currentPage.drawText(line, {
           x: 100,
@@ -695,7 +668,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
       const descHeight = Math.max(lines.length * 12, 12);
 
-      
       currentPage.drawText(item.quantity.toString(), {
         x: 300,
         y: currentY,
@@ -704,7 +676,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      
       const rate = parseFloat(item.rate) || 0;
       currentPage.drawText(rate.toFixed(2), {
         x: 350,
@@ -714,14 +685,12 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: font,
       });
 
-      
       const amount = parseFloat(item.amount) || 0;
       const qty = parseFloat(item.quantity) || 0;
       const perUnitAmount = qty > 0 ? amount / qty : rate;
-      
+
       const discountPerUnit = rate - perUnitAmount;
 
-      
       currentPage.drawText(discountPerUnit.toFixed(2), {
         x: 400,
         y: currentY,
@@ -742,18 +711,15 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       currentPageItems++;
     });
 
-    
     if (currentY < 300) {
       currentPage = pdfDoc.addPage([595, 842]);
       pages.push(currentPage);
-      addWatermark(currentPage); 
-      currentY = 700; 
+      addWatermark(currentPage);
+      currentY = 700;
     }
 
-    
     let sectionY = currentY;
 
-    
     currentPage.drawText("Subtotal:", {
       x: 350,
       y: sectionY,
@@ -790,7 +756,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       sectionY -= 20;
     }
 
-    
     let discountAmount = 0;
     let discountLabel = "Discount:";
     if (serviceBill.discountType === "percentage") {
@@ -816,7 +781,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
     sectionY -= 20;
 
-    
     currentPage.drawText("Advance Paid:", {
       x: 350,
       y: sectionY,
@@ -834,7 +798,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
     sectionY -= 20;
 
-    
     currentPage.drawText("Balance Due:", {
       x: 350,
       y: sectionY,
@@ -869,7 +832,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     sectionY -= 40;
-    
+
     currentPage.drawText("Payment Method:", {
       x: 50,
       y: sectionY,
@@ -905,7 +868,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     );
     sectionY -= 20;
 
-    
     const labelX = 50;
     const contentX = 150;
     const rightMargin = 545;
@@ -929,7 +891,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
           if (currentLine) {
             lines.push(currentLine);
           }
-          
+
           if (font.widthOfTextAtSize(word, size) > maxWidth) {
             let sub = "";
             for (const ch of word) {
@@ -958,13 +920,19 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     const issuesLines = wrapTextByWidth(issues, contentWidth, font, fontSize);
     const notesLines = wrapTextByWidth(notes, contentWidth, font, fontSize);
-    const warrantyLines = wrapTextByWidth(warranty, contentWidth, font, fontSize);
+    const warrantyLines = wrapTextByWidth(
+      warranty,
+      contentWidth,
+      font,
+      fontSize
+    );
 
-    
     const neededHeight =
       (issuesLines.length > 0 ? (issuesLines.length + 1) * lineHeight + 8 : 0) +
       (notesLines.length > 0 ? (notesLines.length + 1) * lineHeight + 8 : 0) +
-      (warrantyLines.length > 0 ? (warrantyLines.length + 1) * lineHeight + 8 : 0);
+      (warrantyLines.length > 0
+        ? (warrantyLines.length + 1) * lineHeight + 8
+        : 0);
 
     if (sectionY - neededHeight < 140) {
       currentPage = pdfDoc.addPage([595, 842]);
@@ -1041,15 +1009,10 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       cursorY -= 8;
     }
 
-    
     sectionY = cursorY;
 
-    
-
-    
     const footerY = 80;
 
-    
     currentPage.drawText("Customer Signature", {
       x: 100,
       y: footerY,
@@ -1065,7 +1028,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.6, 0.6, 0.6),
     });
 
-    
     currentPage.drawText("Authorized Signatory", {
       x: 350,
       y: footerY,
@@ -1081,7 +1043,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.6, 0.6, 0.6),
     });
 
-    
     currentPage.drawText("Thank you for your business!", {
       x: 220,
       y: footerY - 30,
@@ -1090,7 +1051,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       font: fontBold,
     });
 
-    
     currentPage.drawText(
       "OK MOTORS | Pillar num.53, Bailey Rd,  Raja Bazar,  Patna, Bihar 800014",
       {
@@ -1102,7 +1062,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       }
     );
 
-    
     const totalPages = pages.length;
     pages.forEach((page, index) => {
       addPageNumber(page, index + 1, totalPages);
@@ -1111,7 +1070,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const pdfBytes = await pdfDoc.save();
     console.log("PDF saved, bytes length:", pdfBytes.length);
 
-    
     console.log("Returning buffer for download/preview (Vercel-compatible)");
     return Buffer.from(pdfBytes);
   } catch (error) {

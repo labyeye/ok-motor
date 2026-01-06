@@ -26,6 +26,7 @@ const SellLetterSchema = new mongoose.Schema(
     buyerAddress: { type: String, required: true },
     buyerPhone: { type: String, required: true },
     buyerPhone2: { type: String, required: true },
+    buyerEmail: { type: String },
     buyerAadhar: { type: String, required: true },
 
     saleDate: { type: Date, required: true, default: Date.now },

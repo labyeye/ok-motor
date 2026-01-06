@@ -82,8 +82,8 @@ const SellLetterForm = () => {
           saleTime: getCurrentTime(),
           todayDate: getCurrentDate(),
           todayTime: getCurrentTime(),
-          selleraadhar: editLetter.selleraadhar || "764465626571",
-          sellerphone: editLetter.sellerphone || "9876543210",
+          selleraadhar: editLetter.selleraadhar,
+          sellerphone: editLetter.sellerphone,
         }
       : {
           vehicleName: "",
