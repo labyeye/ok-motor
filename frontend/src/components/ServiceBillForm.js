@@ -54,6 +54,7 @@ const ServiceBillForm = () => {
 
   const [formData, setFormData] = useState({
     taxEnabled: false,
+    includeBusinessInPdf: false,
     businessName: "",
     businessGSTIN: "",
     businessAddress: "",
@@ -453,6 +454,7 @@ const ServiceBillForm = () => {
 
       const formattedData = {
         ...formData,
+        includeBusinessInPdf: formData.includeBusinessInPdf,
         serviceDate: new Date(formData.serviceDate).toISOString(),
         deliveryDate: new Date(formData.deliveryDate).toISOString(),
         serviceItems: formData.serviceItems.map((item) => ({
@@ -507,6 +509,7 @@ const ServiceBillForm = () => {
         const pdfService = (await import("../services/pdfService")).default;
         const pdfResult = await pdfService.generateServiceBillPDF({
           ...formattedData,
+          includeBusinessInPdf: formattedData.includeBusinessInPdf,
           _id: billId,
           billNumber: `SRV-${new Date().getFullYear()}-${billId.substring(
             0,
@@ -589,6 +592,7 @@ const ServiceBillForm = () => {
           const pdfService = (await import("../services/pdfService")).default;
           const pdfResult = await pdfService.generateServiceBillPDF({
             ...formattedData,
+            includeBusinessInPdf: formattedData.includeBusinessInPdf,
             _id: billId,
             billNumber: saveResponse.data.data.billNumber,
           });
@@ -616,6 +620,7 @@ const ServiceBillForm = () => {
 
           setFormData({
             taxEnabled: false,
+            includeBusinessInPdf: false,
             businessName: "",
             businessGSTIN: "",
             businessAddress: "",
@@ -864,6 +869,8 @@ const ServiceBillForm = () => {
 
       const formattedBillData = {
         ...billData,
+        includeBusinessInPdf:
+          !!billData.includeBusinessInPdf || !!formData.includeBusinessInPdf,
         serviceDate: new Date(billData.serviceDate).toISOString(),
         deliveryDate: new Date(billData.deliveryDate).toISOString(),
         serviceType: billData.serviceType || formData.serviceType,
@@ -1812,6 +1819,10 @@ const ServiceBillForm = () => {
                             taxEnabled: enabling,
 
                             taxRate: enabling ? 18 : 0,
+                            // if tax disabled, also disable include-in-pdf flag
+                            includeBusinessInPdf: enabling
+                              ? formData.includeBusinessInPdf
+                              : false,
                           };
 
                           if (enabling) {
@@ -1835,6 +1846,31 @@ const ServiceBillForm = () => {
                     </label>
                   </div>
                 </div>
+                {/* Include-in-PDF toggle shown only when tax is enabled */}
+                {formData.taxEnabled && (
+                  <div style={styles.formField}>
+                    <label style={styles.formLabel}>
+                      <IndianRupee style={styles.formIcon} />
+                      Include Business Info in PDF || बिल में व्यापार विवरण
+                      शामिल करें
+                    </label>
+                    <div style={styles.toggleContainer}>
+                      <label style={styles.toggleSwitch}>
+                        <input
+                          type="checkbox"
+                          checked={!!formData.includeBusinessInPdf}
+                          onChange={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              includeBusinessInPdf: !prev.includeBusinessInPdf,
+                            }))
+                          }
+                        />
+                        <span style={styles.toggleSlider}></span>
+                      </label>
+                    </div>
+                  </div>
+                )}
                 {formData.taxEnabled && (
                   <>
                     {}

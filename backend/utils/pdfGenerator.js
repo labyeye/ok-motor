@@ -293,7 +293,12 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     });
 
     
-    const showBusinessInfo = Boolean(serviceBill.taxEnabled) && (serviceBill.businessGSTIN && serviceBill.businessGSTIN.toString().trim() !== "");
+    // Show business info only when tax is enabled AND the client explicitly
+    // requested inclusion via `includeBusinessInPdf`. Previously we required
+    // GSTIN to be present; now the toggle controls visibility and fields
+    // will fall back to "N/A" when missing.
+    const showBusinessInfo = Boolean(serviceBill.taxEnabled) &&
+      Boolean(serviceBill.includeBusinessInPdf);
     if (showBusinessInfo) {
       currentPage.drawText("BUSINESS INFORMATION", {
         x: 50,
