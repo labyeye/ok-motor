@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
   User,
+  Edit,
   ChevronDown,
   ChevronRight,
   LayoutDashboard,
@@ -59,6 +60,71 @@ const StaffList = () => {
   const handleDelete = (id) => {
     setConfirmTargetId(id);
     setConfirmOpen(true);
+  };
+
+  // Edit user (including password)
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [editForm, setEditForm] = useState({ name: "", email: "", role: "staff", status: "active", password: "" });
+
+  const openEdit = (user) => {
+    setEditTarget(user);
+    setEditForm({
+      name: user.name || "",
+      email: user.email || "",
+      role: user.role || "staff",
+      status: user.status || "active",
+      password: "",
+    });
+    setEditOpen(true);
+  };
+
+  const closeEdit = () => {
+    setEditOpen(false);
+    setEditTarget(null);
+    setEditForm({ name: "", email: "", role: "staff", status: "active", password: "" });
+  };
+
+  const handleEditChange = (field, value) => {
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const submitEdit = async () => {
+    if (!editTarget) return;
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Not authenticated");
+
+      const payload = {
+        name: editForm.name,
+        email: editForm.email,
+        role: editForm.role,
+        status: editForm.status,
+      };
+      // include password only if provided
+      if (editForm.password && editForm.password.trim().length > 0) {
+        payload.password = editForm.password;
+      }
+
+      const response = await axios.put(
+        `https://ok-motor-51l3.vercel.app/api/users/${editTarget._id}`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // update local list
+      setStaff((prev) => prev.map((u) => (u._id === editTarget._id ? { ...u, ...response.data } : u)));
+      closeEdit();
+    } catch (err) {
+      console.error("Edit user failed", err);
+      if (err.response?.status === 401) {
+        setError("Your session has expired. Please login again.");
+        logout();
+        navigate('/login');
+      } else {
+        setError(err.response?.data?.message || err.message || "Failed to update user");
+      }
+    }
   };
 
   const performDelete = async () => {
@@ -359,12 +425,19 @@ const StaffList = () => {
                       </td>
                       <td style={styles.td}>
                         <div style={styles.actions}>
-                          <button
-                            style={styles.deleteButton}
-                            onClick={() => handleDelete(user._id)}
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                            <button
+                              style={styles.editButton}
+                              onClick={() => openEdit(user)}
+                              title="Edit user"
+                            >
+                              <Edit size={14} />
+                            </button>
+                            <button
+                              style={styles.deleteButton}
+                              onClick={() => handleDelete(user._id)}
+                            >
+                              <Trash2 size={16} />
+                            </button>
                         </div>
                       </td>
                     </tr>
@@ -375,6 +448,69 @@ const StaffList = () => {
           )}
         </div>
       </div>
+      {editOpen && (
+        <div style={styles.editModalOverlay} onClick={closeEdit}>
+          <div style={styles.editModal} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.editModalHeader}>
+              <h3 style={{ margin: 0 }}>Edit User</h3>
+            </div>
+            <div style={styles.editModalBody}>
+              <div style={styles.editFormRow}>
+                <label style={styles.editLabel}>Name</label>
+                <input
+                  style={styles.editInput}
+                  value={editForm.name}
+                  onChange={(e) => handleEditChange("name", e.target.value)}
+                />
+              </div>
+              <div style={styles.editFormRow}>
+                <label style={styles.editLabel}>Email</label>
+                <input
+                  style={styles.editInput}
+                  value={editForm.email}
+                  onChange={(e) => handleEditChange("email", e.target.value)}
+                />
+              </div>
+              <div style={styles.editFormRow}>
+                <label style={styles.editLabel}>Role</label>
+                <select
+                  style={styles.editInput}
+                  value={editForm.role}
+                  onChange={(e) => handleEditChange("role", e.target.value)}
+                >
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div style={styles.editFormRow}>
+                <label style={styles.editLabel}>Status</label>
+                <select
+                  style={styles.editInput}
+                  value={editForm.status}
+                  onChange={(e) => handleEditChange("status", e.target.value)}
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              <div style={styles.editFormRow}>
+                <label style={styles.editLabel}>Password (leave blank to keep)</label>
+                <input
+                  type="password"
+                  style={styles.editInput}
+                  value={editForm.password}
+                  onChange={(e) => handleEditChange("password", e.target.value)}
+                  placeholder="New password"
+                />
+              </div>
+            </div>
+            <div style={styles.editActions}>
+              <button style={styles.cancelBtn} onClick={closeEdit}>Cancel</button>
+              <button style={styles.saveBtn} onClick={submitEdit}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -636,6 +772,34 @@ const styles = {
       backgroundColor: "#fecaca",
     },
   },
+  editModalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2000,
+  },
+  editModal: {
+    width: "92%",
+    maxWidth: "520px",
+    background: "#fff",
+    borderRadius: "8px",
+    boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+    overflow: "hidden",
+  },
+  editModalHeader: { padding: "12px 16px", borderBottom: "1px solid #eee" },
+  editModalBody: { padding: "16px" },
+  editFormRow: { marginBottom: "12px" },
+  editLabel: { display: "block", marginBottom: "6px", color: "#0f172a", fontSize: "0.9rem" },
+  editInput: { width: "100%", padding: "8px 10px", border: "1px solid #e6eef6", borderRadius: "6px" },
+  editActions: { padding: "12px 16px", borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "flex-end", gap: "8px" },
+  cancelBtn: { padding: "8px 12px", background: "#f1f5f9", border: "none", borderRadius: "6px", cursor: "pointer" },
+  saveBtn: { padding: "8px 12px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" },
 };
 
 export default StaffList;
