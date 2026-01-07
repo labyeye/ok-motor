@@ -932,14 +932,6 @@ const SettingsPage = () => {
                 </p>
               </section>
 
-              {/* Announcements (Admin only) */}
-              {user?.role === 'admin' && (
-                <section style={{ marginBottom: '2rem', paddingBottom: '2rem' }}>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#374151', marginBottom: '1rem' }}>Announcements</h2>
-                  <AnnouncementManager />
-                </section>
-              )}
-
               {/* Default PDF Save Locations */}
               {window.electronAPI && (
                 <section style={{ marginBottom: '2rem', paddingBottom: '2rem' }}>
