@@ -1,8 +1,8 @@
-const User = require('../models/User');
-const asyncHandler = require('express-async-handler');
+const User = require("../models/User");
+const asyncHandler = require("express-async-handler");
 
 const getUsers = asyncHandler(async (req, res) => {
-  const users = await User.find({}).select('-password');
+  const users = await User.find({}).select("-password");
   res.json(users);
 });
 
@@ -13,14 +13,14 @@ const createUser = asyncHandler(async (req, res) => {
 
   if (userExists) {
     res.status(400);
-    throw new Error('User already exists');
+    throw new Error("User already exists");
   }
 
   const user = await User.create({
     name,
     email,
     password,
-    role: role || 'staff'
+    role: role || "staff",
   });
 
   if (user) {
@@ -30,11 +30,11 @@ const createUser = asyncHandler(async (req, res) => {
       email: user.email,
       role: user.role,
       status: user.status,
-      createdAt: user.createdAt
+      createdAt: user.createdAt,
     });
   } else {
     res.status(400);
-    throw new Error('Invalid user data');
+    throw new Error("Invalid user data");
   }
 });
 
@@ -59,11 +59,11 @@ const updateUser = asyncHandler(async (req, res) => {
       email: updatedUser.email,
       role: updatedUser.role,
       status: updatedUser.status,
-      createdAt: updatedUser.createdAt
+      createdAt: updatedUser.createdAt,
     });
   } else {
     res.status(404);
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
 });
 
@@ -71,11 +71,11 @@ const deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
 
   if (user) {
-    await user.deleteOne({ _id: user._id });;
-    res.json({ message: 'User removed' });
+    await user.deleteOne({ _id: user._id });
+    res.json({ message: "User removed" });
   } else {
     res.status(404);
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
 });
 
@@ -83,5 +83,5 @@ module.exports = {
   getUsers,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
 };

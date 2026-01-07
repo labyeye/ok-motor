@@ -324,13 +324,11 @@ router.post("/", protect, async (req, res) => {
       );
     }
 
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Advance bill created successfully",
-        data: savedBill,
-      });
+    res.status(201).json({
+      success: true,
+      message: "Advance bill created successfully",
+      data: savedBill,
+    });
   } catch (error) {
     console.error("Error creating advance bill:", error);
     res.status(500).json({

@@ -2380,8 +2380,11 @@ const styles = {
     position: "sticky",
     top: 0,
     height: "100vh",
+    display: "flex",
+    flexDirection: "column",
+    boxSizing: "border-box",
+    overflow: "hidden",
     transition: "transform 0.3s ease",
-    backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
   },
   loadingOverlay: {
     position: "fixed",
@@ -2496,6 +2499,9 @@ const styles = {
   },
   nav: {
     padding: "16px 0",
+    flex: "1 1 auto",
+    overflowY: "auto",
+    WebkitOverflowScrolling: "touch",
   },
   menuItem: {
     display: "flex",

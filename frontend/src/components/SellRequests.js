@@ -538,13 +538,16 @@ const styles = {
     position: "sticky",
     top: 0,
     height: "100vh",
-    backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
-    overflow: "auto",
+    display: "flex",
+    flexDirection: "column",
+    boxSizing: "border-box",
+    overflow: "hidden",
   },
   sidebarHeader: {
     padding: "24px",
     borderBottom: "1px solid #1e293b",
   },
+  nav: { padding: "16px 0", flex: "1 1 auto", overflowY: "auto", WebkitOverflowScrolling: "touch" },
   topBar: {
     position: "fixed",
     top: 0,
@@ -570,7 +573,7 @@ const styles = {
     background: "rgba(0, 0, 0, 0.5)",
     zIndex: 14,
   },
-  nav: { padding: "16px 0" },
+  nav: { padding: "16px 0", flex: "1 1 auto", overflowY: "auto", WebkitOverflowScrolling: "touch" },
   menuItem: {
     display: "flex",
     alignItems: "center",

@@ -92,7 +92,6 @@ const VehicleCreate = () => {
   const formatDateForInput = (d) => {
     if (!d) return "";
     try {
-      
       return new Date(d).toISOString().slice(0, 10);
     } catch (err) {
       return "";
@@ -224,9 +223,9 @@ const VehicleCreate = () => {
         ]
       : []),
     {
-      name: 'Gallery',
+      name: "Gallery",
       icon: Image,
-      path: '/gallery/manage',
+      path: "/gallery/manage",
     },
     {
       name: "Vehicle History",
@@ -277,12 +276,10 @@ const VehicleCreate = () => {
     setUploadingImages(true);
 
     try {
-      
       const results = [];
 
       for (const file of files) {
         try {
-          
           const auth = await getImageKitAuth();
 
           if (!auth || !auth.token || !auth.signature || !auth.expire) {
@@ -421,7 +418,10 @@ const VehicleCreate = () => {
       position: "sticky",
       top: 0,
       height: "100vh",
-      backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
+      display: "flex",
+      flexDirection: "column",
+      boxSizing: "border-box",
+      overflow: "hidden",
     },
     sidebarHeader: {
       padding: "24px",
@@ -429,6 +429,9 @@ const VehicleCreate = () => {
     },
     nav: {
       padding: "16px 0",
+      flex: "1 1 auto",
+      overflowY: "auto",
+      WebkitOverflowScrolling: "touch",
     },
     menuItem: {
       display: "flex",
@@ -862,7 +865,7 @@ const VehicleCreate = () => {
                     value="Bike"
                     checked={formData.vehicleType === "Bike"}
                     onChange={handleChange}
-                    style={{ display: "none", }}
+                    style={{ display: "none" }}
                   />
                   <Bike size={40} />
                   <span style={{ fontWeight: "500" }}>Bike</span>

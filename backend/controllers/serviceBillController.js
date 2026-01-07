@@ -29,11 +29,12 @@ exports.getVehicleDetails = async (req, res) => {
       ServiceBill.findOne({ registrationNumber: regex })
         .sort({ createdAt: -1 })
         .select("vehicleBrand vehicleModel registrationNumber kmReading"),
-      
-      Vehicle.findOne({ registrationNumber: regex, isActive: true })
-        .sort({ createdAt: -1 })
+
+      Vehicle.findOne({ registrationNumber: regex, isActive: true }).sort({
+        createdAt: -1,
+      }),
     ]);
-    
+
     const vehicleRecord = vehicle || buyLetter || sellLetter || serviceBill;
 
     if (!vehicleRecord) {
@@ -41,12 +42,15 @@ exports.getVehicleDetails = async (req, res) => {
         message: "No vehicle found with this registration number",
       });
     }
-    
+
     const vehicleDetails = {
       vehicleBrand: vehicleRecord.vehicleName || vehicleRecord.vehicleBrand,
       vehicleModel: vehicleRecord.vehicleModel,
       registrationNumber: vehicleRecord.registrationNumber,
-      kmReading: vehicleRecord.vehiclekm || vehicleRecord.kmReading || vehicleRecord.kilometersRun,
+      kmReading:
+        vehicleRecord.vehiclekm ||
+        vehicleRecord.kmReading ||
+        vehicleRecord.kilometersRun,
     };
 
     res.json(vehicleDetails);
@@ -63,13 +67,15 @@ exports.createServiceBill = async (req, res) => {
   console.log("Creating service bill...");
   try {
     const { serviceItems, ...otherData } = req.body;
-    
-    console.log("Received service bill data:", JSON.stringify({ serviceItems, ...otherData }, null, 2));
+
+    console.log(
+      "Received service bill data:",
+      JSON.stringify({ serviceItems, ...otherData }, null, 2)
+    );
 
     if (otherData.vehicle) {
       const vehicle = await Vehicle.findById(otherData.vehicle);
       if (vehicle) {
-        
         otherData.vehicleType = vehicle.vehicleType?.toLowerCase();
         otherData.vehicleBrand = vehicle.vehicleName;
         otherData.vehicleModel = vehicle.vehicleModel;
@@ -80,33 +86,44 @@ exports.createServiceBill = async (req, res) => {
       }
     }
 
-    const requiredFields = ['customerName', 'customerPhone', 'customerAddress', 'vehicleBrand', 'vehicleModel', 'registrationNumber'];
-    const missingFields = requiredFields.filter(field => !otherData[field]);
+    const requiredFields = [
+      "customerName",
+      "customerPhone",
+      "customerAddress",
+      "vehicleBrand",
+      "vehicleModel",
+      "registrationNumber",
+    ];
+    const missingFields = requiredFields.filter((field) => !otherData[field]);
     if (missingFields.length > 0) {
       return res.status(400).json({
         success: false,
-        message: `Missing required fields: ${missingFields.join(', ')}`
+        message: `Missing required fields: ${missingFields.join(", ")}`,
       });
     }
 
     const totalAmount = serviceItems.reduce((sum, item) => {
       const qty = parseFloat(item.quantity) || 0;
       const rate = parseFloat(item.rate) || 0;
-      const amount = (item.amount !== undefined && item.amount !== null && item.amount !== "")
-        ? parseFloat(item.amount) || 0
-        : rate * qty;
+      const amount =
+        item.amount !== undefined && item.amount !== null && item.amount !== ""
+          ? parseFloat(item.amount) || 0
+          : rate * qty;
       return sum + amount;
     }, 0);
-    const taxAmount = ((parseFloat(otherData.taxRate) || 0) / 100) * totalAmount;
-    const grandTotal = totalAmount + taxAmount - (parseFloat(otherData.discount) || 0);
+    const taxAmount =
+      ((parseFloat(otherData.taxRate) || 0) / 100) * totalAmount;
+    const grandTotal =
+      totalAmount + taxAmount - (parseFloat(otherData.discount) || 0);
     const balanceDue = grandTotal - (parseFloat(otherData.advancePaid) || 0);
 
-    const normalizedServiceItems = serviceItems.map(item => {
+    const normalizedServiceItems = serviceItems.map((item) => {
       const qty = parseFloat(item.quantity) || 0;
       const rate = parseFloat(item.rate) || 0;
-      const amount = (item.amount !== undefined && item.amount !== null && item.amount !== "")
-        ? parseFloat(item.amount) || 0
-        : rate * qty;
+      const amount =
+        item.amount !== undefined && item.amount !== null && item.amount !== ""
+          ? parseFloat(item.amount) || 0
+          : rate * qty;
       return {
         ...item,
         quantity: qty,
@@ -135,7 +152,6 @@ exports.createServiceBill = async (req, res) => {
       await serviceBill.save();
     } catch (pdfError) {
       console.error("PDF generation failed:", pdfError);
-      
     }
 
     console.log("Service bill created successfully:", serviceBill._id);
@@ -154,13 +170,13 @@ exports.createServiceBill = async (req, res) => {
 
 exports.getServiceBills = async (req, res) => {
   try {
-    
-    const query = (req.user.role === 'staff' || req.user.role === 'admin')
-      ? {}
-      : { user: req.user.id };
+    const query =
+      req.user.role === "staff" || req.user.role === "admin"
+        ? {}
+        : { user: req.user.id };
     const serviceBills = await ServiceBill.find(query)
       .sort({ createdAt: -1 })
-      .populate('user', 'name role');
+      .populate("user", "name role");
 
     res.status(200).json({
       success: true,
@@ -179,19 +195,21 @@ exports.getServiceBillsByRegistration = async (req, res) => {
   try {
     const { registrationNumber } = req.query;
     if (!registrationNumber) {
-      return res.status(400).json({ message: "Registration number is required" });
+      return res
+        .status(400)
+        .json({ message: "Registration number is required" });
     }
 
-    const serviceBills = await ServiceBill.find({ 
-      registrationNumber: new RegExp(registrationNumber, 'i'),
+    const serviceBills = await ServiceBill.find({
+      registrationNumber: new RegExp(registrationNumber, "i"),
       $or: [
         { user: req.user.id },
-        { visibility: 'staff' },
-        ...(req.user.role === 'staff' ? [{}] : [])
-      ]
+        { visibility: "staff" },
+        ...(req.user.role === "staff" ? [{}] : []),
+      ],
     })
       .sort({ createdAt: -1 })
-      .populate('user', 'name role');
+      .populate("user", "name role");
 
     res.status(200).json({
       success: true,
@@ -210,24 +228,25 @@ exports.previewServiceBillPDF = async (req, res) => {
   console.log("User making request:", req.user.email);
   console.log("Request body keys:", Object.keys(req.body));
   console.log("Request body:", JSON.stringify(req.body, null, 2));
-  
+
   try {
     const serviceBillData = req.body;
 
     if (!serviceBillData.customerName || !serviceBillData.serviceItems) {
       console.log("Missing required fields:", {
         customerName: !!serviceBillData.customerName,
-        serviceItems: !!serviceBillData.serviceItems
+        serviceItems: !!serviceBillData.serviceItems,
       });
       return res.status(400).json({
-        message: "Missing required fields: customerName and serviceItems are required"
+        message:
+          "Missing required fields: customerName and serviceItems are required",
       });
     }
 
     const tempServiceBill = {
       ...serviceBillData,
-      _id: "preview", 
-      
+      _id: "preview",
+
       totalAmount: parseFloat(serviceBillData.totalAmount) || 0,
       taxAmount: parseFloat(serviceBillData.taxAmount) || 0,
       discount: parseFloat(serviceBillData.discount) || 0,
@@ -235,56 +254,63 @@ exports.previewServiceBillPDF = async (req, res) => {
       advancePaid: parseFloat(serviceBillData.advancePaid) || 0,
       balanceDue: parseFloat(serviceBillData.balanceDue) || 0,
       taxRate: parseFloat(serviceBillData.taxRate) || 0,
-      
-      serviceItems: serviceBillData.serviceItems.map(item => {
+
+      serviceItems: serviceBillData.serviceItems.map((item) => {
         const quantity = parseFloat(item.quantity) || 0;
         const rate = parseFloat(item.rate) || 0;
-        const amount = (item.amount !== undefined && item.amount !== null && item.amount !== "")
-          ? parseFloat(item.amount) || 0
-          : rate * quantity;
+        const amount =
+          item.amount !== undefined &&
+          item.amount !== null &&
+          item.amount !== ""
+            ? parseFloat(item.amount) || 0
+            : rate * quantity;
         return {
           ...item,
           quantity,
           rate,
           amount,
         };
-      })
+      }),
     };
 
     console.log("Generating PDF with data:", {
       customerName: tempServiceBill.customerName,
       serviceItemsCount: tempServiceBill.serviceItems?.length,
       totalAmount: tempServiceBill.totalAmount,
-      serviceItemsSample: tempServiceBill.serviceItems?.slice(0, 2).map(item => ({
-        description: item.description,
-        quantity: item.quantity,
-        rate: item.rate,
-        rateType: typeof item.rate
-      }))
+      serviceItemsSample: tempServiceBill.serviceItems
+        ?.slice(0, 2)
+        .map((item) => ({
+          description: item.description,
+          quantity: item.quantity,
+          rate: item.rate,
+          rateType: typeof item.rate,
+        })),
     });
 
-    const pdfBuffer = await generateServiceBillPDF(tempServiceBill, true); 
+    const pdfBuffer = await generateServiceBillPDF(tempServiceBill, true);
 
     console.log("PDF generated successfully, buffer size:", pdfBuffer.length);
     console.log("PDF buffer type:", typeof pdfBuffer);
     console.log("PDF buffer constructor:", pdfBuffer.constructor.name);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename=service-bill-preview.pdf');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      "inline; filename=service-bill-preview.pdf"
+    );
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     console.log("Preview PDF generated successfully");
     res.send(pdfBuffer);
-    
   } catch (error) {
     console.error("Error generating preview PDF:", error);
     console.error("Error stack:", error.stack);
 
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Error generating preview PDF",
       error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 };
@@ -292,14 +318,11 @@ exports.previewServiceBillPDF = async (req, res) => {
 exports.downloadServiceBillPDF = async (req, res) => {
   console.log("Downloading service bill PDF for ID:", req.params.id);
   console.log("User making request:", req.user.email);
-  
-  try {
-    
-    let query = { _id: req.params.id };
-    if (req.user.role === 'admin' || req.user.role === 'staff') {
 
+  try {
+    let query = { _id: req.params.id };
+    if (req.user.role === "admin" || req.user.role === "staff") {
     } else {
-      
       query.user = req.user.id;
     }
 
@@ -312,22 +335,26 @@ exports.downloadServiceBillPDF = async (req, res) => {
       });
     }
 
-    const pdfBuffer = await generateServiceBillPDF(serviceBill, true); 
+    const pdfBuffer = await generateServiceBillPDF(serviceBill, true);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=service-bill-${serviceBill.billNumber || serviceBill._id}.pdf`);
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=service-bill-${
+        serviceBill.billNumber || serviceBill._id
+      }.pdf`
+    );
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     console.log("Download PDF generated successfully");
     res.send(pdfBuffer);
-    
   } catch (error) {
     console.error("Error downloading PDF:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: "Error generating PDF",
-      error: error.message 
+      error: error.message,
     });
   }
 };
@@ -337,11 +364,11 @@ exports.getServiceBill = async (req, res) => {
     const serviceBill = await ServiceBill.findOne({
       _id: req.params.id,
       $or: [
-        { user: req.user.id }, 
-        { visibility: 'staff' }, 
-        
-        ...(req.user.role === 'staff' ? [{}] : []) 
-      ]
+        { user: req.user.id },
+        { visibility: "staff" },
+
+        ...(req.user.role === "staff" ? [{}] : []),
+      ],
     });
 
     if (!serviceBill) {
@@ -365,9 +392,8 @@ exports.getServiceBill = async (req, res) => {
 
 exports.updateServiceBill = async (req, res) => {
   try {
-    
     let query = { _id: req.params.id };
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== "admin") {
       query.user = req.user._id;
     }
     let serviceBill = await ServiceBill.findOne(query);
@@ -390,9 +416,12 @@ exports.updateServiceBill = async (req, res) => {
       serviceBill.totalAmount = serviceBill.serviceItems.reduce((sum, item) => {
         const qty = parseFloat(item.quantity) || 0;
         const rate = parseFloat(item.rate) || 0;
-        const amount = (item.amount !== undefined && item.amount !== null && item.amount !== "")
-          ? parseFloat(item.amount) || 0
-          : rate * qty;
+        const amount =
+          item.amount !== undefined &&
+          item.amount !== null &&
+          item.amount !== ""
+            ? parseFloat(item.amount) || 0
+            : rate * qty;
         return sum + amount;
       }, 0);
       serviceBill.taxAmount =
@@ -443,9 +472,15 @@ exports.deleteServiceBill = async (req, res) => {
     }
 
     // Allow deletion by admin or owner
-    const isOwner = serviceBill.user && serviceBill.user.toString() === req.user.id;
-    if (req.user.role !== 'admin' && !isOwner) {
-      return res.status(403).json({ success: false, message: 'Not authorized to delete this service bill' });
+    const isOwner =
+      serviceBill.user && serviceBill.user.toString() === req.user.id;
+    if (req.user.role !== "admin" && !isOwner) {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Not authorized to delete this service bill",
+        });
     }
 
     await serviceBill.deleteOne();
@@ -467,11 +502,11 @@ exports.generateServiceBillPDF = async (req, res) => {
     const serviceBill = await ServiceBill.findOne({
       _id: req.params.id,
       $or: [
-        { user: req.user.id }, 
-        { visibility: 'staff' }, 
-        
-        ...(req.user.role === 'staff' ? [{}] : []) 
-      ]
+        { user: req.user.id },
+        { visibility: "staff" },
+
+        ...(req.user.role === "staff" ? [{}] : []),
+      ],
     });
 
     if (!serviceBill) {
@@ -501,10 +536,13 @@ exports.generatePDFBuffer = async (req, res) => {
   try {
     const serviceBillData = req.body;
 
-    if (!serviceBillData.serviceItems || !Array.isArray(serviceBillData.serviceItems)) {
+    if (
+      !serviceBillData.serviceItems ||
+      !Array.isArray(serviceBillData.serviceItems)
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Service items are required and must be an array"
+        message: "Service items are required and must be an array",
       });
     }
 
@@ -521,7 +559,7 @@ exports.generatePDFBuffer = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error generating PDF",
-      error: error.message
+      error: error.message,
     });
   }
 };

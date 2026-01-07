@@ -419,10 +419,12 @@ const styles = {
     color: "#f8fafc",
     position: "fixed",
     height: "100vh",
-    overflowY: "auto",
+    display: "flex",
+    flexDirection: "column",
+    boxSizing: "border-box",
+    overflow: "hidden",
     transition: "transform 0.3s ease",
     zIndex: 1000,
-    backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
   },
   sidebarHeader: {
     padding: "24px",
@@ -441,6 +443,9 @@ const styles = {
   },
   nav: {
     padding: "16px 0",
+    flex: "1 1 auto",
+    overflowY: "auto",
+    WebkitOverflowScrolling: "touch",
   },
   menuItem: {
     display: "flex",

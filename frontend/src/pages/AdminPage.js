@@ -993,15 +993,20 @@ const AdminPage = () => {
           position: sticky;
           top: 0;
           height: 100vh;
+          display: flex;
+          flex-direction: column;
+          box-sizing: border-box;
           border-right: 1px solid rgba(255, 255, 255, 0.1);
           z-index: 10;
           transition: transform 0.3s ease;
+          overflow: hidden;
         }
 
         .sidebar-header {
           padding: 1.5rem;
           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
           text-align: center;
+          flex: 0 0 auto;
         }
 
         .brand-logo {
@@ -1020,6 +1025,9 @@ const AdminPage = () => {
 
         .nav {
           padding: 1rem 0;
+          flex: 1 1 auto;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
         }
 
         .menu-item {

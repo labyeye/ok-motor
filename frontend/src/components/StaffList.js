@@ -394,7 +394,10 @@ const styles = {
     position: "sticky",
     top: 0,
     height: "100vh",
-    backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
+    display: "flex",
+    flexDirection: "column",
+    boxSizing: "border-box",
+    overflow: "hidden",
   },
   sidebarHeader: {
     padding: "24px",
@@ -413,6 +416,9 @@ const styles = {
   },
   nav: {
     padding: "16px 0",
+    flex: "1 1 auto",
+    overflowY: "auto",
+    WebkitOverflowScrolling: "touch",
   },
   menuItem: {
     display: "flex",

@@ -1,17 +1,19 @@
-const Gallery = require('../models/Gallery');
-const ImageKit = require('imagekit');
+const Gallery = require("../models/Gallery");
+const ImageKit = require("imagekit");
 
 const imagekit = new ImageKit({
-  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || 'your_public_key',
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || 'your_private_key',
-  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/your_imagekit_id',
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || "your_public_key",
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || "your_private_key",
+  urlEndpoint:
+    process.env.IMAGEKIT_URL_ENDPOINT ||
+    "https://ik.imagekit.io/your_imagekit_id",
 });
 
 exports.getGalleryImages = async (req, res) => {
   try {
     const images = await Gallery.find({ isActive: true })
       .sort({ orderIndex: 1, createdAt: -1 })
-      .select('-__v');
+      .select("-__v");
 
     res.json({
       success: true,
@@ -19,10 +21,10 @@ exports.getGalleryImages = async (req, res) => {
       count: images.length,
     });
   } catch (error) {
-    console.error('Error fetching gallery images:', error);
+    console.error("Error fetching gallery images:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch gallery images',
+      message: "Failed to fetch gallery images",
       error: error.message,
     });
   }
@@ -38,7 +40,7 @@ exports.getAllGalleryImages = async (req, res) => {
       .sort({ orderIndex: 1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('uploadedBy', 'name email');
+      .populate("uploadedBy", "name email");
 
     const total = await Gallery.countDocuments();
 
@@ -53,10 +55,10 @@ exports.getAllGalleryImages = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching all gallery images:', error);
+    console.error("Error fetching all gallery images:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch gallery images',
+      message: "Failed to fetch gallery images",
       error: error.message,
     });
   }
@@ -70,10 +72,10 @@ exports.getImageKitAuth = async (req, res) => {
       ...authenticationParameters,
     });
   } catch (error) {
-    console.error('Error getting ImageKit auth:', error);
+    console.error("Error getting ImageKit auth:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to get authentication parameters',
+      message: "Failed to get authentication parameters",
       error: error.message,
     });
   }
@@ -82,25 +84,26 @@ exports.getImageKitAuth = async (req, res) => {
 exports.uploadGalleryFiles = async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ success: false, message: 'No files uploaded' });
+      return res
+        .status(400)
+        .json({ success: false, message: "No files uploaded" });
     }
 
     const token = req.user?.id;
     const savedImages = [];
 
     for (const file of req.files) {
-      
       const uploadResult = await imagekit.upload({
         file: file.buffer,
         fileName: file.originalname,
-        folder: '/gallery',
+        folder: "/gallery",
       });
 
       const galleryImage = new Gallery({
         imageUrl: uploadResult.url,
         imageKitFileId: uploadResult.fileId || uploadResult.file_id,
-        title: file.originalname || 'Customer Photo',
-        altText: 'Happy Customer',
+        title: file.originalname || "Customer Photo",
+        altText: "Happy Customer",
         uploadedBy: token,
       });
 
@@ -110,8 +113,14 @@ exports.uploadGalleryFiles = async (req, res) => {
 
     res.status(201).json({ success: true, images: savedImages });
   } catch (error) {
-    console.error('Error uploading files to ImageKit:', error);
-    res.status(500).json({ success: false, message: 'Failed to upload files', error: error.message });
+    console.error("Error uploading files to ImageKit:", error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to upload files",
+        error: error.message,
+      });
   }
 };
 
@@ -122,15 +131,15 @@ exports.uploadGalleryImage = async (req, res) => {
     if (!imageUrl || !imageKitFileId) {
       return res.status(400).json({
         success: false,
-        message: 'Image URL and ImageKit File ID are required',
+        message: "Image URL and ImageKit File ID are required",
       });
     }
 
     const galleryImage = new Gallery({
       imageUrl,
       imageKitFileId,
-      title: title || 'Customer Photo',
-      altText: altText || 'Happy Customer',
+      title: title || "Customer Photo",
+      altText: altText || "Happy Customer",
       orderIndex: orderIndex || 0,
       uploadedBy: req.user.id,
     });
@@ -139,14 +148,14 @@ exports.uploadGalleryImage = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Gallery image uploaded successfully',
+      message: "Gallery image uploaded successfully",
       image: galleryImage,
     });
   } catch (error) {
-    console.error('Error uploading gallery image:', error);
+    console.error("Error uploading gallery image:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to upload gallery image',
+      message: "Failed to upload gallery image",
       error: error.message,
     });
   }
@@ -162,7 +171,7 @@ exports.updateGalleryImage = async (req, res) => {
     if (!image) {
       return res.status(404).json({
         success: false,
-        message: 'Gallery image not found',
+        message: "Gallery image not found",
       });
     }
 
@@ -175,14 +184,14 @@ exports.updateGalleryImage = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Gallery image updated successfully',
+      message: "Gallery image updated successfully",
       image,
     });
   } catch (error) {
-    console.error('Error updating gallery image:', error);
+    console.error("Error updating gallery image:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update gallery image',
+      message: "Failed to update gallery image",
       error: error.message,
     });
   }
@@ -197,28 +206,27 @@ exports.deleteGalleryImage = async (req, res) => {
     if (!image) {
       return res.status(404).json({
         success: false,
-        message: 'Gallery image not found',
+        message: "Gallery image not found",
       });
     }
 
     try {
       await imagekit.deleteFile(image.imageKitFileId);
     } catch (imagekitError) {
-      console.error('Error deleting from ImageKit:', imagekitError);
-      
+      console.error("Error deleting from ImageKit:", imagekitError);
     }
 
     await image.deleteOne();
 
     res.json({
       success: true,
-      message: 'Gallery image deleted successfully',
+      message: "Gallery image deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting gallery image:', error);
+    console.error("Error deleting gallery image:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to delete gallery image',
+      message: "Failed to delete gallery image",
       error: error.message,
     });
   }
@@ -226,12 +234,12 @@ exports.deleteGalleryImage = async (req, res) => {
 
 exports.updateGalleryOrder = async (req, res) => {
   try {
-    const { images } = req.body; 
+    const { images } = req.body;
 
     if (!Array.isArray(images)) {
       return res.status(400).json({
         success: false,
-        message: 'Images array is required',
+        message: "Images array is required",
       });
     }
 
@@ -243,13 +251,13 @@ exports.updateGalleryOrder = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Gallery order updated successfully',
+      message: "Gallery order updated successfully",
     });
   } catch (error) {
-    console.error('Error updating gallery order:', error);
+    console.error("Error updating gallery order:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update gallery order',
+      message: "Failed to update gallery order",
       error: error.message,
     });
   }

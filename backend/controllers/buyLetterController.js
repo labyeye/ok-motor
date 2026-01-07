@@ -7,21 +7,20 @@ exports.createBuyLetter = async (req, res) => {
   try {
     const buyLetterData = {
       ...req.body,
-      user: req.user.id, 
-      visibility: req.body.visibility || 'private' 
+      user: req.user.id,
+      visibility: req.body.visibility || "private",
     };
 
     if (buyLetterData.vehicle) {
       const vehicle = await Vehicle.findById(buyLetterData.vehicle);
       if (vehicle) {
-        
         buyLetterData.vehicleName = vehicle.vehicleName;
         buyLetterData.vehicleModel = vehicle.vehicleModel;
         buyLetterData.vehicleColor = vehicle.vehicleColor;
         buyLetterData.registrationNumber = vehicle.registrationNumber;
         buyLetterData.chassisNumber = vehicle.chassisNumber;
         buyLetterData.engineNumber = vehicle.engineNumber;
-        buyLetterData.vehiclekm = vehicle.kilometersRun?.toString() || '';
+        buyLetterData.vehiclekm = vehicle.kilometersRun?.toString() || "";
         buyLetterData.vehicleCondition = vehicle.vehicleCondition;
       }
     }
@@ -34,13 +33,25 @@ exports.createBuyLetter = async (req, res) => {
     }
 
     // If registrationNumber is provided, check for existing document to avoid duplicate-key errors
-    const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    if (buyLetterData.registrationNumber && String(buyLetterData.registrationNumber).trim()) {
-      const regex = new RegExp(`^${escapeRegExp(String(buyLetterData.registrationNumber).trim())}$`, 'i');
+    const escapeRegExp = (string) =>
+      string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (
+      buyLetterData.registrationNumber &&
+      String(buyLetterData.registrationNumber).trim()
+    ) {
+      const regex = new RegExp(
+        `^${escapeRegExp(String(buyLetterData.registrationNumber).trim())}$`,
+        "i"
+      );
       const existing = await BuyLetter.findOne({ registrationNumber: regex });
       if (existing) {
         // Return conflict with existing document so frontend can reuse it
-        return res.status(409).json({ message: 'Buy letter with this registration number already exists', existing });
+        return res
+          .status(409)
+          .json({
+            message: "Buy letter with this registration number already exists",
+            existing,
+          });
       }
     }
 
@@ -51,14 +62,16 @@ exports.createBuyLetter = async (req, res) => {
   } catch (error) {
     console.error("Error creating buy letter:", error);
     // Handle duplicate key error more gracefully
-    if (error && (error.code === 11000 || error.name === 'MongoServerError')) {
+    if (error && (error.code === 11000 || error.name === "MongoServerError")) {
       const dupKey = error.keyValue || {};
-      return res.status(409).json({ message: 'Duplicate key error', dupKey, error: error.message });
+      return res
+        .status(409)
+        .json({ message: "Duplicate key error", dupKey, error: error.message });
     }
 
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Server Error",
-      error: error.message 
+      error: error.message,
     });
   }
 };
@@ -73,16 +86,16 @@ exports.getBuyLetters = async (req, res) => {
       $or: [
         { user: req.user.id },
         { visibility: "staff" },
-        ...(req.user.role === "staff" || req.user.role === "admin" ? [{}] : [])
-      ]
+        ...(req.user.role === "staff" || req.user.role === "admin" ? [{}] : []),
+      ],
     };
 
     const buyLetters = await BuyLetter.find(conditions)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('user', 'name role')
-      .populate('vehicle'); 
+      .populate("user", "name role")
+      .populate("vehicle");
 
     const total = await BuyLetter.countDocuments(conditions);
 
@@ -101,7 +114,9 @@ exports.getBuyLettersByRegistration = async (req, res) => {
   try {
     const { registrationNumber } = req.query;
     if (!registrationNumber) {
-      return res.status(400).json({ message: "Registration number is required" });
+      return res
+        .status(400)
+        .json({ message: "Registration number is required" });
     }
 
     const buyLetters = await BuyLetter.find({
@@ -109,7 +124,7 @@ exports.getBuyLettersByRegistration = async (req, res) => {
       $or: [
         { user: req.user.id },
         { visibility: "staff" },
-        ...(req.user.role === "staff" || req.user.role === "admin" ? [{}] : [])
+        ...(req.user.role === "staff" || req.user.role === "admin" ? [{}] : []),
       ],
     }).sort({ createdAt: -1 });
 
@@ -124,10 +139,10 @@ exports.getBuyLetterById = async (req, res) => {
     const buyLetter = await BuyLetter.findOne({
       _id: req.params.id,
       $or: [
-        { user: req.user.id }, 
-        { visibility: "staff" }, 
-        
-        ...(req.user.role === "staff" ? [{}] : []), 
+        { user: req.user.id },
+        { visibility: "staff" },
+
+        ...(req.user.role === "staff" ? [{}] : []),
       ],
     });
 
@@ -182,12 +197,18 @@ exports.deleteBuyLetter = async (req, res) => {
 
     // Allow deletion if admin OR owner
     const isOwner = buyLetter.user && buyLetter.user.toString() === req.user.id;
-    if (req.user.role !== 'admin' && !isOwner) {
-      return res.status(403).json({ message: 'Not authorized to delete this buy letter' });
+    if (req.user.role !== "admin" && !isOwner) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to delete this buy letter" });
     }
 
     if (buyLetter.pdfPath && fs.existsSync(buyLetter.pdfPath)) {
-      try { fs.unlinkSync(buyLetter.pdfPath); } catch (e) { console.warn('Failed to remove pdfPath:', e); }
+      try {
+        fs.unlinkSync(buyLetter.pdfPath);
+      } catch (e) {
+        console.warn("Failed to remove pdfPath:", e);
+      }
     }
 
     await buyLetter.deleteOne();
@@ -210,10 +231,10 @@ exports.saveBuyLetterPDF = async (req, res) => {
     const buyLetter = await BuyLetter.findOne({
       _id: id,
       $or: [
-        { user: req.user.id }, 
-        { visibility: "staff" }, 
-        
-        ...(req.user.role === "staff" ? [{}] : []), 
+        { user: req.user.id },
+        { visibility: "staff" },
+
+        ...(req.user.role === "staff" ? [{}] : []),
       ],
     });
 

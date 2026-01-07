@@ -11,10 +11,9 @@ const SellLetterSchema = new mongoose.Schema(
     vehicleName: { type: String },
     vehicleModel: { type: String },
     vehicleColor: { type: String },
-    registrationNumber: { 
+    registrationNumber: {
       type: String,
-      // No unique constraint - multiple versions can have same registration number
-      index: true 
+      index: true,
     },
     chassisNumber: { type: String },
     engineNumber: { type: String },

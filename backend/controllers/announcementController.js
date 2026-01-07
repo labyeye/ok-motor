@@ -83,8 +83,7 @@ exports.getCurrentAnnouncement = async (req, res) => {
     if (ann.endDate) {
       const endOfDay = new Date(ann.endDate);
       endOfDay.setHours(23, 59, 59, 999);
-      if (endOfDay < now)
-        return res.json({ success: true, data: null });
+      if (endOfDay < now) return res.json({ success: true, data: null });
     }
     res.json({ success: true, data: ann });
   } catch (err) {

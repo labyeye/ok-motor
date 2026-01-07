@@ -233,13 +233,16 @@ const VehicleHistory = () => {
     },
     sidebar: {
       width: "280px",
-      backgroundColor: "#1e293b",
+      backgroundColor: "#1E283A",
       color: "#f8fafc",
       boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
       position: "sticky",
       top: 0,
       height: "100vh",
-      backgroundImage: "linear-gradient(to bottom, #1e293b, #0f172a)",
+      display: "flex",
+      flexDirection: "column",
+      boxSizing: "border-box",
+      overflow: "hidden",
     },
     sidebarHeader: {
       padding: "24px",
@@ -247,6 +250,9 @@ const VehicleHistory = () => {
     },
     nav: {
       padding: "16px 0",
+      flex: "1 1 auto",
+      overflowY: "auto",
+      WebkitOverflowScrolling: "touch",
     },
     menuItem: {
       display: "flex",

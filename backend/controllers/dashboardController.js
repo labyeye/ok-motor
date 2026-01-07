@@ -13,7 +13,7 @@ const getMonthlyData = async (model, matchCriteria = {}) => {
   if (model.modelName === "BuyLetter" || model.modelName === "SellLetter") {
     amountField = "$saleAmount";
   } else if (model.modelName === "ServiceBill") {
-    amountField = "$grandTotal"; 
+    amountField = "$grandTotal";
   } else if (model.modelName === "AdvanceBill") {
     amountField = "$advancePaid";
   } else {
@@ -154,48 +154,59 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
 };
 exports.getOwnerDashboardStats = async (req, res) => {
   try {
-    
-    const isPrivileged = req.user.role === 'staff' || req.user.role === 'admin';
-    const buyMatch = isPrivileged ? {} : { user: mongoose.Types.ObjectId(req.user.id) };
-    const sellMatch = isPrivileged ? {} : { user: mongoose.Types.ObjectId(req.user.id) };
-    const serviceMatch = isPrivileged ? {} : { user: mongoose.Types.ObjectId(req.user.id) };
+    const isPrivileged = req.user.role === "staff" || req.user.role === "admin";
+    const buyMatch = isPrivileged
+      ? {}
+      : { user: mongoose.Types.ObjectId(req.user.id) };
+    const sellMatch = isPrivileged
+      ? {}
+      : { user: mongoose.Types.ObjectId(req.user.id) };
+    const serviceMatch = isPrivileged
+      ? {}
+      : { user: mongoose.Types.ObjectId(req.user.id) };
 
-    const [buyStats, sellStats, serviceStats, monthlyBuyData, monthlySellData, monthlyServiceData] =
-      await Promise.all([
-        BuyLetter.aggregate([
-          { $match: buyMatch },
-          {
-            $group: {
-              _id: null,
-              count: { $sum: 1 },
-              totalAmount: { $sum: "$saleAmount" },
-            },
+    const [
+      buyStats,
+      sellStats,
+      serviceStats,
+      monthlyBuyData,
+      monthlySellData,
+      monthlyServiceData,
+    ] = await Promise.all([
+      BuyLetter.aggregate([
+        { $match: buyMatch },
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+            totalAmount: { $sum: "$saleAmount" },
           },
-        ]),
-        SellLetter.aggregate([
-          { $match: sellMatch },
-          {
-            $group: {
-              _id: null,
-              count: { $sum: 1 },
-              totalAmount: { $sum: "$saleAmount" },
-            },
+        },
+      ]),
+      SellLetter.aggregate([
+        { $match: sellMatch },
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+            totalAmount: { $sum: "$saleAmount" },
           },
-        ]),
-        Service.aggregate([
-          { $match: serviceMatch },
-          {
-            $group: {
-              _id: null,
-              count: { $sum: 1 },
-              totalAmount: { $sum: "$grandTotal" },
-            },
+        },
+      ]),
+      Service.aggregate([
+        { $match: serviceMatch },
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+            totalAmount: { $sum: "$grandTotal" },
           },
-        ]),
-        getMonthlyData(BuyLetter, buyMatch),
-        getMonthlyData(SellLetter, sellMatch),
-        getMonthlyData(Service, serviceMatch),
-      ]);
+        },
+      ]),
+      getMonthlyData(BuyLetter, buyMatch),
+      getMonthlyData(SellLetter, sellMatch),
+      getMonthlyData(Service, serviceMatch),
+    ]);
 
     const [recentBuy, recentSell, recentService, recentAdvance] =
       await Promise.all([
@@ -225,7 +236,9 @@ exports.getOwnerDashboardStats = async (req, res) => {
     months.forEach((month) => {
       const buyMonth = monthlyBuyData.find((item) => item.month === month);
       const sellMonth = monthlySellData.find((item) => item.month === month);
-      const serviceMonth = monthlyServiceData.find((item) => item.month === month);
+      const serviceMonth = monthlyServiceData.find(
+        (item) => item.month === month
+      );
 
       monthlyData.push({
         month,
@@ -235,7 +248,10 @@ exports.getOwnerDashboardStats = async (req, res) => {
         buyAmount: buyMonth ? buyMonth.totalAmount : 0,
         sellAmount: sellMonth ? sellMonth.totalAmount : 0,
         serviceAmount: serviceMonth ? serviceMonth.totalAmount : 0,
-        profit: (sellMonth?.totalAmount || 0) + (serviceMonth?.totalAmount || 0) - (buyMonth?.totalAmount || 0),
+        profit:
+          (sellMonth?.totalAmount || 0) +
+          (serviceMonth?.totalAmount || 0) -
+          (buyMonth?.totalAmount || 0),
       });
     });
 
@@ -244,12 +260,14 @@ exports.getOwnerDashboardStats = async (req, res) => {
     const totalSellLetters = sellStats.length > 0 ? sellStats[0].count : 0;
     const totalSellValue = sellStats.length > 0 ? sellStats[0].totalAmount : 0;
     const totalServices = serviceStats.length > 0 ? serviceStats[0].count : 0;
-    const totalServiceValue = serviceStats.length > 0 ? serviceStats[0].totalAmount : 0;
+    const totalServiceValue =
+      serviceStats.length > 0 ? serviceStats[0].totalAmount : 0;
 
     const totalRevenue = totalSellValue + totalServiceValue;
     const totalExpenses = totalBuyValue;
     const profit = totalRevenue - totalExpenses;
-    const profitPercentage = totalExpenses > 0 ? (profit / totalExpenses) * 100 : 0;
+    const profitPercentage =
+      totalExpenses > 0 ? (profit / totalExpenses) * 100 : 0;
 
     res.status(200).json({
       success: true,
@@ -285,39 +303,45 @@ exports.getOwnerDashboardStats = async (req, res) => {
 
 exports.getDashboardStats = async (req, res) => {
   try {
-    const [buyStats, sellStats, serviceStats, monthlyBuyData, monthlySellData, monthlyServiceData] =
-      await Promise.all([
-        BuyLetter.aggregate([
-          {
-            $group: {
-              _id: null,
-              count: { $sum: 1 },
-              totalValue: { $sum: "$saleAmount" },
-            },
+    const [
+      buyStats,
+      sellStats,
+      serviceStats,
+      monthlyBuyData,
+      monthlySellData,
+      monthlyServiceData,
+    ] = await Promise.all([
+      BuyLetter.aggregate([
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+            totalValue: { $sum: "$saleAmount" },
           },
-        ]),
-        SellLetter.aggregate([
-          {
-            $group: {
-              _id: null,
-              count: { $sum: 1 },
-              totalValue: { $sum: "$saleAmount" },
-            },
+        },
+      ]),
+      SellLetter.aggregate([
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+            totalValue: { $sum: "$saleAmount" },
           },
-        ]),
-        Service.aggregate([
-          {
-            $group: {
-              _id: null,
-              count: { $sum: 1 },
-              totalValue: { $sum: "$grandTotal" }, 
-            },
+        },
+      ]),
+      Service.aggregate([
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+            totalValue: { $sum: "$grandTotal" },
           },
-        ]),
-        getMonthlyData(BuyLetter),
-        getMonthlyData(SellLetter),
-        getMonthlyData(Service),
-      ]);
+        },
+      ]),
+      getMonthlyData(BuyLetter),
+      getMonthlyData(SellLetter),
+      getMonthlyData(Service),
+    ]);
 
     const [recentBuy, recentSell, recentService, recentAdvance] =
       await Promise.all([
@@ -339,7 +363,9 @@ exports.getDashboardStats = async (req, res) => {
     months.forEach((month) => {
       const buyMonth = monthlyBuyData.find((item) => item.month === month);
       const sellMonth = monthlySellData.find((item) => item.month === month);
-      const serviceMonth = monthlyServiceData.find((item) => item.month === month);
+      const serviceMonth = monthlyServiceData.find(
+        (item) => item.month === month
+      );
 
       monthlyData.push({
         month,
@@ -349,7 +375,10 @@ exports.getDashboardStats = async (req, res) => {
         buyAmount: buyMonth ? buyMonth.totalAmount : 0,
         sellAmount: sellMonth ? sellMonth.totalAmount : 0,
         serviceAmount: serviceMonth ? serviceMonth.totalAmount : 0,
-        profit: (sellMonth?.totalAmount || 0) + (serviceMonth?.totalAmount || 0) - (buyMonth?.totalAmount || 0),
+        profit:
+          (sellMonth?.totalAmount || 0) +
+          (serviceMonth?.totalAmount || 0) -
+          (buyMonth?.totalAmount || 0),
       });
     });
 
@@ -358,26 +387,26 @@ exports.getDashboardStats = async (req, res) => {
     const totalSellLetters = sellStats.length > 0 ? sellStats[0].count : 0;
     const totalSellValue = sellStats.length > 0 ? sellStats[0].totalValue : 0;
     const totalServices = serviceStats.length > 0 ? serviceStats[0].count : 0;
-    const totalServiceValue = serviceStats.length > 0 ? serviceStats[0].totalValue : 0;
+    const totalServiceValue =
+      serviceStats.length > 0 ? serviceStats[0].totalValue : 0;
 
     const totalRevenue = totalSellValue + totalServiceValue;
     const totalExpenses = totalBuyValue;
     const profit = totalRevenue - totalExpenses;
-    const profitPercentage = totalExpenses > 0 ? (profit / totalExpenses) * 100 : 0;
+    const profitPercentage =
+      totalExpenses > 0 ? (profit / totalExpenses) * 100 : 0;
 
-    if (req.user.role === 'staff') {
-      
+    if (req.user.role === "staff") {
       res.status(200).json({
         success: true,
         data: {
           totalBuyLetters,
           totalSellLetters,
           totalServices,
-          totalAdvanceBills: recentAdvance.length, 
+          totalAdvanceBills: recentAdvance.length,
         },
       });
     } else {
-      
       res.status(200).json({
         success: true,
         data: {
@@ -391,7 +420,7 @@ exports.getDashboardStats = async (req, res) => {
           totalExpenses,
           profit,
           profitPercentage,
-          ownerName: req.user?.name || '',
+          ownerName: req.user?.name || "",
           recentTransactions: {
             buy: recentBuy,
             sell: recentSell,
