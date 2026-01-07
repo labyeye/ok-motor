@@ -121,7 +121,7 @@ const SellLetterHistory = () => {
         if (isOnline) {
           
           const response = await axios.get(
-            `http://localhost:3500/api/sell-letters/my-letters?page=${currentPage}`,
+            `https://ok-motor-51l3.vercel.app/api/sell-letters/my-letters?page=${currentPage}`,
             { headers: {} }
           );
           setSellLetters(response.data);
@@ -1027,7 +1027,7 @@ const SellLetterHistory = () => {
             return;
           }
 
-          await axios.delete(`http://localhost:3500/api/sell-letters/${id}`, {
+          await axios.delete(`https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },

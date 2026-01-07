@@ -66,7 +66,7 @@ const AnnouncementPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:3500/api/announcements");
+      const response = await fetch("https://ok-motor-51l3.vercel.app/api/announcements");
       if (!response.ok) throw new Error("Failed to fetch announcements");
       const data = await response.json();
       if (data.success) {

@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3500";
+const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
 
 const SellRequests = () => {
   const { user, logout } = useContext(AuthContext);
