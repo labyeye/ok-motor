@@ -162,7 +162,7 @@ const ServiceBillForm = () => {
         customerName: latestSell?.buyerName || prev.customerName,
         customerPhone: latestSell?.buyerPhone || prev.customerPhone,
         customerAddress: latestSell?.buyerAddress || prev.customerAddress,
-        customerEmail: prev.customerEmail || "NA",
+        customerEmail: latestSell?.buyerEmail || prev.customerEmail || "NA",
       }));
     } catch (error) {
       console.error("Error fetching vehicle details:", error);
@@ -1321,15 +1321,17 @@ const ServiceBillForm = () => {
               </h2>
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
-                  <label style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        fontSize: "0.875rem",
-                        fontWeight: "bold",
-                        color: "#1e293b",
-                        marginBottom: "8px",
-                      }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontSize: "0.875rem",
+                      fontWeight: "bold",
+                      color: "#1e293b",
+                      marginBottom: "8px",
+                    }}
+                  >
                     <Car style={styles.formIcon} />
                     Registration Number || रजिस्ट्रेशन नंबर
                   </label>
@@ -1410,7 +1412,7 @@ const ServiceBillForm = () => {
                     maxLength={25}
                   />
                 </div>
-                
+
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />

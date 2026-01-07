@@ -96,6 +96,7 @@ const SellLetterForm = () => {
           buyerName: "",
           buyerFatherName: "",
           buyerAddress: "",
+          buyerEmail: "",
           buyerPhone: "",
           buyerPhone2: "",
           buyerAadhar: "",
@@ -134,7 +135,8 @@ const SellLetterForm = () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+      const API_BASE =
+        process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
@@ -200,6 +202,8 @@ const SellLetterForm = () => {
         buyerName: "",
         buyerFatherName: "",
         buyerAddress: "",
+        buyerEmail: "",
+        buyerEmail: "",
         buyerPhone: "",
         buyerPhone2: "",
         buyerAadhar: "",
@@ -1077,6 +1081,7 @@ const SellLetterForm = () => {
     previousDate: { x: 243, y: 517, size: 11 },
     previousTime: { x: 363, y: 517, size: 11 },
     buyerPhone: { x: 85, y: 240, size: 11 },
+    buyerEmail: { x: 200, y: 240, size: 10 },
     buyerPhone2: { x: 150, y: 240, size: 11 },
     buyerAadhar: { x: 111, y: 222, size: 11 },
     witnessName: { x: 70, y: 122, size: 11 },
@@ -1106,6 +1111,7 @@ const SellLetterForm = () => {
     previousDate: { x: 240 - 16, y: 538, size: 11 },
     previousTime: { x: 340 - 16, y: 538, size: 11 },
     buyerPhone: { x: 109, y: 282, size: 11 },
+    buyerEmail: { x: 200, y: 282, size: 10 },
     buyerPhone2: { x: 115, y: 282, size: 11 },
     buyerAadhar: { x: 137, y: 263, size: 11 },
     witnessName: { x: 105, y: 135, size: 11 },
@@ -1260,6 +1266,14 @@ const SellLetterForm = () => {
     page.drawText(`, ${formData.buyerPhone2 || "N/A"}`, {
       x: 460,
       y: 665,
+      size: 10,
+      color: rgb(0.2, 0.2, 0.2),
+      font: font,
+    });
+
+    page.drawText(`Email: ${formData.buyerEmail || "N/A"}`, {
+      x: 370,
+      y: 650 - (addressLines.length - 1) * lineHeight2 - 6,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
@@ -2366,6 +2380,28 @@ const SellLetterForm = () => {
                         : {}),
                     }}
                     maxLength={10}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <User style={styles.formIcon} />
+                    Buyer Email || खरीददार का ईमेल
+                  </label>
+                  <input
+                    type="email"
+                    name="buyerEmail"
+                    value={formData.buyerEmail}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedInput("buyerEmail")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "buyerEmail"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
+                    maxLength={60}
+                    placeholder="buyer@example.com"
                   />
                 </div>
                 <div style={styles.formField}>
