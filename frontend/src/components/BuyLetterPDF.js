@@ -45,7 +45,7 @@ const BuyLetterForm = () => {
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
-  const [errors, setErrors] = useState({});
+  const [, setErrors] = useState({});
   const [previewPdf, setPreviewPdf] = useState(null);
   const [previewLanguage, setPreviewLanguage] = useState("hindi");
   const [selectedLanguage, setSelectedLanguage] = useState("hindi");
@@ -1009,7 +1009,6 @@ const BuyLetterForm = () => {
 
       await simulateProgress();
       setIsSaving(true);
-      const isElectron = window.electronAPI !== undefined;
       let existingLetter = await apiService.get(
         `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`
       );

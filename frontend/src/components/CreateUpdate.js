@@ -15,8 +15,6 @@ import {
   FileText,
   Bike,
   Image,
-  Menu,
-  X,
   Settings,
   RefreshCw,
 } from "lucide-react";
@@ -36,8 +34,7 @@ const CreateUpdate = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -421,8 +418,17 @@ const styles = {
     boxSizing: "border-box",
     overflow: "hidden",
   },
-  sidebarHeader: { padding: "24px", borderBottom: "1px solid #1e293b", flex: "0 0 auto" },
-  nav: { padding: "16px 0", flex: "1 1 auto", overflowY: "auto", WebkitOverflowScrolling: "touch" },
+  sidebarHeader: {
+    padding: "24px",
+    borderBottom: "1px solid #1e293b",
+    flex: "0 0 auto",
+  },
+  nav: {
+    padding: "16px 0",
+    flex: "1 1 auto",
+    overflowY: "auto",
+    WebkitOverflowScrolling: "touch",
+  },
   menuItem: {
     display: "flex",
     justifyContent: "space-between",

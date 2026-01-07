@@ -43,11 +43,7 @@
     "lint": "eslint .",
     "electron": "electron .",
     "electron:dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron:build": "npm run build && electron-builder",
-    "electron:build:mac": "npm run build && electron-builder --mac",
-    "electron:build:win": "npm run build && electron-builder --win",
-    "electron:build:linux": "npm run build && electron-builder --linux",
-    "electron:build:win:elevate": "powershell -ExecutionPolicy Bypass -File ./scripts/elevate-and-build.ps1"
+    "electron:build": "cross-env PUBLIC_URL=./ npm run build && electron-builder --mac --win"
   },
   "eslintConfig": {
     "extends": [
@@ -73,6 +69,7 @@
     "electron-builder": "^24.13.3",
     "source-map-loader": "^5.0.0",
     "wait-on": "^7.2.0",
-    "webpack-dev-server": "^5.2.1"
+    "webpack-dev-server": "^5.2.1",
+    "cross-env": "^7.0.3"
   }
 }

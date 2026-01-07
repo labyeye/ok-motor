@@ -33,7 +33,7 @@ const VehicleCreate = () => {
   const [expandedMenus, setExpandedMenus] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [imageKitAuth, setImageKitAuth] = useState(null);
+  const [, setImageKitAuth] = useState(null);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [isSaving, setIsSaving] = useState(false);

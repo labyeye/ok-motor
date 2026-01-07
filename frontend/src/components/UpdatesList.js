@@ -28,8 +28,8 @@ const UpdatesList = () => {
   const { user, logout } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Updates List");
   const [expandedMenus, setExpandedMenus] = useState({});
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [, setIsSidebarOpen] = useState(false);
+  const [, setIsMobile] = useState(window.innerWidth <= 768);
 
   const [updates, setUpdates] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -19,7 +19,6 @@ import {
   Bike,
   Menu,
   Settings,
-  Image,
   RefreshCw,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";

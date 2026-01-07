@@ -22,7 +22,6 @@ import { useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import networkService from '../services/networkService';
 import syncService from '../services/syncService';
-import offlineStorage from '../services/offlineStorage';
 import logo from '../images/company.png';
 import fileSaveService from '../services/fileSaveService';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
@@ -38,7 +37,7 @@ const SettingsPage = () => {
   
   const [storagePath, setStoragePath] = useState('');
   const [saveDirs, setSaveDirs] = useState({});
-  const [syncStatus, setSyncStatus] = useState({});
+  const [, setSyncStatus] = useState({});
   const [syncStats, setSyncStats] = useState({});
   const [autoSync, setAutoSync] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
