@@ -20,7 +20,9 @@ import {
   Megaphone,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
+
 import logo from "../images/company.png";
+import ConfirmModal from "./ConfirmModal";
 
 const UpdatesList = () => {
   const { user, logout } = useContext(AuthContext);
@@ -106,7 +108,6 @@ const UpdatesList = () => {
     { name: "Vehicle History", icon: Bike, path: "/bike-history" },
     { name: "Gallery", icon: Image, path: "/gallery/manage" },
     { name: "Settings", icon: Settings, path: "/settings" },
-    
   ];
 
   useEffect(() => {
@@ -146,16 +147,26 @@ const UpdatesList = () => {
     navigate("/login");
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this update?")) return;
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTargetId, setConfirmTargetId] = useState(null);
+
+  const handleDelete = (id) => {
+    setConfirmTargetId(id);
+    setConfirmOpen(true);
+  };
+
+  const performDelete = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${config.API_BASE_URL}/updates/${id}`, {
+      await axios.delete(`${config.API_BASE_URL}/updates/${confirmTargetId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchUpdates();
     } catch (err) {
       alert("Failed to delete");
+    } finally {
+      setConfirmOpen(false);
+      setConfirmTargetId(null);
     }
   };
 
@@ -180,6 +191,15 @@ const UpdatesList = () => {
 
   return (
     <div style={styles.container}>
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title="Delete Update"
+        message="Are you sure you want to delete this update? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={performDelete}
+        onCancel={() => { setConfirmOpen(false); setConfirmTargetId(null); }}
+      />
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
           <img

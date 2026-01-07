@@ -26,8 +26,10 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
+
 import logo from "../images/company.png";
 import config from "../config/environment";
+import ConfirmModal from "./ConfirmModal";
 
 const ServiceHistory = () => {
   const { user,logout } = useContext(AuthContext);
@@ -46,6 +48,8 @@ const ServiceHistory = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTargetId, setConfirmTargetId] = useState(null);
   const navigate = useNavigate();
 
   const formatDate = (dateString) => {
@@ -80,7 +84,7 @@ const ServiceHistory = () => {
         if (isOnline) {
 
           const serviceResponse = await axios.get(
-            `https://ok-motor-51l3.vercel.app/api/service-bills?page=${currentPage}`
+            `http://localhost:3500/api/service-bills?page=${currentPage}`
           );
           setServiceBills(serviceResponse.data.data || serviceResponse.data);
           setTotalPages(serviceResponse.data.totalPages || 1);
@@ -91,7 +95,7 @@ const ServiceHistory = () => {
           setPurchaseHistory(purchaseResponse.data.data || purchaseResponse.data);
 
           const sellResponse = await axios.get(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters`
+            `http://localhost:3500/api/sell-letters`
           );
           setSellHistory(sellResponse.data.data || sellResponse.data);
         } else {
@@ -393,7 +397,7 @@ const ServiceHistory = () => {
       console.log('Token exists:', !!token);
       console.log('Token preview:', token ? `${token.substring(0, 20)}...` : 'No token');
       
-      const response = await axios.get('https://ok-motor-51l3.vercel.app/api/auth/me');
+      const response = await axios.get('http://localhost:3500/api/auth/me');
       console.log('Auth test successful:', response.data);
     } catch (error) {
       console.error('Auth test failed:', error);
@@ -420,9 +424,10 @@ const ServiceHistory = () => {
 
       console.log('Token exists:', !!token);
       console.log('User:', user);
+           
 
       const response = await axios.get(
-        `https://ok-motor-51l3.vercel.app/api/service-bills/${billId}/download`,
+        `http://localhost:3500/api/service-bills/${billId}/download`,
         {
           responseType: "blob",
           timeout: 30000, 
@@ -468,14 +473,22 @@ const ServiceHistory = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this service bill?")) {
-      try {
-        await axios.delete(`https://ok-motor-51l3.vercel.app/api/service-bills/${id}`);
-        setServiceBills(serviceBills.filter((bill) => bill._id !== id));
-      } catch (error) {
-        console.error("Error deleting service bill:", error);
-      }
+  const handleDelete = (id) => {
+    setConfirmTargetId(id);
+    setConfirmOpen(true);
+  };
+
+  const performDelete = async () => {
+    const id = confirmTargetId;
+    try {
+      await axios.delete(`http://localhost:3500/api/service-bills/${id}`);
+      setServiceBills((prev) => prev.filter((bill) => bill._id !== id));
+    } catch (error) {
+      console.error("Error deleting service bill:", error);
+      alert("Failed to delete service bill");
+    } finally {
+      setConfirmOpen(false);
+      setConfirmTargetId(null);
     }
   };
 
@@ -590,6 +603,15 @@ const ServiceHistory = () => {
       ...styles.container,
       paddingTop: isMobile ? "80px" : "0",
     }}>
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title="Delete Service Bill"
+        message="Are you sure you want to delete this service bill? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={performDelete}
+        onCancel={() => { setConfirmOpen(false); setConfirmTargetId(null); }}
+      />
       <div style={{
         ...styles.topBar,
         display: isMobile && !isSidebarOpen ? "block" : "none",

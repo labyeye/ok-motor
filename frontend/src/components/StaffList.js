@@ -22,7 +22,9 @@ import {
   Megaphone
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
+
 import logo from '../images/company.png';
+import ConfirmModal from './ConfirmModal';
 
 const StaffList = () => {
   const navigate = useNavigate();
@@ -33,11 +35,13 @@ const StaffList = () => {
   const [error, setError] = useState(null);
   const [activeMenu, setActiveMenu] = useState("Staff");
   const [expandedMenus, setExpandedMenus] = useState({ Staff: true }); 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTargetId, setConfirmTargetId] = useState(null);
 
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const response = await axios.get("https://ok-motor-51l3.vercel.app/api/users");
+        const response = await axios.get("http://localhost:3500/api/users");
         setStaff(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         setError(
@@ -52,38 +56,39 @@ const StaffList = () => {
     fetchStaff();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this staff member?")) {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError("You are not authenticated. Please login again.");
-          logout();
-          navigate('/login');
-          return;
-        }
+  const handleDelete = (id) => {
+    setConfirmTargetId(id);
+    setConfirmOpen(true);
+  };
 
-        await axios.delete(`https://ok-motor-51l3.vercel.app/api/users/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setStaff(staff.filter((user) => user._id !== id));
-      } catch (err) {
-        
-        if (err.response?.status === 401) {
-          setError("Your session has expired. Please login again.");
-          logout();
-          navigate('/login');
-        } else if (err.response?.status === 403) {
-          setError("You don't have permission to delete staff members.");
-        } else {
-          setError(
-            err.response?.data?.message ||
-              "Failed to delete staff. Please try again."
-          );
-        }
+  const performDelete = async () => {
+    const id = confirmTargetId;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError("You are not authenticated. Please login again.");
+        logout();
+        navigate('/login');
+        return;
       }
+
+      await axios.delete(`http://localhost:3500/api/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setStaff((prev) => prev.filter((user) => user._id !== id));
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError("Your session has expired. Please login again.");
+        logout();
+        navigate('/login');
+      } else if (err.response?.status === 403) {
+        setError("You don't have permission to delete staff members.");
+      } else {
+        setError(err.response?.data?.message || "Failed to delete staff. Please try again.");
+      }
+    } finally {
+      setConfirmOpen(false);
+      setConfirmTargetId(null);
     }
   };
 
@@ -196,6 +201,15 @@ const StaffList = () => {
 
   return (
     <div style={styles.container}>
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title="Delete Staff Member"
+        message="Are you sure you want to delete this staff member? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={performDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
       {}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>

@@ -24,7 +24,9 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
+
 import logo from "../images/company.png";
+import ConfirmModal from './ConfirmModal';
 
 const AdvanceHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -40,6 +42,8 @@ const AdvanceHistory = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTargetId, setConfirmTargetId] = useState(null);
   const navigate = useNavigate();
 
   const formatDate = (dateString) => {
@@ -68,6 +72,8 @@ const AdvanceHistory = () => {
     };
     fetchData();
   }, [currentPage]);
+
+  // Render confirmation modal
 
   useEffect(() => {
     const handleResize = () => {
@@ -301,7 +307,7 @@ const AdvanceHistory = () => {
       }
       await simulateProgress();
       const response = await axios.get(
-        `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
+        `http://localhost:3500/api/advance-bills/${billId}/download`,
         {
           responseType: "blob",
           timeout: 30000,
@@ -363,43 +369,40 @@ const AdvanceHistory = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this advance bill?")) {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          alert("You are not authenticated. Please login again.");
-          logout();
-          navigate("/login");
-          return;
-        }
+  const handleDelete = (id) => {
+    setConfirmTargetId(id);
+    setConfirmOpen(true);
+  };
 
-        await axios.delete(
-          `https://ok-motor-51l3.vercel.app/api/advance-bills/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setAdvanceBills(advanceBills.filter((bill) => bill._id !== id));
-      } catch (error) {
-        console.error("Error deleting advance bill:", error);
-
-        if (error.response?.status === 401) {
-          alert("Your session has expired. Please login again.");
-          logout();
-          navigate("/login");
-        } else if (error.response?.status === 403) {
-          alert("You don't have permission to delete this file.");
-        } else {
-          alert(
-            `Failed to delete: ${
-              error.response?.data?.message || error.message || "Unknown error"
-            }`
-          );
-        }
+  const performDelete = async () => {
+    const id = confirmTargetId;
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You are not authenticated. Please login again.");
+        logout();
+        navigate("/login");
+        return;
       }
+
+      await axios.delete(`http://localhost:3500/api/advance-bills/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAdvanceBills((prev) => prev.filter((bill) => bill._id !== id));
+    } catch (error) {
+      console.error("Error deleting advance bill:", error);
+      if (error.response?.status === 401) {
+        alert("Your session has expired. Please login again.");
+        logout();
+        navigate("/login");
+      } else if (error.response?.status === 403) {
+        alert("You don't have permission to delete this file.");
+      } else {
+        alert(`Failed to delete: ${error.response?.data?.message || error.message || "Unknown error"}`);
+      }
+    } finally {
+      setConfirmOpen(false);
+      setConfirmTargetId(null);
     }
   };
 
@@ -525,6 +528,16 @@ const AdvanceHistory = () => {
         paddingTop: isMobile ? "80px" : "0",
       }}
     >
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title="Delete Advance Bill"
+        message="Are you sure you want to delete this advance bill? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={performDelete}
+        onCancel={() => { setConfirmOpen(false); setConfirmTargetId(null); }}
+      />
+      
       <div
         style={{
           ...styles.topBar,

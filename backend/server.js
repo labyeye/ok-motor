@@ -29,61 +29,54 @@ const getAllowedOrigins = () => {
     "https://ok-motor-git-main-ok-motor.vercel.app", // Vercel preview
     "https://ok-motor-ok-motor.vercel.app", // Vercel deployment
     "https://okmotors.in",
-    "https://www.okmotors.in"
+    "https://www.okmotors.in",
   ];
-  
+
   // Add production origins from environment
   if (process.env.FRONTEND_URL) {
     origins.push(process.env.FRONTEND_URL);
   }
-  
+
   return origins;
 };
 
 const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = getAllowedOrigins();
-    
-    // Allow requests with no origin (like mobile apps or curl requests)
+
     if (!origin) {
-      console.log('CORS: Allowing request with no origin');
       return callback(null, true);
     }
-    
-    console.log('CORS: Checking origin:', origin);
-    console.log('CORS: Allowed origins:', allowedOrigins);
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
-      console.log('CORS: Origin allowed');
       callback(null, true);
     } else {
-      console.log('CORS: Origin blocked:', origin);
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error("Not allowed by CORS"));
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: [
-    "Content-Type", 
-    "Authorization", 
-    "Cache-Control", 
+    "Content-Type",
+    "Authorization",
+    "Cache-Control",
     "X-Requested-With",
     "Accept",
-    "Origin"
+    "Origin",
   ],
   credentials: true,
   optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
-  preflightContinue: false
+  preflightContinue: false,
 };
 
 // Apply CORS before other middleware
 app.use(cors(corsOptions));
 
 // Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Add timeout middleware
 app.use((req, res, next) => {
@@ -95,7 +88,11 @@ app.use((req, res, next) => {
 
 // Add request logging for debugging
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.headers.origin || 'No origin'}`);
+  console.log(
+    `${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${
+      req.headers.origin || "No origin"
+    }`
+  );
   next();
 });
 
@@ -111,83 +108,86 @@ app.use("/api/advance-bills", advanceBillRoutes);
 app.use("/api/sync", syncRoutes); // Sync routes
 app.use("/api/vehicles", vehicleRoutes); // Vehicle routes
 app.use("/api/gallery", require("./routes/galleryRoutes")); // Gallery routes
-app.use('/api/sell-request', sellRequestRoutes); // Sell form endpoints
-app.use('/api/updates', updatesRoutes); // Updates endpoints
-app.use('/api/announcements', announcementRoutes); // Announcements endpoints
-app.use('/api/bikes', bikeRoutes); // Bike API endpoints
+app.use("/api/sell-request", sellRequestRoutes); // Sell form endpoints
+app.use("/api/updates", updatesRoutes); // Updates endpoints
+app.use("/api/announcements", announcementRoutes); // Announcements endpoints
+app.use("/api/bikes", bikeRoutes); // Bike API endpoints
 
 // Health check endpoint (also in syncRoutes but duplicated here for convenience)
 app.get("/api/health", (req, res) => {
-  res.json({ 
+  res.json({
     success: true,
-    status: "online", 
-    timestamp: new Date().toISOString()
+    status: "online",
+    timestamp: new Date().toISOString(),
   });
 });
 
 // Public root route
 app.get("/", (req, res) => {
   // Ensure index.html is not aggressively cached by browsers/proxies
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.json({ 
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.json({
     message: "OK Motor Backend API",
     status: "Running",
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
+    environment: process.env.NODE_ENV || "development",
     endpoints: {
       health: "/health",
       test: "/test",
-      api: "/api"
-    }
+      api: "/api",
+    },
   });
 });
 
 // Health check endpoint
 app.get("/health", (req, res) => {
-  res.json({ 
-    status: "OK", 
+  res.json({
+    status: "OK",
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || "development",
   });
 });
 
 // Test endpoint for debugging
 app.get("/test", (req, res) => {
-  res.json({ 
+  res.json({
     message: "Server is working!",
     timestamp: new Date().toISOString(),
     headers: {
       origin: req.headers.origin,
-      'user-agent': req.headers['user-agent']?.substring(0, 50) + '...'
-    }
+      "user-agent": req.headers["user-agent"]?.substring(0, 50) + "...",
+    },
   });
 });
 
 // 404 handler
 app.use("*", (req, res) => {
   console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({ 
+  res.status(404).json({
     message: "Route not found",
     path: req.originalUrl,
-    method: req.method
+    method: req.method,
   });
 });
 
 // Error handler
 app.use((error, req, res, next) => {
-  console.error('Error:', error);
-  
-  if (error.message === 'Not allowed by CORS') {
+  console.error("Error:", error);
+
+  if (error.message === "Not allowed by CORS") {
     return res.status(403).json({
-      message: 'CORS error: Origin not allowed',
+      message: "CORS error: Origin not allowed",
       origin: req.headers.origin,
-      allowedOrigins: getAllowedOrigins()
+      allowedOrigins: getAllowedOrigins(),
     });
   }
-  
+
   res.status(500).json({
-    message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+    message: "Internal server error",
+    error:
+      process.env.NODE_ENV === "development"
+        ? error.message
+        : "Something went wrong",
   });
 });
 
@@ -196,9 +196,4 @@ const PORT = process.env.PORT || 2500;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log('Allowed CORS origins:', getAllowedOrigins());
-  console.log('Environment:', process.env.NODE_ENV || 'development');
 });
-
-
-

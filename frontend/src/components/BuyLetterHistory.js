@@ -30,6 +30,8 @@ import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
 
 import AuthContext from "../context/AuthContext";
+import ConfirmModal from "./ConfirmModal";
+
 
 const BuyLetterHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -48,6 +50,9 @@ const BuyLetterHistory = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTargetId, setConfirmTargetId] = useState(null);
+  const [confirmTargetType, setConfirmTargetType] = useState(null);
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -66,7 +71,7 @@ const BuyLetterHistory = () => {
         if (isOnline) {
           
           const response = await axios.get(
-            `https://ok-motor-51l3.vercel.app/api/buy-letter?page=${currentPage}`,
+            `http://localhost:3500/api/buy-letter?page=${currentPage}`,
             {
               headers: {},
             }
@@ -1038,57 +1043,60 @@ const BuyLetterHistory = () => {
     );
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this buy letter?")) {
-      try {
-        const token = localStorage.getItem("token");
-        const isOnline = navigator.onLine;
-        
-        if (isOnline) {
-          
-          if (!token) {
-            alert("You are not authenticated. Please login again.");
-            logout();
-            navigate("/login");
-            return;
-          }
+  const handleDelete = (id) => {
+    setConfirmTargetId(id);
+    setConfirmTargetType('buyLetter');
+    setConfirmOpen(true);
+  };
 
-          await axios.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
-          alert("Buy letter deleted successfully!");
-        } else {
-          
-          const offlineStorage = (await import('../services/offlineStorage')).default;
-          const result = await offlineStorage.deleteById('buyLetters', id);
-          
-          if (result.success) {
-            setBuyLetters(buyLetters.filter((letter) => letter._id !== id));
-            alert("Buy letter deleted from offline storage. Will sync when online.");
-          } else {
-            throw new Error(result.error || 'Failed to delete from offline storage');
-          }
-        }
-      } catch (error) {
-        console.error("Error deleting buy letter:", error);
+  const performDelete = async () => {
+    const id = confirmTargetId;
+    try {
+      const token = localStorage.getItem("token");
+      const isOnline = navigator.onLine;
 
-        if (error.response?.status === 401) {
-          alert("Your session has expired. Please login again.");
+      if (isOnline) {
+        if (!token) {
+          alert("You are not authenticated. Please login again.");
           logout();
           navigate("/login");
-        } else if (error.response?.status === 403) {
-          alert("You don't have permission to delete this item.");
+          return;
+        }
+
+        await axios.delete(`http://localhost:3500/api/buy-letter/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
+        alert("Buy letter deleted successfully!");
+      } else {
+        const offlineStorage = (await import("../services/offlineStorage")).default;
+        const result = await offlineStorage.deleteById("buyLetters", id);
+
+        if (result.success) {
+          setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
+          alert("Buy letter deleted from offline storage. Will sync when online.");
         } else {
-          alert(
-            `Failed to delete: ${
-              error.response?.data?.message || error.message || "Unknown error"
-            }`
-          );
+          throw new Error(result.error || "Failed to delete from offline storage");
         }
       }
+    } catch (error) {
+      console.error("Error deleting buy letter:", error);
+
+      if (error.response?.status === 401) {
+        alert("Your session has expired. Please login again.");
+        logout();
+        navigate("/login");
+      } else if (error.response?.status === 403) {
+        alert("You don't have permission to delete this item.");
+      } else {
+        alert(`Failed to delete: ${error.response?.data?.message || error.message || "Unknown error"}`);
+      }
+    } finally {
+      setConfirmOpen(false);
+      setConfirmTargetId(null);
+      setConfirmTargetType(null);
     }
   };
 
@@ -1103,6 +1111,15 @@ const BuyLetterHistory = () => {
         paddingTop: isMobile ? "80px" : "0",
       }}
     >
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title={confirmTargetType === 'buyLetter' ? 'Delete Buy Letter' : 'Confirm Delete'}
+        message="Are you sure you want to delete this buy letter? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={performDelete}
+        onCancel={() => { setConfirmOpen(false); setConfirmTargetId(null); setConfirmTargetType(null); }}
+      />
       <div
         style={{
           ...styles.topBar,

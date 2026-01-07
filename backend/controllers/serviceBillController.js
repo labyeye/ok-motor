@@ -432,13 +432,8 @@ exports.updateServiceBill = async (req, res) => {
 
 exports.deleteServiceBill = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: "Not authorized to update service bills" });
-    }
-    const serviceBill = await ServiceBill.findOneAndDelete({
-      _id: req.params.id,
-      user: req.user._id,
-    });
+    // Find the service bill
+    const serviceBill = await ServiceBill.findById(req.params.id);
 
     if (!serviceBill) {
       return res.status(404).json({
@@ -446,6 +441,14 @@ exports.deleteServiceBill = async (req, res) => {
         message: "Service bill not found",
       });
     }
+
+    // Allow deletion by admin or owner
+    const isOwner = serviceBill.user && serviceBill.user.toString() === req.user.id;
+    if (req.user.role !== 'admin' && !isOwner) {
+      return res.status(403).json({ success: false, message: 'Not authorized to delete this service bill' });
+    }
+
+    await serviceBill.deleteOne();
 
     res.status(200).json({
       success: true,

@@ -27,6 +27,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
+import ConfirmModal from "./ConfirmModal";
+
 import logo from "../images/company.png";
 
 const VehicleHistory = () => {
@@ -44,7 +46,7 @@ const VehicleHistory = () => {
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
 
-  const API_BASE = "https://ok-motor-51l3.vercel.app";
+  const API_BASE = "http://localhost:3500";
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -83,9 +85,16 @@ const VehicleHistory = () => {
   };
 
   const handleDelete = async (vehicleId) => {
-    if (!window.confirm("Are you sure you want to delete this vehicle?"))
-      return;
+    // open confirm modal instead
+    setConfirmTargetId(vehicleId);
+    setConfirmOpen(true);
+  };
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTargetId, setConfirmTargetId] = useState(null);
+
+  const performDelete = async () => {
+    const vehicleId = confirmTargetId;
     try {
       const token = localStorage.getItem("token");
       await axios.delete(`${API_BASE}/api/vehicles/${vehicleId}`, {
@@ -96,6 +105,9 @@ const VehicleHistory = () => {
     } catch (error) {
       console.error("Error deleting vehicle:", error);
       alert("Failed to delete vehicle");
+    } finally {
+      setConfirmOpen(false);
+      setConfirmTargetId(null);
     }
   };
 
@@ -503,6 +515,15 @@ const VehicleHistory = () => {
         paddingTop: isMobile ? "80px" : "0",
       }}
     >
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title="Delete Vehicle"
+        message="Are you sure you want to delete this vehicle? This action will mark it as not active."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={performDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
       <div
         style={{
           ...styles.topBar,

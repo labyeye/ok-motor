@@ -186,7 +186,6 @@ const BuyLetterForm = () => {
       "vehiclekm",
       "buyerName",
       "buyerCurrentAddress",
-      "buyerPhone",
       "saleAmount",
     ];
 
@@ -233,7 +232,7 @@ const BuyLetterForm = () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE = "https://ok-motor-51l3.vercel.app";
+      const API_BASE = "http://localhost:3500";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
@@ -559,7 +558,10 @@ const BuyLetterForm = () => {
         alert("Buy letter saved successfully!");
       }
 
-      return response.data;
+      // Normalize response: apiService returns `response.data` (or an object),
+      // but some callers expect an axios-like object with `.data`. Support both.
+      const normalizedResponse = response && response.data ? response.data : response;
+      return normalizedResponse;
     } catch (error) {
       console.error("Error saving/updating buy letter:", error);
       let errorMessage = "Failed to save/update buy letter. Please try again.";
@@ -813,13 +815,16 @@ const BuyLetterForm = () => {
         );
       }
 
+      // apiService returns `response.data` (or directly the data). Normalize both shapes.
+      const existingList = existingLetter && existingLetter.data !== undefined ? existingLetter.data : existingLetter;
+
       let savedLetterData;
-      if (existingLetter.data && existingLetter.data.length > 0) {
-        savedLetterData = existingLetter.data[0];
+      if (existingList && existingList.length > 0) {
+        savedLetterData = existingList[0];
       } else {
-        let response;
-        response = await apiService.post("/api/buy-letters", formData);
-        savedLetterData = response.data;
+        let response = await apiService.post("/api/buy-letters", formData);
+        // normalize post response too
+        savedLetterData = response && response.data ? response.data : response;
       }
       const existingPdfBytes = await loadPDFTemplate("buyletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
@@ -1009,13 +1014,14 @@ const BuyLetterForm = () => {
         `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`
       );
 
+      const existingList = existingLetter && existingLetter.data !== undefined ? existingLetter.data : existingLetter;
+
       let savedLetterData;
-      if (existingLetter.data && existingLetter.data.length > 0) {
-        savedLetterData = existingLetter.data[0];
+      if (existingList && existingList.length > 0) {
+        savedLetterData = existingList[0];
       } else {
-        let response;
         const resp = await apiService.post("/api/buy-letters", formData);
-        savedLetterData = resp.data || resp;
+        savedLetterData = resp && resp.data ? resp.data : resp;
       }
 
       const englishTemplateUrl = "/templates/englishbuyletter.pdf";
