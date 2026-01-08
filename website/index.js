@@ -452,7 +452,7 @@ function initServiceCardBackgrounds() {
       card.classList.add("bg-cover");
       // If developer wants no overlay, they can add class `no-overlay`
       // Lazy-load background by creating an Image object
-      const img = new Image();
+      const img = new window.Image();
       img.src = src;
       img.onload = () => {
         // fade-in effect

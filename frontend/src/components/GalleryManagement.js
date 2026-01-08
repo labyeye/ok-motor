@@ -11,7 +11,7 @@ import {
   ChevronDown,
   ChevronRight,
   FileText,
-  Image as ImageIcon,
+  Image,
   Upload,
   Trash2,
   Eye,

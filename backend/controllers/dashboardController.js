@@ -439,3 +439,82 @@ exports.getDashboardStats = async (req, res) => {
     });
   }
 };
+
+// Returns sold vehicles with their first three service bill dates (free services usage)
+// Supports optional query params: `limit` (default 10) and `search` (registrationNumber partial, case-insensitive)
+exports.getFreeServiceUsage = async (req, res) => {
+  try {
+    const { limit = 10, search } = req.query;
+    const numericLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+
+    // Build a base match for sold vehicles (SellLetter)
+    const baseMatch = {};
+    if (search && String(search).trim() !== "") {
+      const regex = new RegExp(String(search).trim().replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
+      baseMatch.registrationNumber = { $regex: regex };
+    }
+
+    const pipeline = [
+      { $match: baseMatch },
+      {
+        $lookup: {
+          from: "servicebills",
+          let: { reg: "$registrationNumber", saleDate: "$saleDate" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$registrationNumber", "$$reg"] },
+                    { $gte: ["$serviceDate", "$$saleDate"] },
+                  ],
+                },
+              },
+            },
+            { $sort: { serviceDate: 1, createdAt: 1 } },
+            { $project: { serviceDate: 1, vehicleBrand: 1, vehicleModel: 1 } },
+          ],
+          as: "services",
+        },
+      },
+      // Keep all sold vehicles (even if they have zero services)
+      {
+        $project: {
+          saleDate: 1,
+          buyerName: 1,
+          registrationNumber: 1,
+          vehicleBrand: {
+            $ifNull: [{ $arrayElemAt: ["$services.vehicleBrand", 0] }, "$vehicleName"],
+          },
+          vehicleModel: {
+            $ifNull: [{ $arrayElemAt: ["$services.vehicleModel", 0] }, "$vehicleModel"],
+          },
+          serviceDates: {
+            $map: {
+              input: "$services",
+              as: "s",
+              in: "$$s.serviceDate",
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          month1: { $arrayElemAt: ["$serviceDates", 0] },
+          month2: { $arrayElemAt: ["$serviceDates", 1] },
+          month3: { $arrayElemAt: ["$serviceDates", 2] },
+          usedCount: { $size: { $ifNull: ["$serviceDates", []] } },
+        },
+      },
+      { $sort: { saleDate: -1 } },
+      { $limit: numericLimit },
+    ];
+
+    const results = await SellLetter.aggregate(pipeline).allowDiskUse(true);
+
+    res.status(200).json({ success: true, data: results });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Server Error" });
+  }
+};

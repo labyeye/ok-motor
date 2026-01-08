@@ -23,14 +23,15 @@ import {
   Menu,
   Settings,
   RefreshCw,
-  Megaphone
+  Megaphone,
+  Image as ImageIcon
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
 
-const BikeHistory = () => {
+const BikeHistory = ({ externalSearchTerm }) => {
   const { user, logout } = useContext(AuthContext);
 
   const [activeMenu, setActiveMenu] = useState("Bike History");
@@ -43,6 +44,21 @@ const BikeHistory = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
+
+  // If an external search term is provided (e.g. from AdminPage modal), sync it
+  useEffect(() => {
+    if (typeof externalSearchTerm !== "undefined" && externalSearchTerm !== null) {
+      const term = String(externalSearchTerm || "").trim();
+      if (term && term !== searchTerm) {
+        setSearchTerm(term);
+      }
+      if (!term) {
+        // if external term is empty, clear internal search
+        setSearchTerm("");
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalSearchTerm]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -1839,7 +1855,7 @@ const BikeHistory = () => {
     },
     {
       name: "Gallery",
-      icon: Image,
+      icon: ImageIcon,
       path: "/gallery/manage",
     },
     {

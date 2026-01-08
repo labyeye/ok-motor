@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useCallback } from "react";
+import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -13,7 +13,7 @@ import {
   FileText,
   Target,
   RefreshCw,
-  Image,
+  Image as ImageIcon,
   Bike,
   Menu,
   X,
@@ -56,6 +56,7 @@ const AdminPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [historyQuery, setHistoryQuery] = useState("");
+  const historyInputRef = useRef(null);
   const [dashboardData, setDashboardData] = useState({
     totalBuyLetters: 0,
     totalSellLetters: 0,
@@ -78,6 +79,9 @@ const AdminPage = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [freeServices, setFreeServices] = useState([]);
+  const [freeServicesLoading, setFreeServicesLoading] = useState(true);
+  const [freeSearch, setFreeSearch] = useState("");
   const navigate = useNavigate();
 
   const fetchDashboardData = useCallback(async () => {
@@ -121,12 +125,59 @@ const AdminPage = () => {
       setLoading(false);
     }
   }, [user, logout, navigate]);
+  const fetchFreeServicesData = useCallback(async (search = "") => {
+    try {
+      setFreeServicesLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
+      const endpoint = "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
+      const params = { limit: 10 };
+      if (search && String(search).trim() !== "") params.search = String(search).trim();
+
+      const response = await axios.get(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
+        params,
+      });
+
+      // ensure dates are normalized on client
+      const items = (response.data.data || []).map((row) => ({
+        ...row,
+        saleDate: row.saleDate || null,
+        month1: row.month1 || null,
+        month2: row.month2 || null,
+        month3: row.month3 || null,
+      }));
+
+      // server already sorts and limits, but ensure consistent ordering
+      items.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+      setFreeServices(items);
+    } catch (err) {
+      console.error("Error fetching free services data:", err);
+    } finally {
+      setFreeServicesLoading(false);
+    }
+  }, []);
   useEffect(() => {
     if (user && activeMenu === "Dashboard") {
       fetchDashboardData();
+      // initial load with no search
+      fetchFreeServicesData();
     }
-  }, [user, activeMenu, fetchDashboardData]);
+  }, [user, activeMenu, fetchDashboardData, fetchFreeServicesData]);
+
+  // Debounce free services search and fetch from server
+  useEffect(() => {
+    if (!user || activeMenu !== "Dashboard") return;
+
+    const handle = setTimeout(() => {
+      fetchFreeServicesData(freeSearch || "");
+    }, 400);
+
+    return () => clearTimeout(handle);
+  }, [freeSearch, user, activeMenu, fetchFreeServicesData]);
+
+  
 
   const formatCurrency = (amount) => {
     if (isNaN(amount)) return "₹0";
@@ -345,7 +396,7 @@ const AdminPage = () => {
     },
     {
       name: "Gallery",
-      icon: Image,
+      icon: ImageIcon,
       path: "/gallery/manage",
     },
     {
@@ -795,6 +846,93 @@ const AdminPage = () => {
     </div>
   );
 
+  const FreeServicesTable = () => {
+    const freeSearchRef = useRef(null);
+    const normalize = (s = "") =>
+      String(s)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")
+        .trim();
+
+    const q = normalize(freeSearch);
+    const filtered = q
+      ? freeServices.filter((row) => normalize(row.registrationNumber).includes(q))
+      : freeServices;
+
+    return (
+      <div className="free-services-card">
+        <h3 className="card-title">Free Service Usage (Sold Vehicles)</h3>
+
+        <div className="free-services-search">
+          <div className="history-search-box" style={{ width: 320 }}>
+              <Search size={18} className="history-search-icon" />
+              <input
+                ref={freeSearchRef}
+                type="text"
+                placeholder="Search by reg. number..."
+                value={freeSearch}
+                onChange={(e) => setFreeSearch(e.target.value)}
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                autoComplete="off"
+                className="history-search-input"
+              />
+            </div>
+        </div>
+
+        {freeServicesLoading ? (
+          <div className="table-loading">Loading free service data...</div>
+        ) : filtered.length === 0 ? (
+          <div className="no-data">No free service records available</div>
+        ) : (
+          <div className="table-wrapper">
+            <table className="free-services-table">
+              <thead>
+                <tr>
+                  <th>Sell Letter Date</th>
+                  <th>Buyer Name</th>
+                  <th>Registration Number</th>
+                  <th>Vehicle Brand</th>
+                  <th>Vehicle Model</th>
+                  <th>Month 1 - Free Service</th>
+                  <th>Month 2 - Free Service</th>
+                  <th>Month 3 - Free Service</th>
+                  <th>Used</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((row, idx) => (
+                  <tr
+                    key={`${row.registrationNumber}-${idx}`}
+                    onClick={() => {
+                      if (row.registrationNumber) {
+                        setHistoryQuery(row.registrationNumber);
+                        setIsHistoryModalOpen(true);
+                      }
+                    }}
+                  >
+                    <td>{formatDate(row.saleDate)}</td>
+                    <td>{row.buyerName || "-"}</td>
+                    <td>{row.registrationNumber || "-"}</td>
+                    <td>{row.vehicleBrand || "-"}</td>
+                    <td>{row.vehicleModel || "-"}</td>
+                    <td>{row.month1 ? formatDate(row.month1) : "Pending"}</td>
+                    <td>{row.month2 ? formatDate(row.month2) : "Pending"}</td>
+                    <td>{row.month3 ? formatDate(row.month3) : "Pending"}</td>
+                    <td>{(row.usedCount || 0) + "/3"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // NOTE: removed automatic refocus when modal closes to avoid reopen loop
+  // (closing modal previously focused the search input which re-opened the modal)
+
   return (
     <div className="admin-container">
       <div className="top-bar">
@@ -904,6 +1042,7 @@ const AdminPage = () => {
                 type="text"
                 placeholder="Search vehicles (reg. no, model, name)..."
                 value={historyQuery}
+                ref={historyInputRef}
                 onFocus={() => setIsHistoryModalOpen(true)}
                 onChange={(e) => {
                   setHistoryQuery(e.target.value);
@@ -917,6 +1056,7 @@ const AdminPage = () => {
           {activeMenu === "Dashboard" && (
             <>
               <DashboardCards />
+              <FreeServicesTable />
               <RevenueCard />
               <RecentTransactions />
               <ChartsSection />
@@ -1802,6 +1942,57 @@ const AdminPage = () => {
             height: 180px;
             width: 240px;
           }
+        }
+
+        /* Free Services table */
+        .free-services-card {
+          background: rgba(255,255,255,0.95);
+          border-radius: 0.75rem;
+          padding: 1rem;
+          margin: 1.5rem 0;
+          box-shadow: 0 4px 10px rgba(2,6,23,0.06);
+        }
+
+        .free-services-search {
+          display: flex;
+          justify-content: flex-start;
+          margin-bottom: 0.75rem;
+        }
+
+        .free-services-card .card-title {
+          margin: 0 0 0.75rem 0;
+          font-size: 1.125rem;
+          font-weight: 600;
+          color: #1f2937;
+        }
+
+        .free-services-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 0.95rem;
+        }
+
+        .free-services-table th,
+        .free-services-table td {
+          padding: 0.5rem 0.75rem;
+          text-align: left;
+          border-bottom: 1px solid #eef2f7;
+        }
+
+        .free-services-table thead th {
+          color: #374151;
+          font-weight: 600;
+          background: transparent;
+        }
+
+        .free-services-table tbody tr:hover {
+          background: #f8fafc;
+          cursor: pointer;
+        }
+
+        .table-loading {
+          padding: 1rem;
+          color: #6b7280;
         }
 
         /* History search box */

@@ -20,9 +20,8 @@ import {
   Menu,
   Settings,
   RefreshCw,
-  Megaphone
-  ,
-  Image
+  Megaphone,
+  Image as ImageIcon
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
@@ -1417,7 +1416,7 @@ const SellLetterHistory = () => {
     },
     {
       name: "Gallery",
-      icon: Image,
+      icon: ImageIcon,
       path: "/gallery/manage",
     },
     {

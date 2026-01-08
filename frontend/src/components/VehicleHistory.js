@@ -21,7 +21,7 @@ import {
   ChevronLeft,
   ChevronRight as ChevronRightIcon,
   RefreshCw,
-  Image,
+  Image as ImageIcon,
   Megaphone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -190,7 +190,7 @@ const VehicleHistory = () => {
     },
     {
       name: "Gallery",
-      icon: Image,
+      icon: ImageIcon,
       path: "/gallery/manage",
     },
     {

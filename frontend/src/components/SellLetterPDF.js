@@ -3241,7 +3241,7 @@ const SellLetterForm = () => {
             {/* Documents Upload Section */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
-                <Image style={styles.sectionIcon} /> Documents Upload
+                <img style={styles.sectionIcon} /> Documents Upload
               </h2>
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
