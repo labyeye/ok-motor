@@ -84,7 +84,7 @@ const ServiceHistory = () => {
         if (isOnline) {
 
           const serviceResponse = await axios.get(
-            `https://ok-motor-51l3.vercel.app/api/service-bills?page=${currentPage}`
+            `http://localhost:3500/api/service-bills?page=${currentPage}`
           );
           setServiceBills(serviceResponse.data.data || serviceResponse.data);
           setTotalPages(serviceResponse.data.totalPages || 1);
@@ -95,7 +95,7 @@ const ServiceHistory = () => {
           setPurchaseHistory(purchaseResponse.data.data || purchaseResponse.data);
 
           const sellResponse = await axios.get(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters`
+            `http://localhost:3500/api/sell-letters`
           );
           setSellHistory(sellResponse.data.data || sellResponse.data);
         } else {
@@ -397,7 +397,7 @@ const ServiceHistory = () => {
       console.log('Token exists:', !!token);
       console.log('Token preview:', token ? `${token.substring(0, 20)}...` : 'No token');
       
-      const response = await axios.get('https://ok-motor-51l3.vercel.app/api/auth/me');
+      const response = await axios.get('http://localhost:3500/api/auth/me');
       console.log('Auth test successful:', response.data);
     } catch (error) {
       console.error('Auth test failed:', error);
@@ -427,7 +427,7 @@ const ServiceHistory = () => {
            
 
       const response = await axios.get(
-        `https://ok-motor-51l3.vercel.app/api/service-bills/${billId}/download`,
+        `http://localhost:3500/api/service-bills/${billId}/download`,
         {
           responseType: "blob",
           timeout: 30000, 
@@ -481,7 +481,7 @@ const ServiceHistory = () => {
   const performDelete = async () => {
     const id = confirmTargetId;
     try {
-      await axios.delete(`https://ok-motor-51l3.vercel.app/api/service-bills/${id}`);
+      await axios.delete(`http://localhost:3500/api/service-bills/${id}`);
       setServiceBills((prev) => prev.filter((bill) => bill._id !== id));
     } catch (error) {
       console.error("Error deleting service bill:", error);

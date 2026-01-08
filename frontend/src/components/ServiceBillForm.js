@@ -92,7 +92,7 @@ const ServiceBillForm = () => {
   });
 
   const [previewMode, setPreviewMode] = useState(false);
-  const API_BASE_URL = "https://ok-motor-51l3.vercel.app/api";
+  const API_BASE_URL = "http://localhost:3500/api";
   const calculateAmounts = (data) => {
     const totalAmount = (data.serviceItems || []).reduce(
       (sum, item) => sum + (parseFloat(item.amount) || 0),

@@ -14,11 +14,13 @@ const getApiUrl = () => {
 
   // For development or when running locally, use local backend
   if (isLocalhost) {
-    return "https://ok-motor-51l3.vercel.app";
+    return "http://localhost:3500";
   }
 
   // For production, use the deployed backend
-  return "https://ok-motor-51l3.vercel.app";
+  // Default to the same origin the app is served from. For hosted setups
+  // where the API is on a different domain, set REACT_APP_API_URL at build time.
+  return window.location.origin;
 };
 
 const API_BASE_URL = getApiUrl();

@@ -192,7 +192,8 @@ app.use((error, req, res, next) => {
 });
 
 // Use PORT from environment variable (Render sets this automatically)
-const PORT = process.env.PORT || 2500;
+// Default to 3500 to match frontend development configuration
+const PORT = process.env.PORT || 3500;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -72,7 +72,7 @@ const BuyLetterHistory = () => {
         if (isOnline) {
           
           const response = await axios.get(
-            `https://ok-motor-51l3.vercel.app/api/buy-letter?page=${currentPage}`,
+            `http://localhost:3500/api/buy-letter?page=${currentPage}`,
             {
               headers: {},
             }
@@ -1064,7 +1064,7 @@ const BuyLetterHistory = () => {
           return;
         }
 
-        await axios.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
+        await axios.delete(`http://localhost:3500/api/buy-letter/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

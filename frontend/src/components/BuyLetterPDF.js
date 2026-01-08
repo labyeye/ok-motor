@@ -232,7 +232,7 @@ const BuyLetterForm = () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE = "https://ok-motor-51l3.vercel.app";
+      const API_BASE = "http://localhost:3500";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {

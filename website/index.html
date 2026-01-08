@@ -62,7 +62,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link rel="preconnect" href="https://code.jquery.com" crossorigin />
-    <link rel="preconnect" href="https://ok-motor-51l3.vercel.app" />
+    <link rel="preconnect" href="http://localhost:3500" />
     <link
       rel="icon"
       type="image/svg+xml"
@@ -1590,7 +1590,7 @@
     </section>
     <script>
       (function () {
-        const API_BASE = "https://ok-motor-51l3.vercel.app";
+        const API_BASE = "http://localhost:3500";
         
         const galleryTrack = document.getElementById("galleryTrack");
         function loadGalleryImages() {
@@ -2277,7 +2277,7 @@
               return `${window.location.protocol}//${host}:2500`;
             }
           } catch (e) {}
-          return "https://ok-motor-51l3.vercel.app";
+          return "http://localhost:3500";
         })();
 
         const testimonialsContainer = document.getElementById(

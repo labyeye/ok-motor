@@ -21,6 +21,8 @@ import {
   Settings,
   RefreshCw,
   Megaphone
+  ,
+  Image
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
@@ -119,7 +121,7 @@ const SellLetterHistory = () => {
 
         if (isOnline) {
           const response = await axios.get(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters/my-letters?page=${currentPage}`,
+            `http://localhost:3500/api/sell-letters/my-letters?page=${currentPage}`,
             { headers: {} }
           );
           setSellLetters(response.data);
@@ -1295,7 +1297,7 @@ const SellLetterHistory = () => {
             return;
           }
 
-          await axios.delete(`https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`, {
+          await axios.delete(`http://localhost:3500/api/sell-letters/${id}`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
