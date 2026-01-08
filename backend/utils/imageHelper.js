@@ -1,4 +1,14 @@
-const sharp = require('sharp');
+let sharp = null;
+try {
+  sharp = require('sharp');
+} catch (err) {
+  // Do not crash the app if sharp is not available for the current runtime.
+  // This commonly happens when native binaries weren't built for the deployment platform.
+  // Fall back to a no-op compressor (returns original buffer) and log a warning.
+  // If you want image processing in that environment, install/build sharp for the target platform.
+  console.warn('[imageHelper] sharp not available — image compression disabled:', err.message);
+}
+
 const ImageKit = require('imagekit');
 
 const imagekit = new ImageKit({
@@ -8,9 +18,11 @@ const imagekit = new ImageKit({
 });
 
 const compressBuffer = async (buffer, targetKb = 100) => {
+  // If sharp isn't available, return the original buffer unchanged.
+  if (!sharp) return buffer;
+
   // Adaptive compression: start with quality and reduce until target size
   let quality = 80;
-  let mime = 'image/jpeg';
   let output = await sharp(buffer).jpeg({ quality }).toBuffer();
   const targetBytes = targetKb * 1024;
 

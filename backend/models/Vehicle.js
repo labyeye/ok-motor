@@ -198,8 +198,6 @@ const VehicleSchema = new mongoose.Schema(
 );
 
 VehicleSchema.index({ vehicleType: 1, availabilityStatus: 1 });
-VehicleSchema.index({ registrationNumber: 1 });
-VehicleSchema.index({ chassisNumber: 1 });
 VehicleSchema.index({ createdAt: -1 });
 
 VehicleSchema.virtual("fullName").get(function () {
