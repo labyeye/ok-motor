@@ -62,6 +62,9 @@ const corsOptions = {
     "X-Requested-With",
     "Accept",
     "Origin",
+    "Access-Control-Allow-Origin",
+    "Access-Control-Allow-Headers",
+    "Access-Control-Allow-Methods",
   ],
   credentials: true,
   optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
