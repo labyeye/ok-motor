@@ -652,7 +652,7 @@
 
         async function loadVehicleData() {
           try {
-            const API_BASE = "http://localhost:3500";
+            const API_BASE = "https://ok-motor-51l3.vercel.app";
             const res = await fetch(
               `${API_BASE}/api/vehicles/public/listings?limit=100`
             );
@@ -664,7 +664,7 @@
           } catch (error) {
             console.error("Error loading vehicle data:", error);
             grid.innerHTML =
-              '<p style="padding:20px;color:#b00">Failed to load vehicles. Make sure backend is running on http://localhost:3500</p>';
+              '<p style="padding:20px;color:#b00">Failed to load vehicles. Make sure backend is running on https://ok-motor-51l3.vercel.app</p>';
             return false;
           }
         }

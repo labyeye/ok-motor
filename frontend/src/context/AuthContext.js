@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
         try {
-          const res = await axios.get("http://localhost:3500/api/auth/me");
+          const res = await axios.get("https://ok-motor-51l3.vercel.app/api/auth/me");
           // server may return user inside data or data.data depending on implementation
           const fetchedUser = res.data?.data || res.data || null;
           setUser(fetchedUser);
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post("http://localhost:3500/api/auth/login", {
+      const res = await axios.post("https://ok-motor-51l3.vercel.app/api/auth/login", {
         email,
         password,
       });

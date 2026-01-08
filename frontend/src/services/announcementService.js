@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = "http://localhost:3500";
+const API_BASE = "https://ok-motor-51l3.vercel.app";
 
 const getCurrent = async () => {
   const res = await axios.get(`${API_BASE}/api/announcements/current`);
