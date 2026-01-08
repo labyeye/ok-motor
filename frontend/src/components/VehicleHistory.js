@@ -1,4 +1,4 @@
-import  { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -152,17 +152,17 @@ const VehicleHistory = () => {
       ],
     },
     {
-      name: "Announcements",
-      icon: Megaphone,
-      path: "/announcements",
-    },
-    {
       name: "Updates",
       icon: RefreshCw,
       submenu: [
         { name: "Create Update", path: "/updates/create" },
         { name: "Updates List", path: "/updates" },
       ],
+    },
+    {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
     },
     {
       name: "Service",
@@ -180,22 +180,18 @@ const VehicleHistory = () => {
         { name: "Advance History", path: "/advance/history" },
       ],
     },
-    ...(user?.role !== "staff"
-      ? [
-          {
-            name: "Staff",
-            icon: Users,
-            submenu: [
-              { name: "Create Staff ID", path: "/staff/create" },
-              { name: "Staff List", path: "/staff/list" },
-            ],
-          },
-        ]
-      : []),
     {
-      name: 'Gallery',
+      name: "Staff",
+      icon: Users,
+      submenu: [
+        { name: "Create Staff ID", path: "/staff/create" },
+        { name: "Staff List", path: "/staff/list" },
+      ],
+    },
+    {
+      name: "Gallery",
       icon: Image,
-      path: '/gallery/manage',
+      path: "/gallery/manage",
     },
     {
       name: "Vehicle History",

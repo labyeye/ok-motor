@@ -41,7 +41,7 @@ const UpdatesList = () => {
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: user?.role === "admin" ? "/admin" : "/staff",
+      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
     },
     {
       name: "Vehicle",
@@ -105,9 +105,21 @@ const UpdatesList = () => {
         { name: "Staff List", path: "/staff/list" },
       ],
     },
-    { name: "Vehicle History", icon: Bike, path: "/bike-history" },
-    { name: "Gallery", icon: Image, path: "/gallery/manage" },
-    { name: "Settings", icon: Settings, path: "/settings" },
+    {
+      name: "Gallery",
+      icon: Image,
+      path: "/gallery/manage",
+    },
+    {
+      name: "Vehicle History",
+      icon: Bike,
+      path: "/bike-history",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
+    },
   ];
 
   useEffect(() => {

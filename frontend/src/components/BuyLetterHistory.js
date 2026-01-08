@@ -23,6 +23,7 @@ import {
   Menu,
   Settings,
   RefreshCw,
+  Megaphone
 } from "lucide-react";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
@@ -257,6 +258,11 @@ const BuyLetterHistory = () => {
       ],
     },
     {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
+    },
+    {
       name: "Service",
       icon: Wrench,
       submenu: [
@@ -272,23 +278,18 @@ const BuyLetterHistory = () => {
         { name: "Advance History", path: "/advance/history" },
       ],
     },
-    
-    ...(user?.role !== "staff"
-      ? [
-          {
-            name: "Staff",
-            icon: Users,
-            submenu: [
-              { name: "Create Staff ID", path: "/staff/create" },
-              { name: "Staff List", path: "/staff/list" },
-            ],
-          },
-        ]
-      : []),
     {
-      name: 'Gallery',
+      name: "Staff",
+      icon: Users,
+      submenu: [
+        { name: "Create Staff ID", path: "/staff/create" },
+        { name: "Staff List", path: "/staff/list" },
+      ],
+    },
+    {
+      name: "Gallery",
       icon: Image,
-      path: '/gallery/manage',
+      path: "/gallery/manage",
     },
     {
       name: "Vehicle History",

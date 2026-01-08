@@ -17,6 +17,7 @@ import {
   Image,
   Settings,
   RefreshCw,
+  Megaphone
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
@@ -93,6 +94,11 @@ const CreateUpdate = () => {
       ],
     },
     {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
+    },
+    {
       name: "Service",
       icon: Wrench,
       submenu: [
@@ -108,21 +114,29 @@ const CreateUpdate = () => {
         { name: "Advance History", path: "/advance/history" },
       ],
     },
-    ...(user?.role !== "staff"
-      ? [
-          {
-            name: "Staff",
-            icon: Users,
-            submenu: [
-              { name: "Create Staff ID", path: "/staff/create" },
-              { name: "Staff List", path: "/staff/list" },
-            ],
-          },
-        ]
-      : []),
-    { name: "Gallery", icon: Image, path: "/gallery/manage" },
-    { name: "Vehicle History", icon: Bike, path: "/bike-history" },
-    { name: "Settings", icon: Settings, path: "/settings" },
+    {
+      name: "Staff",
+      icon: Users,
+      submenu: [
+        { name: "Create Staff ID", path: "/staff/create" },
+        { name: "Staff List", path: "/staff/list" },
+      ],
+    },
+    {
+      name: "Gallery",
+      icon: Image,
+      path: "/gallery/manage",
+    },
+    {
+      name: "Vehicle History",
+      icon: Bike,
+      path: "/bike-history",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
+    },
   ];
 
   const fetchExisting = async () => {

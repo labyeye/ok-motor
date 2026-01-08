@@ -20,6 +20,7 @@ import {
   Menu,
   Settings,
   RefreshCw,
+  Megaphone
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
@@ -1384,6 +1385,11 @@ const SellLetterHistory = () => {
       ],
     },
     {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
+    },
+    {
       name: "Service",
       icon: Wrench,
       submenu: [
@@ -1399,18 +1405,19 @@ const SellLetterHistory = () => {
         { name: "Advance History", path: "/advance/history" },
       ],
     },
-    ...(user?.role !== "staff"
-      ? [
-          {
-            name: "Staff",
-            icon: Users,
-            submenu: [
-              { name: "Create Staff ID", path: "/staff/create" },
-              { name: "Staff List", path: "/staff/list" },
-            ],
-          },
-        ]
-      : []),
+    {
+      name: "Staff",
+      icon: Users,
+      submenu: [
+        { name: "Create Staff ID", path: "/staff/create" },
+        { name: "Staff List", path: "/staff/list" },
+      ],
+    },
+    {
+      name: "Gallery",
+      icon: Image,
+      path: "/gallery/manage",
+    },
     {
       name: "Vehicle History",
       icon: Bike,

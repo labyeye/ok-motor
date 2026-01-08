@@ -18,6 +18,7 @@ import {
   X,
   RefreshCw,
   Image,
+  Megaphone
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
@@ -132,6 +133,11 @@ const SellRequests = () => {
       ],
     },
     {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
+    },
+    {
       name: "Service",
       icon: Wrench,
       submenu: [
@@ -156,9 +162,9 @@ const SellRequests = () => {
       ],
     },
     {
-      name: 'Gallery',
+      name: "Gallery",
       icon: Image,
-      path: '/gallery/manage',
+      path: "/gallery/manage",
     },
     {
       name: "Vehicle History",

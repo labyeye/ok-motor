@@ -231,34 +231,29 @@ const StaffList = () => {
         { name: "Advance History", path: "/advance/history" },
       ],
     },
-    
-    ...(user?.role !== "staff"
-      ? [
-          {
-            name: "Staff",
-            icon: Users,
-            submenu: [
-              { name: "Create Staff ID", path: "/staff/create" },
-              { name: "Staff List", path: "/staff/list" },
-            ],
-          },
-        ]
-      : []),
-      {
-        name: 'Gallery',
-        icon: Image,
-        path: '/gallery/manage',
-      },
-      {
-        name: "Vehicle History",
-        icon: Bike,
-        path: "/bike-history",
-      },
-      {
-        name: "Settings",
-        icon: Settings,
-        path: "/settings",
-      },
+    {
+      name: "Staff",
+      icon: Users,
+      submenu: [
+        { name: "Create Staff ID", path: "/staff/create" },
+        { name: "Staff List", path: "/staff/list" },
+      ],
+    },
+    {
+      name: "Gallery",
+      icon: Image,
+      path: "/gallery/manage",
+    },
+    {
+      name: "Vehicle History",
+      icon: Bike,
+      path: "/bike-history",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
+    },
   ];
   const handleLogout = () => {
     logout();

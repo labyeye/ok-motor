@@ -21,7 +21,7 @@ import {
   X,
   Settings,
   RefreshCw,
-  
+  Megaphone,
   Image,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -541,6 +541,11 @@ const ServiceHistory = () => {
       ],
     },
     {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
+    },
+    {
       name: "Service",
       icon: Wrench,
       submenu: [
@@ -556,22 +561,18 @@ const ServiceHistory = () => {
         { name: "Advance History", path: "/advance/history" },
       ],
     },
-    ...(user?.role !== "staff"
-      ? [
-          {
-            name: "Staff",
-            icon: Users,
-            submenu: [
-              { name: "Create Staff ID", path: "/staff/create" },
-              { name: "Staff List", path: "/staff/list" },
-            ],
-          },
-        ]
-      : []),
     {
-      name: 'Gallery',
+      name: "Staff",
+      icon: Users,
+      submenu: [
+        { name: "Create Staff ID", path: "/staff/create" },
+        { name: "Staff List", path: "/staff/list" },
+      ],
+    },
+    {
+      name: "Gallery",
       icon: Image,
-      path: '/gallery/manage',
+      path: "/gallery/manage",
     },
     {
       name: "Vehicle History",

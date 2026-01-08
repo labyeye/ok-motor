@@ -20,6 +20,9 @@ import {
   Menu,
   Settings,
   Bike,
+  ShipWheel,
+  Megaphone,
+  RefreshCw
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 
@@ -147,7 +150,7 @@ const GalleryManagement = () => {
     },
     {
       name: "Vehicle",
-      icon: Bike,
+      icon: ShipWheel,
       submenu: [
         { name: "Add Vehicle", path: "/vehicle/create" },
         { name: "Vehicle List", path: "/vehicle/history" },
@@ -167,7 +170,21 @@ const GalleryManagement = () => {
       submenu: [
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
       ],
+    },
+    {
+      name: "Updates",
+      icon: RefreshCw,
+      submenu: [
+        { name: "Create Update", path: "/updates/create" },
+        { name: "Updates List", path: "/updates" },
+      ],
+    },
+    {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
     },
     {
       name: "Service",
@@ -185,22 +202,23 @@ const GalleryManagement = () => {
         { name: "Advance History", path: "/advance/history" },
       ],
     },
-    ...(user?.role !== "staff"
-      ? [
-          {
-            name: "Staff",
-            icon: Users,
-            submenu: [
-              { name: "Create Staff ID", path: "/staff/create" },
-              { name: "Staff List", path: "/staff/list" },
-            ],
-          },
-        ]
-      : []),
+    {
+      name: "Staff",
+      icon: Users,
+      submenu: [
+        { name: "Create Staff ID", path: "/staff/create" },
+        { name: "Staff List", path: "/staff/list" },
+      ],
+    },
     {
       name: "Gallery",
-      icon: ImageIcon,
+      icon: Image,
       path: "/gallery/manage",
+    },
+    {
+      name: "Vehicle History",
+      icon: Bike,
+      path: "/bike-history",
     },
     {
       name: "Settings",
