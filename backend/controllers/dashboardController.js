@@ -500,10 +500,32 @@ exports.getFreeServiceUsage = async (req, res) => {
       },
       {
         $addFields: {
-          month1: { $arrayElemAt: ["$serviceDates", 0] },
-          month2: { $arrayElemAt: ["$serviceDates", 1] },
-          month3: { $arrayElemAt: ["$serviceDates", 2] },
+          // Use actual service date if present; otherwise project based on saleDate + n months
+          month1: {
+            $ifNull: [
+              { $arrayElemAt: ["$serviceDates", 0] },
+              { $dateAdd: { startDate: "$saleDate", unit: "month", amount: 1 } },
+            ],
+          },
+          month2: {
+            $ifNull: [
+              { $arrayElemAt: ["$serviceDates", 1] },
+              { $dateAdd: { startDate: "$saleDate", unit: "month", amount: 2 } },
+            ],
+          },
+          month3: {
+            $ifNull: [
+              { $arrayElemAt: ["$serviceDates", 2] },
+              { $dateAdd: { startDate: "$saleDate", unit: "month", amount: 3 } },
+            ],
+          },
           usedCount: { $size: { $ifNull: ["$serviceDates", []] } },
+        },
+      },
+      {
+        $addFields: {
+          projectedMonths: ["$month1", "$month2", "$month3"],
+          nextDue: { $arrayElemAt: [["$month1", "$month2", "$month3"], "$usedCount"] },
         },
       },
       { $sort: { saleDate: -1 } },

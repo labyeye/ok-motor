@@ -859,6 +859,44 @@ const AdminPage = () => {
       ? freeServices.filter((row) => normalize(row.registrationNumber).includes(q))
       : freeServices;
 
+    // prepare processed rows with reminder info and sort by urgency
+    const processed = filtered.map((row) => {
+      const months = [row.month1 || null, row.month2 || null, row.month3 || null];
+      const used = row.usedCount || 0;
+      const today = new Date();
+
+      const pending = months
+        .map((m, idx) => ({
+          idx: idx + 1,
+          date: m ? new Date(m) : new Date(new Date(row.saleDate).setMonth(new Date(row.saleDate).getMonth() + (idx + 1))),
+        }))
+        .filter((p) => p.idx > used);
+
+      const pendingWithDays = pending.map((p) => {
+        const msPerDay = 1000 * 60 * 60 * 24;
+        const daysUntil = Math.ceil((p.date - today) / msPerDay);
+        return { ...p, daysUntil };
+      });
+
+      // pick next pending: sort pendingWithDays ascending (overdue negatives first)
+      pendingWithDays.sort((a, b) => a.daysUntil - b.daysUntil);
+
+      const nextPending = pendingWithDays.length > 0 ? pendingWithDays[0] : null;
+
+      const reminderScore = nextPending ? nextPending.daysUntil : 999999;
+
+      return { row, months, used, pendingWithDays, nextPending, reminderScore };
+    });
+
+    processed.sort((a, b) => a.reminderScore - b.reminderScore);
+
+    const ordinal = (n) => {
+      if (n === 1) return "1st";
+      if (n === 2) return "2nd";
+      if (n === 3) return "3rd";
+      return `${n}th`;
+    };
+
     return (
       <div className="free-services-card">
         <h3 className="card-title">Free Service Usage (Sold Vehicles)</h3>
@@ -898,30 +936,54 @@ const AdminPage = () => {
                   <th>Month 2 - Free Service</th>
                   <th>Month 3 - Free Service</th>
                   <th>Used</th>
+                  <th>Reminder</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((row, idx) => (
-                  <tr
-                    key={`${row.registrationNumber}-${idx}`}
-                    onClick={() => {
-                      if (row.registrationNumber) {
-                        setHistoryQuery(row.registrationNumber);
-                        setIsHistoryModalOpen(true);
-                      }
-                    }}
-                  >
-                    <td>{formatDate(row.saleDate)}</td>
-                    <td>{row.buyerName || "-"}</td>
-                    <td>{row.registrationNumber || "-"}</td>
-                    <td>{row.vehicleBrand || "-"}</td>
-                    <td>{row.vehicleModel || "-"}</td>
-                    <td>{row.month1 ? formatDate(row.month1) : "Pending"}</td>
-                    <td>{row.month2 ? formatDate(row.month2) : "Pending"}</td>
-                    <td>{row.month3 ? formatDate(row.month3) : "Pending"}</td>
-                    <td>{(row.usedCount || 0) + "/3"}</td>
-                  </tr>
-                ))}
+                {processed.map((item, idx) => {
+                  const { row, nextPending, used } = item;
+                  return (
+                    <tr
+                      key={`${row.registrationNumber}-${idx}`}
+                      onClick={() => {
+                        if (row.registrationNumber) {
+                          setHistoryQuery(row.registrationNumber);
+                          setIsHistoryModalOpen(true);
+                        }
+                      }}
+                    >
+                      <td>{formatDate(row.saleDate)}</td>
+                      <td>{row.buyerName || "-"}</td>
+                      <td>{row.registrationNumber || "-"}</td>
+                      <td>{row.vehicleBrand || "-"}</td>
+                      <td>{row.vehicleModel || "-"}</td>
+                      <td>{row.month1 ? formatDate(row.month1) : "-"}</td>
+                      <td>{row.month2 ? formatDate(row.month2) : "-"}</td>
+                      <td>{row.month3 ? formatDate(row.month3) : "-"}</td>
+                      <td>{(row.usedCount || 0) + "/3"}</td>
+                      <td>
+                        {(() => {
+                          if ((row.usedCount || 0) >= 3) return <span>All free services done</span>;
+                          if (!nextPending) return <span>Pending</span>;
+
+                          const days = nextPending.daysUntil;
+                          const ord = ordinal(nextPending.idx);
+                          if (days < 0) {
+                            return (
+                              <span style={{ color: "#ef4444" }}>
+                                {ord} service overdue by {Math.abs(days)}d
+                              </span>
+                            );
+                          }
+                          if (days === 0) {
+                            return <span style={{ color: "#f59e0b" }}>{ord} service due today</span>;
+                          }
+                          return <span style={{ color: "#10b981" }}>{ord} service due in {days}d</span>;
+                        })()}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
