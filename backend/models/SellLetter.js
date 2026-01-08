@@ -48,6 +48,21 @@ const SellLetterSchema = new mongoose.Schema(
 
     documentsVerified: { type: Boolean, default: true },
 
+    documents: {
+      vehicleRC: {
+        front: { type: String },
+        back: { type: String },
+      },
+      aadhaar: {
+        front: { type: String },
+        back: { type: String },
+      },
+      pan: { type: String },
+      vehicleKM: { type: String },
+      vehiclePhotos: [{ type: String }],
+      meta: { type: Object },
+    },
+
     originalDocumentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "SellLetter",

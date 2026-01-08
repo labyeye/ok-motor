@@ -18,7 +18,7 @@
     "file-saver": "^2.0.5",
     "html2canvas": "^1.4.1",
     "imagekit-javascript": "^4.0.1",
-    "jspdf": "^3.0.1",
+    "jspdf": "^4.0.0",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.511.0",
     "mongodb": "^6.19.0",
@@ -65,11 +65,11 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "electron": "^28.3.3",
+    "cross-env": "^7.0.3",
+    "electron": "^39.2.7",
     "electron-builder": "^24.13.3",
     "source-map-loader": "^5.0.0",
     "wait-on": "^7.2.0",
-    "webpack-dev-server": "^5.2.1",
-    "cross-env": "^7.0.3"
+    "webpack-dev-server": "^5.2.1"
   }
 }

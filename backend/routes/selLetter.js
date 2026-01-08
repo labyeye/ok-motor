@@ -12,39 +12,13 @@ const {
   getSellLettersByRegistration,
   getVehicleDetails
 } = require('../controllers/sellLetterController');
-const generateSellLetterPDF = require("../utils/generateSellLetterPDF");
+const multer = require('multer');
+const upload = multer();
 
 router.use(protect);
 
-router.post("/generate-pdf", protect, async (req, res) => {
-  try {
-    const { language = "hindi" } = req.query;
-    const sellLetterData = req.body;
-
-    if (!sellLetterData) {
-      return res.status(400).json({
-        success: false,
-        message: "Sell letter data is required"
-      });
-    }
-
-    const pdfBuffer = await generateSellLetterPDF(sellLetterData, true, language);
-
-    res.set({
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename=sell-letter-${Date.now()}.pdf`,
-    });
-
-    res.send(pdfBuffer);
-  } catch (error) {
-    console.error("Error generating PDF buffer:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error generating PDF",
-      error: error.message
-    });
-  }
-});
+// Note: PDF generation is intentionally handled on the frontend.
+// Removed backend PDF route to keep backend responsibilities limited to image upload and data storage.
 
 router.route('/by-registration').get(getSellLettersByRegistration); 
 router.route('/my-letters').get(getMySellLetters); 

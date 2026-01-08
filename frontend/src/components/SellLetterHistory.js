@@ -42,7 +42,7 @@ const SellLetterHistory = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
-  
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
@@ -114,25 +114,21 @@ const SellLetterHistory = () => {
     const fetchSellLetters = async () => {
       setLoading(true);
       try {
-        
         const isOnline = navigator.onLine;
 
         if (isOnline) {
-          
           const response = await axios.get(
             `https://ok-motor-51l3.vercel.app/api/sell-letters/my-letters?page=${currentPage}`,
             { headers: {} }
           );
           setSellLetters(response.data);
         } else {
-          
           console.log("Offline mode - loading sell letters from local storage");
           const offlineStorage = (await import("../services/offlineStorage"))
             .default;
           const result = await offlineStorage.find("sellLetters");
 
           if (result.success && result.data) {
-            
             const sortedData = result.data.sort(
               (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
             );
@@ -319,7 +315,7 @@ const SellLetterHistory = () => {
 
     const [hour, minute] = timeString.split(":").map(Number);
 
-    const hours12 = hour % 12 || 12; 
+    const hours12 = hour % 12 || 12;
     const ampm = hour >= 12 ? "PM" : "AM";
 
     const formattedHours = String(hours12).padStart(2, "0");
@@ -408,9 +404,6 @@ const SellLetterHistory = () => {
       const existingPdfBytes = await loadPDFTemplate("sellletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-      const invoicePage = pdfDoc.addPage([595, 842]);
-      await drawVehicleInvoice(invoicePage, pdfDoc, letter);
-
       const formattedLetter = {
         ...letter,
         buyerName1: letter.buyerName,
@@ -426,7 +419,7 @@ const SellLetterHistory = () => {
         previousTime: formatTime12Hour(
           letter.previousTime || letter.todayTime || "12:00"
         ),
-        amountInWords: formatIndianAmountInWords(letter.saleAmount), 
+        amountInWords: formatIndianAmountInWords(letter.saleAmount),
         saleAmount: formatRupee(letter.saleAmount),
         sellerphone: letter.sellerphone || "9876543210",
         selleraadhar: letter.selleraadhar || "764465626571",
@@ -472,6 +465,155 @@ const SellLetterHistory = () => {
         });
       }
 
+      // Insert document pages (Vehicle RC, Aadhaar, PAN, KM, Vehicle photos)
+      const embedImageFromUrl = async (pdfDoc, url) => {
+        try {
+          const res = await fetch(url);
+          const contentType = res.headers.get("content-type") || "";
+          const bytes = await res.arrayBuffer();
+          if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
+          return await pdfDoc.embedJpg(bytes);
+        } catch (err) {
+          console.warn("Failed to embed image from", url, err);
+          return null;
+        }
+      };
+
+      const addDocumentPages = async (pdfDoc, documentsObj) => {
+        if (!documentsObj) return;
+        const items = [];
+        if (documentsObj.vehicleRC) {
+          if (documentsObj.vehicleRC.front)
+            items.push({
+              title: "Vehicle RC - Front",
+              url: documentsObj.vehicleRC.front,
+            });
+          if (documentsObj.vehicleRC.back)
+            items.push({
+              title: "Vehicle RC - Back",
+              url: documentsObj.vehicleRC.back,
+            });
+        }
+        if (documentsObj.aadhaar) {
+          if (documentsObj.aadhaar.front)
+            items.push({
+              title: "Aadhaar - Front",
+              url: documentsObj.aadhaar.front,
+            });
+          if (documentsObj.aadhaar.back)
+            items.push({
+              title: "Aadhaar - Back",
+              url: documentsObj.aadhaar.back,
+            });
+        }
+        if (documentsObj.pan)
+          items.push({ title: "PAN Card", url: documentsObj.pan });
+        if (documentsObj.vehicleKM)
+          items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
+        if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
+          documentsObj.vehiclePhotos.forEach((u, i) =>
+            items.push({ title: `Vehicle Photo ${i + 1}`, url: u })
+          );
+        }
+
+        for (let i = 0; i < items.length; i += 4) {
+          const page = pdfDoc.addPage([595, 842]);
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          try {
+            const logoUrl = logo1;
+            const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
+            const logoImg = await pdfDoc.embedPng(logoBytes);
+
+            // invoice-style header
+            page.drawRectangle({
+              x: 0,
+              y: 780,
+              width: 595,
+              height: 80,
+              color: rgb(0.047, 0.098, 0.196),
+            });
+            page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+            try {
+              page.drawImage(logoImg, {
+                x: 180,
+                y: 430,
+                width: 260,
+                height: 220,
+                opacity: 0.3,
+              });
+              page.drawImage(logoImg, {
+                x: 180,
+                y: 130,
+                width: 260,
+                height: 220,
+                opacity: 0.3,
+              });
+            } catch (wmErr) {}
+            page.drawText("UDAYAM-BR-26-0028550", {
+              x: 330,
+              y: 805,
+              size: 18,
+              color: rgb(1, 1, 1),
+              font,
+            });
+            page.drawRectangle({
+              x: 0,
+              y: 750,
+              width: 595,
+              height: 30,
+              color: rgb(0.9, 0.9, 0.9),
+            });
+          } catch (err) {
+            // ignore header errors
+          }
+
+          const cols = [40, 315];
+          const rows = [720, 360];
+          for (let cell = 0; cell < 4; cell++) {
+            const item = items[i + cell];
+            if (!item) continue;
+            const col = cell % 2;
+            const row = Math.floor(cell / 2);
+            const x = cols[col];
+            const yTop = rows[row];
+            const titleFont = await pdfDoc.embedFont(
+              StandardFonts.HelveticaBold
+            );
+            page.drawText(item.title, {
+              x,
+              y: yTop,
+              size: 11,
+              font: titleFont,
+            });
+            const embedded = await embedImageFromUrl(pdfDoc, item.url);
+            if (embedded) {
+              const cellMaxW = 240;
+              const cellMaxH = 300;
+              const { width, height } = embedded.scale(1);
+              let drawW = cellMaxW;
+              let drawH = (height / width) * drawW;
+              if (drawH > cellMaxH) {
+                drawH = cellMaxH;
+                drawW = (width / height) * drawH;
+              }
+              const drawY = yTop - drawH - 10;
+              page.drawImage(embedded, {
+                x,
+                y: drawY,
+                width: drawW,
+                height: drawH,
+              });
+            }
+          }
+        }
+      };
+
+      await addDocumentPages(pdfDoc, letter.documents);
+
+      // add invoice page as final page
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
@@ -497,16 +639,15 @@ const SellLetterHistory = () => {
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const invoicePage = pdfDoc.addPage([595, 842]);
-      await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+      // we'll add document pages first, then invoice as the final page
       const formattedLetter = {
         ...letter,
         buyerName1: letter.buyerName,
         buyerName2: letter.buyerName,
         saleDate: formatDate(letter.saleDate),
-        saleTime: formatTime12Hour(letter.saleTime), 
-        amountInWords: formatIndianAmountInWords(letter.saleAmount), 
-        saleAmount: formatRupee(letter.saleAmount), 
+        saleTime: formatTime12Hour(letter.saleTime),
+        amountInWords: formatIndianAmountInWords(letter.saleAmount),
+        saleAmount: formatRupee(letter.saleAmount),
         todayTime: formatTime12Hour(letter.todayTime || "12:00"),
         previousDate: formatDate(
           letter.previousDate || letter.todayDate || new Date()
@@ -514,7 +655,7 @@ const SellLetterHistory = () => {
         previousTime: formatTime12Hour(
           letter.previousTime || letter.todayTime || "12:00"
         ),
-        vehiclekm: formatKm(letter.vehiclekm), 
+        vehiclekm: formatKm(letter.vehiclekm),
         sellerphone: letter.sellerphone || "9876543210",
         selleraadhar: letter.selleraadhar || "764465626571",
       };
@@ -562,6 +703,134 @@ const SellLetterHistory = () => {
         });
       }
 
+      // Insert document pages (packed 2x2)
+      const embedImageFromUrl = async (pdfDoc, url) => {
+        try {
+          const res = await fetch(url);
+          const contentType = res.headers.get("content-type") || "";
+          const bytes = await res.arrayBuffer();
+          if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
+          return await pdfDoc.embedJpg(bytes);
+        } catch (err) {
+          console.warn("Failed to embed image from", url, err);
+          return null;
+        }
+      };
+
+      const addDocumentPages = async (pdfDoc, documentsObj) => {
+        if (!documentsObj) return;
+        const items = [];
+        if (documentsObj.vehicleRC) {
+          if (documentsObj.vehicleRC.front)
+            items.push({
+              title: "Vehicle RC - Front",
+              url: documentsObj.vehicleRC.front,
+            });
+          if (documentsObj.vehicleRC.back)
+            items.push({
+              title: "Vehicle RC - Back",
+              url: documentsObj.vehicleRC.back,
+            });
+        }
+        if (documentsObj.aadhaar) {
+          if (documentsObj.aadhaar.front)
+            items.push({
+              title: "Aadhaar - Front",
+              url: documentsObj.aadhaar.front,
+            });
+          if (documentsObj.aadhaar.back)
+            items.push({
+              title: "Aadhaar - Back",
+              url: documentsObj.aadhaar.back,
+            });
+        }
+        if (documentsObj.pan)
+          items.push({ title: "PAN Card", url: documentsObj.pan });
+        if (documentsObj.vehicleKM)
+          items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
+        if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
+          documentsObj.vehiclePhotos.forEach((u, i) =>
+            items.push({ title: `Vehicle Photo ${i + 1}`, url: u })
+          );
+        }
+
+        for (let i = 0; i < items.length; i += 4) {
+          const page = pdfDoc.addPage([595, 842]);
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          try {
+            const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
+            const logoImg = await pdfDoc.embedPng(logoBytes);
+            page.drawRectangle({
+              x: 0,
+              y: 780,
+              width: 595,
+              height: 80,
+              color: rgb(0.047, 0.098, 0.196),
+            });
+            page.drawImage(logoImg, {
+              x: 50,
+              y: 792 - 60,
+              width: 120,
+              height: 60,
+            });
+            page.drawText("OK Motors", {
+              x: 190,
+              y: 815,
+              size: 14,
+              font,
+              color: rgb(255, 255, 255),
+            });
+          } catch (err) {
+            // ignore header errors
+          }
+
+          const cols = [40, 315];
+          const rows = [720, 360];
+          for (let cell = 0; cell < 4; cell++) {
+            const item = items[i + cell];
+            if (!item) continue;
+            const col = cell % 2;
+            const row = Math.floor(cell / 2);
+            const x = cols[col];
+            const yTop = rows[row];
+            const titleFont = await pdfDoc.embedFont(
+              StandardFonts.HelveticaBold
+            );
+            page.drawText(item.title, {
+              x,
+              y: yTop,
+              size: 11,
+              font: titleFont,
+            });
+            const embedded = await embedImageFromUrl(pdfDoc, item.url);
+            if (embedded) {
+              const cellMaxW = 240;
+              const cellMaxH = 300;
+              const { width, height } = embedded.scale(1);
+              let drawW = cellMaxW;
+              let drawH = (height / width) * drawW;
+              if (drawH > cellMaxH) {
+                drawH = cellMaxH;
+                drawW = (width / height) * drawH;
+              }
+              const drawY = yTop - drawH - 10;
+              page.drawImage(embedded, {
+                x,
+                y: drawY,
+                width: drawW,
+                height: drawH,
+              });
+            }
+          }
+        }
+      };
+
+      await addDocumentPages(pdfDoc, letter.documents);
+
+      // add invoice page as final page
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
@@ -579,11 +848,11 @@ const SellLetterHistory = () => {
   const drawVehicleInvoice = async (page, pdfDoc, letter) => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const logoUrl = logo1; 
+    const logoUrl = logo1;
     const logoImageBytes = await fetch(logoUrl).then((res) =>
       res.arrayBuffer()
     );
-    const logoImage = await pdfDoc.embedPng(logoImageBytes); 
+    const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
     page.drawRectangle({
       x: 0,
@@ -1018,7 +1287,6 @@ const SellLetterHistory = () => {
         const isOnline = navigator.onLine;
 
         if (isOnline) {
-          
           if (!token) {
             alert("You are not authenticated. Please login again.");
             logout();
@@ -1034,7 +1302,6 @@ const SellLetterHistory = () => {
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
           alert("Sell letter deleted successfully!");
         } else {
-          
           const offlineStorage = (await import("../services/offlineStorage"))
             .default;
           const result = await offlineStorage.deleteById("sellLetters", id);
@@ -1071,7 +1338,6 @@ const SellLetterHistory = () => {
   };
 
   const handleEdit = (letter) => {
-    
     navigate("/sell/create", { state: { editLetter: letter } });
   };
   const handleLogout = () => {
@@ -1166,7 +1432,7 @@ const SellLetterHistory = () => {
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    
+
     const actualPath = typeof path === "function" ? path(user?.role) : path;
     navigate(actualPath);
   };
@@ -1225,7 +1491,7 @@ const SellLetterHistory = () => {
               width: "100%",
               maxWidth: "25rem",
               height: "9rem",
-              objectFit: "cover", 
+              objectFit: "cover",
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
@@ -1246,7 +1512,6 @@ const SellLetterHistory = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
-                    
                     handleMenuClick(item.name, item.path);
                   }
                 }}
@@ -1368,7 +1633,11 @@ const SellLetterHistory = () => {
                       <tr key={letter._id} style={styles.tableRow}>
                         <td style={styles.tableCell}>{letter.buyerName}</td>
                         <td style={styles.tableCell}>{letter.vehicleModel}</td>
-                        <td style={styles.tableCell}>{`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim()}</td>
+                        <td style={styles.tableCell}>
+                          {`${letter.vehicleName || ""} ${
+                            letter.vehicleModel || ""
+                          }`.trim()}
+                        </td>
                         <td style={styles.tableCell}>
                           {letter.registrationNumber}
                         </td>

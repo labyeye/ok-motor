@@ -120,6 +120,17 @@ const SellLetterForm = () => {
         }
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [filesState, setFilesState] = useState({
+    vehicleRCFront: null,
+    vehicleRCBack: null,
+    aadhaarFront: null,
+    aadhaarBack: null,
+    panPhoto: null,
+    vehicleKMPhoto: null,
+    vehiclePhotos: [],
+  });
+  const [filePreviews, setFilePreviews] = useState({});
+  const [savedSellLetter, setSavedSellLetter] = useState(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -131,12 +142,23 @@ const SellLetterForm = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // cleanup object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      try {
+        Object.values(filePreviews).forEach((v) => {
+          if (Array.isArray(v)) v.forEach((u) => URL.revokeObjectURL(u));
+          else if (typeof v === "string") URL.revokeObjectURL(v);
+        });
+      } catch (err) {}
+    };
+  }, [filePreviews]);
+
   const fetchVehicles = async () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE =
-        process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+      const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
@@ -353,6 +375,43 @@ const SellLetterForm = () => {
     }
 
     return errs;
+  };
+
+  // File input handlers
+  const handleFileInput = (e, fieldName) => {
+    const file = e.target.files && e.target.files[0];
+    setFilesState((prev) => ({ ...prev, [fieldName]: file }));
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setFilePreviews((prev) => ({ ...prev, [fieldName]: url }));
+    } else {
+      setFilePreviews((prev) => {
+        const next = { ...prev };
+        delete next[fieldName];
+        return next;
+      });
+    }
+  };
+
+  const handleMultipleFiles = (e, fieldName) => {
+    const fileList = Array.from(e.target.files || []);
+    const limited = fileList.slice(0, 4);
+    setFilesState((prev) => ({ ...prev, [fieldName]: limited }));
+    const prevs = limited.map((f) => URL.createObjectURL(f));
+    setFilePreviews((prev) => ({ ...prev, [fieldName]: prevs }));
+  };
+
+  const removeVehiclePhoto = (index) => {
+    setFilesState((prev) => {
+      const arr = (prev.vehiclePhotos || []).slice();
+      arr.splice(index, 1);
+      return { ...prev, vehiclePhotos: arr };
+    });
+    setFilePreviews((prev) => {
+      const arr = (prev.vehiclePhotos || []).slice();
+      arr.splice(index, 1);
+      return { ...prev, vehiclePhotos: arr };
+    });
   };
   const DownloadProgressModal = ({ progress, onClose }) => {
     return (
@@ -601,10 +660,7 @@ const SellLetterForm = () => {
       const existingPdfBytes = await fetch(templateUrl).then((res) =>
         res.arrayBuffer()
       );
-
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const invoicePage = pdfDoc.addPage([595, 842]);
-      await drawVehicleInvoice(invoicePage, pdfDoc);
 
       const formattedData = {
         ...formData,
@@ -674,6 +730,170 @@ const SellLetterForm = () => {
           });
         }
       }
+      // add document pages (use savedSellLetter.documents if available, else use filePreviews)
+      const docs =
+        (saveResultRef.current && saveResultRef.current.documents) ||
+        (savedSellLetter && savedSellLetter.documents) ||
+        null;
+
+      const embedImageFromUrl = async (url) => {
+        try {
+          const res = await fetch(url);
+          const contentType = res.headers.get("content-type") || "";
+          const bytes = await res.arrayBuffer();
+          if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
+          return await pdfDoc.embedJpg(bytes);
+        } catch (err) {
+          console.warn("Failed to embed image from", url, err);
+          return null;
+        }
+      };
+
+      const addDocumentPages = async (documentsObj) => {
+        if (!documentsObj) return;
+        const items = [];
+        if (documentsObj.vehicleRC) {
+          if (documentsObj.vehicleRC.front)
+            items.push({
+              title: "Vehicle RC - Front",
+              url: documentsObj.vehicleRC.front,
+            });
+          if (documentsObj.vehicleRC.back)
+            items.push({
+              title: "Vehicle RC - Back",
+              url: documentsObj.vehicleRC.back,
+            });
+        }
+        if (documentsObj.aadhaar) {
+          if (documentsObj.aadhaar.front)
+            items.push({
+              title: "Aadhaar - Front",
+              url: documentsObj.aadhaar.front,
+            });
+          if (documentsObj.aadhaar.back)
+            items.push({
+              title: "Aadhaar - Back",
+              url: documentsObj.aadhaar.back,
+            });
+        }
+        if (documentsObj.pan)
+          items.push({ title: "PAN Card", url: documentsObj.pan });
+        if (documentsObj.vehicleKM)
+          items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
+        if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
+          documentsObj.vehiclePhotos.forEach((u, i) =>
+            items.push({ title: `Vehicle Photo ${i + 1}`, url: u })
+          );
+        }
+        // Pack up to 4 images per page in a responsive 2x2 grid to avoid wasted space
+        for (let i = 0; i < items.length; i += 4) {
+          const page = pdfDoc.addPage([595, 842]);
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          try {
+            const logoUrl = logo1;
+            const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
+            const logoImg = await pdfDoc.embedPng(logoBytes);
+
+            // same header as invoice
+            page.drawRectangle({
+              x: 0,
+              y: 780,
+              width: 595,
+              height: 80,
+              color: rgb(0.047, 0.098, 0.196),
+            });
+
+            page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+
+            // watermark images
+            try {
+              page.drawImage(logoImg, {
+                x: 180,
+                y: 430,
+                width: 260,
+                height: 220,
+                opacity: 0.3,
+              });
+              page.drawImage(logoImg, {
+                x: 180,
+                y: 130,
+                width: 260,
+                height: 220,
+                opacity: 0.3,
+              });
+            } catch (wmErr) {
+              // ignore watermark errors
+            }
+
+            page.drawText("UDAYAM-BR-26-0028550", {
+              x: 330,
+              y: 805,
+              size: 18,
+              color: rgb(255, 255, 255, 1),
+              font,
+            });
+            page.drawRectangle({
+              x: 0,
+              y: 750,
+              width: 595,
+              height: 30,
+              color: rgb(0.9, 0.9, 0.9),
+            });
+          } catch (err) {
+            // ignore header errors
+          }
+
+          // positions for 2x2 grid
+          const cols = [40, 315];
+          const rows = [720, 360];
+          for (let cell = 0; cell < 4; cell++) {
+            const item = items[i + cell];
+            if (!item) continue;
+            const col = cell % 2;
+            const row = Math.floor(cell / 2);
+            const x = cols[col];
+            const yTop = rows[row];
+
+            const titleFont = await pdfDoc.embedFont(
+              StandardFonts.HelveticaBold
+            );
+            page.drawText(item.title, {
+              x,
+              y: yTop,
+              size: 11,
+              font: titleFont,
+            });
+
+            const embedded = await embedImageFromUrl(item.url);
+            if (embedded) {
+              // compute fit for cell
+              const cellMaxW = 240;
+              const cellMaxH = 300;
+              const { width, height } = embedded.scale(1);
+              let drawW = cellMaxW;
+              let drawH = (height / width) * drawW;
+              if (drawH > cellMaxH) {
+                drawH = cellMaxH;
+                drawW = (width / height) * drawH;
+              }
+              const drawY = yTop - drawH - 10;
+              page.drawImage(embedded, {
+                x,
+                y: drawY,
+                width: drawW,
+                height: drawH,
+              });
+            }
+          }
+        }
+      };
+
+      await addDocumentPages(docs);
+
+      // add invoice as final page
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc);
+
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -902,13 +1122,66 @@ const SellLetterForm = () => {
         }),
       };
 
-      if (isElectron) {
-        response = await apiService.post("/api/sell-letters", dataToSave);
+      // If any files are selected, submit as multipart/form-data so backend can process images
+      const hasFiles =
+        filesState.vehicleRCFront ||
+        filesState.vehicleRCBack ||
+        filesState.aadhaarFront ||
+        filesState.aadhaarBack ||
+        filesState.panPhoto ||
+        filesState.vehicleKMPhoto ||
+        (filesState.vehiclePhotos && filesState.vehiclePhotos.length > 0);
+
+      if (hasFiles) {
+        const form = new FormData();
+        // append all scalar/primitive fields
+        Object.entries(dataToSave).forEach(([key, value]) => {
+          if (value === undefined || value === null) return;
+          if (typeof value === "object") {
+            form.append(key, JSON.stringify(value));
+          } else {
+            form.append(key, String(value));
+          }
+        });
+
+        // append files using the field names expected by backend
+        if (filesState.vehicleRCFront)
+          form.append("vehicleRCFront", filesState.vehicleRCFront);
+        if (filesState.vehicleRCBack)
+          form.append("vehicleRCBack", filesState.vehicleRCBack);
+        if (filesState.aadhaarFront)
+          form.append("aadhaarFront", filesState.aadhaarFront);
+        if (filesState.aadhaarBack)
+          form.append("aadhaarBack", filesState.aadhaarBack);
+        if (filesState.panPhoto) form.append("panPhoto", filesState.panPhoto);
+        if (filesState.vehicleKMPhoto)
+          form.append("vehicleKMPhoto", filesState.vehicleKMPhoto);
+        if (filesState.vehiclePhotos && filesState.vehiclePhotos.length) {
+          filesState.vehiclePhotos
+            .slice(0, 4)
+            .forEach((f) => form.append("vehiclePhotos", f));
+        }
+
+        if (isElectron) {
+          response = await apiService.post("/api/sell-letters", form);
+        } else {
+          response = await axios.post(
+            "https://ok-motor-51l3.vercel.app/api/sell-letters",
+            form,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
+          );
+        }
       } else {
-        response = await axios.post(
-          "https://ok-motor-51l3.vercel.app/api/sell-letters",
-          dataToSave
-        );
+        if (isElectron) {
+          response = await apiService.post("/api/sell-letters", dataToSave);
+        } else {
+          response = await axios.post(
+            "https://ok-motor-51l3.vercel.app/api/sell-letters",
+            dataToSave
+          );
+        }
       }
 
       if (editLetter?._id) {
@@ -927,7 +1200,11 @@ const SellLetterForm = () => {
             console.error("Failed to clear draft:", error);
           }
         }
-        return response.data;
+        // store returned sell letter for PDF generation (contains uploaded image URLs)
+        const returned = response.data;
+        setSavedSellLetter(returned);
+        saveResultRef.current = returned;
+        return returned;
       }
     } catch (error) {
       console.error("Error saving sell letter:", error);
@@ -1620,8 +1897,7 @@ const SellLetterForm = () => {
 
         return `${formattedHours}:${formattedMinutes} ${ampm}`;
       };
-      const invoicePage = pdfDoc.addPage([595, 842]);
-      await drawVehicleInvoice(invoicePage, pdfDoc);
+      // We'll append document pages here, then add invoice as the last page.
 
       const formattedLetter = {
         ...formData,
@@ -1688,6 +1964,171 @@ const SellLetterForm = () => {
           });
         }
       }
+      // Insert document pages (fetched from savedSellLetter.documents or server response)
+      const docs =
+        (saveResultRef.current && saveResultRef.current.documents) ||
+        (savedSellLetter && savedSellLetter.documents) ||
+        formData.documents ||
+        null;
+
+      const embedImageFromUrl = async (url) => {
+        try {
+          const res = await fetch(url);
+          const contentType = res.headers.get("content-type") || "";
+          const bytes = await res.arrayBuffer();
+          if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
+          return await pdfDoc.embedJpg(bytes);
+        } catch (err) {
+          console.warn("Failed to embed image from", url, err);
+          return null;
+        }
+      };
+
+      const addDocumentPages = async (documentsObj) => {
+        if (!documentsObj) return;
+        const items = [];
+        if (documentsObj.vehicleRC) {
+          if (documentsObj.vehicleRC.front)
+            items.push({
+              title: "Vehicle RC - Front",
+              url: documentsObj.vehicleRC.front,
+            });
+          if (documentsObj.vehicleRC.back)
+            items.push({
+              title: "Vehicle RC - Back",
+              url: documentsObj.vehicleRC.back,
+            });
+        }
+        if (documentsObj.aadhaar) {
+          if (documentsObj.aadhaar.front)
+            items.push({
+              title: "Aadhaar - Front",
+              url: documentsObj.aadhaar.front,
+            });
+          if (documentsObj.aadhaar.back)
+            items.push({
+              title: "Aadhaar - Back",
+              url: documentsObj.aadhaar.back,
+            });
+        }
+        if (documentsObj.pan)
+          items.push({ title: "PAN Card", url: documentsObj.pan });
+        if (documentsObj.vehicleKM)
+          items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
+        if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
+          documentsObj.vehiclePhotos.forEach((u, i) =>
+            items.push({ title: `Vehicle Photo ${i + 1}`, url: u })
+          );
+        }
+        // Pack up to 4 images per page in a responsive 2x2 grid to avoid wasted space
+        for (let i = 0; i < items.length; i += 4) {
+          const page = pdfDoc.addPage([595, 842]);
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          try {
+            const logoUrl = logo1;
+            const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
+            const logoImg = await pdfDoc.embedPng(logoBytes);
+
+            // same header as invoice
+            page.drawRectangle({
+              x: 0,
+              y: 780,
+              width: 595,
+              height: 80,
+              color: rgb(0.047, 0.098, 0.196),
+            });
+
+            page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+
+            // watermark images
+            try {
+              page.drawImage(logoImg, {
+                x: 180,
+                y: 430,
+                width: 260,
+                height: 220,
+                opacity: 0.3,
+              });
+              page.drawImage(logoImg, {
+                x: 180,
+                y: 130,
+                width: 260,
+                height: 220,
+                opacity: 0.3,
+              });
+            } catch (wmErr) {
+              // ignore watermark errors
+            }
+
+            page.drawText("UDAYAM-BR-26-0028550", {
+              x: 330,
+              y: 805,
+              size: 18,
+              color: rgb(255, 255, 255, 1),
+              font,
+            });
+            page.drawRectangle({
+              x: 0,
+              y: 750,
+              width: 595,
+              height: 30,
+              color: rgb(0.9, 0.9, 0.9),
+            });
+          } catch (err) {
+            // ignore header errors
+          }
+
+          // positions for 2x2 grid
+          const cols = [40, 315];
+          const rows = [720, 360];
+          for (let cell = 0; cell < 4; cell++) {
+            const item = items[i + cell];
+            if (!item) continue;
+            const col = cell % 2;
+            const row = Math.floor(cell / 2);
+            const x = cols[col];
+            const yTop = rows[row];
+
+            const titleFont = await pdfDoc.embedFont(
+              StandardFonts.HelveticaBold
+            );
+            page.drawText(item.title, {
+              x,
+              y: yTop,
+              size: 11,
+              font: titleFont,
+            });
+
+            const embedded = await embedImageFromUrl(item.url);
+            if (embedded) {
+              // compute fit for cell
+              const cellMaxW = 240;
+              const cellMaxH = 300;
+              const { width, height } = embedded.scale(1);
+              let drawW = cellMaxW;
+              let drawH = (height / width) * drawW;
+              if (drawH > cellMaxH) {
+                drawH = cellMaxH;
+                drawW = (width / height) * drawH;
+              }
+              const drawY = yTop - drawH - 10;
+              page.drawImage(embedded, {
+                x,
+                y: drawY,
+                width: drawW,
+                height: drawH,
+              });
+            }
+          }
+        }
+      };
+
+      await addDocumentPages(docs);
+
+      // add invoice page as final page
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc);
+
       const pdfBytes = await pdfDoc.save();
       const filename = `vehicle_sale_agreement_hindi_${
         formData.registrationNumber || "document"
@@ -1728,8 +2169,7 @@ const SellLetterForm = () => {
         if (!timeString) return "";
         return timeString.slice(0, 5);
       }
-      const invoicePage = pdfDoc.addPage([595, 842]);
-      await drawVehicleInvoice(invoicePage, pdfDoc);
+      // We'll append document pages here, then add invoice as the last page.
 
       const formattedLetter = {
         ...formData,
@@ -1796,6 +2236,161 @@ const SellLetterForm = () => {
           });
         }
       }
+
+      const docs =
+        (saveResultRef.current && saveResultRef.current.documents) ||
+        (savedSellLetter && savedSellLetter.documents) ||
+        formData.documents ||
+        null;
+
+      const embedImageFromUrl = async (url) => {
+        try {
+          const res = await fetch(url);
+          const contentType = res.headers.get("content-type") || "";
+          const bytes = await res.arrayBuffer();
+          if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
+          return await pdfDoc.embedJpg(bytes);
+        } catch (err) {
+          console.warn("Failed to embed image from", url, err);
+          return null;
+        }
+      };
+
+      const addDocumentPages = async (documentsObj) => {
+        if (!documentsObj) return;
+        const items = [];
+        if (documentsObj.vehicleRC) {
+          if (documentsObj.vehicleRC.front)
+            items.push({
+              title: "Vehicle RC - Front",
+              url: documentsObj.vehicleRC.front,
+            });
+          if (documentsObj.vehicleRC.back)
+            items.push({
+              title: "Vehicle RC - Back",
+              url: documentsObj.vehicleRC.back,
+            });
+        }
+        if (documentsObj.aadhaar) {
+          if (documentsObj.aadhaar.front)
+            items.push({
+              title: "Aadhaar - Front",
+              url: documentsObj.aadhaar.front,
+            });
+          if (documentsObj.aadhaar.back)
+            items.push({
+              title: "Aadhaar - Back",
+              url: documentsObj.aadhaar.back,
+            });
+        }
+        if (documentsObj.pan)
+          items.push({ title: "PAN Card", url: documentsObj.pan });
+        if (documentsObj.vehicleKM)
+          items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
+        if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
+          documentsObj.vehiclePhotos.forEach((u, i) =>
+            items.push({ title: `Vehicle Photo ${i + 1}`, url: u })
+          );
+        }
+
+        // Pack up to 4 images per page in a responsive 2x2 grid to avoid wasted space
+        for (let i = 0; i < items.length; i += 4) {
+          const page = pdfDoc.addPage([595, 842]);
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          try {
+            const logoUrl = logo1;
+            const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
+            const logoImg = await pdfDoc.embedPng(logoBytes);
+
+            // invoice-style header
+            page.drawRectangle({
+              x: 0,
+              y: 780,
+              width: 595,
+              height: 80,
+              color: rgb(0.047, 0.098, 0.196),
+            });
+            page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+            try {
+              page.drawImage(logoImg, {
+                x: 180,
+                y: 430,
+                width: 260,
+                height: 220,
+                opacity: 0.3,
+              });
+              page.drawImage(logoImg, {
+                x: 180,
+                y: 130,
+                width: 260,
+                height: 220,
+                opacity: 0.3,
+              });
+            } catch (wmErr) {}
+            page.drawText("UDAYAM-BR-26-0028550", {
+              x: 330,
+              y: 805,
+              size: 18,
+              color: rgb(255, 255, 255, 1),
+              font,
+            });
+            page.drawRectangle({
+              x: 0,
+              y: 750,
+              width: 595,
+              height: 30,
+              color: rgb(0.9, 0.9, 0.9),
+            });
+          } catch (err) {}
+          const cols = [40, 315];
+          const rows = [720, 360];
+          for (let cell = 0; cell < 4; cell++) {
+            const item = items[i + cell];
+            if (!item) continue;
+            const col = cell % 2;
+            const row = Math.floor(cell / 2);
+            const x = cols[col];
+            const yTop = rows[row];
+
+            const titleFont = await pdfDoc.embedFont(
+              StandardFonts.HelveticaBold
+            );
+            page.drawText(item.title, {
+              x,
+              y: yTop,
+              size: 11,
+              font: titleFont,
+            });
+
+            const embedded = await embedImageFromUrl(item.url);
+            if (embedded) {
+              // compute fit for cell
+              const cellMaxW = 240;
+              const cellMaxH = 300;
+              const { width, height } = embedded.scale(1);
+              let drawW = cellMaxW;
+              let drawH = (height / width) * drawW;
+              if (drawH > cellMaxH) {
+                drawH = cellMaxH;
+                drawW = (width / height) * drawH;
+              }
+              const drawY = yTop - drawH - 10;
+              page.drawImage(embedded, {
+                x,
+                y: drawY,
+                width: drawW,
+                height: drawH,
+              });
+            }
+          }
+        }
+      };
+
+      await addDocumentPages(docs);
+
+      // add invoice page as final page
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc);
 
       const pdfBytes = await pdfDoc.save();
       const filenameEn = `vehicle_sale_agreement_english_${
@@ -2636,6 +3231,149 @@ const SellLetterForm = () => {
               </div>
             </div>
 
+            {/* Documents Upload Section */}
+            <div style={styles.formSection}>
+              <h2 style={styles.sectionTitle}>
+                <Image style={styles.sectionIcon} /> Documents Upload
+              </h2>
+              <div style={styles.formGrid}>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>Vehicle RC - Front</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileInput(e, "vehicleRCFront")}
+                  />
+                  {filePreviews.vehicleRCFront && (
+                    <img
+                      src={filePreviews.vehicleRCFront}
+                      alt="rc-front"
+                      style={styles.previewImg}
+                    />
+                  )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>Vehicle RC - Back</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileInput(e, "vehicleRCBack")}
+                  />
+                  {filePreviews.vehicleRCBack && (
+                    <img
+                      src={filePreviews.vehicleRCBack}
+                      alt="rc-back"
+                      style={styles.previewImg}
+                    />
+                  )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>Aadhaar - Front</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileInput(e, "aadhaarFront")}
+                  />
+                  {filePreviews.aadhaarFront && (
+                    <img
+                      src={filePreviews.aadhaarFront}
+                      alt="aadhaar-front"
+                      style={styles.previewImg}
+                    />
+                  )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>Aadhaar - Back</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileInput(e, "aadhaarBack")}
+                  />
+                  {filePreviews.aadhaarBack && (
+                    <img
+                      src={filePreviews.aadhaarBack}
+                      alt="aadhaar-back"
+                      style={styles.previewImg}
+                    />
+                  )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>PAN Card Photo</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileInput(e, "panPhoto")}
+                  />
+                  {filePreviews.panPhoto && (
+                    <img
+                      src={filePreviews.panPhoto}
+                      alt="pan"
+                      style={styles.previewImg}
+                    />
+                  )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    Vehicle KM (Odometer) Photo
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileInput(e, "vehicleKMPhoto")}
+                  />
+                  {filePreviews.vehicleKMPhoto && (
+                    <img
+                      src={filePreviews.vehicleKMPhoto}
+                      alt="km"
+                      style={styles.previewImg}
+                    />
+                  )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    Vehicle Photos (up to 4)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handleMultipleFiles(e, "vehiclePhotos")}
+                  />
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      marginTop: "8px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    {(filePreviews.vehiclePhotos || []).map((p, idx) => (
+                      <div key={idx} style={{ position: "relative" }}>
+                        <img
+                          src={p}
+                          alt={`vehicle-${idx}`}
+                          style={styles.previewImgSmall}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeVehiclePhoto(idx)}
+                          style={styles.removePreviewBtn}
+                        >
+                          x
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div style={styles.formActions}>
               <div
                 style={{ display: "flex", alignItems: "center", gap: "10px" }}
@@ -3020,6 +3758,32 @@ const styles = {
   },
   formField: {
     marginBottom: "16px",
+  },
+  previewImg: {
+    width: "100%",
+    maxWidth: "320px",
+    marginTop: "8px",
+    borderRadius: "6px",
+    border: "1px solid #e2e8f0",
+  },
+  previewImgSmall: {
+    width: "80px",
+    height: "60px",
+    objectFit: "cover",
+    borderRadius: "6px",
+    border: "1px solid #e2e8f0",
+  },
+  removePreviewBtn: {
+    position: "absolute",
+    top: "-6px",
+    right: "-6px",
+    background: "#ef4444",
+    color: "#fff",
+    border: "none",
+    borderRadius: "50%",
+    width: "20px",
+    height: "20px",
+    cursor: "pointer",
   },
   formLabel: {
     display: "flex",
