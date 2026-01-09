@@ -82,22 +82,6 @@ const VehicleSchema = new mongoose.Schema(
       trim: true,
     },
 
-    insuranceStatus: {
-      type: String,
-      enum: ["Valid", "Expired", "Not Available"],
-    },
-    insuranceExpiryDate: {
-      type: Date,
-    },
-    insuranceCompany: {
-      type: String,
-      trim: true,
-    },
-    insurancePolicyNumber: {
-      type: String,
-      trim: true,
-    },
-
     seatingCapacity: {
       type: Number,
       min: 1,

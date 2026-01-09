@@ -60,10 +60,6 @@ const VehicleCreate = () => {
     registrationNumber: "",
     chassisNumber: "",
     engineNumber: "",
-    insuranceStatus: "Valid",
-    insuranceExpiryDate: "",
-    insuranceCompany: "",
-    insurancePolicyNumber: "",
     seatingCapacity: "",
     bodyType: "",
     purchasePrice: "",
@@ -122,12 +118,7 @@ const VehicleCreate = () => {
         registrationNumber: v.registrationNumber || "",
         chassisNumber: v.chassisNumber || "",
         engineNumber: v.engineNumber || "",
-        insuranceStatus: v.insuranceStatus || prev.insuranceStatus,
-        insuranceExpiryDate: v.insuranceExpiryDate
-          ? formatDateForInput(v.insuranceExpiryDate)
-          : "",
-        insuranceCompany: v.insuranceCompany || "",
-        insurancePolicyNumber: v.insurancePolicyNumber || "",
+        // insurance fields moved to Sell Letter model; removed from vehicle
         seatingCapacity: v.seatingCapacity || "",
         bodyType: v.bodyType || "",
         purchasePrice: v.purchasePrice || "",
@@ -1241,59 +1232,7 @@ const VehicleCreate = () => {
               </div>
             </div>
 
-            {/* Insurance Details */}
-            <div style={styles.formSection}>
-              <h3 style={styles.sectionTitle}>Insurance</h3>
-              <div style={styles.formGrid}>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Insurance Status</label>
-                  <select
-                    name="insuranceStatus"
-                    value={formData.insuranceStatus}
-                    onChange={handleChange}
-                    style={styles.formSelect}
-                  >
-                    <option value="Valid">Valid</option>
-                    <option value="Expired">Expired</option>
-                    <option value="Not Available">Not Available</option>
-                  </select>
-                </div>
-
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Insurance Expiry Date</label>
-                  <input
-                    type="date"
-                    name="insuranceExpiryDate"
-                    value={formData.insuranceExpiryDate}
-                    onChange={handleChange}
-                    style={styles.formInput}
-                  />
-                </div>
-
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Insurance Company</label>
-                  <input
-                    type="text"
-                    name="insuranceCompany"
-                    value={formData.insuranceCompany}
-                    onChange={handleChange}
-                    style={styles.formInput}
-                    placeholder="e.g., ICICI Lombard"
-                  />
-                </div>
-
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Policy Number</label>
-                  <input
-                    type="text"
-                    name="insurancePolicyNumber"
-                    value={formData.insurancePolicyNumber}
-                    onChange={handleChange}
-                    style={styles.formInput}
-                  />
-                </div>
-              </div>
-            </div>
+            
 
             {/* Additional Details */}
             <div style={styles.formSection}>

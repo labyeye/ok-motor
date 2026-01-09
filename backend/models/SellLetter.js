@@ -20,6 +20,25 @@ const SellLetterSchema = new mongoose.Schema(
     vehiclekm: { type: String },
     vehicleCondition: { type: String, enum: ["running", "notRunning"] },
 
+    pucIssueDate: { type: Date },
+    pucExpiryDate: { type: Date },
+
+    insuranceStatus: {
+      type: String,
+      enum: ["Valid", "Expired", "Not Available"],
+    },
+    insuranceExpiryDate: {
+      type: Date,
+    },
+    insuranceCompany: {
+      type: String,
+      trim: true,
+    },
+    insurancePolicyNumber: {
+      type: String,
+      trim: true,
+    },
+
     buyerName: { type: String, required: true },
     buyerFatherName: { type: String, required: true },
     buyerAddress: { type: String, required: true },

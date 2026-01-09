@@ -133,7 +133,8 @@ const AdminPage = () => {
 
       const endpoint = "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
       const params = { limit: 10 };
-      if (search && String(search).trim() !== "") params.search = String(search).trim();
+      if (search && String(search).trim() !== "")
+        params.search = String(search).trim();
 
       const response = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
@@ -176,8 +177,6 @@ const AdminPage = () => {
 
     return () => clearTimeout(handle);
   }, [freeSearch, user, activeMenu, fetchFreeServicesData]);
-
-  
 
   const formatCurrency = (amount) => {
     if (isNaN(amount)) return "₹0";
@@ -856,19 +855,31 @@ const AdminPage = () => {
 
     const q = normalize(freeSearch);
     const filtered = q
-      ? freeServices.filter((row) => normalize(row.registrationNumber).includes(q))
+      ? freeServices.filter((row) =>
+          normalize(row.registrationNumber).includes(q)
+        )
       : freeServices;
 
     // prepare processed rows with reminder info and sort by urgency
     const processed = filtered.map((row) => {
-      const months = [row.month1 || null, row.month2 || null, row.month3 || null];
+      const months = [
+        row.month1 || null,
+        row.month2 || null,
+        row.month3 || null,
+      ];
       const used = row.usedCount || 0;
       const today = new Date();
 
       const pending = months
         .map((m, idx) => ({
           idx: idx + 1,
-          date: m ? new Date(m) : new Date(new Date(row.saleDate).setMonth(new Date(row.saleDate).getMonth() + (idx + 1))),
+          date: m
+            ? new Date(m)
+            : new Date(
+                new Date(row.saleDate).setMonth(
+                  new Date(row.saleDate).getMonth() + (idx + 1)
+                )
+              ),
         }))
         .filter((p) => p.idx > used);
 
@@ -881,7 +892,8 @@ const AdminPage = () => {
       // pick next pending: sort pendingWithDays ascending (overdue negatives first)
       pendingWithDays.sort((a, b) => a.daysUntil - b.daysUntil);
 
-      const nextPending = pendingWithDays.length > 0 ? pendingWithDays[0] : null;
+      const nextPending =
+        pendingWithDays.length > 0 ? pendingWithDays[0] : null;
 
       const reminderScore = nextPending ? nextPending.daysUntil : 999999;
 
@@ -903,19 +915,19 @@ const AdminPage = () => {
 
         <div className="free-services-search">
           <div className="history-search-box" style={{ width: 320 }}>
-              <Search size={18} className="history-search-icon" />
-              <input
-                ref={freeSearchRef}
-                type="text"
-                placeholder="Search by reg. number..."
-                value={freeSearch}
-                onChange={(e) => setFreeSearch(e.target.value)}
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
-                autoComplete="off"
-                className="history-search-input"
-              />
-            </div>
+            <Search size={18} className="history-search-icon" />
+            <input
+              ref={freeSearchRef}
+              type="text"
+              placeholder="Search by reg. number..."
+              value={freeSearch}
+              onChange={(e) => setFreeSearch(e.target.value)}
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+              autoComplete="off"
+              className="history-search-input"
+            />
+          </div>
         </div>
 
         {freeServicesLoading ? (
@@ -963,7 +975,8 @@ const AdminPage = () => {
                       <td>{(row.usedCount || 0) + "/3"}</td>
                       <td>
                         {(() => {
-                          if ((row.usedCount || 0) >= 3) return <span>All free services done</span>;
+                          if ((row.usedCount || 0) >= 3)
+                            return <span>All free services done</span>;
                           if (!nextPending) return <span>Pending</span>;
 
                           const days = nextPending.daysUntil;
@@ -976,11 +989,302 @@ const AdminPage = () => {
                             );
                           }
                           if (days === 0) {
-                            return <span style={{ color: "#f59e0b" }}>{ord} service due today</span>;
+                            return (
+                              <span style={{ color: "#f59e0b" }}>
+                                {ord} service due today
+                              </span>
+                            );
                           }
-                          return <span style={{ color: "#10b981" }}>{ord} service due in {days}d</span>;
+                          return (
+                            <span style={{ color: "#10b981" }}>
+                              {ord} service due in {days}d
+                            </span>
+                          );
                         })()}
                       </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const PucReminderTable = () => {
+    const [items, setItems] = useState([]);
+    const [loadingItems, setLoadingItems] = useState(true);
+    const [search, setSearch] = useState("");
+
+    const fetchPucData = useCallback(async () => {
+      try {
+        setLoadingItems(true);
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const resp = await axios.get("https://ok-motor-51l3.vercel.app/api/sell-letters", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = resp.data || [];
+        // normalize and keep those with pucExpiryDate
+        const withPuc = (data || []).filter((s) => s && s.pucExpiryDate);
+        setItems(withPuc);
+      } catch (err) {
+        console.error("Error fetching sell letters for PUC reminders:", err);
+      } finally {
+        setLoadingItems(false);
+      }
+    }, []);
+
+    useEffect(() => {
+      fetchPucData();
+    }, [fetchPucData]);
+
+    const now = new Date();
+    const msPerDay = 1000 * 60 * 60 * 24;
+
+    const q = String(search || "")
+      .toLowerCase()
+      .trim();
+
+    // Filter items for search and for expiry within next 7 days or already expired
+    const processed = (items || [])
+      .map((row) => {
+        const expiry = row.pucExpiryDate ? new Date(row.pucExpiryDate) : null;
+        const daysUntil = expiry ? Math.ceil((expiry - now) / msPerDay) : null;
+        return { row, expiry, daysUntil };
+      })
+      .filter((it) => it.expiry !== null)
+      .filter((it) => {
+        // show if expiry within next 7 days (0..7) or already expired (daysUntil < 0)
+        return it.daysUntil <= 7;
+      })
+      .filter((it) => {
+        if (!q) return true;
+        const r = it.row || {};
+        return (
+          String(r.registrationNumber || "")
+            .toLowerCase()
+            .includes(q) ||
+          String(r.vehicleName || "")
+            .toLowerCase()
+            .includes(q) ||
+          String(r.buyerName || "")
+            .toLowerCase()
+            .includes(q)
+        );
+      })
+      .sort((a, b) => a.daysUntil - b.daysUntil);
+
+    return (
+      <div className="free-services-card">
+        <h3 className="card-title">PUC Expiry Reminders</h3>
+
+        <div className="free-services-search">
+          <div className="history-search-box" style={{ width: 320 }}>
+            <Search size={18} className="history-search-icon" />
+            <input
+              type="text"
+              placeholder="Search reg. no, vehicle or buyer..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="history-search-input"
+            />
+          </div>
+        </div>
+
+        {loadingItems ? (
+          <div className="table-loading">Loading PUC reminders...</div>
+        ) : processed.length === 0 ? (
+          <div className="no-data">No PUC expiries within 7 days</div>
+        ) : (
+          <div className="table-wrapper">
+            <table className="free-services-table">
+              <thead>
+                <tr>
+                  <th>Registration</th>
+                  <th>Buyer</th>
+                  <th>Vehicle</th>
+                  <th>PUC Expiry</th>
+                  <th>Days Left</th>
+                </tr>
+              </thead>
+              <tbody>
+                {processed.map((it, idx) => {
+                  const { row, expiry, daysUntil } = it;
+                  return (
+                    <tr
+                      key={`${row.registrationNumber || row._id}-${idx}`}
+                      onClick={() => {
+                        if (row.registrationNumber) {
+                          setHistoryQuery(row.registrationNumber);
+                          setIsHistoryModalOpen(true);
+                        }
+                      }}
+                    >
+                      <td>{row.registrationNumber || "-"}</td>
+                      <td>{row.buyerName || "-"}</td>
+                      <td>
+                        {(row.vehicleName || "") +
+                          " " +
+                          (row.vehicleModel || "")}
+                      </td>
+                      <td>{expiry ? formatDate(expiry) : "-"}</td>
+                      <td>
+                        {daysUntil < 0 ? (
+                          <span style={{ color: "#ef4444" }}>
+                            {Math.abs(daysUntil)}d overdue
+                          </span>
+                        ) : daysUntil === 0 ? (
+                          <span style={{ color: "#f59e0b" }}>Due today</span>
+                        ) : (
+                          <span style={{ color: "#10b981" }}>{daysUntil}d</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const InsuranceReminderTable = () => {
+    const [items, setItems] = useState([]);
+    const [loadingItems, setLoadingItems] = useState(true);
+    const [search, setSearch] = useState("");
+
+    const fetchInsuranceData = useCallback(async () => {
+      try {
+        setLoadingItems(true);
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        // reuse sell-letters endpoint and filter client-side for insurance expiry
+        const resp = await axios.get("https://ok-motor-51l3.vercel.app/api/sell-letters", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = resp.data || [];
+        // keep those with insuranceExpiryDate
+        const withInsurance = (data || []).filter(
+          (s) => s && s.insuranceExpiryDate
+        );
+        setItems(withInsurance);
+      } catch (err) {
+        console.error(
+          "Error fetching sell letters for Insurance reminders:",
+          err
+        );
+      } finally {
+        setLoadingItems(false);
+      }
+    }, []);
+
+    useEffect(() => {
+      fetchInsuranceData();
+    }, [fetchInsuranceData]);
+
+    const now = new Date();
+    const msPerDay = 1000 * 60 * 60 * 24;
+
+    const q = String(search || "")
+      .toLowerCase()
+      .trim();
+
+    const processed = (items || [])
+      .map((row) => {
+        const expiry = row.insuranceExpiryDate
+          ? new Date(row.insuranceExpiryDate)
+          : null;
+        const daysUntil = expiry ? Math.ceil((expiry - now) / msPerDay) : null;
+        return { row, expiry, daysUntil };
+      })
+      .filter((it) => it.expiry !== null)
+      .filter((it) => {
+        // show if expiry within next 7 days or already expired
+        return it.daysUntil <= 7;
+      })
+      .filter((it) => {
+        if (!q) return true;
+        const r = it.row || {};
+        return (
+          String(r.registrationNumber || "")
+            .toLowerCase()
+            .includes(q) ||
+          String(r.vehicleName || "")
+            .toLowerCase()
+            .includes(q) ||
+          String(r.buyerName || "")
+            .toLowerCase()
+            .includes(q)
+        );
+      })
+      .sort((a, b) => a.daysUntil - b.daysUntil);
+
+    return (
+      <div className="free-services-card">
+        <h3 className="card-title">Insurance Expiry Reminders</h3>
+
+        <div className="free-services-search">
+          <div className="history-search-box" style={{ width: 320 }}>
+            <Search size={18} className="history-search-icon" />
+            <input
+              type="text"
+              placeholder="Search reg. no, vehicle or buyer..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="history-search-input"
+            />
+          </div>
+        </div>
+
+        {loadingItems ? (
+          <div className="table-loading">Loading insurance reminders...</div>
+        ) : processed.length === 0 ? (
+          <div className="no-data">No insurance expiries within 7 days</div>
+        ) : (
+          <div className="table-wrapper">
+            <table className="free-services-table">
+              <thead>
+                <tr>
+                  <th>Registration</th>
+                  <th>Buyer</th>
+                  <th>Vehicle</th>
+                  <th>Insurance Expiry</th>
+                  <th>Days Left</th>
+                  <th>Insurance Company</th>
+                </tr>
+              </thead>
+              <tbody>
+                {processed.map((it, idx) => {
+                  const { row, expiry, daysUntil } = it;
+                  return (
+                    <tr key={`${row.registrationNumber || idx}-${idx}`}>
+                      <td>{row.registrationNumber || "-"}</td>
+                      <td>{row.buyerName || "-"}</td>
+                      <td>{row.vehicleName || row.vehicleModel || "-"}</td>
+                      <td>
+                        {expiry
+                          ? new Date(expiry).toLocaleDateString("en-IN")
+                          : "-"}
+                      </td>
+                      <td>
+                        {daysUntil < 0 ? (
+                          <span style={{ color: "#ef4444" }}>
+                            {Math.abs(daysUntil)}d overdue
+                          </span>
+                        ) : daysUntil === 0 ? (
+                          <span style={{ color: "#f59e0b" }}>Due today</span>
+                        ) : (
+                          <span style={{ color: "#10b981" }}>{daysUntil}d</span>
+                        )}
+                      </td>
+                      <td>{row.insuranceCompany || "-"}</td>
                     </tr>
                   );
                 })}
@@ -1119,7 +1423,8 @@ const AdminPage = () => {
             <>
               <DashboardCards />
               <FreeServicesTable />
-              <RevenueCard />
+              <PucReminderTable />
+              <InsuranceReminderTable />
               <RecentTransactions />
               <ChartsSection />
 

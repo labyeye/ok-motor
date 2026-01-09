@@ -31,7 +31,7 @@ import {
   Image,
   Settings,
   RefreshCw,
-  Megaphone
+  Megaphone,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../images/company.png";
@@ -94,6 +94,12 @@ const SellLetterForm = () => {
           chassisNumber: "",
           engineNumber: "",
           vehiclekm: "",
+          pucIssueDate: "",
+          pucExpiryDate: "",
+          insuranceStatus: "",
+          insuranceExpiryDate: "",
+          insuranceCompany: "",
+          insurancePolicyNumber: "",
           buyerName: "",
           buyerFatherName: "",
           buyerAddress: "",
@@ -159,8 +165,7 @@ const SellLetterForm = () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE =
-        process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+      const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
@@ -211,6 +216,71 @@ const SellLetterForm = () => {
         localStorage.removeItem("sellLetterDraft");
       }
     }
+  }, [editLetter]);
+
+  // If we were navigated here to edit an existing letter, fetch the full
+  // sell-letter from the server (it may contain PUC/Insurance fields or
+  // document URLs that were not included in the list view). Normalize date
+  // fields to `YYYY-MM-DD` so they populate HTML date inputs correctly.
+  useEffect(() => {
+    const loadFullEditLetter = async () => {
+      try {
+        if (!editLetter || !editLetter._id) return;
+        const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+        const token = localStorage.getItem("token");
+        const resp = await axios.get(`${API_BASE}/api/sell-letters/${editLetter._id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+
+        const full = resp.data || {};
+
+        const toInputDate = (v) => {
+          if (!v) return "";
+          const dt = new Date(v);
+          if (isNaN(dt.getTime())) return String(v);
+          return dt.toISOString().split("T")[0];
+        };
+
+        const normalized = {
+          ...full,
+          pucIssueDate: toInputDate(full.pucIssueDate),
+          pucExpiryDate: toInputDate(full.pucExpiryDate),
+          insuranceExpiryDate: toInputDate(full.insuranceExpiryDate),
+          saleDate: toInputDate(full.saleDate) || getCurrentDate(),
+          todayDate: toInputDate(full.todayDate) || getCurrentDate(),
+          previousDate: toInputDate(full.previousDate) || getCurrentDate(),
+          // keep times as-is if present
+          saleTime: full.saleTime || getCurrentTime(),
+          todayTime: full.todayTime || getCurrentTime(),
+          previousTime: full.previousTime || getCurrentTime(),
+        };
+
+        setFormData((prev) => ({ ...prev, ...normalized }));
+
+        // If server returned stored document URLs, show them as previews
+        if (full.documents) {
+          const previews = {};
+          if (full.documents.vehicleRC) {
+            previews.vehicleRCFront = full.documents.vehicleRC.front || null;
+            previews.vehicleRCBack = full.documents.vehicleRC.back || null;
+          }
+          if (full.documents.aadhaar) {
+            previews.aadhaarFront = full.documents.aadhaar.front || null;
+            previews.aadhaarBack = full.documents.aadhaar.back || null;
+          }
+          if (full.documents.pan) previews.panPhoto = full.documents.pan || null;
+          if (full.documents.vehicleKM) previews.vehicleKMPhoto = full.documents.vehicleKM || null;
+          if (Array.isArray(full.documents.vehiclePhotos)) previews.vehiclePhotos = full.documents.vehiclePhotos;
+
+          setFilePreviews((prev) => ({ ...prev, ...previews }));
+          setSavedSellLetter(full);
+        }
+      } catch (err) {
+        console.error("Failed to load full sell letter for edit:", err);
+      }
+    };
+
+    loadFullEditLetter();
   }, [editLetter]);
 
   const clearForm = () => {
@@ -1070,8 +1140,7 @@ const SellLetterForm = () => {
         "buyerPhone2",
         "buyerAadhar",
         "saleAmount",
-        "selleraadhar",
-        "sellerphone",
+        // seller-specific fields are not required for sell letters
       ];
 
       const missingFields = requiredFields.filter((field) => !formData[field]);
@@ -2847,6 +2916,90 @@ const SellLetterForm = () => {
                     <option value="running">Running</option>
                     <option value="notRunning">Not Running</option>
                   </select>
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Calendar style={styles.formIcon} />
+                    PUC Issue Date || PUC जारी तिथि
+                  </label>
+                  <input
+                    type="date"
+                    name="pucIssueDate"
+                    value={formData.pucIssueDate || ""}
+                    onChange={handleChange}
+                    style={styles.formInput}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Calendar style={styles.formIcon} />
+                    PUC Expiry Date || PUC समाप्ति तिथि
+                  </label>
+                  <input
+                    type="date"
+                    name="pucExpiryDate"
+                    value={formData.pucExpiryDate || ""}
+                    onChange={handleChange}
+                    style={styles.formInput}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <AlertCircle style={styles.formIcon} />
+                    Insurance Status || बीमा स्थिति
+                  </label>
+                  <select
+                    name="insuranceStatus"
+                    value={formData.insuranceStatus || ""}
+                    onChange={handleChange}
+                    style={styles.formSelect}
+                  >
+                    <option value="">Select</option>
+                    <option value="Valid">Valid</option>
+                    <option value="Expired">Expired</option>
+                    <option value="Not Available">Not Available</option>
+                  </select>
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Calendar style={styles.formIcon} />
+                    Insurance Expiry Date || बीमा समाप्ति तिथि
+                  </label>
+                  <input
+                    type="date"
+                    name="insuranceExpiryDate"
+                    value={formData.insuranceExpiryDate || ""}
+                    onChange={handleChange}
+                    style={styles.formInput}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <FileText style={styles.formIcon} />
+                    Insurance Company || बीमा कंपनी
+                  </label>
+                  <input
+                    type="text"
+                    name="insuranceCompany"
+                    value={formData.insuranceCompany || ""}
+                    onChange={handleChange}
+                    onInput={handleInput}
+                    style={styles.formInput}
+                  />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <FileText style={styles.formIcon} />
+                    Insurance Policy Number || पॉलिसी नंबर
+                  </label>
+                  <input
+                    type="text"
+                    name="insurancePolicyNumber"
+                    value={formData.insurancePolicyNumber || ""}
+                    onChange={handleChange}
+                    onInput={handleInput}
+                    style={styles.formInput}
+                  />
                 </div>
               </div>
             </div>
