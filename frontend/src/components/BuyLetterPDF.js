@@ -61,6 +61,28 @@ const BuyLetterForm = () => {
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [loadingVehicles, setLoadingVehicles] = useState(false);
+  const [filesState, setFilesState] = useState({
+    vehicleRCFront: null,
+    vehicleRCBack: null,
+    aadhaarFront: null,
+    aadhaarBack: null,
+    panPhoto: null,
+    vehicleKMPhoto: null,
+    vehiclePhotos: [],
+  });
+  const [filePreviews, setFilePreviews] = useState({});
+
+  // cleanup object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      try {
+        Object.values(filePreviews).forEach((v) => {
+          if (Array.isArray(v)) v.forEach((u) => URL.revokeObjectURL(u));
+          else if (typeof v === "string") URL.revokeObjectURL(v);
+        });
+      } catch (err) {}
+    };
+  }, [filePreviews]);
 
   const formatDateForInput = (dateString) => {
     if (!dateString) return new Date().toISOString().split("T")[0];
@@ -173,6 +195,73 @@ const BuyLetterForm = () => {
     fetchVehicles();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // If navigated here to edit an existing buy letter, fetch the full record
+  // (list entries may not include documents). Normalize date fields for inputs
+  useEffect(() => {
+    const loadFullEditLetter = async () => {
+      try {
+        if (!editLetter || !editLetter._id) return;
+        const API_BASE =
+          process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+        const token = localStorage.getItem("token");
+        const resp = await axios.get(
+          `${API_BASE}/api/buy-letters/${editLetter._id}`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
+
+        const full = resp.data || {};
+
+        const toInputDate = (v) => {
+          if (!v) return "";
+          const dt = new Date(v);
+          if (isNaN(dt.getTime())) return String(v);
+          return dt.toISOString().split("T")[0];
+        };
+
+        const normalized = {
+          ...full,
+          saleDate:
+            toInputDate(full.saleDate) ||
+            new Date().toISOString().split("T")[0],
+          todayDate:
+            toInputDate(full.todayDate) ||
+            new Date().toISOString().split("T")[0],
+          // keep times as-is if present
+          saleTime: full.saleTime || formData.saleTime,
+          todayTime: full.todayTime || formData.todayTime,
+        };
+
+        setFormData((prev) => ({ ...prev, ...normalized }));
+
+        if (full.documents) {
+          const previews = {};
+          if (full.documents.vehicleRC) {
+            previews.vehicleRCFront = full.documents.vehicleRC.front || null;
+            previews.vehicleRCBack = full.documents.vehicleRC.back || null;
+          }
+          if (full.documents.aadhaar) {
+            previews.aadhaarFront = full.documents.aadhaar.front || null;
+            previews.aadhaarBack = full.documents.aadhaar.back || null;
+          }
+          if (full.documents.pan)
+            previews.panPhoto = full.documents.pan || null;
+          if (full.documents.vehicleKM)
+            previews.vehicleKMPhoto = full.documents.vehicleKM || null;
+          if (Array.isArray(full.documents.vehiclePhotos))
+            previews.vehiclePhotos = full.documents.vehiclePhotos;
+
+          setFilePreviews((prev) => ({ ...prev, ...previews }));
+        }
+      } catch (err) {
+        console.error("Failed to load full buy letter for edit:", err);
+      }
+    };
+
+    loadFullEditLetter();
+  }, [editLetter]);
 
   const validateForm = () => {
     const requiredFields = [
@@ -546,10 +635,66 @@ const BuyLetterForm = () => {
         }),
       };
 
-      if (isElectron) {
-        response = await apiService.post("/api/buy-letter", dataToSave);
+      // If any files are selected, submit as multipart/form-data so backend can process images
+      const hasFiles =
+        filesState.vehicleRCFront ||
+        filesState.vehicleRCBack ||
+        filesState.aadhaarFront ||
+        filesState.aadhaarBack ||
+        filesState.panPhoto ||
+        filesState.vehicleKMPhoto ||
+        (filesState.vehiclePhotos && filesState.vehiclePhotos.length > 0);
+
+      if (hasFiles) {
+        const form = new FormData();
+        // append all scalar/primitive fields
+        Object.entries(dataToSave).forEach(([key, value]) => {
+          if (value === undefined || value === null) return;
+          if (typeof value === "object") {
+            form.append(key, JSON.stringify(value));
+          } else {
+            form.append(key, String(value));
+          }
+        });
+
+        // append files using the field names expected by backend
+        if (filesState.vehicleRCFront)
+          form.append("vehicleRCFront", filesState.vehicleRCFront);
+        if (filesState.vehicleRCBack)
+          form.append("vehicleRCBack", filesState.vehicleRCBack);
+        if (filesState.aadhaarFront)
+          form.append("aadhaarFront", filesState.aadhaarFront);
+        if (filesState.aadhaarBack)
+          form.append("aadhaarBack", filesState.aadhaarBack);
+        if (filesState.panPhoto) form.append("panPhoto", filesState.panPhoto);
+        if (filesState.vehicleKMPhoto)
+          form.append("vehicleKMPhoto", filesState.vehicleKMPhoto);
+        if (filesState.vehiclePhotos && filesState.vehiclePhotos.length) {
+          filesState.vehiclePhotos
+            .slice(0, 4)
+            .forEach((f) => form.append("vehiclePhotos", f));
+        }
+
+        if (isElectron) {
+          response = await apiService.post("/api/buy-letters", form);
+        } else {
+          response = await axios.post(
+            "https://ok-motor-51l3.vercel.app/api/buy-letters",
+            form,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
+          );
+        }
       } else {
-        response = await apiService.post("/api/buy-letters", dataToSave);
+        if (isElectron) {
+          response = await apiService.post("/api/buy-letters", dataToSave);
+        } else {
+          response = await axios.post(
+            "https://ok-motor-51l3.vercel.app/api/buy-letters",
+            dataToSave
+          );
+        }
       }
 
       if (editLetter?._id) {
@@ -558,9 +703,8 @@ const BuyLetterForm = () => {
         alert("Buy letter saved successfully!");
       }
 
-      // Normalize response: apiService returns `response.data` (or an object),
-      // but some callers expect an axios-like object with `.data`. Support both.
-      const normalizedResponse = response && response.data ? response.data : response;
+      const normalizedResponse =
+        response && response.data ? response.data : response;
       return normalizedResponse;
     } catch (error) {
       console.error("Error saving/updating buy letter:", error);
@@ -579,6 +723,43 @@ const BuyLetterForm = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // File input handlers (mirror SellLetter behavior)
+  const handleFileInput = (e, fieldName) => {
+    const file = e.target.files && e.target.files[0];
+    setFilesState((prev) => ({ ...prev, [fieldName]: file }));
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setFilePreviews((prev) => ({ ...prev, [fieldName]: url }));
+    } else {
+      setFilePreviews((prev) => {
+        const next = { ...prev };
+        delete next[fieldName];
+        return next;
+      });
+    }
+  };
+
+  const handleMultipleFiles = (e, fieldName) => {
+    const fileList = Array.from(e.target.files || []);
+    const limited = fileList.slice(0, 4);
+    setFilesState((prev) => ({ ...prev, [fieldName]: limited }));
+    const prevs = limited.map((f) => URL.createObjectURL(f));
+    setFilePreviews((prev) => ({ ...prev, [fieldName]: prevs }));
+  };
+
+  const removeVehiclePhoto = (index) => {
+    setFilesState((prev) => {
+      const arr = (prev.vehiclePhotos || []).slice();
+      arr.splice(index, 1);
+      return { ...prev, vehiclePhotos: arr };
+    });
+    setFilePreviews((prev) => {
+      const arr = (prev.vehiclePhotos || []).slice();
+      arr.splice(index, 1);
+      return { ...prev, vehiclePhotos: arr };
+    });
   };
 
   const handleSaveAndDownload = async () => {
@@ -812,7 +993,10 @@ const BuyLetterForm = () => {
       }
 
       // apiService returns `response.data` (or directly the data). Normalize both shapes.
-      const existingList = existingLetter && existingLetter.data !== undefined ? existingLetter.data : existingLetter;
+      const existingList =
+        existingLetter && existingLetter.data !== undefined
+          ? existingLetter.data
+          : existingLetter;
 
       let savedLetterData;
       if (existingList && existingList.length > 0) {
@@ -1009,7 +1193,10 @@ const BuyLetterForm = () => {
         `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`
       );
 
-      const existingList = existingLetter && existingLetter.data !== undefined ? existingLetter.data : existingLetter;
+      const existingList =
+        existingLetter && existingLetter.data !== undefined
+          ? existingLetter.data
+          : existingLetter;
 
       let savedLetterData;
       if (existingList && existingList.length > 0) {
@@ -2011,6 +2198,8 @@ const BuyLetterForm = () => {
                     maxLength={10}
                   />
                 </div>
+                {/* Document uploads (vehicle RC, Aadhaar, PAN, KM photos) */}
+
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <User style={styles.formIcon} />
@@ -2256,6 +2445,140 @@ const BuyLetterForm = () => {
                     <option value="running">Running</option>
                     <option value="notRunning">Not Running</option>
                   </select>
+                </div>
+              </div>
+            </div>
+
+            <div style={styles.formSection}>
+              <h2 style={styles.sectionTitle}>
+                <User style={styles.sectionIcon} /> Upload Documents
+              </h2>
+              <div style={styles.formField}>
+                <label style={styles.formLabel}>
+                  <FileText style={styles.formIcon} />
+                  Upload Documents (Vehicle RC, Aadhaar, PAN, Photos)
+                </label>
+                <div
+                  style={{
+                    marginTop: 8,
+                    flexDirection: "row",
+                    display: "flex",
+                    width: "100%",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div style={{ marginBottom: 8 }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileInput(e, "vehicleRCFront")}
+                    />
+                    <span style={{ marginLeft: 8 }}>Vehicle RC Front</span>
+                    {filePreviews.vehicleRCFront && (
+                      <img
+                        src={filePreviews.vehicleRCFront}
+                        alt="rc-front"
+                        style={{ width: 80, marginLeft: 8 }}
+                      />
+                    )}
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileInput(e, "vehicleRCBack")}
+                    />
+                    <span style={{ marginLeft: 8 }}>Vehicle RC Back</span>
+                    {filePreviews.vehicleRCBack && (
+                      <img
+                        src={filePreviews.vehicleRCBack}
+                        alt="rc-back"
+                        style={{ width: 80, marginLeft: 8 }}
+                      />
+                    )}
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileInput(e, "aadhaarFront")}
+                    />
+                    <span style={{ marginLeft: 8 }}>Aadhaar Front</span>
+                    {filePreviews.aadhaarFront && (
+                      <img
+                        src={filePreviews.aadhaarFront}
+                        alt="aadhaar-front"
+                        style={{ width: 80, marginLeft: 8 }}
+                      />
+                    )}
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileInput(e, "aadhaarBack")}
+                    />
+                    <span style={{ marginLeft: 8 }}>Aadhaar Back</span>
+                    {filePreviews.aadhaarBack && (
+                      <img
+                        src={filePreviews.aadhaarBack}
+                        alt="aadhaar-back"
+                        style={{ width: 80, marginLeft: 8 }}
+                      />
+                    )}
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileInput(e, "panPhoto")}
+                    />
+                    <span style={{ marginLeft: 8 }}>PAN Photo</span>
+                    {filePreviews.panPhoto && (
+                      <img
+                        src={filePreviews.panPhoto}
+                        alt="pan"
+                        style={{ width: 80, marginLeft: 8 }}
+                      />
+                    )}
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileInput(e, "vehicleKMPhoto")}
+                    />
+                    <span style={{ marginLeft: 8 }}>Vehicle KM Photo</span>
+                    {filePreviews.vehicleKMPhoto && (
+                      <img
+                        src={filePreviews.vehicleKMPhoto}
+                        alt="km"
+                        style={{ width: 80, marginLeft: 8 }}
+                      />
+                    )}
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => handleMultipleFiles(e, "vehiclePhotos")}
+                    />
+                    <span style={{ marginLeft: 8 }}>
+                      Vehicle Photos (up to 4)
+                    </span>
+                    <div style={{ display: "inline-block", marginLeft: 8 }}>
+                      {Array.isArray(filePreviews.vehiclePhotos) &&
+                        filePreviews.vehiclePhotos.map((src, idx) => (
+                          <img
+                            key={idx}
+                            src={src}
+                            alt={`photo-${idx}`}
+                            style={{ width: 80, marginLeft: 6 }}
+                          />
+                        ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

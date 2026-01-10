@@ -37,6 +37,15 @@ const SellLetterHistory = () => {
   const [expandedMenus, setExpandedMenus] = useState({});
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [selectedLetter, setSelectedLetter] = useState(null);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [chosenLanguage, setChosenLanguage] = useState(null); // 'hindi' | 'english'
+  const [docSelections, setDocSelections] = useState({
+    vehicleRC: true,
+    aadhaar: true,
+    pan: true,
+    vehicleKM: true,
+    vehiclePhotos: true,
+  });
   const [sellLetters, setSellLetters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -396,7 +405,7 @@ const SellLetterHistory = () => {
       color: "#64748b",
     },
   };
-  const fillAndDownloadHindiPdf = async (letter) => {
+  const fillAndDownloadHindiPdf = async (letter, documentsToInclude = null) => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
@@ -610,7 +619,7 @@ const SellLetterHistory = () => {
         }
       };
 
-      await addDocumentPages(pdfDoc, letter.documents);
+      await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
 
       // add invoice page as final page
       const invoicePage = pdfDoc.addPage([595, 842]);
@@ -631,7 +640,7 @@ const SellLetterHistory = () => {
     }
   };
 
-  const fillAndDownloadEnglishPdf = async (letter) => {
+  const fillAndDownloadEnglishPdf = async (letter, documentsToInclude = null) => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
@@ -827,7 +836,7 @@ const SellLetterHistory = () => {
         }
       };
 
-      await addDocumentPages(pdfDoc, letter.documents);
+      await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
 
       // add invoice page as final page
       const invoicePage = pdfDoc.addPage([595, 842]);
@@ -1735,8 +1744,21 @@ const SellLetterHistory = () => {
                 <button
                   style={styles.englishButton}
                   onClick={() => {
-                    fillAndDownloadEnglishPdf(selectedLetter);
+                    setChosenLanguage("english");
                     setShowLanguageModal(false);
+                    // initialize selections based on available documents
+                    setDocSelections({
+                      vehicleRC: !!selectedLetter.documents?.vehicleRC,
+                      aadhaar: !!selectedLetter.documents?.aadhaar,
+                      pan: !!selectedLetter.documents?.pan,
+                      vehicleKM: !!selectedLetter.documents?.vehicleKM,
+                      vehiclePhotos:
+                        !!(
+                          selectedLetter.documents?.vehiclePhotos &&
+                          selectedLetter.documents.vehiclePhotos.length
+                        ),
+                    });
+                    setShowDocumentModal(true);
                   }}
                 >
                   English PDF
@@ -1744,8 +1766,20 @@ const SellLetterHistory = () => {
                 <button
                   style={styles.hindiButton}
                   onClick={() => {
-                    fillAndDownloadHindiPdf(selectedLetter);
+                    setChosenLanguage("hindi");
                     setShowLanguageModal(false);
+                    setDocSelections({
+                      vehicleRC: !!selectedLetter.documents?.vehicleRC,
+                      aadhaar: !!selectedLetter.documents?.aadhaar,
+                      pan: !!selectedLetter.documents?.pan,
+                      vehicleKM: !!selectedLetter.documents?.vehicleKM,
+                      vehiclePhotos:
+                        !!(
+                          selectedLetter.documents?.vehiclePhotos &&
+                          selectedLetter.documents.vehiclePhotos.length
+                        ),
+                    });
+                    setShowDocumentModal(true);
                   }}
                 >
                   Hindi PDF
@@ -1765,6 +1799,104 @@ const SellLetterHistory = () => {
             progress={downloadProgress}
             onClose={() => setIsDownloading(false)}
           />
+        )}
+        {showDocumentModal && selectedLetter && (
+          <div style={styles.modalOverlay}>
+            <div style={styles.modalContent}>
+              <h3 style={styles.modalTitle}>Select Documents to Include</h3>
+              <p style={styles.modalText}>
+                Choose which supporting documents to include in the sell
+                letter PDF.
+              </p>
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: "block", marginBottom: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={!!docSelections.vehicleRC}
+                    onChange={(e) =>
+                      setDocSelections((s) => ({ ...s, vehicleRC: e.target.checked }))
+                    }
+                  />
+                  &nbsp;Vehicle RC (front/back)
+                </label>
+                <label style={{ display: "block", marginBottom: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={!!docSelections.aadhaar}
+                    onChange={(e) =>
+                      setDocSelections((s) => ({ ...s, aadhaar: e.target.checked }))
+                    }
+                  />
+                  &nbsp;Aadhaar (front/back)
+                </label>
+                <label style={{ display: "block", marginBottom: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={!!docSelections.pan}
+                    onChange={(e) =>
+                      setDocSelections((s) => ({ ...s, pan: e.target.checked }))
+                    }
+                  />
+                  &nbsp;PAN Card
+                </label>
+                <label style={{ display: "block", marginBottom: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={!!docSelections.vehicleKM}
+                    onChange={(e) =>
+                      setDocSelections((s) => ({ ...s, vehicleKM: e.target.checked }))
+                    }
+                  />
+                  &nbsp;Vehicle KM Photo
+                </label>
+                <label style={{ display: "block", marginBottom: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={!!docSelections.vehiclePhotos}
+                    onChange={(e) =>
+                      setDocSelections((s) => ({ ...s, vehiclePhotos: e.target.checked }))
+                    }
+                  />
+                  &nbsp;Vehicle Photos
+                </label>
+              </div>
+              <div style={{ display: "flex", gap: 12 }}>
+                <button
+                  style={styles.cancelButton}
+                  onClick={() => setShowDocumentModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  style={styles.saveButton}
+                  onClick={() => {
+                    const buildFilteredDocs = (docs = {}, sel = {}) => {
+                      const out = {};
+                      if (sel.vehicleRC && docs.vehicleRC) out.vehicleRC = docs.vehicleRC;
+                      if (sel.aadhaar && docs.aadhaar) out.aadhaar = docs.aadhaar;
+                      if (sel.pan && docs.pan) out.pan = docs.pan;
+                      if (sel.vehicleKM && docs.vehicleKM) out.vehicleKM = docs.vehicleKM;
+                      if (sel.vehiclePhotos && docs.vehiclePhotos)
+                        out.vehiclePhotos = docs.vehiclePhotos;
+                      return out;
+                    };
+
+                    const filtered = buildFilteredDocs(selectedLetter.documents, docSelections);
+
+                    setShowDocumentModal(false);
+                    // trigger PDF generation based on chosen language
+                    if (chosenLanguage === "hindi") {
+                      fillAndDownloadHindiPdf(selectedLetter, filtered);
+                    } else {
+                      fillAndDownloadEnglishPdf(selectedLetter, filtered);
+                    }
+                  }}
+                >
+                  Download PDF
+                </button>
+              </div>
+            </div>
+          </div>
         )}
         {}
       </div>

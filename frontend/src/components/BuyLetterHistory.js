@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -23,7 +22,7 @@ import {
   Menu,
   Settings,
   RefreshCw,
-  Megaphone
+  Megaphone,
 } from "lucide-react";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
@@ -33,7 +32,6 @@ import logo1 from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 import ConfirmModal from "./ConfirmModal";
 
-
 const BuyLetterHistory = () => {
   const { user, logout } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Buy Letter History");
@@ -41,12 +39,21 @@ const BuyLetterHistory = () => {
   const navigate = useNavigate();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [selectedLetter, setSelectedLetter] = useState(null);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [chosenLanguage, setChosenLanguage] = useState(null);
+  const [docSelections, setDocSelections] = useState({
+    vehicleRC: true,
+    aadhaar: true,
+    pan: true,
+    vehicleKM: true,
+    vehiclePhotos: true,
+  });
   const [buyLetters, setBuyLetters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  
+
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -68,9 +75,8 @@ const BuyLetterHistory = () => {
         setLoading(true);
 
         const isOnline = navigator.onLine;
-        
+
         if (isOnline) {
-          
           const response = await axios.get(
             `https://ok-motor-51l3.vercel.app/api/buy-letter?page=${currentPage}`,
             {
@@ -81,18 +87,17 @@ const BuyLetterHistory = () => {
           setBuyLetters(response.data.buyLetters);
           setTotalPages(response.data.pages);
         } else {
-          
-          console.log('Offline mode - loading from local storage');
-          const offlineStorage = (await import('../services/offlineStorage')).default;
-          const result = await offlineStorage.find('buyLetters');
-          
+          console.log("Offline mode - loading from local storage");
+          const offlineStorage = (await import("../services/offlineStorage"))
+            .default;
+          const result = await offlineStorage.find("buyLetters");
+
           if (result.success && result.data) {
-            
-            const sortedData = result.data.sort((a, b) => 
-              new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+            const sortedData = result.data.sort(
+              (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
             );
             setBuyLetters(sortedData);
-            setTotalPages(1); 
+            setTotalPages(1);
           } else {
             setBuyLetters([]);
             setTotalPages(1);
@@ -102,20 +107,22 @@ const BuyLetterHistory = () => {
         console.error("Error details:", error.response?.data || error.message);
 
         if (navigator.onLine) {
-          console.log('Online fetch failed, trying offline fallback');
+          console.log("Online fetch failed, trying offline fallback");
           try {
-            const offlineStorage = (await import('../services/offlineStorage')).default;
-            const result = await offlineStorage.find('buyLetters');
-            
+            const offlineStorage = (await import("../services/offlineStorage"))
+              .default;
+            const result = await offlineStorage.find("buyLetters");
+
             if (result.success && result.data) {
-              const sortedData = result.data.sort((a, b) => 
-                new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+              const sortedData = result.data.sort(
+                (a, b) =>
+                  new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
               );
               setBuyLetters(sortedData);
               setTotalPages(1);
             }
           } catch (offlineError) {
-            console.error('Offline fallback also failed:', offlineError);
+            console.error("Offline fallback also failed:", offlineError);
           }
         }
       } finally {
@@ -204,12 +211,111 @@ const BuyLetterHistory = () => {
       }, 100);
     });
   };
+  // helper to embed remote images into pdf-lib
+  const embedImageFromUrl = async (pdfDoc, url) => {
+    try {
+      const res = await fetch(url);
+      const contentType = res.headers.get("content-type") || "";
+      const bytes = await res.arrayBuffer();
+      if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
+      return await pdfDoc.embedJpg(bytes);
+    } catch (err) {
+      console.warn("Failed to embed image from", url, err);
+      return null;
+    }
+  };
+
+  // add document image pages (4 per page, 2x2 grid)
+  const addDocumentPages = async (pdfDoc, documentsObj) => {
+    if (!documentsObj) return;
+    const items = [];
+    if (documentsObj.vehicleRC) {
+      if (documentsObj.vehicleRC.front)
+        items.push({
+          title: "Vehicle RC - Front",
+          url: documentsObj.vehicleRC.front,
+        });
+      if (documentsObj.vehicleRC.back)
+        items.push({
+          title: "Vehicle RC - Back",
+          url: documentsObj.vehicleRC.back,
+        });
+    }
+    if (documentsObj.aadhaar) {
+      if (documentsObj.aadhaar.front)
+        items.push({
+          title: "Aadhaar - Front",
+          url: documentsObj.aadhaar.front,
+        });
+      if (documentsObj.aadhaar.back)
+        items.push({ title: "Aadhaar - Back", url: documentsObj.aadhaar.back });
+    }
+    if (documentsObj.pan)
+      items.push({ title: "PAN Card", url: documentsObj.pan });
+    if (documentsObj.vehicleKM)
+      items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
+    if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
+      documentsObj.vehiclePhotos.forEach((u, i) =>
+        items.push({ title: `Vehicle Photo ${i + 1}`, url: u })
+      );
+    }
+
+    for (let i = 0; i < items.length; i += 4) {
+      const page = pdfDoc.addPage([595, 842]);
+      try {
+        const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
+        const logoImg = await pdfDoc.embedPng(logoBytes);
+        page.drawRectangle({
+          x: 0,
+          y: 780,
+          width: 595,
+          height: 80,
+          color: rgb(0.047, 0.098, 0.196),
+        });
+        page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+      } catch (err) {
+        // ignore header errors
+      }
+
+      const cols = [40, 315];
+      const rows = [720, 360];
+      for (let cell = 0; cell < 4; cell++) {
+        const item = items[i + cell];
+        if (!item) continue;
+        const col = cell % 2;
+        const row = Math.floor(cell / 2);
+        const x = cols[col];
+        const yTop = rows[row];
+        const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        page.drawText(item.title, { x, y: yTop, size: 11, font: titleFont });
+        const embedded = await embedImageFromUrl(pdfDoc, item.url);
+        if (embedded) {
+          const cellMaxW = 240;
+          const cellMaxH = 300;
+          const { width, height } = embedded.scale(1);
+          let drawW = cellMaxW;
+          let drawH = (height / width) * drawW;
+          if (drawH > cellMaxH) {
+            drawH = cellMaxH;
+            drawW = (width / height) * drawH;
+          }
+          const drawY = yTop - drawH - 10;
+          page.drawImage(embedded, {
+            x,
+            y: drawY,
+            width: drawW,
+            height: drawH,
+          });
+        }
+      }
+    }
+  };
   const formatTime = (timeString) => {
     if (!timeString) return "";
 
     const [hour, minute] = timeString.split(":").map(Number);
 
-    const hours12 = hour % 12 || 12; 
+    const hours12 = hour % 12 || 12;
     const ampm = hour >= 12 ? "PM" : "AM";
 
     const formattedHours = String(hours12).padStart(2, "0");
@@ -319,7 +425,7 @@ const BuyLetterHistory = () => {
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    
+
     const actualPath = typeof path === "function" ? path(user?.role) : path;
     navigate(actualPath);
   };
@@ -512,14 +618,14 @@ const BuyLetterHistory = () => {
       .match(/.{1,4}/g)
       ?.join("-") || "";
 
-  const downloadHindiPDF = async (letter) => {
+  const downloadHindiPDF = async (letter, documentsToInclude = null) => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
 
       await simulateProgress();
 
-      const existingPdfBytes = await loadPDFTemplate('buyletter.pdf');
+      const existingPdfBytes = await loadPDFTemplate("buyletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const formattedData = {
@@ -567,6 +673,8 @@ const BuyLetterHistory = () => {
         size: fieldPositions.saleAmount.size,
         color: rgb(0, 0, 0),
       });
+      // add document image pages (if any) before appending invoice
+      await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
       const pdfBytes = await pdfDoc.save();
@@ -584,7 +692,7 @@ const BuyLetterHistory = () => {
     }
   };
 
-  const downloadEnglishPDF = async (letter) => {
+  const downloadEnglishPDF = async (letter, documentsToInclude = null) => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
@@ -641,6 +749,8 @@ const BuyLetterHistory = () => {
         color: rgb(0, 0, 0),
       });
 
+      // add document image pages (if any) before appending invoice
+      await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
       const pdfBytes = await pdfDoc.save();
@@ -1046,7 +1156,7 @@ const BuyLetterHistory = () => {
 
   const handleDelete = (id) => {
     setConfirmTargetId(id);
-    setConfirmTargetType('buyLetter');
+    setConfirmTargetType("buyLetter");
     setConfirmOpen(true);
   };
 
@@ -1072,14 +1182,19 @@ const BuyLetterHistory = () => {
         setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
         alert("Buy letter deleted successfully!");
       } else {
-        const offlineStorage = (await import("../services/offlineStorage")).default;
+        const offlineStorage = (await import("../services/offlineStorage"))
+          .default;
         const result = await offlineStorage.deleteById("buyLetters", id);
 
         if (result.success) {
           setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
-          alert("Buy letter deleted from offline storage. Will sync when online.");
+          alert(
+            "Buy letter deleted from offline storage. Will sync when online."
+          );
         } else {
-          throw new Error(result.error || "Failed to delete from offline storage");
+          throw new Error(
+            result.error || "Failed to delete from offline storage"
+          );
         }
       }
     } catch (error) {
@@ -1092,7 +1207,11 @@ const BuyLetterHistory = () => {
       } else if (error.response?.status === 403) {
         alert("You don't have permission to delete this item.");
       } else {
-        alert(`Failed to delete: ${error.response?.data?.message || error.message || "Unknown error"}`);
+        alert(
+          `Failed to delete: ${
+            error.response?.data?.message || error.message || "Unknown error"
+          }`
+        );
       }
     } finally {
       setConfirmOpen(false);
@@ -1114,12 +1233,20 @@ const BuyLetterHistory = () => {
     >
       <ConfirmModal
         isOpen={confirmOpen}
-        title={confirmTargetType === 'buyLetter' ? 'Delete Buy Letter' : 'Confirm Delete'}
+        title={
+          confirmTargetType === "buyLetter"
+            ? "Delete Buy Letter"
+            : "Confirm Delete"
+        }
         message="Are you sure you want to delete this buy letter? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
         onConfirm={performDelete}
-        onCancel={() => { setConfirmOpen(false); setConfirmTargetId(null); setConfirmTargetType(null); }}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setConfirmTargetId(null);
+          setConfirmTargetType(null);
+        }}
       />
       <div
         style={{
@@ -1168,7 +1295,7 @@ const BuyLetterHistory = () => {
               width: "100%",
               maxWidth: "25rem",
               height: "9rem",
-              objectFit: "cover", 
+              objectFit: "cover",
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
@@ -1189,7 +1316,6 @@ const BuyLetterHistory = () => {
                   if (item.submenu) {
                     toggleMenu(item.name);
                   } else {
-                    
                     handleMenuClick(item.name, item.path);
                   }
                 }}
@@ -1298,13 +1424,17 @@ const BuyLetterHistory = () => {
                   <tbody>
                     {filteredLetters.map((letter) => (
                       <tr key={letter._id} style={styles.tableRow}>
-                          <td style={styles.tableCell}>{letter.sellerName}</td>
-                          <td style={styles.tableCell}>{letter.vehicleModel}</td>
-                          <td style={styles.tableCell}>{`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim()}</td>
-                          <td style={styles.tableCell}>
-                            {letter.registrationNumber}
-                          </td>
-                          <td style={styles.tableCell}>{letter.buyerName}</td>
+                        <td style={styles.tableCell}>{letter.sellerName}</td>
+                        <td style={styles.tableCell}>{letter.vehicleModel}</td>
+                        <td style={styles.tableCell}>
+                          {`${letter.vehicleName || ""} ${
+                            letter.vehicleModel || ""
+                          }`.trim()}
+                        </td>
+                        <td style={styles.tableCell}>
+                          {letter.registrationNumber}
+                        </td>
+                        <td style={styles.tableCell}>{letter.buyerName}</td>
                         <td style={styles.tableCell}>
                           ₹
                           {new Intl.NumberFormat("en-IN").format(
@@ -1402,9 +1532,20 @@ const BuyLetterHistory = () => {
                 style={{ display: "flex", gap: "16px", marginBottom: "24px" }}
               >
                 <button
-                  onClick={async () => {
+                  onClick={() => {
+                    setChosenLanguage("english");
                     setShowLanguageModal(false);
-                    await downloadEnglishPDF(selectedLetter);
+                    setDocSelections({
+                      vehicleRC: !!selectedLetter.documents?.vehicleRC,
+                      aadhaar: !!selectedLetter.documents?.aadhaar,
+                      pan: !!selectedLetter.documents?.pan,
+                      vehicleKM: !!selectedLetter.documents?.vehicleKM,
+                      vehiclePhotos: !!(
+                        selectedLetter.documents?.vehiclePhotos &&
+                        selectedLetter.documents.vehiclePhotos.length
+                      ),
+                    });
+                    setShowDocumentModal(true);
                   }}
                   style={{
                     flex: 1,
@@ -1423,9 +1564,20 @@ const BuyLetterHistory = () => {
                   English PDF
                 </button>
                 <button
-                  onClick={async () => {
+                  onClick={() => {
+                    setChosenLanguage("hindi");
                     setShowLanguageModal(false);
-                    await downloadHindiPDF(selectedLetter);
+                    setDocSelections({
+                      vehicleRC: !!selectedLetter.documents?.vehicleRC,
+                      aadhaar: !!selectedLetter.documents?.aadhaar,
+                      pan: !!selectedLetter.documents?.pan,
+                      vehicleKM: !!selectedLetter.documents?.vehicleKM,
+                      vehiclePhotos: !!(
+                        selectedLetter.documents?.vehiclePhotos &&
+                        selectedLetter.documents.vehiclePhotos.length
+                      ),
+                    });
+                    setShowDocumentModal(true);
                   }}
                   style={{
                     flex: 1,
@@ -1444,6 +1596,120 @@ const BuyLetterHistory = () => {
                   Hindi PDF
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {showDocumentModal && selectedLetter && (
+        <div style={modalStyles.overlay}>
+          <div style={modalStyles.modal}>
+            <h3 style={styles.modalTitle}>Select Documents to Include</h3>
+            <p style={styles.modalText}>
+              Choose which supporting documents to include in the buy letter
+              PDF.
+            </p>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", marginBottom: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={!!docSelections.vehicleRC}
+                  onChange={(e) =>
+                    setDocSelections((s) => ({
+                      ...s,
+                      vehicleRC: e.target.checked,
+                    }))
+                  }
+                />
+                &nbsp;Vehicle RC (front/back)
+              </label>
+              <label style={{ display: "block", marginBottom: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={!!docSelections.aadhaar}
+                  onChange={(e) =>
+                    setDocSelections((s) => ({
+                      ...s,
+                      aadhaar: e.target.checked,
+                    }))
+                  }
+                />
+                &nbsp;Aadhaar (front/back)
+              </label>
+              <label style={{ display: "block", marginBottom: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={!!docSelections.pan}
+                  onChange={(e) =>
+                    setDocSelections((s) => ({ ...s, pan: e.target.checked }))
+                  }
+                />
+                &nbsp;PAN Card
+              </label>
+              <label style={{ display: "block", marginBottom: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={!!docSelections.vehicleKM}
+                  onChange={(e) =>
+                    setDocSelections((s) => ({
+                      ...s,
+                      vehicleKM: e.target.checked,
+                    }))
+                  }
+                />
+                &nbsp;Vehicle KM Photo
+              </label>
+              <label style={{ display: "block", marginBottom: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={!!docSelections.vehiclePhotos}
+                  onChange={(e) =>
+                    setDocSelections((s) => ({
+                      ...s,
+                      vehiclePhotos: e.target.checked,
+                    }))
+                  }
+                />
+                &nbsp;Vehicle Photos
+              </label>
+            </div>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                style={styles.cancelButton}
+                onClick={() => setShowDocumentModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                style={styles.saveButton}
+                onClick={() => {
+                  const buildFilteredDocs = (docs = {}, sel = {}) => {
+                    const out = {};
+                    if (sel.vehicleRC && docs.vehicleRC)
+                      out.vehicleRC = docs.vehicleRC;
+                    if (sel.aadhaar && docs.aadhaar) out.aadhaar = docs.aadhaar;
+                    if (sel.pan && docs.pan) out.pan = docs.pan;
+                    if (sel.vehicleKM && docs.vehicleKM)
+                      out.vehicleKM = docs.vehicleKM;
+                    if (sel.vehiclePhotos && docs.vehiclePhotos)
+                      out.vehiclePhotos = docs.vehiclePhotos;
+                    return out;
+                  };
+
+                  const filtered = buildFilteredDocs(
+                    selectedLetter.documents,
+                    docSelections
+                  );
+
+                  setShowDocumentModal(false);
+                  if (chosenLanguage === "hindi") {
+                    downloadHindiPDF(selectedLetter, filtered);
+                  } else {
+                    downloadEnglishPDF(selectedLetter, filtered);
+                  }
+                }}
+              >
+                Download PDF
+              </button>
             </div>
           </div>
         </div>

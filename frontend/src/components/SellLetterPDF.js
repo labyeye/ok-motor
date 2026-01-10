@@ -226,11 +226,15 @@ const SellLetterForm = () => {
     const loadFullEditLetter = async () => {
       try {
         if (!editLetter || !editLetter._id) return;
-        const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+        const API_BASE =
+          process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
         const token = localStorage.getItem("token");
-        const resp = await axios.get(`${API_BASE}/api/sell-letters/${editLetter._id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const resp = await axios.get(
+          `${API_BASE}/api/sell-letters/${editLetter._id}`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
 
         const full = resp.data || {};
 
@@ -268,9 +272,12 @@ const SellLetterForm = () => {
             previews.aadhaarFront = full.documents.aadhaar.front || null;
             previews.aadhaarBack = full.documents.aadhaar.back || null;
           }
-          if (full.documents.pan) previews.panPhoto = full.documents.pan || null;
-          if (full.documents.vehicleKM) previews.vehicleKMPhoto = full.documents.vehicleKM || null;
-          if (Array.isArray(full.documents.vehiclePhotos)) previews.vehiclePhotos = full.documents.vehiclePhotos;
+          if (full.documents.pan)
+            previews.panPhoto = full.documents.pan || null;
+          if (full.documents.vehicleKM)
+            previews.vehicleKMPhoto = full.documents.vehicleKM || null;
+          if (Array.isArray(full.documents.vehiclePhotos))
+            previews.vehiclePhotos = full.documents.vehiclePhotos;
 
           setFilePreviews((prev) => ({ ...prev, ...previews }));
           setSavedSellLetter(full);
@@ -964,8 +971,6 @@ const SellLetterForm = () => {
           }
         }
       };
-
-      await addDocumentPages(docs);
 
       // add invoice as final page
       const invoicePage = pdfDoc.addPage([595, 842]);
@@ -2199,8 +2204,6 @@ const SellLetterForm = () => {
         }
       };
 
-      await addDocumentPages(docs);
-
       // add invoice page as final page
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
@@ -2461,8 +2464,6 @@ const SellLetterForm = () => {
           }
         }
       };
-
-      await addDocumentPages(docs);
 
       // add invoice page as final page
       const invoicePage = pdfDoc.addPage([595, 842]);

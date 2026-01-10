@@ -56,6 +56,24 @@ const BuyLetterSchema = new mongoose.Schema({
   todayDate: { type: Date },
   todayTime: { type: String },
 
+  documents: {
+    vehicleRC: {
+      front: { type: String },
+      back: { type: String },
+    },
+    aadhaar: {
+      front: { type: String },
+      back: { type: String },
+    },
+    pan: { type: String },
+    vehicleKM: { type: String },
+    vehiclePhotos: [{ type: String }],
+    meta: {
+      uploadedAt: { type: Date },
+      uploader: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    },
+  },
+
   documentsVerified1: { type: Boolean, default: true },
   note: { type: String },
 
