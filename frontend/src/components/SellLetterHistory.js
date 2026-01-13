@@ -527,7 +527,7 @@ const SellLetterHistory = () => {
           );
         }
 
-        for (let i = 0; i < items.length; i += 4) {
+        for (let i = 0; i < items.length; i += 2) {
           const page = pdfDoc.addPage([595, 842]);
           const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
           try {
@@ -578,28 +578,29 @@ const SellLetterHistory = () => {
             // ignore header errors
           }
 
-          const cols = [40, 315];
-          const rows = [720, 360];
-          for (let cell = 0; cell < 4; cell++) {
+          const yPositions = [740, 390];
+
+          for (let cell = 0; cell < 2; cell++) {
             const item = items[i + cell];
             if (!item) continue;
-            const col = cell % 2;
-            const row = Math.floor(cell / 2);
-            const x = cols[col];
-            const yTop = rows[row];
+
+            const x = 50;
+            const yTop = yPositions[cell];
+
             const titleFont = await pdfDoc.embedFont(
               StandardFonts.HelveticaBold
             );
             page.drawText(item.title, {
               x,
               y: yTop,
-              size: 11,
+              size: 12,
               font: titleFont,
             });
+
             const embedded = await embedImageFromUrl(pdfDoc, item.url);
             if (embedded) {
-              const cellMaxW = 240;
-              const cellMaxH = 300;
+              const cellMaxW = 500;
+              const cellMaxH = 320;
               const { width, height } = embedded.scale(1);
               let drawW = cellMaxW;
               let drawH = (height / width) * drawW;
@@ -768,7 +769,7 @@ const SellLetterHistory = () => {
           );
         }
 
-        for (let i = 0; i < items.length; i += 4) {
+        for (let i = 0; i < items.length; i += 2) {
           const page = pdfDoc.addPage([595, 842]);
           const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
           try {
@@ -798,28 +799,29 @@ const SellLetterHistory = () => {
             // ignore header errors
           }
 
-          const cols = [40, 315];
-          const rows = [720, 360];
-          for (let cell = 0; cell < 4; cell++) {
+          const yPositions = [740, 390];
+
+          for (let cell = 0; cell < 2; cell++) {
             const item = items[i + cell];
             if (!item) continue;
-            const col = cell % 2;
-            const row = Math.floor(cell / 2);
-            const x = cols[col];
-            const yTop = rows[row];
+
+            const x = 50;
+            const yTop = yPositions[cell];
+
             const titleFont = await pdfDoc.embedFont(
               StandardFonts.HelveticaBold
             );
             page.drawText(item.title, {
               x,
               y: yTop,
-              size: 11,
+              size: 12,
               font: titleFont,
             });
+
             const embedded = await embedImageFromUrl(pdfDoc, item.url);
             if (embedded) {
-              const cellMaxW = 240;
-              const cellMaxH = 300;
+              const cellMaxW = 500;
+              const cellMaxH = 320;
               const { width, height } = embedded.scale(1);
               let drawW = cellMaxW;
               let drawH = (height / width) * drawW;
