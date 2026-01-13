@@ -61,8 +61,7 @@ const LetterHeadForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const API_BASE_URL =
-    process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app/api";
+  const API_BASE_URL = "https://ok-motor-51l3.vercel.app/api";
 
   const handleSaveAndDownload = async () => {
     if (isSaving) return;
