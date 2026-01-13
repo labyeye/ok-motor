@@ -26,6 +26,8 @@ import {
   Bike,
   Menu,
   X,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -50,6 +52,8 @@ const LetterHeadForm = () => {
     message: "",
   });
 
+  const [editingId, setEditingId] = useState(null);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
@@ -62,6 +66,43 @@ const LetterHeadForm = () => {
   };
 
   const API_BASE_URL = "https://ok-motor-51l3.vercel.app/api";
+
+  const handleEdit = (letter) => {
+    setFormData({
+      date: letter.date.split("T")[0],
+      to: letter.to,
+      subject: letter.subject,
+      message: letter.message,
+    });
+    setEditingId(letter._id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setFormData({
+      date: new Date().toISOString().split("T")[0],
+      to: "",
+      subject: "",
+      message: "",
+    });
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this letter head?"))
+      return;
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_BASE_URL}/letter-heads/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchHistory(); // Refresh table
+    } catch (error) {
+      console.error("Error deleting letter head:", error);
+      alert("Failed to delete letter head");
+    }
+  };
 
   const handleSaveAndDownload = async () => {
     if (isSaving) return;
@@ -85,12 +126,25 @@ const LetterHeadForm = () => {
       // 1. Save to Backend
       if (navigator.onLine) {
         try {
-          await axios.post(`${API_BASE_URL}/letter-heads`, formData, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          });
+          if (editingId) {
+            await axios.put(
+              `${API_BASE_URL}/letter-heads/${editingId}`,
+              formData,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+          } else {
+            await axios.post(`${API_BASE_URL}/letter-heads`, formData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            });
+          }
         } catch (err) {
           console.warn(
             "Failed to save to backend, continuing to PDF generation",
@@ -539,6 +593,20 @@ const LetterHeadForm = () => {
       display: "inline-flex",
       alignItems: "center",
       gap: "4px",
+      marginRight: "8px",
+    },
+    deleteBtn: {
+      padding: "6px 12px",
+      backgroundColor: "#fee2e2",
+      color: "#991b1b",
+      border: "none",
+      borderRadius: "6px",
+      cursor: "pointer",
+      fontSize: "0.75rem",
+      fontWeight: "600",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "4px",
     },
   };
 
@@ -702,7 +770,23 @@ const LetterHeadForm = () => {
               >
                 <FileText size={24} />
               </div>
-              <h1 style={styles.title}>Create Letter Head</h1>
+              <h1 style={styles.title}>
+                {editingId ? "Edit Letter Head" : "Create Letter Head"}
+              </h1>
+              {editingId && (
+                <button
+                  onClick={handleCancelEdit}
+                  style={{
+                    ...styles.actionBtn,
+                    backgroundColor: "#f1f5f9",
+                    color: "#64748b",
+                    fontSize: "0.875rem",
+                    marginLeft: "12px",
+                  }}
+                >
+                  <X size={16} /> Cancel
+                </button>
+              )}
             </div>
             <button
               onClick={handleSaveAndDownload}
@@ -827,6 +911,22 @@ const LetterHeadForm = () => {
                               onClick={() => handleDownloadCopy(letter)}
                             >
                               <Download size={14} /> Download
+                            </button>
+                            <button
+                              style={{
+                                ...styles.actionBtn,
+                                backgroundColor: "#fff7ed",
+                                color: "#c2410c",
+                              }}
+                              onClick={() => handleEdit(letter)}
+                            >
+                              <Edit size={14} /> Edit
+                            </button>
+                            <button
+                              style={styles.deleteBtn}
+                              onClick={() => handleDelete(letter._id)}
+                            >
+                              <Trash2 size={14} /> Delete
                             </button>
                           </td>
                         </tr>
