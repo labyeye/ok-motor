@@ -20,29 +20,31 @@ import {
   UserPlus,
   Settings,
   RefreshCw,
-  Megaphone
+  Megaphone,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 
-import logo from '../images/company.png';
-import ConfirmModal from './ConfirmModal';
+import logo from "../images/company.png";
+import ConfirmModal from "./ConfirmModal";
 
 const StaffList = () => {
   const navigate = useNavigate();
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeMenu, setActiveMenu] = useState("Staff");
-  const [expandedMenus, setExpandedMenus] = useState({ Staff: true }); 
+  const [expandedMenus, setExpandedMenus] = useState({ Staff: true });
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTargetId, setConfirmTargetId] = useState(null);
 
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const response = await axios.get("https://ok-motor-51l3.vercel.app/api/users");
+        const response = await axios.get(
+          "https://ok-motor-51l3.vercel.app/api/users"
+        );
         setStaff(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         setError(
@@ -65,7 +67,13 @@ const StaffList = () => {
   // Edit user (including password)
   const [editOpen, setEditOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
-  const [editForm, setEditForm] = useState({ name: "", email: "", role: "staff", status: "active", password: "" });
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    role: "staff",
+    status: "active",
+    password: "",
+  });
 
   const openEdit = (user) => {
     setEditTarget(user);
@@ -82,7 +90,13 @@ const StaffList = () => {
   const closeEdit = () => {
     setEditOpen(false);
     setEditTarget(null);
-    setEditForm({ name: "", email: "", role: "staff", status: "active", password: "" });
+    setEditForm({
+      name: "",
+      email: "",
+      role: "staff",
+      status: "active",
+      password: "",
+    });
   };
 
   const handleEditChange = (field, value) => {
@@ -113,16 +127,22 @@ const StaffList = () => {
       );
 
       // update local list
-      setStaff((prev) => prev.map((u) => (u._id === editTarget._id ? { ...u, ...response.data } : u)));
+      setStaff((prev) =>
+        prev.map((u) =>
+          u._id === editTarget._id ? { ...u, ...response.data } : u
+        )
+      );
       closeEdit();
     } catch (err) {
       console.error("Edit user failed", err);
       if (err.response?.status === 401) {
         setError("Your session has expired. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
       } else {
-        setError(err.response?.data?.message || err.message || "Failed to update user");
+        setError(
+          err.response?.data?.message || err.message || "Failed to update user"
+        );
       }
     }
   };
@@ -130,11 +150,11 @@ const StaffList = () => {
   const performDelete = async () => {
     const id = confirmTargetId;
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
         setError("You are not authenticated. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
@@ -146,11 +166,14 @@ const StaffList = () => {
       if (err.response?.status === 401) {
         setError("Your session has expired. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
       } else if (err.response?.status === 403) {
         setError("You don't have permission to delete staff members.");
       } else {
-        setError(err.response?.data?.message || "Failed to delete staff. Please try again.");
+        setError(
+          err.response?.data?.message ||
+            "Failed to delete staff. Please try again."
+        );
       }
     } finally {
       setConfirmOpen(false);
@@ -167,7 +190,7 @@ const StaffList = () => {
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    const actualPath = typeof path === 'function' ? path(user?.role) : path;
+    const actualPath = typeof path === "function" ? path(user?.role) : path;
     navigate(actualPath);
   };
 
@@ -250,6 +273,11 @@ const StaffList = () => {
       path: "/bike-history",
     },
     {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
+    },
+    {
       name: "Settings",
       icon: Settings,
       path: "/settings",
@@ -274,27 +302,30 @@ const StaffList = () => {
       {}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-           <img src={logo} alt="logo" style={{width: '14.5rem', height: '10.5rem', color: '#7c3aed'}} />
+          <img
+            src={logo}
+            alt="logo"
+            style={{ width: "14.5rem", height: "10.5rem", color: "#7c3aed" }}
+          />
           <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
         </div>
 
         <nav style={styles.nav}>
           {menuItems.map((item) => (
             <div key={item.name}>
-    <div
-      style={{
-        ...styles.menuItem,
-        ...(activeMenu === item.name ? styles.menuItemActive : {}),
-      }}
-      onClick={() => {
-        if (item.submenu) {
-          toggleMenu(item.name);
-        } else {
-          
-          handleMenuClick(item.name, item.path);
-        }
-      }}
-    >
+              <div
+                style={{
+                  ...styles.menuItem,
+                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
+                }}
+                onClick={() => {
+                  if (item.submenu) {
+                    toggleMenu(item.name);
+                  } else {
+                    handleMenuClick(item.name, item.path);
+                  }
+                }}
+              >
                 <div style={styles.menuItemContent}>
                   <item.icon size={20} style={styles.menuIcon} />
                   <span style={styles.menuText}>{item.name}</span>
@@ -316,22 +347,24 @@ const StaffList = () => {
                   opacity: expandedMenus[item.name] ? 1 : 0,
                 }}
               >
-                {Array.isArray(item.submenu) ? item.submenu.map((subItem) => (
-                  <div
-                    key={subItem.name}
-                    style={{
-                      ...styles.submenuItem,
-                      ...(activeMenu === subItem.name
-                        ? styles.submenuItemActive
-                        : {}),
-                    }}
-                    onClick={() =>
-                      handleMenuClick(subItem.name, subItem.path)
-                    }
-                  >
-                    {subItem.name}
-                  </div>
-                )) : null}
+                {Array.isArray(item.submenu)
+                  ? item.submenu.map((subItem) => (
+                      <div
+                        key={subItem.name}
+                        style={{
+                          ...styles.submenuItem,
+                          ...(activeMenu === subItem.name
+                            ? styles.submenuItemActive
+                            : {}),
+                        }}
+                        onClick={() =>
+                          handleMenuClick(subItem.name, subItem.path)
+                        }
+                      >
+                        {subItem.name}
+                      </div>
+                    ))
+                  : null}
               </div>
             </div>
           ))}
@@ -420,19 +453,19 @@ const StaffList = () => {
                       </td>
                       <td style={styles.td}>
                         <div style={styles.actions}>
-                            <button
-                              style={styles.editButton}
-                              onClick={() => openEdit(user)}
-                              title="Edit user"
-                            >
-                              <Edit size={14} />
-                            </button>
-                            <button
-                              style={styles.deleteButton}
-                              onClick={() => handleDelete(user._id)}
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                          <button
+                            style={styles.editButton}
+                            onClick={() => openEdit(user)}
+                            title="Edit user"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button
+                            style={styles.deleteButton}
+                            onClick={() => handleDelete(user._id)}
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -489,7 +522,9 @@ const StaffList = () => {
                 </select>
               </div>
               <div style={styles.editFormRow}>
-                <label style={styles.editLabel}>Password (leave blank to keep)</label>
+                <label style={styles.editLabel}>
+                  Password (leave blank to keep)
+                </label>
                 <input
                   type="password"
                   style={styles.editInput}
@@ -500,8 +535,12 @@ const StaffList = () => {
               </div>
             </div>
             <div style={styles.editActions}>
-              <button style={styles.cancelBtn} onClick={closeEdit}>Cancel</button>
-              <button style={styles.saveBtn} onClick={submitEdit}>Save</button>
+              <button style={styles.cancelBtn} onClick={closeEdit}>
+                Cancel
+              </button>
+              <button style={styles.saveBtn} onClick={submitEdit}>
+                Save
+              </button>
             </div>
           </div>
         </div>
@@ -514,12 +553,12 @@ const styles = {
   container: {
     display: "flex",
     minHeight: "100vh",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     fontFamily: "'Inter', sans-serif",
   },
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
     position: "sticky",
@@ -532,7 +571,7 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #1e293b",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   },
   sidebarTitle: {
     fontSize: "1.25rem",
@@ -564,8 +603,8 @@ const styles = {
     },
   },
   menuItemActive: {
-    backgroundColor: "#1e293b",
-    borderRight: "3px solid #3b82f6",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    borderRight: "3px solid #088395",
     color: "#ffffff",
   },
   menuItemContent: {
@@ -584,7 +623,8 @@ const styles = {
     backgroundColor: "rgba(26, 37, 54, 0.8)",
     maxHeight: "0px",
     overflow: "hidden",
-    transition: "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition:
+      "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
     opacity: 0,
   },
   submenuItem: {
@@ -608,7 +648,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #1e293b",
+    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
     transition: "all 0.2s ease",
     ":hover": {
       backgroundColor: "#7f1d1d20",
@@ -645,7 +685,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     padding: "10px 16px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "8px",
@@ -709,8 +749,8 @@ const styles = {
     textTransform: "capitalize",
   },
   adminBadge: {
-    backgroundColor: "#dbeafe",
-    color: "#1d4ed8",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    color: "#088395",
   },
   staffBadge: {
     backgroundColor: "#ecfccb",
@@ -741,8 +781,8 @@ const styles = {
     justifyContent: "center",
     width: "32px",
     height: "32px",
-    backgroundColor: "#e0f2fe",
-    color: "#0369a1",
+    backgroundColor: "rgba(8, 131, 149, 0.1)",
+    color: "#088395",
     border: "none",
     borderRadius: "4px",
     cursor: "pointer",
@@ -790,11 +830,40 @@ const styles = {
   editModalHeader: { padding: "12px 16px", borderBottom: "1px solid #eee" },
   editModalBody: { padding: "16px" },
   editFormRow: { marginBottom: "12px" },
-  editLabel: { display: "block", marginBottom: "6px", color: "#0f172a", fontSize: "0.9rem" },
-  editInput: { width: "100%", padding: "8px 10px", border: "1px solid #e6eef6", borderRadius: "6px" },
-  editActions: { padding: "12px 16px", borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "flex-end", gap: "8px" },
-  cancelBtn: { padding: "8px 12px", background: "#f1f5f9", border: "none", borderRadius: "6px", cursor: "pointer" },
-  saveBtn: { padding: "8px 12px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" },
+  editLabel: {
+    display: "block",
+    marginBottom: "6px",
+    color: "#0f172a",
+    fontSize: "0.9rem",
+  },
+  editInput: {
+    width: "100%",
+    padding: "8px 10px",
+    border: "1px solid #e6eef6",
+    borderRadius: "6px",
+  },
+  editActions: {
+    padding: "12px 16px",
+    borderTop: "1px solid #f1f5f9",
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: "8px",
+  },
+  cancelBtn: {
+    padding: "8px 12px",
+    background: "#f1f5f9",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+  },
+  saveBtn: {
+    padding: "8px 12px",
+    background: "#088395",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+  },
 };
 
 export default StaffList;

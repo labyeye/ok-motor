@@ -163,7 +163,7 @@ const BuyLetterHistory = () => {
                 onClick={onClose}
                 style={{
                   padding: "8px 16px",
-                  backgroundColor: "#3b82f6",
+                  backgroundColor: "#088395",
                   color: "white",
                   border: "none",
                   borderRadius: "4px",
@@ -190,7 +190,7 @@ const BuyLetterHistory = () => {
     },
     progressBar: {
       height: "100%",
-      backgroundColor: "#3b82f6",
+      backgroundColor: "#088395",
       transition: "width 0.3s ease",
     },
     progressText: {
@@ -401,6 +401,11 @@ const BuyLetterHistory = () => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
     },
     {
       name: "Settings",
@@ -1174,11 +1179,14 @@ const BuyLetterHistory = () => {
           return;
         }
 
-        await axios.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await axios.delete(
+          `https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
         alert("Buy letter deleted successfully!");
       } else {
@@ -1550,7 +1558,7 @@ const BuyLetterHistory = () => {
                   style={{
                     flex: 1,
                     padding: "12px",
-                    backgroundColor: "#3b82f6",
+                    backgroundColor: "#088395",
                     color: "white",
                     border: "none",
                     borderRadius: "6px",
@@ -1582,7 +1590,7 @@ const BuyLetterHistory = () => {
                   style={{
                     flex: 1,
                     padding: "12px",
-                    backgroundColor: "#3b82f6",
+                    backgroundColor: "#37B7C3",
                     color: "white",
                     border: "none",
                     borderRadius: "6px",
@@ -1728,7 +1736,7 @@ const styles = {
   container: {
     display: "flex",
     minHeight: "100vh",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     fontFamily: "'Inter', sans-serif",
   },
   topBar: {
@@ -1758,7 +1766,7 @@ const styles = {
   },
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
     position: "sticky",
@@ -1772,7 +1780,7 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #1e293b",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   },
   sidebarTitle: {
     fontSize: "1.25rem",
@@ -1804,8 +1812,8 @@ const styles = {
     },
   },
   menuItemActive: {
-    backgroundColor: "#1e293b",
-    borderRight: "3px solid #3b82f6",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    borderRight: "3px solid #088395",
     color: "#ffffff",
   },
   menuItemContent: {
@@ -1848,7 +1856,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #1e293b",
+    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
     transition: "all 0.2s ease",
     ":hover": {
       backgroundColor: "#7f1d1d20",
@@ -1903,7 +1911,7 @@ const styles = {
     backgroundColor: "#f8fafc",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
+      borderColor: "#088395",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
       backgroundColor: "#ffffff",
     },
@@ -1913,7 +1921,7 @@ const styles = {
     alignItems: "center",
     gap: "8px",
     padding: "10px 16px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "8px",
@@ -1979,7 +1987,7 @@ const styles = {
     borderRadius: "4px",
     ":hover": {
       backgroundColor: "#f1f5f9",
-      color: "#3b82f6",
+      color: "#088395",
     },
   },
   pagination: {
@@ -2097,7 +2105,7 @@ const modalStyles = {
     backgroundColor: "#f8fafc",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
+      borderColor: "#088395",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
       backgroundColor: "#ffffff",
     },
@@ -2112,7 +2120,7 @@ const modalStyles = {
   },
   saveButton: {
     padding: "8px 16px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "4px",

@@ -26,7 +26,12 @@ class PDFService {
       if (!resp || !resp.ok) {
         // try with origin prefix
         try {
-          const originPrefixed = (typeof window !== 'undefined' && window.location && window.location.origin ? window.location.origin : '') + url;
+          const originPrefixed =
+            (typeof window !== "undefined" &&
+            window.location &&
+            window.location.origin
+              ? window.location.origin
+              : "") + url;
           resp = await fetch(originPrefixed);
         } catch (e) {
           resp = null;
@@ -36,7 +41,7 @@ class PDFService {
       if (!resp || !resp.ok) {
         // try PUBLIC_URL if available
         try {
-          const pub = process.env.PUBLIC_URL || '';
+          const pub = process.env.PUBLIC_URL || "";
           const pubUrl = pub + url;
           resp = await fetch(pubUrl);
         } catch (e) {
@@ -61,17 +66,32 @@ class PDFService {
       }
     } catch (err) {
       // If fetch failed (common in packaged Electron with file:// or asar), try asking the main process to read the asset directly
-      console.warn("_embedImageByUrl fetch failed for", url, err?.message || err);
+      console.warn(
+        "_embedImageByUrl fetch failed for",
+        url,
+        err?.message || err
+      );
 
       try {
-        if (typeof window !== 'undefined' && window.electronAPI && window.electronAPI.isElectron && typeof window.electronAPI.readAsset === 'function') {
+        if (
+          typeof window !== "undefined" &&
+          window.electronAPI &&
+          window.electronAPI.isElectron &&
+          typeof window.electronAPI.readAsset === "function"
+        ) {
           const res = await window.electronAPI.readAsset(url);
-          if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          if (
+            res &&
+            res.success &&
+            Array.isArray(res.data) &&
+            res.data.length > 0
+          ) {
             const arr = Uint8Array.from(res.data);
-            const lower2 = (url || '').split('?')[0].toLowerCase();
+            const lower2 = (url || "").split("?")[0].toLowerCase();
             try {
-              if (lower2.endsWith('.png')) return await pdfDoc.embedPng(arr);
-              if (lower2.endsWith('.jpg') || lower2.endsWith('.jpeg')) return await pdfDoc.embedJpg(arr);
+              if (lower2.endsWith(".png")) return await pdfDoc.embedPng(arr);
+              if (lower2.endsWith(".jpg") || lower2.endsWith(".jpeg"))
+                return await pdfDoc.embedJpg(arr);
               // fallback
               try {
                 return await pdfDoc.embedPng(arr);
@@ -79,13 +99,21 @@ class PDFService {
                 return await pdfDoc.embedJpg(arr);
               }
             } catch (embedErr) {
-              console.warn('_embedImageByUrl electron-embed failed for', url, embedErr?.message || embedErr);
+              console.warn(
+                "_embedImageByUrl electron-embed failed for",
+                url,
+                embedErr?.message || embedErr
+              );
               return null;
             }
           }
         }
       } catch (ipcErr) {
-        console.warn('_embedImageByUrl readAsset IPC failed for', url, ipcErr?.message || ipcErr);
+        console.warn(
+          "_embedImageByUrl readAsset IPC failed for",
+          url,
+          ipcErr?.message || ipcErr
+        );
       }
 
       return null;
@@ -693,9 +721,17 @@ class PDFService {
           logoImage = await this._embedImageByUrl(pdfDoc, logo);
         }
       } catch (logoError) {
-        console.warn("Logo not found, continuing without logo:", logoError?.message || logoError);
+        console.warn(
+          "Logo not found, continuing without logo:",
+          logoError?.message || logoError
+        );
       }
-      console.debug("PDFService: service logo url=", logo, "embedded=", !!logoImage);
+      console.debug(
+        "PDFService: service logo url=",
+        logo,
+        "embedded=",
+        !!logoImage
+      );
 
       // Function to add watermark
       const addWatermark = (page) => {
@@ -1747,7 +1783,12 @@ class PDFService {
       } catch (logoError) {
         console.warn("Logo not found:", logoError?.message || logoError);
       }
-      console.debug("PDFService: advance logo url=", logoBack, "embedded=", !!logoImage);
+      console.debug(
+        "PDFService: advance logo url=",
+        logoBack,
+        "embedded=",
+        !!logoImage
+      );
 
       const pageWidth = 595;
 
@@ -2270,6 +2311,268 @@ class PDFService {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  }
+  /**
+   * Generate Letter Head PDF
+   */
+  async generateLetterHeadPDF(letterData) {
+    // For now, we will rely on offline generation as the primary method
+    // until an online endpoint is established if needed.
+    return await this.generateLetterHeadPDFOffline(letterData);
+  }
+
+  /**
+   * Generate Letter Head PDF Offline
+   */
+  async generateLetterHeadPDFOffline(letterData) {
+    try {
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([595, 842]); // A4
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      const { width, height } = page.getSize();
+      let yPosition = height - 50;
+
+      // Logo and Header (Same as Service Bill)
+      let logoImage = null;
+      try {
+        if (logo) {
+          logoImage = await this._embedImageByUrl(pdfDoc, logo);
+        }
+      } catch (logoError) {
+        console.warn("Logo not found:", logoError);
+      }
+
+      // Watermark
+      if (logoImage) {
+        page.drawImage(logoImage, {
+          x: 280,
+          y: 200,
+          width: 450,
+          height: 400,
+          opacity: 0.1, // Lighter watermark for letter
+          rotate: degrees(45),
+        });
+      }
+
+      // Header Blue Box
+      page.drawRectangle({
+        x: 0,
+        y: 780,
+        width: 595, // Full width
+        height: 120, // Height
+        color: rgb(0.047, 0.098, 0.196), // Dark Blue
+      });
+
+      // Logo in Header
+      if (logoImage) {
+        page.drawImage(logoImage, {
+          x: 50,
+          y: 740,
+          width: 170,
+          height: 140,
+        });
+      }
+
+      // Company UDAYAM No
+      page.drawText("UDAYAM-BR-26-0028550", {
+        x: 400,
+        y: 800,
+        size: 14,
+        color: rgb(0.8, 0.8, 0.8),
+        font: fontBold,
+      });
+
+      // Title Bar
+      page.drawRectangle({
+        x: 0,
+        y: 750,
+        width: 595,
+        height: 30,
+        color: rgb(0.9, 0.9, 0.9), // Light Gray
+      });
+
+      page.drawText("LETTER HEAD", {
+        x: 240,
+        y: 758,
+        size: 18,
+        color: rgb(0.047, 0.098, 0.196),
+        font: fontBold,
+      });
+
+      yPosition = 700;
+
+      // Date
+      page.drawText(`Date: ${this.formatDate(letterData.date)}`, {
+        x: 450,
+        y: yPosition,
+        size: 12,
+        font: font,
+        color: rgb(0, 0, 0),
+      });
+
+      yPosition -= 40;
+
+      // To
+      page.drawText("To,", {
+        x: 50,
+        y: yPosition,
+        size: 12,
+        font: fontBold,
+        color: rgb(0, 0, 0),
+      });
+      yPosition -= 20;
+
+      const toLines = letterData.to.split("\n");
+      for (const line of toLines) {
+        page.drawText(line, {
+          x: 50,
+          y: yPosition,
+          size: 12,
+          font: font,
+          color: rgb(0, 0, 0),
+        });
+        yPosition -= 15;
+      }
+
+      yPosition -= 20;
+
+      // Subject
+      page.drawText("Subject:", {
+        x: 50,
+        y: yPosition,
+        size: 12,
+        font: fontBold,
+        color: rgb(0, 0, 0),
+      });
+      page.drawText(letterData.subject, {
+        x: 110,
+        y: yPosition,
+        size: 12,
+        font: fontBold, // Bold subject
+        color: rgb(0, 0, 0),
+      });
+
+      yPosition -= 40;
+
+      // Message Body
+      const message = letterData.message || "";
+      const maxWidth = 500;
+      const fontSize = 11;
+
+      // Handle multiline text reflow
+      const paragraphs = message.split("\n");
+
+      for (const paragraph of paragraphs) {
+        const words = paragraph.split(" ");
+        let line = "";
+
+        for (const word of words) {
+          const testLine = line + word + " ";
+          const textWidth = font.widthOfTextAtSize(testLine, fontSize);
+
+          if (textWidth > maxWidth) {
+            page.drawText(line, {
+              x: 50,
+              y: yPosition,
+              size: fontSize,
+              font: font,
+            });
+            line = word + " ";
+            yPosition -= 15;
+          } else {
+            line = testLine;
+          }
+        }
+        // Draw last line of paragraph
+        page.drawText(line, {
+          x: 50,
+          y: yPosition,
+          size: fontSize,
+          font: font,
+        });
+        yPosition -= 25; // Extra space between paragraphs
+
+        // Add new page if out of space
+        if (yPosition < 100) {
+          // New page logic could go here, but for simplicity we assume 1 page for now or just cut off
+          // Ideally:
+          // const newPage = pdfDoc.addPage([595, 842]);
+          // yPosition = 750;
+          // ... re-setup font etc
+        }
+      }
+
+      // Footer Signatures
+      yPosition = 150;
+
+      page.drawText("For OK Motor", {
+        x: 400,
+        y: yPosition + 20,
+        size: 12,
+        font: fontBold,
+        color: rgb(0, 0, 0),
+      });
+
+      page.drawText("Authorized Signatory", {
+        x: 400,
+        y: yPosition - 40,
+        size: 10,
+        font: font,
+        color: rgb(0, 0, 0),
+      });
+
+      // Footer Contact Info (Bottom of page)
+      const footerY = 40;
+      page.drawLine({
+        start: { x: 20, y: footerY + 15 },
+        end: { x: 575, y: footerY + 15 },
+        thickness: 1,
+        color: rgb(0.8, 0.8, 0.8),
+      });
+
+      page.drawText(
+        "Address: Main Road, Near Bus Stand, Sample City - 123456",
+        {
+          x: 50,
+          y: footerY,
+          size: 9,
+          font: font,
+          color: rgb(0.4, 0.4, 0.4),
+        }
+      );
+
+      page.drawText("Phone: +91 98765 43210 | Email: contact@okmotor.in", {
+        x: 50,
+        y: footerY - 12,
+        size: 9,
+        font: font,
+        color: rgb(0.4, 0.4, 0.4),
+      });
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+
+      // Save logic (Electron/Browser)
+      const filename = `letter-head-${Date.now()}.pdf`;
+      const saveRes = await fileSaveService.savePdfToDefaultDir(
+        filename,
+        pdfBytes,
+        "letter"
+      );
+
+      return {
+        success: true,
+        blob,
+        buffer: pdfBytes,
+        saved: !!(saveRes && saveRes.success),
+        savedPath: saveRes?.path || null,
+      };
+    } catch (error) {
+      console.error("Error generating Letter Head PDF:", error);
+      return { success: false, error: error.message };
+    }
   }
 }
 

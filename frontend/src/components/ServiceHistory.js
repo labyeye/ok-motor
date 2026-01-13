@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import {
@@ -32,7 +31,7 @@ import config from "../config/environment";
 import ConfirmModal from "./ConfirmModal";
 
 const ServiceHistory = () => {
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   const [activeMenu, setActiveMenu] = useState("Service History");
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -82,7 +81,6 @@ const ServiceHistory = () => {
         const isOnline = navigator.onLine;
 
         if (isOnline) {
-
           const serviceResponse = await axios.get(
             `https://ok-motor-51l3.vercel.app/api/service-bills?page=${currentPage}`
           );
@@ -92,72 +90,78 @@ const ServiceHistory = () => {
           const purchaseResponse = await axios.get(
             `${config.API_BASE_URL}/buy-letter`
           );
-          setPurchaseHistory(purchaseResponse.data.data || purchaseResponse.data);
+          setPurchaseHistory(
+            purchaseResponse.data.data || purchaseResponse.data
+          );
 
           const sellResponse = await axios.get(
             `https://ok-motor-51l3.vercel.app/api/sell-letters`
           );
           setSellHistory(sellResponse.data.data || sellResponse.data);
         } else {
-          
-          console.log('Offline mode - loading service bills from local storage');
-          const offlineStorage = (await import('../services/offlineStorage')).default;
+          console.log(
+            "Offline mode - loading service bills from local storage"
+          );
+          const offlineStorage = (await import("../services/offlineStorage"))
+            .default;
 
-          const serviceResult = await offlineStorage.find('serviceBills');
+          const serviceResult = await offlineStorage.find("serviceBills");
           if (serviceResult.success && serviceResult.data) {
-            const sortedData = serviceResult.data.sort((a, b) => 
-              new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+            const sortedData = serviceResult.data.sort(
+              (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
             );
             setServiceBills(sortedData);
           } else {
             setServiceBills([]);
           }
 
-          const buyResult = await offlineStorage.find('buyLetters');
+          const buyResult = await offlineStorage.find("buyLetters");
           if (buyResult.success && buyResult.data) {
             setPurchaseHistory(buyResult.data);
           } else {
             setPurchaseHistory([]);
           }
 
-          const sellResult = await offlineStorage.find('sellLetters');
+          const sellResult = await offlineStorage.find("sellLetters");
           if (sellResult.success && sellResult.data) {
             setSellHistory(sellResult.data);
           } else {
             setSellHistory([]);
           }
-          
+
           setTotalPages(1);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
 
         if (navigator.onLine) {
-          console.log('Online fetch failed, trying offline fallback');
+          console.log("Online fetch failed, trying offline fallback");
           try {
-            const offlineStorage = (await import('../services/offlineStorage')).default;
-            
-            const serviceResult = await offlineStorage.find('serviceBills');
+            const offlineStorage = (await import("../services/offlineStorage"))
+              .default;
+
+            const serviceResult = await offlineStorage.find("serviceBills");
             if (serviceResult.success && serviceResult.data) {
-              const sortedData = serviceResult.data.sort((a, b) => 
-                new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+              const sortedData = serviceResult.data.sort(
+                (a, b) =>
+                  new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
               );
               setServiceBills(sortedData);
             }
-            
-            const buyResult = await offlineStorage.find('buyLetters');
+
+            const buyResult = await offlineStorage.find("buyLetters");
             if (buyResult.success) {
               setPurchaseHistory(buyResult.data || []);
             }
-            
-            const sellResult = await offlineStorage.find('sellLetters');
+
+            const sellResult = await offlineStorage.find("sellLetters");
             if (sellResult.success) {
               setSellHistory(sellResult.data || []);
             }
-            
+
             setTotalPages(1);
           } catch (offlineError) {
-            console.error('Offline fallback also failed:', offlineError);
+            console.error("Offline fallback also failed:", offlineError);
           }
         }
       } finally {
@@ -230,7 +234,7 @@ const ServiceHistory = () => {
                 onClick={onClose}
                 style={{
                   padding: "8px 16px",
-                  backgroundColor: "#3b82f6",
+                  backgroundColor: "#088395",
                   color: "white",
                   border: "none",
                   borderRadius: "4px",
@@ -330,8 +334,8 @@ const ServiceHistory = () => {
       backgroundColor: "#f8fafc",
       ":focus": {
         outline: "none",
-        borderColor: "#3b82f6",
-        boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+        borderColor: "#088395",
+        boxShadow: "0 0 0 3px rgba(8, 131, 149, 0.1)",
         backgroundColor: "#ffffff",
       },
     },
@@ -345,7 +349,7 @@ const ServiceHistory = () => {
     },
     saveButton: {
       padding: "8px 16px",
-      backgroundColor: "#3b82f6",
+      backgroundColor: "#088395",
       color: "white",
       border: "none",
       borderRadius: "4px",
@@ -382,7 +386,7 @@ const ServiceHistory = () => {
     },
     progressBar: {
       height: "100%",
-      backgroundColor: "#3b82f6",
+      backgroundColor: "#088395",
       transition: "width 0.3s ease",
     },
     progressText: {
@@ -392,16 +396,21 @@ const ServiceHistory = () => {
   };
   const testAuth = async () => {
     try {
-      const token = localStorage.getItem('token');
-      console.log('Testing authentication...');
-      console.log('Token exists:', !!token);
-      console.log('Token preview:', token ? `${token.substring(0, 20)}...` : 'No token');
-      
-      const response = await axios.get('https://ok-motor-51l3.vercel.app/api/auth/me');
-      console.log('Auth test successful:', response.data);
+      const token = localStorage.getItem("token");
+      console.log("Testing authentication...");
+      console.log("Token exists:", !!token);
+      console.log(
+        "Token preview:",
+        token ? `${token.substring(0, 20)}...` : "No token"
+      );
+
+      const response = await axios.get(
+        "https://ok-motor-51l3.vercel.app/api/auth/me"
+      );
+      console.log("Auth test successful:", response.data);
     } catch (error) {
-      console.error('Auth test failed:', error);
-      console.error('Error details:', error.response?.data);
+      console.error("Auth test failed:", error);
+      console.error("Error details:", error.response?.data);
     }
   };
 
@@ -411,26 +420,24 @@ const ServiceHistory = () => {
     await simulateProgress();
 
     try {
-      
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
         alert("You are not authenticated. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
       await testAuth();
 
-      console.log('Token exists:', !!token);
-      console.log('User:', user);
-           
+      console.log("Token exists:", !!token);
+      console.log("User:", user);
 
       const response = await axios.get(
         `https://ok-motor-51l3.vercel.app/api/service-bills/${billId}/download`,
         {
           responseType: "blob",
-          timeout: 30000, 
+          timeout: 30000,
         }
       );
 
@@ -448,21 +455,39 @@ const ServiceHistory = () => {
       if (error.response?.status === 401) {
         alert("Your session has expired. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
       } else if (error.response?.status === 403) {
         alert("You don't have permission to download this file.");
       } else if (error.response?.status === 404) {
-        alert("Service bill not found or PDF could not be generated. Please try again or contact support.");
+        alert(
+          "Service bill not found or PDF could not be generated. Please try again or contact support."
+        );
       } else if (error.response?.status === 503) {
-        alert("Server is temporarily unavailable. Please try again in a few minutes or contact support if the issue persists.");
-      } else if (error.response?.status === 502 || error.response?.status === 504) {
+        alert(
+          "Server is temporarily unavailable. Please try again in a few minutes or contact support if the issue persists."
+        );
+      } else if (
+        error.response?.status === 502 ||
+        error.response?.status === 504
+      ) {
         alert("Server is experiencing issues. Please try again later.");
-      } else if (error.code === 'ECONNABORTED' || error.code === 'NETWORK_ERROR') {
-        alert("Connection timeout. Please check your internet connection and try again.");
+      } else if (
+        error.code === "ECONNABORTED" ||
+        error.code === "NETWORK_ERROR"
+      ) {
+        alert(
+          "Connection timeout. Please check your internet connection and try again."
+        );
       } else {
-        alert(`Failed to download PDF: ${error.response?.data?.message || error.message || 'Server temporarily unavailable'}`);
+        alert(
+          `Failed to download PDF: ${
+            error.response?.data?.message ||
+            error.message ||
+            "Server temporarily unavailable"
+          }`
+        );
       }
-      
+
       setDownloadProgress((prev) => {
         const newState = { ...prev };
         delete newState[billId];
@@ -481,7 +506,9 @@ const ServiceHistory = () => {
   const performDelete = async () => {
     const id = confirmTargetId;
     try {
-      await axios.delete(`https://ok-motor-51l3.vercel.app/api/service-bills/${id}`);
+      await axios.delete(
+        `https://ok-motor-51l3.vercel.app/api/service-bills/${id}`
+      );
       setServiceBills((prev) => prev.filter((bill) => bill._id !== id));
     } catch (error) {
       console.error("Error deleting service bill:", error);
@@ -580,6 +607,11 @@ const ServiceHistory = () => {
       path: "/bike-history",
     },
     {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
+    },
+    {
       name: "Settings",
       icon: Settings,
       path: "/settings",
@@ -600,10 +632,12 @@ const ServiceHistory = () => {
   };
 
   return (
-    <div style={{
-      ...styles.container,
-      paddingTop: isMobile ? "80px" : "0",
-    }}>
+    <div
+      style={{
+        ...styles.container,
+        paddingTop: isMobile ? "80px" : "0",
+      }}
+    >
       <ConfirmModal
         isOpen={confirmOpen}
         title="Delete Service Bill"
@@ -611,12 +645,17 @@ const ServiceHistory = () => {
         confirmText="Delete"
         cancelText="Cancel"
         onConfirm={performDelete}
-        onCancel={() => { setConfirmOpen(false); setConfirmTargetId(null); }}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setConfirmTargetId(null);
+        }}
       />
-      <div style={{
-        ...styles.topBar,
-        display: isMobile && !isSidebarOpen ? "block" : "none",
-      }}>
+      <div
+        style={{
+          ...styles.topBar,
+          display: isMobile && !isSidebarOpen ? "block" : "none",
+        }}
+      >
         <div
           style={{
             ...styles.hamburgerMenu,
@@ -636,19 +675,26 @@ const ServiceHistory = () => {
       )}
 
       {}
-      <div style={{
-        ...styles.sidebar,
-        ...(isMobile
-          ? {
-              transform: isSidebarOpen
-                ? "translateX(0)"
-                : "translateX(-100%)",
-              position: "fixed",
-              zIndex: 15,
-            }
-          : {}),
-      }}>
-         <div style={styles.sidebarHeader}>
+      <div
+        style={{
+          ...styles.sidebar,
+          ...(isMobile
+            ? {
+                transform: isSidebarOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
+                position: "fixed",
+                zIndex: 15,
+              }
+            : {}),
+        }}
+      >
+        <div
+          style={{
+            padding: "24px",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+          }}
+        >
           <img
             src={logo}
             alt="logo"
@@ -656,7 +702,7 @@ const ServiceHistory = () => {
               width: "100%",
               maxWidth: "25rem",
               height: "9rem",
-              objectFit: "cover", 
+              objectFit: "cover",
               objectPosition: "center",
               display: "block",
               margin: "0 auto 1rem auto",
@@ -671,7 +717,8 @@ const ServiceHistory = () => {
               <div
                 style={{
                   ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
+                  backgroundColor: "#071952",
+                  color: "#ffffff",
                 }}
                 onClick={() => {
                   if (item.submenu) {
@@ -806,7 +853,11 @@ const ServiceHistory = () => {
                               ₹{item.purchaseAmount?.toFixed(2) || 0}
                             </td>
                             <td style={styles.tableCell}>
-                              {item.user && item.user.role === 'admin' ? 'admin' : (item.user && item.user.name ? item.user.name : '')}
+                              {item.user && item.user.role === "admin"
+                                ? "admin"
+                                : item.user && item.user.name
+                                ? item.user.name
+                                : ""}
                             </td>
                           </tr>
                         ))}
@@ -859,7 +910,11 @@ const ServiceHistory = () => {
                               ₹{item.sellAmount?.toFixed(2) || 0}
                             </td>
                             <td style={styles.tableCell}>
-                              {item.user && item.user.role === 'admin' ? 'admin' : (item.user && item.user.name ? item.user.name : '')}
+                              {item.user && item.user.role === "admin"
+                                ? "admin"
+                                : item.user && item.user.name
+                                ? item.user.name
+                                : ""}
                             </td>
                           </tr>
                         ))}
@@ -916,7 +971,11 @@ const ServiceHistory = () => {
                               {new Date(bill.createdAt).toLocaleDateString()}
                             </td>
                             <td style={styles.tableCell}>
-                              {bill.user && bill.user.role === 'admin' ? 'admin' : (bill.user && bill.user.name ? bill.user.name : '')}
+                              {bill.user && bill.user.role === "admin"
+                                ? "admin"
+                                : bill.user && bill.user.name
+                                ? bill.user.name
+                                : ""}
                             </td>
                             <td style={styles.tableCell}>
                               <span
@@ -955,7 +1014,7 @@ const ServiceHistory = () => {
                                       style={{
                                         width: `${downloadProgress[bill._id]}%`,
                                         height: "100%",
-                                        backgroundColor: "#3b82f6",
+                                        backgroundColor: "#088395",
                                         transition: "width 0.3s ease",
                                       }}
                                     />
@@ -1048,8 +1107,12 @@ const ServiceHistory = () => {
                           </span>
                         </td>
                         <td style={styles.tableCell}>
-                              {bill.user && bill.user.role === 'admin' ? 'admin' : (bill.user && bill.user.name ? bill.user.name : '')}
-                            </td>
+                          {bill.user && bill.user.role === "admin"
+                            ? "admin"
+                            : bill.user && bill.user.name
+                            ? bill.user.name
+                            : ""}
+                        </td>
                         <td style={styles.tableCell}>
                           <button
                             onClick={() => handleDownload(bill._id)}
@@ -1071,7 +1134,7 @@ const ServiceHistory = () => {
                                   style={{
                                     width: `${downloadProgress[bill._id]}%`,
                                     height: "100%",
-                                    backgroundColor: "#3b82f6",
+                                    backgroundColor: "#088395",
                                     transition: "width 0.3s ease",
                                   }}
                                 />
@@ -1152,7 +1215,7 @@ const styles = {
   container: {
     display: "flex",
     minHeight: "100vh",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     fontFamily: "'Inter', sans-serif",
   },
   topBar: {
@@ -1182,7 +1245,7 @@ const styles = {
   },
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
     position: "sticky",
@@ -1196,7 +1259,7 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #1e293b",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   },
   sidebarTitle: {
     fontSize: "1.25rem",
@@ -1228,8 +1291,8 @@ const styles = {
     },
   },
   menuItemActive: {
-    backgroundColor: "#1e293b",
-    borderRight: "3px solid #3b82f6",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    borderRight: "3px solid #088395",
     color: "#ffffff",
   },
   menuItemContent: {
@@ -1247,7 +1310,7 @@ const styles = {
   },
   downloadProgressBar: {
     height: "100%",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     transition: "width 0.3s ease",
   },
   menuIcon: {
@@ -1286,7 +1349,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #1e293b",
+    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
     transition: "all 0.2s ease",
     ":hover": {
       backgroundColor: "#7f1d1d20",
@@ -1340,8 +1403,8 @@ const styles = {
     transition: "all 0.2s ease",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
-      boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+      borderColor: "#088395",
+      boxShadow: "0 0 0 3px rgba(8, 131, 149, 0.1)",
     },
   },
   newBillButton: {
@@ -1349,7 +1412,7 @@ const styles = {
     alignItems: "center",
     gap: "8px",
     padding: "10px 16px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "8px",
@@ -1375,7 +1438,7 @@ const styles = {
   tableHeader: {
     padding: "12px 16px",
     textAlign: "left",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     color: "#1e293b",
     fontSize: "0.875rem",
     fontWeight: "600",
@@ -1401,8 +1464,8 @@ const styles = {
     textTransform: "capitalize",
   },
   statusPaid: {
-    backgroundColor: "#dcfce7",
-    color: "#166534",
+    backgroundColor: "rgba(8, 131, 149, 0.1)",
+    color: "#088395",
   },
   statusPartial: {
     backgroundColor: "#fef9c3",
@@ -1421,8 +1484,8 @@ const styles = {
     margin: "0 4px",
     borderRadius: "4px",
     ":hover": {
-      backgroundColor: "#f1f5f9",
-      color: "#3b82f6",
+      backgroundColor: "#EBF4F6",
+      color: "#088395",
     },
   },
   pagination: {

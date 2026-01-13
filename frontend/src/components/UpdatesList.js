@@ -116,6 +116,11 @@ const UpdatesList = () => {
       path: "/bike-history",
     },
     {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
+    },
+    {
       name: "Settings",
       icon: Settings,
       path: "/settings",
@@ -210,7 +215,10 @@ const UpdatesList = () => {
         confirmText="Delete"
         cancelText="Cancel"
         onConfirm={performDelete}
-        onCancel={() => { setConfirmOpen(false); setConfirmTargetId(null); }}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setConfirmTargetId(null);
+        }}
       />
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
@@ -401,12 +409,12 @@ const styles = {
   container: {
     display: "flex",
     height: "100vh",
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#EBF4F6",
     fontFamily: "Arial, sans-serif",
   },
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     position: "sticky",
     top: 0,
@@ -416,8 +424,17 @@ const styles = {
     boxSizing: "border-box",
     overflow: "hidden",
   },
-  sidebarHeader: { padding: "24px", borderBottom: "1px solid #1e293b", flex: "0 0 auto" },
-  nav: { padding: "16px 0", flex: "1 1 auto", overflowY: "auto", WebkitOverflowScrolling: "touch" },
+  sidebarHeader: {
+    padding: "24px",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+    flex: "0 0 auto",
+  },
+  nav: {
+    padding: "16px 0",
+    flex: "1 1 auto",
+    overflowY: "auto",
+    WebkitOverflowScrolling: "touch",
+  },
   menuItem: {
     display: "flex",
     alignItems: "center",
@@ -427,8 +444,8 @@ const styles = {
     color: "#e2e8f0",
   },
   menuItemActive: {
-    backgroundColor: "#1e293b",
-    borderRight: "3px solid #3b82f6",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    borderRight: "3px solid #088395",
     color: "#ffffff",
   },
   menuItemContent: { display: "flex", alignItems: "center" },
@@ -448,7 +465,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #1e293b",
+    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
   },
   mainContent: { flex: 1, overflow: "auto" },
   contentPadding: { padding: "32px" },
@@ -468,7 +485,7 @@ const styles = {
     cursor: "pointer",
   },
   headerPrimary: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "#fff",
     border: "none",
     padding: "8px 12px",

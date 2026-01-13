@@ -28,6 +28,7 @@ import AnnouncementPage from "./pages/AnnouncementPage";
 import VehicleCreate from "./components/VehicleCreate";
 import VehicleHistory from "./components/VehicleHistory";
 import GalleryManagement from "./components/GalleryManagement";
+import LetterHeadForm from "./components/LetterHeadForm";
 import { useState, useEffect } from "react";
 import networkService from "./services/networkService";
 import "./services/syncService"; // initialize sync service for side-effects
@@ -84,24 +85,26 @@ function App() {
   useEffect(() => {
     // Initialize services only in Electron
     const isElectron = window.electronAPI !== undefined;
-    
+
     if (isElectron) {
       console.log("🚀 Initializing offline services in Electron...");
-      
+
       // Start network monitoring
       networkService.checkConnection();
-      
+
       // Subscribe to network changes
       const unsubscribeNetwork = networkService.subscribe((online) => {
-        console.log(`📡 Network status changed: ${online ? "Online" : "Offline"}`);
+        console.log(
+          `📡 Network status changed: ${online ? "Online" : "Offline"}`
+        );
         setIsOnline(online);
       });
-      
+
       // Sync service auto-initializes when imported
       // It will automatically start monitoring and syncing
-      
+
       console.log("✅ Offline services initialized successfully!");
-      
+
       return () => {
         unsubscribeNetwork();
       };
@@ -117,7 +120,7 @@ function App() {
       };
     }
   }, []);
-  
+
   return (
     <AuthProvider>
       <div
@@ -272,6 +275,14 @@ function App() {
             element={
               <PrivateRoute roles={["admin", "staff"]}>
                 <AdvanceHistory />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/letter-head/create"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <LetterHeadForm />
               </PrivateRoute>
             }
           />

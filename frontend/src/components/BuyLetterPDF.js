@@ -392,7 +392,7 @@ const BuyLetterForm = () => {
                 onClick={onClose}
                 style={{
                   padding: "8px 16px",
-                  backgroundColor: "#3b82f6",
+                  backgroundColor: "#088395",
                   color: "white",
                   border: "none",
                   borderRadius: "4px",
@@ -420,7 +420,7 @@ const BuyLetterForm = () => {
     },
     progressBar: {
       height: "100%",
-      backgroundColor: "#3b82f6",
+      backgroundColor: "#088395",
       transition: "width 0.3s ease",
     },
     progressText: {
@@ -910,6 +910,11 @@ const BuyLetterForm = () => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
     },
     {
       name: "Settings",
@@ -2018,7 +2023,7 @@ const BuyLetterForm = () => {
                     gap: "8px",
                   }}
                 >
-                  <CheckCircle size={20} style={{ color: "#3b82f6" }} />
+                  <CheckCircle size={20} style={{ color: "#088395" }} />
                   <span style={{ fontSize: "0.875rem", color: "#1e293b" }}>
                     Vehicle details auto-filled. You can modify them below if
                     needed.
@@ -2451,133 +2456,141 @@ const BuyLetterForm = () => {
 
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
-                <User style={styles.sectionIcon} /> Upload Documents
+                <FileText style={styles.sectionIcon} /> Documents Upload
               </h2>
-              <div style={styles.formField}>
-                <label style={styles.formLabel}>
-                  <FileText style={styles.formIcon} />
-                  Upload Documents (Vehicle RC, Aadhaar, PAN, Photos)
-                </label>
-                <div
-                  style={{
-                    marginTop: 8,
-                    flexDirection: "row",
-                    display: "flex",
-                    width: "100%",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div style={{ marginBottom: 8 }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileInput(e, "vehicleRCFront")}
+              <div style={styles.formGrid}>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>Vehicle RC - Front</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileInput(e, "vehicleRCFront")}
+                  />
+                  {filePreviews.vehicleRCFront && (
+                    <img
+                      src={filePreviews.vehicleRCFront}
+                      alt="rc-front"
+                      style={styles.previewImg}
                     />
-                    <span style={{ marginLeft: 8 }}>Vehicle RC Front</span>
-                    {filePreviews.vehicleRCFront && (
-                      <img
-                        src={filePreviews.vehicleRCFront}
-                        alt="rc-front"
-                        style={{ width: 80, marginLeft: 8 }}
-                      />
-                    )}
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileInput(e, "vehicleRCBack")}
+                  )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>Vehicle RC - Back</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileInput(e, "vehicleRCBack")}
+                  />
+                  {filePreviews.vehicleRCBack && (
+                    <img
+                      src={filePreviews.vehicleRCBack}
+                      alt="rc-back"
+                      style={styles.previewImg}
                     />
-                    <span style={{ marginLeft: 8 }}>Vehicle RC Back</span>
-                    {filePreviews.vehicleRCBack && (
-                      <img
-                        src={filePreviews.vehicleRCBack}
-                        alt="rc-back"
-                        style={{ width: 80, marginLeft: 8 }}
-                      />
-                    )}
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileInput(e, "aadhaarFront")}
+                  )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>Aadhaar - Front</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileInput(e, "aadhaarFront")}
+                  />
+                  {filePreviews.aadhaarFront && (
+                    <img
+                      src={filePreviews.aadhaarFront}
+                      alt="aadhaar-front"
+                      style={styles.previewImg}
                     />
-                    <span style={{ marginLeft: 8 }}>Aadhaar Front</span>
-                    {filePreviews.aadhaarFront && (
-                      <img
-                        src={filePreviews.aadhaarFront}
-                        alt="aadhaar-front"
-                        style={{ width: 80, marginLeft: 8 }}
-                      />
-                    )}
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileInput(e, "aadhaarBack")}
+                  )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>Aadhaar - Back</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileInput(e, "aadhaarBack")}
+                  />
+                  {filePreviews.aadhaarBack && (
+                    <img
+                      src={filePreviews.aadhaarBack}
+                      alt="aadhaar-back"
+                      style={styles.previewImg}
                     />
-                    <span style={{ marginLeft: 8 }}>Aadhaar Back</span>
-                    {filePreviews.aadhaarBack && (
-                      <img
-                        src={filePreviews.aadhaarBack}
-                        alt="aadhaar-back"
-                        style={{ width: 80, marginLeft: 8 }}
-                      />
-                    )}
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileInput(e, "panPhoto")}
+                  )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>PAN Card Photo</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileInput(e, "panPhoto")}
+                  />
+                  {filePreviews.panPhoto && (
+                    <img
+                      src={filePreviews.panPhoto}
+                      alt="pan"
+                      style={styles.previewImg}
                     />
-                    <span style={{ marginLeft: 8 }}>PAN Photo</span>
-                    {filePreviews.panPhoto && (
-                      <img
-                        src={filePreviews.panPhoto}
-                        alt="pan"
-                        style={{ width: 80, marginLeft: 8 }}
-                      />
-                    )}
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileInput(e, "vehicleKMPhoto")}
+                  )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    Vehicle KM (Odometer) Photo
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileInput(e, "vehicleKMPhoto")}
+                  />
+                  {filePreviews.vehicleKMPhoto && (
+                    <img
+                      src={filePreviews.vehicleKMPhoto}
+                      alt="km"
+                      style={styles.previewImg}
                     />
-                    <span style={{ marginLeft: 8 }}>Vehicle KM Photo</span>
-                    {filePreviews.vehicleKMPhoto && (
-                      <img
-                        src={filePreviews.vehicleKMPhoto}
-                        alt="km"
-                        style={{ width: 80, marginLeft: 8 }}
-                      />
-                    )}
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => handleMultipleFiles(e, "vehiclePhotos")}
-                    />
-                    <span style={{ marginLeft: 8 }}>
-                      Vehicle Photos (up to 4)
-                    </span>
-                    <div style={{ display: "inline-block", marginLeft: 8 }}>
-                      {Array.isArray(filePreviews.vehiclePhotos) &&
-                        filePreviews.vehiclePhotos.map((src, idx) => (
-                          <img
-                            key={idx}
-                            src={src}
-                            alt={`photo-${idx}`}
-                            style={{ width: 80, marginLeft: 6 }}
-                          />
-                        ))}
-                    </div>
+                  )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    Vehicle Photos (up to 4)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handleMultipleFiles(e, "vehiclePhotos")}
+                  />
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      marginTop: "8px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    {(filePreviews.vehiclePhotos || []).map((p, idx) => (
+                      <div key={idx} style={{ position: "relative" }}>
+                        <img
+                          src={p}
+                          alt={`vehicle-${idx}`}
+                          style={styles.previewImgSmall}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeVehiclePhoto(idx)}
+                          style={styles.removePreviewBtn}
+                        >
+                          x
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -3029,12 +3042,12 @@ const styles = {
   container: {
     display: "flex",
     minHeight: "100vh",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     fontFamily: "'Inter', sans-serif",
   },
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
     position: "sticky",
@@ -3047,7 +3060,7 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #1e293b",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   },
   sidebarTitle: {
     fontSize: "1.25rem",
@@ -3079,8 +3092,8 @@ const styles = {
     },
   },
   menuItemActive: {
-    backgroundColor: "#1e293b",
-    borderRight: "3px solid #3b82f6",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    borderRight: "3px solid #088395",
     color: "#ffffff",
   },
   menuItemContent: {
@@ -3123,7 +3136,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #1e293b",
+    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
     transition: "all 0.2s ease",
     ":hover": {
       backgroundColor: "#7f1d1d20",
@@ -3170,14 +3183,14 @@ const styles = {
   },
   syncButton: {
     fontSize: "0.75rem",
-    backgroundColor: "#10b981",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     padding: "4px 8px",
     borderRadius: "4px",
     cursor: "pointer",
     ":hover": {
-      backgroundColor: "#059669",
+      backgroundColor: "#2DA2AD",
     },
   },
   pageTitle: {
@@ -3228,33 +3241,33 @@ const styles = {
   englishButton: {
     flex: 1,
     padding: "12px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
     fontWeight: "500",
     ":hover": {
-      backgroundColor: "#2563eb",
+      backgroundColor: "#2DA2AD",
     },
   },
   hindiButton: {
     flex: 1,
     padding: "12px",
-    backgroundColor: "#10b981",
+    backgroundColor: "#37B7C3",
     color: "white",
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
     fontWeight: "500",
     ":hover": {
-      backgroundColor: "#059669",
+      backgroundColor: "#2DA2AD",
     },
   },
   modalCloseButton: {
     width: "100%",
     padding: "8px",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     color: "#64748b",
     border: "none",
     borderRadius: "6px",
@@ -3347,10 +3360,11 @@ const styles = {
   formGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-    gap: "20px",
+    gap: "25px",
   },
   formField: {
     marginBottom: "16px",
+    width: "90%",
   },
   formLabel: {
     display: "flex",
@@ -3394,7 +3408,7 @@ const styles = {
     backgroundColor: "#ffffff",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
+      borderColor: "#088395",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
       backgroundColor: "black",
     },
@@ -3414,7 +3428,7 @@ const styles = {
     backgroundSize: "1em",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
+      borderColor: "#088395",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
       backgroundColor: "red",
     },
@@ -3432,7 +3446,7 @@ const styles = {
     backgroundColor: "#ffffff",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
+      borderColor: "#088395",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
       backgroundColor: "#f8fafc",
     },
@@ -3446,7 +3460,7 @@ const styles = {
   formCheckbox: {
     width: "16px",
     height: "16px",
-    accentColor: "#3b82f6",
+    accentColor: "#088395",
   },
   formCheckboxLabel: {
     display: "flex",
@@ -3486,7 +3500,7 @@ const styles = {
     alignItems: "center",
     gap: "8px",
     padding: "10px 20px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "8px",
@@ -3513,6 +3527,38 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: "24px",
+  },
+  previewImg: {
+    width: "100%",
+    height: "150px",
+    objectFit: "contain",
+    marginTop: "8px",
+    border: "1px solid #e2e8f0",
+    borderRadius: "4px",
+    backgroundColor: "#f8fafc",
+  },
+  previewImgSmall: {
+    width: "80px",
+    height: "80px",
+    objectFit: "cover",
+    borderRadius: "4px",
+    border: "1px solid #e2e8f0",
+  },
+  removePreviewBtn: {
+    position: "absolute",
+    top: "-8px",
+    right: "-8px",
+    backgroundColor: "#ef4444",
+    color: "white",
+    border: "none",
+    borderRadius: "50%",
+    width: "20px",
+    height: "20px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    fontSize: "12px",
   },
   backButton: {
     display: "flex",

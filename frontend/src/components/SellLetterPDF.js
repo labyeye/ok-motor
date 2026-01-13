@@ -165,7 +165,8 @@ const SellLetterForm = () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+      const API_BASE =
+        process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
@@ -517,7 +518,7 @@ const SellLetterForm = () => {
                 onClick={onClose}
                 style={{
                   padding: "8px 16px",
-                  backgroundColor: "#3b82f6",
+                  backgroundColor: "#088395",
                   color: "white",
                   border: "none",
                   borderRadius: "4px",
@@ -545,7 +546,7 @@ const SellLetterForm = () => {
     },
     progressBar: {
       height: "100%",
-      backgroundColor: "#3b82f6",
+      backgroundColor: "#088395",
       transition: "width 0.3s ease",
     },
     progressText: {
@@ -691,6 +692,11 @@ const SellLetterForm = () => {
       path: "/bike-history",
     },
     {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
+    },
+    {
       name: "Settings",
       icon: Settings,
       path: "/settings",
@@ -814,7 +820,6 @@ const SellLetterForm = () => {
           });
         }
       }
-      // add document pages (use savedSellLetter.documents if available, else use filePreviews)
       const docs =
         (saveResultRef.current && saveResultRef.current.documents) ||
         (savedSellLetter && savedSellLetter.documents) ||
@@ -2718,7 +2723,7 @@ const SellLetterForm = () => {
                     gap: "8px",
                   }}
                 >
-                  <CheckCircle size={20} style={{ color: "#3b82f6" }} />
+                  <CheckCircle size={20} style={{ color: "#088395" }} />
                   <span style={{ fontSize: "0.875rem", color: "#1e293b" }}>
                     Vehicle details auto-filled. You can modify them below if
                     needed.
@@ -3659,7 +3664,7 @@ const styles = {
   container: {
     display: "flex",
     minHeight: "100vh",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     fontFamily: "'Inter', sans-serif",
   },
   topBar: {
@@ -3690,7 +3695,7 @@ const styles = {
 
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
     position: "sticky",
@@ -3704,7 +3709,7 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #1e293b",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   },
   sidebarTitle: {
     fontSize: "1.25rem",
@@ -3736,8 +3741,8 @@ const styles = {
     },
   },
   menuItemActive: {
-    backgroundColor: "#1e293b",
-    borderRight: "3px solid #3b82f6",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    borderRight: "3px solid #088395",
     color: "#ffffff",
   },
   menuItemContent: {
@@ -3780,7 +3785,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #1e293b",
+    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
     transition: "all 0.2s ease",
     ":hover": {
       backgroundColor: "#7f1d1d20",
@@ -3847,33 +3852,33 @@ const styles = {
   englishButton: {
     flex: 1,
     padding: "12px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
     fontWeight: "500",
     ":hover": {
-      backgroundColor: "#2563eb",
+      backgroundColor: "#2DA2AD",
     },
   },
   hindiButton: {
     flex: 1,
     padding: "12px",
-    backgroundColor: "#10b981",
+    backgroundColor: "#37B7C3",
     color: "white",
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
     fontWeight: "500",
     ":hover": {
-      backgroundColor: "#059669",
+      backgroundColor: "#2DA2AD",
     },
   },
   modalCloseButton: {
     width: "100%",
     padding: "8px",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     color: "#64748b",
     border: "none",
     borderRadius: "6px",
@@ -3919,6 +3924,7 @@ const styles = {
   },
   formField: {
     marginBottom: "16px",
+    width: "90%",
   },
   previewImg: {
     width: "100%",
@@ -3970,7 +3976,7 @@ const styles = {
     backgroundColor: "#f8fafc",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
+      borderColor: "#088395",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
       backgroundColor: "#ffffff",
     },
@@ -4012,7 +4018,7 @@ const styles = {
     backgroundSize: "1em",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
+      borderColor: "#088395",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
       backgroundColor: "#ffffff",
     },
@@ -4029,7 +4035,7 @@ const styles = {
     backgroundColor: "#f8fafc",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
+      borderColor: "#088395",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
       backgroundColor: "#ffffff",
     },
@@ -4043,7 +4049,7 @@ const styles = {
   formCheckbox: {
     width: "16px",
     height: "16px",
-    accentColor: "#3b82f6",
+    accentColor: "#088395",
   },
   formCheckboxLabel: {
     display: "flex",
@@ -4084,7 +4090,7 @@ const styles = {
     alignItems: "center",
     gap: "8px",
     padding: "10px 20px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "8px",

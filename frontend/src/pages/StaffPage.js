@@ -22,7 +22,7 @@ import logo from "../images/company.png";
 import AuthContext from "../context/AuthContext";
 
 const StaffPage = () => {
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -41,9 +41,9 @@ const StaffPage = () => {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-        const endpoint = isOwnerView
-          ? `https://ok-motor-51l3.vercel.app/api/dashboard/owner`
-          : `https://ok-motor-51l3.vercel.app/api/dashboard/stats`;
+      const endpoint = isOwnerView
+        ? `https://ok-motor-51l3.vercel.app/api/dashboard/owner`
+        : `https://ok-motor-51l3.vercel.app/api/dashboard/stats`;
 
       const response = await fetch(endpoint, {
         headers: {
@@ -177,9 +177,14 @@ const StaffPage = () => {
         ]
       : []),
     {
-      name: 'Gallery',
+      name: "Gallery",
       icon: Image,
-      path: '/gallery/manage',
+      path: "/gallery/manage",
+    },
+    {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
     },
     {
       name: "Vehicle History",
@@ -204,7 +209,7 @@ const StaffPage = () => {
               style={{
                 ...styles.card,
                 borderLeft: `4px solid ${
-                  ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b"][index]
+                  ["#088395", "#37B7C3", "#071952", "#f59e0b"][index]
                 }`,
                 opacity: 0.7,
               }}
@@ -218,9 +223,9 @@ const StaffPage = () => {
                   style={{
                     ...styles.cardIcon,
                     backgroundColor: [
-                      "#dbeafe",
-                      "#d1fae5",
-                      "#ede9fe",
+                      "rgba(8, 131, 149, 0.15)",
+                      "rgba(55, 183, 195, 0.15)",
+                      "rgba(7, 25, 82, 0.15)",
                       "#fef3c7",
                     ][index],
                   }}
@@ -239,26 +244,36 @@ const StaffPage = () => {
           ))
       ) : (
         <>
-          <div style={{ ...styles.card, borderLeft: "4px solid #3b82f6" }}>
+          <div style={{ ...styles.card, borderLeft: "4px solid #088395" }}>
             <div style={styles.cardContent}>
               <div>
                 <p style={styles.cardLabel}>Total Buy Letters</p>
                 <p style={styles.cardValue}>{dashboardData.totalBuyLetters}</p>
               </div>
-              <div style={{ ...styles.cardIcon, backgroundColor: "#dbeafe" }}>
-                <FileText size={32} color="#2563eb" />
+              <div
+                style={{
+                  ...styles.cardIcon,
+                  backgroundColor: "rgba(8, 131, 149, 0.15)",
+                }}
+              >
+                <FileText size={32} color="#088395" />
               </div>
             </div>
           </div>
 
-          <div style={{ ...styles.card, borderLeft: "4px solid #10b981" }}>
+          <div style={{ ...styles.card, borderLeft: "4px solid #37B7C3" }}>
             <div style={styles.cardContent}>
               <div>
                 <p style={styles.cardLabel}>Total Sell Letters</p>
                 <p style={styles.cardValue}>{dashboardData.totalSellLetters}</p>
               </div>
-              <div style={{ ...styles.cardIcon, backgroundColor: "#d1fae5" }}>
-                <TrendingUp size={32} color="#059669" />
+              <div
+                style={{
+                  ...styles.cardIcon,
+                  backgroundColor: "rgba(55, 183, 195, 0.15)",
+                }}
+              >
+                <TrendingUp size={32} color="#088395" />
               </div>
             </div>
           </div>
@@ -279,7 +294,9 @@ const StaffPage = () => {
             <div style={styles.cardContent}>
               <div>
                 <p style={styles.cardLabel}>Total Advance Bills</p>
-                <p style={styles.cardValue}>{dashboardData.totalAdvanceBills || 0}</p>
+                <p style={styles.cardValue}>
+                  {dashboardData.totalAdvanceBills || 0}
+                </p>
               </div>
               <div style={{ ...styles.cardIcon, backgroundColor: "#fef3c7" }}>
                 <FileText size={32} color="#d97706" />
@@ -306,7 +323,7 @@ const StaffPage = () => {
                 <p
                   style={{
                     ...styles.revenueValue,
-                    color: ["#dc2626", "#059669", "#2563eb"][index],
+                    color: ["#dc2626", "#088395", "#088395"][index],
                   }}
                 >
                   -
@@ -339,7 +356,7 @@ const StaffPage = () => {
             <p style={styles.revenueLabel}>
               {isOwnerView ? "My Total Sales" : "Total Business Sales"}
             </p>
-            <p style={{ ...styles.revenueValue, color: "#059669" }}>
+            <p style={{ ...styles.revenueValue, color: "#088395" }}>
               {formatCurrency(dashboardData.totalSellValue)}
               {isOwnerView && (
                 <span
@@ -359,7 +376,7 @@ const StaffPage = () => {
             <p
               style={{
                 ...styles.revenueValue,
-                color: dashboardData.profit >= 0 ? "#2563eb" : "#dc2626",
+                color: dashboardData.profit >= 0 ? "#088395" : "#dc2626",
               }}
             >
               {formatCurrency(dashboardData.profit)}
@@ -539,7 +556,7 @@ const StaffPage = () => {
                   >
                     <ShoppingCart
                       size={24}
-                      color="#2563eb"
+                      color="#088395"
                       style={styles.quickActionIcon}
                     />
                     <p style={styles.quickActionTitle}>Create Buy Letter</p>
@@ -616,13 +633,13 @@ const styles = {
   container: {
     display: "flex",
     height: "100vh",
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#EBF4F6",
     fontFamily: "Arial, sans-serif",
   },
   // Sidebar Styles
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
     position: "sticky",
@@ -667,8 +684,8 @@ const styles = {
     },
   },
   menuItemActive: {
-    backgroundColor: "#1e293b",
-    borderRight: "3px solid #3b82f6",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    borderRight: "3px solid #088395",
     color: "#ffffff",
   },
   menuItemContent: {

@@ -474,7 +474,7 @@ const AdvancePayBillForm = () => {
                 onClick={onClose}
                 style={{
                   padding: "8px 16px",
-                  backgroundColor: "#3b82f6",
+                  backgroundColor: "#088395",
                   color: "white",
                   border: "none",
                   borderRadius: "4px",
@@ -502,7 +502,7 @@ const AdvancePayBillForm = () => {
     },
     progressBar: {
       height: "100%",
-      backgroundColor: "#3b82f6",
+      backgroundColor: "#088395",
       transition: "width 0.3s ease",
     },
     progressText: {
@@ -767,6 +767,11 @@ const AdvancePayBillForm = () => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
     },
     {
       name: "Settings",
@@ -1515,12 +1520,12 @@ const styles = {
   container: {
     display: "flex",
     minHeight: "100vh",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     fontFamily: "'Inter', sans-serif",
   },
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
     position: "sticky",
@@ -1558,7 +1563,7 @@ const styles = {
     height: "50px",
     margin: "0 auto 20px",
     border: "5px solid #f3f3f3",
-    borderTop: "5px solid #3b82f6",
+    borderTop: "5px solid #088395",
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
   },
@@ -1621,7 +1626,7 @@ const styles = {
   modalCloseButton: {
     width: "100%",
     padding: "8px",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     color: "#64748b",
     border: "none",
     borderRadius: "6px",
@@ -1632,7 +1637,7 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #1e293b",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   },
   sidebarTitle: {
     fontSize: "1.25rem",
@@ -1667,8 +1672,8 @@ const styles = {
     },
   },
   menuItemActive: {
-    backgroundColor: "#1e293b",
-    borderRight: "3px solid #3b82f6",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    borderRight: "3px solid #088395",
     color: "#ffffff",
   },
   menuItemContent: {
@@ -1711,7 +1716,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #1e293b",
+    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
     transition: "all 0.2s ease",
     ":hover": {
       backgroundColor: "#7f1d1d20",
@@ -1822,8 +1827,8 @@ const styles = {
     backgroundColor: "#f8fafc",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
-      boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+      borderColor: "#088395",
+      boxShadow: "0 0 0 3px rgba(8, 131, 149, 0.1)",
       backgroundColor: "#ffffff",
     },
   },
@@ -1843,8 +1848,8 @@ const styles = {
     backgroundSize: "1em",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
-      boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+      borderColor: "#088395",
+      boxShadow: "0 0 0 3px rgba(8, 131, 149, 0.1)",
       backgroundColor: "#ffffff",
     },
   },
@@ -1860,7 +1865,7 @@ const styles = {
     backgroundColor: "#f8fafc",
   },
   previewButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "#ffffff",
     border: "none",
     padding: "10px 20px",
@@ -1872,7 +1877,7 @@ const styles = {
     },
   },
   saveButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#088395",
     color: "#ffffff",
     border: "none",
     padding: "10px 20px",
@@ -1884,7 +1889,7 @@ const styles = {
     },
   },
   downloadButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#088395",
     color: "#ffffff",
     border: "none",
     padding: "10px 20px",

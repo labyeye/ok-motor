@@ -18,11 +18,12 @@ import {
   X,
   RefreshCw,
   Image,
-  Megaphone
+  Megaphone,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
-const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+const API_BASE =
+  process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
 
 const SellRequests = () => {
   const { user, logout } = useContext(AuthContext);
@@ -74,7 +75,7 @@ const SellRequests = () => {
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       setRequests((prev) =>
         prev.map((p) => (p._id === id ? res.data.data : p))
       );
@@ -172,6 +173,11 @@ const SellRequests = () => {
       path: "/bike-history",
     },
     {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
+    },
+    {
       name: "Settings",
       icon: Settings,
       path: "/settings",
@@ -185,16 +191,29 @@ const SellRequests = () => {
         paddingTop: isMobile ? "72px" : undefined,
       }}
     >
-      <div style={{ ...styles.topBar, display: isMobile && !isSidebarOpen ? "block" : "none" }}>
+      <div
+        style={{
+          ...styles.topBar,
+          display: isMobile && !isSidebarOpen ? "block" : "none",
+        }}
+      >
         <div
-          style={{ ...styles.hamburgerMenu, display: isMobile && !isSidebarOpen ? "block" : "none" }}
+          style={{
+            ...styles.hamburgerMenu,
+            display: isMobile && !isSidebarOpen ? "block" : "none",
+          }}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
           {isSidebarOpen ? <X size={28} /> : <Menu size={28} />}
         </div>
       </div>
 
-      {isSidebarOpen && isMobile && <div style={styles.sidebarOverlay} onClick={() => setIsSidebarOpen(false)}></div>}
+      {isSidebarOpen && isMobile && (
+        <div
+          style={styles.sidebarOverlay}
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
 
       {}
       <div
@@ -202,7 +221,9 @@ const SellRequests = () => {
           ...styles.sidebar,
           ...(isMobile
             ? {
-                transform: isSidebarOpen ? "translateX(0)" : "translateX(-100%)",
+                transform: isSidebarOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
                 position: "fixed",
                 zIndex: 15,
               }
@@ -271,7 +292,9 @@ const SellRequests = () => {
                           ? styles.submenuItemActive
                           : {}),
                       }}
-                      onClick={() => handleMenuClick(subItem.name, subItem.path)}
+                      onClick={() =>
+                        handleMenuClick(subItem.name, subItem.path)
+                      }
                     >
                       {subItem.name}
                     </div>
@@ -533,12 +556,12 @@ const styles = {
   container: {
     display: "flex",
     height: "100vh",
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#EBF4F6",
     fontFamily: "Arial, sans-serif",
   },
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
     position: "sticky",
@@ -551,9 +574,14 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #1e293b",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   },
-  nav: { padding: "16px 0", flex: "1 1 auto", overflowY: "auto", WebkitOverflowScrolling: "touch" },
+  nav: {
+    padding: "16px 0",
+    flex: "1 1 auto",
+    overflowY: "auto",
+    WebkitOverflowScrolling: "touch",
+  },
   topBar: {
     position: "fixed",
     top: 0,
@@ -579,7 +607,12 @@ const styles = {
     background: "rgba(0, 0, 0, 0.5)",
     zIndex: 14,
   },
-  nav: { padding: "16px 0", flex: "1 1 auto", overflowY: "auto", WebkitOverflowScrolling: "touch" },
+  nav: {
+    padding: "16px 0",
+    flex: "1 1 auto",
+    overflowY: "auto",
+    WebkitOverflowScrolling: "touch",
+  },
   menuItem: {
     display: "flex",
     alignItems: "center",
@@ -590,8 +623,8 @@ const styles = {
     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   },
   menuItemActive: {
-    backgroundColor: "#1e293b",
-    borderRight: "3px solid #3b82f6",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    borderRight: "3px solid #088395",
     color: "#ffffff",
   },
   menuItemContent: { display: "flex", alignItems: "center" },
@@ -611,7 +644,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #1e293b",
+    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
   },
   mainContent: { flex: 1, overflow: "auto" },
   contentPadding: { padding: "32px" },

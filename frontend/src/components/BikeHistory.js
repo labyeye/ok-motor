@@ -24,7 +24,7 @@ import {
   Settings,
   RefreshCw,
   Megaphone,
-  Image as ImageIcon
+  Image as ImageIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -47,7 +47,10 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
   // If an external search term is provided (e.g. from AdminPage modal), sync it
   useEffect(() => {
-    if (typeof externalSearchTerm !== "undefined" && externalSearchTerm !== null) {
+    if (
+      typeof externalSearchTerm !== "undefined" &&
+      externalSearchTerm !== null
+    ) {
       const term = String(externalSearchTerm || "").trim();
       if (term && term !== searchTerm) {
         setSearchTerm(term);
@@ -1707,7 +1710,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
   const getActionIcon = (type) => {
     switch (type) {
       case "buy":
-        return <ArrowDownLeft size={16} color="#3b82f6" />;
+        return <ArrowDownLeft size={16} color="#088395" />;
       case "sell":
         return <ArrowUpRight size={16} color="#ef4444" />;
       case "service":
@@ -1862,6 +1865,11 @@ const BikeHistory = ({ externalSearchTerm }) => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
     },
     {
       name: "Settings",
@@ -2162,7 +2170,7 @@ const styles = {
   container: {
     display: "flex",
     minHeight: "100vh",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     fontFamily: "'Inter', sans-serif",
   },
   topBar: {
@@ -2192,7 +2200,7 @@ const styles = {
   },
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
     position: "sticky",
@@ -2206,7 +2214,7 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #1e293b",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   },
   sidebarTitle: {
     fontSize: "1.25rem",
@@ -2238,8 +2246,8 @@ const styles = {
     },
   },
   menuItemActive: {
-    backgroundColor: "#1e293b",
-    borderRight: "3px solid #3b82f6",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    borderRight: "3px solid #088395",
     color: "#ffffff",
   },
   menuItemContent: {
@@ -2282,7 +2290,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #1e293b",
+    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
     transition: "all 0.2s ease",
     ":hover": {
       backgroundColor: "#7f1d1d20",
@@ -2362,8 +2370,8 @@ const styles = {
     backgroundColor: "#f8fafc",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
-      boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+      borderColor: "#088395",
+      boxShadow: "0 0 0 3px rgba(8, 131, 149, 0.1)",
       backgroundColor: "#ffffff",
     },
   },
@@ -2381,7 +2389,7 @@ const styles = {
   tableHeader: {
     padding: "12px 16px",
     textAlign: "left",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     color: "#1e293b",
     fontSize: "0.875rem",
     fontWeight: "600",
@@ -2420,7 +2428,7 @@ const styles = {
     alignItems: "center",
     gap: "4px",
     padding: "6px 12px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "4px",
@@ -2437,7 +2445,7 @@ const styles = {
     alignItems: "center",
     gap: "4px",
     padding: "6px 12px",
-    backgroundColor: "#10b981",
+    backgroundColor: "#37B7C3",
     color: "white",
     border: "none",
     borderRadius: "4px",
@@ -2446,7 +2454,7 @@ const styles = {
     cursor: "pointer",
     transition: "all 0.2s ease",
     ":hover": {
-      backgroundColor: "#059669",
+      backgroundColor: "#2DA2AD",
     },
   },
   actionButtons: {

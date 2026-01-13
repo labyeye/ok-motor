@@ -84,6 +84,126 @@ const AdminPage = () => {
   const [freeSearch, setFreeSearch] = useState("");
   const navigate = useNavigate();
 
+  const [extraStats, setExtraStats] = useState({
+    totalVehicles: 0,
+    totalBikes: 0,
+    totalSold: 0,
+    insuranceExpiring: 0,
+    pucExpiring: 0,
+    month1Pending: 0,
+    month2Pending: 0,
+    month3Pending: 0,
+  });
+
+  const fetchVehicleStats = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const API_BASE = "https://ok-motor-51l3.vercel.app";
+      const res = await axios.get(`${API_BASE}/api/vehicles?limit=2000`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const vehicles = res.data.vehicles || [];
+
+      // Fetch sell letters for accurate sold count
+      const resSellLetters = await axios.get(
+        `${API_BASE}/api/sell-letters?limit=2000`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      // Handle array or object response structure
+      const sellLetters = Array.isArray(resSellLetters.data)
+        ? resSellLetters.data
+        : resSellLetters.data.data || [];
+
+      // Logic to count unique sell letters (handling edits/versions)
+      const uniqueSaleIds = new Set();
+      sellLetters.forEach((letter) => {
+        // use originalDocumentId if available (it points to the first version), else use _id
+        const saleId = letter.originalDocumentId || letter._id;
+        uniqueSaleIds.add(saleId);
+      });
+      const totalSoldLetters = uniqueSaleIds.size;
+
+      const totalVehicles = vehicles.length;
+      const totalBikes = vehicles.filter((v) => {
+        const name = (v.vehicleName || "").toLowerCase();
+        const type = (v.vehicleType || "").toLowerCase();
+        return (
+          type.includes("bike") ||
+          type.includes("scooter") ||
+          type.includes("motorcycle") ||
+          name.includes("bike") ||
+          name.includes("scooter") ||
+          name.includes("activa") ||
+          name.includes("access") ||
+          name.includes("honda") ||
+          name.includes("hero")
+        );
+      }).length;
+
+      const soldVehicles = vehicles.filter(
+        (v) => v.availabilityStatus === "Sold"
+      );
+      // Use the sell letters count for "Total Sold" instead of vehicle status
+      const totalSold = totalSoldLetters;
+
+      const now = new Date();
+      const sevenDays = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      let insuranceExpiring = 0;
+      let pucExpiring = 0;
+
+      soldVehicles.forEach((v) => {
+        if (v.insuranceExpiryDate) {
+          const d = new Date(v.insuranceExpiryDate);
+          if (d >= now && d <= sevenDays) insuranceExpiring++;
+        }
+        if (v.pucExpiryDate) {
+          const d = new Date(v.pucExpiryDate);
+          if (d >= now && d <= sevenDays) pucExpiring++;
+        }
+      });
+
+      setExtraStats((prev) => ({
+        ...prev,
+        totalVehicles,
+        totalBikes,
+        totalSold,
+        insuranceExpiring,
+        pucExpiring,
+      }));
+    } catch (e) {
+      console.error("Error fetching vehicle stats", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user && activeMenu === "Dashboard") {
+      fetchVehicleStats();
+    }
+  }, [user, activeMenu, fetchVehicleStats]);
+
+  useEffect(() => {
+    if (freeServices.length > 0) {
+      let m1 = 0,
+        m2 = 0,
+        m3 = 0;
+      freeServices.forEach((row) => {
+        const used = row.usedCount || 0;
+        if (used === 0) m1++;
+        else if (used === 1) m2++;
+        else if (used === 2) m3++;
+      });
+      setExtraStats((prev) => ({
+        ...prev,
+        month1Pending: m1,
+        month2Pending: m2,
+        month3Pending: m3,
+      }));
+    }
+  }, [freeServices]);
+
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
@@ -131,8 +251,9 @@ const AdminPage = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const endpoint = "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
-      const params = { limit: 10 };
+      const endpoint =
+        "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
+      const params = { limit: 2000 };
       if (search && String(search).trim() !== "")
         params.search = String(search).trim();
 
@@ -399,6 +520,11 @@ const AdminPage = () => {
       path: "/gallery/manage",
     },
     {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
+    },
+    {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
@@ -508,6 +634,151 @@ const AdminPage = () => {
           </div>
         </>
       )}
+    </div>
+  );
+
+  const DetailedStatsCards = () => (
+    <div style={{ marginTop: "32px", marginBottom: "32px" }}>
+      {/* 1. Vehicle Counts */}
+      <h3
+        style={{
+          fontSize: "1.1rem",
+          fontWeight: 600,
+          color: "#64748b",
+          marginBottom: "16px",
+        }}
+      >
+        Vehicle Overview
+      </h3>
+      <div className="cards-grid" style={{ marginBottom: "32px" }}>
+        <div className="card blue">
+          <div className="card-content">
+            <div>
+              <p className="card-label">Total Vehicles</p>
+              <p className="card-value">{extraStats.totalVehicles}</p>
+            </div>
+            <div className="card-icon">
+              <Bike />
+            </div>
+          </div>
+        </div>
+        <div className="card purple">
+          <div className="card-content">
+            <div>
+              <p className="card-label">Total Bikes</p>
+              <p className="card-value">{extraStats.totalBikes}</p>
+            </div>
+            <div className="card-icon">
+              <Bike />
+            </div>
+          </div>
+        </div>
+        <div className="card green">
+          <div className="card-content">
+            <div>
+              <p className="card-label">Total Sold</p>
+              <p className="card-value">{extraStats.totalSold}</p>
+            </div>
+            <div className="card-icon">
+              <TrendingUp />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Free Service Counts */}
+      <h3
+        style={{
+          fontSize: "1.1rem",
+          fontWeight: 600,
+          color: "#64748b",
+          marginBottom: "16px",
+        }}
+      >
+        Pending Free Services
+      </h3>
+      <div className="cards-grid" style={{ marginBottom: "32px" }}>
+        <div className="card amber">
+          <div className="card-content">
+            <div>
+              <p className="card-label">1st Month Pending</p>
+              <p className="card-value">{extraStats.month1Pending}</p>
+            </div>
+            <div className="card-icon">
+              <Wrench />
+            </div>
+          </div>
+        </div>
+        <div className="card amber">
+          <div className="card-content">
+            <div>
+              <p className="card-label">2nd Month Pending</p>
+              <p className="card-value">{extraStats.month2Pending}</p>
+            </div>
+            <div className="card-icon">
+              <Wrench />
+            </div>
+          </div>
+        </div>
+        <div className="card amber">
+          <div className="card-content">
+            <div>
+              <p className="card-label">3rd Month Pending</p>
+              <p className="card-value">{extraStats.month3Pending}</p>
+            </div>
+            <div className="card-icon">
+              <Wrench />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Expiry Counts */}
+      <h3
+        style={{
+          fontSize: "1.1rem",
+          fontWeight: 600,
+          color: "#64748b",
+          marginBottom: "16px",
+        }}
+      >
+        Approaching Expiry (Sold Vehicles - 7 Days)
+      </h3>
+      <div
+        className="cards-grid"
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}
+      >
+        <div className="card" style={{ backgroundColor: "#ef4444" }}>
+          <div className="card-content">
+            <div>
+              <p className="card-label" style={{ color: "white" }}>
+                Insurance Expiring
+              </p>
+              <p className="card-value" style={{ color: "white" }}>
+                {extraStats.insuranceExpiring}
+              </p>
+            </div>
+            <div className="card-icon" style={{ color: "white" }}>
+              <FileText />
+            </div>
+          </div>
+        </div>
+        <div className="card" style={{ backgroundColor: "#ef4444" }}>
+          <div className="card-content">
+            <div>
+              <p className="card-label" style={{ color: "white" }}>
+                PUC Expiring
+              </p>
+              <p className="card-value" style={{ color: "white" }}>
+                {extraStats.pucExpiring}
+              </p>
+            </div>
+            <div className="card-icon" style={{ color: "white" }}>
+              <FileText />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 
@@ -644,75 +915,6 @@ const AdminPage = () => {
         </div>
       );
     }
-
-    return (
-      <div className="charts-container">
-        <div className="chart-card">
-          <h3 className="chart-title">Monthly Transactions</h3>
-          <div className="chart-wrapper">
-            {dashboardData.monthlyData?.length > 0 ? (
-              <Bar data={monthlyChartData} options={chartOptions} />
-            ) : (
-              <p className="no-data">No transaction data available</p>
-            )}
-          </div>
-        </div>
-
-        <div className="chart-card">
-          <h3 className="chart-title">Monthly Profit</h3>
-          <div className="chart-wrapper">
-            {dashboardData.monthlyData?.length > 0 ? (
-              <Bar data={profitChartData} options={chartOptions} />
-            ) : (
-              <p className="no-data">No profit data available</p>
-            )}
-          </div>
-        </div>
-
-        <div className="chart-card">
-          <h3 className="chart-title">Transaction Types</h3>
-          <div className="chart-wrapper">
-            <Pie data={transactionTypeData} options={pieOptions} />
-          </div>
-        </div>
-
-        <div className="chart-card">
-          <h3 className="chart-title">Revenue Breakdown</h3>
-          <div className="chart-wrapper">
-            <Pie
-              data={{
-                labels: [
-                  "Service Revenue",
-                  "Sales Revenue",
-                  "Purchase Expenses",
-                ],
-                datasets: [
-                  {
-                    data: [
-                      dashboardData.totalServiceValue || 0,
-                      dashboardData.totalSellValue || 0,
-                      dashboardData.totalBuyValue || 0,
-                    ],
-                    backgroundColor: [
-                      "rgba(245, 158, 11, 0.7)",
-                      "rgba(16, 185, 129, 0.7)",
-                      "rgba(239, 68, 68, 0.7)",
-                    ],
-                    borderColor: [
-                      "rgba(217, 119, 6, 1)",
-                      "rgba(5, 150, 105, 1)",
-                      "rgba(239, 68, 68, 1)",
-                    ],
-                    borderWidth: 1,
-                  },
-                ],
-              }}
-              options={pieOptions}
-            />
-          </div>
-        </div>
-      </div>
-    );
   };
   const RecentTransactions = () => {
     const renderTransactionList = (transactions) => {
@@ -804,46 +1006,6 @@ const AdminPage = () => {
       </div>
     );
   };
-
-  const QuickActions = () => (
-    <div className="quick-actions-card">
-      <h3 className="quick-actions-title">Quick Actions</h3>
-      <div className="quick-actions-grid">
-        <button
-          className="quick-action-button blue"
-          onClick={() => navigate("/buy/create")}
-        >
-          <ShoppingCart size={24} />
-          <p className="quick-action-title">Create Buy Letter</p>
-          <p className="quick-action-subtitle">Add new purchase</p>
-        </button>
-        <button
-          className="quick-action-button green"
-          onClick={() => navigate("/sell/create")}
-        >
-          <TrendingUp size={24} />
-          <p className="quick-action-title">Create Sell Letter</p>
-          <p className="quick-action-subtitle">Record new sale</p>
-        </button>
-        <button
-          className="quick-action-button purple"
-          onClick={() => navigate("/service/create")}
-        >
-          <Wrench size={24} />
-          <p className="quick-action-title">Service Bill</p>
-          <p className="quick-action-subtitle">Create service record</p>
-        </button>
-        <button
-          className="quick-action-button amber"
-          onClick={() => navigate("/staff/create")}
-        >
-          <Users size={24} />
-          <p className="quick-action-title">Add Staff</p>
-          <p className="quick-action-subtitle">Register new staff</p>
-        </button>
-      </div>
-    </div>
-  );
 
   const FreeServicesTable = () => {
     const freeSearchRef = useRef(null);
@@ -1023,9 +1185,12 @@ const AdminPage = () => {
         setLoadingItems(true);
         const token = localStorage.getItem("token");
         if (!token) return;
-        const resp = await axios.get("https://ok-motor-51l3.vercel.app/api/sell-letters", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const resp = await axios.get(
+          "https://ok-motor-51l3.vercel.app/api/sell-letters",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         const data = resp.data || [];
         // normalize and keep those with pucExpiryDate
@@ -1165,9 +1330,12 @@ const AdminPage = () => {
         const token = localStorage.getItem("token");
         if (!token) return;
         // reuse sell-letters endpoint and filter client-side for insurance expiry
-        const resp = await axios.get("https://ok-motor-51l3.vercel.app/api/sell-letters", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const resp = await axios.get(
+          "https://ok-motor-51l3.vercel.app/api/sell-letters",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         const data = resp.data || [];
         // keep those with insuranceExpiryDate
@@ -1422,16 +1590,16 @@ const AdminPage = () => {
           {activeMenu === "Dashboard" && (
             <>
               <DashboardCards />
+              <DetailedStatsCards />
               <FreeServicesTable />
               <PucReminderTable />
               <InsuranceReminderTable />
               <RecentTransactions />
               <ChartsSection />
 
-              {!loading && !error && <QuickActions />}
+              {!loading && !error}
             </>
           )}
-
           {activeMenu !== "Dashboard" && (
             <div className="placeholder-card">
               <h2>{activeMenu}</h2>
@@ -1473,7 +1641,7 @@ const AdminPage = () => {
           display: flex;
           min-height: 100vh;
           font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-          background-color: #f3f4f6;
+          background-color: #EBF4F6;
         }
         .sidebar-overlay {
           display: none;
@@ -1495,7 +1663,7 @@ const AdminPage = () => {
         /* Sidebar Styles */
         .sidebar {
           width: 280px;
-          background: #1E283A;
+          background: #071952;
           color: #f8fafc;
           position: sticky;
           top: 0;
@@ -1552,8 +1720,8 @@ const AdminPage = () => {
         }
 
         .menu-item.active {
-          background: rgba(59, 130, 246, 0.2);
-          border-right: 3px solid #3b82f6;
+          background: rgba(8, 131, 149, 0.2);
+          border-right: 3px solid #088395;
           color: #ffffff;
         }
 
@@ -1671,11 +1839,11 @@ const AdminPage = () => {
         }
 
         .card.blue {
-          border-left: 4px solid #3b82f6;
+          border-left: 4px solid #088395;
         }
 
         .card.green {
-          border-left: 4px solid #10b981;
+          border-left: 4px solid #37B7C3;
         }
 
         .card.purple {
@@ -1735,11 +1903,11 @@ const AdminPage = () => {
         }
 
         .card.blue .card-icon {
-          background-color: #dbeafe;
+          background-color: rgba(8, 131, 149, 0.15);
         }
 
         .card.green .card-icon {
-          background-color: #d1fae5;
+          background-color: rgba(55, 183, 195, 0.15);
         }
 
         .card.purple .card-icon {
@@ -1752,7 +1920,7 @@ const AdminPage = () => {
 
         /* Revenue Card */
         .revenue-card {
-          background: #1e293b;
+          background: #071952;
           backdrop-filter: blur(10px);
           border-radius: 0.75rem;
           padding: 1.5rem;
@@ -1799,7 +1967,7 @@ const AdminPage = () => {
         }
 
         .revenue-value.positive {
-          color: #10b981;
+          color: #088395;
         }
 
         .revenue-value.negative {
@@ -1845,7 +2013,7 @@ const AdminPage = () => {
         }
 
         .summary-value.positive {
-          color: #10b981;
+          color: #088395;
         }
 
         .summary-value.negative {
@@ -1881,7 +2049,7 @@ const AdminPage = () => {
         }
 
         .breakdown-value.positive {
-          color: #10b981;
+          color: #088395;
         }
 
         .breakdown-value.negative {
@@ -1903,7 +2071,7 @@ const AdminPage = () => {
         }
 
         .chart-card {
-          background: #1e293b;
+          background: #071952;
           backdrop-filter: blur(10px);
           border-radius: 0.75rem;
           padding: 1.5rem;
@@ -2103,11 +2271,11 @@ const AdminPage = () => {
         }
 
         .quick-action-button.blue {
-          background: rgba(219, 234, 254, 0.7);
+          background: rgba(8, 131, 149, 0.15);
         }
 
         .quick-action-button.green {
-          background: rgba(209, 250, 229, 0.7);
+          background: rgba(55, 183, 195, 0.15);
         }
 
         .quick-action-button.purple {

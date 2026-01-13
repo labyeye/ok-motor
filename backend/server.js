@@ -125,6 +125,8 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+app.use("/api/letter-heads", require("./routes/letterHeadRoutes"));
+
 // Public root route
 app.get("/", (req, res) => {
   // Ensure index.html is not aggressively cached by browsers/proxies

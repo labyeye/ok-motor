@@ -21,7 +21,7 @@ import {
   Settings,
   RefreshCw,
   Megaphone,
-  Image as ImageIcon
+  Image as ImageIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
@@ -369,7 +369,7 @@ const SellLetterHistory = () => {
                 onClick={onClose}
                 style={{
                   padding: "8px 16px",
-                  backgroundColor: "#3b82f6",
+                  backgroundColor: "#088395",
                   color: "white",
                   border: "none",
                   borderRadius: "4px",
@@ -397,7 +397,7 @@ const SellLetterHistory = () => {
     },
     progressBar: {
       height: "100%",
-      backgroundColor: "#3b82f6",
+      backgroundColor: "#088395",
       transition: "width 0.3s ease",
     },
     progressText: {
@@ -640,7 +640,10 @@ const SellLetterHistory = () => {
     }
   };
 
-  const fillAndDownloadEnglishPdf = async (letter, documentsToInclude = null) => {
+  const fillAndDownloadEnglishPdf = async (
+    letter,
+    documentsToInclude = null
+  ) => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
@@ -1305,11 +1308,14 @@ const SellLetterHistory = () => {
             return;
           }
 
-          await axios.delete(`https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          await axios.delete(
+            `https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
           alert("Sell letter deleted successfully!");
         } else {
@@ -1432,6 +1438,11 @@ const SellLetterHistory = () => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
     },
     {
       name: "Settings",
@@ -1752,11 +1763,10 @@ const SellLetterHistory = () => {
                       aadhaar: !!selectedLetter.documents?.aadhaar,
                       pan: !!selectedLetter.documents?.pan,
                       vehicleKM: !!selectedLetter.documents?.vehicleKM,
-                      vehiclePhotos:
-                        !!(
-                          selectedLetter.documents?.vehiclePhotos &&
-                          selectedLetter.documents.vehiclePhotos.length
-                        ),
+                      vehiclePhotos: !!(
+                        selectedLetter.documents?.vehiclePhotos &&
+                        selectedLetter.documents.vehiclePhotos.length
+                      ),
                     });
                     setShowDocumentModal(true);
                   }}
@@ -1773,11 +1783,10 @@ const SellLetterHistory = () => {
                       aadhaar: !!selectedLetter.documents?.aadhaar,
                       pan: !!selectedLetter.documents?.pan,
                       vehicleKM: !!selectedLetter.documents?.vehicleKM,
-                      vehiclePhotos:
-                        !!(
-                          selectedLetter.documents?.vehiclePhotos &&
-                          selectedLetter.documents.vehiclePhotos.length
-                        ),
+                      vehiclePhotos: !!(
+                        selectedLetter.documents?.vehiclePhotos &&
+                        selectedLetter.documents.vehiclePhotos.length
+                      ),
                     });
                     setShowDocumentModal(true);
                   }}
@@ -1805,8 +1814,8 @@ const SellLetterHistory = () => {
             <div style={styles.modalContent}>
               <h3 style={styles.modalTitle}>Select Documents to Include</h3>
               <p style={styles.modalText}>
-                Choose which supporting documents to include in the sell
-                letter PDF.
+                Choose which supporting documents to include in the sell letter
+                PDF.
               </p>
               <div style={{ marginBottom: 12 }}>
                 <label style={{ display: "block", marginBottom: 8 }}>
@@ -1814,7 +1823,10 @@ const SellLetterHistory = () => {
                     type="checkbox"
                     checked={!!docSelections.vehicleRC}
                     onChange={(e) =>
-                      setDocSelections((s) => ({ ...s, vehicleRC: e.target.checked }))
+                      setDocSelections((s) => ({
+                        ...s,
+                        vehicleRC: e.target.checked,
+                      }))
                     }
                   />
                   &nbsp;Vehicle RC (front/back)
@@ -1824,7 +1836,10 @@ const SellLetterHistory = () => {
                     type="checkbox"
                     checked={!!docSelections.aadhaar}
                     onChange={(e) =>
-                      setDocSelections((s) => ({ ...s, aadhaar: e.target.checked }))
+                      setDocSelections((s) => ({
+                        ...s,
+                        aadhaar: e.target.checked,
+                      }))
                     }
                   />
                   &nbsp;Aadhaar (front/back)
@@ -1844,7 +1859,10 @@ const SellLetterHistory = () => {
                     type="checkbox"
                     checked={!!docSelections.vehicleKM}
                     onChange={(e) =>
-                      setDocSelections((s) => ({ ...s, vehicleKM: e.target.checked }))
+                      setDocSelections((s) => ({
+                        ...s,
+                        vehicleKM: e.target.checked,
+                      }))
                     }
                   />
                   &nbsp;Vehicle KM Photo
@@ -1854,7 +1872,10 @@ const SellLetterHistory = () => {
                     type="checkbox"
                     checked={!!docSelections.vehiclePhotos}
                     onChange={(e) =>
-                      setDocSelections((s) => ({ ...s, vehiclePhotos: e.target.checked }))
+                      setDocSelections((s) => ({
+                        ...s,
+                        vehiclePhotos: e.target.checked,
+                      }))
                     }
                   />
                   &nbsp;Vehicle Photos
@@ -1872,16 +1893,22 @@ const SellLetterHistory = () => {
                   onClick={() => {
                     const buildFilteredDocs = (docs = {}, sel = {}) => {
                       const out = {};
-                      if (sel.vehicleRC && docs.vehicleRC) out.vehicleRC = docs.vehicleRC;
-                      if (sel.aadhaar && docs.aadhaar) out.aadhaar = docs.aadhaar;
+                      if (sel.vehicleRC && docs.vehicleRC)
+                        out.vehicleRC = docs.vehicleRC;
+                      if (sel.aadhaar && docs.aadhaar)
+                        out.aadhaar = docs.aadhaar;
                       if (sel.pan && docs.pan) out.pan = docs.pan;
-                      if (sel.vehicleKM && docs.vehicleKM) out.vehicleKM = docs.vehicleKM;
+                      if (sel.vehicleKM && docs.vehicleKM)
+                        out.vehicleKM = docs.vehicleKM;
                       if (sel.vehiclePhotos && docs.vehiclePhotos)
                         out.vehiclePhotos = docs.vehiclePhotos;
                       return out;
                     };
 
-                    const filtered = buildFilteredDocs(selectedLetter.documents, docSelections);
+                    const filtered = buildFilteredDocs(
+                      selectedLetter.documents,
+                      docSelections
+                    );
 
                     setShowDocumentModal(false);
                     // trigger PDF generation based on chosen language
@@ -1986,7 +2013,7 @@ const modalStyles = {
     backgroundColor: "#f8fafc",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
+      borderColor: "#088395",
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
       backgroundColor: "#ffffff",
     },
@@ -2001,7 +2028,7 @@ const modalStyles = {
   },
   saveButton: {
     padding: "8px 16px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "4px",
@@ -2030,7 +2057,7 @@ const styles = {
   container: {
     display: "flex",
     minHeight: "100vh",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     fontFamily: "'Inter', sans-serif",
   },
   topBar: {
@@ -2060,7 +2087,7 @@ const styles = {
   },
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
     position: "sticky",
@@ -2074,7 +2101,7 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #1e293b",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   },
   sidebarTitle: {
     fontSize: "1.25rem",
@@ -2106,8 +2133,8 @@ const styles = {
     },
   },
   menuItemActive: {
-    backgroundColor: "#1e293b",
-    borderRight: "3px solid #3b82f6",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    borderRight: "3px solid #088395",
     color: "#ffffff",
   },
   menuItemContent: {
@@ -2150,7 +2177,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #1e293b",
+    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
     transition: "all 0.2s ease",
     ":hover": {
       backgroundColor: "#7f1d1d20",
@@ -2193,7 +2220,7 @@ const styles = {
     alignItems: "center",
     gap: "8px",
     padding: "10px 16px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "8px",
@@ -2236,7 +2263,7 @@ const styles = {
     borderRadius: "4px",
     ":hover": {
       backgroundColor: "#f1f5f9",
-      color: "#3b82f6",
+      color: "#088395",
     },
   },
   pagination: {
@@ -2329,8 +2356,8 @@ const styles = {
   verifiedBadge: {
     display: "inline-block",
     padding: "4px 8px",
-    backgroundColor: "#dcfce7",
-    color: "#166534",
+    backgroundColor: "rgba(8, 131, 149, 0.1)",
+    color: "#088395",
     borderRadius: "12px",
     fontSize: "0.75rem",
     fontWeight: "500",
@@ -2346,7 +2373,7 @@ const styles = {
   },
   viewButton: {
     padding: "6px 12px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "4px",
@@ -2397,7 +2424,7 @@ const styles = {
   englishButton: {
     flex: 1,
     padding: "12px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "6px",
@@ -2410,7 +2437,7 @@ const styles = {
   hindiButton: {
     flex: 1,
     padding: "12px",
-    backgroundColor: "#10b981",
+    backgroundColor: "#37B7C3",
     color: "white",
     border: "none",
     borderRadius: "6px",

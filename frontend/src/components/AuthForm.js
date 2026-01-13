@@ -245,8 +245,8 @@ const AuthForm = ({ isLogin }) => {
 
         .form-input:focus {
           outline: none;
-          border-color: rgba(124, 58, 237, 0.8);
-          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+          border-color: rgba(8, 131, 149, 0.8);
+          box-shadow: 0 0 0 3px rgba(8, 131, 149, 0.2);
           background: rgba(255, 255, 255, 0.25);
         }
 
@@ -289,7 +289,7 @@ const AuthForm = ({ isLogin }) => {
           left: 0.75rem;
           font-size: 0.75rem;
           color: white;
-          background: rgba(124, 58, 237, 0.5);
+          background: rgba(8, 131, 149, 0.5);
           padding: 0 0.5rem;
           border-radius: 0.25rem;
         }
@@ -318,8 +318,8 @@ const AuthForm = ({ isLogin }) => {
           padding: 1rem 1.5rem;
           background: linear-gradient(
             135deg,
-            rgba(124, 58, 237, 0.9),
-            rgba(59, 130, 246, 0.9)
+            rgba(7, 25, 82, 0.9),
+            rgba(8, 131, 149, 0.9)
           );
           color: white;
           border: none;

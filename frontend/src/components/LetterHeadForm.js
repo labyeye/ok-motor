@@ -1,0 +1,846 @@
+import React, { useState, useContext, useEffect } from "react";
+import { saveAs } from "file-saver";
+import axios from "axios";
+import {
+  FileText,
+  ArrowLeft,
+  Download,
+  Calendar,
+  User,
+  Type,
+  AlignLeft,
+  Save,
+  LayoutDashboard,
+  ShoppingCart,
+  TrendingUp,
+  Wrench,
+  ShipWheel,
+  Users,
+  LogOut,
+  ChevronDown,
+  ChevronRight,
+  Settings,
+  RefreshCw,
+  Megaphone,
+  Image,
+  Bike,
+  Menu,
+  X,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import AuthContext from "../context/AuthContext";
+import pdfService from "../services/pdfService";
+import logo from "../images/company.png";
+
+const LetterHeadForm = () => {
+  const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [isSaving, setIsSaving] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Sidebar states
+  const [activeMenu, setActiveMenu] = useState("Letter Head");
+  const [expandedMenus, setExpandedMenus] = useState({});
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const [formData, setFormData] = useState({
+    date: new Date().toISOString().split("T")[0],
+    to: "",
+    subject: "",
+    message: "",
+  });
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const API_BASE_URL =
+    process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app/api";
+
+  const handleSaveAndDownload = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+
+    try {
+      if (!formData.to || !formData.subject || !formData.message) {
+        alert("Please fill in all required fields (To, Subject, Message)");
+        setIsSaving(false);
+        return;
+      }
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Authentication required. Please login again.");
+        logout();
+        navigate("/login");
+        return;
+      }
+
+      // 1. Save to Backend
+      if (navigator.onLine) {
+        try {
+          await axios.post(`${API_BASE_URL}/letter-heads`, formData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+        } catch (err) {
+          console.warn(
+            "Failed to save to backend, continuing to PDF generation",
+            err
+          );
+        }
+      }
+
+      // 2. Generate PDF using the new service method
+      const result = await pdfService.generateLetterHeadPDF({
+        ...formData,
+        user: user,
+      });
+
+      if (result.success) {
+        if (result.saved && window.electronAPI) {
+          alert(`PDF saved to ${result.savedPath}`);
+        } else {
+          saveAs(result.blob, `letter-head-${Date.now()}.pdf`);
+        }
+        await fetchHistory(); // Refresh table
+      } else {
+        alert("Failed to generate PDF: " + (result.error || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Error in Letter Head save/print:", error);
+      alert("An error occurred. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const menuItems = [
+    {
+      name: "Dashboard",
+      icon: LayoutDashboard,
+      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
+    },
+    {
+      name: "Vehicle",
+      icon: ShipWheel,
+      submenu: [
+        { name: "Add Vehicle", path: "/vehicle/create" },
+        { name: "Vehicle List", path: "/vehicle/history" },
+      ],
+    },
+    {
+      name: "Buy",
+      icon: ShoppingCart,
+      submenu: [
+        { name: "Create Buy Letter", path: "/buy/create" },
+        { name: "Buy Letter History", path: "/buy/history" },
+      ],
+    },
+    {
+      name: "Sell",
+      icon: TrendingUp,
+      submenu: [
+        { name: "Create Sell Letter", path: "/sell/create" },
+        { name: "Sell Letter History", path: "/sell/history" },
+        { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Updates",
+      icon: RefreshCw,
+      submenu: [
+        { name: "Create Update", path: "/updates/create" },
+        { name: "Updates List", path: "/updates" },
+      ],
+    },
+    {
+      name: "Announcements",
+      icon: Megaphone,
+      path: "/announcements",
+    },
+    {
+      name: "Service",
+      icon: Wrench,
+      submenu: [
+        { name: "Create Service Bill", path: "/service/create" },
+        { name: "Service History", path: "/service/history" },
+      ],
+    },
+    {
+      name: "Payment",
+      icon: FileText,
+      submenu: [
+        { name: "Create Advance Bill", path: "/advance/create" },
+        { name: "Advance History", path: "/advance/history" },
+      ],
+    },
+    {
+      name: "Staff",
+      icon: Users,
+      submenu: [
+        { name: "Create Staff ID", path: "/staff/create" },
+        { name: "Staff List", path: "/staff/list" },
+      ],
+    },
+    {
+      name: "Gallery",
+      icon: Image,
+      path: "/gallery/manage",
+    },
+    {
+      name: "Vehicle History",
+      icon: Bike,
+      path: "/bike-history",
+    },
+    {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
+    },
+  ];
+
+  const toggleMenu = (menuName) => {
+    setExpandedMenus((prev) => ({
+      ...prev,
+      [menuName]: !prev[menuName],
+    }));
+  };
+
+  const handleMenuClick = (menuName, path) => {
+    setActiveMenu(menuName);
+    const actualPath = typeof path === "function" ? path(user?.role) : path;
+    navigate(actualPath);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const [history, setHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const fetchHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await axios.get(`${API_BASE_URL}/letter-heads`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setHistory(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleDownloadCopy = async (letter) => {
+    try {
+      const result = await pdfService.generateLetterHeadPDF({
+        ...letter,
+        user: user,
+      });
+
+      if (result.success) {
+        saveAs(
+          result.blob,
+          `letter-head-${letter.letterNumber || Date.now()}.pdf`
+        );
+      } else {
+        alert("Failed to generate PDF");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error downloading copy");
+    }
+  };
+
+  const styles = {
+    container: {
+      display: "flex",
+      minHeight: "100vh",
+      backgroundColor: "#EBF4F6",
+      fontFamily: "'Inter', sans-serif",
+    },
+    // Sidebar Styles
+    sidebar: {
+      width: "280px",
+      backgroundColor: "#071952", // Dark Blue
+      color: "#f8fafc",
+      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+      position: "sticky",
+      top: 0,
+      height: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      boxSizing: "border-box",
+      overflow: "hidden",
+      transition: "transform 0.3s ease-in-out",
+    },
+    sidebarOverlay: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      zIndex: 14,
+    },
+    topBar: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      height: "60px",
+      backgroundColor: "#fff",
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+      zIndex: 14,
+      display: "flex",
+      alignItems: "center",
+      padding: "0 16px",
+    },
+    hamburgerMenu: {
+      cursor: "pointer",
+      color: "#1e293b",
+    },
+    nav: {
+      padding: "16px 0",
+      flex: "1 1 auto",
+      overflowY: "auto",
+      WebkitOverflowScrolling: "touch",
+    },
+    menuItem: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "12px 24px",
+      cursor: "pointer",
+      color: "#e2e8f0",
+      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    },
+    menuItemActive: {
+      backgroundColor: "rgba(8, 131, 149, 0.2)",
+      borderRight: "3px solid #088395",
+      color: "#ffffff",
+    },
+    menuItemContent: {
+      display: "flex",
+      alignItems: "center",
+    },
+    menuIcon: {
+      marginRight: "12px",
+      color: "#94a3b8",
+    },
+    menuText: {
+      fontSize: "0.9375rem",
+      fontWeight: "500",
+    },
+    submenu: {
+      backgroundColor: "#051238", // Slightly darker
+      overflow: "hidden",
+    },
+    submenuItem: {
+      padding: "10px 24px 10px 64px",
+      cursor: "pointer",
+      color: "#cbd5e1",
+      fontSize: "0.875rem",
+      transition: "all 0.2s ease",
+    },
+    submenuItemActive: {
+      color: "#37B7C3",
+      fontWeight: "500",
+    },
+    logoutButton: {
+      display: "flex",
+      alignItems: "center",
+      padding: "12px 24px",
+      cursor: "pointer",
+      color: "#f87171",
+      marginTop: "16px",
+      borderTop: "1px solid #1e293b",
+      transition: "all 0.2s ease",
+    },
+    // Main Content
+    mainContent: {
+      flex: 1,
+      overflowY: "auto",
+      height: "100vh",
+      backgroundColor: "#ffffffff", // Light gray background for contrast
+    },
+    contentPadding: {
+      padding: isMobile ? "24px 16px" : "32px",
+      maxWidth: "1200px",
+      margin: "0 auto",
+    },
+    // Form specific styles
+    header: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: "24px",
+      flexWrap: "wrap",
+      gap: "16px",
+    },
+    titleGroup: {
+      display: "flex",
+      alignItems: "center",
+      gap: "12px",
+    },
+    backButton: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "40px",
+      height: "40px",
+      borderRadius: "50%",
+      backgroundColor: "#fff",
+      border: "1px solid #e2e8f0",
+      color: "#64748b",
+      cursor: "pointer",
+      transition: "all 0.2s",
+    },
+    title: {
+      fontSize: "24px",
+      fontWeight: "700",
+      color: "#0f172a",
+      margin: 0,
+    },
+    formCard: {
+      backgroundColor: "#fff",
+      borderRadius: "12px",
+      boxShadow:
+        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+      padding: isMobile ? "20px" : "32px",
+      marginBottom: "32px",
+    },
+    grid: {
+      display: "grid",
+      gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+      gap: "24px",
+      marginBottom: "24px",
+    },
+    formGroup: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "8px",
+    },
+    label: {
+      fontSize: "14px",
+      fontWeight: "600",
+      color: "#475569",
+      display: "flex",
+      alignItems: "center",
+      gap: "6px",
+    },
+    inputArgs: {
+      padding: "10px 14px",
+      borderRadius: "8px",
+      border: "1px solid #cbd5e1",
+      fontSize: "15px",
+      color: "#1e293b",
+      transition: "border-color 0.2s",
+      width: "95%",
+    },
+    textarea: {
+      padding: "12px 14px",
+      borderRadius: "8px",
+      border: "1px solid #cbd5e1",
+      fontSize: "15px",
+      color: "#1e293b",
+      minHeight: "300px",
+      resize: "vertical",
+      lineHeight: "1.6",
+      fontFamily: "inherit",
+    },
+    button: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "8px",
+      padding: "12px 24px",
+      backgroundColor: "#088395",
+      color: "#fff",
+      border: "none",
+      borderRadius: "8px",
+      fontSize: "16px",
+      fontWeight: "600",
+      cursor: "pointer",
+      transition: "background-color 0.2s",
+      minWidth: "200px",
+    },
+    buttonDisabled: {
+      backgroundColor: "#94a3b8",
+      cursor: "not-allowed",
+    },
+    // Table Styles
+    tableCard: {
+      backgroundColor: "#fff",
+      borderRadius: "12px",
+      boxShadow:
+        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+      padding: "24px",
+      overflowX: "auto",
+    },
+    tableTitle: {
+      fontSize: "1.25rem",
+      fontWeight: "700",
+      color: "#1e293b",
+      marginBottom: "16px",
+    },
+    table: {
+      width: "100%",
+      borderCollapse: "collapse",
+      minWidth: "600px",
+    },
+    th: {
+      textAlign: "left",
+      padding: "12px 16px",
+      borderBottom: "2px solid #e2e8f0",
+      color: "#475569",
+      fontWeight: "600",
+      fontSize: "0.875rem",
+    },
+    td: {
+      padding: "12px 16px",
+      borderBottom: "1px solid #e2e8f0",
+      color: "#334155",
+      fontSize: "0.875rem",
+    },
+    actionBtn: {
+      padding: "6px 12px",
+      backgroundColor: "#e0f2fe",
+      color: "#0369a1",
+      border: "none",
+      borderRadius: "6px",
+      cursor: "pointer",
+      fontSize: "0.75rem",
+      fontWeight: "600",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "4px",
+    },
+  };
+
+  return (
+    <div
+      style={{
+        ...styles.container,
+        paddingTop: isMobile ? "60px" : "0",
+      }}
+    >
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && isMobile && (
+        <div
+          style={styles.sidebarOverlay}
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
+      {/* Mobile Top Bar */}
+      <div
+        style={{
+          ...styles.topBar,
+          display: isMobile && !isSidebarOpen ? "flex" : "none",
+        }}
+      >
+        <div
+          style={styles.hamburgerMenu}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+        </div>
+      </div>
+
+      {/* Sidebar */}
+      <div
+        style={{
+          ...styles.sidebar,
+          ...(isMobile
+            ? {
+                transform: isSidebarOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
+                position: "fixed",
+                zIndex: 15,
+              }
+            : {}),
+        }}
+      >
+        <div
+          style={{
+            padding: "24px",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+          }}
+        >
+          <img
+            src={logo}
+            alt="logo"
+            style={{
+              width: "100%",
+              maxWidth: "25rem",
+              height: "9rem",
+              objectFit: "cover",
+              objectPosition: "center",
+              display: "block",
+              margin: "0 auto 1rem auto",
+            }}
+          />
+          <p
+            className="sidebar-subtitle"
+            style={{ fontSize: "0.875rem", color: "#94a3b8", marginTop: "4px" }}
+          >
+            Welcome, {user?.name || "User"}
+          </p>
+        </div>
+
+        <nav style={styles.nav}>
+          {menuItems.map((item) => (
+            <div key={item.name}>
+              <div
+                style={{
+                  ...styles.menuItem,
+                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
+                }}
+                onClick={() => {
+                  if (item.submenu) {
+                    toggleMenu(item.name);
+                  } else {
+                    handleMenuClick(item.name, item.path);
+                  }
+                }}
+              >
+                <div style={styles.menuItemContent}>
+                  <item.icon size={20} style={styles.menuIcon} />
+                  <span style={styles.menuText}>{item.name}</span>
+                </div>
+                {item.submenu &&
+                  (expandedMenus[item.name] ? (
+                    <ChevronDown size={16} />
+                  ) : (
+                    <ChevronRight size={16} />
+                  ))}
+              </div>
+
+              {item.submenu && (
+                <div
+                  style={{
+                    ...styles.submenu,
+                    maxHeight: expandedMenus[item.name]
+                      ? `${item.submenu.length * 48}px`
+                      : "0px",
+                    opacity: expandedMenus[item.name] ? 1 : 0,
+                    transition:
+                      "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
+                  }}
+                >
+                  {item.submenu.map((subItem) => (
+                    <div
+                      key={subItem.name}
+                      style={{
+                        ...styles.submenuItem,
+                        ...(activeMenu === subItem.name
+                          ? styles.submenuItemActive
+                          : {}),
+                      }}
+                      onClick={() =>
+                        handleMenuClick(subItem.name, subItem.path)
+                      }
+                    >
+                      {subItem.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
+          <div style={styles.logoutButton} onClick={handleLogout}>
+            <LogOut size={20} style={styles.menuIcon} />
+            <span style={styles.menuText}>Logout</span>
+          </div>
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div style={styles.mainContent}>
+        <div style={styles.contentPadding}>
+          {/* Header */}
+          <div style={styles.header}>
+            <div style={styles.titleGroup}>
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "8px",
+                  backgroundColor: "#e0f2fe",
+                  color: "#0284c7",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <FileText size={24} />
+              </div>
+              <h1 style={styles.title}>Create Letter Head</h1>
+            </div>
+            <button
+              onClick={handleSaveAndDownload}
+              disabled={isSaving}
+              style={
+                isSaving
+                  ? { ...styles.button, ...styles.buttonDisabled }
+                  : styles.button
+              }
+            >
+              {isSaving ? (
+                "Processing..."
+              ) : (
+                <>
+                  <Save size={20} />
+                  Save & Print
+                </>
+              )}
+            </button>
+          </div>
+
+          <div style={styles.formCard}>
+            <div style={styles.grid}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>
+                  <Calendar size={16} /> Date
+                </label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  style={styles.inputArgs}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>
+                  <User size={16} /> To (Recipient)
+                </label>
+                <textarea
+                  name="to"
+                  value={formData.to}
+                  onChange={handleChange}
+                  placeholder="e.g. The Manager, SBI Bank, New Delhi..."
+                  style={{
+                    ...styles.inputArgs,
+                    minHeight: "80px",
+                    resize: "none",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ ...styles.formGroup, marginBottom: "24px" }}>
+              <label style={styles.label}>
+                <Type size={16} /> Subject
+              </label>
+              <input
+                type="text"
+                name="subject"
+                value={formData.subject}
+                onChange={handleChange}
+                placeholder="Subject of the letter..."
+                style={styles.inputArgs}
+              />
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>
+                <AlignLeft size={16} /> Message Body
+              </label>
+              <textarea
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                placeholder="Type your letter content here..."
+                style={styles.textarea}
+              />
+            </div>
+          </div>
+
+          {/* History Table */}
+          <div style={styles.tableCard}>
+            <h2 style={styles.tableTitle}>Recent Letter Heads</h2>
+            {loadingHistory ? (
+              <p>Loading history...</p>
+            ) : history.length === 0 ? (
+              <p style={{ color: "#64748b" }}>No letter heads created yet.</p>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>Date</th>
+                      <th style={styles.th}>Letter No</th>
+                      <th style={styles.th}>To</th>
+                      <th style={styles.th}>Subject</th>
+                      <th style={styles.th}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history
+                      .sort(
+                        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                      )
+                      .slice(0, 10)
+                      .map((letter) => (
+                        <tr key={letter._id}>
+                          <td style={styles.td}>
+                            {new Date(letter.date).toLocaleDateString("en-IN")}
+                          </td>
+                          <td style={styles.td}>{letter.letterNumber}</td>
+                          <td style={styles.td}>
+                            {letter.to.substring(0, 30)}...
+                          </td>
+                          <td style={styles.td}>
+                            {letter.subject.substring(0, 30)}...
+                          </td>
+                          <td style={styles.td}>
+                            <button
+                              style={styles.actionBtn}
+                              onClick={() => handleDownloadCopy(letter)}
+                            >
+                              <Download size={14} /> Download
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LetterHeadForm;

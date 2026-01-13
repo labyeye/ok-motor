@@ -17,7 +17,7 @@ import {
   Image,
   Settings,
   RefreshCw,
-  Megaphone
+  Megaphone,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
@@ -131,6 +131,11 @@ const CreateUpdate = () => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
     },
     {
       name: "Settings",
@@ -388,7 +393,7 @@ const CreateUpdate = () => {
                   padding: "8px 12px",
                   borderRadius: 6,
                   border: "none",
-                  background: "#3b82f6",
+                  background: "#088395",
                   color: "#fff",
                 }}
               >
@@ -417,12 +422,12 @@ const styles = {
   container: {
     display: "flex",
     height: "100vh",
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#EBF4F6",
     fontFamily: "Arial, sans-serif",
   },
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     position: "sticky",
     top: 0,
@@ -434,7 +439,7 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #1e293b",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
     flex: "0 0 auto",
   },
   nav: {
@@ -464,7 +469,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #1e293b",
+    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
   },
   mainContent: { flex: 1, overflow: "auto" },
   contentPadding: { padding: "32px" },
@@ -484,7 +489,7 @@ const styles = {
     cursor: "pointer",
   },
   headerPrimary: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "#fff",
     border: "none",
     padding: "8px 12px",

@@ -199,6 +199,11 @@ const VehicleHistory = () => {
       path: "/bike-history",
     },
     {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
+    },
+    {
       name: "Settings",
       icon: Settings,
       path: "/settings",
@@ -224,12 +229,12 @@ const VehicleHistory = () => {
     container: {
       display: "flex",
       minHeight: "100vh",
-      backgroundColor: "#f1f5f9",
+      backgroundColor: "#EBF4F6",
       fontFamily: "'Inter', sans-serif",
     },
     sidebar: {
       width: "280px",
-      backgroundColor: "#1E283A",
+      backgroundColor: "#071952",
       color: "#f8fafc",
       boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
       position: "sticky",
@@ -242,7 +247,7 @@ const VehicleHistory = () => {
     },
     sidebarHeader: {
       padding: "24px",
-      borderBottom: "1px solid #1e293b",
+      borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
     },
     nav: {
       padding: "16px 0",
@@ -260,8 +265,8 @@ const VehicleHistory = () => {
       transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
     },
     menuItemActive: {
-      backgroundColor: "#1e293b",
-      borderRight: "3px solid #3b82f6",
+      backgroundColor: "rgba(8, 131, 149, 0.2)",
+      borderRight: "3px solid #088395",
       color: "#ffffff",
     },
     menuItemContent: {
@@ -301,7 +306,7 @@ const VehicleHistory = () => {
       cursor: "pointer",
       color: "#f87171",
       marginTop: "16px",
-      borderTop: "1px solid #1e293b",
+      borderTop: "1px solid rgba(255, 255, 255, 0.1)",
       transition: "all 0.2s ease",
     },
     mainContent: {
@@ -331,7 +336,7 @@ const VehicleHistory = () => {
       alignItems: "center",
       gap: "8px",
       padding: "10px 20px",
-      backgroundColor: "#10b981",
+      backgroundColor: "#088395",
       color: "white",
       border: "none",
       borderRadius: "8px",
@@ -399,7 +404,7 @@ const VehicleHistory = () => {
       position: "absolute",
       top: "12px",
       right: "12px",
-      backgroundColor: "#3b82f6",
+      backgroundColor: "#088395",
       color: "white",
       padding: "4px 12px",
       borderRadius: "6px",
@@ -442,7 +447,7 @@ const VehicleHistory = () => {
     vehiclePrice: {
       fontSize: "1.25rem",
       fontWeight: "700",
-      color: "#10b981",
+      color: "#088395",
       marginBottom: "16px",
     },
     vehicleActions: {
@@ -464,7 +469,7 @@ const VehicleHistory = () => {
       transition: "all 0.2s ease",
     },
     btnEdit: {
-      backgroundColor: "#3b82f6",
+      backgroundColor: "#088395",
       color: "white",
     },
     btnView: {

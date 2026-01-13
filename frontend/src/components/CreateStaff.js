@@ -19,14 +19,14 @@ import {
   LogOut,
   Settings,
   RefreshCw,
-  Megaphone
+  Megaphone,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
-import logo from '../images/company.png';
+import logo from "../images/company.png";
 
 const CreateStaff = () => {
   const navigate = useNavigate();
-  const { user,logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -55,33 +55,28 @@ const CreateStaff = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
         setError("You are not authenticated. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
-      await axios.post(
-        "https://ok-motor-51l3.vercel.app/api/users",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.post("https://ok-motor-51l3.vercel.app/api/users", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setSuccess(true);
       setTimeout(() => {
         navigate("/staff/list");
       }, 1500);
     } catch (err) {
-      
       if (err.response?.status === 401) {
         setError("Your session has expired. Please login again.");
         logout();
-        navigate('/login');
+        navigate("/login");
       } else if (err.response?.status === 403) {
         setError("You don't have permission to create staff members.");
       } else {
@@ -109,7 +104,7 @@ const CreateStaff = () => {
 
   const handleMenuClick = (menuName, path) => {
     setActiveMenu(menuName);
-    const actualPath = typeof path === 'function' ? path(user?.role) : path;
+    const actualPath = typeof path === "function" ? path(user?.role) : path;
     navigate(actualPath);
   };
 
@@ -192,6 +187,11 @@ const CreateStaff = () => {
       path: "/bike-history",
     },
     {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
+    },
+    {
       name: "Settings",
       icon: Settings,
       path: "/settings",
@@ -203,8 +203,14 @@ const CreateStaff = () => {
       {}
       <div style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-           <img src={logo} alt="logo" style={{width: '14.5rem', height: '10.5rem', color: '#7c3aed'}} />
-          <p style={styles.sidebarSubtitle}>Welcome, {user?.role === 'admin' ? 'OK MOTORS' : 'OK MOTORS'}</p>
+          <img
+            src={logo}
+            alt="logo"
+            style={{ width: "14.5rem", height: "10.5rem", color: "#7c3aed" }}
+          />
+          <p style={styles.sidebarSubtitle}>
+            Welcome, {user?.role === "admin" ? "OK MOTORS" : "OK MOTORS"}
+          </p>
         </div>
 
         <nav style={styles.nav}>
@@ -213,9 +219,11 @@ const CreateStaff = () => {
               <div
                 style={{
                   ...styles.menuItem,
-                  ...(activeMenu === item.name || 
-                      (item.submenu && item.submenu.some(subItem => activeMenu === subItem.name)) 
-                      ? styles.menuItemActive : {}),
+                  ...(activeMenu === item.name ||
+                  (item.submenu &&
+                    item.submenu.some((subItem) => activeMenu === subItem.name))
+                    ? styles.menuItemActive
+                    : {}),
                 }}
                 onClick={() => {
                   if (item.submenu) {
@@ -229,13 +237,12 @@ const CreateStaff = () => {
                   <item.icon size={20} style={styles.menuIcon} />
                   <span style={styles.menuText}>{item.name}</span>
                 </div>
-                {item.submenu && (
-                  expandedMenus[item.name] ? (
+                {item.submenu &&
+                  (expandedMenus[item.name] ? (
                     <ChevronDown size={16} />
                   ) : (
                     <ChevronRight size={16} />
-                  )
-                )}
+                  ))}
               </div>
 
               {item.submenu && (
@@ -256,9 +263,13 @@ const CreateStaff = () => {
                       key={subItem.name}
                       style={{
                         ...styles.submenuItem,
-                        ...(activeMenu === subItem.name ? styles.submenuItemActive : {}),
+                        ...(activeMenu === subItem.name
+                          ? styles.submenuItemActive
+                          : {}),
                       }}
-                      onClick={() => handleMenuClick(subItem.name, subItem.path)}
+                      onClick={() =>
+                        handleMenuClick(subItem.name, subItem.path)
+                      }
                     >
                       {subItem.name}
                     </div>
@@ -379,12 +390,12 @@ const styles = {
   container: {
     display: "flex",
     minHeight: "100vh",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#EBF4F6",
     fontFamily: "'Inter', sans-serif",
   },
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
     position: "sticky",
@@ -397,7 +408,7 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #1e293b",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   },
   sidebarTitle: {
     fontSize: "1.25rem",
@@ -429,8 +440,8 @@ const styles = {
     },
   },
   menuItemActive: {
-    backgroundColor: "#1e293b",
-    borderRight: "3px solid #3b82f6",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    borderRight: "3px solid #088395",
     color: "#ffffff",
   },
   menuItemContent: {
@@ -473,7 +484,7 @@ const styles = {
     cursor: "pointer",
     color: "#f87171",
     marginTop: "16px",
-    borderTop: "1px solid #1e293b",
+    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
     transition: "all 0.2s ease",
     ":hover": {
       backgroundColor: "#7f1d1d20",
@@ -543,8 +554,8 @@ const styles = {
     backgroundColor: "#f8fafc",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
-      boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+      borderColor: "#088395",
+      boxShadow: "0 0 0 3px rgba(8, 131, 149, 0.1)",
       backgroundColor: "#ffffff",
     },
   },
@@ -558,8 +569,8 @@ const styles = {
     transition: "all 0.2s ease",
     ":focus": {
       outline: "none",
-      borderColor: "#3b82f6",
-      boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.1)",
+      borderColor: "#088395",
+      boxShadow: "0 0 0 3px rgba(8, 131, 149, 0.1)",
       backgroundColor: "#ffffff",
     },
   },
@@ -570,7 +581,7 @@ const styles = {
   },
   submitButton: {
     padding: "12px 24px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "8px",

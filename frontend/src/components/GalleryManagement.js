@@ -22,7 +22,7 @@ import {
   Bike,
   ShipWheel,
   Megaphone,
-  RefreshCw
+  RefreshCw,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 
@@ -219,6 +219,11 @@ const GalleryManagement = () => {
       name: "Vehicle History",
       icon: Bike,
       path: "/bike-history",
+    },
+    {
+      name: "Letter Head",
+      icon: FileText,
+      path: "/letter-head/create",
     },
     {
       name: "Settings",
@@ -429,11 +434,11 @@ const styles = {
   container: {
     display: "flex",
     minHeight: "100vh",
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#EBF4F6",
   },
   sidebar: {
     width: "280px",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#071952",
     color: "#f8fafc",
     position: "fixed",
     height: "100vh",
@@ -446,7 +451,7 @@ const styles = {
   },
   sidebarHeader: {
     padding: "24px",
-    borderBottom: "1px solid #1e293b",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
@@ -483,8 +488,9 @@ const styles = {
     fontWeight: "500",
   },
   activeMenuItem: {
-    backgroundColor: "rgba(255,255,255,0.03)",
-    color: "#fff",
+    backgroundColor: "rgba(8, 131, 149, 0.2)",
+    borderRight: "3px solid #088395",
+    color: "#ffffff",
   },
   submenu: {
     paddingLeft: 48,
@@ -542,7 +548,7 @@ const styles = {
     alignItems: "center",
     gap: "8px",
     padding: "12px 24px",
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#088395",
     color: "white",
     border: "none",
     borderRadius: "8px",
