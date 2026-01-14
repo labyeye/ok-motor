@@ -117,7 +117,7 @@ ServiceBillSchema.pre("save", async function (next) {
     while (attempts < maxAttempts) {
       try {
         const count = await this.constructor.countDocuments();
-        billNumber = `SRV-${new Date().getFullYear()}-${(count + 1 + attempts)
+        billNumber = `OKM-${new Date().getFullYear()}-${(count + 1 + attempts)
           .toString()
           .padStart(5, "0")}`;
 
@@ -130,7 +130,7 @@ ServiceBillSchema.pre("save", async function (next) {
       } catch (error) {
         attempts++;
         if (attempts >= maxAttempts) {
-          this.billNumber = `SRV-${new Date().getFullYear()}-${Date.now()
+          this.billNumber = `OKM-${new Date().getFullYear()}-${Date.now()
             .toString()
             .slice(-5)}`;
           break;

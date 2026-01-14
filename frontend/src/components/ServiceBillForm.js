@@ -512,7 +512,7 @@ const ServiceBillForm = () => {
           ...formattedData,
           includeBusinessInPdf: formattedData.includeBusinessInPdf,
           _id: billId,
-          billNumber: `SRV-${new Date().getFullYear()}-${billId.substring(
+          billNumber: `OKM-${new Date().getFullYear()}-${billId.substring(
             0,
             4
           )}`,
