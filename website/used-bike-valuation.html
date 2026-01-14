@@ -62,7 +62,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       crossorigin="anonymous"
     />
-    
+
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         var t = document.getElementById("mobileMenuBtn"),
@@ -119,7 +119,11 @@
     <div class="top-banner" id="topBanner" role="banner">
       <div class="top-banner-container">
         <div class="top-banner-left" id="topBannerMessage"></div>
-        <div class="top-banner-right" id="topBannerActions" aria-hidden="true"></div>
+        <div
+          class="top-banner-right"
+          id="topBannerActions"
+          aria-hidden="true"
+        ></div>
       </div>
     </div>
 
@@ -219,15 +223,9 @@
               <a class="dropdown-item" href="tax-challan.html"
                 >TRAFFIC CHALLAN</a
               >
-              <a class="dropdown-item" href="insaurance.html"
-                >INSURANCE</a
-              >
-              <a class="dropdown-item" href="rto-services.html"
-                >RTO SERVICES</a
-              >
-              <a class="dropdown-item" href="puc.html"
-                >PUC CRTIFICATE</a
-              >
+              <a class="dropdown-item" href="insaurance.html">INSURANCE</a>
+              <a class="dropdown-item" href="rto-services.html">RTO SERVICES</a>
+              <a class="dropdown-item" href="puc.html">PUC CRTIFICATE</a>
             </div>
           </div>
           <a href="https://www.okmotors.in/finance.html" class="nav-item"
@@ -642,7 +640,7 @@
     <script>
       let bikeMakes = [];
       let currentBikeData = null;
-      
+
       async function loadBikeMakes() {
         const makeSelect = document.getElementById("make");
         try {
@@ -654,7 +652,6 @@
           if (result.success && result.data) {
             bikeMakes = result.data;
           } else {
-            
             bikeMakes = [
               "KTM",
               "Royal Enfield",
@@ -682,7 +679,6 @@
           ];
         }
 
-        
         makeSelect.innerHTML = '<option value="">Select Make</option>';
         bikeMakes.forEach((make) => {
           const option = document.createElement("option");
@@ -694,7 +690,7 @@
 
       async function loadBikeYears(make, model) {
         const yearSelect = document.getElementById("year");
-        
+
         // If no make provided, show all years from current back to 1990
         if (!make) {
           yearSelect.innerHTML = '<option value="">Select Year</option>';
@@ -707,7 +703,7 @@
           }
           return;
         }
-        
+
         yearSelect.innerHTML = '<option value="">Loading years...</option>';
 
         try {
@@ -720,7 +716,6 @@
           const result = await response.json();
 
           if (result.success && result.data && result.data.length > 0) {
-            
             const years = [...new Set(result.data.map((bike) => bike.year))]
               .filter((year) => year && year !== "")
               .sort((a, b) => b.localeCompare(a)); // Sort descending
@@ -844,7 +839,7 @@
         .addEventListener("change", async function () {
           const makeSelect = document.getElementById("make").value;
           const modelSelect = this.value;
-          
+
           if (makeSelect && modelSelect) {
             await loadBikeYears(makeSelect, modelSelect);
           }
@@ -938,5 +933,3 @@
     <script src="./index.js"></script>
   </body>
 </html>
-
-

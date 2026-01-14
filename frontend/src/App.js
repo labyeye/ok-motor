@@ -29,6 +29,10 @@ import VehicleCreate from "./components/VehicleCreate";
 import VehicleHistory from "./components/VehicleHistory";
 import GalleryManagement from "./components/GalleryManagement";
 import LetterHeadForm from "./components/LetterHeadForm";
+import InsuranceForm from "./components/InsuranceForm";
+import InsuranceHistory from "./components/InsuranceHistory";
+import PUCForm from "./components/PUCForm";
+import PUCHistory from "./components/PUCHistory";
 import { useState, useEffect } from "react";
 import networkService from "./services/networkService";
 import "./services/syncService"; // initialize sync service for side-effects
@@ -283,6 +287,38 @@ function App() {
             element={
               <PrivateRoute roles={["admin", "staff"]}>
                 <LetterHeadForm />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/insurance/create"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <InsuranceForm />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/insurance/history"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <InsuranceHistory />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/puc/create"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <PUCForm />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/puc/history"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <PUCHistory />
               </PrivateRoute>
             }
           />

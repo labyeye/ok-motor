@@ -115,6 +115,8 @@ app.use("/api/sell-request", sellRequestRoutes); // Sell form endpoints
 app.use("/api/updates", updatesRoutes); // Updates endpoints
 app.use("/api/announcements", announcementRoutes); // Announcements endpoints
 app.use("/api/bikes", bikeRoutes); // Bike API endpoints
+app.use("/api/insurance", require("./routes/insuranceRoutes")); // Insurance endpoints
+app.use("/api/puc", require("./routes/pucRoutes")); // PUC endpoints
 
 // Health check endpoint (also in syncRoutes but duplicated here for convenience)
 app.get("/api/health", (req, res) => {

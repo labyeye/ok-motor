@@ -4,20 +4,20 @@
  * Routes requests to online API or offline storage based on network status
  */
 
-import axios from 'axios';
-import offlineStorage from './offlineStorage';
-import networkService from './networkService';
+import axios from "axios";
+import offlineStorage from "./offlineStorage";
+import networkService from "./networkService";
 
 class ApiService {
   constructor() {
-    this.baseURL = 'https://ok-motor-51l3.vercel.app';
+    this.baseURL = "https://ok-motor-51l3.vercel.app";
     this.axiosInstance = axios.create({
-      baseURL: this.baseURL
+      baseURL: this.baseURL,
     });
 
     // Set up axios interceptors
     this.setupInterceptors();
-    
+
     // Set API URL for network health checks
     networkService.setApiUrl(`${this.baseURL}/api/health`);
   }
@@ -29,7 +29,7 @@ class ApiService {
     // Request interceptor
     this.axiosInstance.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -45,9 +45,12 @@ class ApiService {
       (response) => response,
       (error) => {
         // If network error and we're offline, don't throw
-        if (!networkService.getStatus() && 
-            (error.code === 'ERR_NETWORK' || error.message.includes('Network Error'))) {
-          console.log('Network error detected - using offline mode');
+        if (
+          !networkService.getStatus() &&
+          (error.code === "ERR_NETWORK" ||
+            error.message.includes("Network Error"))
+        ) {
+          console.log("Network error detected - using offline mode");
         }
         return Promise.reject(error);
       }
@@ -75,13 +78,13 @@ class ApiService {
       const response = await this.axiosInstance({
         method,
         url: endpoint,
-        data
+        data,
       });
       return response.data;
     } catch (error) {
       // If network error, fallback to offline
-      if (error.code === 'ERR_NETWORK' || !networkService.getStatus()) {
-        console.log('Network error - falling back to offline mode');
+      if (error.code === "ERR_NETWORK" || !networkService.getStatus()) {
+        console.log("Network error - falling back to offline mode");
         return this.handleOfflineRequest(method, endpoint, data);
       }
       throw error;
@@ -93,18 +96,20 @@ class ApiService {
    */
   async handleOfflineRequest(method, endpoint, data) {
     // Parse endpoint to determine collection and action
-    const parts = endpoint.split('/').filter(p => p);
-    const collection = this.getCollectionFromEndpoint(parts[parts.length - 1] || parts[0]);
+    const parts = endpoint.split("/").filter((p) => p);
+    const collection = this.getCollectionFromEndpoint(
+      parts[parts.length - 1] || parts[0]
+    );
 
     switch (method.toUpperCase()) {
-      case 'GET':
+      case "GET":
         return this.handleOfflineGet(collection, endpoint);
-      case 'POST':
+      case "POST":
         return this.handleOfflinePost(collection, data);
-      case 'PUT':
-      case 'PATCH':
+      case "PUT":
+      case "PATCH":
         return this.handleOfflinePut(collection, endpoint, data);
-      case 'DELETE':
+      case "DELETE":
         return this.handleOfflineDelete(collection, endpoint);
       default:
         throw new Error(`Unsupported offline method: ${method}`);
@@ -117,15 +122,15 @@ class ApiService {
   getCollectionFromEndpoint(endpoint) {
     // Support both plural and singular endpoint paths.
     const mapping = {
-      'buy-letters': 'buyLetters',
-      'buy-letter': 'buyLetters',
-      'sell-letters': 'sellLetters',
-      'sell-letter': 'sellLetters',
-      'service-bills': 'serviceBills',
-      'service-bill': 'serviceBills',
-      'advance-bills': 'advanceBills',
-      'advance-bill': 'advanceBills',
-      'users': 'users'
+      "buy-letters": "buyLetters",
+      "buy-letter": "buyLetters",
+      "sell-letters": "sellLetters",
+      "sell-letter": "sellLetters",
+      "service-bills": "serviceBills",
+      "service-bill": "serviceBills",
+      "advance-bills": "advanceBills",
+      "advance-bill": "advanceBills",
+      users: "users",
     };
 
     for (const [key, value] of Object.entries(mapping)) {
@@ -135,10 +140,10 @@ class ApiService {
     }
 
     // Fallback: if endpoint contains a known root like 'buy' or 'sell', map heuristically
-    if (endpoint.includes('buy')) return 'buyLetters';
-    if (endpoint.includes('sell')) return 'sellLetters';
-    if (endpoint.includes('service')) return 'serviceBills';
-    if (endpoint.includes('advance')) return 'advanceBills';
+    if (endpoint.includes("buy")) return "buyLetters";
+    if (endpoint.includes("sell")) return "sellLetters";
+    if (endpoint.includes("service")) return "serviceBills";
+    if (endpoint.includes("advance")) return "advanceBills";
 
     return endpoint;
   }
@@ -149,15 +154,15 @@ class ApiService {
   async handleOfflineGet(collection, endpoint) {
     // Check if requesting by ID
     const idMatch = endpoint.match(/\/([a-f0-9]{24}|\w+)$/);
-    
+
     if (idMatch) {
       const id = idMatch[1];
       const result = await offlineStorage.findById(collection, id);
-      
+
       if (result.success && result.data) {
         return { success: true, data: result.data };
       } else {
-        throw new Error('Document not found');
+        throw new Error("Document not found");
       }
     } else {
       // Get all documents
@@ -171,7 +176,7 @@ class ApiService {
    */
   async handleOfflinePost(collection, data) {
     const result = await offlineStorage.create(collection, data);
-    
+
     if (result.success) {
       return { success: true, data: result.data };
     } else {
@@ -184,14 +189,14 @@ class ApiService {
    */
   async handleOfflinePut(collection, endpoint, data) {
     const idMatch = endpoint.match(/\/([a-f0-9]{24}|\w+)$/);
-    
+
     if (!idMatch) {
-      throw new Error('ID required for update');
+      throw new Error("ID required for update");
     }
 
     const id = idMatch[1];
     const result = await offlineStorage.updateById(collection, id, data);
-    
+
     if (result.success) {
       return { success: true, data: result.data };
     } else {
@@ -204,16 +209,16 @@ class ApiService {
    */
   async handleOfflineDelete(collection, endpoint) {
     const idMatch = endpoint.match(/\/([a-f0-9]{24}|\w+)$/);
-    
+
     if (!idMatch) {
-      throw new Error('ID required for delete');
+      throw new Error("ID required for delete");
     }
 
     const id = idMatch[1];
     const result = await offlineStorage.deleteById(collection, id);
-    
+
     if (result.success) {
-      return { success: true, message: 'Document deleted' };
+      return { success: true, message: "Document deleted" };
     } else {
       throw new Error(result.error);
     }
@@ -221,23 +226,23 @@ class ApiService {
 
   // Convenience methods
   async get(endpoint) {
-    return this.request('GET', endpoint);
+    return this.request("GET", endpoint);
   }
 
   async post(endpoint, data) {
-    return this.request('POST', endpoint, data);
+    return this.request("POST", endpoint, data);
   }
 
   async put(endpoint, data) {
-    return this.request('PUT', endpoint, data);
+    return this.request("PUT", endpoint, data);
   }
 
   async patch(endpoint, data) {
-    return this.request('PATCH', endpoint, data);
+    return this.request("PATCH", endpoint, data);
   }
 
   async delete(endpoint) {
-    return this.request('DELETE', endpoint);
+    return this.request("DELETE", endpoint);
   }
 }
 

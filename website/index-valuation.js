@@ -53,7 +53,9 @@
 
   async function fetchBikeMakes() {
     try {
-      const response = await fetch(`https://ok-motor-51l3.vercel.app/api/bikes/makes`);
+      const response = await fetch(
+        `https://ok-motor-51l3.vercel.app/api/bikes/makes`
+      );
       const result = await response.json();
 
       if (result.success && result.data) {
@@ -321,7 +323,7 @@
       option.textContent = modelName;
       modelFilter.appendChild(option);
     });
-    
+
     // Repopulate year dropdown after models are loaded
     valuationPopulateYearDropdown();
   }
@@ -355,7 +357,7 @@
     if (modelFilter) {
       modelFilter.innerHTML = '<option value="">Select Model</option>';
     }
-    
+
     // Populate year dropdown with all years immediately
     valuationPopulateYearDropdown();
   }

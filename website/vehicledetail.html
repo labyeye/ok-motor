@@ -120,8 +120,14 @@
           >
         </div>
         <div class="top-banner-right" aria-hidden="true">
-          <a href="https://www.facebook.com/profile.php?id=100092409081953" class="social"><i class="fab fa-facebook-f"></i></a>
-          <a href="https://www.instagram.com/ok_motors_patna/" class="social"><i class="fab fa-instagram"></i></a>
+          <a
+            href="https://www.facebook.com/profile.php?id=100092409081953"
+            class="social"
+            ><i class="fab fa-facebook-f"></i
+          ></a>
+          <a href="https://www.instagram.com/ok_motors_patna/" class="social"
+            ><i class="fab fa-instagram"></i
+          ></a>
         </div>
       </div>
     </div>
@@ -222,15 +228,9 @@
               <a class="dropdown-item" href="tax-challan.html"
                 >TRAFFIC CHALLAN</a
               >
-              <a class="dropdown-item" href="insaurance.html"
-                >INSURANCE</a
-              >
-              <a class="dropdown-item" href="rto-services.html"
-                >RTO SERVICES</a
-              >
-              <a class="dropdown-item" href="puc.html"
-                >PUC CRTIFICATE</a
-              >
+              <a class="dropdown-item" href="insaurance.html">INSURANCE</a>
+              <a class="dropdown-item" href="rto-services.html">RTO SERVICES</a>
+              <a class="dropdown-item" href="puc.html">PUC CRTIFICATE</a>
             </div>
           </div>
           <a href="https://www.okmotors.in/finance.html" class="nav-item"
@@ -281,7 +281,6 @@
     <div class="inventory-hero" id="maincontent">
       <div class="vehicle-main-section">
         <div class="vehicle-content-row">
-          
           <div class="vehicle-image-block">
             <img
               id="mainVehicleImg"
@@ -292,13 +291,10 @@
             <div class="vehicle-thumbnails" id="vehicleThumbnails"></div>
           </div>
 
-          
           <div class="vehicle-details-block">
-            
             <h1 class="vehicle-title" id="vehicleTitle">Vehicle Brand Model</h1>
             <p class="vehicle-subtitle" id="vehicleModel">2022 Model</p>
 
-            
             <div class="price-box">
               <div class="price-label">Price</div>
               <div class="price-row">
@@ -306,7 +302,6 @@
               </div>
             </div>
 
-            
             <div class="specs-section">
               <h3 class="specs-title">Key Specifications</h3>
               <div class="specs-grid">
@@ -355,7 +350,6 @@
               </div>
             </div>
 
-            
             <div class="cta-section">
               <button
                 class="btn-primary"
@@ -371,7 +365,6 @@
               </button>
             </div>
 
-            
             <div class="trust-badges">
               <div class="badge-item">
                 <i class="fas fa-shield-alt"></i>
@@ -388,8 +381,6 @@
             </div>
           </div>
         </div>
-
-        
       </div>
 
       <div class="why-choose-row">
@@ -406,7 +397,6 @@
           <i class="fas fa-heart"></i> Trusted Seller
         </div>
       </div>
-      
     </div>
     <script>
       const API_BASE_URL = "https://ok-motor-51l3.vercel.app";
@@ -434,10 +424,14 @@
 
       function formatOwnership(owner) {
         const ownerStr = String(owner);
-        
+
         if (ownerStr === "1" || ownerStr.includes("1st")) return "1st Owner";
         if (ownerStr === "2" || ownerStr.includes("2nd")) return "2nd Owner";
-        if (ownerStr === "3" || ownerStr.includes("3+") || ownerStr.includes("3rd"))
+        if (
+          ownerStr === "3" ||
+          ownerStr.includes("3+") ||
+          ownerStr.includes("3rd")
+        )
           return "3+ Owner";
         return ownerStr;
       }
@@ -523,7 +517,8 @@
           }
           const vehicleModelYear = document.getElementById("vehicleModelYear");
           if (vehicleModelYear) {
-            vehicleModelYear.textContent = car.manufacturingYear || car.modelYear || car.year || "-";
+            vehicleModelYear.textContent =
+              car.manufacturingYear || car.modelYear || car.year || "-";
           }
 
           const price = car.sellingPrice || car.expectedPrice || car.price || 0;
@@ -545,7 +540,8 @@
             document.getElementById("additionalDetails");
 
           if (car.registrationNumber) {
-            const vehicleRegNumber = document.getElementById("vehicleRegNumber");
+            const vehicleRegNumber =
+              document.getElementById("vehicleRegNumber");
             const regNumberItem = document.getElementById("regNumberItem");
             if (vehicleRegNumber && regNumberItem) {
               vehicleRegNumber.textContent = car.registrationNumber;
@@ -578,7 +574,8 @@
             const vehicleStatus = document.getElementById("vehicleStatus");
             const statusItem = document.getElementById("statusItem");
             if (vehicleStatus && statusItem) {
-              vehicleStatus.textContent = car.status || car.availabilityStatus || "Available";
+              vehicleStatus.textContent =
+                car.status || car.availabilityStatus || "Available";
               statusItem.style.display = "block";
               hasAdditionalDetails = true;
             }
@@ -641,9 +638,9 @@
             );
           }
           if (!images || images.length === 0) images = ["assets/owner.png"];
-          
-          console.log('Extracted image URLs:', images);
-          
+
+          console.log("Extracted image URLs:", images);
+
           const mainImg = document.getElementById("mainVehicleImg");
           const thumbnails = document.getElementById("vehicleThumbnails");
           thumbnails.innerHTML = "";
@@ -1331,8 +1328,7 @@
               window.matchMedia("(prefers-color-scheme: dark)").matches;
             applyTheme(prefersDark ? "dark" : "light");
           }
-        } catch (e) {
-        }
+        } catch (e) {}
 
         if (checkbox) {
           checkbox.addEventListener("change", function () {
@@ -1342,7 +1338,7 @@
       })();
     </script>
     <script src="./scroll-bg-handler.js"></script>
-    
+
     <script src="./sticky-cta.js"></script>
 
     <div class="floating-buttons">
@@ -1399,5 +1395,3 @@
     </div>
   </body>
 </html>
-
-

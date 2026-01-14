@@ -19,6 +19,7 @@ import {
   X,
   Settings,
   Megaphone,
+  Shield,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
@@ -154,7 +155,7 @@ const AdminPage = () => {
       let insuranceExpiring = 0;
       let pucExpiring = 0;
 
-      soldVehicles.forEach((v) => {
+      sellLetters.forEach((v) => {
         if (v.insuranceExpiryDate) {
           const d = new Date(v.insuranceExpiryDate);
           if (d >= now && d <= sevenDays) insuranceExpiring++;
@@ -164,6 +165,41 @@ const AdminPage = () => {
           if (d >= now && d <= sevenDays) pucExpiring++;
         }
       });
+
+      // Fetch standalone PUC records
+      try {
+        const resPUC = await axios.get(`${API_BASE}/api/puc?limit=2000`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const pucList = resPUC.data || [];
+        pucList.forEach((p) => {
+          if (p.pucExpiry) {
+            const d = new Date(p.pucExpiry);
+            if (d >= now && d <= sevenDays) pucExpiring++;
+          }
+        });
+      } catch (err) {
+        console.error("Error fetching puc stats", err);
+      }
+
+      // Fetch standalone Insurance records
+      try {
+        const resInsurance = await axios.get(
+          `${API_BASE}/api/insurance?limit=2000`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const insuranceList = resInsurance.data || [];
+        insuranceList.forEach((ins) => {
+          if (ins.insuranceExpiry) {
+            const d = new Date(ins.insuranceExpiry);
+            if (d >= now && d <= sevenDays) insuranceExpiring++;
+          }
+        });
+      } catch (err) {
+        console.error("Error fetching insurance stats", err);
+      }
 
       setExtraStats((prev) => ({
         ...prev,
@@ -475,6 +511,22 @@ const AdminPage = () => {
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
         { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Insurance",
+      icon: Shield,
+      submenu: [
+        { name: "Add Insurance", path: "/insurance/create" },
+        { name: "Insurance List", path: "/insurance/history" },
+      ],
+    },
+    {
+      name: "PUC",
+      icon: FileText,
+      submenu: [
+        { name: "Add PUC", path: "/puc/create" },
+        { name: "PUC List", path: "/puc/history" },
       ],
     },
     {
@@ -1182,7 +1234,6 @@ const AdminPage = () => {
 
     const fetchPucData = useCallback(async () => {
       try {
-        setLoadingItems(true);
         const token = localStorage.getItem("token");
         if (!token) return;
         const resp = await axios.get(
@@ -1192,14 +1243,49 @@ const AdminPage = () => {
           }
         );
 
+        // fetch standalone PUC
+        const resPUC = await axios.get(
+          "https://ok-motor-51l3.vercel.app/api/puc?limit=2000",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
         const data = resp.data || [];
-        // normalize and keep those with pucExpiryDate
-        const withPuc = (data || []).filter((s) => s && s.pucExpiryDate);
-        setItems(withPuc);
+        const additionalPUC = resPUC.data || [];
+
+        // Format SellLetter items
+        const sellLetterItems = (data || [])
+          .filter((s) => s && s.pucExpiryDate)
+          .map((item) => ({
+            ...item,
+            type: "sell_letter",
+            displayReg: item.registrationNumber,
+            displayName: item.buyerName,
+            displayPhone: item.buyerPhone,
+            displayVehicle: item.vehicleName || item.vehicleModel,
+            displayExpiry: item.pucExpiryDate,
+          }));
+
+        // Format PUC Model items
+        const pucItems = (additionalPUC || [])
+          .filter((p) => p && p.pucExpiry)
+          .map((item) => ({
+            ...item,
+            type: "puc_model",
+            displayReg: item.regNo,
+            displayName: item.personName,
+            displayPhone: item.personPhone,
+            displayVehicle: `${item.brand || ""} ${
+              item.vehicleModel || ""
+            }`.trim(),
+            displayExpiry: item.pucExpiry,
+          }));
+
+        setItems([...sellLetterItems, ...pucItems]);
       } catch (err) {
-        console.error("Error fetching sell letters for PUC reminders:", err);
+        console.error("Error fetching data for PUC reminders:", err);
       } finally {
-        setLoadingItems(false);
       }
     }, []);
 
@@ -1217,7 +1303,7 @@ const AdminPage = () => {
     // Filter items for search and for expiry within next 7 days or already expired
     const processed = (items || [])
       .map((row) => {
-        const expiry = row.pucExpiryDate ? new Date(row.pucExpiryDate) : null;
+        const expiry = row.displayExpiry ? new Date(row.displayExpiry) : null;
         const daysUntil = expiry ? Math.ceil((expiry - now) / msPerDay) : null;
         return { row, expiry, daysUntil };
       })
@@ -1230,13 +1316,13 @@ const AdminPage = () => {
         if (!q) return true;
         const r = it.row || {};
         return (
-          String(r.registrationNumber || "")
+          String(r.displayReg || "")
             .toLowerCase()
             .includes(q) ||
-          String(r.vehicleName || "")
+          String(r.displayVehicle || "")
             .toLowerCase()
             .includes(q) ||
-          String(r.buyerName || "")
+          String(r.displayName || "")
             .toLowerCase()
             .includes(q)
         );
@@ -1252,7 +1338,7 @@ const AdminPage = () => {
             <Search size={18} className="history-search-icon" />
             <input
               type="text"
-              placeholder="Search reg. no, vehicle or buyer..."
+              placeholder="Search reg. no, vehicle or name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="history-search-input"
@@ -1270,10 +1356,12 @@ const AdminPage = () => {
               <thead>
                 <tr>
                   <th>Registration</th>
-                  <th>Buyer</th>
+                  <th>Name</th>
+                  <th>Phone</th>
                   <th>Vehicle</th>
                   <th>PUC Expiry</th>
                   <th>Days Left</th>
+                  <th>Source</th>
                 </tr>
               </thead>
               <tbody>
@@ -1281,21 +1369,18 @@ const AdminPage = () => {
                   const { row, expiry, daysUntil } = it;
                   return (
                     <tr
-                      key={`${row.registrationNumber || row._id}-${idx}`}
+                      key={`${row._id}-${idx}`}
                       onClick={() => {
-                        if (row.registrationNumber) {
-                          setHistoryQuery(row.registrationNumber);
+                        if (row.displayReg) {
+                          setHistoryQuery(row.displayReg);
                           setIsHistoryModalOpen(true);
                         }
                       }}
                     >
-                      <td>{row.registrationNumber || "-"}</td>
-                      <td>{row.buyerName || "-"}</td>
-                      <td>
-                        {(row.vehicleName || "") +
-                          " " +
-                          (row.vehicleModel || "")}
-                      </td>
+                      <td>{row.displayReg || "-"}</td>
+                      <td>{row.displayName || "-"}</td>
+                      <td>{row.displayPhone || "-"}</td>
+                      <td>{row.displayVehicle || "-"}</td>
                       <td>{expiry ? formatDate(expiry) : "-"}</td>
                       <td>
                         {daysUntil < 0 ? (
@@ -1306,6 +1391,33 @@ const AdminPage = () => {
                           <span style={{ color: "#f59e0b" }}>Due today</span>
                         ) : (
                           <span style={{ color: "#10b981" }}>{daysUntil}d</span>
+                        )}
+                      </td>
+                      <td>
+                        {row.type === "sell_letter" ? (
+                          <span
+                            style={{
+                              fontSize: "0.75rem",
+                              padding: "2px 6px",
+                              backgroundColor: "#e0f2fe",
+                              color: "#0284c7",
+                              borderRadius: "4px",
+                            }}
+                          >
+                            Sold Vehicle
+                          </span>
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: "0.75rem",
+                              padding: "2px 6px",
+                              backgroundColor: "#f3e8ff",
+                              color: "#7e22ce",
+                              borderRadius: "4px",
+                            }}
+                          >
+                            PUC Only
+                          </span>
                         )}
                       </td>
                     </tr>
@@ -1326,7 +1438,6 @@ const AdminPage = () => {
 
     const fetchInsuranceData = useCallback(async () => {
       try {
-        setLoadingItems(true);
         const token = localStorage.getItem("token");
         if (!token) return;
         // reuse sell-letters endpoint and filter client-side for insurance expiry
@@ -1338,16 +1449,50 @@ const AdminPage = () => {
         );
 
         const data = resp.data || [];
-        // keep those with insuranceExpiryDate
-        const withInsurance = (data || []).filter(
-          (s) => s && s.insuranceExpiryDate
+        // fetch standalone insurance
+        const resInsurance = await axios.get(
+          "https://ok-motor-51l3.vercel.app/api/insurance?limit=2000",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
-        setItems(withInsurance);
+
+        const additionalInsurance = resInsurance.data || [];
+
+        // Format SellLetter items
+        const sellLetterItems = (data || [])
+          .filter((s) => s && s.insuranceExpiryDate)
+          .map((item) => ({
+            ...item,
+            type: "sell_letter",
+            // normalize fields
+            displayReg: item.registrationNumber,
+            displayName: item.buyerName,
+            displayPhone: item.buyerPhone,
+            displayVehicle: item.vehicleName || item.vehicleModel,
+            displayExpiry: item.insuranceExpiryDate,
+            displayCompany: item.insuranceCompany,
+          }));
+
+        // Format Insurance Model items
+        const insuranceItems = (additionalInsurance || [])
+          .filter((s) => s && s.insuranceExpiry)
+          .map((item) => ({
+            ...item,
+            type: "insurance_model",
+            displayReg: item.regNo,
+            displayName: item.personName,
+            displayPhone: item.personPhone,
+            displayVehicle: `${item.brand || ""} ${
+              item.vehicleModel || ""
+            }`.trim(),
+            displayExpiry: item.insuranceExpiry,
+            displayCompany: item.insuranceCompany,
+          }));
+
+        setItems([...sellLetterItems, ...insuranceItems]);
       } catch (err) {
-        console.error(
-          "Error fetching sell letters for Insurance reminders:",
-          err
-        );
+        console.error("Error fetching data for Insurance reminders:", err);
       } finally {
         setLoadingItems(false);
       }
@@ -1366,9 +1511,7 @@ const AdminPage = () => {
 
     const processed = (items || [])
       .map((row) => {
-        const expiry = row.insuranceExpiryDate
-          ? new Date(row.insuranceExpiryDate)
-          : null;
+        const expiry = row.displayExpiry ? new Date(row.displayExpiry) : null;
         const daysUntil = expiry ? Math.ceil((expiry - now) / msPerDay) : null;
         return { row, expiry, daysUntil };
       })
@@ -1381,13 +1524,13 @@ const AdminPage = () => {
         if (!q) return true;
         const r = it.row || {};
         return (
-          String(r.registrationNumber || "")
+          String(r.displayReg || "")
             .toLowerCase()
             .includes(q) ||
-          String(r.vehicleName || "")
+          String(r.displayVehicle || "")
             .toLowerCase()
             .includes(q) ||
-          String(r.buyerName || "")
+          String(r.displayName || "")
             .toLowerCase()
             .includes(q)
         );
@@ -1403,7 +1546,7 @@ const AdminPage = () => {
             <Search size={18} className="history-search-icon" />
             <input
               type="text"
-              placeholder="Search reg. no, vehicle or buyer..."
+              placeholder="Search reg. no, vehicle or name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="history-search-input"
@@ -1421,21 +1564,24 @@ const AdminPage = () => {
               <thead>
                 <tr>
                   <th>Registration</th>
-                  <th>Buyer</th>
+                  <th>Name</th>
+                  <th>Phone</th>
                   <th>Vehicle</th>
                   <th>Insurance Expiry</th>
                   <th>Days Left</th>
                   <th>Insurance Company</th>
+                  <th>Source</th>
                 </tr>
               </thead>
               <tbody>
                 {processed.map((it, idx) => {
                   const { row, expiry, daysUntil } = it;
                   return (
-                    <tr key={`${row.registrationNumber || idx}-${idx}`}>
-                      <td>{row.registrationNumber || "-"}</td>
-                      <td>{row.buyerName || "-"}</td>
-                      <td>{row.vehicleName || row.vehicleModel || "-"}</td>
+                    <tr key={`${row._id}-${idx}`}>
+                      <td>{row.displayReg || "-"}</td>
+                      <td>{row.displayName || "-"}</td>
+                      <td>{row.displayPhone || "-"}</td>
+                      <td>{row.displayVehicle || "-"}</td>
                       <td>
                         {expiry
                           ? new Date(expiry).toLocaleDateString("en-IN")
@@ -1452,7 +1598,34 @@ const AdminPage = () => {
                           <span style={{ color: "#10b981" }}>{daysUntil}d</span>
                         )}
                       </td>
-                      <td>{row.insuranceCompany || "-"}</td>
+                      <td>{row.displayCompany || "-"}</td>
+                      <td>
+                        {row.type === "sell_letter" ? (
+                          <span
+                            style={{
+                              fontSize: "0.75rem",
+                              padding: "2px 6px",
+                              backgroundColor: "#e0f2fe",
+                              color: "#0284c7",
+                              borderRadius: "4px",
+                            }}
+                          >
+                            Sold Vehicle
+                          </span>
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: "0.75rem",
+                              padding: "2px 6px",
+                              backgroundColor: "#f3e8ff",
+                              color: "#7e22ce",
+                              borderRadius: "4px",
+                            }}
+                          >
+                            Insurance Only
+                          </span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -2533,7 +2706,7 @@ const AdminPage = () => {
         /* History search box */
         .history-search-container {
           display: flex;
-          justify-content: center;
+          justify-content: left;
           margin: 1rem 0 1.5rem 0;
         }
 

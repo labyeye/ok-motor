@@ -136,7 +136,7 @@ const AuthForm = ({ isLogin }) => {
           display: flex;
           min-height: 100vh;
           font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-          background-image: url("https://ik.imagekit.io/os1mzoooe/ChatGPT%20Image%20Jun%2022,%202025,%2001_51_38%20PM.png?updatedAt=1750580522377");
+          background-image: url("https://ik.imagekit.io/okmotors/dash.png");
           background-size: cover;
           background-position: center;
           background-repeat: no-repeat;
@@ -165,7 +165,7 @@ const AuthForm = ({ isLogin }) => {
 
         .auth-content {
           width: 100%;
-          max-width: 420px;
+          max-width: 300px;
           background: rgba(255, 255, 255, 0.01);
           backdrop-filter: blur(7px);
           border-radius: 1rem;

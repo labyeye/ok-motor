@@ -40,7 +40,8 @@ function initNavDropdownToggles() {
   if (!nav) return;
 
   const setAria = (open) => {
-    if (mobileBtn) mobileBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (mobileBtn)
+      mobileBtn.setAttribute("aria-expanded", open ? "true" : "false");
   };
 
   nav.addEventListener("click", (ev) => {
@@ -53,7 +54,8 @@ function initNavDropdownToggles() {
     if (
       parent &&
       isMobile &&
-      (anchor.classList.contains("dropdown-toggle") || anchor.classList.contains("nav-link"))
+      (anchor.classList.contains("dropdown-toggle") ||
+        anchor.classList.contains("nav-link"))
     ) {
       ev.preventDefault();
       parent.classList.toggle("open");
@@ -605,7 +607,8 @@ function fetchFeaturedVehicles(vehicleType, sliderEl) {
         primaryImage: v.primaryImage,
         downPayment: v.downPayment || 0,
         status: v.availabilityStatus || "Available",
-      }));      displayFeaturedVehicles(formattedVehicles, sliderEl, vehicleType);
+      }));
+      displayFeaturedVehicles(formattedVehicles, sliderEl, vehicleType);
     })
     .catch((error) => {
       console.error(`Error fetching ${vehicleType}:`, error);
@@ -654,7 +657,9 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
         <img src="${imageUrl}" alt="${vehicleName.trim()}" />
       </div>
       <div class="card-content">
-        <h3 class="vehicle-title">${vehicle.brand || ""} ${vehicle.model || ""}</h3>
+        <h3 class="vehicle-title">${vehicle.brand || ""} ${
+      vehicle.model || ""
+    }</h3>
         <div class="vehicle-meta">
           <span class="year">${vehicle.modelYear || vehicle.year || "-"}</span>
         </div>
@@ -667,7 +672,9 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
           </div>
           <div class="detail-item">
             <i class="fas fa-user" style="color: white;"></i>
-            <span>${vehicle.ownership || vehicle.owner || "1st Owner"} Owner</span>
+            <span>${
+              vehicle.ownership || vehicle.owner || "1st Owner"
+            } Owner</span>
           </div>
           <div class="detail-item">
             <i class="fas fa-gas-pump" style="color: white;"></i>
