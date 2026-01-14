@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
+import pdfService from "../services/pdfService";
 
 import logo from "../images/company.png";
 import config from "../config/environment";
@@ -429,72 +430,36 @@ const ServiceHistory = () => {
       }
 
       await testAuth();
+      const bill = serviceBills.find((b) => b._id === billId);
 
-      console.log("Token exists:", !!token);
-      console.log("User:", user);
-
-      const response = await axios.get(
-        `https://ok-motor-51l3.vercel.app/api/service-bills/${billId}/download`,
-        {
-          responseType: "blob",
-          timeout: 30000,
-        }
-      );
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `service-bill-${billId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error("Error downloading PDF:", error);
-      console.error("Error response:", error.response);
-
-      if (error.response?.status === 401) {
-        alert("Your session has expired. Please login again.");
-        logout();
-        navigate("/login");
-      } else if (error.response?.status === 403) {
-        alert("You don't have permission to download this file.");
-      } else if (error.response?.status === 404) {
-        alert(
-          "Service bill not found or PDF could not be generated. Please try again or contact support."
-        );
-      } else if (error.response?.status === 503) {
-        alert(
-          "Server is temporarily unavailable. Please try again in a few minutes or contact support if the issue persists."
-        );
-      } else if (
-        error.response?.status === 502 ||
-        error.response?.status === 504
-      ) {
-        alert("Server is experiencing issues. Please try again later.");
-      } else if (
-        error.code === "ECONNABORTED" ||
-        error.code === "NETWORK_ERROR"
-      ) {
-        alert(
-          "Connection timeout. Please check your internet connection and try again."
-        );
-      } else {
-        alert(
-          `Failed to download PDF: ${
-            error.response?.data?.message ||
-            error.message ||
-            "Server temporarily unavailable"
-          }`
-        );
+      if (!bill) {
+        alert("Bill data not found. Please refresh.");
+        return;
       }
 
+      const result = await pdfService.generateServiceBillPDFOffline(bill);
+
+      if (result.success && result.blob) {
+        const url = window.URL.createObjectURL(result.blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `service-bill-${billId}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        throw new Error(result.error || "Failed to generate PDF");
+      }
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      alert("Failed to download PDF. Please try again.");
+    } finally {
+      setIsDownloading(false);
       setDownloadProgress((prev) => {
         const newState = { ...prev };
         delete newState[billId];
         return newState;
       });
-    } finally {
-      setIsDownloading(false);
     }
   };
 

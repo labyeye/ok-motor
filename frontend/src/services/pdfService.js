@@ -818,7 +818,12 @@ class PDFService {
         font: font,
       });
 
-      const currentDate = new Date();
+      // Use bill date or created date, fallback to current date only if missing
+      const currentDate =
+        serviceBill.date || serviceBill.createdAt
+          ? new Date(serviceBill.date || serviceBill.createdAt)
+          : new Date();
+
       const formatTime12Hour = (date) => {
         const hours = date.getHours();
         const minutes = date.getMinutes();
