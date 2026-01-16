@@ -229,12 +229,15 @@ const BuyLetterForm = () => {
           todayDate:
             toInputDate(full.todayDate) ||
             new Date().toISOString().split("T")[0],
-          // keep times as-is if present
-          saleTime: full.saleTime || formData.saleTime,
-          todayTime: full.todayTime || formData.todayTime,
         };
 
-        setFormData((prev) => ({ ...prev, ...normalized }));
+        setFormData((prev) => ({
+          ...prev,
+          ...normalized,
+          // keep times as-is if present, else use previous state
+          saleTime: full.saleTime || prev.saleTime,
+          todayTime: full.todayTime || prev.todayTime,
+        }));
 
         if (full.documents) {
           const previews = {};

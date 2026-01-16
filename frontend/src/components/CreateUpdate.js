@@ -40,126 +40,27 @@ const CreateUpdate = () => {
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
+
+    const fetchExisting = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${config.API_BASE_URL}/updates/admin`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const found = res.data.data.find((u) => u._id === id);
+        if (found) {
+          setTitle(found.title);
+          setShortDescription(found.shortDescription);
+          setPreview(found.images || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch existing update", err);
+      }
+    };
+
     if (id) fetchExisting();
     return () => window.removeEventListener("resize", handleResize);
   }, [id]);
-
-  const toggleMenu = (menuName) => {
-    setExpandedMenus((prev) => ({ ...prev, [menuName]: !prev[menuName] }));
-  };
-
-  const handleMenuClick = (menuName, path) => {
-    setActiveMenu(menuName);
-    const actualPath = typeof path === "function" ? path(user?.role) : path;
-    if (actualPath) navigate(actualPath);
-  };
-
-  const menuItems = [
-    {
-      name: "Dashboard",
-      icon: LayoutDashboard,
-      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
-    },
-    {
-      name: "Vehicle",
-      icon: ShipWheel,
-      submenu: [
-        { name: "Add Vehicle", path: "/vehicle/create" },
-        { name: "Vehicle List", path: "/vehicle/history" },
-      ],
-    },
-    {
-      name: "Buy",
-      icon: ShoppingCart,
-      submenu: [
-        { name: "Create Buy Letter", path: "/buy/create" },
-        { name: "Buy Letter History", path: "/buy/history" },
-      ],
-    },
-    {
-      name: "Sell",
-      icon: TrendingUp,
-      submenu: [
-        { name: "Create Sell Letter", path: "/sell/create" },
-        { name: "Sell Letter History", path: "/sell/history" },
-        { name: "Sell Requests", path: "/sell/requests" },
-      ],
-    },
-    {
-      name: "Updates",
-      icon: RefreshCw,
-      submenu: [
-        { name: "Create Update", path: "/updates/create" },
-        { name: "Updates List", path: "/updates" },
-      ],
-    },
-    {
-      name: "Announcements",
-      icon: Megaphone,
-      path: "/announcements",
-    },
-    {
-      name: "Service",
-      icon: Wrench,
-      submenu: [
-        { name: "Create Service Bill", path: "/service/create" },
-        { name: "Service History", path: "/service/history" },
-      ],
-    },
-    {
-      name: "Payment",
-      icon: FileText,
-      submenu: [
-        { name: "Create Advance Bill", path: "/advance/create" },
-        { name: "Advance History", path: "/advance/history" },
-      ],
-    },
-    {
-      name: "Staff",
-      icon: Users,
-      submenu: [
-        { name: "Create Staff ID", path: "/staff/create" },
-        { name: "Staff List", path: "/staff/list" },
-      ],
-    },
-    {
-      name: "Gallery",
-      icon: Image,
-      path: "/gallery/manage",
-    },
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
-    },
-    {
-      name: "Letter Head",
-      icon: FileText,
-      path: "/letter-head/create",
-    },
-    {
-      name: "Settings",
-      icon: Settings,
-      path: "/settings",
-    },
-  ];
-
-  const fetchExisting = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(`${config.API_BASE_URL}/updates/admin`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const found = res.data.data.find((u) => u._id === id);
-      if (found) {
-        setTitle(found.title);
-        setShortDescription(found.shortDescription);
-        setPreview(found.images || []);
-      }
-    } catch (err) {
-      console.error("Failed to fetch existing update", err);
-    }
-  };
 
   const onFiles = (e) => {
     const files = Array.from(e.target.files || []);

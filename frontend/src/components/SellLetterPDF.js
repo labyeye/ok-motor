@@ -305,7 +305,6 @@ const SellLetterForm = () => {
         buyerFatherName: "",
         buyerAddress: "",
         buyerEmail: "",
-        buyerEmail: "",
         buyerPhone: "",
         buyerPhone2: "",
         buyerAadhar: "",
@@ -820,24 +819,8 @@ const SellLetterForm = () => {
           });
         }
       }
-      const docs =
-        (saveResultRef.current && saveResultRef.current.documents) ||
-        (savedSellLetter && savedSellLetter.documents) ||
-        null;
 
-      const embedImageFromUrl = async (url) => {
-        try {
-          const res = await fetch(url);
-          const contentType = res.headers.get("content-type") || "";
-          const bytes = await res.arrayBuffer();
-          if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
-          return await pdfDoc.embedJpg(bytes);
-        } catch (err) {
-          console.warn("Failed to embed image from", url, err);
-          return null;
-        }
-      };
-
+      // eslint-disable-next-line no-unused-vars
       const addDocumentPages = async (documentsObj) => {
         if (!documentsObj) return;
         const items = [];
@@ -1323,47 +1306,6 @@ const SellLetterForm = () => {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const generatePDFBuffer = async (data, language = "hindi") => {
-    try {
-      const isElectron = window.electronAPI !== undefined;
-
-      let response;
-      if (isElectron) {
-        response = await apiService.post(
-          `/api/sell-letters/generate-pdf?language=${language}`,
-          data,
-          {
-            responseType: "arraybuffer",
-          }
-        );
-      } else {
-        response = await axios.post(
-          `https://ok-motor-51l3.vercel.app/api/sell-letters/generate-pdf?language=${language}`,
-          data,
-          {
-            responseType: "arraybuffer",
-          }
-        );
-      }
-      return response.data;
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      throw error;
-    }
-  };
-
-  const downloadPDFFromBuffer = (buffer, filename) => {
-    const blob = new Blob([buffer], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   const handleSaveAndDownload = async () => {
@@ -2051,25 +1993,8 @@ const SellLetterForm = () => {
         }
       }
       // Insert document pages (fetched from savedSellLetter.documents or server response)
-      const docs =
-        (saveResultRef.current && saveResultRef.current.documents) ||
-        (savedSellLetter && savedSellLetter.documents) ||
-        formData.documents ||
-        null;
 
-      const embedImageFromUrl = async (url) => {
-        try {
-          const res = await fetch(url);
-          const contentType = res.headers.get("content-type") || "";
-          const bytes = await res.arrayBuffer();
-          if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
-          return await pdfDoc.embedJpg(bytes);
-        } catch (err) {
-          console.warn("Failed to embed image from", url, err);
-          return null;
-        }
-      };
-
+      // eslint-disable-next-line no-unused-vars
       const addDocumentPages = async (documentsObj) => {
         if (!documentsObj) return;
         const items = [];
@@ -2321,25 +2246,7 @@ const SellLetterForm = () => {
         }
       }
 
-      const docs =
-        (saveResultRef.current && saveResultRef.current.documents) ||
-        (savedSellLetter && savedSellLetter.documents) ||
-        formData.documents ||
-        null;
-
-      const embedImageFromUrl = async (url) => {
-        try {
-          const res = await fetch(url);
-          const contentType = res.headers.get("content-type") || "";
-          const bytes = await res.arrayBuffer();
-          if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
-          return await pdfDoc.embedJpg(bytes);
-        } catch (err) {
-          console.warn("Failed to embed image from", url, err);
-          return null;
-        }
-      };
-
+      // eslint-disable-next-line no-unused-vars
       const addDocumentPages = async (documentsObj) => {
         if (!documentsObj) return;
         const items = [];
@@ -3400,7 +3307,7 @@ const SellLetterForm = () => {
             {/* Documents Upload Section */}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
-                <img style={styles.sectionIcon} /> Documents Upload
+                <img style={styles.sectionIcon} alt="" /> Documents Upload
               </h2>
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
@@ -3887,13 +3794,7 @@ const styles = {
       backgroundColor: "#e2e8f0",
     },
   },
-  formInput: {
-    width: "100%",
-    borderRadius: "12px",
-    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-    padding: "32px",
-    border: "1px solid #e2e8f0",
-  },
+
   formSection: {
     marginBottom: "40px",
     paddingBottom: "24px",
