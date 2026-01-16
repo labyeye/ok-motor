@@ -137,7 +137,7 @@ const SellLetterForm = () => {
     vehiclePhotos: [],
   });
   const [filePreviews, setFilePreviews] = useState({});
-  const [savedSellLetter, setSavedSellLetter] = useState(null);
+  const [, setSavedSellLetter] = useState(null);
 
   useEffect(() => {
     const handleResize = () => {
