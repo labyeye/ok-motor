@@ -821,6 +821,20 @@ const SellLetterForm = () => {
       }
 
       // eslint-disable-next-line no-unused-vars
+      const embedImageFromUrl = async (url) => {
+        try {
+          const res = await fetch(url);
+          const contentType = res.headers.get("content-type") || "";
+          const bytes = await res.arrayBuffer();
+          if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
+          return await pdfDoc.embedJpg(bytes);
+        } catch (err) {
+          console.warn("Failed to embed image from", url, err);
+          return null;
+        }
+      };
+
+      // eslint-disable-next-line no-unused-vars
       const addDocumentPages = async (documentsObj) => {
         if (!documentsObj) return;
         const items = [];
@@ -1995,6 +2009,20 @@ const SellLetterForm = () => {
       // Insert document pages (fetched from savedSellLetter.documents or server response)
 
       // eslint-disable-next-line no-unused-vars
+      const embedImageFromUrl = async (url) => {
+        try {
+          const res = await fetch(url);
+          const contentType = res.headers.get("content-type") || "";
+          const bytes = await res.arrayBuffer();
+          if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
+          return await pdfDoc.embedJpg(bytes);
+        } catch (err) {
+          console.warn("Failed to embed image from", url, err);
+          return null;
+        }
+      };
+
+      // eslint-disable-next-line no-unused-vars
       const addDocumentPages = async (documentsObj) => {
         if (!documentsObj) return;
         const items = [];
@@ -2245,6 +2273,20 @@ const SellLetterForm = () => {
           });
         }
       }
+
+      // eslint-disable-next-line no-unused-vars
+      const embedImageFromUrl = async (url) => {
+        try {
+          const res = await fetch(url);
+          const contentType = res.headers.get("content-type") || "";
+          const bytes = await res.arrayBuffer();
+          if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
+          return await pdfDoc.embedJpg(bytes);
+        } catch (err) {
+          console.warn("Failed to embed image from", url, err);
+          return null;
+        }
+      };
 
       // eslint-disable-next-line no-unused-vars
       const addDocumentPages = async (documentsObj) => {
