@@ -607,12 +607,6 @@ const styles = {
     background: "rgba(0, 0, 0, 0.5)",
     zIndex: 14,
   },
-  nav: {
-    padding: "16px 0",
-    flex: "1 1 auto",
-    overflowY: "auto",
-    WebkitOverflowScrolling: "touch",
-  },
   menuItem: {
     display: "flex",
     alignItems: "center",
