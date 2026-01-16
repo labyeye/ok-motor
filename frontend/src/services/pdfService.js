@@ -2336,7 +2336,7 @@ class PDFService {
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-      const { width, height } = page.getSize();
+      const { height } = page.getSize();
       let yPosition = height - 50;
 
       // Logo and Header (Same as Service Bill)
@@ -2591,4 +2591,5 @@ class PDFService {
   }
 }
 
-export default new PDFService();
+const pdfServiceInstance = new PDFService();
+export default pdfServiceInstance;

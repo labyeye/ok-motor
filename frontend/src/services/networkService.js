@@ -11,7 +11,7 @@ class NetworkService {
     this.apiHealthCheckUrl = null;
     this.healthCheckInterval = null;
     this.healthCheckIntervalTime = 30000; // 30 seconds
-    
+
     this.init();
   }
 
@@ -20,9 +20,9 @@ class NetworkService {
    */
   init() {
     // Listen for browser online/offline events
-    window.addEventListener('online', this.handleOnline.bind(this));
-    window.addEventListener('offline', this.handleOffline.bind(this));
-    
+    window.addEventListener("online", this.handleOnline.bind(this));
+    window.addEventListener("offline", this.handleOffline.bind(this));
+
     // Initial check
     this.checkConnection();
   }
@@ -62,7 +62,7 @@ class NetworkService {
    * Handle online event
    */
   handleOnline() {
-    console.log('Browser detected online');
+    console.log("Browser detected online");
     this.checkConnection();
   }
 
@@ -70,7 +70,7 @@ class NetworkService {
    * Handle offline event
    */
   handleOffline() {
-    console.log('Browser detected offline');
+    console.log("Browser detected offline");
     this.updateStatus(false);
   }
 
@@ -91,20 +91,20 @@ class NetworkService {
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
         const response = await fetch(this.apiHealthCheckUrl, {
-          method: 'GET',
+          method: "GET",
           signal: controller.signal,
           headers: {
-            'Cache-Control': 'no-cache'
-          }
+            "Cache-Control": "no-cache",
+          },
         });
 
         clearTimeout(timeoutId);
-        
+
         const online = response.ok || response.status === 401; // 401 means server is up but needs auth
         this.updateStatus(online);
         return online;
       } catch (error) {
-        console.log('API health check failed:', error.message);
+        console.log("API health check failed:", error.message);
         this.updateStatus(false);
         return false;
       }
@@ -123,18 +123,20 @@ class NetworkService {
     this.isOnline = isOnline;
 
     // Notify all listeners
-    this.listeners.forEach(callback => {
+    this.listeners.forEach((callback) => {
       try {
         callback(isOnline, wasOnline);
       } catch (error) {
-        console.error('Error in network status listener:', error);
+        console.error("Error in network status listener:", error);
       }
     });
 
     // Dispatch custom event
-    window.dispatchEvent(new CustomEvent('network-status-change', {
-      detail: { isOnline, wasOnline }
-    }));
+    window.dispatchEvent(
+      new CustomEvent("network-status-change", {
+        detail: { isOnline, wasOnline },
+      })
+    );
   }
 
   /**
@@ -144,7 +146,7 @@ class NetworkService {
    */
   subscribe(callback) {
     this.listeners.push(callback);
-    
+
     // Call immediately with current status
     callback(this.isOnline, this.isOnline);
 
@@ -175,11 +177,12 @@ class NetworkService {
    * Clean up resources
    */
   destroy() {
-    window.removeEventListener('online', this.handleOnline);
-    window.removeEventListener('offline', this.handleOffline);
+    window.removeEventListener("online", this.handleOnline);
+    window.removeEventListener("offline", this.handleOffline);
     this.stopHealthCheck();
     this.listeners = [];
   }
 }
 
-export default new NetworkService();
+const networkServiceInstance = new NetworkService();
+export default networkServiceInstance;
