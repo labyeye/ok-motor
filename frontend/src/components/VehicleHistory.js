@@ -56,6 +56,7 @@ const VehicleHistory = () => {
 
   useEffect(() => {
     fetchVehicles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filterType, filterStatus]);
 
   const fetchVehicles = async () => {

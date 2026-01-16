@@ -22,7 +22,6 @@ import {
   Shield,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -143,9 +142,6 @@ const AdminPage = () => {
         );
       }).length;
 
-      const soldVehicles = vehicles.filter(
-        (v) => v.availabilityStatus === "Sold"
-      );
       // Use the sell letters count for "Total Sold" instead of vehicle status
       const totalSold = totalSoldLetters;
 
@@ -369,65 +365,10 @@ const AdminPage = () => {
     navigate("/login");
   };
 
-  const monthlyChartData = {
-    labels: dashboardData.monthlyData?.map((item) => item.month) || [],
-    datasets: [
-      {
-        label: "Buy Amount (Expenses)",
-        data: dashboardData.monthlyData?.map((item) => item.buyAmount) || [],
-        backgroundColor: "rgba(239, 68, 68, 0.7)",
-        borderColor: "rgba(239, 68, 68, 1)",
-      },
-      {
-        label: "Sell Amount (Revenue)",
-        data: dashboardData.monthlyData?.map((item) => item.sellAmount) || [],
-        backgroundColor: "rgba(16, 185, 129, 0.7)",
-        borderColor: "rgba(16, 185, 129, 1)",
-      },
-      {
-        label: "Service Amount (Revenue)",
-        data:
-          dashboardData.monthlyData?.map((item) => item.serviceAmount) || [],
-        backgroundColor: "rgba(245, 158, 11, 0.7)",
-        borderColor: "rgba(245, 158, 11, 1)",
-      },
-    ],
-  };
-
-  const profitChartData = {
-    labels: dashboardData.monthlyData?.map((item) => item.month) || [],
-    datasets: [
-      {
-        label: "Profit",
-        data: dashboardData.monthlyData?.map((item) => item.profit) || [],
-        backgroundColor: "rgba(16, 185, 129, 0.7)",
-      },
-    ],
-  };
-
-  const transactionTypeData = {
-    labels: ["Buy", "Sell", "Service"],
-    datasets: [
-      {
-        data: [
-          dashboardData.totalBuyLetters || 0,
-          dashboardData.totalSellLetters || 0,
-          dashboardData.totalServices || 0,
-        ],
-        backgroundColor: [
-          "rgba(239, 68, 68, 0.7)",
-          "rgba(16, 185, 129, 0.7)",
-          "rgba(245, 158, 11, 0.7)",
-        ],
-        borderColor: [
-          "rgba(239, 68, 68, 1)",
-          "rgba(5, 150, 105, 1)",
-          "rgba(217, 119, 6, 1)",
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
+  // Chart data removed - not currently used
+  // const monthlyChartData = { ... };
+  // const profitChartData = { ... };
+  // const transactionTypeData = { ... };
 
   // Chart options removed - not currently used
   // const chartOptions = { ... };

@@ -83,16 +83,9 @@ const VehicleCreate = () => {
       loadVehicleForEdit(editVehicleId);
     }
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [editVehicleId]);
 
-  const formatDateForInput = (d) => {
-    if (!d) return "";
-    try {
-      return new Date(d).toISOString().slice(0, 10);
-    } catch (err) {
-      return "";
-    }
-  };
+  // formatDateForInput function removed - not currently used
 
   const loadVehicleForEdit = async (id) => {
     try {
