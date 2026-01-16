@@ -2693,8 +2693,15 @@ const AdminPage = () => {
 
         .free-services-table {
           width: 100%;
+          min-width: 650px;
           border-collapse: collapse;
           font-size: 0.95rem;
+        }
+
+        .table-wrapper {
+          width: 100%;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
         }
 
         .free-services-table th,
