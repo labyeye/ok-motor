@@ -20,6 +20,7 @@ import {
   Shield,
   Trash2,
   FileText,
+  Edit,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -61,6 +62,10 @@ const PUCHistory = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEdit = (item) => {
+    navigate("/puc/create", { state: { pucData: item } });
   };
 
   const handleDelete = async (id) => {
@@ -574,12 +579,24 @@ const PUCHistory = () => {
                         {new Date(item.pucExpiry).toLocaleDateString("en-IN")}
                       </td>
                       <td style={styles.td}>
-                        <button
-                          style={styles.deleteBtn}
-                          onClick={() => handleDelete(item._id)}
-                        >
-                          <Trash2 size={16} /> Delete
-                        </button>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button
+                            style={{
+                              ...styles.deleteBtn,
+                              backgroundColor: "#e0f2fe",
+                              color: "#0284c7",
+                            }}
+                            onClick={() => handleEdit(item)}
+                          >
+                            <Edit size={16} /> Edit
+                          </button>
+                          <button
+                            style={styles.deleteBtn}
+                            onClick={() => handleDelete(item._id)}
+                          >
+                            <Trash2 size={16} /> Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

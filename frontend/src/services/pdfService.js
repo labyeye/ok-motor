@@ -2512,6 +2512,16 @@ class PDFService {
       // Footer Signatures
       yPosition = 150;
 
+      if (letterData.recipientName) {
+        page.drawText(letterData.recipientName, {
+          x: 50,
+          y: yPosition + 20,
+          size: 12,
+          font: fontBold,
+          color: rgb(0, 0, 0),
+        });
+      }
+
       page.drawText("For OK Motor", {
         x: 400,
         y: yPosition + 20,
@@ -2538,9 +2548,9 @@ class PDFService {
       });
 
       page.drawText(
-        "Address: Main Road, Near Bus Stand, Sample City - 123456",
+        "Address: Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014",
         {
-          x: 50,
+          x: 120,
           y: footerY,
           size: 9,
           font: font,
@@ -2548,8 +2558,8 @@ class PDFService {
         }
       );
 
-      page.drawText("Phone: +91 98765 43210 | Email: contact@okmotor.in", {
-        x: 50,
+      page.drawText("Phone: +91 72800 12222", {
+        x: 250,
         y: footerY - 12,
         size: 9,
         font: font,

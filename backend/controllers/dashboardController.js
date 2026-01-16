@@ -2,6 +2,8 @@ const BuyLetter = require("../models/BuyLetter");
 const SellLetter = require("../models/SellLetter");
 const Service = require("../models/ServiceBill");
 const Advance = require("../models/AdvanceBill");
+const PUC = require("../models/PUC");
+const Insurance = require("../models/Insurance");
 const mongoose = require("mongoose");
 
 const getMonthlyData = async (model, matchCriteria = {}) => {
@@ -450,7 +452,12 @@ exports.getFreeServiceUsage = async (req, res) => {
     // Build a base match for sold vehicles (SellLetter)
     const baseMatch = {};
     if (search && String(search).trim() !== "") {
-      const regex = new RegExp(String(search).trim().replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
+      const regex = new RegExp(
+        String(search)
+          .trim()
+          .replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"),
+        "i"
+      );
       baseMatch.registrationNumber = { $regex: regex };
     }
 
@@ -484,10 +491,16 @@ exports.getFreeServiceUsage = async (req, res) => {
           buyerName: 1,
           registrationNumber: 1,
           vehicleBrand: {
-            $ifNull: [{ $arrayElemAt: ["$services.vehicleBrand", 0] }, "$vehicleName"],
+            $ifNull: [
+              { $arrayElemAt: ["$services.vehicleBrand", 0] },
+              "$vehicleName",
+            ],
           },
           vehicleModel: {
-            $ifNull: [{ $arrayElemAt: ["$services.vehicleModel", 0] }, "$vehicleModel"],
+            $ifNull: [
+              { $arrayElemAt: ["$services.vehicleModel", 0] },
+              "$vehicleModel",
+            ],
           },
           serviceDates: {
             $map: {
@@ -504,19 +517,25 @@ exports.getFreeServiceUsage = async (req, res) => {
           month1: {
             $ifNull: [
               { $arrayElemAt: ["$serviceDates", 0] },
-              { $dateAdd: { startDate: "$saleDate", unit: "month", amount: 1 } },
+              {
+                $dateAdd: { startDate: "$saleDate", unit: "month", amount: 1 },
+              },
             ],
           },
           month2: {
             $ifNull: [
               { $arrayElemAt: ["$serviceDates", 1] },
-              { $dateAdd: { startDate: "$saleDate", unit: "month", amount: 2 } },
+              {
+                $dateAdd: { startDate: "$saleDate", unit: "month", amount: 2 },
+              },
             ],
           },
           month3: {
             $ifNull: [
               { $arrayElemAt: ["$serviceDates", 2] },
-              { $dateAdd: { startDate: "$saleDate", unit: "month", amount: 3 } },
+              {
+                $dateAdd: { startDate: "$saleDate", unit: "month", amount: 3 },
+              },
             ],
           },
           usedCount: { $size: { $ifNull: ["$serviceDates", []] } },
@@ -525,7 +544,9 @@ exports.getFreeServiceUsage = async (req, res) => {
       {
         $addFields: {
           projectedMonths: ["$month1", "$month2", "$month3"],
-          nextDue: { $arrayElemAt: [["$month1", "$month2", "$month3"], "$usedCount"] },
+          nextDue: {
+            $arrayElemAt: [["$month1", "$month2", "$month3"], "$usedCount"],
+          },
         },
       },
       { $sort: { saleDate: -1 } },
@@ -537,6 +558,199 @@ exports.getFreeServiceUsage = async (req, res) => {
     res.status(200).json({ success: true, data: results });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ success: false, error: "Server Error" });
+  }
+};
+
+exports.getPucExpiryReminders = async (req, res) => {
+  try {
+    const { limit = 100, search } = req.query;
+    const numericLimit = parseInt(limit, 10);
+
+    // Date Logic: Expiry <= Today + 7 days
+    const now = new Date();
+    const sevenDaysFromNow = new Date(now);
+    sevenDaysFromNow.setDate(now.getDate() + 7);
+
+    // If search is provided, we might want to search globally (ignoring date) OR within the date range.
+    // The previous frontend logic was: Filter by DATE first, then SEARCH.
+    // So we will stick to that: Find items expiring soon, then filter by search if present.
+    // However, for efficiency, we put both in the query.
+
+    // Base match for date
+    // Note: ensure we only start with valid expiries
+    const sellBase = {
+      pucExpiryDate: { $exists: true, $ne: null, $lte: sevenDaysFromNow },
+    };
+    const pucBase = {
+      pucExpiry: { $exists: true, $ne: null, $lte: sevenDaysFromNow },
+    };
+
+    if (search && String(search).trim() !== "") {
+      const regex = new RegExp(
+        String(search)
+          .trim()
+          .replace(/[-/\\^+?.()|[\]{}]/g, "\\$&"),
+        "i"
+      );
+
+      sellBase.$or = [
+        { registrationNumber: { $regex: regex } },
+        { buyerName: { $regex: regex } },
+        { vehicleName: { $regex: regex } },
+        { vehicleModel: { $regex: regex } },
+      ];
+
+      pucBase.$or = [
+        { regNo: { $regex: regex } },
+        { personName: { $regex: regex } },
+        { brand: { $regex: regex } },
+        { vehicleModel: { $regex: regex } },
+      ];
+    }
+
+    const [sellLetters, pucRecords] = await Promise.all([
+      SellLetter.find(sellBase)
+        .select(
+          "registrationNumber buyerName buyerPhone vehicleName vehicleModel pucExpiryDate"
+        )
+        .sort({ pucExpiryDate: 1 })
+        .limit(numericLimit) // Optimize: limit individual queries too, though we re-sort after
+        .lean(),
+      PUC.find(pucBase)
+        .select("regNo personName personPhone brand vehicleModel pucExpiry")
+        .sort({ pucExpiry: 1 })
+        .limit(numericLimit)
+        .lean(),
+    ]);
+
+    // Normalize
+    const normalizedSell = sellLetters.map((s) => ({
+      _id: s._id,
+      type: "sell_letter",
+      displayReg: s.registrationNumber,
+      displayName: s.buyerName,
+      displayPhone: s.buyerPhone,
+      displayVehicle: `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
+      displayExpiry: s.pucExpiryDate,
+    }));
+
+    const normalizedPuc = pucRecords.map((p) => ({
+      _id: p._id,
+      type: "puc_model",
+      displayReg: p.regNo,
+      displayName: p.personName,
+      displayPhone: p.personPhone,
+      displayVehicle: `${p.brand || ""} ${p.vehicleModel || ""}`.trim(),
+      displayExpiry: p.pucExpiry,
+    }));
+
+    const combined = [...normalizedSell, ...normalizedPuc];
+
+    // Sort combined list by expiry date
+    combined.sort(
+      (a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry)
+    );
+
+    // Hard limit on final result
+    const finalData = combined.slice(0, numericLimit);
+
+    res.status(200).json({ success: true, data: finalData });
+  } catch (err) {
+    console.error("Error in getPucExpiryReminders:", err);
+    res.status(500).json({ success: false, error: "Server Error" });
+  }
+};
+
+exports.getInsuranceExpiryReminders = async (req, res) => {
+  try {
+    const { limit = 100, search } = req.query;
+    const numericLimit = parseInt(limit, 10);
+
+    const now = new Date();
+    const sevenDaysFromNow = new Date(now);
+    sevenDaysFromNow.setDate(now.getDate() + 7);
+
+    const sellBase = {
+      insuranceExpiryDate: { $exists: true, $ne: null, $lte: sevenDaysFromNow },
+    };
+    const insBase = {
+      insuranceExpiry: { $exists: true, $ne: null, $lte: sevenDaysFromNow },
+    };
+
+    if (search && String(search).trim() !== "") {
+      const regex = new RegExp(
+        String(search)
+          .trim()
+          .replace(/[-/\\^+?.()|[\]{}]/g, "\\$&"),
+        "i"
+      );
+
+      sellBase.$or = [
+        { registrationNumber: { $regex: regex } },
+        { buyerName: { $regex: regex } },
+        { vehicleName: { $regex: regex } },
+        { vehicleModel: { $regex: regex } },
+        { insuranceCompany: { $regex: regex } },
+      ];
+
+      insBase.$or = [
+        { regNo: { $regex: regex } },
+        { personName: { $regex: regex } },
+        { brand: { $regex: regex } },
+        { vehicleModel: { $regex: regex } },
+        { insuranceCompany: { $regex: regex } },
+      ];
+    }
+
+    const [sellLetters, insRecords] = await Promise.all([
+      SellLetter.find(sellBase)
+        .select(
+          "registrationNumber buyerName buyerPhone vehicleName vehicleModel insuranceExpiryDate insuranceCompany"
+        )
+        .sort({ insuranceExpiryDate: 1 })
+        .limit(numericLimit)
+        .lean(),
+      Insurance.find(insBase)
+        .select(
+          "regNo personName personPhone brand vehicleModel insuranceExpiry insuranceCompany"
+        )
+        .sort({ insuranceExpiry: 1 })
+        .limit(numericLimit)
+        .lean(),
+    ]);
+
+    const normalizedSell = sellLetters.map((s) => ({
+      _id: s._id,
+      type: "sell_letter",
+      displayReg: s.registrationNumber,
+      displayName: s.buyerName,
+      displayPhone: s.buyerPhone,
+      displayVehicle: `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
+      displayExpiry: s.insuranceExpiryDate,
+      displayCompany: s.insuranceCompany,
+    }));
+
+    const normalizedIns = insRecords.map((p) => ({
+      _id: p._id,
+      type: "insurance_model",
+      displayReg: p.regNo,
+      displayName: p.personName,
+      displayPhone: p.personPhone,
+      displayVehicle: `${p.brand || ""} ${p.vehicleModel || ""}`.trim(),
+      displayExpiry: p.insuranceExpiry,
+      displayCompany: p.insuranceCompany,
+    }));
+
+    const combined = [...normalizedSell, ...normalizedIns];
+    combined.sort(
+      (a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry)
+    );
+    const finalData = combined.slice(0, numericLimit);
+
+    res.status(200).json({ success: true, data: finalData });
+  } catch (err) {
+    console.error("Error in getInsuranceExpiryReminders:", err);
     res.status(500).json({ success: false, error: "Server Error" });
   }
 };

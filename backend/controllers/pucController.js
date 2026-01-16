@@ -37,6 +37,29 @@ exports.getAllPUC = async (req, res) => {
   }
 };
 
+exports.updatePUC = async (req, res) => {
+  try {
+    let puc = await PUC.findById(req.params.id);
+
+    if (!puc) {
+      return res.status(404).json({ message: "PUC record not found" });
+    }
+
+    puc = await PUC.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.json(puc);
+  } catch (error) {
+    console.error("Error updating PUC:", error);
+    res.status(500).json({
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
 exports.deletePUC = async (req, res) => {
   try {
     const puc = await PUC.findById(req.params.id);

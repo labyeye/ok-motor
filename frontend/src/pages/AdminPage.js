@@ -1283,9 +1283,16 @@ const AdminPage = () => {
           }));
 
         setItems([...sellLetterItems, ...pucItems]);
+        console.log("PUC Data Loaded:", {
+          sellLetterCount: sellLetterItems.length,
+          pucModelCount: pucItems.length,
+          total: sellLetterItems.length + pucItems.length,
+          sample: pucItems[0],
+        });
       } catch (err) {
         console.error("Error fetching data for PUC reminders:", err);
       } finally {
+        setLoadingItems(false);
       }
     }, []);
 
@@ -1309,12 +1316,11 @@ const AdminPage = () => {
       })
       .filter((it) => it.expiry !== null)
       .filter((it) => {
-        // show if expiry within next 7 days (0..7) or already expired (daysUntil < 0)
-        return it.daysUntil <= 7;
-      })
-      .filter((it) => {
+        // Show everything, but apply search if q exists
         if (!q) return true;
+
         const r = it.row || {};
+
         return (
           String(r.displayReg || "")
             .toLowerCase()
@@ -1323,6 +1329,9 @@ const AdminPage = () => {
             .toLowerCase()
             .includes(q) ||
           String(r.displayName || "")
+            .toLowerCase()
+            .includes(q) ||
+          String(r.displayPhone || "")
             .toLowerCase()
             .includes(q)
         );
@@ -1491,6 +1500,12 @@ const AdminPage = () => {
           }));
 
         setItems([...sellLetterItems, ...insuranceItems]);
+        console.log("Insurance Data Loaded:", {
+          sellLetterCount: sellLetterItems.length,
+          insuranceModelCount: insuranceItems.length,
+          total: sellLetterItems.length + insuranceItems.length,
+          sample: insuranceItems[0],
+        });
       } catch (err) {
         console.error("Error fetching data for Insurance reminders:", err);
       } finally {
@@ -1517,12 +1532,11 @@ const AdminPage = () => {
       })
       .filter((it) => it.expiry !== null)
       .filter((it) => {
-        // show if expiry within next 7 days or already expired
-        return it.daysUntil <= 7;
-      })
-      .filter((it) => {
+        // Show everything, but apply search if q exists
         if (!q) return true;
+
         const r = it.row || {};
+
         return (
           String(r.displayReg || "")
             .toLowerCase()
@@ -1531,6 +1545,9 @@ const AdminPage = () => {
             .toLowerCase()
             .includes(q) ||
           String(r.displayName || "")
+            .toLowerCase()
+            .includes(q) ||
+          String(r.displayPhone || "")
             .toLowerCase()
             .includes(q)
         );

@@ -5,10 +5,11 @@ const {
   createPUC,
   getAllPUC,
   deletePUC,
+  updatePUC,
 } = require("../controllers/pucController");
 
 router.route("/").post(protect, createPUC).get(protect, getAllPUC);
 
-router.route("/:id").delete(protect, deletePUC);
+router.route("/:id").delete(protect, deletePUC).put(protect, updatePUC);
 
 module.exports = router;

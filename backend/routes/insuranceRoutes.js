@@ -5,10 +5,14 @@ const {
   createInsurance,
   getAllInsurance,
   deleteInsurance,
+  updateInsurance,
 } = require("../controllers/insuranceController");
 
 router.route("/").post(protect, createInsurance).get(protect, getAllInsurance);
 
-router.route("/:id").delete(protect, deleteInsurance);
+router
+  .route("/:id")
+  .delete(protect, deleteInsurance)
+  .put(protect, updateInsurance);
 
 module.exports = router;

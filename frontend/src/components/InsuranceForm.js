@@ -21,15 +21,17 @@ import {
   Shield,
   Save,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
 
 const InsuranceForm = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSaving, setIsSaving] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [editId, setEditId] = useState(null);
 
   // Sidebar states
   const [activeMenu, setActiveMenu] = useState("Insurance");
@@ -51,8 +53,28 @@ const InsuranceForm = () => {
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
+
+    // Check for edit mode
+    if (location.state && location.state.insuranceData) {
+      const data = location.state.insuranceData;
+      setEditId(data._id);
+      setFormData({
+        personName: data.personName || "",
+        personPhone: data.personPhone || "",
+        vehicleModel: data.vehicleModel || "",
+        brand: data.brand || "",
+        year: data.year || "",
+        regNo: data.regNo || "",
+        insurancePolicyNo: data.insurancePolicyNo || "",
+        insuranceCompany: data.insuranceCompany || "",
+        insuranceExpiry: data.insuranceExpiry
+          ? new Date(data.insuranceExpiry).toISOString().split("T")[0]
+          : "",
+      });
+    }
+
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -75,25 +97,35 @@ const InsuranceForm = () => {
         return;
       }
 
-      await axios.post(`${API_BASE_URL}/insurance`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      alert("Insurance record saved successfully!");
-      setFormData({
-        personName: "",
-        personPhone: "",
-        vehicleModel: "",
-        brand: "",
-        year: "",
-        regNo: "",
-        insurancePolicyNo: "",
-        insuranceCompany: "",
-        insuranceExpiry: "",
-      });
+      if (editId) {
+        await axios.put(`${API_BASE_URL}/insurance/${editId}`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        alert("Insurance record updated successfully!");
+        navigate("/insurance/history");
+      } else {
+        await axios.post(`${API_BASE_URL}/insurance`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        alert("Insurance record saved successfully!");
+        setFormData({
+          personName: "",
+          personPhone: "",
+          vehicleModel: "",
+          brand: "",
+          year: "",
+          regNo: "",
+          insurancePolicyNo: "",
+          insuranceCompany: "",
+          insuranceExpiry: "",
+        });
+      }
     } catch (error) {
       console.error("Error saving insurance:", error);
       alert(error.response?.data?.message || "Failed to save insurance record");
@@ -571,7 +603,9 @@ const InsuranceForm = () => {
               >
                 <Shield size={24} />
               </div>
-              <h1 style={styles.title}>Add New Insurance</h1>
+              <h1 style={styles.title}>
+                {editId ? "Edit Insurance Record" : "Add New Insurance"}
+              </h1>
             </div>
           </div>
 
@@ -683,7 +717,11 @@ const InsuranceForm = () => {
                     : styles.button
                 }
               >
-                {isSaving ? "Saving..." : "Save Insurance Record"}
+                {isSaving
+                  ? "Saving..."
+                  : editId
+                  ? "Update Insurance Record"
+                  : "Save Insurance Record"}
                 {!isSaving && <Save size={20} />}
               </button>
             </div>

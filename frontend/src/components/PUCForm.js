@@ -21,7 +21,7 @@ import {
   FileText,
   Save,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
 
@@ -47,11 +47,21 @@ const PUCForm = () => {
     pucExpiry: "",
   });
 
+  const location = useLocation();
+
   useEffect(() => {
+    if (location.state?.pucData) {
+      const data = location.state.pucData;
+      setFormData({
+        ...data,
+        pucExpiry: data.pucExpiry ? data.pucExpiry.split("T")[0] : "",
+      });
+    }
+
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,14 +84,26 @@ const PUCForm = () => {
         return;
       }
 
-      await axios.post(`${API_BASE_URL}/puc`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      if (formData._id) {
+        // Update existing record
+        await axios.put(`${API_BASE_URL}/puc/${formData._id}`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        alert("PUC record updated successfully!");
+      } else {
+        // Create new record
+        await axios.post(`${API_BASE_URL}/puc`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        alert("PUC record saved successfully!");
+      }
 
-      alert("PUC record saved successfully!");
       setFormData({
         personName: "",
         personPhone: "",
@@ -92,6 +114,10 @@ const PUCForm = () => {
         pucNumber: "",
         pucExpiry: "",
       });
+      // specific navigation or state clear if needed
+      if (formData._id) {
+        navigate("/puc/history");
+      }
     } catch (error) {
       console.error("Error saving PUC:", error);
       alert(error.response?.data?.message || "Failed to save PUC record");
@@ -577,7 +603,9 @@ const PUCForm = () => {
               >
                 <FileText size={24} />
               </div>
-              <h1 style={styles.title}>Add New PUC</h1>
+              <h1 style={styles.title}>
+                {formData._id ? "Edit PUC Record" : "Add New PUC"}
+              </h1>
             </div>
           </div>
 
@@ -679,7 +707,11 @@ const PUCForm = () => {
                     : styles.button
                 }
               >
-                {isSaving ? "Saving..." : "Save PUC Record"}
+                {isSaving
+                  ? "Saving..."
+                  : formData._id
+                  ? "Update PUC Record"
+                  : "Save PUC Record"}
                 {!isSaving && <Save size={20} />}
               </button>
             </div>

@@ -48,6 +48,7 @@ const LetterHeadForm = () => {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     to: "",
+    recipientName: "", // New field
     subject: "",
     message: "",
   });
@@ -71,6 +72,7 @@ const LetterHeadForm = () => {
     setFormData({
       date: letter.date.split("T")[0],
       to: letter.to,
+      recipientName: letter.recipientName || "",
       subject: letter.subject,
       message: letter.message,
     });
@@ -83,6 +85,7 @@ const LetterHeadForm = () => {
     setFormData({
       date: new Date().toISOString().split("T")[0],
       to: "",
+      recipientName: "",
       subject: "",
       message: "",
     });
@@ -123,13 +126,25 @@ const LetterHeadForm = () => {
         return;
       }
 
+      // Sanitize data to remove tab characters which break PDF generation
+      const sanitize = (str) =>
+        typeof str === "string" ? str.replace(/\t/g, " ") : str;
+
+      const sanitizedData = {
+        ...formData,
+        to: sanitize(formData.to),
+        recipientName: sanitize(formData.recipientName),
+        subject: sanitize(formData.subject),
+        message: sanitize(formData.message),
+      };
+
       // 1. Save to Backend
       if (navigator.onLine) {
         try {
           if (editingId) {
             await axios.put(
               `${API_BASE_URL}/letter-heads/${editingId}`,
-              formData,
+              sanitizedData,
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -138,7 +153,7 @@ const LetterHeadForm = () => {
               }
             );
           } else {
-            await axios.post(`${API_BASE_URL}/letter-heads`, formData, {
+            await axios.post(`${API_BASE_URL}/letter-heads`, sanitizedData, {
               headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
@@ -155,7 +170,7 @@ const LetterHeadForm = () => {
 
       // 2. Generate PDF using the new service method
       const result = await pdfService.generateLetterHeadPDF({
-        ...formData,
+        ...sanitizedData,
         user: user,
       });
 
@@ -823,9 +838,7 @@ const LetterHeadForm = () => {
                 />
               </div>
               <div style={styles.formGroup}>
-                <label style={styles.label}>
-                  <User size={16} /> To (Recipient)
-                </label>
+                <label style={styles.label}>To (Address/Person)</label>
                 <textarea
                   name="to"
                   value={formData.to}
@@ -836,6 +849,19 @@ const LetterHeadForm = () => {
                     minHeight: "80px",
                     resize: "none",
                   }}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>
+                  Recipient Name (For Signature)
+                </label>
+                <input
+                  type="text"
+                  name="recipientName"
+                  value={formData.recipientName}
+                  onChange={handleChange}
+                  placeholder="Name of person signing..."
+                  style={styles.inputArgs}
                 />
               </div>
             </div>

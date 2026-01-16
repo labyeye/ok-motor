@@ -14,7 +14,6 @@ exports.createInsurance = async (req, res) => {
   } catch (error) {
     console.error("Error creating insurance:", error);
     if (error.code === 11000) {
-      // Handle unique constraint violation (e.g. regNo)
       return res.status(400).json({
         message:
           "Duplicate entry for Registration Number or other unique field",
@@ -60,6 +59,30 @@ exports.deleteInsurance = async (req, res) => {
     res.json({ message: "Insurance record deleted successfully" });
   } catch (error) {
     console.error("Error deleting insurance:", error);
+    res.status(500).json({
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+exports.updateInsurance = async (req, res) => {
+  try {
+    const insurance = await Insurance.findById(req.params.id);
+
+    if (!insurance) {
+      return res.status(404).json({ message: "Insurance record not found" });
+    }
+
+    const updatedInsurance = await Insurance.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    res.json(updatedInsurance);
+  } catch (error) {
+    console.error("Error updating insurance:", error);
     res.status(500).json({
       message: "Server Error",
       error: error.message,

@@ -475,12 +475,10 @@ exports.deleteServiceBill = async (req, res) => {
     const isOwner =
       serviceBill.user && serviceBill.user.toString() === req.user.id;
     if (req.user.role !== "admin" && !isOwner) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Not authorized to delete this service bill",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete this service bill",
+      });
     }
 
     await serviceBill.deleteOne();
