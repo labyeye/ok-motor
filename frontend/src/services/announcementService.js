@@ -35,4 +35,5 @@ const remove = async (id, token) => {
   return res.data;
 };
 
-export default { getCurrent, list, create, update, remove };
+const announcementService = { getCurrent, list, create, update, remove };
+export default announcementService;

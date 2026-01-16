@@ -25,7 +25,6 @@ import syncService from "../services/syncService";
 import logo from "../images/company.png";
 import fileSaveService from "../services/fileSaveService";
 import { PDFDocument, StandardFonts } from "pdf-lib";
-import AnnouncementManager from "../components/AnnouncementManager";
 
 const SettingsPage = () => {
   const { user, logout } = useContext(AuthContext);

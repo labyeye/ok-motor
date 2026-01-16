@@ -429,58 +429,9 @@ const AdminPage = () => {
     ],
   };
 
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top",
-        labels: {
-          color: "#ffffff",
-        },
-      },
-      title: {
-        display: true,
-        color: "#ffffff",
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          color: "#ffffff",
-        },
-        grid: {
-          color: "rgba(255, 255, 255, 0.1)",
-        },
-      },
-      x: {
-        ticks: {
-          color: "#ffffff",
-        },
-        grid: {
-          color: "rgba(255, 255, 255, 0.1)",
-        },
-      },
-    },
-    maintainAspectRatio: false,
-  };
-
-  const pieOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "right",
-        labels: {
-          color: "#ffffff",
-        },
-      },
-      title: {
-        display: true,
-        color: "#ffffff",
-      },
-    },
-    maintainAspectRatio: false,
-  };
+  // Chart options removed - not currently used
+  // const chartOptions = { ... };
+  // const pieOptions = { ... };
 
   const menuItems = [
     {
@@ -834,111 +785,7 @@ const AdminPage = () => {
     </div>
   );
 
-  const RevenueCard = () => (
-    <div className="revenue-card">
-      <h3 className="revenue-title">Business Revenue Overview</h3>
-      {loading ? (
-        <div className="revenue-grid">
-          {Array(4)
-            .fill()
-            .map((_, index) => (
-              <div key={index} className="revenue-item shimmer">
-                <p className="revenue-label">Loading...</p>
-                <p className="revenue-value">-</p>
-              </div>
-            ))}
-        </div>
-      ) : error ? (
-        <div className="error-message">
-          <p>{error}</p>
-        </div>
-      ) : (
-        <div className="revenue-grid">
-          <div className="revenue-item">
-            <p className="revenue-label">Total Revenue from Service</p>
-            <p className="revenue-value positive">
-              {formatCurrency(dashboardData.totalServiceValue)}
-            </p>
-            <small className="revenue-detail">
-              {dashboardData.totalServices} services completed
-            </small>
-          </div>
-          <div className="revenue-item">
-            <p className="revenue-label">Total Revenue from Sales</p>
-            <p className="revenue-value positive">
-              {formatCurrency(dashboardData.totalSellValue)}
-            </p>
-            <small className="revenue-detail">
-              {dashboardData.totalSellLetters} vehicles sold
-            </small>
-          </div>
-          <div className="revenue-item">
-            <p className="revenue-label">Total Expenses from Purchases</p>
-            <p className="revenue-value negative">
-              {formatCurrency(dashboardData.totalBuyValue)}
-            </p>
-            <small className="revenue-detail">
-              {dashboardData.totalBuyLetters} vehicles purchased
-            </small>
-          </div>
-          <div className="revenue-item">
-            <p className="revenue-label">Net Profit/Loss</p>
-            <p
-              className={`revenue-value ${
-                dashboardData.profit >= 0 ? "positive" : "negative"
-              }`}
-            >
-              {formatCurrency(dashboardData.profit)}
-            </p>
-            <small className="revenue-detail">
-              {dashboardData.profit >= 0 ? "Profit" : "Loss"}:{" "}
-              {Math.abs(dashboardData.profitPercentage).toFixed(2)}%
-            </small>
-          </div>
-        </div>
-      )}
-
-      {/* Additional Revenue Summary */}
-      {!loading && !error && (
-        <div className="revenue-summary">
-          <div className="summary-row">
-            <div className="summary-item">
-              <span className="summary-label">Total Revenue:</span>
-              <span className="summary-value positive">
-                {formatCurrency(dashboardData.totalRevenue)}
-              </span>
-            </div>
-            <div className="summary-item">
-              <span className="summary-label">Total Expenses:</span>
-              <span className="summary-value negative">
-                {formatCurrency(dashboardData.totalExpenses)}
-              </span>
-            </div>
-          </div>
-          <div className="summary-breakdown">
-            <div className="breakdown-item">
-              <span className="breakdown-label">Service Revenue:</span>
-              <span className="breakdown-value positive">
-                {formatCurrency(dashboardData.totalServiceValue)}
-              </span>
-            </div>
-            <div className="breakdown-item">
-              <span className="breakdown-label">Sales Revenue:</span>
-              <span className="breakdown-value positive">
-                {formatCurrency(dashboardData.totalSellValue)}
-              </span>
-            </div>
-            <div className="breakdown-item">
-              <span className="breakdown-label">Purchase Expenses:</span>
-              <span className="breakdown-value negative">
-                {formatCurrency(dashboardData.totalBuyValue)}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  // RevenueCard component removed - not currently used
 
   const ChartsSection = () => {
     if (loading) {
@@ -1167,7 +1014,7 @@ const AdminPage = () => {
               </thead>
               <tbody>
                 {processed.map((item, idx) => {
-                  const { row, nextPending, used } = item;
+                  const { row, nextPending } = item;
                   return (
                     <tr
                       key={`${row.registrationNumber}-${idx}`}
