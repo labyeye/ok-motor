@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -335,37 +335,37 @@
         <div
           class="hero-slide active"
           style="
-            background-image: url('https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg');
+            background-image: url(&quot;https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapercave.com/wp/wp12477050.jpg');
+            background-image: url(&quot;https://wallpapercave.com/wp/wp12477050.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://www.bmw-m.com/content/dam/bmw/marketBMW_M/www_bmw-m_com/topics/magazine-article-pool/2024/wallpaper/m-wallpaper/3-0-csl/bmw-3-0-csl-mi-05.jpg');
+            background-image: url(&quot;https://www.bmw-m.com/content/dam/bmw/marketBMW_M/www_bmw-m_com/topics/magazine-article-pool/2024/wallpaper/m-wallpaper/3-0-csl/bmw-3-0-csl-mi-05.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapers.com/images/hd/ktm-duke-390-front-angle-o247jx7vlg7ct83k.jpg');
+            background-image: url(&quot;https://wallpapers.com/images/hd/ktm-duke-390-front-angle-o247jx7vlg7ct83k.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://www.hdwallpapers.in/download/bmw_f30_widebody_car_4k_8k_hd_cars-1366x768.jpg');
+            background-image: url(&quot;https://www.hdwallpapers.in/download/bmw_f30_widebody_car_4k_8k_hd_cars-1366x768.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapers.com/images/hd/ktm-duke-pictures-zapyw35oajg0sraj.jpg');
+            background-image: url(&quot;https://wallpapers.com/images/hd/ktm-duke-pictures-zapyw35oajg0sraj.jpg&quot;);
           "
         ></div>
       </div>
@@ -651,7 +651,7 @@
           try {
             const API_BASE = "https://ok-motor-51l3.vercel.app";
             const res = await fetch(
-              `${API_BASE}/api/vehicles/public/listings?limit=100`
+              `${API_BASE}/api/vehicles/public/listings?limit=100`,
             );
             if (!res.ok) throw new Error("Failed to fetch vehicles");
             const data = await res.json();
@@ -690,8 +690,8 @@
                   : ""
               }
               <img src="${imageUrl}" alt="${
-            (vehicle.vehicleName || "") + " " + (vehicle.vehicleModel || "")
-          }" />
+                (vehicle.vehicleName || "") + " " + (vehicle.vehicleModel || "")
+              }" />
             </div>
             <div class="card-content">
                               <div class="car-body">${
@@ -700,8 +700,8 @@
 
               <div class="title-row">
               <h3 class="vehicle-title">${vehicle.vehicleName || ""} ${
-            vehicle.vehicleModel || ""
-          }</h3>
+                vehicle.vehicleModel || ""
+              }</h3>
           <div class="vehicle-meta">
                 <span class="year">${vehicle.manufacturingYear || "-"}</span>
               </div>
@@ -735,17 +735,17 @@
                   vehicle.sellingPrice ||
                     vehicle.expectedPrice ||
                     vehicle.purchasePrice ||
-                    0
+                    0,
                 )}</div>
                 <div class="emi">${
                   vehicle.downPayment
                     ? "Down: ₹" + priceFormatter(vehicle.downPayment)
                     : ""
                 } ${
-            vehicle.emi
-              ? "| EMI: ₹" + priceFormatter(vehicle.emi) + "/month"
-              : ""
-          }</div>
+                  vehicle.emi
+                    ? "| EMI: ₹" + priceFormatter(vehicle.emi) + "/month"
+                    : ""
+                }</div>
                 <div class="button-group">
                   <button class="contact-btn" data-id="${
                     vehicle._id
@@ -836,7 +836,7 @@
 
         function setFilterBadge(filterKey, label) {
           const btn = document.querySelector(
-            `.filter-btn[data-filter="${filterKey}"]`
+            `.filter-btn[data-filter="${filterKey}"]`,
           );
           if (!btn) return;
           const old = btn.querySelector(".filter-badge");
@@ -864,7 +864,7 @@
             ].filter(Boolean);
             const years = [
               ...new Set(
-                allVehicles.map((v) => v.manufacturingYear || v.modelYear)
+                allVehicles.map((v) => v.manufacturingYear || v.modelYear),
               ),
             ].sort((a, b) => b - a);
             const types = [
@@ -1016,7 +1016,7 @@
                 min: 0,
                 max: max,
                 label: `Less than ₹${new Intl.NumberFormat("en-IN").format(
-                  max
+                  max,
                 )}`,
               };
             }

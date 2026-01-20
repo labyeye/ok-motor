@@ -571,7 +571,7 @@ const InsuranceHistory = () => {
                       <td style={styles.td}>{item.insuranceCompany}</td>
                       <td style={styles.td}>
                         {new Date(item.insuranceExpiry).toLocaleDateString(
-                          "en-IN"
+                          "en-IN",
                         )}
                       </td>
                       <td style={styles.td}>

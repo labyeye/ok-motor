@@ -46,7 +46,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ArcElement
+  ArcElement,
 );
 
 const AdminPage = () => {
@@ -109,7 +109,7 @@ const AdminPage = () => {
         `${API_BASE}/api/sell-letters?limit=2000`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       // Handle array or object response structure
       const sellLetters = Array.isArray(resSellLetters.data)
@@ -184,7 +184,7 @@ const AdminPage = () => {
           `${API_BASE}/api/insurance?limit=2000`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
         const insuranceList = resInsurance.data || [];
         insuranceList.forEach((ins) => {
@@ -266,7 +266,7 @@ const AdminPage = () => {
       console.error("Error fetching dashboard data:", err);
       setError(
         err.response?.data?.message ||
-          "Failed to load dashboard data. Please try again."
+          "Failed to load dashboard data. Please try again.",
       );
       if (err.response?.status === 401) {
         // Handle unauthorized error (token expired or invalid)
@@ -304,8 +304,15 @@ const AdminPage = () => {
       }));
 
       // server already sorts and limits, but ensure consistent ordering
-      items.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
-      setFreeServices(items);
+      // Filter out records before Dec 2025
+      const cutoffDate = new Date("2025-12-01");
+      const filteredItems = items.filter((row) => {
+        if (!row.saleDate) return false;
+        return new Date(row.saleDate) >= cutoffDate;
+      });
+
+      filteredItems.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+      setFreeServices(filteredItems);
     } catch (err) {
       console.error("Error fetching free services data:", err);
     } finally {
@@ -858,7 +865,7 @@ const AdminPage = () => {
     const q = normalize(freeSearch);
     const filtered = q
       ? freeServices.filter((row) =>
-          normalize(row.registrationNumber).includes(q)
+          normalize(row.registrationNumber).includes(q),
         )
       : freeServices;
 
@@ -879,8 +886,8 @@ const AdminPage = () => {
             ? new Date(m)
             : new Date(
                 new Date(row.saleDate).setMonth(
-                  new Date(row.saleDate).getMonth() + (idx + 1)
-                )
+                  new Date(row.saleDate).getMonth() + (idx + 1),
+                ),
               ),
         }))
         .filter((p) => p.idx > used);
@@ -938,11 +945,15 @@ const AdminPage = () => {
           <div className="no-data">No free service records available</div>
         ) : (
           <div className="table-wrapper">
-            <table className="free-services-table">
+            <table
+              className="free-services-table"
+              style={{ fontSize: "0.75rem" }}
+            >
               <thead>
                 <tr>
                   <th>Sell Letter Date</th>
                   <th>Buyer Name</th>
+                  <th>Buyer Phone</th>
                   <th>Registration Number</th>
                   <th>Vehicle Brand</th>
                   <th>Vehicle Model</th>
@@ -968,6 +979,7 @@ const AdminPage = () => {
                     >
                       <td>{formatDate(row.saleDate)}</td>
                       <td>{row.buyerName || "-"}</td>
+                      <td>{row.buyerPhone || "-"}</td>
                       <td>{row.registrationNumber || "-"}</td>
                       <td>{row.vehicleBrand || "-"}</td>
                       <td>{row.vehicleModel || "-"}</td>
@@ -1028,7 +1040,7 @@ const AdminPage = () => {
           "https://ok-motor-51l3.vercel.app/api/sell-letters",
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
 
         // fetch standalone PUC
@@ -1036,7 +1048,7 @@ const AdminPage = () => {
           "https://ok-motor-51l3.vercel.app/api/puc?limit=2000",
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
 
         const data = resp.data || [];
@@ -1242,7 +1254,7 @@ const AdminPage = () => {
           "https://ok-motor-51l3.vercel.app/api/sell-letters",
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
 
         const data = resp.data || [];
@@ -1251,7 +1263,7 @@ const AdminPage = () => {
           "https://ok-motor-51l3.vercel.app/api/insurance?limit=2000",
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
 
         const additionalInsurance = resInsurance.data || [];

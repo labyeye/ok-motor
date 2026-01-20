@@ -95,7 +95,7 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
           date: doc.saleDate,
           amount: doc.saleAmount,
           vehicle: doc.registrationNumber,
-        }))
+        })),
       );
   } else if (model.modelName === "SellLetter") {
     return model
@@ -110,7 +110,7 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
           date: doc.saleDate,
           amount: doc.saleAmount,
           vehicle: doc.registrationNumber,
-        }))
+        })),
       );
   } else if (model.modelName === "ServiceBill") {
     return model
@@ -118,7 +118,7 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
       .sort({ serviceDate: -1, createdAt: -1 })
       .limit(limit)
       .select(
-        "customerName serviceDate grandTotal registrationNumber serviceType"
+        "customerName serviceDate grandTotal registrationNumber serviceType",
       )
       .lean()
       .then((docs) =>
@@ -128,7 +128,7 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
           amount: doc.grandTotal,
           vehicle: doc.registrationNumber,
           serviceType: doc.serviceType,
-        }))
+        })),
       );
   } else if (model.modelName === "AdvanceBill") {
     return model
@@ -143,7 +143,7 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
           date: doc.serviceDate,
           amount: doc.advancePaid,
           vehicle: doc.registrationNumber,
-        }))
+        })),
       );
   }
 
@@ -239,7 +239,7 @@ exports.getOwnerDashboardStats = async (req, res) => {
       const buyMonth = monthlyBuyData.find((item) => item.month === month);
       const sellMonth = monthlySellData.find((item) => item.month === month);
       const serviceMonth = monthlyServiceData.find(
-        (item) => item.month === month
+        (item) => item.month === month,
       );
 
       monthlyData.push({
@@ -366,7 +366,7 @@ exports.getDashboardStats = async (req, res) => {
       const buyMonth = monthlyBuyData.find((item) => item.month === month);
       const sellMonth = monthlySellData.find((item) => item.month === month);
       const serviceMonth = monthlyServiceData.find(
-        (item) => item.month === month
+        (item) => item.month === month,
       );
 
       monthlyData.push({
@@ -447,7 +447,7 @@ exports.getDashboardStats = async (req, res) => {
 exports.getFreeServiceUsage = async (req, res) => {
   try {
     const { limit = 10, search } = req.query;
-    const numericLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+    const numericLimit = Math.max(1, Math.min(2000, parseInt(limit, 10) || 10));
 
     // Build a base match for sold vehicles (SellLetter)
     const baseMatch = {};
@@ -456,7 +456,7 @@ exports.getFreeServiceUsage = async (req, res) => {
         String(search)
           .trim()
           .replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"),
-        "i"
+        "i",
       );
       baseMatch.registrationNumber = { $regex: regex };
     }
@@ -489,6 +489,7 @@ exports.getFreeServiceUsage = async (req, res) => {
         $project: {
           saleDate: 1,
           buyerName: 1,
+          buyerPhone: 1,
           registrationNumber: 1,
           vehicleBrand: {
             $ifNull: [
@@ -555,6 +556,15 @@ exports.getFreeServiceUsage = async (req, res) => {
 
     const results = await SellLetter.aggregate(pipeline).allowDiskUse(true);
 
+    if (results.length > 0) {
+      console.log("Debug FreeServiceUsage Result Sample:", {
+        reg: results[0].registrationNumber,
+        buyer: results[0].buyerName,
+        phone: results[0].buyerPhone,
+        fullObj: JSON.stringify(results[0]).slice(0, 200),
+      });
+    }
+
     res.status(200).json({ success: true, data: results });
   } catch (err) {
     console.error(err);
@@ -591,7 +601,7 @@ exports.getPucExpiryReminders = async (req, res) => {
         String(search)
           .trim()
           .replace(/[-/\\^+?.()|[\]{}]/g, "\\$&"),
-        "i"
+        "i",
       );
 
       sellBase.$or = [
@@ -612,7 +622,7 @@ exports.getPucExpiryReminders = async (req, res) => {
     const [sellLetters, pucRecords] = await Promise.all([
       SellLetter.find(sellBase)
         .select(
-          "registrationNumber buyerName buyerPhone vehicleName vehicleModel pucExpiryDate"
+          "registrationNumber buyerName buyerPhone vehicleName vehicleModel pucExpiryDate",
         )
         .sort({ pucExpiryDate: 1 })
         .limit(numericLimit) // Optimize: limit individual queries too, though we re-sort after
@@ -649,7 +659,7 @@ exports.getPucExpiryReminders = async (req, res) => {
 
     // Sort combined list by expiry date
     combined.sort(
-      (a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry)
+      (a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry),
     );
 
     // Hard limit on final result
@@ -683,7 +693,7 @@ exports.getInsuranceExpiryReminders = async (req, res) => {
         String(search)
           .trim()
           .replace(/[-/\\^+?.()|[\]{}]/g, "\\$&"),
-        "i"
+        "i",
       );
 
       sellBase.$or = [
@@ -706,14 +716,14 @@ exports.getInsuranceExpiryReminders = async (req, res) => {
     const [sellLetters, insRecords] = await Promise.all([
       SellLetter.find(sellBase)
         .select(
-          "registrationNumber buyerName buyerPhone vehicleName vehicleModel insuranceExpiryDate insuranceCompany"
+          "registrationNumber buyerName buyerPhone vehicleName vehicleModel insuranceExpiryDate insuranceCompany",
         )
         .sort({ insuranceExpiryDate: 1 })
         .limit(numericLimit)
         .lean(),
       Insurance.find(insBase)
         .select(
-          "regNo personName personPhone brand vehicleModel insuranceExpiry insuranceCompany"
+          "regNo personName personPhone brand vehicleModel insuranceExpiry insuranceCompany",
         )
         .sort({ insuranceExpiry: 1 })
         .limit(numericLimit)
@@ -744,7 +754,7 @@ exports.getInsuranceExpiryReminders = async (req, res) => {
 
     const combined = [...normalizedSell, ...normalizedIns];
     combined.sort(
-      (a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry)
+      (a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry),
     );
     const finalData = combined.slice(0, numericLimit);
 

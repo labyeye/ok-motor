@@ -246,7 +246,7 @@ const VehicleCreate = () => {
         `${API_BASE}/api/vehicles/imagekit-auth`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       setImageKitAuth(response.data);
       return response.data;
@@ -281,7 +281,7 @@ const VehicleCreate = () => {
             "fileName",
             `vehicle_${Date.now()}_${Math.random().toString(36).substring(7)}_${
               file.name
-            }`
+            }`,
           );
           formData.append("publicKey", publicKey);
           formData.append("signature", auth.signature);
@@ -291,7 +291,7 @@ const VehicleCreate = () => {
 
           console.log(
             `Uploading file ${results.length + 1}/${files.length}:`,
-            file.name
+            file.name,
           );
 
           const response = await axios.post(
@@ -301,7 +301,7 @@ const VehicleCreate = () => {
               headers: {
                 "Content-Type": "multipart/form-data",
               },
-            }
+            },
           );
 
           results.push({
@@ -313,14 +313,14 @@ const VehicleCreate = () => {
 
           console.log(
             `✓ Upload successful (${results.length}/${files.length}):`,
-            response.data.name
+            response.data.name,
           );
         } catch (fileError) {
           console.error(`Failed to upload ${file.name}:`, fileError);
           alert(
             `Failed to upload ${file.name}: ${
               fileError.response?.data?.message || fileError.message
-            }`
+            }`,
           );
         }
       }
@@ -328,7 +328,7 @@ const VehicleCreate = () => {
       if (results.length > 0) {
         setUploadedImages([...uploadedImages, ...results]);
         alert(
-          `${results.length} of ${files.length} image(s) uploaded successfully!`
+          `${results.length} of ${files.length} image(s) uploaded successfully!`,
         );
       } else {
         alert("No images were uploaded successfully");
@@ -369,7 +369,7 @@ const VehicleCreate = () => {
           vehicleData,
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
         alert("Vehicle updated successfully!");
       } else {
@@ -1318,8 +1318,8 @@ const VehicleCreate = () => {
                 {isSaving
                   ? "Saving..."
                   : editVehicleId
-                  ? "Save Changes"
-                  : "Save Vehicle"}
+                    ? "Save Changes"
+                    : "Save Vehicle"}
               </button>
             </div>
           </form>

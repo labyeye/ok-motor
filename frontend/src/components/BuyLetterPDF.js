@@ -183,7 +183,7 @@ const BuyLetterForm = () => {
           witnessphone: "",
           returnpersonname: "",
           note: "",
-        }
+        },
   );
 
   useEffect(() => {
@@ -209,7 +209,7 @@ const BuyLetterForm = () => {
           `${API_BASE}/api/buy-letters/${editLetter._id}`,
           {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
-          }
+          },
         );
 
         const full = resp.data || {};
@@ -329,7 +329,7 @@ const BuyLetterForm = () => {
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       setVehicles(response.data.vehicles || []);
     } catch (error) {
@@ -686,7 +686,7 @@ const BuyLetterForm = () => {
             form,
             {
               headers: { "Content-Type": "multipart/form-data" },
-            }
+            },
           );
         }
       } else {
@@ -695,7 +695,7 @@ const BuyLetterForm = () => {
         } else {
           response = await axios.post(
             "https://ok-motor-51l3.vercel.app/api/buy-letters",
-            dataToSave
+            dataToSave,
           );
         }
       }
@@ -992,11 +992,11 @@ const BuyLetterForm = () => {
       let existingLetter;
       if (isElectron) {
         existingLetter = await apiService.get(
-          `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`
+          `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
         );
       } else {
         existingLetter = await apiService.get(
-          `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`
+          `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
         );
       }
 
@@ -1096,7 +1096,7 @@ const BuyLetterForm = () => {
         const saveRes = await fileSaveService.savePdfToDefaultDir(
           filename,
           pdfBytes,
-          "buy"
+          "buy",
         );
         if (saveRes && saveRes.success && window.electronAPI) {
           alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
@@ -1198,7 +1198,7 @@ const BuyLetterForm = () => {
       await simulateProgress();
       setIsSaving(true);
       let existingLetter = await apiService.get(
-        `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`
+        `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
       );
 
       const existingList =
@@ -1214,10 +1214,7 @@ const BuyLetterForm = () => {
         savedLetterData = resp && resp.data ? resp.data : resp;
       }
 
-      const englishTemplateUrl = "/templates/englishbuyletter.pdf";
-      const existingPdfBytes = await fetch(englishTemplateUrl).then((res) =>
-        res.arrayBuffer()
-      );
+      const existingPdfBytes = await loadPDFTemplate("englishbuyletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const firstPage = pdfDoc.getPages()[0];
@@ -1235,12 +1232,12 @@ const BuyLetterForm = () => {
         amountInWords: formatIndianAmountInWords(
           formData.saleAmount
             ? formData.saleAmount.toString().replace(/\D/g, "")
-            : "0"
+            : "0",
         ),
       };
 
       for (const [fieldName, position] of Object.entries(
-        englishFieldPositions
+        englishFieldPositions,
       )) {
         if (
           fieldName === "selleraadharphone" &&
@@ -1299,7 +1296,7 @@ const BuyLetterForm = () => {
         const saveRes = await fileSaveService.savePdfToDefaultDir(
           filename,
           pdfBytes,
-          "buy"
+          "buy",
         );
         if (saveRes && saveRes.success && window.electronAPI) {
           alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
@@ -1367,7 +1364,7 @@ const BuyLetterForm = () => {
         amountInWords: formatIndianAmountInWords(
           formData.saleAmount
             ? formData.saleAmount.toString().replace(/\D/g, "")
-            : "0"
+            : "0",
         ),
       };
 
@@ -1446,7 +1443,7 @@ const BuyLetterForm = () => {
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const logoUrl = logo1;
     const logoImageBytes = await fetch(logoUrl).then((res) =>
-      res.arrayBuffer()
+      res.arrayBuffer(),
     );
     const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
@@ -1489,7 +1486,7 @@ const BuyLetterForm = () => {
         size: 8,
         color: rgb(0.8, 0.8, 0.8),
         font: font,
-      }
+      },
     );
     page.drawRectangle({
       x: 0,
@@ -1507,7 +1504,7 @@ const BuyLetterForm = () => {
       font: boldFont,
     });
     const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(
-      Math.random() * 10000
+      Math.random() * 10000,
     )
       .toString()
       .padStart(4, "0")}`;
@@ -1728,13 +1725,13 @@ const BuyLetterForm = () => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
     page.drawText(
       `Amount in Words: ${formatIndianAmountInWords(
         !formData.saleAmount || isNaN(Number(formData.saleAmount))
           ? 0
-          : Number(formData.saleAmount)
+          : Number(formData.saleAmount),
       )}`,
       {
         x: 60,
@@ -1742,7 +1739,7 @@ const BuyLetterForm = () => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
 
     page.drawText("TERMS & CONDITIONS", {
@@ -1757,7 +1754,7 @@ const BuyLetterForm = () => {
       "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
       "2. Customer signature confirms acceptance of all terms.",
       `3. OK MOTORS has paid the money amount of ${formatRupee(
-        formData.saleAmount
+        formData.saleAmount,
       )} to ${formData.sellerName}.`,
       "4. The seller confirms that the vehicle is free from any loans, liabilities, or pending challans at the time of sale.",
       "5. The seller agrees to provide all original documents including RC, insurance, and ID proof at the time of sale.",
@@ -1830,7 +1827,7 @@ const BuyLetterForm = () => {
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
         font: font,
-      }
+      },
     );
   };
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -298,37 +298,37 @@
         <div
           class="hero-slide active"
           style="
-            background-image: url('https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg');
+            background-image: url(&quot;https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapercave.com/wp/wp12477050.jpg');
+            background-image: url(&quot;https://wallpapercave.com/wp/wp12477050.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://www.bmw-m.com/content/dam/bmw/marketBMW_M/www_bmw-m_com/topics/magazine-article-pool/2024/wallpaper/m-wallpaper/3-0-csl/bmw-3-0-csl-mi-05.jpg');
+            background-image: url(&quot;https://www.bmw-m.com/content/dam/bmw/marketBMW_M/www_bmw-m_com/topics/magazine-article-pool/2024/wallpaper/m-wallpaper/3-0-csl/bmw-3-0-csl-mi-05.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapers.com/images/hd/ktm-duke-390-front-angle-o247jx7vlg7ct83k.jpg');
+            background-image: url(&quot;https://wallpapers.com/images/hd/ktm-duke-390-front-angle-o247jx7vlg7ct83k.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://www.hdwallpapers.in/download/bmw_f30_widebody_car_4k_8k_hd_cars-1366x768.jpg');
+            background-image: url(&quot;https://www.hdwallpapers.in/download/bmw_f30_widebody_car_4k_8k_hd_cars-1366x768.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapers.com/images/hd/ktm-duke-pictures-zapyw35oajg0sraj.jpg');
+            background-image: url(&quot;https://wallpapers.com/images/hd/ktm-duke-pictures-zapyw35oajg0sraj.jpg&quot;);
           "
         ></div>
       </div>
@@ -740,7 +740,7 @@
               .getElementById("reviewMessage")
               .value.trim();
             const rating = Number(
-              document.getElementById("reviewRating").value
+              document.getElementById("reviewRating").value,
             );
             if (!name || !message || !rating) {
               alert("Please fill all fields and select a rating.");
@@ -780,7 +780,7 @@
               const val = idx + 1;
               if (ratingInput) ratingInput.value = val;
               modalStars.forEach((s, i) =>
-                s.classList.toggle("selected", i < val)
+                s.classList.toggle("selected", i < val),
               );
             });
           });
@@ -790,7 +790,7 @@
         document.addEventListener("DOMContentLoaded", function () {
           const darkModeToggle = document.getElementById("darkModeToggle");
           const mobileDarkModeToggle = document.getElementById(
-            "mobileDarkModeToggle"
+            "mobileDarkModeToggle",
           );
 
           function checkDarkModePreference() {
@@ -966,7 +966,7 @@
             if (files.length > 5) {
               showMessage(
                 "You can upload maximum 5 images. Only first 5 will be processed.",
-                "error"
+                "error",
               );
             }
 
@@ -1032,7 +1032,7 @@
             if (!validateForm()) {
               showMessage(
                 "Please fill all required fields marked with *",
-                "error"
+                "error",
               );
               return;
             }
@@ -1048,7 +1048,7 @@
               const formData = new FormData();
 
               const formFields = form.querySelectorAll(
-                "input, select, textarea"
+                "input, select, textarea",
               );
               formFields.forEach((field) => {
                 if (field.type === "file") {
@@ -1067,7 +1067,7 @@
                 {
                   method: "POST",
                   body: formData,
-                }
+                },
               );
 
               const result = await response.json();
@@ -1075,7 +1075,7 @@
               if (response.ok) {
                 showMessage(
                   "Thank you for your submission! We will contact you shortly with your valuation.",
-                  "success"
+                  "success",
                 );
                 form.reset();
                 imagePreview.innerHTML = "";
@@ -1086,14 +1086,14 @@
                   result.error ||
                     result.message ||
                     "Failed to submit form. Please try again.",
-                  "error"
+                  "error",
                 );
               }
             } catch (error) {
               console.error("Error submitting form:", error);
               showMessage(
                 "Network error occurred. Please check your connection and try again.",
-                "error"
+                "error",
               );
             } finally {
               submitBtn.disabled = false;

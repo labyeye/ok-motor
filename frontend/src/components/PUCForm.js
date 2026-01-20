@@ -710,8 +710,8 @@ const PUCForm = () => {
                 {isSaving
                   ? "Saving..."
                   : formData._id
-                  ? "Update PUC Record"
-                  : "Save PUC Record"}
+                    ? "Update PUC Record"
+                    : "Save PUC Record"}
                 {!isSaving && <Save size={20} />}
               </button>
             </div>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -86,7 +86,7 @@
         function setAriaExpanded(isOpen) {
           mobileMenuBtn.setAttribute(
             "aria-expanded",
-            isOpen ? "true" : "false"
+            isOpen ? "true" : "false",
           );
         }
 
@@ -320,37 +320,37 @@
         <div
           class="hero-slide active"
           style="
-            background-image: url('https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg');
+            background-image: url(&quot;https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapercave.com/wp/wp12477050.jpg');
+            background-image: url(&quot;https://wallpapercave.com/wp/wp12477050.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://www.bmw-m.com/content/dam/bmw/marketBMW_M/www_bmw-m_com/topics/magazine-article-pool/2024/wallpaper/m-wallpaper/3-0-csl/bmw-3-0-csl-mi-05.jpg');
+            background-image: url(&quot;https://www.bmw-m.com/content/dam/bmw/marketBMW_M/www_bmw-m_com/topics/magazine-article-pool/2024/wallpaper/m-wallpaper/3-0-csl/bmw-3-0-csl-mi-05.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapers.com/images/hd/ktm-duke-390-front-angle-o247jx7vlg7ct83k.jpg');
+            background-image: url(&quot;https://wallpapers.com/images/hd/ktm-duke-390-front-angle-o247jx7vlg7ct83k.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://www.hdwallpapers.in/download/bmw_f30_widebody_car_4k_8k_hd_cars-1366x768.jpg');
+            background-image: url(&quot;https://www.hdwallpapers.in/download/bmw_f30_widebody_car_4k_8k_hd_cars-1366x768.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapers.com/images/hd/ktm-duke-pictures-zapyw35oajg0sraj.jpg');
+            background-image: url(&quot;https://wallpapers.com/images/hd/ktm-duke-pictures-zapyw35oajg0sraj.jpg&quot;);
           "
         ></div>
       </div>
@@ -720,7 +720,7 @@
         function randomAvatar(name) {
           const seed = name ? name.replace(/\s/g, "") : "user";
           return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
-            seed
+            seed,
           )}`;
         }
         function renderTestimonials(reviews) {
@@ -739,14 +739,14 @@
                 </div>
                 <div class="testimonial-header">
                   <img src="${randomAvatar(r.name)}" alt="${
-                r.name
-              }" class="user-avatar" width="60" height="60" loading="lazy" />
+                    r.name
+                  }" class="user-avatar" width="60" height="60" loading="lazy" />
                   <div class="user-info">
                     <h4 class="user-name" itemprop="author">${r.name}</h4>
                     <div class="rating" itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating">
                       <meta itemprop="ratingValue" content="${r.rating}" />
                       ${'<i class="fas fa-star"></i>'.repeat(
-                        r.rating
+                        r.rating,
                       )}${'<i class="far fa-star"></i>'.repeat(5 - r.rating)}
                     </div>
                   </div>
@@ -754,12 +754,12 @@
                 <div class="quote" itemprop="reviewBody">${r.message}</div>
                 <div class="testimonial-footer">
                   <span class="testimonial-date">${new Date(
-                    r.date
+                    r.date,
                   ).toLocaleDateString()}</span>
                 </div>
                 <meta itemprop="itemReviewed" content="Ok Motors" />
               </div>
-            `
+            `,
             )
             .join("");
         }
@@ -848,7 +848,7 @@
             const val = idx + 1;
             if (ratingInput) ratingInput.value = val;
             modalStars.forEach((s, i) =>
-              s.classList.toggle("selected", i < val)
+              s.classList.toggle("selected", i < val),
             );
           });
         });
@@ -867,7 +867,7 @@
               }
             });
           },
-          { threshold: 0.1 }
+          { threshold: 0.1 },
         );
 
         timelineItems.forEach((item) => {
@@ -892,7 +892,7 @@
       document.addEventListener("DOMContentLoaded", function () {
         const darkModeToggle = document.getElementById("darkModeToggle");
         const mobileDarkModeToggle = document.getElementById(
-          "mobileDarkModeToggle"
+          "mobileDarkModeToggle",
         );
         function checkDarkModePreference() {
           const savedTheme = localStorage.getItem("theme");

@@ -895,14 +895,14 @@ const VehicleHistory = () => {
                                       vehicle.availabilityStatus === "Available"
                                         ? "#d1fae5"
                                         : vehicle.availabilityStatus === "Sold"
-                                        ? "#fee2e2"
-                                        : "#fef3c7",
+                                          ? "#fee2e2"
+                                          : "#fef3c7",
                                     color:
                                       vehicle.availabilityStatus === "Available"
                                         ? "#059669"
                                         : vehicle.availabilityStatus === "Sold"
-                                        ? "#dc2626"
-                                        : "#d97706",
+                                          ? "#dc2626"
+                                          : "#d97706",
                                     display: "inline-block",
                                     padding: "6px 10px",
                                   }}
@@ -932,7 +932,7 @@ const VehicleHistory = () => {
                                       }}
                                       onClick={() =>
                                         navigate(
-                                          `/vehicle/create?vehicleId=${vehicle._id}`
+                                          `/vehicle/create?vehicleId=${vehicle._id}`,
                                         )
                                       }
                                     >

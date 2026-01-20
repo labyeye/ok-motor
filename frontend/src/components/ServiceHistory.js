@@ -22,6 +22,7 @@ import {
   RefreshCw,
   Megaphone,
   Image,
+  Eye,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -51,6 +52,11 @@ const ServiceHistory = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTargetId, setConfirmTargetId] = useState(null);
   const navigate = useNavigate();
+
+  // Preview modal states
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
+  const [previewBill, setPreviewBill] = useState(null);
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -83,25 +89,25 @@ const ServiceHistory = () => {
 
         if (isOnline) {
           const serviceResponse = await axios.get(
-            `https://ok-motor-51l3.vercel.app/api/service-bills?page=${currentPage}`
+            `https://ok-motor-51l3.vercel.app/api/service-bills?page=${currentPage}`,
           );
           setServiceBills(serviceResponse.data.data || serviceResponse.data);
           setTotalPages(serviceResponse.data.totalPages || 1);
 
           const purchaseResponse = await axios.get(
-            `${config.API_BASE_URL}/buy-letter`
+            `${config.API_BASE_URL}/buy-letter`,
           );
           setPurchaseHistory(
-            purchaseResponse.data.data || purchaseResponse.data
+            purchaseResponse.data.data || purchaseResponse.data,
           );
 
           const sellResponse = await axios.get(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters`
+            `https://ok-motor-51l3.vercel.app/api/sell-letters`,
           );
           setSellHistory(sellResponse.data.data || sellResponse.data);
         } else {
           console.log(
-            "Offline mode - loading service bills from local storage"
+            "Offline mode - loading service bills from local storage",
           );
           const offlineStorage = (await import("../services/offlineStorage"))
             .default;
@@ -109,7 +115,7 @@ const ServiceHistory = () => {
           const serviceResult = await offlineStorage.find("serviceBills");
           if (serviceResult.success && serviceResult.data) {
             const sortedData = serviceResult.data.sort(
-              (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+              (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
             );
             setServiceBills(sortedData);
           } else {
@@ -145,7 +151,7 @@ const ServiceHistory = () => {
             if (serviceResult.success && serviceResult.data) {
               const sortedData = serviceResult.data.sort(
                 (a, b) =>
-                  new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+                  new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
               );
               setServiceBills(sortedData);
             }
@@ -200,13 +206,13 @@ const ServiceHistory = () => {
 
     return {
       purchase: purchaseHistory.filter((item) =>
-        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm)
+        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm),
       ),
       sell: sellHistory.filter((item) =>
-        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm)
+        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm),
       ),
       service: serviceBills.filter((item) =>
-        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm)
+        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm),
       ),
     };
   };
@@ -402,11 +408,11 @@ const ServiceHistory = () => {
       console.log("Token exists:", !!token);
       console.log(
         "Token preview:",
-        token ? `${token.substring(0, 20)}...` : "No token"
+        token ? `${token.substring(0, 20)}...` : "No token",
       );
 
       const response = await axios.get(
-        "https://ok-motor-51l3.vercel.app/api/auth/me"
+        "https://ok-motor-51l3.vercel.app/api/auth/me",
       );
       console.log("Auth test successful:", response.data);
     } catch (error) {
@@ -463,6 +469,44 @@ const ServiceHistory = () => {
     }
   };
 
+  const handleViewBill = async (billId) => {
+    try {
+      setIsDownloading(true);
+      setDownloadProgress(0);
+
+      const progressInterval = setInterval(() => {
+        setDownloadProgress((prev) => Math.min(prev + 10, 90));
+      }, 100);
+
+      const bill = serviceBills.find((b) => b._id === billId);
+      if (!bill) {
+        alert("Bill data not found. Please refresh.");
+        setIsDownloading(false);
+        return;
+      }
+
+      const result = await pdfService.generateServiceBillPDFOffline(bill);
+
+      if (result.success && result.blob) {
+        const url = URL.createObjectURL(result.blob);
+
+        clearInterval(progressInterval);
+        setDownloadProgress(100);
+        setIsDownloading(false);
+
+        setPreviewPdfUrl(url);
+        setPreviewBill(bill);
+        setShowPreviewModal(true);
+      } else {
+        throw new Error(result.error || "Failed to generate PDF");
+      }
+    } catch (error) {
+      console.error("Error generating preview:", error);
+      alert("Failed to generate preview. Please try again.");
+      setIsDownloading(false);
+    }
+  };
+
   const handleDelete = (id) => {
     setConfirmTargetId(id);
     setConfirmOpen(true);
@@ -472,7 +516,7 @@ const ServiceHistory = () => {
     const id = confirmTargetId;
     try {
       await axios.delete(
-        `https://ok-motor-51l3.vercel.app/api/service-bills/${id}`
+        `https://ok-motor-51l3.vercel.app/api/service-bills/${id}`,
       );
       setServiceBills((prev) => prev.filter((bill) => bill._id !== id));
     } catch (error) {
@@ -821,8 +865,8 @@ const ServiceHistory = () => {
                               {item.user && item.user.role === "admin"
                                 ? "admin"
                                 : item.user && item.user.name
-                                ? item.user.name
-                                : ""}
+                                  ? item.user.name
+                                  : ""}
                             </td>
                           </tr>
                         ))}
@@ -878,8 +922,8 @@ const ServiceHistory = () => {
                               {item.user && item.user.role === "admin"
                                 ? "admin"
                                 : item.user && item.user.name
-                                ? item.user.name
-                                : ""}
+                                  ? item.user.name
+                                  : ""}
                             </td>
                           </tr>
                         ))}
@@ -939,8 +983,8 @@ const ServiceHistory = () => {
                               {bill.user && bill.user.role === "admin"
                                 ? "admin"
                                 : bill.user && bill.user.name
-                                ? bill.user.name
-                                : ""}
+                                  ? bill.user.name
+                                  : ""}
                             </td>
                             <td style={styles.tableCell}>
                               <span
@@ -949,8 +993,8 @@ const ServiceHistory = () => {
                                   ...(bill.paymentStatus === "paid"
                                     ? styles.statusPaid
                                     : bill.paymentStatus === "partial"
-                                    ? styles.statusPartial
-                                    : styles.statusPending),
+                                      ? styles.statusPartial
+                                      : styles.statusPending),
                                 }}
                               >
                                 {bill.paymentStatus}
@@ -1050,7 +1094,7 @@ const ServiceHistory = () => {
                         <td style={styles.tableCell}>
                           ₹
                           {new Intl.NumberFormat("en-IN").format(
-                            bill.grandTotal
+                            bill.grandTotal,
                           )}
                         </td>
                         <td style={styles.tableCell}>
@@ -1064,8 +1108,8 @@ const ServiceHistory = () => {
                               ...(bill.paymentStatus === "paid"
                                 ? styles.statusPaid
                                 : bill.paymentStatus === "partial"
-                                ? styles.statusPartial
-                                : styles.statusPending),
+                                  ? styles.statusPartial
+                                  : styles.statusPending),
                             }}
                           >
                             {bill.paymentStatus}
@@ -1075,10 +1119,17 @@ const ServiceHistory = () => {
                           {bill.user && bill.user.role === "admin"
                             ? "admin"
                             : bill.user && bill.user.name
-                            ? bill.user.name
-                            : ""}
+                              ? bill.user.name
+                              : ""}
                         </td>
                         <td style={styles.tableCell}>
+                          <button
+                            onClick={() => handleViewBill(bill._id)}
+                            style={styles.iconButton}
+                            title="View"
+                          >
+                            <Eye size={16} />
+                          </button>
                           <button
                             onClick={() => handleDownload(bill._id)}
                             style={styles.iconButton}
@@ -1173,6 +1224,152 @@ const ServiceHistory = () => {
           />
         </div>
       ))}
+      {showPreviewModal && previewBill && previewPdfUrl && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+          onClick={() => {
+            setShowPreviewModal(false);
+            if (previewPdfUrl) {
+              URL.revokeObjectURL(previewPdfUrl);
+              setPreviewPdfUrl(null);
+            }
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: "12px",
+              maxWidth: "900px",
+              width: "100%",
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                padding: "20px 24px",
+                borderBottom: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                backgroundColor: "#f8fafc",
+                borderTopLeftRadius: "12px",
+                borderTopRightRadius: "12px",
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  color: "#0f172a",
+                  margin: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <FileText size={24} color="#088395" />
+                Service Bill Preview
+              </h2>
+              <button
+                onClick={() => {
+                  setShowPreviewModal(false);
+                  if (previewPdfUrl) {
+                    URL.revokeObjectURL(previewPdfUrl);
+                    setPreviewPdfUrl(null);
+                  }
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#64748b",
+                  padding: "4px",
+                }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div
+              style={{
+                flex: 1,
+                overflow: "hidden",
+                backgroundColor: "#525659",
+              }}
+            >
+              <object
+                data={previewPdfUrl}
+                type="application/pdf"
+                style={{
+                  width: "100%",
+                  height: "600px",
+                  border: "none",
+                }}
+                aria-label="Service Bill PDF Preview"
+              >
+                <iframe
+                  src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                  style={{
+                    width: "100%",
+                    height: "600px",
+                    border: "none",
+                  }}
+                  title="Service Bill PDF Preview"
+                />
+              </object>
+            </div>
+            <div
+              style={{
+                padding: "20px 24px",
+                borderTop: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "12px",
+                backgroundColor: "#f8fafc",
+                borderBottomLeftRadius: "12px",
+                borderBottomRightRadius: "12px",
+              }}
+            >
+              <button
+                onClick={() => {
+                  setShowPreviewModal(false);
+                  if (previewPdfUrl) {
+                    URL.revokeObjectURL(previewPdfUrl);
+                    setPreviewPdfUrl(null);
+                  }
+                }}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#fff",
+                  color: "#475569",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -63,7 +63,7 @@
         var ann = j && j.data ? j.data : null;
         if (!ann || !ann.message) {
           console.warn(
-            "No current announcement available. Check if announcement is active and dates are valid."
+            "No current announcement available. Check if announcement is active and dates are valid.",
           );
           return;
         }

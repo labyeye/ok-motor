@@ -287,7 +287,7 @@ function initFilterSearch() {
             // Check if keyword matches any model
             if (brand.models) {
               const matchingModel = brand.models.find((m) =>
-                m.toLowerCase().includes(keyword)
+                m.toLowerCase().includes(keyword),
               );
               if (matchingModel) {
                 if (!make) params.set("brand", brand.make);
@@ -302,7 +302,7 @@ function initFilterSearch() {
               const keywordMatch = brand.keywords.some(
                 (k) =>
                   k.toLowerCase().includes(keyword) ||
-                  keyword.includes(k.toLowerCase())
+                  keyword.includes(k.toLowerCase()),
               );
               if (keywordMatch) {
                 if (!make) params.set("brand", brand.make);
@@ -512,7 +512,7 @@ function initStatsObserver() {
         }
       });
     },
-    { threshold: 0.5 }
+    { threshold: 0.5 },
   );
   observer.observe(target);
 }
@@ -529,11 +529,11 @@ function initFeaturedSliders() {
 
     if (carPrevBtn)
       carPrevBtn.addEventListener("click", () =>
-        carSlider.scrollBy({ left: -300, behavior: "smooth" })
+        carSlider.scrollBy({ left: -300, behavior: "smooth" }),
       );
     if (carNextBtn)
       carNextBtn.addEventListener("click", () =>
-        carSlider.scrollBy({ left: 300, behavior: "smooth" })
+        carSlider.scrollBy({ left: 300, behavior: "smooth" }),
       );
 
     fetchFeaturedVehicles("Car", carSlider);
@@ -547,11 +547,11 @@ function initFeaturedSliders() {
 
     if (bikePrevBtn)
       bikePrevBtn.addEventListener("click", () =>
-        bikeSlider.scrollBy({ left: -300, behavior: "smooth" })
+        bikeSlider.scrollBy({ left: -300, behavior: "smooth" }),
       );
     if (bikeNextBtn)
       bikeNextBtn.addEventListener("click", () =>
-        bikeSlider.scrollBy({ left: 300, behavior: "smooth" })
+        bikeSlider.scrollBy({ left: 300, behavior: "smooth" }),
       );
 
     fetchFeaturedVehicles("Bike", bikeSlider);
@@ -569,7 +569,7 @@ function fetchFeaturedVehicles(vehicleType, sliderEl) {
   const API_BASE = "https://ok-motor-51l3.vercel.app";
 
   fetch(
-    `${API_BASE}/api/vehicles/public/listings?limit=8&vehicleType=${vehicleType}`
+    `${API_BASE}/api/vehicles/public/listings?limit=8&vehicleType=${vehicleType}`,
   )
     .then((response) => {
       if (!response.ok) throw new Error(`Failed to load vehicles`);
@@ -601,7 +601,7 @@ function fetchFeaturedVehicles(vehicleType, sliderEl) {
         images:
           v.images && v.images.length > 0
             ? v.images.map((img) =>
-                typeof img === "string" ? img : img.url || ""
+                typeof img === "string" ? img : img.url || "",
               )
             : ["https://via.placeholder.com/400x300?text=No+Image"],
         primaryImage: v.primaryImage,
@@ -613,7 +613,7 @@ function fetchFeaturedVehicles(vehicleType, sliderEl) {
     .catch((error) => {
       console.error(`Error fetching ${vehicleType}:`, error);
       showFeaturedError(sliderEl, vehicleType, () =>
-        fetchFeaturedVehicles(vehicleType, sliderEl)
+        fetchFeaturedVehicles(vehicleType, sliderEl),
       );
     });
 }
@@ -658,8 +658,8 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
       </div>
       <div class="card-content">
         <h3 class="vehicle-title">${vehicle.brand || ""} ${
-      vehicle.model || ""
-    }</h3>
+          vehicle.model || ""
+        }</h3>
         <div class="vehicle-meta">
           <span class="year">${vehicle.modelYear || vehicle.year || "-"}</span>
         </div>
@@ -696,14 +696,14 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
               ? "Down: ₹" + vehicle.downPayment.toLocaleString()
               : ""
           } ${
-      vehicle.downPayment
-        ? "| EMI: ₹" +
-          Math.round(
-            ((vehicle.price || 0) - vehicle.downPayment) / 36
-          ).toLocaleString() +
-          "/month"
-        : ""
-    }</div>
+            vehicle.downPayment
+              ? "| EMI: ₹" +
+                Math.round(
+                  ((vehicle.price || 0) - vehicle.downPayment) / 36,
+                ).toLocaleString() +
+                "/month"
+              : ""
+          }</div>
           <div class="button-group">
             <button class="contact-btn" data-id="${
               vehicle._id
@@ -1108,7 +1108,7 @@ function initSmartSearch() {
 
   // Load recent searches from localStorage
   let recentSearches = JSON.parse(
-    localStorage.getItem("recentSearches") || "[]"
+    localStorage.getItem("recentSearches") || "[]",
   );
 
   // Show recent searches on focus
@@ -1170,7 +1170,7 @@ function initSmartSearch() {
         <i class="fas fa-history"></i>
         <span>${search}</span>
       </div>
-    `
+    `,
       )
       .join("");
   }
@@ -1231,7 +1231,7 @@ function initFilterPersistence() {
   function loadSavedFilters() {
     try {
       const savedFilters = JSON.parse(
-        localStorage.getItem("vehicleFilters") || "{}"
+        localStorage.getItem("vehicleFilters") || "{}",
       );
 
       if (savedFilters.make && filterElements.make) {
@@ -1305,7 +1305,7 @@ function updateActiveFilters() {
           <i class="fas fa-times"></i>
         </button>
       </div>
-    `
+    `,
       )
       .join("");
     activeFiltersDiv.style.display = "flex";
@@ -1529,7 +1529,7 @@ function initVehicleComparison() {
             <i class="fas fa-times"></i>
           </button>
         </div>
-      `
+      `,
         )
         .join("");
       compareCount.textContent = comparisonList.length;
@@ -1541,7 +1541,7 @@ function initVehicleComparison() {
   window.removeFromComparison = function (name) {
     comparisonList = comparisonList.filter((v) => v.name !== name);
     const checkbox = document.querySelector(
-      `.vehicle-card .compare-checkbox, .bike-card .compare-checkbox`
+      `.vehicle-card .compare-checkbox, .bike-card .compare-checkbox`,
     );
     if (checkbox) checkbox.checked = false;
     updateComparisonBar();
@@ -1576,7 +1576,7 @@ function initVehicleComparison() {
             <span class="comparison-spec-value">Available</span>
           </div>
         </div>
-      `
+      `,
         )
         .join("");
       modal.style.display = "block";
@@ -1661,7 +1661,7 @@ window.openTestDriveModal = function () {
 // Scroll animation for service cards
 function initScrollAnimations() {
   const serviceCards = document.querySelectorAll(
-    ".services-grid .service-card"
+    ".services-grid .service-card",
   );
 
   if (serviceCards.length === 0) return;
@@ -1678,7 +1678,7 @@ function initScrollAnimations() {
     {
       threshold: 0.1,
       rootMargin: "0px 0px -50px 0px",
-    }
+    },
   );
 
   serviceCards.forEach((card) => {

@@ -9,22 +9,17 @@ class PDFService {
     this.baseURL = process.env.REACT_APP_API_URL || "http://localhost:5000";
   }
 
-  // Helper to fetch an image by URL and embed into the pdfDoc (PNG or JPG)
   async _embedImageByUrl(pdfDoc, url) {
     if (!url) return null;
     try {
-      // Try several strategies to fetch the image bytes because asset URLs differ
-      // between dev, production and Electron file:// contexts.
       let resp = null;
       try {
         resp = await fetch(url);
       } catch (e) {
-        // ignore and try alternatives
         resp = null;
       }
 
       if (!resp || !resp.ok) {
-        // try with origin prefix
         try {
           const originPrefixed =
             (typeof window !== "undefined" &&
@@ -39,7 +34,6 @@ class PDFService {
       }
 
       if (!resp || !resp.ok) {
-        // try PUBLIC_URL if available
         try {
           const pub = process.env.PUBLIC_URL || "";
           const pubUrl = pub + url;
@@ -58,18 +52,17 @@ class PDFService {
       if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
         return await pdfDoc.embedJpg(bytes);
       }
-      // fallback: try png then jpg
+
       try {
         return await pdfDoc.embedPng(bytes);
       } catch (e) {
         return await pdfDoc.embedJpg(bytes);
       }
     } catch (err) {
-      // If fetch failed (common in packaged Electron with file:// or asar), try asking the main process to read the asset directly
       console.warn(
         "_embedImageByUrl fetch failed for",
         url,
-        err?.message || err
+        err?.message || err,
       );
 
       try {
@@ -92,7 +85,7 @@ class PDFService {
               if (lower2.endsWith(".png")) return await pdfDoc.embedPng(arr);
               if (lower2.endsWith(".jpg") || lower2.endsWith(".jpeg"))
                 return await pdfDoc.embedJpg(arr);
-              // fallback
+
               try {
                 return await pdfDoc.embedPng(arr);
               } catch (e2) {
@@ -102,7 +95,7 @@ class PDFService {
               console.warn(
                 "_embedImageByUrl electron-embed failed for",
                 url,
-                embedErr?.message || embedErr
+                embedErr?.message || embedErr,
               );
               return null;
             }
@@ -112,7 +105,7 @@ class PDFService {
         console.warn(
           "_embedImageByUrl readAsset IPC failed for",
           url,
-          ipcErr?.message || ipcErr
+          ipcErr?.message || ipcErr,
         );
       }
 
@@ -120,9 +113,6 @@ class PDFService {
     }
   }
 
-  /**
-   * Format Indian amount in words
-   */
   formatIndianAmountInWords(amount) {
     if (isNaN(amount)) return "(Zero Rupees)";
 
@@ -217,9 +207,6 @@ class PDFService {
     return `(${convert(num)} Only)`;
   }
 
-  /**
-   * Format date for display
-   */
   formatDate(dateString) {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -230,26 +217,18 @@ class PDFService {
     });
   }
 
-  /**
-   * Generate Buy Letter PDF (offline-capable)
-   */
   async generateBuyLetterPDF(letterData) {
     if (networkService.getStatus()) {
       try {
-        // Try online generation first
         return await this.generateBuyLetterPDFOnline(letterData);
       } catch (error) {
         console.log("Online PDF generation failed, using offline:", error);
       }
     }
 
-    // Offline generation
     return await this.generateBuyLetterPDFOffline(letterData);
   }
 
-  /**
-   * Generate Buy Letter PDF online (via API)
-   */
   async generateBuyLetterPDFOnline(letterData) {
     try {
       const response = await axios.post(
@@ -260,13 +239,12 @@ class PDFService {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       const buffer = response.data;
       const blob = new Blob([buffer], { type: "application/pdf" });
 
-      // Try to save silently to configured folder when running in Electron
       let saveRes = null;
       try {
         const filename = `buy-letter-${
@@ -275,13 +253,12 @@ class PDFService {
         saveRes = await fileSaveService.savePdfToDefaultDir(
           filename,
           buffer,
-          "buy"
+          "buy",
         );
       } catch (saveErr) {
-        // ignore save errors here; caller may still handle the returned blob
         console.warn(
           "Silent save failed for buy letter:",
-          saveErr?.message || saveErr
+          saveErr?.message || saveErr,
         );
       }
 
@@ -297,20 +274,16 @@ class PDFService {
     }
   }
 
-  /**
-   * Generate Buy Letter PDF offline (client-side)
-   */
   async generateBuyLetterPDFOffline(data) {
     try {
       const pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([595, 842]); // A4 size
+      const page = pdfDoc.addPage([595, 842]);
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
       const { width, height } = page.getSize();
       let yPosition = height - 50;
 
-      // Helper function to draw text
       const drawText = (text, x, y, options = {}) => {
         page.drawText(text, {
           x,
@@ -322,14 +295,12 @@ class PDFService {
         });
       };
 
-      // Title
       drawText("VEHICLE PURCHASE AGREEMENT", width / 2 - 100, yPosition, {
         bold: true,
         size: 14,
       });
       yPosition -= 30;
 
-      // Seller Information
       drawText("SELLER INFORMATION", 50, yPosition, { bold: true, size: 12 });
       yPosition -= 20;
       drawText(`Name: ${data.sellerName}`, 50, yPosition);
@@ -355,7 +326,7 @@ class PDFService {
       drawText(
         `Vehicle: ${data.vehicleName} ${data.vehicleModel}`,
         50,
-        yPosition
+        yPosition,
       );
       yPosition -= 15;
       drawText(`Color: ${data.vehicleColor}`, 50, yPosition);
@@ -387,7 +358,6 @@ class PDFService {
 
       yPosition -= 10;
 
-      // Sale Details
       drawText("SALE DETAILS", 50, yPosition, { bold: true, size: 12 });
       yPosition -= 20;
       drawText(`Sale Date: ${this.formatDate(data.saleDate)}`, 50, yPosition);
@@ -397,13 +367,12 @@ class PDFService {
       drawText(
         `Amount in Words: ${this.formatIndianAmountInWords(data.saleAmount)}`,
         50,
-        yPosition
+        yPosition,
       );
       yPosition -= 15;
       drawText(`Payment Method: ${data.paymentMethod}`, 50, yPosition);
       yPosition -= 30;
 
-      // Signatures
       drawText("_________________", 50, yPosition);
       drawText("_________________", width - 150, yPosition);
       yPosition -= 15;
@@ -413,14 +382,13 @@ class PDFService {
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
 
-      // Save to configured directory (Electron) or fallback to download
       const filename = `buy-letter-${
         data.registrationNumber
       }-${Date.now()}.pdf`;
       const saveRes = await fileSaveService.savePdfToDefaultDir(
         filename,
         pdfBytes,
-        "buy"
+        "buy",
       );
 
       return {
@@ -436,9 +404,6 @@ class PDFService {
     }
   }
 
-  /**
-   * Generate Sell Letter PDF
-   */
   async generateSellLetterPDF(letterData) {
     if (networkService.getStatus()) {
       try {
@@ -451,9 +416,6 @@ class PDFService {
     return await this.generateSellLetterPDFOffline(letterData);
   }
 
-  /**
-   * Generate Sell Letter PDF online
-   */
   async generateSellLetterPDFOnline(letterData) {
     try {
       const response = await axios.post(
@@ -464,7 +426,7 @@ class PDFService {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       const buffer = response.data;
@@ -478,12 +440,12 @@ class PDFService {
         saveRes = await fileSaveService.savePdfToDefaultDir(
           filename,
           buffer,
-          "sell"
+          "sell",
         );
       } catch (saveErr) {
         console.warn(
           "Silent save failed for sell letter:",
-          saveErr?.message || saveErr
+          saveErr?.message || saveErr,
         );
       }
 
@@ -499,9 +461,6 @@ class PDFService {
     }
   }
 
-  /**
-   * Generate Sell Letter PDF offline
-   */
   async generateSellLetterPDFOffline(data) {
     try {
       const pdfDoc = await PDFDocument.create();
@@ -523,20 +482,18 @@ class PDFService {
         });
       };
 
-      // Title
       drawText("VEHICLE SALE AGREEMENT", width / 2 - 100, yPosition, {
         bold: true,
         size: 14,
       });
       yPosition -= 30;
 
-      // Vehicle Information
       drawText("VEHICLE DETAILS", 50, yPosition, { bold: true, size: 12 });
       yPosition -= 20;
       drawText(
         `Vehicle: ${data.vehicleName} ${data.vehicleModel}`,
         50,
-        yPosition
+        yPosition,
       );
       yPosition -= 15;
       drawText(`Registration: ${data.registrationNumber}`, 50, yPosition);
@@ -546,7 +503,6 @@ class PDFService {
       drawText(`Engine No: ${data.engineNumber}`, 50, yPosition);
       yPosition -= 20;
 
-      // Buyer Information
       drawText("BUYER DETAILS", 50, yPosition, { bold: true, size: 12 });
       yPosition -= 20;
       drawText(`Name: ${data.buyerName}`, 50, yPosition);
@@ -556,7 +512,6 @@ class PDFService {
       drawText(`Phone: ${data.buyerPhone}`, 50, yPosition);
       yPosition -= 20;
 
-      // Sale Details
       drawText("SALE INFORMATION", 50, yPosition, { bold: true, size: 12 });
       yPosition -= 20;
       drawText(`Sale Amount: ₹${data.saleAmount}`, 50, yPosition);
@@ -574,7 +529,7 @@ class PDFService {
       const saveRes = await fileSaveService.savePdfToDefaultDir(
         filename,
         pdfBytes,
-        "sell"
+        "sell",
       );
 
       return {
@@ -590,9 +545,6 @@ class PDFService {
     }
   }
 
-  /**
-   * Generate Service Bill PDF
-   */
   async generateServiceBillPDF(billData) {
     if (networkService.getStatus()) {
       try {
@@ -605,9 +557,6 @@ class PDFService {
     return await this.generateServiceBillPDFOffline(billData);
   }
 
-  /**
-   * Generate Service Bill PDF online
-   */
   async generateServiceBillPDFOnline(billData) {
     try {
       const response = await axios.post(
@@ -618,7 +567,7 @@ class PDFService {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       const buffer = response.data;
@@ -632,12 +581,12 @@ class PDFService {
         saveRes = await fileSaveService.savePdfToDefaultDir(
           filename,
           buffer,
-          "service"
+          "service",
         );
       } catch (saveErr) {
         console.warn(
           "Silent save failed for service bill:",
-          saveErr?.message || saveErr
+          saveErr?.message || saveErr,
         );
       }
 
@@ -653,12 +602,8 @@ class PDFService {
     }
   }
 
-  /**
-   * Generate Service Bill PDF offline - Complete template matching backend
-   */
   async generateServiceBillPDFOffline(serviceBill) {
     try {
-      // Validate input
       if (!serviceBill || typeof serviceBill !== "object") {
         throw new Error("Invalid serviceBill parameter: must be an object");
       }
@@ -669,7 +614,6 @@ class PDFService {
         throw new Error("Invalid serviceBill: serviceItems must be an array");
       }
 
-      // Parse all numeric fields safely
       const validatedServiceBill = {
         ...serviceBill,
         totalAmount: parseFloat(serviceBill.totalAmount) || 0,
@@ -693,7 +637,6 @@ class PDFService {
       };
       serviceBill = validatedServiceBill;
 
-      // Set defaults for missing string fields
       serviceBill.paymentMethod = serviceBill.paymentMethod || "cash";
       serviceBill.paymentStatus = serviceBill.paymentStatus || "pending";
       serviceBill.vehicleType = serviceBill.vehicleType || "bike";
@@ -713,27 +656,24 @@ class PDFService {
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-      // Load logo (if available from bundled assets)
       let logoImage = null;
       try {
-        // Use the imported asset URL so it works both in dev and production builds
         if (logo) {
           logoImage = await this._embedImageByUrl(pdfDoc, logo);
         }
       } catch (logoError) {
         console.warn(
           "Logo not found, continuing without logo:",
-          logoError?.message || logoError
+          logoError?.message || logoError,
         );
       }
       console.debug(
         "PDFService: service logo url=",
         logo,
         "embedded=",
-        !!logoImage
+        !!logoImage,
       );
 
-      // Function to add watermark
       const addWatermark = (page) => {
         if (logoImage) {
           page.drawImage(logoImage, {
@@ -747,7 +687,6 @@ class PDFService {
         }
       };
 
-      // Function to add page number
       const addPageNumber = (page, currentPageNum, totalPages) => {
         page.drawText(`${currentPageNum}/${totalPages}`, {
           x: 550,
@@ -760,7 +699,6 @@ class PDFService {
 
       addWatermark(currentPage);
 
-      // Header Section
       currentPage.drawRectangle({
         x: 0,
         y: 780,
@@ -786,7 +724,6 @@ class PDFService {
         font: fontBold,
       });
 
-      // Title Section
       currentPage.drawRectangle({
         x: 0,
         y: 750,
@@ -803,7 +740,6 @@ class PDFService {
         font: fontBold,
       });
 
-      // Invoice Info
       const invoiceNumber =
         serviceBill.billNumber ||
         `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)
@@ -818,7 +754,6 @@ class PDFService {
         font: font,
       });
 
-      // Use bill date or created date, fallback to current date only if missing
       const currentDate =
         serviceBill.date || serviceBill.createdAt
           ? new Date(serviceBill.date || serviceBill.createdAt)
@@ -831,13 +766,13 @@ class PDFService {
         const hours12 = hours % 12 || 12;
         return `${String(hours12).padStart(2, "0")}:${String(minutes).padStart(
           2,
-          "0"
+          "0",
         )} ${ampm}`;
       };
 
       currentPage.drawText(
         `Date: ${currentDate.toLocaleDateString(
-          "en-IN"
+          "en-IN",
         )} Time: ${formatTime12Hour(currentDate)}`,
         {
           x: 400,
@@ -845,10 +780,9 @@ class PDFService {
           size: 10,
           color: rgb(0.2, 0.2, 0.2),
           font: font,
-        }
+        },
       );
 
-      // Divider
       currentPage.drawLine({
         start: { x: 50, y: 710 },
         end: { x: 545, y: 710 },
@@ -856,7 +790,6 @@ class PDFService {
         color: rgb(0.8, 0.8, 0.8),
       });
 
-      // Business Information (if enabled)
       let customerY;
       if (Boolean(serviceBill.taxEnabled)) {
         currentPage.drawText("BUSINESS INFORMATION", {
@@ -905,7 +838,6 @@ class PDFService {
         customerY = 690;
       }
 
-      // Customer Information
       currentPage.drawText("CUSTOMER DETAILS", {
         x: 50,
         y: customerY,
@@ -967,7 +899,6 @@ class PDFService {
         font: fontBold,
       });
 
-      // Vehicle condition
       currentPage.drawRectangle({
         x: leftColumnX,
         y: columnY - 30,
@@ -984,7 +915,7 @@ class PDFService {
           size: 10,
           color: rgb(0.2, 0.2, 0.2),
           font: font,
-        }
+        },
       );
 
       const vehicleDetails = [
@@ -1029,7 +960,6 @@ class PDFService {
         });
       });
 
-      // Right Column - Service Information
       currentPage.drawText("SERVICE DETAILS", {
         x: rightColumnX,
         y: columnY,
@@ -1093,7 +1023,6 @@ class PDFService {
         });
       });
 
-      // Custom service description if applicable
       const isCustomService =
         serviceBill.serviceType &&
         serviceBill.serviceType.toLowerCase() === "custom";
@@ -1130,7 +1059,6 @@ class PDFService {
         });
       }
 
-      // Service Items Table with pagination
       const itemsStartY = columnY - 140;
       const minItemsFirstPage = 25;
       const maxItemsPerPage = 25;
@@ -1149,7 +1077,6 @@ class PDFService {
         currentY -= 20;
       }
 
-      // Function to draw table headers
       const drawServiceItemHeaders = (page, y) => {
         const serviceHeaders = [
           "#",
@@ -1175,7 +1102,6 @@ class PDFService {
       drawServiceItemHeaders(currentPage, currentY);
       currentY -= 20;
 
-      // Draw all service items
       serviceBill.serviceItems.forEach((item, index) => {
         if (!item || typeof item !== "object") return;
 
@@ -1196,7 +1122,6 @@ class PDFService {
           currentY -= 20;
         }
 
-        // Draw item number
         currentPage.drawText((index + 1).toString(), {
           x: 60,
           y: currentY,
@@ -1205,7 +1130,6 @@ class PDFService {
           font: font,
         });
 
-        // Handle description wrapping
         const description = item.description || "";
         const maxWidth = 180;
         const lines = [];
@@ -1235,7 +1159,6 @@ class PDFService {
 
         const descHeight = Math.max(lines.length * 12, 12);
 
-        // Draw quantity, rate, discount and amount
         currentPage.drawText(item.quantity.toString(), {
           x: 300,
           y: currentY,
@@ -1278,7 +1201,6 @@ class PDFService {
         currentPageItems++;
       });
 
-      // Ensure space for totals
       if (currentY < 300) {
         currentPage = pdfDoc.addPage([595, 842]);
         pages.push(currentPage);
@@ -1288,7 +1210,6 @@ class PDFService {
 
       let sectionY = currentY;
 
-      // Totals Section
       currentPage.drawText("Subtotal:", {
         x: 350,
         y: sectionY,
@@ -1323,7 +1244,6 @@ class PDFService {
         sectionY -= 20;
       }
 
-      // Discount
       let discountAmount = 0;
       let discountLabel = "Discount:";
       if (serviceBill.discountType === "percentage") {
@@ -1350,7 +1270,6 @@ class PDFService {
       });
       sectionY -= 20;
 
-      // Advance Paid
       currentPage.drawText("Advance Paid:", {
         x: 350,
         y: sectionY,
@@ -1367,7 +1286,6 @@ class PDFService {
       });
       sectionY -= 20;
 
-      // Balance Due
       currentPage.drawText("Balance Due:", {
         x: 350,
         y: sectionY,
@@ -1401,7 +1319,6 @@ class PDFService {
 
       sectionY -= 40;
 
-      // Payment Information
       currentPage.drawText("Payment Method:", {
         x: 50,
         y: sectionY,
@@ -1417,7 +1334,7 @@ class PDFService {
           size: 10,
           color: rgb(0.2, 0.2, 0.2),
           font: font,
-        }
+        },
       );
       sectionY -= 20;
 
@@ -1436,11 +1353,10 @@ class PDFService {
           size: 10,
           color: rgb(0.2, 0.2, 0.2),
           font: font,
-        }
+        },
       );
       sectionY -= 20;
 
-      // Issues/Notes/Warranty - helper function
       const wrapTextByWidth = (text, maxWidth, font, size) => {
         if (!text) return [];
         const words = text.split(/\s+/);
@@ -1494,7 +1410,7 @@ class PDFService {
         warranty,
         contentWidth,
         font,
-        fontSize
+        fontSize,
       );
 
       const neededHeight =
@@ -1580,7 +1496,6 @@ class PDFService {
         });
       }
 
-      // Footer with Signatures
       const footerY = 80;
 
       currentPage.drawText("Customer Signature", {
@@ -1629,10 +1544,9 @@ class PDFService {
           size: 8,
           color: rgb(0.5, 0.5, 0.5),
           font: font,
-        }
+        },
       );
 
-      // Add page numbers
       const totalPages = pages.length;
       pages.forEach((page, index) => {
         addPageNumber(page, index + 1, totalPages);
@@ -1647,7 +1561,7 @@ class PDFService {
       const saveRes = await fileSaveService.savePdfToDefaultDir(
         filename,
         pdfBytes,
-        "service"
+        "service",
       );
 
       return {
@@ -1663,9 +1577,6 @@ class PDFService {
     }
   }
 
-  /**
-   * Generate Advance Bill PDF (offline-capable)
-   */
   async generateAdvanceBillPDF(billData) {
     if (networkService.getStatus()) {
       try {
@@ -1677,9 +1588,6 @@ class PDFService {
     return await this.generateAdvanceBillPDFOffline(billData);
   }
 
-  /**
-   * Generate Advance Bill PDF online
-   */
   async generateAdvanceBillPDFOnline(billData) {
     try {
       const response = await axios.post(
@@ -1690,7 +1598,7 @@ class PDFService {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       const buffer = response.data;
@@ -1704,12 +1612,12 @@ class PDFService {
         saveRes = await fileSaveService.savePdfToDefaultDir(
           filename,
           buffer,
-          "advance"
+          "advance",
         );
       } catch (saveErr) {
         console.warn(
           "Silent save failed for advance bill:",
-          saveErr?.message || saveErr
+          saveErr?.message || saveErr,
         );
       }
 
@@ -1725,9 +1633,6 @@ class PDFService {
     }
   }
 
-  /**
-   * Generate Advance Bill PDF offline - Complete template matching backend
-   */
   async generateAdvanceBillPDFOffline(advanceBill) {
     try {
       const pdfDoc = await PDFDocument.create();
@@ -1775,11 +1680,10 @@ class PDFService {
         const hours12 = hours % 12 || 12;
         return `${String(hours12).padStart(2, "0")}:${String(minutes).padStart(
           2,
-          "0"
+          "0",
         )} ${ampm}`;
       };
 
-      // Load logo (use bundled asset URL)
       let logoImage = null;
       try {
         if (logoBack) {
@@ -1792,12 +1696,11 @@ class PDFService {
         "PDFService: advance logo url=",
         logoBack,
         "embedded=",
-        !!logoImage
+        !!logoImage,
       );
 
       const pageWidth = 595;
 
-      // Header Section
       page.drawRectangle({
         x: 0,
         y: 780,
@@ -1832,7 +1735,6 @@ class PDFService {
         font: fontBold,
       });
 
-      // Title Section
       page.drawRectangle({
         x: 0,
         y: 750,
@@ -1849,7 +1751,6 @@ class PDFService {
         font: fontBold,
       });
 
-      // Invoice Info
       const invoiceNumber =
         advanceBill.billNumber ||
         `ADV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)
@@ -1869,7 +1770,7 @@ class PDFService {
 
       page.drawText(
         `Date: ${istDate.toLocaleDateString("en-IN")} Time: ${formatTime12Hour(
-          istDate
+          istDate,
         )}`,
         {
           x: 400,
@@ -1877,10 +1778,9 @@ class PDFService {
           size: 10,
           color: rgb(0.2, 0.2, 0.2),
           font: font,
-        }
+        },
       );
 
-      // Divider
       page.drawLine({
         start: { x: 50, y: 710 },
         end: { x: 545, y: 710 },
@@ -1897,7 +1797,6 @@ class PDFService {
         opacity: 0.6,
       });
 
-      // Customer Information
       const customerY = 690;
       page.drawText("CUSTOMER DETAILS", {
         x: 50,
@@ -1956,7 +1855,6 @@ class PDFService {
         opacity: 0.6,
       });
 
-      // Vehicle Information
       const vehicleY = customerY - 80;
       page.drawText("VEHICLE DETAILS", {
         x: 50,
@@ -2013,7 +1911,6 @@ class PDFService {
         opacity: 0.6,
       });
 
-      // Service Dates
       const serviceY = vehicleY - 140;
       page.drawText("ADVANCE PAYMENT DATES", {
         x: 50,
@@ -2033,7 +1930,7 @@ class PDFService {
 
       page.drawText(
         new Date(advanceBill.serviceDate || Date.now()).toLocaleDateString(
-          "en-IN"
+          "en-IN",
         ),
         {
           x: 180,
@@ -2041,7 +1938,7 @@ class PDFService {
           size: 10,
           color: rgb(0.2, 0.2, 0.2),
           font: font,
-        }
+        },
       );
 
       page.drawText("Delivery Date:", {
@@ -2054,7 +1951,7 @@ class PDFService {
 
       page.drawText(
         new Date(
-          advanceBill.deliveryDate || Date.now() + 86400000
+          advanceBill.deliveryDate || Date.now() + 86400000,
         ).toLocaleDateString("en-IN"),
         {
           x: 420,
@@ -2062,7 +1959,7 @@ class PDFService {
           size: 10,
           color: rgb(0.2, 0.2, 0.2),
           font: font,
-        }
+        },
       );
 
       page.drawRectangle({
@@ -2074,7 +1971,6 @@ class PDFService {
         opacity: 0.6,
       });
 
-      // Payment Information
       const paymentY = serviceY - 50;
       page.drawText("PAYMENT INFORMATION", {
         x: 50,
@@ -2139,7 +2035,6 @@ class PDFService {
         opacity: 0.6,
       });
 
-      // Note Section (if note exists)
       let termsY = 250;
 
       if (advanceBill.note && advanceBill.note.trim()) {
@@ -2228,7 +2123,6 @@ class PDFService {
         });
       });
 
-      // Footer with Signatures
       const footerY = 60;
       page.drawText("Customer Signature", {
         x: 100,
@@ -2276,7 +2170,7 @@ class PDFService {
           size: 8,
           color: rgb(0.5, 0.5, 0.5),
           font: font,
-        }
+        },
       );
 
       const pdfBytes = await pdfDoc.save();
@@ -2288,7 +2182,7 @@ class PDFService {
       const saveRes = await fileSaveService.savePdfToDefaultDir(
         filename,
         pdfBytes,
-        "advance"
+        "advance",
       );
 
       return {
@@ -2304,9 +2198,6 @@ class PDFService {
     }
   }
 
-  /**
-   * Download PDF blob
-   */
   downloadPDF(blob, filename) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -2317,29 +2208,26 @@ class PDFService {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }
-  /**
-   * Generate Letter Head PDF
-   */
-  async generateLetterHeadPDF(letterData) {
-    // For now, we will rely on offline generation as the primary method
-    // until an online endpoint is established if needed.
-    return await this.generateLetterHeadPDFOffline(letterData);
+
+  async generateLetterHeadPDF(letterData, previewOnly = false) {
+    return await this.generateLetterHeadPDFOffline(letterData, previewOnly);
   }
 
-  /**
-   * Generate Letter Head PDF Offline
-   */
-  async generateLetterHeadPDFOffline(letterData) {
+  sanitizeTextForPDF(text) {
+    if (!text) return "";
+
+    return String(text)
+      .replace(/₹/g, "Rs. ")
+      .replace(/[^\x00-\xFF]/g, "");
+  }
+
+  async generateLetterHeadPDFOffline(letterData, previewOnly = false) {
     try {
       const pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([595, 842]); // A4
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-      const { height } = page.getSize();
-      let yPosition = height - 50;
+      const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+      const fontBold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
 
-      // Logo and Header (Same as Service Bill)
       let logoImage = null;
       try {
         if (logo) {
@@ -2349,124 +2237,142 @@ class PDFService {
         console.warn("Logo not found:", logoError);
       }
 
-      // Watermark
-      if (logoImage) {
-        page.drawImage(logoImage, {
-          x: 280,
-          y: 200,
-          width: 450,
-          height: 400,
-          opacity: 0.1, // Lighter watermark for letter
-          rotate: degrees(45),
-        });
-      }
+      const headerFontSize = 14;
+      const contentFontSize = 12;
 
-      // Header Blue Box
-      page.drawRectangle({
-        x: 0,
-        y: 780,
-        width: 595, // Full width
-        height: 120, // Height
-        color: rgb(0.047, 0.098, 0.196), // Dark Blue
-      });
+      const createPage = (isFirstPage = false) => {
+        const p = pdfDoc.addPage([595, 842]);
 
-      // Logo in Header
-      if (logoImage) {
-        page.drawImage(logoImage, {
-          x: 50,
-          y: 740,
-          width: 170,
-          height: 140,
-        });
-      }
+        if (logoImage) {
+          p.drawImage(logoImage, {
+            x: 280,
+            y: 200,
+            width: 450,
+            height: 400,
+            opacity: 0.1,
+            rotate: degrees(45),
+          });
+        }
 
-      // Company UDAYAM No
-      page.drawText("UDAYAM-BR-26-0028550", {
-        x: 400,
-        y: 800,
-        size: 14,
-        color: rgb(0.8, 0.8, 0.8),
-        font: fontBold,
-      });
+        if (isFirstPage) {
+          p.drawRectangle({
+            x: 0,
+            y: 780,
+            width: 595,
+            height: 120,
+            color: rgb(0.047, 0.098, 0.196),
+          });
 
-      // Title Bar
-      page.drawRectangle({
-        x: 0,
-        y: 750,
-        width: 595,
-        height: 30,
-        color: rgb(0.9, 0.9, 0.9), // Light Gray
-      });
+          if (logoImage) {
+            p.drawImage(logoImage, {
+              x: 50,
+              y: 740,
+              width: 170,
+              height: 140,
+            });
+          }
 
-      page.drawText("LETTER HEAD", {
-        x: 240,
-        y: 758,
-        size: 18,
-        color: rgb(0.047, 0.098, 0.196),
-        font: fontBold,
-      });
+          p.drawText("UDAYAM-BR-26-0028550", {
+            x: 400,
+            y: 800,
+            size: 14,
+            color: rgb(0.8, 0.8, 0.8),
+            font: fontBold,
+          });
 
-      yPosition = 700;
+          p.drawRectangle({
+            x: 0,
+            y: 750,
+            width: 595,
+            height: 30,
+            color: rgb(0.9, 0.9, 0.9),
+          });
 
-      // Date
-      page.drawText(`Date: ${this.formatDate(letterData.date)}`, {
+          p.drawText("LETTER HEAD", {
+            x: 240,
+            y: 758,
+            size: 18,
+            color: rgb(0.047, 0.098, 0.196),
+            font: fontBold,
+          });
+        }
+        return p;
+      };
+
+      let currentPage = createPage(true);
+      let yPosition = 700;
+
+      const sanitizedData = {
+        ...letterData,
+        to: this.sanitizeTextForPDF(letterData.to),
+        subject: this.sanitizeTextForPDF(letterData.subject),
+        message: this.sanitizeTextForPDF(letterData.message),
+        recipientName: this.sanitizeTextForPDF(letterData.recipientName),
+      };
+
+      const checkPageBreak = (neededSpace = 20) => {
+        if (yPosition < 50 + neededSpace) {
+          currentPage = createPage(false);
+          yPosition = 750;
+        }
+      };
+
+      checkPageBreak(20);
+      currentPage.drawText(`Date: ${this.formatDate(sanitizedData.date)}`, {
         x: 450,
         y: yPosition,
-        size: 12,
+        size: headerFontSize,
         font: font,
         color: rgb(0, 0, 0),
       });
-
       yPosition -= 40;
 
-      // To
-      page.drawText("To,", {
+      checkPageBreak(20);
+      currentPage.drawText("To,", {
         x: 50,
         y: yPosition,
-        size: 12,
+        size: headerFontSize,
         font: fontBold,
         color: rgb(0, 0, 0),
       });
       yPosition -= 20;
 
-      const toLines = letterData.to.split("\n");
+      const toLines = sanitizedData.to.split("\n");
       for (const line of toLines) {
-        page.drawText(line, {
+        checkPageBreak(20);
+        currentPage.drawText(line, {
           x: 50,
           y: yPosition,
-          size: 12,
+          size: headerFontSize,
           font: font,
           color: rgb(0, 0, 0),
         });
-        yPosition -= 15;
+        yPosition -= 20;
       }
 
       yPosition -= 20;
 
-      // Subject
-      page.drawText("Subject:", {
+      checkPageBreak(20);
+      currentPage.drawText("Subject:", {
         x: 50,
         y: yPosition,
-        size: 12,
+        size: headerFontSize,
         font: fontBold,
         color: rgb(0, 0, 0),
       });
-      page.drawText(letterData.subject, {
-        x: 110,
+
+      currentPage.drawText(sanitizedData.subject, {
+        x: 120,
         y: yPosition,
-        size: 12,
-        font: fontBold, // Bold subject
+        size: headerFontSize,
+        font: fontBold,
         color: rgb(0, 0, 0),
       });
-
       yPosition -= 40;
 
-      // Message Body
-      const message = letterData.message || "";
+      const message = sanitizedData.message || "";
       const maxWidth = 500;
-      const fontSize = 11;
 
-      // Handle multiline text reflow
       const paragraphs = message.split("\n");
 
       for (const paragraph of paragraphs) {
@@ -2475,107 +2381,123 @@ class PDFService {
 
         for (const word of words) {
           const testLine = line + word + " ";
-          const textWidth = font.widthOfTextAtSize(testLine, fontSize);
+          const textWidth = font.widthOfTextAtSize(testLine, contentFontSize);
 
           if (textWidth > maxWidth) {
-            page.drawText(line, {
+            checkPageBreak(13);
+            currentPage.drawText(line, {
               x: 50,
               y: yPosition,
-              size: fontSize,
+              size: contentFontSize,
               font: font,
             });
             line = word + " ";
-            yPosition -= 15;
+            yPosition -= 13;
           } else {
             line = testLine;
           }
         }
-        // Draw last line of paragraph
-        page.drawText(line, {
+
+        checkPageBreak(13);
+        currentPage.drawText(line, {
           x: 50,
           y: yPosition,
-          size: fontSize,
+          size: contentFontSize,
           font: font,
         });
-        yPosition -= 25; // Extra space between paragraphs
-
-        // Add new page if out of space
-        if (yPosition < 100) {
-          // New page logic could go here, but for simplicity we assume 1 page for now or just cut off
-          // Ideally:
-          // const newPage = pdfDoc.addPage([595, 842]);
-          // yPosition = 750;
-          // ... re-setup font etc
-        }
+        yPosition -= 20;
       }
 
-      // Footer Signatures
-      yPosition = 150;
+      checkPageBreak(100);
+      yPosition -= 30;
 
-      if (letterData.recipientName) {
-        page.drawText(letterData.recipientName, {
-          x: 50,
-          y: yPosition + 20,
-          size: 12,
-          font: fontBold,
-          color: rgb(0, 0, 0),
-        });
-      }
-
-      page.drawText("For OK Motor", {
-        x: 400,
-        y: yPosition + 20,
-        size: 12,
-        font: fontBold,
-        color: rgb(0, 0, 0),
-      });
-
-      page.drawText("Authorized Signatory", {
-        x: 400,
-        y: yPosition - 40,
-        size: 10,
-        font: font,
-        color: rgb(0, 0, 0),
-      });
-
-      // Footer Contact Info (Bottom of page)
-      const footerY = 40;
-      page.drawLine({
-        start: { x: 20, y: footerY + 15 },
-        end: { x: 575, y: footerY + 15 },
+      // Signature section with lines
+      currentPage.drawLine({
+        start: { x: 70, y: yPosition },
+        end: { x: 250, y: yPosition },
         thickness: 1,
-        color: rgb(0.8, 0.8, 0.8),
+        color: rgb(0, 0, 0),
       });
 
-      page.drawText(
-        "Address: Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014",
-        {
-          x: 120,
-          y: footerY,
+      currentPage.drawLine({
+        start: { x: 345, y: yPosition },
+        end: { x: 525, y: yPosition },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+      currentPage.drawText("Recipient Signature", {
+        x: 120,
+        y: yPosition - 20,
+        size: 11,
+        font: font,
+        color: rgb(0.5, 0.5, 0.5),
+      });
+
+      currentPage.drawText("Authorized Signatory", {
+        x: 385,
+        y: yPosition - 20,
+        size: 11,
+        font: font,
+        color: rgb(0.5, 0.5, 0.5),
+      });
+
+      const pages = pdfDoc.getPages();
+      const totalPages = pages.length;
+
+      pages.forEach((p, index) => {
+        const pageNumber = index + 1;
+        const footerY = 40;
+
+        p.drawLine({
+          start: { x: 20, y: footerY + 15 },
+          end: { x: 575, y: footerY + 15 },
+          thickness: 1,
+          color: rgb(0.8, 0.8, 0.8),
+        });
+
+        p.drawText(
+          "Address: Pillar num.53, Bailey Rd, Samanpura, Raja Bazar, Indrapuri, Patna, Bihar 800014",
+          {
+            x: 120,
+            y: footerY,
+            size: 9,
+            font: font,
+            color: rgb(0.4, 0.4, 0.4),
+          },
+        );
+
+        p.drawText("Phone: +91 72800 12222", {
+          x: 250,
+          y: footerY - 12,
           size: 9,
           font: font,
           color: rgb(0.4, 0.4, 0.4),
-        }
-      );
+        });
 
-      page.drawText("Phone: +91 72800 12222", {
-        x: 250,
-        y: footerY - 12,
-        size: 9,
-        font: font,
-        color: rgb(0.4, 0.4, 0.4),
+        // Add page number in bottom right corner
+        p.drawText(`${pageNumber}`, {
+          x: 560,
+          y: footerY,
+          size: 10,
+          font: font,
+          color: rgb(0.4, 0.4, 0.4),
+        });
       });
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
 
-      // Save logic (Electron/Browser)
-      const filename = `letter-head-${Date.now()}.pdf`;
-      const saveRes = await fileSaveService.savePdfToDefaultDir(
-        filename,
-        pdfBytes,
-        "letter"
-      );
+      // Only save to file system if not preview mode
+      let saveRes = null;
+      if (!previewOnly) {
+        const filename = `letter-head-${Date.now()}.pdf`;
+        saveRes = await fileSaveService.savePdfToDefaultDir(
+          filename,
+          pdfBytes,
+          "letter",
+        );
+      }
 
       return {
         success: true,

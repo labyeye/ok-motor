@@ -22,7 +22,7 @@
   function randomAvatar(name) {
     const seed = name ? name.replace(/\s/g, "") : "user";
     return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
-      seed
+      seed,
     )}`;
   }
 
@@ -38,18 +38,18 @@
           " class="user-avatar" width="60" height="60" loading="lazy" />
         <div class="user-info">
           <h4 class="user-name" itemprop="author">${escapeHtml(
-            r.name || "Anonymous"
+            r.name || "Anonymous",
           )}</h4>
           <div class="rating">${'<i class="fas fa-star"></i>'.repeat(
-            r.rating || 5
+            r.rating || 5,
           )}${'<i class="far fa-star"></i>'.repeat(
-      Math.max(0, 5 - (r.rating || 5))
-    )}</div>
+            Math.max(0, 5 - (r.rating || 5)),
+          )}</div>
         </div>
       </div>
       <div class="quote">${escapeHtml(r.message || r.text || "")}</div>
       <div class="testimonial-footer"><span class="testimonial-date">${new Date(
-        r.date || r.createdAt || Date.now()
+        r.date || r.createdAt || Date.now(),
       ).toLocaleDateString()}</span></div>
     `;
     return div;
@@ -118,10 +118,10 @@
     function showSlide(n) {
       current = (n + slidesEls.length) % slidesEls.length;
       slidesEls.forEach(
-        (el, i) => (el.style.display = i === current ? "flex" : "none")
+        (el, i) => (el.style.display = i === current ? "flex" : "none"),
       );
       Array.from(nav.children).forEach((d, i) =>
-        d.classList.toggle("active", i === current)
+        d.classList.toggle("active", i === current),
       );
     }
 
@@ -133,7 +133,7 @@
       .querySelector(".testimonial-next")
       .addEventListener("click", () => showSlide(current + 1));
     Array.from(nav.children).forEach((d, i) =>
-      d.addEventListener("click", () => showSlide(i))
+      d.addEventListener("click", () => showSlide(i)),
     );
 
     // rebuild on resize (debounced)
@@ -142,7 +142,7 @@
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(
         () => renderTestimonialsSlider(container, reviews),
-        250
+        250,
       );
     });
   }
@@ -161,8 +161,8 @@
           data && data.success && Array.isArray(data.reviews)
             ? data.reviews
             : Array.isArray(data)
-            ? data
-            : [];
+              ? data
+              : [];
         renderTestimonialsSlider(container, reviews);
       })
       .catch(() => renderTestimonialsSlider(container, []));
@@ -175,14 +175,14 @@
 
     const openButtons = document.querySelectorAll(".open-review-modal");
     openButtons.forEach((b) =>
-      b.addEventListener("click", () => (reviewModal.style.display = "block"))
+      b.addEventListener("click", () => (reviewModal.style.display = "block")),
     );
 
     const closeBtn = reviewModal.querySelector(".close");
     if (closeBtn)
       closeBtn.addEventListener(
         "click",
-        () => (reviewModal.style.display = "none")
+        () => (reviewModal.style.display = "none"),
       );
     window.addEventListener("click", (e) => {
       if (e.target === reviewModal) reviewModal.style.display = "none";
@@ -197,7 +197,7 @@
           const v = Number(this.getAttribute("data-value")) || idx + 1;
           ratingInput.value = v;
           stars.forEach((st, i) => st.classList.toggle("selected", i < v));
-        })
+        }),
       );
     }
 
@@ -207,7 +207,7 @@
       const message =
         (document.getElementById("reviewMessage") || {}).value || "";
       const rating = Number(
-        (document.getElementById("reviewRating") || {}).value || 0
+        (document.getElementById("reviewRating") || {}).value || 0,
       );
       if (!name || !message || !rating) {
         alert("Please fill all fields and select a rating.");

@@ -720,8 +720,8 @@ const InsuranceForm = () => {
                 {isSaving
                   ? "Saving..."
                   : editId
-                  ? "Update Insurance Record"
-                  : "Save Insurance Record"}
+                    ? "Update Insurance Record"
+                    : "Save Insurance Record"}
                 {!isSaving && <Save size={20} />}
               </button>
             </div>

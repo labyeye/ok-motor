@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -278,37 +278,37 @@
         <div
           class="hero-slide active"
           style="
-            background-image: url('https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg');
+            background-image: url(&quot;https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapercave.com/wp/wp12477050.jpg');
+            background-image: url(&quot;https://wallpapercave.com/wp/wp12477050.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://www.bmw-m.com/content/dam/bmw/marketBMW_M/www_bmw-m_com/topics/magazine-article-pool/2024/wallpaper/m-wallpaper/3-0-csl/bmw-3-0-csl-mi-05.jpg');
+            background-image: url(&quot;https://www.bmw-m.com/content/dam/bmw/marketBMW_M/www_bmw-m_com/topics/magazine-article-pool/2024/wallpaper/m-wallpaper/3-0-csl/bmw-3-0-csl-mi-05.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapers.com/images/hd/ktm-duke-390-front-angle-o247jx7vlg7ct83k.jpg');
+            background-image: url(&quot;https://wallpapers.com/images/hd/ktm-duke-390-front-angle-o247jx7vlg7ct83k.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://www.hdwallpapers.in/download/bmw_f30_widebody_car_4k_8k_hd_cars-1366x768.jpg');
+            background-image: url(&quot;https://www.hdwallpapers.in/download/bmw_f30_widebody_car_4k_8k_hd_cars-1366x768.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapers.com/images/hd/ktm-duke-pictures-zapyw35oajg0sraj.jpg');
+            background-image: url(&quot;https://wallpapers.com/images/hd/ktm-duke-pictures-zapyw35oajg0sraj.jpg&quot;);
           "
         ></div>
       </div>
@@ -645,7 +645,7 @@
         const makeSelect = document.getElementById("make");
         try {
           const response = await fetch(
-            `https://ok-motor-51l3.vercel.app/api/bikes/makes`
+            `https://ok-motor-51l3.vercel.app/api/bikes/makes`,
           );
           const result = await response.json();
 
@@ -708,7 +708,7 @@
 
         try {
           let url = `https://ok-motor-51l3.vercel.app/api/bikes?make=${encodeURIComponent(
-            make
+            make,
           )}`;
           if (model) url += `&model=${encodeURIComponent(model)}`;
 
@@ -771,8 +771,8 @@
         try {
           const response = await fetch(
             `https://ok-motor-51l3.vercel.app/api/bikes/models?make=${encodeURIComponent(
-              make
-            )}`
+              make,
+            )}`,
           );
           const result = await response.json();
 
@@ -790,7 +790,7 @@
       async function fetchBikeData(make, model, year) {
         try {
           let url = `https://ok-motor-51l3.vercel.app/api/bikes?make=${encodeURIComponent(
-            make
+            make,
           )}`;
           if (model) url += `&model=${encodeURIComponent(model)}`;
           if (year) url += `&year=${year}`;
@@ -875,17 +875,17 @@
           const priceFair = await calculateValuation(
             { ...baseData, condition: "fair" },
             "bike",
-            bikeData
+            bikeData,
           );
           const priceGood = await calculateValuation(
             { ...baseData, condition: "good" },
             "bike",
-            bikeData
+            bikeData,
           );
           const priceExcellent = await calculateValuation(
             { ...baseData, condition: "excellent" },
             "bike",
-            bikeData
+            bikeData,
           );
 
           const resultEl = document.getElementById("valuationResult");
@@ -893,18 +893,14 @@
 
           document.getElementById("resultTitle").textContent =
             titleText + " bike";
-          document.getElementById(
-            "resultSubtitle"
-          ).textContent = `${year} model ${titleText}`;
-          document.getElementById(
-            "priceFair"
-          ).textContent = `Rs. ${priceFair.toLocaleString()}`;
-          document.getElementById(
-            "priceGood"
-          ).textContent = `Rs. ${priceGood.toLocaleString()}`;
-          document.getElementById(
-            "priceExcellent"
-          ).textContent = `Rs. ${priceExcellent.toLocaleString()}`;
+          document.getElementById("resultSubtitle").textContent =
+            `${year} model ${titleText}`;
+          document.getElementById("priceFair").textContent =
+            `Rs. ${priceFair.toLocaleString()}`;
+          document.getElementById("priceGood").textContent =
+            `Rs. ${priceGood.toLocaleString()}`;
+          document.getElementById("priceExcellent").textContent =
+            `Rs. ${priceExcellent.toLocaleString()}`;
 
           document.getElementById("sellVehicleName").textContent = titleText;
           document.getElementById("buyVehicleName").textContent = titleText;
@@ -916,7 +912,7 @@
       document.addEventListener("DOMContentLoaded", function () {
         document
           .querySelectorAll(
-            ".nav-dropdown .dropdown-toggle, .nav-dropdown .nav-link"
+            ".nav-dropdown .dropdown-toggle, .nav-dropdown .nav-link",
           )
           .forEach(function (btn) {
             btn.addEventListener("click", function (e) {

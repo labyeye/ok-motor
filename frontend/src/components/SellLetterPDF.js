@@ -124,7 +124,7 @@ const SellLetterForm = () => {
           witnessPhone: "",
           documentsVerified: true,
           note: "",
-        }
+        },
   );
   const [isSaving, setIsSaving] = useState(false);
   const [filesState, setFilesState] = useState({
@@ -171,7 +171,7 @@ const SellLetterForm = () => {
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       setVehicles(response.data.vehicles || []);
     } catch (error) {
@@ -234,7 +234,7 @@ const SellLetterForm = () => {
           `${API_BASE}/api/sell-letters/${editLetter._id}`,
           {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
-          }
+          },
         );
 
         const full = resp.data || {};
@@ -704,10 +704,6 @@ const SellLetterForm = () => {
   const handlePreview = async (language = "hindi") => {
     try {
       setIsSaving(true);
-      const templateUrl =
-        language === "hindi"
-          ? "/templates/sellletter.pdf"
-          : "/templates/englishsell.pdf";
 
       const requiredFields = [
         "vehicleName",
@@ -746,9 +742,9 @@ const SellLetterForm = () => {
       }
 
       setMissingFields([]);
-      const existingPdfBytes = await fetch(templateUrl).then((res) =>
-        res.arrayBuffer()
-      );
+      const templateName =
+        language === "hindi" ? "sellletter.pdf" : "englishsell.pdf";
+      const existingPdfBytes = await loadPDFTemplate(templateName);
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const formattedData = {
@@ -763,10 +759,10 @@ const SellLetterForm = () => {
         todayDate: formatDate(formData.todayDate || new Date()),
         todayTime: formatTime(formData.todayTime || "12:00"),
         previousDate: formatDate(
-          formData.previousDate || formData.todayDate || new Date()
+          formData.previousDate || formData.todayDate || new Date(),
         ),
         previousTime: formatTime(
-          formData.previousTime || formData.todayTime || "12:00"
+          formData.previousTime || formData.todayTime || "12:00",
         ),
       };
 
@@ -868,7 +864,7 @@ const SellLetterForm = () => {
           items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
         if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
           documentsObj.vehiclePhotos.forEach((u, i) =>
-            items.push({ title: `Vehicle Photo ${i + 1}`, url: u })
+            items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
           );
         }
         // Pack up to 4 images per page in a responsive 2x2 grid to avoid wasted space
@@ -941,7 +937,7 @@ const SellLetterForm = () => {
             const yTop = rows[row];
 
             const titleFont = await pdfDoc.embedFont(
-              StandardFonts.HelveticaBold
+              StandardFonts.HelveticaBold,
             );
             page.drawText(item.title, {
               x,
@@ -1154,7 +1150,7 @@ const SellLetterForm = () => {
 
       if (missingFields.length > 0) {
         const msg = `Please fill in all required fields: ${missingFields.join(
-          ", "
+          ", ",
         )}`;
         try {
           alert(msg);
@@ -1253,7 +1249,7 @@ const SellLetterForm = () => {
             form,
             {
               headers: { "Content-Type": "multipart/form-data" },
-            }
+            },
           );
         }
       } else {
@@ -1262,7 +1258,7 @@ const SellLetterForm = () => {
         } else {
           response = await axios.post(
             "https://ok-motor-51l3.vercel.app/api/sell-letters",
-            dataToSave
+            dataToSave,
           );
         }
       }
@@ -1294,7 +1290,7 @@ const SellLetterForm = () => {
 
       if (error.message === "Request queued for when online") {
         alert(
-          "No internet connection. Sell letter will be saved when connection is restored."
+          "No internet connection. Sell letter will be saved when connection is restored.",
         );
         return true;
       }
@@ -1443,7 +1439,7 @@ const SellLetterForm = () => {
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const logoUrl = logo1;
     const logoImageBytes = await fetch(logoUrl).then((res) =>
-      res.arrayBuffer()
+      res.arrayBuffer(),
     );
     const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
@@ -1501,7 +1497,7 @@ const SellLetterForm = () => {
     });
 
     const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(
-      Math.random() * 10000
+      Math.random() * 10000,
     )
       .toString()
       .padStart(4, "0")}`;
@@ -1712,7 +1708,7 @@ const SellLetterForm = () => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
     const paymentMethodDisplay = {
       cash: "CASH",
@@ -1729,13 +1725,13 @@ const SellLetterForm = () => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
     page.drawText(
       `Amount in Words: ${formatIndianAmountInWords(
         !formData.saleAmount || isNaN(Number(formData.saleAmount))
           ? 0
-          : Number(formData.saleAmount)
+          : Number(formData.saleAmount),
       )}`,
       {
         x: 60,
@@ -1743,7 +1739,7 @@ const SellLetterForm = () => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
 
     page.drawText(
@@ -1756,7 +1752,7 @@ const SellLetterForm = () => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
 
     page.drawRectangle({
@@ -1814,7 +1810,7 @@ const SellLetterForm = () => {
       "8. Delay in transfer beyond 15 days incurs Rs. 17/day penalty.",
       "9. Customer signature confirms acceptance of all terms.",
       `10. OK MOTORS has recieved the money amount ${formatRupee(
-        formData.saleAmount
+        formData.saleAmount,
       )} from ${formData.buyerName}.`,
       "11. It is compulsory to get the vehicle serviced after driving 1500-1800 km otherwise guarrantee will be expired ",
     ];
@@ -1882,7 +1878,7 @@ const SellLetterForm = () => {
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
         font: font,
-      }
+      },
     );
   };
   const handleInput = (e) => {
@@ -1901,7 +1897,7 @@ const SellLetterForm = () => {
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
       const response = await axios.get(
-        `https://ok-motor-51l3.vercel.app/api/sell-letters/vehicle-details?registrationNumber=${registrationNumber}`
+        `https://ok-motor-51l3.vercel.app/api/sell-letters/vehicle-details?registrationNumber=${registrationNumber}`,
       );
 
       if (response.data) {
@@ -1949,7 +1945,7 @@ const SellLetterForm = () => {
         amountInWords: formatIndianAmountInWords(
           !formData.saleAmount || isNaN(Number(formData.saleAmount))
             ? 0
-            : Number(formData.saleAmount)
+            : Number(formData.saleAmount),
         ),
         vehiclekm: formatKm(formData.vehiclekm),
         saleDate: formatDate(formData.saleDate),
@@ -1957,10 +1953,10 @@ const SellLetterForm = () => {
         todayDate: formatDate(formData.todayDate || new Date()),
         todayTime: formatTime(formData.todayTime || "12:00"),
         previousDate: formatDate(
-          formData.previousDate || formData.todayDate || new Date()
+          formData.previousDate || formData.todayDate || new Date(),
         ),
         previousTime: formatTime(
-          formData.previousTime || formData.todayTime || "12:00"
+          formData.previousTime || formData.todayTime || "12:00",
         ),
       };
 
@@ -1986,7 +1982,7 @@ const SellLetterForm = () => {
           const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
           const saleAmountWidth = font.widthOfTextAtSize(
             saleAmountText,
-            position.size
+            position.size,
           );
           const dynamicX =
             hindiFieldPositions.saleAmount.x + saleAmountWidth + 10;
@@ -2056,7 +2052,7 @@ const SellLetterForm = () => {
           items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
         if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
           documentsObj.vehiclePhotos.forEach((u, i) =>
-            items.push({ title: `Vehicle Photo ${i + 1}`, url: u })
+            items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
           );
         }
         // Pack up to 4 images per page in a responsive 2x2 grid to avoid wasted space
@@ -2129,7 +2125,7 @@ const SellLetterForm = () => {
             const yTop = rows[row];
 
             const titleFont = await pdfDoc.embedFont(
-              StandardFonts.HelveticaBold
+              StandardFonts.HelveticaBold,
             );
             page.drawText(item.title, {
               x,
@@ -2175,7 +2171,7 @@ const SellLetterForm = () => {
         const saveRes = await fileSaveService.savePdfToDefaultDir(
           filename,
           pdfBytes,
-          "sell"
+          "sell",
         );
         if (saveRes && saveRes.success && window.electronAPI) {
           alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
@@ -2216,7 +2212,7 @@ const SellLetterForm = () => {
         amountInWords: formatIndianAmountInWords(
           !formData.saleAmount || isNaN(Number(formData.saleAmount))
             ? 0
-            : Number(formData.saleAmount)
+            : Number(formData.saleAmount),
         ),
         vehiclekm: formatKm(formData.vehiclekm),
         saleDate: formatDate(formData.saleDate),
@@ -2224,15 +2220,15 @@ const SellLetterForm = () => {
         todayDate: formatDate(formData.todayDate || new Date()),
         todayTime: formatTime(formData.todayTime || "12:00"),
         previousDate: formatDate(
-          formData.previousDate || formData.todayDate || new Date()
+          formData.previousDate || formData.todayDate || new Date(),
         ),
         previousTime: formatTime(
-          formData.previousTime || formData.todayTime || "12:00"
+          formData.previousTime || formData.todayTime || "12:00",
         ),
       };
 
       for (const [fieldName, position] of Object.entries(
-        englishFieldPositions
+        englishFieldPositions,
       )) {
         if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
           const combinedPhones = `${formattedLetter.buyerPhone}${
@@ -2254,7 +2250,7 @@ const SellLetterForm = () => {
           const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
           const saleAmountWidth = font.widthOfTextAtSize(
             saleAmountText,
-            position.size
+            position.size,
           );
           const dynamicX =
             englishFieldPositions.saleAmount.x + saleAmountWidth + 10;
@@ -2322,7 +2318,7 @@ const SellLetterForm = () => {
           items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
         if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
           documentsObj.vehiclePhotos.forEach((u, i) =>
-            items.push({ title: `Vehicle Photo ${i + 1}`, url: u })
+            items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
           );
         }
 
@@ -2386,7 +2382,7 @@ const SellLetterForm = () => {
             const yTop = rows[row];
 
             const titleFont = await pdfDoc.embedFont(
-              StandardFonts.HelveticaBold
+              StandardFonts.HelveticaBold,
             );
             page.drawText(item.title, {
               x,
@@ -2432,7 +2428,7 @@ const SellLetterForm = () => {
         const saveRes = await fileSaveService.savePdfToDefaultDir(
           filenameEn,
           pdfBytes,
-          "sell"
+          "sell",
         );
         if (saveRes && saveRes.success && window.electronAPI) {
           alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);

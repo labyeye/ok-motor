@@ -22,6 +22,7 @@ import {
   RefreshCw,
   Megaphone,
   Image as ImageIcon,
+  Eye,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
@@ -53,6 +54,11 @@ const SellLetterHistory = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // Preview modal states
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
+  const [previewLetter, setPreviewLetter] = useState(null);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -130,7 +136,7 @@ const SellLetterHistory = () => {
         if (isOnline) {
           const response = await axios.get(
             `https://ok-motor-51l3.vercel.app/api/sell-letters/my-letters?page=${currentPage}`,
-            { headers: {} }
+            { headers: {} },
           );
           setSellLetters(response.data);
         } else {
@@ -141,7 +147,7 @@ const SellLetterHistory = () => {
 
           if (result.success && result.data) {
             const sortedData = result.data.sort(
-              (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+              (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
             );
             setSellLetters(sortedData);
           } else {
@@ -161,7 +167,7 @@ const SellLetterHistory = () => {
             if (result.success && result.data) {
               const sortedData = result.data.sort(
                 (a, b) =>
-                  new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+                  new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
               );
               setSellLetters(sortedData);
             }
@@ -340,12 +346,201 @@ const SellLetterHistory = () => {
       letter.registrationNumber
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      letter.buyerName.toLowerCase().includes(searchTerm.toLowerCase())
+      letter.buyerName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleDownload = (letter) => {
     setSelectedLetter(letter);
     setShowLanguageModal(true);
+  };
+
+  const handleViewLetter = async (letter) => {
+    try {
+      setIsDownloading(true);
+      setDownloadProgress(0);
+
+      const progressInterval = setInterval(() => {
+        setDownloadProgress((prev) => Math.min(prev + 10, 90));
+      }, 100);
+
+      // Generate PDF (using English version for preview)
+      const existingPdfBytes = await loadPDFTemplate("englishsell.pdf");
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+      const formattedLetter = {
+        ...letter,
+        buyerName1: letter.buyerName,
+        buyerName2: letter.buyerName,
+        saleDate: formatDate(letter.saleDate),
+        saleTime: formatTime12Hour(letter.saleTime),
+        amountInWords: formatIndianAmountInWords(letter.saleAmount),
+        saleAmount: formatRupee(letter.saleAmount),
+        todayTime: formatTime12Hour(letter.todayTime || "12:00"),
+        previousDate: formatDate(
+          letter.previousDate || letter.todayDate || new Date(),
+        ),
+        previousTime: formatTime12Hour(
+          letter.previousTime || letter.todayTime || "12:00",
+        ),
+        vehiclekm: formatKm(letter.vehiclekm),
+        sellerphone: letter.sellerphone || "9876543210",
+        selleraadhar: letter.selleraadhar || "764465626571",
+      };
+
+      for (const [fieldName, position] of Object.entries(
+        englishFieldPositions,
+      )) {
+        if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
+          const combinedPhones = `${formattedLetter.buyerPhone}${
+            formattedLetter.buyerPhone2
+              ? ` , ${formattedLetter.buyerPhone2}`
+              : ""
+          }`;
+          pdfDoc.getPages()[0].drawText(combinedPhones, {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            weight: "bold",
+            color: rgb(0, 0, 0),
+          });
+        } else if (fieldName !== "buyerPhone2" && formattedLetter[fieldName]) {
+          pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
+            x: position.x,
+            y: position.y,
+            size: position.size,
+            weight: "bold",
+            color: rgb(0, 0, 0),
+          });
+        }
+      }
+
+      if (formattedLetter.saleAmount && formattedLetter.amountInWords) {
+        const page = pdfDoc.getPages()[0];
+        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const saleText = `${formattedLetter.saleAmount}`;
+        const xBase = englishFieldPositions.saleAmount.x;
+        const yBase = englishFieldPositions.saleAmount.y;
+        const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
+        page.drawText(formattedLetter.amountInWords, {
+          x: xBase + saleTextWidth + 8,
+          y: yBase,
+          size: 10,
+          color: rgb(0, 0, 0),
+          font,
+        });
+      }
+
+      // Add document pages if available
+      if (letter.documents) {
+        // Define addDocumentPages inline for preview
+        const embedImageFromUrl = async (pdfDoc, url) => {
+          try {
+            const res = await fetch(url);
+            const contentType = res.headers.get("content-type") || "";
+            const bytes = await res.arrayBuffer();
+            if (contentType.includes("png"))
+              return await pdfDoc.embedPng(bytes);
+            return await pdfDoc.embedJpg(bytes);
+          } catch (err) {
+            console.warn("Failed to embed image from", url, err);
+            return null;
+          }
+        };
+
+        const addDocumentPages = async (pdfDoc, documentsObj) => {
+          if (!documentsObj) return;
+          const items = [];
+          if (documentsObj.vehicleRC) {
+            if (documentsObj.vehicleRC.front)
+              items.push({
+                title: "Vehicle RC - Front",
+                url: documentsObj.vehicleRC.front,
+              });
+            if (documentsObj.vehicleRC.back)
+              items.push({
+                title: "Vehicle RC - Back",
+                url: documentsObj.vehicleRC.back,
+              });
+          }
+          if (documentsObj.aadhaar) {
+            if (documentsObj.aadhaar.front)
+              items.push({
+                title: "Aadhaar - Front",
+                url: documentsObj.aadhaar.front,
+              });
+            if (documentsObj.aadhaar.back)
+              items.push({
+                title: "Aadhaar - Back",
+                url: documentsObj.aadhaar.back,
+              });
+          }
+          if (documentsObj.pan)
+            items.push({ title: "PAN Card", url: documentsObj.pan });
+          if (documentsObj.vehicleKM)
+            items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
+          if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
+            documentsObj.vehiclePhotos.forEach((u, i) =>
+              items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
+            );
+          }
+
+          for (let i = 0; i < items.length; i += 2) {
+            const page = pdfDoc.addPage([595, 842]);
+            const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            const yPositions = [740, 390];
+
+            for (let cell = 0; cell < 2; cell++) {
+              const item = items[i + cell];
+              if (!item) continue;
+              const x = 50;
+              const yTop = yPositions[cell];
+              page.drawText(item.title, { x, y: yTop, size: 12, font });
+              const embedded = await embedImageFromUrl(pdfDoc, item.url);
+              if (embedded) {
+                const cellMaxW = 500;
+                const cellMaxH = 320;
+                const { width, height } = embedded.scale(1);
+                let drawW = cellMaxW;
+                let drawH = (height / width) * drawW;
+                if (drawH > cellMaxH) {
+                  drawH = cellMaxH;
+                  drawW = (width / height) * drawH;
+                }
+                const drawY = yTop - drawH - 10;
+                page.drawImage(embedded, {
+                  x,
+                  y: drawY,
+                  width: drawW,
+                  height: drawH,
+                });
+              }
+            }
+          }
+        };
+
+        await addDocumentPages(pdfDoc, letter.documents);
+      }
+
+      // Add invoice page
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+
+      clearInterval(progressInterval);
+      setDownloadProgress(100);
+      setIsDownloading(false);
+
+      setPreviewPdfUrl(url);
+      setPreviewLetter(letter);
+      setShowPreviewModal(true);
+    } catch (error) {
+      console.error("Error generating preview:", error);
+      alert("Failed to generate preview. Please try again.");
+      setIsDownloading(false);
+    }
   };
   const DownloadProgressModal = ({ progress, onClose }) => {
     return (
@@ -425,10 +620,10 @@ const SellLetterHistory = () => {
         todayDate: formatDate(letter.todayDate || new Date()),
         todayTime: formatTime12Hour(letter.todayTime || "12:00"),
         previousDate: formatDate(
-          letter.previousDate || letter.todayDate || new Date()
+          letter.previousDate || letter.todayDate || new Date(),
         ),
         previousTime: formatTime12Hour(
-          letter.previousTime || letter.todayTime || "12:00"
+          letter.previousTime || letter.todayTime || "12:00",
         ),
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
         saleAmount: formatRupee(letter.saleAmount),
@@ -523,7 +718,7 @@ const SellLetterHistory = () => {
           items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
         if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
           documentsObj.vehiclePhotos.forEach((u, i) =>
-            items.push({ title: `Vehicle Photo ${i + 1}`, url: u })
+            items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
           );
         }
 
@@ -588,7 +783,7 @@ const SellLetterHistory = () => {
             const yTop = yPositions[cell];
 
             const titleFont = await pdfDoc.embedFont(
-              StandardFonts.HelveticaBold
+              StandardFonts.HelveticaBold,
             );
             page.drawText(item.title, {
               x,
@@ -643,16 +838,13 @@ const SellLetterHistory = () => {
 
   const fillAndDownloadEnglishPdf = async (
     letter,
-    documentsToInclude = null
+    documentsToInclude = null,
   ) => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
       await simulateProgress();
-      const templateUrl = "/templates/englishsell.pdf";
-      const existingPdfBytes = await fetch(templateUrl).then((res) =>
-        res.arrayBuffer()
-      );
+      const existingPdfBytes = await loadPDFTemplate("englishsell.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       // we'll add document pages first, then invoice as the final page
       const formattedLetter = {
@@ -665,10 +857,10 @@ const SellLetterHistory = () => {
         saleAmount: formatRupee(letter.saleAmount),
         todayTime: formatTime12Hour(letter.todayTime || "12:00"),
         previousDate: formatDate(
-          letter.previousDate || letter.todayDate || new Date()
+          letter.previousDate || letter.todayDate || new Date(),
         ),
         previousTime: formatTime12Hour(
-          letter.previousTime || letter.todayTime || "12:00"
+          letter.previousTime || letter.todayTime || "12:00",
         ),
         vehiclekm: formatKm(letter.vehiclekm),
         sellerphone: letter.sellerphone || "9876543210",
@@ -676,7 +868,7 @@ const SellLetterHistory = () => {
       };
 
       for (const [fieldName, position] of Object.entries(
-        englishFieldPositions
+        englishFieldPositions,
       )) {
         if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
           const combinedPhones = `${formattedLetter.buyerPhone}${
@@ -765,7 +957,7 @@ const SellLetterHistory = () => {
           items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
         if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
           documentsObj.vehiclePhotos.forEach((u, i) =>
-            items.push({ title: `Vehicle Photo ${i + 1}`, url: u })
+            items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
           );
         }
 
@@ -809,7 +1001,7 @@ const SellLetterHistory = () => {
             const yTop = yPositions[cell];
 
             const titleFont = await pdfDoc.embedFont(
-              StandardFonts.HelveticaBold
+              StandardFonts.HelveticaBold,
             );
             page.drawText(item.title, {
               x,
@@ -866,7 +1058,7 @@ const SellLetterHistory = () => {
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const logoUrl = logo1;
     const logoImageBytes = await fetch(logoUrl).then((res) =>
-      res.arrayBuffer()
+      res.arrayBuffer(),
     );
     const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
@@ -924,7 +1116,7 @@ const SellLetterHistory = () => {
     });
 
     const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(
-      Math.random() * 10000
+      Math.random() * 10000,
     )
       .toString()
       .padStart(4, "0")}`;
@@ -1141,7 +1333,7 @@ const SellLetterHistory = () => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
     page.drawText(
       `Amount in Words: ${
@@ -1153,7 +1345,7 @@ const SellLetterHistory = () => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
 
     page.drawText(
@@ -1166,7 +1358,7 @@ const SellLetterHistory = () => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
 
     page.drawRectangle({
@@ -1224,7 +1416,7 @@ const SellLetterHistory = () => {
       "8. Delay in transfer beyond 15 days incurs Rs. 17/day penalty.",
       "9. Customer signature confirms acceptance of all terms.",
       `10. OK MOTORS has recieved the money amount ${formatRupee(
-        letter.saleAmount
+        letter.saleAmount,
       )} from ${letter.buyerName}.`,
       "11. It is compulsory to get the vehicle serviced after driving 1500-1800 km otherwise guarrantee will be expired ",
     ];
@@ -1292,7 +1484,7 @@ const SellLetterHistory = () => {
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
         font: font,
-      }
+      },
     );
   };
 
@@ -1316,7 +1508,7 @@ const SellLetterHistory = () => {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
-            }
+            },
           );
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
           alert("Sell letter deleted successfully!");
@@ -1328,11 +1520,11 @@ const SellLetterHistory = () => {
           if (result.success) {
             setSellLetters(sellLetters.filter((letter) => letter._id !== id));
             alert(
-              "Sell letter deleted from offline storage. Will sync when online."
+              "Sell letter deleted from offline storage. Will sync when online.",
             );
           } else {
             throw new Error(
-              result.error || "Failed to delete from offline storage"
+              result.error || "Failed to delete from offline storage",
             );
           }
         }
@@ -1349,7 +1541,7 @@ const SellLetterHistory = () => {
           alert(
             `Failed to delete: ${
               error.response?.data?.message || error.message || "Unknown error"
-            }`
+            }`,
           );
         }
       }
@@ -1674,7 +1866,7 @@ const SellLetterHistory = () => {
                         <td style={styles.tableCell}>
                           ₹
                           {new Intl.NumberFormat("en-IN").format(
-                            letter.saleAmount
+                            letter.saleAmount,
                           )}
                         </td>
                         <td style={styles.tableCell}>
@@ -1684,10 +1876,17 @@ const SellLetterHistory = () => {
                           {letter.user && letter.user.role === "admin"
                             ? "admin"
                             : letter.user && letter.user.name
-                            ? letter.user.name
-                            : ""}
+                              ? letter.user.name
+                              : ""}
                         </td>
                         <td style={styles.tableCell}>
+                          <button
+                            onClick={() => handleViewLetter(letter)}
+                            style={styles.iconButton}
+                            title="View"
+                          >
+                            <Eye size={16} />
+                          </button>
                           <button
                             onClick={() => handleDownload(letter)}
                             style={styles.iconButton}
@@ -1909,7 +2108,7 @@ const SellLetterHistory = () => {
 
                     const filtered = buildFilteredDocs(
                       selectedLetter.documents,
-                      docSelections
+                      docSelections,
                     );
 
                     setShowDocumentModal(false);
@@ -1922,6 +2121,152 @@ const SellLetterHistory = () => {
                   }}
                 >
                   Download PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {showPreviewModal && previewLetter && previewPdfUrl && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000,
+              padding: "20px",
+            }}
+            onClick={() => {
+              setShowPreviewModal(false);
+              if (previewPdfUrl) {
+                URL.revokeObjectURL(previewPdfUrl);
+                setPreviewPdfUrl(null);
+              }
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                maxWidth: "900px",
+                width: "100%",
+                maxHeight: "90vh",
+                display: "flex",
+                flexDirection: "column",
+                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  padding: "20px 24px",
+                  borderBottom: "1px solid #e2e8f0",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  backgroundColor: "#f8fafc",
+                  borderTopLeftRadius: "12px",
+                  borderTopRightRadius: "12px",
+                }}
+              >
+                <h2
+                  style={{
+                    fontSize: "20px",
+                    fontWeight: "700",
+                    color: "#0f172a",
+                    margin: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <FileText size={24} color="#088395" />
+                  Sell Letter Preview
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowPreviewModal(false);
+                    if (previewPdfUrl) {
+                      URL.revokeObjectURL(previewPdfUrl);
+                      setPreviewPdfUrl(null);
+                    }
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#64748b",
+                    padding: "4px",
+                  }}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <div
+                style={{
+                  flex: 1,
+                  overflow: "hidden",
+                  backgroundColor: "#525659",
+                }}
+              >
+                <object
+                  data={previewPdfUrl}
+                  type="application/pdf"
+                  style={{
+                    width: "100%",
+                    height: "600px",
+                    border: "none",
+                  }}
+                  aria-label="Sell Letter PDF Preview"
+                >
+                  <iframe
+                    src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                    style={{
+                      width: "100%",
+                      height: "600px",
+                      border: "none",
+                    }}
+                    title="Sell Letter PDF Preview"
+                  />
+                </object>
+              </div>
+              <div
+                style={{
+                  padding: "20px 24px",
+                  borderTop: "1px solid #e2e8f0",
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "12px",
+                  backgroundColor: "#f8fafc",
+                  borderBottomLeftRadius: "12px",
+                  borderBottomRightRadius: "12px",
+                }}
+              >
+                <button
+                  onClick={() => {
+                    setShowPreviewModal(false);
+                    if (previewPdfUrl) {
+                      URL.revokeObjectURL(previewPdfUrl);
+                      setPreviewPdfUrl(null);
+                    }
+                  }}
+                  style={{
+                    padding: "10px 20px",
+                    backgroundColor: "#fff",
+                    color: "#475569",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                  }}
+                >
+                  Close
                 </button>
               </div>
             </div>

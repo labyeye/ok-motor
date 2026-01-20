@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -66,7 +66,7 @@
               var src = img.getAttribute("src") || "";
               var isDecor =
                 /logo|icon|decor|sprite|background|arrow|dot|star|placeholder/i.test(
-                  src
+                  src,
                 ) ||
                 img.classList.contains("logo-img") ||
                 img.getAttribute("itemprop") === "logo";
@@ -353,7 +353,7 @@
             <div class="cta-section">
               <button
                 class="btn-primary"
-                onclick="window.location.href='tel:+917280012222'"
+                onclick="window.location.href = 'tel:+917280012222'"
               >
                 <i class="fas fa-phone"></i> Call Now
               </button>
@@ -500,7 +500,7 @@
           const vehicleOwner = document.getElementById("vehicleOwner");
           if (vehicleOwner) {
             vehicleOwner.textContent = formatOwnership(
-              car.ownershipNumber || car.ownership || "1"
+              car.ownershipNumber || car.ownership || "1",
             );
           }
           const vehicleFuel = document.getElementById("vehicleFuel");
@@ -621,7 +621,7 @@
             car.photos.length
           ) {
             images = car.photos.map((img) =>
-              typeof img === "object" && img.url ? img.url : img
+              typeof img === "object" && img.url ? img.url : img,
             );
           } else if (
             car.imageUrl &&
@@ -629,12 +629,12 @@
             car.imageUrl.length
           ) {
             images = car.imageUrl.map((img) =>
-              typeof img === "object" && img.url ? img.url : img
+              typeof img === "object" && img.url ? img.url : img,
             );
           } else if (car.image) {
             const imgArray = Array.isArray(car.image) ? car.image : [car.image];
             images = imgArray.map((img) =>
-              typeof img === "object" && img.url ? img.url : img
+              typeof img === "object" && img.url ? img.url : img,
             );
           }
           if (!images || images.length === 0) images = ["assets/owner.png"];
@@ -690,7 +690,7 @@
                 const mainImgEl = document.getElementById("mainVehicleImg");
                 if (mainImgEl) mainImgEl.src = normalizeImagePath(img);
                 Array.from(thumbnails.children).forEach((t) =>
-                  t.classList.remove("selected")
+                  t.classList.remove("selected"),
                 );
                 thumb.classList.add("selected");
               };
@@ -766,17 +766,17 @@
                 vehicleType: vehicle.vehicleType,
                 images: Array.isArray(vehicle.images)
                   ? vehicle.images.map((img) =>
-                      typeof img === "object" && img.url ? img.url : img
+                      typeof img === "object" && img.url ? img.url : img,
                     )
                   : [],
                 imageUrl: Array.isArray(vehicle.images)
                   ? vehicle.images.map((img) =>
-                      typeof img === "object" && img.url ? img.url : img
+                      typeof img === "object" && img.url ? img.url : img,
                     )
                   : [],
                 photos: Array.isArray(vehicle.images)
                   ? vehicle.images.map((img) =>
-                      typeof img === "object" && img.url ? img.url : img
+                      typeof img === "object" && img.url ? img.url : img,
                     )
                   : [],
               };
@@ -832,15 +832,15 @@
                 vehicle.status === "Available"
                   ? "status-available"
                   : vehicle.availabilityStatus === "Sold Out" ||
-                    vehicle.status === "Sold Out"
-                  ? "status-sold"
-                  : vehicle.availabilityStatus === "Coming Soon" ||
-                    vehicle.status === "Coming Soon"
-                  ? "status-coming-soon"
-                  : "status-available";
+                      vehicle.status === "Sold Out"
+                    ? "status-sold"
+                    : vehicle.availabilityStatus === "Coming Soon" ||
+                        vehicle.status === "Coming Soon"
+                      ? "status-coming-soon"
+                      : "status-available";
 
               const ownerText = formatOwnership(
-                vehicle.ownershipNumber || vehicle.ownership || "1"
+                vehicle.ownershipNumber || vehicle.ownership || "1",
               );
 
               const card = document.createElement("div");
@@ -848,13 +848,13 @@
               card.innerHTML = `
                 <div class="image-container">
                   <img src="${imgSrc}" alt="${
-                vehicle.vehicleName || vehicle.make || vehicle.brand || ""
-              } ${
-                vehicle.vehicleModel || vehicle.model || ""
-              }" class="other-car-img" />
+                    vehicle.vehicleName || vehicle.make || vehicle.brand || ""
+                  } ${
+                    vehicle.vehicleModel || vehicle.model || ""
+                  }" class="other-car-img" />
                   <div class="status-badge ${statusClass}">${
-                vehicle.availabilityStatus || vehicle.status || "Available"
-              }</div>
+                    vehicle.availabilityStatus || vehicle.status || "Available"
+                  }</div>
                 </div>
                 <div class="card-content">
                   <h3>${
@@ -863,8 +863,8 @@
                     vehicle.brand ||
                     "Unknown Brand"
                   } ${
-                vehicle.vehicleModel || vehicle.model || "Unknown Model"
-              }</h3>
+                    vehicle.vehicleModel || vehicle.model || "Unknown Model"
+                  }</h3>
                   <span class="model">${
                     vehicle.manufacturingYear ||
                     vehicle.year ||
@@ -1387,7 +1387,7 @@
       </a>
       <button
         class="sticky-cta-btn inventory-btn"
-        onclick="location.href='inventory.html'"
+        onclick="location.href = 'inventory.html'"
       >
         <i class="fas fa-car"></i>
         <span>View All</span>

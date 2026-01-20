@@ -102,7 +102,7 @@ const GalleryManagement = () => {
       console.error("Error uploading images:", error);
       alert(
         "Failed to upload images: " +
-          (error.response?.data?.message || error.message)
+          (error.response?.data?.message || error.message),
       );
     } finally {
       setUploading(false);
@@ -133,7 +133,7 @@ const GalleryManagement = () => {
         { isActive: !currentStatus },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       fetchImages();
     } catch (error) {

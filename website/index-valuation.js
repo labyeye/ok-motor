@@ -54,7 +54,7 @@
   async function fetchBikeMakes() {
     try {
       const response = await fetch(
-        `https://ok-motor-51l3.vercel.app/api/bikes/makes`
+        `https://ok-motor-51l3.vercel.app/api/bikes/makes`,
       );
       const result = await response.json();
 
@@ -97,8 +97,8 @@
     try {
       const response = await fetch(
         `https://ok-motor-51l3.vercel.app/api/bikes/models?make=${encodeURIComponent(
-          make
-        )}`
+          make,
+        )}`,
       );
       const result = await response.json();
 
@@ -116,7 +116,7 @@
   async function fetchBikeDetails(make, model, year) {
     try {
       let url = `https://ok-motor-51l3.vercel.app/api/bikes?make=${encodeURIComponent(
-        make
+        make,
       )}`;
       if (model) url += `&model=${encodeURIComponent(model)}`;
       if (year) url += `&year=${year}`;
@@ -160,7 +160,7 @@
     if (basePrice < 40000) basePrice = 40000;
 
     console.log(
-      `Base Price: ${make} | CC: ${cc} | Price: ₹${basePrice.toFixed(0)}`
+      `Base Price: ${make} | CC: ${cc} | Price: ₹${basePrice.toFixed(0)}`,
     );
 
     return basePrice;
@@ -189,7 +189,7 @@
         .map((y) => parseInt(y))
         .sort((a, b) => b - a);
       const nearestYear = availableYears.reduce((prev, curr) =>
-        Math.abs(curr - year) < Math.abs(prev - year) ? curr : prev
+        Math.abs(curr - year) < Math.abs(prev - year) ? curr : prev,
       );
       return modelData.yearPrices[nearestYear];
     }
@@ -311,7 +311,7 @@
         const brand = data.brands.find((b) => b.make === selectedMake);
         if (brand && brand.models) {
           models = brand.models.map((modelData) =>
-            typeof modelData === "string" ? modelData : modelData.name
+            typeof modelData === "string" ? modelData : modelData.name,
           );
         }
       }
@@ -434,7 +434,7 @@
         const estimatedValue = await calculateValuation(
           data,
           vehicleType,
-          apiData
+          apiData,
         );
 
         sessionStorage.setItem(
@@ -443,7 +443,7 @@
             ...data,
             vehicleType: vehicleType,
             estimatedValue: estimatedValue,
-          })
+          }),
         );
 
         const targetPage =
@@ -485,21 +485,21 @@
       resultEl.style.display = "block";
       resultEl.innerHTML = `
         <strong>Estimated Valuation:</strong> ₹ ${data.estimatedValue.toLocaleString(
-          "en-IN"
+          "en-IN",
         )}
         <span style="display:block;color:#666;margin-top:6px;font-size:13px">
           Based on: ${data.make} ${data.model} (${data.year}) • ${parseInt(
-        data.kms
-      ).toLocaleString("en-IN")} km • 
+            data.kms,
+          ).toLocaleString("en-IN")} km • 
           ${data.owners}${
-        data.owners == 1
-          ? "st"
-          : data.owners == 2
-          ? "nd"
-          : data.owners == 3
-          ? "rd"
-          : "th"
-      } Owner • 
+            data.owners == 1
+              ? "st"
+              : data.owners == 2
+                ? "nd"
+                : data.owners == 3
+                  ? "rd"
+                  : "th"
+          } Owner • 
           ${
             data.condition.charAt(0).toUpperCase() + data.condition.slice(1)
           } Condition

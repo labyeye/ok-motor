@@ -96,7 +96,7 @@ const ServiceBillForm = () => {
   const calculateAmounts = (data) => {
     const totalAmount = (data.serviceItems || []).reduce(
       (sum, item) => sum + (parseFloat(item.amount) || 0),
-      0
+      0,
     );
 
     const taxAmount = data.taxEnabled
@@ -125,8 +125,8 @@ const ServiceBillForm = () => {
       // Use unified apiService so Authorization header and offline handling are applied
       const vehicleResp = await apiService.get(
         `/api/advance-bills/vehicle-details?registrationNumber=${encodeURIComponent(
-          registrationNumber
-        )}`
+          registrationNumber,
+        )}`,
       );
 
       // Try to fetch sell-letter for this registration to autofill buyer details
@@ -134,8 +134,8 @@ const ServiceBillForm = () => {
       try {
         const sellResp = await apiService.get(
           `/api/sell-letters/by-registration?registrationNumber=${encodeURIComponent(
-            registrationNumber
-          )}`
+            registrationNumber,
+          )}`,
         );
         // apiService returns the body directly (array of sell letters)
         sellLetters = Array.isArray(sellResp) ? sellResp : sellResp.data || [];
@@ -393,7 +393,7 @@ const ServiceBillForm = () => {
         const firstKey = Object.keys(errors)[0];
         try {
           alert(
-            errors[firstKey] || "Please fix the form errors before submitting"
+            errors[firstKey] || "Please fix the form errors before submitting",
           );
         } catch (err) {
           // fallback
@@ -430,7 +430,7 @@ const ServiceBillForm = () => {
             } else {
               // fallback: try to find by common field names
               const fallback = document.querySelector(
-                '[name="customerName"], [name="customerPhone"], [name="customerAddress"]'
+                '[name="customerName"], [name="customerPhone"], [name="customerAddress"]',
               );
               if (fallback) {
                 fallback.focus();
@@ -490,17 +490,17 @@ const ServiceBillForm = () => {
 
         const result = await offlineStorage.create(
           "serviceBills",
-          formattedData
+          formattedData,
         );
         if (result.success) {
           billId = result.data._id;
           if (formData._id) {
             alert(
-              "Service bill saved as new version offline! Will sync when online."
+              "Service bill saved as new version offline! Will sync when online.",
             );
           } else {
             alert(
-              "Service bill saved offline successfully! Will sync when online."
+              "Service bill saved offline successfully! Will sync when online.",
             );
           }
         } else {
@@ -514,7 +514,7 @@ const ServiceBillForm = () => {
           _id: billId,
           billNumber: `OKM-${new Date().getFullYear()}-${billId.substring(
             0,
-            4
+            4,
           )}`,
         });
 
@@ -522,7 +522,7 @@ const ServiceBillForm = () => {
           pdfBlob = pdfResult.blob;
           if (pdfResult.saved && window.electronAPI) {
             alert(
-              `PDF saved to ${pdfResult.savedPath || "default PDF folder"}`
+              `PDF saved to ${pdfResult.savedPath || "default PDF folder"}`,
             );
           } else {
             saveAs(pdfBlob, `service-bill-${billId}.pdf`);
@@ -583,7 +583,7 @@ const ServiceBillForm = () => {
                 "Content-Type": "application/json",
               },
               timeout: 30000,
-            })
+            }),
           );
           if (!saveResponse.data?.data?._id) {
             throw new Error("Invalid response format from server");
@@ -602,7 +602,7 @@ const ServiceBillForm = () => {
             pdfBlob = pdfResult.blob;
             if (pdfResult.saved && window.electronAPI) {
               alert(
-                `PDF saved to ${pdfResult.savedPath || "default PDF folder"}`
+                `PDF saved to ${pdfResult.savedPath || "default PDF folder"}`,
               );
             } else {
               saveAs(pdfBlob, `service-bill-${billId}.pdf`);
@@ -613,7 +613,7 @@ const ServiceBillForm = () => {
 
           if (formData._id) {
             alert(
-              "Service bill saved as new version! Original remains unchanged."
+              "Service bill saved as new version! Original remains unchanged.",
             );
           } else {
             alert("Service bill saved and downloaded successfully!");
@@ -662,7 +662,7 @@ const ServiceBillForm = () => {
           console.error(
             "Error in save and download:",
             error,
-            error.response?.data
+            error.response?.data,
           );
 
           if (error.response?.status === 401) {
@@ -821,7 +821,7 @@ const ServiceBillForm = () => {
   const retryRequest = async (
     requestFn,
     maxRetries = 3,
-    initialDelay = 1000
+    initialDelay = 1000,
   ) => {
     let delay = initialDelay;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -849,7 +849,7 @@ const ServiceBillForm = () => {
 
   const generateServiceBillPDF = async (
     billData = formData,
-    forPreview = false
+    forPreview = false,
   ) => {
     try {
       setShowLoadingOverlay(true);
@@ -858,7 +858,7 @@ const ServiceBillForm = () => {
       console.log("Generating PDF - Token present:", !!token);
       console.log(
         "Generating PDF - Token preview:",
-        token ? token.substring(0, 20) + "..." : "No token"
+        token ? token.substring(0, 20) + "..." : "No token",
       );
 
       if (!token) {
@@ -909,7 +909,7 @@ const ServiceBillForm = () => {
       if (forPreview) {
         console.log(
           "Making service bill preview request to:",
-          `${API_BASE_URL}/service-bills/preview`
+          `${API_BASE_URL}/service-bills/preview`,
         );
         console.log("Request data:", formattedBillData);
 
@@ -924,15 +924,15 @@ const ServiceBillForm = () => {
                 "Content-Type": "application/json",
               },
               timeout: 30000,
-            }
-          )
+            },
+          ),
         );
 
         console.log("Service bill preview response received:", previewResponse);
         console.log("Response data type:", typeof previewResponse.data);
         console.log(
           "Response data length:",
-          previewResponse.data?.length || "N/A"
+          previewResponse.data?.length || "N/A",
         );
 
         const pdfBlob = new Blob([previewResponse.data], {
@@ -949,7 +949,7 @@ const ServiceBillForm = () => {
               "Content-Type": "application/json",
             },
             timeout: 30000,
-          })
+          }),
         );
 
         if (!saveResponse.data?.data?._id) {
@@ -965,7 +965,7 @@ const ServiceBillForm = () => {
               Accept: "application/pdf",
             },
             timeout: 30000,
-          })
+          }),
         );
 
         const pdfBlob = new Blob([pdfResponse.data], {
@@ -977,7 +977,7 @@ const ServiceBillForm = () => {
           const saveRes = await fileSaveService.savePdfToDefaultDir(
             filename,
             arrayBuf,
-            "service"
+            "service",
           );
           if (saveRes && saveRes.success && window.electronAPI) {
             alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
@@ -1001,7 +1001,7 @@ const ServiceBillForm = () => {
 
       if (error.response?.status === 503) {
         alert(
-          "Server is temporarily unavailable. Please try again in a few moments. If the problem persists, the server might be restarting."
+          "Server is temporarily unavailable. Please try again in a few moments. If the problem persists, the server might be restarting.",
         );
         return;
       }
@@ -1843,8 +1843,8 @@ const ServiceBillForm = () => {
                           if (enabling) {
                             const hasBusinessInfo = Boolean(
                               formData.businessName ||
-                                formData.businessGSTIN ||
-                                formData.businessAddress
+                              formData.businessGSTIN ||
+                              formData.businessAddress,
                             );
                             setShowBusinessFields(hasBusinessInfo);
                           } else {

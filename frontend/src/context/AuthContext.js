@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
 
         try {
           const res = await axios.get(
-            "https://ok-motor-51l3.vercel.app/api/auth/me"
+            "https://ok-motor-51l3.vercel.app/api/auth/me",
           );
           // server may return user inside data or data.data depending on implementation
           const fetchedUser = res.data?.data || res.data || null;
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
         {
           email,
           password,
-        }
+        },
       );
       const token = res.data?.token || res.data?.data?.token;
       const userData = res.data?.data || res.data || null;

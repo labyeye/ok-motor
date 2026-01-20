@@ -37,7 +37,7 @@ class ApiService {
       },
       (error) => {
         return Promise.reject(error);
-      }
+      },
     );
 
     // Response interceptor
@@ -53,7 +53,7 @@ class ApiService {
           console.log("Network error detected - using offline mode");
         }
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -98,7 +98,7 @@ class ApiService {
     // Parse endpoint to determine collection and action
     const parts = endpoint.split("/").filter((p) => p);
     const collection = this.getCollectionFromEndpoint(
-      parts[parts.length - 1] || parts[0]
+      parts[parts.length - 1] || parts[0],
     );
 
     switch (method.toUpperCase()) {

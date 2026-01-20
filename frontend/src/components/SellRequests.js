@@ -73,11 +73,11 @@ const SellRequests = () => {
       const res = await axios.patch(
         `${API_BASE}/api/sell-request/${id}/status`,
         { status },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       setRequests((prev) =>
-        prev.map((p) => (p._id === id ? res.data.data : p))
+        prev.map((p) => (p._id === id ? res.data.data : p)),
       );
       if (selected && selected._id === id) setSelected(res.data.data);
     } catch (err) {
@@ -415,8 +415,8 @@ const SellRequests = () => {
                                 r.status === "Approved"
                                   ? "#ecfccb"
                                   : r.status === "Rejected"
-                                  ? "#fee2e2"
-                                  : "#f1f5f9",
+                                    ? "#fee2e2"
+                                    : "#f1f5f9",
                             }}
                           >
                             {r.status}

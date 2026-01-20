@@ -285,11 +285,11 @@ const AdvancePayBillForm = () => {
           billId = result.data._id;
           if (formData._id) {
             alert(
-              "Advance bill saved as new version offline! Will sync when online."
+              "Advance bill saved as new version offline! Will sync when online.",
             );
           } else {
             alert(
-              "Advance bill saved offline successfully! Will sync when online."
+              "Advance bill saved offline successfully! Will sync when online.",
             );
           }
         } else {
@@ -301,7 +301,7 @@ const AdvancePayBillForm = () => {
           _id: billId,
           billNumber: `ADV-${new Date().getFullYear()}-${billId.substring(
             0,
-            4
+            4,
           )}`,
         });
 
@@ -354,7 +354,7 @@ const AdvancePayBillForm = () => {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (!saveResponse.data?.data?._id) {
@@ -385,7 +385,7 @@ const AdvancePayBillForm = () => {
 
         if (formData._id) {
           alert(
-            "Advance bill saved as new version! Original remains unchanged."
+            "Advance bill saved as new version! Original remains unchanged.",
           );
         } else {
           alert("Advance bill saved and downloaded successfully!");
@@ -429,7 +429,7 @@ const AdvancePayBillForm = () => {
         alert(
           `Failed to save and download: ${
             error.response?.data?.message || error.message
-          }`
+          }`,
         );
       }
     } finally {
@@ -572,7 +572,7 @@ const AdvancePayBillForm = () => {
 
   const generateAdvanceBillPDF = async (
     billData = formData,
-    forPreview = false
+    forPreview = false,
   ) => {
     try {
       setShowLoadingOverlay(true);
@@ -618,7 +618,7 @@ const AdvancePayBillForm = () => {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (!saveResponse.data?.data?._id) {
@@ -636,7 +636,7 @@ const AdvancePayBillForm = () => {
         if (pdfResult.success) {
           if (pdfResult.saved && window.electronAPI) {
             alert(
-              `PDF saved to ${pdfResult.savedPath || "default PDF folder"}`
+              `PDF saved to ${pdfResult.savedPath || "default PDF folder"}`,
             );
           } else {
             saveAs(pdfResult.blob, `advance-bill-${billId}.pdf`);
@@ -658,7 +658,7 @@ const AdvancePayBillForm = () => {
         alert(
           `Failed to generate PDF: ${
             error.response?.data?.message || error.message
-          }`
+          }`,
         );
       }
     } finally {
@@ -671,7 +671,7 @@ const AdvancePayBillForm = () => {
         "https://ok-motor-51l3.vercel.app/api/advance-bills/vehicle-details",
         {
           params: { registrationNumber },
-        }
+        },
       );
 
       if (response.data) {

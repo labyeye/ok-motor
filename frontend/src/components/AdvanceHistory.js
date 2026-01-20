@@ -21,6 +21,7 @@ import {
   RefreshCw,
   Image,
   Megaphone,
+  Eye,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -46,6 +47,11 @@ const AdvanceHistory = () => {
   const [confirmTargetId, setConfirmTargetId] = useState(null);
   const navigate = useNavigate();
 
+  // Preview modal states
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
+  const [previewBill, setPreviewBill] = useState(null);
+
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -61,7 +67,7 @@ const AdvanceHistory = () => {
       try {
         const response = await axios.get(
           `/api/advance-bills?page=${currentPage}`,
-          { headers: {} }
+          { headers: {} },
         );
         setAdvanceBills(response.data.data || []);
       } catch (error) {
@@ -290,7 +296,7 @@ const AdvanceHistory = () => {
           bill.registrationNumber
             ?.toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          bill.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
+          bill.customerName?.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     : advanceBills;
 
@@ -315,7 +321,7 @@ const AdvanceHistory = () => {
             Authorization: `Bearer ${token}`,
             "Cache-Control": "no-cache",
           },
-        }
+        },
       );
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -336,11 +342,11 @@ const AdvanceHistory = () => {
         alert("You don't have permission to download this file.");
       } else if (error.response?.status === 404) {
         alert(
-          "Advance bill not found or PDF could not be generated. Please try again or contact support."
+          "Advance bill not found or PDF could not be generated. Please try again or contact support.",
         );
       } else if (error.response?.status === 503) {
         alert(
-          "Server is temporarily unavailable. Please try again in a few minutes."
+          "Server is temporarily unavailable. Please try again in a few minutes.",
         );
       } else if (
         error.response?.status === 502 ||
@@ -349,11 +355,11 @@ const AdvanceHistory = () => {
         alert("Server is experiencing issues. Please try again later.");
       } else if (error.code === "ERR_NETWORK" || error.code === "ERR_FAILED") {
         alert(
-          "Network error. This might be due to:\n• Server is temporarily down\n• Service worker interference\n• Network connectivity issues\n\nPlease try again in a few minutes."
+          "Network error. This might be due to:\n• Server is temporarily down\n• Service worker interference\n• Network connectivity issues\n\nPlease try again in a few minutes.",
         );
       } else if (error.code === "ECONNABORTED") {
         alert(
-          "Connection timeout. Please check your internet connection and try again."
+          "Connection timeout. Please check your internet connection and try again.",
         );
       } else {
         alert(
@@ -361,10 +367,57 @@ const AdvanceHistory = () => {
             error.response?.data?.message ||
             error.message ||
             "Server temporarily unavailable"
-          }`
+          }`,
         );
       }
     } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleViewBill = async (billId) => {
+    try {
+      setIsDownloading(true);
+      setDownloadProgress(0);
+
+      const progressInterval = setInterval(() => {
+        setDownloadProgress((prev) => Math.min(prev + 10, 90));
+      }, 100);
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You are not authenticated. Please login again.");
+        logout();
+        navigate("/login");
+        setIsDownloading(false);
+        return;
+      }
+
+      const response = await axios.get(
+        `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
+        {
+          responseType: "blob",
+          timeout: 30000,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Cache-Control": "no-cache",
+          },
+        },
+      );
+
+      const url = URL.createObjectURL(new Blob([response.data]));
+      const bill = advanceBills.find((b) => b._id === billId);
+
+      clearInterval(progressInterval);
+      setDownloadProgress(100);
+      setIsDownloading(false);
+
+      setPreviewPdfUrl(url);
+      setPreviewBill(bill);
+      setShowPreviewModal(true);
+    } catch (error) {
+      console.error("Error generating preview:", error);
+      alert("Failed to generate preview. Please try again.");
       setIsDownloading(false);
     }
   };
@@ -389,7 +442,7 @@ const AdvanceHistory = () => {
         `https://ok-motor-51l3.vercel.app/api/advance-bills/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       setAdvanceBills((prev) => prev.filter((bill) => bill._id !== id));
     } catch (error) {
@@ -404,7 +457,7 @@ const AdvanceHistory = () => {
         alert(
           `Failed to delete: ${
             error.response?.data?.message || error.message || "Unknown error"
-          }`
+          }`,
         );
       }
     } finally {
@@ -723,19 +776,19 @@ const AdvanceHistory = () => {
                         <td style={styles.tableCell}>
                           ₹
                           {new Intl.NumberFormat("en-IN").format(
-                            bill.grandTotal
+                            bill.grandTotal,
                           )}
                         </td>
                         <td style={styles.tableCell}>
                           ₹
                           {new Intl.NumberFormat("en-IN").format(
-                            bill.advancePaid
+                            bill.advancePaid,
                           )}
                         </td>
                         <td style={styles.tableCell}>
                           ₹
                           {new Intl.NumberFormat("en-IN").format(
-                            bill.balanceDue
+                            bill.balanceDue,
                           )}
                         </td>
                         <td style={styles.tableCell}>
@@ -745,10 +798,17 @@ const AdvanceHistory = () => {
                           {bill.user && bill.user.role === "admin"
                             ? "admin"
                             : bill.user && bill.user.name
-                            ? bill.user.name
-                            : ""}
+                              ? bill.user.name
+                              : ""}
                         </td>
                         <td style={styles.tableCell}>
+                          <button
+                            onClick={() => handleViewBill(bill._id)}
+                            style={styles.iconButton}
+                            title="View"
+                          >
+                            <Eye size={16} />
+                          </button>
                           <button
                             onClick={() => handleDownload(bill._id)}
                             style={styles.iconButton}
@@ -805,6 +865,152 @@ const AdvanceHistory = () => {
           progress={downloadProgress}
           onClose={() => setIsDownloading(false)}
         />
+      )}
+      {showPreviewModal && previewBill && previewPdfUrl && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+          onClick={() => {
+            setShowPreviewModal(false);
+            if (previewPdfUrl) {
+              URL.revokeObjectURL(previewPdfUrl);
+              setPreviewPdfUrl(null);
+            }
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: "12px",
+              maxWidth: "900px",
+              width: "100%",
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                padding: "20px 24px",
+                borderBottom: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                backgroundColor: "#f8fafc",
+                borderTopLeftRadius: "12px",
+                borderTopRightRadius: "12px",
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  color: "#0f172a",
+                  margin: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <FileText size={24} color="#088395" />
+                Advance Bill Preview
+              </h2>
+              <button
+                onClick={() => {
+                  setShowPreviewModal(false);
+                  if (previewPdfUrl) {
+                    URL.revokeObjectURL(previewPdfUrl);
+                    setPreviewPdfUrl(null);
+                  }
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#64748b",
+                  padding: "4px",
+                }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div
+              style={{
+                flex: 1,
+                overflow: "hidden",
+                backgroundColor: "#525659",
+              }}
+            >
+              <object
+                data={previewPdfUrl}
+                type="application/pdf"
+                style={{
+                  width: "100%",
+                  height: "600px",
+                  border: "none",
+                }}
+                aria-label="Advance Bill PDF Preview"
+              >
+                <iframe
+                  src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                  style={{
+                    width: "100%",
+                    height: "600px",
+                    border: "none",
+                  }}
+                  title="Advance Bill PDF Preview"
+                />
+              </object>
+            </div>
+            <div
+              style={{
+                padding: "20px 24px",
+                borderTop: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "12px",
+                backgroundColor: "#f8fafc",
+                borderBottomLeftRadius: "12px",
+                borderBottomRightRadius: "12px",
+              }}
+            >
+              <button
+                onClick={() => {
+                  setShowPreviewModal(false);
+                  if (previewPdfUrl) {
+                    URL.revokeObjectURL(previewPdfUrl);
+                    setPreviewPdfUrl(null);
+                  }
+                }}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#fff",
+                  color: "#475569",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

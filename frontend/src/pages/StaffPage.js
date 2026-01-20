@@ -390,7 +390,7 @@ const StaffPage = () => {
                 >
                   {dashboardData.profit >= 0 ? "Profit" : "Loss"}:{" "}
                   {Math.abs(
-                    (dashboardData.profit / dashboardData.totalBuyValue) * 100
+                    (dashboardData.profit / dashboardData.totalBuyValue) * 100,
                   ).toFixed(2)}
                   %
                 </span>

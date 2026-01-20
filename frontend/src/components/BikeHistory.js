@@ -301,7 +301,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       };
 
       for (const [fieldName, position] of Object.entries(
-        buyLetterFieldPositions
+        buyLetterFieldPositions,
       )) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
@@ -338,7 +338,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const link = document.createElement("a");
       link.href = url;
       link.download = `buy_letter_${letter.registrationNumber}_${formatDate(
-        letter.date
+        letter.date,
       )}.pdf`;
       document.body.appendChild(link);
       link.click();
@@ -365,10 +365,10 @@ const BikeHistory = ({ externalSearchTerm }) => {
         todayDate: formatDate(letter.todayDate || new Date()),
         todayTime: formatTime12Hour(letter.todayTime || "12:00"),
         previousDate: formatDate(
-          letter.previousDate || letter.todayDate || new Date()
+          letter.previousDate || letter.todayDate || new Date(),
         ),
         previousTime: formatTime12Hour(
-          letter.previousTime || letter.todayTime || "12:00"
+          letter.previousTime || letter.todayTime || "12:00",
         ),
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
         saleAmount: formatRupee(letter.saleAmount),
@@ -382,7 +382,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       };
 
       for (const [fieldName, position] of Object.entries(
-        sellLetterFieldPositions
+        sellLetterFieldPositions,
       )) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
@@ -422,7 +422,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const link = document.createElement("a");
       link.href = url;
       link.download = `sell_letter_${letter.registrationNumber}_${formatDate(
-        letter.date
+        letter.date,
       )}.pdf`;
       document.body.appendChild(link);
       link.click();
@@ -439,7 +439,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const logoUrl = logo1;
     const logoImageBytes = await fetch(logoUrl).then((res) =>
-      res.arrayBuffer()
+      res.arrayBuffer(),
     );
     const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
@@ -481,7 +481,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         size: 8,
         color: rgb(0.8, 0.8, 0.8),
         font: font,
-      }
+      },
     );
     page.drawRectangle({
       x: 0,
@@ -499,7 +499,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       font: boldFont,
     });
     const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(
-      Math.random() * 10000
+      Math.random() * 10000,
     )
       .toString()
       .padStart(4, "0")}`;
@@ -724,7 +724,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
     page.drawText(
       `Amount in Words: ${formatIndianAmountInWords(letter.saleAmount)}`,
@@ -734,7 +734,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
 
     page.drawText("TERMS & CONDITIONS", {
@@ -749,7 +749,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       "1. No refunds after invoice billing, except for transfer issues reported within 15 days.",
       "2. Customer signature confirms acceptance of all terms.",
       `3. OK MOTORS has paid the money amount of ${formatRupee(
-        letter.saleAmount
+        letter.saleAmount,
       )} to ${letter.sellerName}.`,
       "4. The seller confirms that the vehicle is free from any loans, liabilities, or pending challans at the time of sale.",
       "5. The seller agrees to provide all original documents including RC, insurance, and ID proof at the time of sale.",
@@ -860,7 +860,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
         font: font,
-      }
+      },
     );
   };
 
@@ -869,7 +869,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const logoUrl = logo1;
     const logoImageBytes = await fetch(logoUrl).then((res) =>
-      res.arrayBuffer()
+      res.arrayBuffer(),
     );
     const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
@@ -911,7 +911,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         size: 8,
         color: rgb(0.8, 0.8, 0.8),
         font: font,
-      }
+      },
     );
     page.drawRectangle({
       x: 0,
@@ -929,7 +929,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       font: boldFont,
     });
     const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(
-      Math.random() * 10000
+      Math.random() * 10000,
     )
       .toString()
       .padStart(4, "0")}`;
@@ -1161,7 +1161,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
 
     page.drawText(
@@ -1172,7 +1172,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
 
     page.drawRectangle({
@@ -1217,7 +1217,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       "8. Delay in transfer beyond 15 days incurs Rs. 17/day penalty.",
       "9. Customer signature confirms acceptance of all terms.",
       `10. OK MOTORS has received the money amount ${formatRupee(
-        letter.saleAmount
+        letter.saleAmount,
       )} from ${letter.buyerName}.`,
       "11. It is compulsory to get the vehicle serviced after driving 1500-1800 km otherwise guarantee will be expired.",
     ];
@@ -1323,7 +1323,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
         font: font,
-      }
+      },
     );
   };
 
@@ -1335,16 +1335,16 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const [buyLetters, sellLetters, serviceBills, advanceBills] =
         await Promise.all([
           axios.get(
-            `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${searchTerm}`
+            `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
           ),
           axios.get(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters/by-registration?registrationNumber=${searchTerm}`
+            `https://ok-motor-51l3.vercel.app/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
           ),
           axios.get(
-            `https://ok-motor-51l3.vercel.app/api/service-bills/by-registration?registrationNumber=${searchTerm}`
+            `https://ok-motor-51l3.vercel.app/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
           ),
           axios.get(
-            `https://ok-motor-51l3.vercel.app/api/advance-bills/by-registration?registrationNumber=${searchTerm}`
+            `https://ok-motor-51l3.vercel.app/api/advance-bills/by-registration?registrationNumber=${searchTerm}`,
           ),
         ]);
 
@@ -1365,8 +1365,8 @@ const BikeHistory = ({ externalSearchTerm }) => {
           ? Array.isArray(serviceBills.data?.data)
             ? serviceBills.data.data
             : Array.isArray(serviceBills.data)
-            ? serviceBills.data
-            : []
+              ? serviceBills.data
+              : []
           : [];
       const advanceData =
         advanceBills.status === 200
@@ -1454,7 +1454,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       };
 
       for (const [fieldName, position] of Object.entries(
-        buyLetterFieldPositions
+        buyLetterFieldPositions,
       )) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
@@ -1511,10 +1511,10 @@ const BikeHistory = ({ externalSearchTerm }) => {
         todayDate: formatDate(letter.todayDate || new Date()),
         todayTime: formatTime12Hour(letter.todayTime || "12:00"),
         previousDate: formatDate(
-          letter.previousDate || letter.todayDate || new Date()
+          letter.previousDate || letter.todayDate || new Date(),
         ),
         previousTime: formatTime12Hour(
-          letter.previousTime || letter.todayTime || "12:00"
+          letter.previousTime || letter.todayTime || "12:00",
         ),
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
         saleAmount: formatRupee(letter.saleAmount),
@@ -1528,7 +1528,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       };
 
       for (const [fieldName, position] of Object.entries(
-        sellLetterFieldPositions
+        sellLetterFieldPositions,
       )) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
@@ -1577,7 +1577,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
     try {
       if (type === "buy") {
         const letter = bikeHistory.find(
-          (item) => item._id === id && item.type === "buy"
+          (item) => item._id === id && item.type === "buy",
         );
         if (letter) {
           await previewBuyLetterPDF(letter);
@@ -1587,7 +1587,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return;
       } else if (type === "sell") {
         const letter = bikeHistory.find(
-          (item) => item._id === id && item.type === "sell"
+          (item) => item._id === id && item.type === "sell",
         );
         if (letter) {
           await previewSellLetterPDF(letter);
@@ -1624,7 +1624,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
     try {
       if (type === "buy") {
         const letter = bikeHistory.find(
-          (item) => item._id === id && item.type === "buy"
+          (item) => item._id === id && item.type === "buy",
         );
         if (letter) {
           await downloadBuyLetterPDF(letter);
@@ -1634,7 +1634,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return;
       } else if (type === "sell") {
         const letter = bikeHistory.find(
-          (item) => item._id === id && item.type === "sell"
+          (item) => item._id === id && item.type === "sell",
         );
         if (letter) {
           await downloadSellLetterPDF(letter);
@@ -2116,7 +2116,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                               downloadPdf(
                                 item._id,
                                 item.type,
-                                getFileName(item)
+                                getFileName(item),
                               )
                             }
                             style={styles.downloadButton}

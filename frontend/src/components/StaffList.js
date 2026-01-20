@@ -43,13 +43,13 @@ const StaffList = () => {
     const fetchStaff = async () => {
       try {
         const response = await axios.get(
-          "https://ok-motor-51l3.vercel.app/api/users"
+          "https://ok-motor-51l3.vercel.app/api/users",
         );
         setStaff(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         setError(
           err.response?.data?.message ||
-            "Failed to fetch staff. Please try again."
+            "Failed to fetch staff. Please try again.",
         );
       } finally {
         setLoading(false);
@@ -123,14 +123,14 @@ const StaffList = () => {
       const response = await axios.put(
         `https://ok-motor-51l3.vercel.app/api/users/${editTarget._id}`,
         payload,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       // update local list
       setStaff((prev) =>
         prev.map((u) =>
-          u._id === editTarget._id ? { ...u, ...response.data } : u
-        )
+          u._id === editTarget._id ? { ...u, ...response.data } : u,
+        ),
       );
       closeEdit();
     } catch (err) {
@@ -141,7 +141,7 @@ const StaffList = () => {
         navigate("/login");
       } else {
         setError(
-          err.response?.data?.message || err.message || "Failed to update user"
+          err.response?.data?.message || err.message || "Failed to update user",
         );
       }
     }
@@ -172,7 +172,7 @@ const StaffList = () => {
       } else {
         setError(
           err.response?.data?.message ||
-            "Failed to delete staff. Please try again."
+            "Failed to delete staff. Please try again.",
         );
       }
     } finally {

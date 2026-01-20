@@ -26,6 +26,8 @@ import {
   X,
   Edit,
   Trash2,
+  Eye,
+  Check,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -42,6 +44,11 @@ const LetterHeadForm = () => {
   const [activeMenu, setActiveMenu] = useState("Letter Head");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Preview modal states
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewData, setPreviewData] = useState(null);
+  const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
@@ -105,17 +112,57 @@ const LetterHeadForm = () => {
     }
   };
 
-  const handleSaveAndDownload = async () => {
+  const handleShowPreview = async () => {
+    if (!formData.to || !formData.subject || !formData.message) {
+      alert("Please fill in all required fields (To, Subject, Message)");
+      return;
+    }
+
+    // Sanitize data for preview
+    const sanitize = (str) =>
+      typeof str === "string" ? str.replace(/\t/g, " ") : str;
+
+    const sanitizedData = {
+      ...formData,
+      to: sanitize(formData.to),
+      recipientName: sanitize(formData.recipientName),
+      subject: sanitize(formData.subject),
+      message: sanitize(formData.message),
+    };
+
+    // Generate PDF for preview
+    try {
+      const result = await pdfService.generateLetterHeadPDF(
+        {
+          ...sanitizedData,
+          user: user,
+        },
+        true, // previewOnly = true
+      );
+
+      if (result.success) {
+        const pdfUrl = URL.createObjectURL(result.blob);
+        setPreviewPdfUrl(pdfUrl);
+        setPreviewData(sanitizedData);
+        setShowPreviewModal(true);
+      } else {
+        alert(
+          "Failed to generate PDF preview: " +
+            (result.error || "Unknown error"),
+        );
+      }
+    } catch (error) {
+      console.error("Error generating preview:", error);
+      alert("Failed to generate preview");
+    }
+  };
+
+  const handleConfirmSaveAndPrint = async () => {
     if (isSaving) return;
     setIsSaving(true);
+    setShowPreviewModal(false);
 
     try {
-      if (!formData.to || !formData.subject || !formData.message) {
-        alert("Please fill in all required fields (To, Subject, Message)");
-        setIsSaving(false);
-        return;
-      }
-
       const token = localStorage.getItem("token");
       if (!token) {
         alert("Authentication required. Please login again.");
@@ -124,34 +171,22 @@ const LetterHeadForm = () => {
         return;
       }
 
-      // Sanitize data to remove tab characters which break PDF generation
-      const sanitize = (str) =>
-        typeof str === "string" ? str.replace(/\t/g, " ") : str;
-
-      const sanitizedData = {
-        ...formData,
-        to: sanitize(formData.to),
-        recipientName: sanitize(formData.recipientName),
-        subject: sanitize(formData.subject),
-        message: sanitize(formData.message),
-      };
-
       // 1. Save to Backend
       if (navigator.onLine) {
         try {
           if (editingId) {
             await axios.put(
               `${API_BASE_URL}/letter-heads/${editingId}`,
-              sanitizedData,
+              previewData,
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
                   "Content-Type": "application/json",
                 },
-              }
+              },
             );
           } else {
-            await axios.post(`${API_BASE_URL}/letter-heads`, sanitizedData, {
+            await axios.post(`${API_BASE_URL}/letter-heads`, previewData, {
               headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
@@ -161,14 +196,14 @@ const LetterHeadForm = () => {
         } catch (err) {
           console.warn(
             "Failed to save to backend, continuing to PDF generation",
-            err
+            err,
           );
         }
       }
 
       // 2. Generate PDF using the new service method
       const result = await pdfService.generateLetterHeadPDF({
-        ...sanitizedData,
+        ...previewData,
         user: user,
       });
 
@@ -179,6 +214,8 @@ const LetterHeadForm = () => {
           saveAs(result.blob, `letter-head-${Date.now()}.pdf`);
         }
         await fetchHistory(); // Refresh table
+        // Reset form after successful save
+        handleCancelEdit();
       } else {
         alert("Failed to generate PDF: " + (result.error || "Unknown error"));
       }
@@ -332,7 +369,7 @@ const LetterHeadForm = () => {
       if (result.success) {
         saveAs(
           result.blob,
-          `letter-head-${letter.letterNumber || Date.now()}.pdf`
+          `letter-head-${letter.letterNumber || Date.now()}.pdf`,
         );
       } else {
         alert("Failed to generate PDF");
@@ -340,6 +377,30 @@ const LetterHeadForm = () => {
     } catch (error) {
       console.error(error);
       alert("Error downloading copy");
+    }
+  };
+
+  const handleViewLetter = async (letter) => {
+    try {
+      const result = await pdfService.generateLetterHeadPDF(
+        {
+          ...letter,
+          user: user,
+        },
+        true, // previewOnly = true
+      );
+
+      if (result.success) {
+        const pdfUrl = URL.createObjectURL(result.blob);
+        setPreviewPdfUrl(pdfUrl);
+        setPreviewData(letter);
+        setShowPreviewModal(true);
+      } else {
+        alert("Failed to generate PDF preview");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error generating preview");
     }
   };
 
@@ -802,7 +863,7 @@ const LetterHeadForm = () => {
               )}
             </div>
             <button
-              onClick={handleSaveAndDownload}
+              onClick={handleShowPreview}
               disabled={isSaving}
               style={
                 isSaving
@@ -814,8 +875,8 @@ const LetterHeadForm = () => {
                 "Processing..."
               ) : (
                 <>
-                  <Save size={20} />
-                  Save & Print
+                  <Eye size={20} />
+                  Preview & Save
                 </>
               )}
             </button>
@@ -914,7 +975,7 @@ const LetterHeadForm = () => {
                   <tbody>
                     {history
                       .sort(
-                        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
                       )
                       .slice(0, 10)
                       .map((letter) => (
@@ -931,10 +992,20 @@ const LetterHeadForm = () => {
                           </td>
                           <td style={styles.td}>
                             <button
+                              style={{
+                                ...styles.actionBtn,
+                                backgroundColor: "#f0f9ff",
+                                color: "#0369a1",
+                              }}
+                              onClick={() => handleViewLetter(letter)}
+                            >
+                              <Eye size={14} />
+                            </button>
+                            <button
                               style={styles.actionBtn}
                               onClick={() => handleDownloadCopy(letter)}
                             >
-                              <Download size={14} /> Download
+                              <Download size={14} />
                             </button>
                             <button
                               style={{
@@ -944,13 +1015,13 @@ const LetterHeadForm = () => {
                               }}
                               onClick={() => handleEdit(letter)}
                             >
-                              <Edit size={14} /> Edit
+                              <Edit size={14} />
                             </button>
                             <button
                               style={styles.deleteBtn}
                               onClick={() => handleDelete(letter._id)}
                             >
-                              <Trash2 size={14} /> Delete
+                              <Trash2 size={14} />
                             </button>
                           </td>
                         </tr>
@@ -962,6 +1033,199 @@ const LetterHeadForm = () => {
           </div>
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {showPreviewModal && previewData && previewPdfUrl && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+          onClick={() => {
+            setShowPreviewModal(false);
+            if (previewPdfUrl) {
+              URL.revokeObjectURL(previewPdfUrl);
+              setPreviewPdfUrl(null);
+            }
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: "12px",
+              maxWidth: "900px",
+              width: "100%",
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "20px 24px",
+                borderBottom: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                backgroundColor: "#f8fafc",
+                borderTopLeftRadius: "12px",
+                borderTopRightRadius: "12px",
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  color: "#0f172a",
+                  margin: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <FileText size={24} color="#088395" />
+                Letter Head Preview
+              </h2>
+              <button
+                onClick={() => {
+                  setShowPreviewModal(false);
+                  if (previewPdfUrl) {
+                    URL.revokeObjectURL(previewPdfUrl);
+                    setPreviewPdfUrl(null);
+                  }
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#64748b",
+                  padding: "4px",
+                }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Modal Body - PDF Preview */}
+            <div
+              style={{
+                flex: 1,
+                overflow: "hidden",
+                backgroundColor: "#525659",
+              }}
+            >
+              <object
+                data={previewPdfUrl}
+                type="application/pdf"
+                style={{
+                  width: "100%",
+                  height: "600px",
+                  border: "none",
+                }}
+                aria-label="Letter Head PDF Preview"
+              >
+                <iframe
+                  src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                  style={{
+                    width: "100%",
+                    height: "600px",
+                    border: "none",
+                  }}
+                  title="Letter Head PDF Preview"
+                />
+              </object>
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                padding: "20px 24px",
+                borderTop: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "12px",
+                backgroundColor: "#f8fafc",
+                borderBottomLeftRadius: "12px",
+                borderBottomRightRadius: "12px",
+              }}
+            >
+              <button
+                onClick={() => {
+                  setShowPreviewModal(false);
+                  if (previewPdfUrl) {
+                    URL.revokeObjectURL(previewPdfUrl);
+                    setPreviewPdfUrl(null);
+                  }
+                }}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#fff",
+                  color: "#475569",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#f1f5f9";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#fff";
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSaveAndPrint}
+                disabled={isSaving}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "10px 20px",
+                  backgroundColor: isSaving ? "#94a3b8" : "#088395",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: isSaving ? "not-allowed" : "pointer",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSaving) e.target.style.backgroundColor = "#076d7d";
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSaving) e.target.style.backgroundColor = "#088395";
+                }}
+              >
+                {isSaving ? (
+                  "Processing..."
+                ) : (
+                  <>
+                    <Check size={18} />
+                    Confirm & Save
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
