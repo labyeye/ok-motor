@@ -2475,7 +2475,7 @@ class PDFService {
         });
 
         // Add page number in bottom right corner
-        p.drawText(`${pageNumber}`, {
+        p.drawText(`${pageNumber}/${pages.length}`, {
           x: 560,
           y: footerY,
           size: 10,
