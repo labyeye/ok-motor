@@ -1527,11 +1527,15 @@ const SellLetterForm = () => {
       font: boldFont,
     });
 
-    const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(
-      Math.random() * 10000,
-    )
+    const invoiceNumber = `OKMTR-${(() => {
+      const d = new Date();
+      const y = d.getFullYear();
+      return d.getMonth() >= 3
+        ? `${y}-${String(y + 1).slice(-2)}`
+        : `${y - 1}-${String(y).slice(-2)}`;
+    })()}-${Math.floor(Math.random() * 100000)
       .toString()
-      .padStart(4, "0")}`;
+      .padStart(5, "0")}`;
 
     page.drawText(`Invoice Number: ${invoiceNumber}`, {
       x: 50,

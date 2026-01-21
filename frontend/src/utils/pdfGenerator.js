@@ -15,7 +15,7 @@ const formatTime12Hour = (timeString) => {
       const hours12 = hours % 12 || 12;
       return `${String(hours12).padStart(2, "0")}:${String(minutes).padStart(
         2,
-        "0"
+        "0",
       )} ${ampm}`;
     }
 
@@ -35,7 +35,7 @@ const formatTime12Hour = (timeString) => {
         const hours12 = hours % 12 || 12;
         return `${String(hours12).padStart(2, "0")}:${String(minutes).padStart(
           2,
-          "0"
+          "0",
         )} ${ampm}`;
       }
 
@@ -45,7 +45,7 @@ const formatTime12Hour = (timeString) => {
         const hours12 = hour % 12 || 12;
         const ampm = hour >= 12 ? "PM" : "AM";
         return `${String(hours12).padStart(2, "0")}:${String(
-          minute || 0
+          minute || 0,
         ).padStart(2, "0")} ${ampm}`;
       }
     }
@@ -85,9 +85,12 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       serviceItems: serviceBill.serviceItems.map((item) => {
         const quantity = parseFloat(item.quantity) || 0;
         const rate = parseFloat(item.rate) || 0;
-        const amount = (item.amount !== undefined && item.amount !== null && item.amount !== "")
-          ? parseFloat(item.amount) || 0
-          : rate * quantity;
+        const amount =
+          item.amount !== undefined &&
+          item.amount !== null &&
+          item.amount !== ""
+            ? parseFloat(item.amount) || 0
+            : rate * quantity;
         return {
           ...item,
           quantity,
@@ -122,7 +125,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     // Load logo
     const logoPath = path.join(
       __dirname,
-      "../../frontend/src/images/okmotorback.png"
+      "../../frontend/src/images/okmotorback.png",
     );
     let logoImage;
     try {
@@ -214,9 +217,15 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     // Invoice Info
     const invoiceNumber =
       serviceBill.billNumber ||
-      `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)
+      `OKMTR-${(() => {
+        const d = new Date();
+        const y = d.getFullYear();
+        return d.getMonth() >= 3
+          ? `${y}-${String(y + 1).slice(-2)}`
+          : `${y - 1}-${String(y).slice(-2)}`;
+      })()}-${Math.floor(Math.random() * 100000)
         .toString()
-        .padStart(4, "0")}`;
+        .padStart(5, "0")}`;
 
     currentPage.drawText(`Invoice Number: ${invoiceNumber}`, {
       x: 50,
@@ -229,7 +238,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const currentDate = new Date();
     currentPage.drawText(
       `Date: ${currentDate.toLocaleDateString(
-        "en-IN"
+        "en-IN",
       )} Time: ${formatTime12Hour(currentDate)}`,
       {
         x: 400,
@@ -237,7 +246,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
 
     // Divider
@@ -248,9 +257,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.8, 0.8, 0.8),
     });
 
-  // Business Information (if enabled)
-  let customerY;
-  if (Boolean(serviceBill.taxEnabled)) {
+    // Business Information (if enabled)
+    let customerY;
+    if (Boolean(serviceBill.taxEnabled)) {
       currentPage.drawText("BUSINESS INFORMATION", {
         x: 50,
         y: 690,
@@ -377,7 +386,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
 
     const vehicleDetails = [
@@ -546,7 +555,14 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     // Function to draw table headers (added Discount column)
     const drawServiceItemHeaders = (page, y) => {
-      const serviceHeaders = ["#", "Description", "Qty", "Rate Rs.", "Disc Rs.", "Amount Rs."];
+      const serviceHeaders = [
+        "#",
+        "Description",
+        "Qty",
+        "Rate Rs.",
+        "Disc Rs.",
+        "Amount Rs.",
+      ];
       // positions: index, desc, qty, rate, discount, amount
       const serviceHeaderPositions = [60, 100, 300, 350, 400, 470];
 
@@ -845,10 +861,9 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
     sectionY -= 20;
-    
 
     // Issues Reported
     currentPage.drawText("ISSUES REPORTED", {
@@ -922,7 +937,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     const technicianNotes = serviceBill.technicianNotes || "";
     const technicianNotesLines = splitTextIntoLines(
       technicianNotes,
-      maxCharsPerLine
+      maxCharsPerLine,
     );
 
     if (technicianNotesLines.length > 0) {
@@ -1036,7 +1051,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
         font: font,
-      }
+      },
     );
 
     // Add page numbers to all pages

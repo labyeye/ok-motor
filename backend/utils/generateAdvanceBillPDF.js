@@ -8,13 +8,13 @@ const locateLogoPath = () => {
 
   candidates.push(path.join(__dirname, "../assets/images/okmotorback.png"));
   candidates.push(
-    path.join(__dirname, "../../frontend/src/images/okmotorback.png")
+    path.join(__dirname, "../../frontend/src/images/okmotorback.png"),
   );
   candidates.push(
-    path.join(__dirname, "../../frontend/public/images/okmotorback.png")
+    path.join(__dirname, "../../frontend/public/images/okmotorback.png"),
   );
   candidates.push(
-    path.join(__dirname, "../../frontend/public/okmotorback.png")
+    path.join(__dirname, "../../frontend/public/okmotorback.png"),
   );
   candidates.push(path.join(__dirname, "../images/okmotorback.png"));
   candidates.push(path.join(__dirname, "../assets/okmotorback.png"));
@@ -47,7 +47,7 @@ const formatTime12Hour = (timeString) => {
       const hours12 = hours % 12 || 12;
       return `${String(hours12).padStart(2, "0")}:${String(minutes).padStart(
         2,
-        "0"
+        "0",
       )} ${ampm}`;
     }
 
@@ -64,7 +64,7 @@ const formatTime12Hour = (timeString) => {
         const hours12 = hours % 12 || 12;
         return `${String(hours12).padStart(2, "0")}:${String(minutes).padStart(
           2,
-          "0"
+          "0",
         )} ${ampm}`;
       }
 
@@ -73,7 +73,7 @@ const formatTime12Hour = (timeString) => {
         const hours12 = hour % 12 || 12;
         const ampm = hour >= 12 ? "PM" : "AM";
         return `${String(hours12).padStart(2, "0")}:${String(
-          minute || 0
+          minute || 0,
         ).padStart(2, "0")} ${ampm}`;
       }
     }
@@ -147,7 +147,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     } catch (logoError) {
       console.warn(
         "Logo not found, continuing without logo:",
-        logoError.message
+        logoError.message,
       );
       logoImage = null;
     }
@@ -208,9 +208,15 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
 
     const invoiceNumber =
       advanceBill.billNumber ||
-      `ADV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)
+      `OKMTR-ADV-${(() => {
+        const d = new Date();
+        const y = d.getFullYear();
+        return d.getMonth() >= 3
+          ? `${y}-${String(y + 1).slice(-2)}`
+          : `${y - 1}-${String(y).slice(-2)}`;
+      })()}-${Math.floor(Math.random() * 100000)
         .toString()
-        .padStart(4, "0")}`;
+        .padStart(5, "0")}`;
 
     page.drawText(`Invoice Number: ${invoiceNumber}`, {
       x: 50,
@@ -386,7 +392,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
 
     page.drawText(
       new Date(advanceBill.serviceDate || Date.now()).toLocaleDateString(
-        "en-IN"
+        "en-IN",
       ),
       {
         x: 180,
@@ -394,7 +400,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
 
     page.drawText("Delivery Date:", {
@@ -407,7 +413,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
 
     page.drawText(
       new Date(
-        advanceBill.deliveryDate || Date.now() + 86400000
+        advanceBill.deliveryDate || Date.now() + 86400000,
       ).toLocaleDateString("en-IN"),
       {
         x: 420,
@@ -415,7 +421,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
     page.drawRectangle({
       x: 0,
@@ -624,7 +630,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
         font: font,
-      }
+      },
     );
 
     const pdfBytes = await pdfDoc.save();
@@ -647,7 +653,7 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       } catch (err) {
         console.warn(
           "Primary upload directory write failed, falling back to tmpdir:",
-          err.message
+          err.message,
         );
         try {
           if (!fs.existsSync(fallbackDir)) {

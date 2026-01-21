@@ -105,7 +105,7 @@ const ServiceBillSchema = new mongoose.Schema(
     billNumber: { type: String, unique: true },
     createdAt: { type: Date, default: Date.now },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 ServiceBillSchema.pre("save", async function (next) {
@@ -114,10 +114,23 @@ ServiceBillSchema.pre("save", async function (next) {
     let attempts = 0;
     const maxAttempts = 10;
 
+    const getFinancialYear = () => {
+      const d = new Date();
+      const year = d.getFullYear();
+      const month = d.getMonth(); // 0-11 (Jan is 0)
+      if (month >= 3) {
+        // April onwards
+        return `${year}-${String(year + 1).slice(-2)}`;
+      } else {
+        return `${year - 1}-${String(year).slice(-2)}`;
+      }
+    };
+
     while (attempts < maxAttempts) {
       try {
         const count = await this.constructor.countDocuments();
-        billNumber = `OKM-${new Date().getFullYear()}-${(count + 1 + attempts)
+        const fy = getFinancialYear();
+        billNumber = `OKMTR-${fy}-${(count + 1 + attempts)
           .toString()
           .padStart(5, "0")}`;
 
@@ -130,9 +143,8 @@ ServiceBillSchema.pre("save", async function (next) {
       } catch (error) {
         attempts++;
         if (attempts >= maxAttempts) {
-          this.billNumber = `OKM-${new Date().getFullYear()}-${Date.now()
-            .toString()
-            .slice(-5)}`;
+          const fy = getFinancialYear();
+          this.billNumber = `OKMTR-${fy}-${Date.now().toString().slice(-5)}`;
           break;
         }
       }
@@ -148,7 +160,7 @@ ServiceBillSchema.pre("save", async function (next) {
   ) {
     this.totalAmount = this.serviceItems.reduce(
       (sum, item) => sum + (parseFloat(item.amount) || 0),
-      0
+      0,
     );
     this.taxAmount = (this.taxRate / 100) * this.totalAmount;
 

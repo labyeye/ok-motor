@@ -512,10 +512,13 @@ const ServiceBillForm = () => {
           ...formattedData,
           includeBusinessInPdf: formattedData.includeBusinessInPdf,
           _id: billId,
-          billNumber: `OKM-${new Date().getFullYear()}-${billId.substring(
-            0,
-            4,
-          )}`,
+          billNumber: `OKMTR-${(() => {
+            const d = new Date();
+            const y = d.getFullYear();
+            return d.getMonth() >= 3
+              ? `${y}-${String(y + 1).slice(-2)}`
+              : `${y - 1}-${String(y).slice(-2)}`;
+          })()}-${billId.substring(0, 5).toUpperCase()}`,
         });
 
         if (pdfResult.success) {

@@ -13,7 +13,7 @@ const formatTime12Hour = (timeString) => {
       const hours12 = hours % 12 || 12;
       return `${String(hours12).padStart(2, "0")}:${String(minutes).padStart(
         2,
-        "0"
+        "0",
       )} ${ampm}`;
     }
 
@@ -30,7 +30,7 @@ const formatTime12Hour = (timeString) => {
         const hours12 = hours % 12 || 12;
         return `${String(hours12).padStart(2, "0")}:${String(minutes).padStart(
           2,
-          "0"
+          "0",
         )} ${ampm}`;
       }
 
@@ -39,7 +39,7 @@ const formatTime12Hour = (timeString) => {
         const hours12 = hour % 12 || 12;
         const ampm = hour >= 12 ? "PM" : "AM";
         return `${String(hours12).padStart(2, "0")}:${String(
-          minute || 0
+          minute || 0,
         ).padStart(2, "0")} ${ampm}`;
       }
     }
@@ -118,13 +118,13 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       candidates.push(path.join(__dirname, "../assets/images/okmotorback.png"));
 
       candidates.push(
-        path.join(__dirname, "../../frontend/src/images/okmotorback.png")
+        path.join(__dirname, "../../frontend/src/images/okmotorback.png"),
       );
       candidates.push(
-        path.join(__dirname, "../../frontend/public/images/okmotorback.png")
+        path.join(__dirname, "../../frontend/public/images/okmotorback.png"),
       );
       candidates.push(
-        path.join(__dirname, "../../frontend/public/okmotorback.png")
+        path.join(__dirname, "../../frontend/public/okmotorback.png"),
       );
       candidates.push(path.join(__dirname, "../images/okmotorback.png"));
       candidates.push(path.join(__dirname, "../assets/okmotorback.png"));
@@ -159,7 +159,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       }
     } else {
       console.warn(
-        "⚠ No logo found in candidate locations, PDF will be generated without watermark"
+        "⚠ No logo found in candidate locations, PDF will be generated without watermark",
       );
       console.warn("Current __dirname:", __dirname);
     }
@@ -248,9 +248,15 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
 
     const invoiceNumber =
       serviceBill.billNumber ||
-      `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)
+      `OKMTR-${(() => {
+        const d = new Date();
+        const y = d.getFullYear();
+        return d.getMonth() >= 3
+          ? `${y}-${String(y + 1).slice(-2)}`
+          : `${y - 1}-${String(y).slice(-2)}`;
+      })()}-${Math.floor(Math.random() * 100000)
         .toString()
-        .padStart(4, "0")}`;
+        .padStart(5, "0")}`;
 
     currentPage.drawText(`Invoice Number: ${invoiceNumber}`, {
       x: 50,
@@ -415,7 +421,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
 
     const vehicleDetails = [
@@ -864,7 +870,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font: font,
-      }
+      },
     );
     sectionY -= 20;
 
@@ -924,7 +930,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       warranty,
       contentWidth,
       font,
-      fontSize
+      fontSize,
     );
 
     const neededHeight =
@@ -1059,7 +1065,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         size: 8,
         color: rgb(0.5, 0.5, 0.5),
         font: font,
-      }
+      },
     );
 
     const totalPages = pages.length;

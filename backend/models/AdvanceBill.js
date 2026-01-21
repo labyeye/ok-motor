@@ -163,7 +163,7 @@ const advanceBillSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 advanceBillSchema.pre("save", async function (next) {
@@ -178,29 +178,45 @@ advanceBillSchema.pre("save", async function (next) {
     }
 
     if (!this.billNumber) {
-      const year = new Date().getFullYear();
+      const getFinancialYear = () => {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = d.getMonth();
+        if (month >= 3) {
+          return `${year}-${String(year + 1).slice(-2)}`;
+        } else {
+          return `${year - 1}-${String(year).slice(-2)}`;
+        }
+      };
+
       let attempts = 0;
       const maxAttempts = 10;
 
       while (attempts < maxAttempts) {
-        const random = Math.floor(Math.random() * 10000)
-          .toString()
-          .padStart(4, "0");
-        const candidate = `ADV-${year}-${random}`;
+        try {
+          const count = await this.constructor.countDocuments();
+          const fy = getFinancialYear();
+          const candidate = `OKMTR-ADV-${fy}-${(count + 1 + attempts)
+            .toString()
+            .padStart(5, "0")}`;
 
-        const existing = await this.constructor
-          .findOne({ billNumber: candidate })
-          .lean()
-          .exec();
-        if (!existing) {
-          this.billNumber = candidate;
-          break;
+          const existing = await this.constructor
+            .findOne({ billNumber: candidate })
+            .lean()
+            .exec();
+          if (!existing) {
+            this.billNumber = candidate;
+            break;
+          }
+          attempts += 1;
+        } catch (err) {
+          attempts += 1;
         }
-        attempts += 1;
       }
 
       if (!this.billNumber) {
-        this.billNumber = `ADV-${year}-${Date.now().toString().slice(-8)}`;
+        const fy = getFinancialYear();
+        this.billNumber = `OKMTR-ADV-${fy}-${Date.now().toString().slice(-5)}`;
       }
     }
 

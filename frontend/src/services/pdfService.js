@@ -740,9 +740,15 @@ class PDFService {
 
       const invoiceNumber =
         serviceBill.billNumber ||
-        `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)
+        `OKMTR-${(() => {
+          const d = new Date();
+          const y = d.getFullYear();
+          return d.getMonth() >= 3
+            ? `${y}-${String(y + 1).slice(-2)}`
+            : `${y - 1}-${String(y).slice(-2)}`;
+        })()}-${Math.floor(Math.random() * 100000)
           .toString()
-          .padStart(4, "0")}`;
+          .padStart(5, "0")}`;
 
       currentPage.drawText(`Invoice Number: ${invoiceNumber}`, {
         x: 50,
