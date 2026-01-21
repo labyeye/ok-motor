@@ -320,7 +320,7 @@ class PDFService {
 
       yPosition -= 10;
 
-      // Vehicle Information
+      
       drawText("VEHICLE INFORMATION", 50, yPosition, { bold: true, size: 12 });
       yPosition -= 20;
       drawText(
@@ -346,7 +346,7 @@ class PDFService {
 
       yPosition -= 10;
 
-      // Buyer Information
+      
       drawText("BUYER INFORMATION", 50, yPosition, { bold: true, size: 12 });
       yPosition -= 20;
       drawText(`Name: ${data.buyerName}`, 50, yPosition);
@@ -2218,7 +2218,7 @@ class PDFService {
 
     return String(text)
       .replace(/₹/g, "Rs. ")
-      .replace(/[^\x00-\xFF]/g, ""); // eslint-disable-line no-control-regex
+      .replace(/[^\x00-\xFF]/g, ""); 
   }
 
   async generateLetterHeadPDFOffline(letterData, previewOnly = false) {
@@ -2411,7 +2411,7 @@ class PDFService {
       checkPageBreak(100);
       yPosition -= 120;
 
-      // Signature section with lines
+      
       currentPage.drawLine({
         start: { x: 70, y: yPosition },
         end: { x: 250, y: yPosition },
@@ -2474,7 +2474,7 @@ class PDFService {
           color: rgb(0.4, 0.4, 0.4),
         });
 
-        // Add page number in bottom right corner
+        
         p.drawText(`${pageNumber}/${pages.length}`, {
           x: 560,
           y: footerY,
@@ -2487,7 +2487,7 @@ class PDFService {
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
 
-      // Only save to file system if not preview mode
+      
       let saveRes = null;
       if (!previewOnly) {
         const filename = `letter-head-${Date.now()}.pdf`;
