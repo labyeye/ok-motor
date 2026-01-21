@@ -2409,7 +2409,7 @@ class PDFService {
       }
 
       checkPageBreak(100);
-      yPosition -= 30;
+      yPosition -= 120;
 
       // Signature section with lines
       currentPage.drawLine({
@@ -2428,7 +2428,7 @@ class PDFService {
 
       currentPage.drawText("Recipient Signature", {
         x: 120,
-        y: yPosition - 20,
+        y: yPosition - 30,
         size: 11,
         font: font,
         color: rgb(0.5, 0.5, 0.5),
@@ -2436,7 +2436,7 @@ class PDFService {
 
       currentPage.drawText("Authorized Signatory", {
         x: 385,
-        y: yPosition - 20,
+        y: yPosition - 30,
         size: 11,
         font: font,
         color: rgb(0.5, 0.5, 0.5),
