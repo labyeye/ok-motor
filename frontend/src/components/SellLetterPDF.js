@@ -38,6 +38,7 @@ import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
 
 import AuthContext from "../context/AuthContext";
+import ImageCropper from "./ImageCropper";
 
 const SellLetterForm = () => {
   const { user, logout } = useContext(AuthContext);
@@ -137,6 +138,13 @@ const SellLetterForm = () => {
     vehiclePhotos: [],
   });
   const [filePreviews, setFilePreviews] = useState({});
+
+  // Crop states
+  const [showCropper, setShowCropper] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState(null);
+  const [cropFieldName, setCropFieldName] = useState(null);
+  const [cropFileName, setCropFileName] = useState(null);
+
   const [, setSavedSellLetter] = useState(null);
 
   useEffect(() => {
@@ -459,17 +467,40 @@ const SellLetterForm = () => {
   // File input handlers
   const handleFileInput = (e, fieldName) => {
     const file = e.target.files && e.target.files[0];
-    setFilesState((prev) => ({ ...prev, [fieldName]: file }));
     if (file) {
       const url = URL.createObjectURL(file);
-      setFilePreviews((prev) => ({ ...prev, [fieldName]: url }));
-    } else {
-      setFilePreviews((prev) => {
-        const next = { ...prev };
-        delete next[fieldName];
-        return next;
-      });
+      setCropImageSrc(url);
+      setCropFieldName(fieldName);
+      setCropFileName(file.name);
+      setShowCropper(true);
+      // Reset input value
+      e.target.value = null;
     }
+  };
+
+  const onCropCancel = () => {
+    setShowCropper(false);
+    setCropImageSrc(null);
+    setCropFieldName(null);
+    setCropFileName(null);
+  };
+
+  const onCropComplete = (croppedBlob) => {
+    if (!cropFieldName) return;
+
+    const file = new File([croppedBlob], cropFileName || "image.jpg", {
+      type: "image/jpeg",
+    });
+
+    setFilesState((prev) => ({ ...prev, [cropFieldName]: file }));
+
+    const url = URL.createObjectURL(file);
+    setFilePreviews((prev) => ({ ...prev, [cropFieldName]: url }));
+
+    setShowCropper(false);
+    setCropImageSrc(null);
+    setCropFieldName(null);
+    setCropFileName(null);
   };
 
   const handleMultipleFiles = (e, fieldName) => {
@@ -3600,6 +3631,13 @@ const SellLetterForm = () => {
               </button>
             </div>
           </div>
+        )}
+        {showCropper && cropImageSrc && (
+          <ImageCropper
+            imageSrc={cropImageSrc}
+            onCancel={onCropCancel}
+            onCropComplete={onCropComplete}
+          />
         )}
       </div>
     </div>

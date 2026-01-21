@@ -37,6 +37,7 @@ import logo1 from "../images/okmotorback.png";
 
 import { useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
+import ImageCropper from "./ImageCropper";
 
 const BuyLetterForm = () => {
   const { user, logout } = useContext(AuthContext);
@@ -70,7 +71,14 @@ const BuyLetterForm = () => {
     vehicleKMPhoto: null,
     vehiclePhotos: [],
   });
+
   const [filePreviews, setFilePreviews] = useState({});
+
+  // Crop states
+  const [showCropper, setShowCropper] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState(null);
+  const [cropFieldName, setCropFieldName] = useState(null);
+  const [cropFileName, setCropFileName] = useState(null);
 
   // cleanup object URLs when component unmounts
   useEffect(() => {
@@ -731,17 +739,42 @@ const BuyLetterForm = () => {
   // File input handlers (mirror SellLetter behavior)
   const handleFileInput = (e, fieldName) => {
     const file = e.target.files && e.target.files[0];
-    setFilesState((prev) => ({ ...prev, [fieldName]: file }));
     if (file) {
       const url = URL.createObjectURL(file);
-      setFilePreviews((prev) => ({ ...prev, [fieldName]: url }));
-    } else {
-      setFilePreviews((prev) => {
-        const next = { ...prev };
-        delete next[fieldName];
-        return next;
-      });
+      setCropImageSrc(url);
+      setCropFieldName(fieldName);
+      setCropFileName(file.name);
+      setShowCropper(true);
+      // Reset input value so same file can be selected again if cancelled
+      e.target.value = null;
     }
+  };
+
+  const onCropCancel = () => {
+    setShowCropper(false);
+    setCropImageSrc(null);
+    setCropFieldName(null);
+    setCropFileName(null);
+  };
+
+  const onCropComplete = (croppedBlob) => {
+    if (!cropFieldName) return;
+
+    const file = new File([croppedBlob], cropFileName || "image.jpg", {
+      type: "image/jpeg",
+    });
+
+    setFilesState((prev) => ({ ...prev, [cropFieldName]: file }));
+
+    // Create preview URL
+    const url = URL.createObjectURL(file);
+    setFilePreviews((prev) => ({ ...prev, [cropFieldName]: url }));
+
+    // Reset crop state
+    setShowCropper(false);
+    setCropImageSrc(null);
+    setCropFieldName(null);
+    setCropFileName(null);
   };
 
   const handleMultipleFiles = (e, fieldName) => {
@@ -3033,6 +3066,13 @@ const BuyLetterForm = () => {
           </div>
         )}
         {showLoadingOverlay && <LoadingOverlay />}
+        {showCropper && cropImageSrc && (
+          <ImageCropper
+            imageSrc={cropImageSrc}
+            onCancel={onCropCancel}
+            onCropComplete={onCropComplete}
+          />
+        )}
       </div>
     </div>
   );
