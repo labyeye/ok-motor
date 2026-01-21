@@ -2218,7 +2218,7 @@ class PDFService {
 
     return String(text)
       .replace(/₹/g, "Rs. ")
-      .replace(/[^\x00-\xFF]/g, "");
+      .replace(/[^\x00-\xFF]/g, ""); // eslint-disable-line no-control-regex
   }
 
   async generateLetterHeadPDFOffline(letterData, previewOnly = false) {
@@ -2443,7 +2443,6 @@ class PDFService {
       });
 
       const pages = pdfDoc.getPages();
-      const totalPages = pages.length;
 
       pages.forEach((p, index) => {
         const pageNumber = index + 1;

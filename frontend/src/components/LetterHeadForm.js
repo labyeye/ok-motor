@@ -7,7 +7,6 @@ import {
   Calendar,
   Type,
   AlignLeft,
-  Save,
   LayoutDashboard,
   ShoppingCart,
   TrendingUp,
