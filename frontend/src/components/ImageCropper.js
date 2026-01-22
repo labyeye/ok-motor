@@ -1,43 +1,79 @@
-import React, { useState, useCallback } from "react";
-import Cropper from "react-easy-crop";
-import getCroppedImg from "../utils/cropUtils";
+import React, { useState, useRef } from "react";
+import ReactCrop from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 import { X, Check, RotateCw } from "lucide-react";
 
-const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
+const ImageCropper = ({
+  imageSrc,
+  onCancel,
+  onCropComplete,
+}) => {
+  const [crop, setCrop] = useState({
+    unit: "%",
+    width: 50,
+    height: 50,
+    x: 25,
+    y: 25,
+  });
   const [rotation, setRotation] = useState(0);
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [completedCrop, setCompletedCrop] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
+  const imgRef = useRef(null);
 
-  const onCropChange = useCallback((crop) => {
-    setCrop(crop);
-  }, []);
+  const getCroppedImg = async () => {
+    if (!completedCrop || !imgRef.current) {
+      return null;
+    }
 
-  const onRotationChange = useCallback((rotation) => {
-    setRotation(rotation);
-  }, []);
+    const image = imgRef.current;
+    const canvas = document.createElement("canvas");
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    
+    canvas.width = completedCrop.width * scaleX;
+    canvas.height = completedCrop.height * scaleY;
+    
+    const ctx = canvas.getContext("2d");
+    
+    if (rotation !== 0) {
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      ctx.translate(centerX, centerY);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.translate(-centerX, -centerY);
+    }
 
-  const onZoomChange = useCallback((zoom) => {
-    setZoom(zoom);
-  }, []);
+    ctx.drawImage(
+      image,
+      completedCrop.x * scaleX,
+      completedCrop.y * scaleY,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
 
-  const onCropCompleteCallback = useCallback(
-    (croppedArea, croppedAreaPixels) => {
-      setCroppedAreaPixels(croppedAreaPixels);
-    },
-    [],
-  );
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          console.error("Canvas is empty");
+          return;
+        }
+        const file = new File([blob], "cropped.jpg", { type: "image/jpeg" });
+        resolve(file);
+      }, "image/jpeg", 0.95);
+    });
+  };
 
   const handleSave = async () => {
     try {
       setIsCropping(true);
-      const croppedImage = await getCroppedImg(
-        imageSrc,
-        croppedAreaPixels,
-        rotation,
-      );
-      onCropComplete(croppedImage);
+      const croppedImage = await getCroppedImg();
+      if (croppedImage) {
+        onCropComplete(croppedImage);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -56,36 +92,26 @@ const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
         </div>
 
         <div style={styles.cropperContainer}>
-          <Cropper
-            image={imageSrc}
+          <ReactCrop
             crop={crop}
-            rotation={rotation}
-            zoom={zoom}
-            aspect={undefined}
-            onCropChange={onCropChange}
-            onRotationChange={onRotationChange}
-            onCropComplete={onCropCompleteCallback}
-            onZoomChange={onZoomChange}
-            cropShape="rect"
-            showGrid={true}
-            restrictPosition={false}
-          />
+            onChange={(c) => setCrop(c)}
+            onComplete={(c) => setCompletedCrop(c)}
+            style={{ maxHeight: "100%", maxWidth: "100%" }}
+          >
+            <img
+              ref={imgRef}
+              src={imageSrc}
+              alt="Crop"
+              style={{
+                maxHeight: "100%",
+                maxWidth: "100%",
+                transform: `rotate(${rotation}deg)`,
+              }}
+            />
+          </ReactCrop>
         </div>
 
         <div style={styles.controls}>
-          <div style={styles.sliderContainer}>
-            <label style={styles.label}>Zoom</label>
-            <input
-              type="range"
-              value={zoom}
-              min={1}
-              max={3}
-              step={0.1}
-              aria-labelledby="Zoom"
-              onChange={(e) => setZoom(e.target.value)}
-              style={styles.slider}
-            />
-          </div>
           <div style={styles.sliderContainer}>
             <label style={styles.label}>Rotation</label>
             <button
