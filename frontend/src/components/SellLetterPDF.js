@@ -97,6 +97,7 @@ const SellLetterForm = () => {
           vehiclekm: "",
           pucIssueDate: "",
           pucExpiryDate: "",
+          pucStatus: "",
           insuranceStatus: "",
           insuranceExpiryDate: "",
           insuranceCompany: "",
@@ -1623,7 +1624,7 @@ const SellLetterForm = () => {
 
     page.drawText(`Email: ${formData.buyerEmail || "N/A"}`, {
       x: 370,
-      y: 650 - (addressLines.length - 1) * lineHeight2 - 6,
+      y: 640 - (addressLines.length - 1) * lineHeight2 - 6,
       size: 10,
       color: rgb(0.2, 0.2, 0.2),
       font: font,
@@ -2928,6 +2929,23 @@ const SellLetterForm = () => {
                     onChange={handleChange}
                     style={styles.formInput}
                   />
+                </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <AlertCircle style={styles.formIcon} />
+                    PUC Status || PUC स्थिति
+                  </label>
+                  <select
+                    name="pucStatus"
+                    value={formData.pucStatus || ""}
+                    onChange={handleChange}
+                    style={styles.formSelect}
+                  >
+                    <option value="">Select</option>
+                    <option value="Valid">Valid</option>
+                    <option value="Expired">Expired</option>
+                    <option value="Not Available">Not Available</option>
+                  </select>
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>

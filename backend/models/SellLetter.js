@@ -22,6 +22,10 @@ const SellLetterSchema = new mongoose.Schema(
 
     pucIssueDate: { type: Date },
     pucExpiryDate: { type: Date },
+    pucStatus: {
+      type: String,
+      enum: ["Valid", "Expired", "Not Available"],
+    },
 
     insuranceStatus: {
       type: String,

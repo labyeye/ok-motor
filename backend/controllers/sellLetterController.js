@@ -217,6 +217,8 @@ exports.getVehicleDetails = async (req, res) => {
       vehicleDetails.pucIssueDate = vehicleRecord.pucIssueDate;
     if (vehicleRecord.pucExpiryDate)
       vehicleDetails.pucExpiryDate = vehicleRecord.pucExpiryDate;
+    if (vehicleRecord.pucStatus)
+      vehicleDetails.pucStatus = vehicleRecord.pucStatus;
     if (vehicleRecord.insuranceStatus)
       vehicleDetails.insuranceStatus = vehicleRecord.insuranceStatus;
     if (vehicleRecord.insuranceExpiryDate)

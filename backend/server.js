@@ -94,7 +94,7 @@ app.use((req, res, next) => {
   console.log(
     `${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${
       req.headers.origin || "No origin"
-    }`
+    }`,
   );
   next();
 });
@@ -189,12 +189,11 @@ app.use((error, req, res, next) => {
     });
   }
 
-  res.status(500).json({
-    message: "Internal server error",
-    error:
-      process.env.NODE_ENV === "development"
-        ? error.message
-        : "Something went wrong",
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+
+  res.status(statusCode).json({
+    message: error.message,
+    stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
   });
 });
 
