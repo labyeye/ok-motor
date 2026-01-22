@@ -61,11 +61,14 @@ const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
             crop={crop}
             rotation={rotation}
             zoom={zoom}
-            aspect={4 / 3} // Default aspect ratio, maybe make this a prop if needed
+            aspect={undefined}
             onCropChange={onCropChange}
             onRotationChange={onRotationChange}
             onCropComplete={onCropCompleteCallback}
             onZoomChange={onZoomChange}
+            cropShape="rect"
+            showGrid={true}
+            restrictPosition={false}
           />
         </div>
 
