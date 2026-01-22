@@ -2501,7 +2501,6 @@ const BuyLetterForm = () => {
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={(e) => handleFileInput(e, "vehicleRCFront")}
                   />
                   {filePreviews.vehicleRCFront && (
@@ -2518,7 +2517,6 @@ const BuyLetterForm = () => {
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={(e) => handleFileInput(e, "vehicleRCBack")}
                   />
                   {filePreviews.vehicleRCBack && (
@@ -2535,7 +2533,6 @@ const BuyLetterForm = () => {
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={(e) => handleFileInput(e, "aadhaarFront")}
                   />
                   {filePreviews.aadhaarFront && (
@@ -2552,7 +2549,6 @@ const BuyLetterForm = () => {
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={(e) => handleFileInput(e, "aadhaarBack")}
                   />
                   {filePreviews.aadhaarBack && (
@@ -2569,7 +2565,6 @@ const BuyLetterForm = () => {
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={(e) => handleFileInput(e, "panPhoto")}
                   />
                   {filePreviews.panPhoto && (
@@ -2588,7 +2583,6 @@ const BuyLetterForm = () => {
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={(e) => handleFileInput(e, "vehicleKMPhoto")}
                   />
                   {filePreviews.vehicleKMPhoto && (
@@ -2607,7 +2601,6 @@ const BuyLetterForm = () => {
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     multiple
                     onChange={(e) => handleMultipleFiles(e, "vehiclePhotos")}
                   />
