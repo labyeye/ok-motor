@@ -38,6 +38,8 @@ import logo1 from "../images/okmotorback.png";
 import { useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import ImageCropper from "./ImageCropper";
+import FileUploadModal from "./FileUploadModal";
+import { isPdfFile, isImageFile, extractImagesFromPdf } from "../utils/pdfHandler";
 
 const BuyLetterForm = () => {
   const { user, logout } = useContext(AuthContext);
@@ -79,6 +81,11 @@ const BuyLetterForm = () => {
   const [cropImageSrc, setCropImageSrc] = useState(null);
   const [cropFieldName, setCropFieldName] = useState(null);
   const [cropFileName, setCropFileName] = useState(null);
+
+  // Upload modal states
+  const [showFileUploadModal, setShowFileUploadModal] = useState(false);
+  const [uploadModalFieldName, setUploadModalFieldName] = useState(null);
+  const [uploadModalAllowPdf, setUploadModalAllowPdf] = useState(false);
 
   // cleanup object URLs when component unmounts
   useEffect(() => {
@@ -737,17 +744,77 @@ const BuyLetterForm = () => {
   };
 
   // File input handlers (mirror SellLetter behavior)
-  const handleFileInput = (e, fieldName) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setCropImageSrc(url);
-      setCropFieldName(fieldName);
-      setCropFileName(file.name);
-      setShowCropper(true);
-      // Reset input value so same file can be selected again if cancelled
-      e.target.value = null;
+  const handleFileInput = (fieldName, allowPdf = false) => {
+    setUploadModalFieldName(fieldName);
+    setUploadModalAllowPdf(allowPdf);
+    setShowFileUploadModal(true);
+  };
+
+  const handleFileUploadSelect = async (file, uploadType) => {
+    if (!file || !uploadModalFieldName) {
+      setShowFileUploadModal(false);
+      return;
     }
+
+    try {
+      // Handle PDF files
+      if (isPdfFile(file)) {
+        // Store PDF directly for aadhaar
+        const pdfUrl = URL.createObjectURL(file);
+        setFilesState((prev) => ({
+          ...prev,
+          [uploadModalFieldName]: file,
+        }));
+        setFilePreviews((prev) => ({
+          ...prev,
+          [uploadModalFieldName]: pdfUrl,
+        }));
+        setShowFileUploadModal(false);
+        return;
+      }
+
+      // Handle image files - show cropper
+      if (isImageFile(file)) {
+        const url = URL.createObjectURL(file);
+        setCropImageSrc(url);
+        setCropFieldName(uploadModalFieldName);
+        setCropFileName(file.name);
+        setShowFileUploadModal(false);
+        setShowCropper(true);
+        return;
+      }
+
+      // Invalid file type
+      alert("Please select a valid image or PDF file");
+      setShowFileUploadModal(false);
+    } catch (error) {
+      console.error("Error handling file upload:", error);
+      alert("Error processing file. Please try again.");
+      setShowFileUploadModal(false);
+    }
+  };
+
+  const closeFileUploadModal = () => {
+    setShowFileUploadModal(false);
+    setUploadModalFieldName(null);
+    setUploadModalAllowPdf(false);
+  };
+
+  const handleMultipleFileInput = (fieldName) => {
+    // For multiple files, we handle them without the modal for now
+    // Create temporary input element
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = true;
+    input.accept = "image/*";
+    input.onchange = (e) => {
+      const fileList = Array.from(e.target.files || []);
+      const limited = fileList.slice(0, 4);
+      setFilesState((prev) => ({ ...prev, [fieldName]: limited }));
+      const prevs = limited.map((f) => URL.createObjectURL(f));
+      setFilePreviews((prev) => ({ ...prev, [fieldName]: prevs }));
+    };
+    input.click();
   };
 
   const onCropCancel = () => {
@@ -2498,11 +2565,13 @@ const BuyLetterForm = () => {
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>Vehicle RC - Front</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileInput(e, "vehicleRCFront")}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => handleFileInput("vehicleRCFront")}
+                    style={styles.uploadBtn}
+                  >
+                    <Image size={20} /> Choose File
+                  </button>
                   {filePreviews.vehicleRCFront && (
                     <img
                       src={filePreviews.vehicleRCFront}
@@ -2514,11 +2583,13 @@ const BuyLetterForm = () => {
 
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>Vehicle RC - Back</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileInput(e, "vehicleRCBack")}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => handleFileInput("vehicleRCBack")}
+                    style={styles.uploadBtn}
+                  >
+                    <Image size={20} /> Choose File
+                  </button>
                   {filePreviews.vehicleRCBack && (
                     <img
                       src={filePreviews.vehicleRCBack}
@@ -2530,11 +2601,13 @@ const BuyLetterForm = () => {
 
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>Aadhaar - Front</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileInput(e, "aadhaarFront")}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => handleFileInput("aadhaarFront", true)}
+                    style={styles.uploadBtn}
+                  >
+                    <Image size={20} /> Choose File
+                  </button>
                   {filePreviews.aadhaarFront && (
                     <img
                       src={filePreviews.aadhaarFront}
@@ -2546,11 +2619,13 @@ const BuyLetterForm = () => {
 
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>Aadhaar - Back</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileInput(e, "aadhaarBack")}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => handleFileInput("aadhaarBack", true)}
+                    style={styles.uploadBtn}
+                  >
+                    <Image size={20} /> Choose File
+                  </button>
                   {filePreviews.aadhaarBack && (
                     <img
                       src={filePreviews.aadhaarBack}
@@ -2562,11 +2637,13 @@ const BuyLetterForm = () => {
 
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>PAN Card Photo</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileInput(e, "panPhoto")}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => handleFileInput("panPhoto")}
+                    style={styles.uploadBtn}
+                  >
+                    <Image size={20} /> Choose File
+                  </button>
                   {filePreviews.panPhoto && (
                     <img
                       src={filePreviews.panPhoto}
@@ -2580,11 +2657,13 @@ const BuyLetterForm = () => {
                   <label style={styles.formLabel}>
                     Vehicle KM (Odometer) Photo
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileInput(e, "vehicleKMPhoto")}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => handleFileInput("vehicleKMPhoto")}
+                    style={styles.uploadBtn}
+                  >
+                    <Image size={20} /> Choose File
+                  </button>
                   {filePreviews.vehicleKMPhoto && (
                     <img
                       src={filePreviews.vehicleKMPhoto}
@@ -2598,12 +2677,13 @@ const BuyLetterForm = () => {
                   <label style={styles.formLabel}>
                     Vehicle Photos (up to 4)
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => handleMultipleFiles(e, "vehiclePhotos")}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => handleMultipleFileInput("vehiclePhotos")}
+                    style={styles.uploadBtn}
+                  >
+                    <Image size={20} /> Choose Files
+                  </button>
                   <div
                     style={{
                       display: "flex",
@@ -3075,6 +3155,13 @@ const BuyLetterForm = () => {
             imageSrc={cropImageSrc}
             onCancel={onCropCancel}
             onCropComplete={onCropComplete}
+          />
+        )}
+        {showFileUploadModal && (
+          <FileUploadModal
+            onSelect={handleFileUploadSelect}
+            onCancel={closeFileUploadModal}
+            allowPdf={uploadModalAllowPdf}
           />
         )}
       </div>
@@ -3580,6 +3667,22 @@ const styles = {
     border: "1px solid #e2e8f0",
     borderRadius: "4px",
     backgroundColor: "#f8fafc",
+  },
+  uploadBtn: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "10px 16px",
+    backgroundColor: "#f0f9ff",
+    color: "#0284c7",
+    border: "2px dashed #0284c7",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "500",
+    transition: "all 0.2s ease",
+    width: "100%",
+    justifyContent: "center",
   },
   previewImgSmall: {
     width: "80px",

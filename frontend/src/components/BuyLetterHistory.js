@@ -235,18 +235,23 @@ const BuyLetterHistory = () => {
   const addDocumentPages = async (pdfDoc, documentsObj) => {
     if (!documentsObj) return;
     const items = [];
+    const rcItems = []; // Separate RC items to handle as one row
+
+    // Collect RC items
     if (documentsObj.vehicleRC) {
       if (documentsObj.vehicleRC.front)
-        items.push({
+        rcItems.push({
           title: "Vehicle RC - Front",
           url: documentsObj.vehicleRC.front,
         });
       if (documentsObj.vehicleRC.back)
-        items.push({
+        rcItems.push({
           title: "Vehicle RC - Back",
           url: documentsObj.vehicleRC.back,
         });
     }
+
+    // Collect other documents
     if (documentsObj.aadhaar) {
       if (documentsObj.aadhaar.front)
         items.push({
@@ -266,6 +271,63 @@ const BuyLetterHistory = () => {
       );
     }
 
+    // Create first page with RC items (compact 2-column layout)
+    if (rcItems.length > 0) {
+      const page = pdfDoc.addPage([595, 842]);
+      try {
+        const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
+        const logoImg = await pdfDoc.embedPng(logoBytes);
+        page.drawRectangle({
+          x: 0,
+          y: 780,
+          width: 595,
+          height: 80,
+          color: rgb(0.047, 0.098, 0.196),
+        });
+        page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+      } catch (err) {
+        // ignore header errors
+      }
+
+      // RC layout: compact side-by-side in one row
+      const margin = 40;
+      const colWidth = (595 - 3 * margin) / 2; // Two equal columns
+      const colGap = margin;
+      const maxHeight = 250;
+
+      for (let i = 0; i < rcItems.length; i++) {
+        const item = rcItems[i];
+        const xPos = margin + i * (colWidth + colGap);
+        const yTop = 700;
+
+        const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        page.drawText(item.title, { x: xPos, y: yTop, size: 10, font: titleFont });
+
+        const embedded = await embedImageFromUrl(pdfDoc, item.url);
+        if (embedded) {
+          const { width, height } = embedded.scale(1);
+          let drawW = colWidth - 20;
+          let drawH = (height / width) * drawW;
+
+          if (drawH > maxHeight) {
+            drawH = maxHeight;
+            drawW = (width / height) * drawH;
+          }
+
+          const centeredX = xPos + (colWidth - drawW) / 2;
+          const drawY = yTop - drawH - 15;
+
+          page.drawImage(embedded, {
+            x: centeredX,
+            y: drawY,
+            width: drawW,
+            height: drawH,
+          });
+        }
+      }
+    }
+
+    // Add remaining documents (2 per page as before)
     for (let i = 0; i < items.length; i += 2) {
       const page = pdfDoc.addPage([595, 842]);
       try {
@@ -844,14 +906,14 @@ const BuyLetterHistory = () => {
         color: rgb(0, 0, 0),
       });
 
+      // Add invoice page
+      const invoicePage = pdfDoc.addPage([595, 842]);
+      await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+
       // Add document pages if available
       if (letter.documents) {
         await addDocumentPages(pdfDoc, letter.documents);
       }
-
-      // Add invoice page
-      const invoicePage = pdfDoc.addPage([595, 842]);
-      await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
