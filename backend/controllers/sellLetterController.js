@@ -117,6 +117,7 @@ exports.createSellLetter = [
       sellLetterData.documents = {
         vehicleRC: uploadedUrls.vehicleRC,
         aadhaar: uploadedUrls.aadhaar,
+        aadhaarUploadMode: body.aadhaarUploadMode || "separate",
         pan: uploadedUrls.pan,
         vehicleKM: uploadedUrls.vehicleKM,
         vehiclePhotos: uploadedUrls.vehiclePhotos,
@@ -244,8 +245,17 @@ exports.getSellLetters = async (req, res) => {
     const sellLetters = await SellLetter.find()
       .sort({ createdAt: -1 })
       .select("-__v")
-      .populate("user", "name role");
-    res.json(sellLetters);
+      .populate("user", "name role")
+      .populate("previousVersionId", "vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition pucIssueDate pucExpiryDate pucStatus insuranceStatus insuranceExpiryDate insuranceCompany insurancePolicyNumber buyerName buyerFatherName buyerAddress buyerPhone buyerPhone2 buyerEmail buyerAadhar saleDate saleTime saleAmount paymentMethod todayDate todayTime previousDate previousTime witnessName witnessPhone note documents")
+      .lean();
+
+    // Rename populated field for frontend convenience
+    const sellLettersWithPrevious = sellLetters.map(letter => ({
+      ...letter,
+      previousVersion: letter.previousVersionId
+    }));
+
+    res.json(sellLettersWithPrevious);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
@@ -289,8 +299,17 @@ exports.getMySellLetters = async (req, res) => {
     })
       .sort({ createdAt: -1 })
       .select("-__v")
-      .populate("user", "name role");
-    res.json(sellLetters);
+      .populate("user", "name role")
+      .populate("previousVersionId", "vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition pucIssueDate pucExpiryDate pucStatus insuranceStatus insuranceExpiryDate insuranceCompany insurancePolicyNumber buyerName buyerFatherName buyerAddress buyerPhone buyerPhone2 buyerEmail buyerAadhar saleDate saleTime saleAmount paymentMethod todayDate todayTime previousDate previousTime witnessName witnessPhone note documents")
+      .lean();
+
+    // Rename populated field for frontend convenience
+    const sellLettersWithPrevious = sellLetters.map(letter => ({
+      ...letter,
+      previousVersion: letter.previousVersionId
+    }));
+
+    res.json(sellLettersWithPrevious);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });

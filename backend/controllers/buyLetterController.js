@@ -61,6 +61,18 @@ exports.createBuyLetter = [
         vehiclePhotos: [],
       };
 
+      // Parse preserved documents from frontend (URLs that shouldn't be lost)
+      let preservedDocs = {};
+      if (body.preservedDocuments) {
+        try {
+          preservedDocs = typeof body.preservedDocuments === 'string' 
+            ? JSON.parse(body.preservedDocuments) 
+            : body.preservedDocuments;
+        } catch (e) {
+          console.error('Failed to parse preservedDocuments:', e);
+        }
+      }
+
       const processFile = async (file, nameHint) => {
         const compressed = await compressBuffer(file.buffer, 100);
         const filename = `${Date.now()}-${nameHint}`;
@@ -74,34 +86,52 @@ exports.createBuyLetter = [
             files.vehicleRCFront[0],
             "vehicle-rc-front"
           );
+        } else if (preservedDocs.vehicleRCFront) {
+          uploadedUrls.vehicleRC.front = preservedDocs.vehicleRCFront;
         }
+        
         if (files.vehicleRCBack && files.vehicleRCBack[0]) {
           uploadedUrls.vehicleRC.back = await processFile(
             files.vehicleRCBack[0],
             "vehicle-rc-back"
           );
+        } else if (preservedDocs.vehicleRCBack) {
+          uploadedUrls.vehicleRC.back = preservedDocs.vehicleRCBack;
         }
+        
         if (files.aadhaarFront && files.aadhaarFront[0]) {
           uploadedUrls.aadhaar.front = await processFile(
             files.aadhaarFront[0],
             "aadhaar-front"
           );
+        } else if (preservedDocs.aadhaarFront) {
+          uploadedUrls.aadhaar.front = preservedDocs.aadhaarFront;
         }
+        
         if (files.aadhaarBack && files.aadhaarBack[0]) {
           uploadedUrls.aadhaar.back = await processFile(
             files.aadhaarBack[0],
             "aadhaar-back"
           );
+        } else if (preservedDocs.aadhaarBack) {
+          uploadedUrls.aadhaar.back = preservedDocs.aadhaarBack;
         }
+        
         if (files.panPhoto && files.panPhoto[0]) {
           uploadedUrls.pan = await processFile(files.panPhoto[0], "pan-photo");
+        } else if (preservedDocs.panPhoto) {
+          uploadedUrls.pan = preservedDocs.panPhoto;
         }
+        
         if (files.vehicleKMPhoto && files.vehicleKMPhoto[0]) {
           uploadedUrls.vehicleKM = await processFile(
             files.vehicleKMPhoto[0],
             "vehicle-km"
           );
+        } else if (preservedDocs.vehicleKMPhoto) {
+          uploadedUrls.vehicleKM = preservedDocs.vehicleKMPhoto;
         }
+        
         if (files.vehiclePhotos && files.vehiclePhotos.length) {
           for (let i = 0; i < files.vehiclePhotos.length && i < 10; i++) {
             const url = await processFile(
@@ -121,6 +151,7 @@ exports.createBuyLetter = [
       buyLetterData.documents = {
         vehicleRC: uploadedUrls.vehicleRC,
         aadhaar: uploadedUrls.aadhaar,
+        aadhaarUploadMode: body.aadhaarUploadMode || "separate",
         pan: uploadedUrls.pan,
         vehicleKM: uploadedUrls.vehicleKM,
         vehiclePhotos: uploadedUrls.vehiclePhotos,
@@ -202,12 +233,20 @@ exports.getBuyLetters = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .populate("user", "name role")
-      .populate("vehicle");
+      .populate("vehicle")
+      .populate("previousVersionId", "sellerName sellerFatherName sellerCurrentAddress selleraadhar sellerpan selleraadharphone selleraadharphone2 vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition buyerName buyerFatherName buyerCurrentAddress buyernames buyerphone witnessname witnessphone dealername dealeraddress returnpersonname saleDate saleTime saleAmount paymentMethod todayDate todayTime note documents")
+      .lean();
+
+    // Rename populated field for frontend convenience
+    const buyLettersWithPrevious = buyLetters.map(letter => ({
+      ...letter,
+      previousVersion: letter.previousVersionId
+    }));
 
     const total = await BuyLetter.countDocuments(conditions);
 
     res.json({
-      buyLetters,
+      buyLetters: buyLettersWithPrevious,
       total,
       page,
       pages: Math.ceil(total / limit),

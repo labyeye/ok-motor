@@ -132,6 +132,7 @@ const SellLetterForm = () => {
         },
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [aadhaarUploadMode, setAadhaarUploadMode] = useState("separate");
   const [filesState, setFilesState] = useState({
     vehicleRCFront: null,
     vehicleRCBack: null,
@@ -282,6 +283,16 @@ const SellLetterForm = () => {
         // If server returned stored document URLs, show them as previews
         if (full.documents) {
           const previews = {};
+          
+          // Set aadhaarUploadMode based on loaded document
+          if (full.documents.aadhaarUploadMode) {
+            setAadhaarUploadMode(full.documents.aadhaarUploadMode);
+          } else {
+            // Detect mode from existing data
+            const sameUrl = full.documents.aadhaar?.front === full.documents.aadhaar?.back;
+            setAadhaarUploadMode(sameUrl && full.documents.aadhaar?.front ? "single" : "separate");
+          }
+          
           if (full.documents.vehicleRC) {
             previews.vehicleRCFront = full.documents.vehicleRC.front || null;
             previews.vehicleRCBack = full.documents.vehicleRC.back || null;
@@ -492,14 +503,30 @@ const SellLetterForm = () => {
         // Preserve PDF upload and surface a preview URL so PDF docs render like templates
         const pdfData = await extractImagesFromPdf(file);
         const pdfUrl = pdfData?.url || URL.createObjectURL(file);
-        setFilesState((prev) => ({
-          ...prev,
-          [uploadModalFieldName]: file,
-        }));
-        setFilePreviews((prev) => ({
-          ...prev,
-          [uploadModalFieldName]: pdfUrl,
-        }));
+        
+        // Special handling for Aadhaar based on upload mode
+        if (uploadModalFieldName === "aadhaarFront" && aadhaarUploadMode === "single") {
+          // Single file mode: use for both front and back
+          setFilesState((prev) => ({
+            ...prev,
+            aadhaarFront: file,
+            aadhaarBack: file,
+          }));
+          setFilePreviews((prev) => ({
+            ...prev,
+            aadhaarFront: pdfUrl,
+            aadhaarBack: pdfUrl,
+          }));
+        } else {
+          setFilesState((prev) => ({
+            ...prev,
+            [uploadModalFieldName]: file,
+          }));
+          setFilePreviews((prev) => ({
+            ...prev,
+            [uploadModalFieldName]: pdfUrl,
+          }));
+        }
         setShowFileUploadModal(false);
         return;
       }
@@ -562,10 +589,25 @@ const SellLetterForm = () => {
       type: "image/jpeg",
     });
 
-    setFilesState((prev) => ({ ...prev, [cropFieldName]: file }));
-
-    const url = URL.createObjectURL(file);
-    setFilePreviews((prev) => ({ ...prev, [cropFieldName]: url }));
+    // Special handling for Aadhaar based on upload mode
+    if (cropFieldName === "aadhaarFront" && aadhaarUploadMode === "single") {
+      // Single file mode: use for both front and back
+      setFilesState((prev) => ({
+        ...prev,
+        aadhaarFront: file,
+        aadhaarBack: file,
+      }));
+      const url = URL.createObjectURL(file);
+      setFilePreviews((prev) => ({
+        ...prev,
+        aadhaarFront: url,
+        aadhaarBack: url,
+      }));
+    } else {
+      setFilesState((prev) => ({ ...prev, [cropFieldName]: file }));
+      const url = URL.createObjectURL(file);
+      setFilePreviews((prev) => ({ ...prev, [cropFieldName]: url }));
+    }
 
     setShowCropper(false);
     setCropImageSrc(null);
@@ -1315,6 +1357,9 @@ const SellLetterForm = () => {
             form.append(key, String(value));
           }
         });
+        
+        // Add aadhaarUploadMode to the form
+        form.append("aadhaarUploadMode", aadhaarUploadMode);
 
         // append files using the field names expected by backend
         if (filesState.vehicleRCFront)
@@ -3498,41 +3543,121 @@ const SellLetterForm = () => {
                   )}
                 </div>
 
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Aadhaar - Front</label>
-                  <button
-                    type="button"
-                    onClick={() => handleFileInput("aadhaarFront", true)}
-                    style={styles.uploadBtn}
-                  >
-                    <Image size={20} /> Choose File
-                  </button>
-                  {filePreviews.aadhaarFront && (
-                    <img
-                      src={filePreviews.aadhaarFront}
-                      alt="aadhaar-front"
-                      style={styles.previewImg}
-                    />
-                  )}
+                {/* Aadhaar Upload Mode Toggle */}
+                <div style={{ ...styles.formField, width: "100%" }}>
+                  <label style={{ ...styles.formLabel, marginBottom: "12px" }}>
+                    Aadhaar Upload Mode
+                  </label>
+                  <div style={{ display: "flex", gap: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                      <input
+                        type="radio"
+                        name="aadhaarUploadMode"
+                        value="single"
+                        checked={aadhaarUploadMode === "single"}
+                        onChange={(e) => {
+                          setAadhaarUploadMode(e.target.value);
+                          // Clear aadhaar files when switching modes
+                          setFilesState(prev => ({
+                            ...prev,
+                            aadhaarFront: null,
+                            aadhaarBack: null,
+                          }));
+                          setFilePreviews(prev => ({
+                            ...prev,
+                            aadhaarFront: null,
+                            aadhaarBack: null,
+                          }));
+                        }}
+                        style={{ cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "14px" }}>Single File (Front + Back in one PDF/Image)</span>
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                      <input
+                        type="radio"
+                        name="aadhaarUploadMode"
+                        value="separate"
+                        checked={aadhaarUploadMode === "separate"}
+                        onChange={(e) => {
+                          setAadhaarUploadMode(e.target.value);
+                          // Clear aadhaar files when switching modes
+                          setFilesState(prev => ({
+                            ...prev,
+                            aadhaarFront: null,
+                            aadhaarBack: null,
+                          }));
+                          setFilePreviews(prev => ({
+                            ...prev,
+                            aadhaarFront: null,
+                            aadhaarBack: null,
+                          }));
+                        }}
+                        style={{ cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "14px" }}>Two Separate Images (Front & Back)</span>
+                    </label>
+                  </div>
                 </div>
 
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Aadhaar - Back</label>
-                  <button
-                    type="button"
-                    onClick={() => handleFileInput("aadhaarBack", true)}
-                    style={styles.uploadBtn}
-                  >
-                    <Image size={20} /> Choose File
-                  </button>
-                  {filePreviews.aadhaarBack && (
-                    <img
-                      src={filePreviews.aadhaarBack}
-                      alt="aadhaar-back"
-                      style={styles.previewImg}
-                    />
-                  )}
-                </div>
+                {/* Render upload fields based on mode */}
+                {aadhaarUploadMode === "single" ? (
+                  <div style={styles.formField}>
+                    <label style={styles.formLabel}>Aadhaar (Front and Back)</label>
+                    <button
+                      type="button"
+                      onClick={() => handleFileInput("aadhaarFront", true)}
+                      style={styles.uploadBtn}
+                    >
+                      <Image size={20} /> Choose File
+                    </button>
+                    {filePreviews.aadhaarFront && (
+                      <img
+                        src={filePreviews.aadhaarFront}
+                        alt="aadhaar"
+                        style={styles.previewImg}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>Aadhaar (Front)</label>
+                      <button
+                        type="button"
+                        onClick={() => handleFileInput("aadhaarFront", true)}
+                        style={styles.uploadBtn}
+                      >
+                        <Image size={20} /> Choose File
+                      </button>
+                      {filePreviews.aadhaarFront && (
+                        <img
+                          src={filePreviews.aadhaarFront}
+                          alt="aadhaar-front"
+                          style={styles.previewImg}
+                        />
+                      )}
+                    </div>
+
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>Aadhaar (Back)</label>
+                      <button
+                        type="button"
+                        onClick={() => handleFileInput("aadhaarBack", true)}
+                        style={styles.uploadBtn}
+                      >
+                        <Image size={20} /> Choose File
+                      </button>
+                      {filePreviews.aadhaarBack && (
+                        <img
+                          src={filePreviews.aadhaarBack}
+                          alt="aadhaar-back"
+                          style={styles.previewImg}
+                        />
+                      )}
+                    </div>
+                  </>
+                )}
 
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>PAN Card Photo</label>

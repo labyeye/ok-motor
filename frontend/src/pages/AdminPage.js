@@ -95,6 +95,10 @@ const AdminPage = () => {
     month3Pending: 0,
   });
 
+  const [incompleteBuyLetters, setIncompleteBuyLetters] = useState([]);
+  const [incompleteSellLetters, setIncompleteSellLetters] = useState([]);
+  const [incompleteLoading, setIncompleteLoading] = useState(false);
+
   const fetchVehicleStats = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
@@ -103,6 +107,9 @@ const AdminPage = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const vehicles = res.data.vehicles || [];
+
+      // Fetch incomplete data
+      fetchIncompleteLetters();
 
       // Fetch sell letters for accurate sold count
       const resSellLetters = await axios.get(
@@ -283,8 +290,7 @@ const AdminPage = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const endpoint =
-        "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
+      const endpoint = "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
       const params = { limit: 2000 };
       if (search && String(search).trim() !== "")
         params.search = String(search).trim();
@@ -319,11 +325,152 @@ const AdminPage = () => {
       setFreeServicesLoading(false);
     }
   }, []);
+
+  const fetchIncompleteLetters = useCallback(async () => {
+    setIncompleteLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const API_BASE = "https://ok-motor-51l3.vercel.app";
+
+      // Fetch all buy letters
+      const buyRes = await axios.get(`${API_BASE}/api/buy-letter?limit=2000`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const buyLetters = buyRes.data.buyLetters || [];
+
+      // Fetch all sell letters
+      const sellRes = await axios.get(
+        `${API_BASE}/api/sell-letters?limit=2000`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const sellLetters = Array.isArray(sellRes.data)
+        ? sellRes.data
+        : sellRes.data.data || [];
+
+      // Check for missing fields in Buy Letters
+      const incompleteBuy = buyLetters
+        .map((letter) => {
+          const missingFields = [];
+
+          // Check required text fields
+          if (!letter.sellerName || !letter.sellerName.trim())
+            missingFields.push("Seller Name");
+          if (!letter.sellerFatherName || !letter.sellerFatherName.trim())
+            missingFields.push("Seller Father Name");
+          if (
+            !letter.sellerCurrentAddress ||
+            !letter.sellerCurrentAddress.trim()
+          )
+            missingFields.push("Seller Address");
+          if (!letter.vehicleName || !letter.vehicleName.trim())
+            missingFields.push("Vehicle Name");
+          if (!letter.registrationNumber || !letter.registrationNumber.trim())
+            missingFields.push("Registration Number");
+          if (!letter.buyerName || !letter.buyerName.trim())
+            missingFields.push("Buyer Name");
+          if (!letter.buyerFatherName || !letter.buyerFatherName.trim())
+            missingFields.push("Buyer Father Name");
+          if (!letter.saleAmount) missingFields.push("Sale Amount");
+          if (!letter.saleDate) missingFields.push("Sale Date");
+          if (!letter.witnessname || !letter.witnessname.trim())
+            missingFields.push("Witness Name");
+          if (!letter.witnessphone || !letter.witnessphone.trim())
+            missingFields.push("Witness Phone");
+
+          // Check documents
+          if (!letter.documents?.vehicleRC?.front)
+            missingFields.push("Vehicle RC Front");
+          if (!letter.documents?.vehicleRC?.back)
+            missingFields.push("Vehicle RC Back");
+          if (!letter.documents?.aadhaar?.front)
+            missingFields.push("Aadhaar Front");
+          if (!letter.documents?.aadhaar?.back)
+            missingFields.push("Aadhaar Back");
+          if (!letter.documents?.pan) missingFields.push("PAN Card");
+          if (!letter.documents?.vehicleKM)
+            missingFields.push("Vehicle KM Photo");
+          if (
+            !letter.documents?.vehiclePhotos ||
+            letter.documents.vehiclePhotos.length === 0
+          )
+            missingFields.push("Vehicle Photos");
+
+          return {
+            ...letter,
+            missingFields,
+          };
+        })
+        .filter((letter) => letter.missingFields.length > 0);
+
+      // Check for missing fields in Sell Letters
+      const incompleteSell = sellLetters
+        .map((letter) => {
+          const missingFields = [];
+
+          // Check required text fields
+          if (!letter.vehicleName || !letter.vehicleName.trim())
+            missingFields.push("Vehicle Name");
+          if (!letter.registrationNumber || !letter.registrationNumber.trim())
+            missingFields.push("Registration Number");
+          if (!letter.buyerName || !letter.buyerName.trim())
+            missingFields.push("Buyer Name");
+          if (!letter.buyerFatherName || !letter.buyerFatherName.trim())
+            missingFields.push("Buyer Father Name");
+          if (!letter.buyerAddress || !letter.buyerAddress.trim())
+            missingFields.push("Buyer Address");
+          if (!letter.buyerPhone || !letter.buyerPhone.trim())
+            missingFields.push("Buyer Phone");
+          if (!letter.buyerAadhar || !letter.buyerAadhar.trim())
+            missingFields.push("Buyer Aadhaar");
+          if (!letter.saleAmount) missingFields.push("Sale Amount");
+          if (!letter.saleDate) missingFields.push("Sale Date");
+          if (!letter.witnessName || !letter.witnessName.trim())
+            missingFields.push("Witness Name");
+          if (!letter.witnessPhone || !letter.witnessPhone.trim())
+            missingFields.push("Witness Phone");
+
+          // Check documents
+          if (!letter.documents?.vehicleRC?.front)
+            missingFields.push("Vehicle RC Front");
+          if (!letter.documents?.vehicleRC?.back)
+            missingFields.push("Vehicle RC Back");
+          if (!letter.documents?.aadhaar?.front)
+            missingFields.push("Aadhaar Front");
+          if (!letter.documents?.aadhaar?.back)
+            missingFields.push("Aadhaar Back");
+          if (!letter.documents?.pan) missingFields.push("PAN Card");
+          if (!letter.documents?.vehicleKM)
+            missingFields.push("Vehicle KM Photo");
+          if (
+            !letter.documents?.vehiclePhotos ||
+            letter.documents.vehiclePhotos.length === 0
+          )
+            missingFields.push("Vehicle Photos");
+
+          return {
+            ...letter,
+            missingFields,
+          };
+        })
+        .filter((letter) => letter.missingFields.length > 0);
+
+      setIncompleteBuyLetters(incompleteBuy);
+      setIncompleteSellLetters(incompleteSell);
+    } catch (error) {
+      console.error("Error fetching incomplete letters:", error);
+    } finally {
+      setIncompleteLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (user && activeMenu === "Dashboard") {
       fetchDashboardData();
       // initial load with no search
       fetchFreeServicesData();
+      fetchIncompleteLetters();
     }
   }, [user, activeMenu, fetchDashboardData, fetchFreeServicesData]);
 
@@ -1036,12 +1183,9 @@ const AdminPage = () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-        const resp = await axios.get(
-          "https://ok-motor-51l3.vercel.app/api/sell-letters",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        const resp = await axios.get("https://ok-motor-51l3.vercel.app/api/sell-letters", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
         // fetch standalone PUC
         const resPUC = await axios.get(
@@ -1250,12 +1394,9 @@ const AdminPage = () => {
         const token = localStorage.getItem("token");
         if (!token) return;
         // reuse sell-letters endpoint and filter client-side for insurance expiry
-        const resp = await axios.get(
-          "https://ok-motor-51l3.vercel.app/api/sell-letters",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        const resp = await axios.get("https://ok-motor-51l3.vercel.app/api/sell-letters", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
         const data = resp.data || [];
         // fetch standalone insurance
@@ -1454,6 +1595,209 @@ const AdminPage = () => {
     );
   };
 
+  const IncompleteBuyLettersTable = () => {
+    const [search, setSearch] = useState("");
+
+    const filteredLetters = incompleteBuyLetters.filter((letter) => {
+      const q = search.toLowerCase().trim();
+      if (!q) return true;
+      return (
+        (letter.registrationNumber || "").toLowerCase().includes(q) ||
+        (letter.sellerName || "").toLowerCase().includes(q) ||
+        (letter.buyerName || "").toLowerCase().includes(q) ||
+        (letter.vehicleName || "").toLowerCase().includes(q)
+      );
+    });
+
+    return (
+      <div className="free-services-card">
+        <h3 className="card-title" style={{ color: "#dc2626" }}>
+          Incomplete Buy Letters ({incompleteBuyLetters.length})
+        </h3>
+
+        <div className="free-services-search">
+          <div className="history-search-box" style={{ width: 320 }}>
+            <Search size={18} className="history-search-icon" />
+            <input
+              type="text"
+              placeholder="Search reg. no, seller, buyer..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="history-search-input"
+            />
+          </div>
+        </div>
+
+        {incompleteLoading ? (
+          <div className="table-loading">Loading incomplete buy letters...</div>
+        ) : filteredLetters.length === 0 ? (
+          <div className="no-data">
+            {incompleteBuyLetters.length === 0
+              ? "All buy letters are complete! ✅"
+              : "No matching records found"}
+          </div>
+        ) : (
+          <div className="table-wrapper">
+            <table className="free-services-table">
+              <thead>
+                <tr>
+                  <th>Registration No</th>
+                  <th>Seller Name</th>
+                  <th>Buyer Name</th>
+                  <th>Vehicle</th>
+                  <th>Sale Amount</th>
+                  <th>Created At</th>
+                  <th>Missing Fields</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLetters.map((letter) => (
+                  <tr key={letter._id}>
+                    <td>{letter.registrationNumber || "-"}</td>
+                    <td>{letter.sellerName || "-"}</td>
+                    <td>{letter.buyerName || "-"}</td>
+                    <td>
+                      {`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim() ||
+                        "-"}
+                    </td>
+                    <td>
+                      {letter.saleAmount
+                        ? `₹${new Intl.NumberFormat("en-IN").format(letter.saleAmount)}`
+                        : "-"}
+                    </td>
+                    <td>{formatDate(letter.createdAt)}</td>
+                    <td>
+                      <div style={{ maxWidth: "300px" }}>
+                        {letter.missingFields.map((field, idx) => (
+                          <span
+                            key={idx}
+                            style={{
+                              display: "inline-block",
+                              fontSize: "0.7rem",
+                              padding: "2px 6px",
+                              margin: "2px",
+                              backgroundColor: "#fee2e2",
+                              color: "#dc2626",
+                              borderRadius: "3px",
+                              border: "1px solid #fca5a5",
+                            }}
+                          >
+                            {field}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const IncompleteSellLettersTable = () => {
+    const [search, setSearch] = useState("");
+
+    const filteredLetters = incompleteSellLetters.filter((letter) => {
+      const q = search.toLowerCase().trim();
+      if (!q) return true;
+      return (
+        (letter.registrationNumber || "").toLowerCase().includes(q) ||
+        (letter.buyerName || "").toLowerCase().includes(q) ||
+        (letter.vehicleName || "").toLowerCase().includes(q)
+      );
+    });
+
+    return (
+      <div className="free-services-card">
+        <h3 className="card-title" style={{ color: "#dc2626" }}>
+          Incomplete Sell Letters ({incompleteSellLetters.length})
+        </h3>
+
+        <div className="free-services-search">
+          <div className="history-search-box" style={{ width: 320 }}>
+            <Search size={18} className="history-search-icon" />
+            <input
+              type="text"
+              placeholder="Search reg. no, buyer, vehicle..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="history-search-input"
+            />
+          </div>
+        </div>
+
+        {incompleteLoading ? (
+          <div className="table-loading">
+            Loading incomplete sell letters...
+          </div>
+        ) : filteredLetters.length === 0 ? (
+          <div className="no-data">
+            {incompleteSellLetters.length === 0
+              ? "All sell letters are complete! ✅"
+              : "No matching records found"}
+          </div>
+        ) : (
+          <div className="table-wrapper">
+            <table className="free-services-table">
+              <thead>
+                <tr>
+                  <th>Registration No</th>
+                  <th>Buyer Name</th>
+                  <th>Vehicle</th>
+                  <th>Sale Amount</th>
+                  <th>Created At</th>
+                  <th>Missing Fields</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLetters.map((letter) => (
+                  <tr key={letter._id}>
+                    <td>{letter.registrationNumber || "-"}</td>
+                    <td>{letter.buyerName || "-"}</td>
+                    <td>
+                      {`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim() ||
+                        "-"}
+                    </td>
+                    <td>
+                      {letter.saleAmount
+                        ? `₹${new Intl.NumberFormat("en-IN").format(letter.saleAmount)}`
+                        : "-"}
+                    </td>
+                    <td>{formatDate(letter.createdAt)}</td>
+                    <td>
+                      <div style={{ maxWidth: "300px" }}>
+                        {letter.missingFields.map((field, idx) => (
+                          <span
+                            key={idx}
+                            style={{
+                              display: "inline-block",
+                              fontSize: "0.7rem",
+                              padding: "2px 6px",
+                              margin: "2px",
+                              backgroundColor: "#fee2e2",
+                              color: "#dc2626",
+                              borderRadius: "3px",
+                              border: "1px solid #fca5a5",
+                            }}
+                          >
+                            {field}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // NOTE: removed automatic refocus when modal closes to avoid reopen loop
   // (closing modal previously focused the search input which re-opened the modal)
 
@@ -1584,6 +1928,8 @@ const AdminPage = () => {
               <FreeServicesTable />
               <PucReminderTable />
               <InsuranceReminderTable />
+              <IncompleteBuyLettersTable />
+              <IncompleteSellLettersTable />
               <RecentTransactions />
               <ChartsSection />
 

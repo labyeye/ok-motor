@@ -47,7 +47,6 @@ const AdvanceHistory = () => {
   const [confirmTargetId, setConfirmTargetId] = useState(null);
   const navigate = useNavigate();
 
-  // Preview modal states
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
   const [previewBill, setPreviewBill] = useState(null);
@@ -78,8 +77,6 @@ const AdvanceHistory = () => {
     };
     fetchData();
   }, [currentPage]);
-
-  // Render confirmation modal
 
   useEffect(() => {
     const handleResize = () => {

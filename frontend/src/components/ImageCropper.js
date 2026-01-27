@@ -30,29 +30,33 @@ const ImageCropper = ({
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
     
-    canvas.width = completedCrop.width * scaleX;
-    canvas.height = completedCrop.height * scaleY;
+    // compute bounding box for rotated crop
+    const cropWidth = completedCrop.width * scaleX;
+    const cropHeight = completedCrop.height * scaleY;
+    const rad = (rotation * Math.PI) / 180;
+    const sin = Math.abs(Math.sin(rad));
+    const cos = Math.abs(Math.cos(rad));
+
+    // rotated canvas size so image isn't clipped
+    canvas.width = Math.ceil(cropWidth * cos + cropHeight * sin);
+    canvas.height = Math.ceil(cropWidth * sin + cropHeight * cos);
     
     const ctx = canvas.getContext("2d");
-    
-    if (rotation !== 0) {
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      ctx.translate(centerX, centerY);
-      ctx.rotate((rotation * Math.PI) / 180);
-      ctx.translate(-centerX, -centerY);
-    }
+
+    // move origin to center, rotate, then draw cropped area centered
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(rad);
 
     ctx.drawImage(
       image,
       completedCrop.x * scaleX,
       completedCrop.y * scaleY,
-      completedCrop.width * scaleX,
-      completedCrop.height * scaleY,
-      0,
-      0,
-      canvas.width,
-      canvas.height
+      cropWidth,
+      cropHeight,
+      -cropWidth / 2,
+      -cropHeight / 2,
+      cropWidth,
+      cropHeight
     );
 
     return new Promise((resolve) => {
@@ -96,16 +100,17 @@ const ImageCropper = ({
             crop={crop}
             onChange={(c) => setCrop(c)}
             onComplete={(c) => setCompletedCrop(c)}
-            style={{ maxHeight: "100%", maxWidth: "100%" }}
+            aspect={undefined}
           >
             <img
               ref={imgRef}
               src={imageSrc}
               alt="Crop"
               style={{
-                maxHeight: "100%",
                 maxWidth: "100%",
-                transform: `rotate(${rotation}deg)`,
+                maxHeight: "55vh",
+                display: "block",
+                /* Do not visually rotate here; rotation is applied during export to keep crop box accurate */
               }}
             />
           </ReactCrop>
@@ -160,8 +165,8 @@ const styles = {
     backgroundColor: "white",
     borderRadius: "8px",
     width: "90%",
-    maxWidth: "600px",
-    height: "80vh",
+    maxWidth: "800px",
+    maxHeight: "90vh",
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
@@ -190,6 +195,13 @@ const styles = {
     position: "relative",
     flex: 1,
     backgroundColor: "#333",
+    overflow: "auto",
+    minHeight: "400px",
+    maxHeight: "60vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "20px",
   },
   controls: {
     padding: "16px",

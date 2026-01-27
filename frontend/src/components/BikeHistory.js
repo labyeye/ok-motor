@@ -45,7 +45,6 @@ const BikeHistory = ({ externalSearchTerm }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
 
-  // If an external search term is provided (e.g. from AdminPage modal), sync it
   useEffect(() => {
     if (
       typeof externalSearchTerm !== "undefined" &&
@@ -56,11 +55,9 @@ const BikeHistory = ({ externalSearchTerm }) => {
         setSearchTerm(term);
       }
       if (!term) {
-        // if external term is empty, clear internal search
         setSearchTerm("");
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [externalSearchTerm]);
 
   const formatDate = (dateString) => {

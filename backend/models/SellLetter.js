@@ -80,6 +80,11 @@ const SellLetterSchema = new mongoose.Schema(
         front: { type: String },
         back: { type: String },
       },
+      aadhaarUploadMode: {
+        type: String,
+        enum: ["single", "separate"],
+        default: "separate",
+      },
       pan: { type: String },
       vehicleKM: { type: String },
       vehiclePhotos: [{ type: String }],

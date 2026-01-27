@@ -19,11 +19,13 @@ export const extractImagesFromPdf = async (pdfFile) => {
 };
 
 export const convertPdfToImages = async (pdfFile) => {
-  // This function converts PDF pages to images using pdfjs-dist
-  // Install pdfjs-dist: npm install pdfjs-dist
   try {
     const pdfjsLib = await import("pdfjs-dist");
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    // Use bundled worker to avoid CDN fetch failures; prefer .mjs worker for bundlers
+    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+      "pdfjs-dist/build/pdf.worker.min.mjs",
+      import.meta.url,
+    ).toString();
 
     const arrayBuffer = await pdfFile.arrayBuffer();
     const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;

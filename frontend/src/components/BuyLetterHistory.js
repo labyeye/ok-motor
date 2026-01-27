@@ -75,6 +75,142 @@ const BuyLetterHistory = () => {
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
+
+  // Helper to get field label in readable format
+  const getFieldLabel = (fieldName) => {
+    const labels = {
+      sellerName: "Seller Name",
+      sellerFatherName: "Seller Father Name",
+      sellerCurrentAddress: "Seller Address",
+      selleraadhar: "Seller Aadhaar",
+      sellerpan: "Seller PAN",
+      selleraadharphone: "Seller Phone",
+      selleraadharphone2: "Seller Phone 2",
+      vehicleName: "Vehicle Name",
+      vehicleModel: "Vehicle Model",
+      vehicleColor: "Vehicle Color",
+      registrationNumber: "Registration Number",
+      chassisNumber: "Chassis Number",
+      engineNumber: "Engine Number",
+      vehiclekm: "Vehicle KM",
+      vehicleCondition: "Vehicle Condition",
+      buyerName: "Buyer Name",
+      buyerFatherName: "Buyer Father Name",
+      buyerCurrentAddress: "Buyer Address",
+      buyernames: "Buyer Names",
+      buyerphone: "Buyer Phone",
+      witnessname: "Witness Name",
+      witnessphone: "Witness Phone",
+      dealername: "Dealer Name",
+      dealeraddress: "Dealer Address",
+      returnpersonname: "Return Person Name",
+      saleDate: "Sale Date",
+      saleTime: "Sale Time",
+      saleAmount: "Sale Amount",
+      paymentMethod: "Payment Method",
+      todayDate: "Today's Date",
+      todayTime: "Today's Time",
+      note: "Note",
+    };
+    return labels[fieldName] || fieldName;
+  };
+
+  // Function to detect and display changes
+  const getChanges = (letter) => {
+    if (!letter.previousVersionId || letter.version === 1) return null;
+
+    const changes = [];
+    const fieldsToCompare = [
+      "sellerName", "sellerFatherName", "sellerCurrentAddress", "selleraadhar",
+      "sellerpan", "selleraadharphone", "selleraadharphone2", "vehicleName",
+      "vehicleModel", "vehicleColor", "registrationNumber", "chassisNumber",
+      "engineNumber", "vehiclekm", "vehicleCondition", "buyerName",
+      "buyerFatherName", "buyerCurrentAddress", "buyernames", "buyerphone",
+      "witnessname", "witnessphone", "dealername", "dealeraddress",
+      "returnpersonname", "saleAmount", "paymentMethod", "note"
+    ];
+
+    // Check if we have previousVersion data populated
+    if (letter.previousVersion) {
+      fieldsToCompare.forEach(field => {
+        const oldValue = letter.previousVersion[field];
+        const newValue = letter[field];
+        
+        if (oldValue !== newValue && (oldValue || newValue)) {
+          changes.push({
+            field: getFieldLabel(field),
+            oldValue: oldValue || "(empty)",
+            newValue: newValue || "(empty)"
+          });
+        }
+      });
+
+      // Check date fields
+      const oldSaleDate = letter.previousVersion.saleDate ? formatDate(letter.previousVersion.saleDate) : "";
+      const newSaleDate = letter.saleDate ? formatDate(letter.saleDate) : "";
+      if (oldSaleDate !== newSaleDate && (oldSaleDate || newSaleDate)) {
+        changes.push({
+          field: "Sale Date",
+          oldValue: oldSaleDate || "(empty)",
+          newValue: newSaleDate || "(empty)"
+        });
+      }
+
+      const oldTodayDate = letter.previousVersion.todayDate ? formatDate(letter.previousVersion.todayDate) : "";
+      const newTodayDate = letter.todayDate ? formatDate(letter.todayDate) : "";
+      if (oldTodayDate !== newTodayDate && (oldTodayDate || newTodayDate)) {
+        changes.push({
+          field: "Today's Date",
+          oldValue: oldTodayDate || "(empty)",
+          newValue: newTodayDate || "(empty)"
+        });
+      }
+      const checkDocumentChange = (docPath, label) => {
+        const getNestedValue = (obj, path) => path.split('.').reduce((acc, part) => acc?.[part], obj);
+        const oldDoc = getNestedValue(letter.previousVersion.documents, docPath);
+        const newDoc = getNestedValue(letter.documents, docPath);
+        
+        if (oldDoc !== newDoc) {
+          if (!oldDoc && newDoc) {
+            changes.push({
+              field: label,
+              oldValue: "Not uploaded",
+              newValue: "Uploaded"
+            });
+          } else if (oldDoc && !newDoc) {
+            changes.push({
+              field: label,
+              oldValue: "Uploaded",
+              newValue: "Removed"
+            });
+          } else if (oldDoc && newDoc && oldDoc !== newDoc) {
+            changes.push({
+              field: label,
+              oldValue: "Updated (old document)",
+              newValue: "Updated (new document)"
+            });
+          }
+        }
+      };
+      checkDocumentChange('vehicleRC.front', 'Vehicle RC - Front');
+      checkDocumentChange('vehicleRC.back', 'Vehicle RC - Back');
+      checkDocumentChange('aadhaar.front', 'Aadhaar - Front');
+      checkDocumentChange('aadhaar.back', 'Aadhaar - Back');
+      checkDocumentChange('pan', 'PAN Card');
+      checkDocumentChange('vehicleKM', 'Vehicle KM Photo');
+      const oldPhotosCount = letter.previousVersion.documents?.vehiclePhotos?.length || 0;
+      const newPhotosCount = letter.documents?.vehiclePhotos?.length || 0;
+      if (oldPhotosCount !== newPhotosCount) {
+        changes.push({
+          field: 'Vehicle Photos',
+          oldValue: `${oldPhotosCount} photo${oldPhotosCount !== 1 ? 's' : ''}`,
+          newValue: `${newPhotosCount} photo${newPhotosCount !== 1 ? 's' : ''}`
+        });
+      }
+    }
+
+    return changes.length > 0 ? changes : null;
+  };
   useEffect(() => {
     const fetchBuyLetters = async () => {
       try {
@@ -236,34 +372,62 @@ const BuyLetterHistory = () => {
     if (!documentsObj) return;
     const items = [];
     const rcItems = []; // Separate RC items to handle as one row
+    const aadhaarItems = []; // Separate Aadhaar items to handle as one row like RC
 
     // Collect RC items
     if (documentsObj.vehicleRC) {
-      if (documentsObj.vehicleRC.front)
+      if (documentsObj.vehicleRC.front && documentsObj.vehicleRC.front !== null)
         rcItems.push({
           title: "Vehicle RC - Front",
           url: documentsObj.vehicleRC.front,
         });
-      if (documentsObj.vehicleRC.back)
+      if (documentsObj.vehicleRC.back && documentsObj.vehicleRC.back !== null)
         rcItems.push({
           title: "Vehicle RC - Back",
           url: documentsObj.vehicleRC.back,
         });
     }
 
-    // Collect other documents
+    // Collect Aadhaar items based on upload mode
+    const singleAadhaarItem = [];
     if (documentsObj.aadhaar) {
-      if (documentsObj.aadhaar.front)
-        items.push({
-          title: "Aadhaar - Front",
-          url: documentsObj.aadhaar.front,
-        });
-      if (documentsObj.aadhaar.back)
-        items.push({ title: "Aadhaar - Back", url: documentsObj.aadhaar.back });
+      const uploadMode = documentsObj.aadhaarUploadMode || "separate";
+      
+      if (uploadMode === "single") {
+        // Single file mode: render full-page separately
+        if (documentsObj.aadhaar.front) {
+          singleAadhaarItem.push({
+            title: "Aadhaar (Front and Back)",
+            url: documentsObj.aadhaar.front,
+          });
+        }
+      } else {
+        // Separate mode: show front and back separately like Vehicle RC
+        if (documentsObj.aadhaar.front && documentsObj.aadhaar.front !== null) {
+          aadhaarItems.push({
+            title: "Aadhaar - Front",
+            url: documentsObj.aadhaar.front,
+          });
+        }
+        // Only add back if it's different from front (avoid duplicate when PDF is uploaded in old format)
+        if (
+          documentsObj.aadhaar.back &&
+          documentsObj.aadhaar.back !== null &&
+          documentsObj.aadhaar.back !== documentsObj.aadhaar.front
+        ) {
+          aadhaarItems.push({
+            title: "Aadhaar - Back",
+            url: documentsObj.aadhaar.back,
+          });
+        }
+      }
     }
-    if (documentsObj.pan)
+
+    // Collect other documents
+    // Collect other documents
+    if (documentsObj.pan && documentsObj.pan !== null)
       items.push({ title: "PAN Card", url: documentsObj.pan });
-    if (documentsObj.vehicleKM)
+    if (documentsObj.vehicleKM && documentsObj.vehicleKM !== null)
       items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
     if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
       documentsObj.vehiclePhotos.forEach((u, i) =>
@@ -271,8 +435,8 @@ const BuyLetterHistory = () => {
       );
     }
 
-    // Create first page with RC items (compact 2-column layout)
-    if (rcItems.length > 0) {
+    // Helper function to render 2-column layout page
+    const renderTwoColumnPage = async (pageItems, pageTitle = null) => {
       const page = pdfDoc.addPage([595, 842]);
       try {
         const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
@@ -289,14 +453,14 @@ const BuyLetterHistory = () => {
         // ignore header errors
       }
 
-      // RC layout: compact side-by-side in one row
+      // Compact side-by-side layout in one row
       const margin = 40;
       const colWidth = (595 - 3 * margin) / 2; // Two equal columns
       const colGap = margin;
       const maxHeight = 250;
 
-      for (let i = 0; i < rcItems.length; i++) {
-        const item = rcItems[i];
+      for (let i = 0; i < pageItems.length; i++) {
+        const item = pageItems[i];
         const xPos = margin + i * (colWidth + colGap);
         const yTop = 700;
 
@@ -325,6 +489,65 @@ const BuyLetterHistory = () => {
           });
         }
       }
+    };
+
+    // Create page with RC items (compact 2-column layout)
+    if (rcItems.length > 0) {
+      await renderTwoColumnPage(rcItems);
+    }
+
+    // Create page with Aadhaar items
+    // If single mode: render full-page, otherwise use 2-column layout
+    if (singleAadhaarItem.length > 0) {
+      // Full-page rendering for single Aadhaar
+      const page = pdfDoc.addPage([595, 842]);
+      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const item = singleAadhaarItem[0];
+      
+      try {
+        const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
+        const logoImg = await pdfDoc.embedPng(logoBytes);
+        page.drawRectangle({
+          x: 0,
+          y: 780,
+          width: 595,
+          height: 80,
+          color: rgb(0.047, 0.098, 0.196),
+        });
+        page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+      } catch (err) {}
+      
+      page.drawText(item.title, { x: 50, y: 720, size: 14, font });
+      
+      const embedded = await embedImageFromUrl(pdfDoc, item.url);
+      if (embedded) {
+        const pageWidth = 595;
+        const margin = 50;
+        const maxWidth = pageWidth - 2 * margin;
+        const maxHeight = 660;
+        
+        const { width, height } = embedded.scale(1);
+        let drawW = maxWidth;
+        let drawH = (height / width) * drawW;
+        
+        if (drawH > maxHeight) {
+          drawH = maxHeight;
+          drawW = (width / height) * drawH;
+        }
+        
+        const xPos = (pageWidth - drawW) / 2;
+        const yPos = 690 - drawH;
+        
+        page.drawImage(embedded, {
+          x: xPos,
+          y: yPos,
+          width: drawW,
+          height: drawH,
+        });
+      }
+    } else if (aadhaarItems.length > 0) {
+      // 2-column layout for separate mode
+      await renderTwoColumnPage(aadhaarItems);
     }
 
     // Add remaining documents (2 per page as before)
@@ -748,10 +971,11 @@ const BuyLetterHistory = () => {
         size: fieldPositions.saleAmount.size,
         color: rgb(0, 0, 0),
       });
-      // add document image pages (if any) before appending invoice
-      await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
+      // add invoice next, then attach document pages for a consistent flow
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+      await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
+
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
@@ -761,9 +985,13 @@ const BuyLetterHistory = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      setDownloadProgress(100);
+      setIsDownloading(false);
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Failed to generate PDF. Please try again.");
+      setIsDownloading(false);
     }
   };
 
@@ -821,10 +1049,11 @@ const BuyLetterHistory = () => {
         color: rgb(0, 0, 0),
       });
 
-      // add document image pages (if any) before appending invoice
-      await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
+      // add invoice next, then attach document pages for a consistent flow
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+      await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
+
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
@@ -834,9 +1063,13 @@ const BuyLetterHistory = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      setDownloadProgress(100);
+      setIsDownloading(false);
     } catch (error) {
       console.error("Error generating English PDF:", error);
       alert("Failed to generate English PDF. Please try again.");
+      setIsDownloading(false);
     }
   };
   const handleDownload = (letter) => {
@@ -1587,36 +1820,51 @@ const BuyLetterHistory = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredLetters.map((letter) => (
-                      <tr key={letter._id} style={styles.tableRow}>
-                        <td style={styles.tableCell}>{letter.sellerName}</td>
-                        <td style={styles.tableCell}>{letter.vehicleModel}</td>
-                        <td style={styles.tableCell}>
-                          {`${letter.vehicleName || ""} ${
-                            letter.vehicleModel || ""
-                          }`.trim()}
-                        </td>
-                        <td style={styles.tableCell}>
-                          {letter.registrationNumber}
-                        </td>
-                        <td style={styles.tableCell}>{letter.buyerName}</td>
-                        <td style={styles.tableCell}>
-                          ₹
-                          {new Intl.NumberFormat("en-IN").format(
-                            letter.saleAmount,
-                          )}
-                        </td>
-                        <td style={styles.tableCell}>
-                          {formatDate(letter.createdAt)}
-                        </td>
-                        <td style={styles.tableCell}>
-                          {letter.user && letter.user.role === "admin"
-                            ? "admin"
-                            : letter.user && letter.user.name
-                              ? letter.user.name
-                              : ""}
-                        </td>
-                        <td style={styles.tableCell}>
+                    {filteredLetters.map((letter) => {
+                      const changes = getChanges(letter);
+                      return (
+                        <React.Fragment key={letter._id}>
+                          <tr style={styles.tableRow}>
+                            <td style={styles.tableCell}>
+                              {letter.sellerName}
+                              {letter.version > 1 && (
+                                <span style={{ fontSize: "0.75rem", color: "#ff9800", marginLeft: "6px", fontWeight: "600" }}>
+                                  (v{letter.version})
+                                </span>
+                              )}
+                            </td>
+                            <td style={styles.tableCell}>{letter.vehicleModel}</td>
+                            <td style={styles.tableCell}>
+                              {`${letter.vehicleName || ""} ${
+                                letter.vehicleModel || ""
+                              }`.trim()}
+                            </td>
+                            <td style={styles.tableCell}>
+                              {letter.registrationNumber}
+                            </td>
+                            <td style={styles.tableCell}>{letter.buyerName}</td>
+                            <td style={styles.tableCell}>
+                              ₹
+                              {new Intl.NumberFormat("en-IN").format(
+                                letter.saleAmount,
+                              )}
+                            </td>
+                            <td style={styles.tableCell}>
+                              {formatDate(letter.createdAt)}
+                              {letter.editedAt && (
+                                <div style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "2px" }}>
+                                  Edited: {formatDate(letter.editedAt)}
+                                </div>
+                              )}
+                            </td>
+                            <td style={styles.tableCell}>
+                              {letter.user && letter.user.role === "admin"
+                                ? "admin"
+                                : letter.user && letter.user.name
+                                  ? letter.user.name
+                                  : ""}
+                            </td>
+                            <td style={styles.tableCell}>
                           <button
                             onClick={() => handleViewLetter(letter)}
                             style={styles.iconButton}
@@ -1652,7 +1900,39 @@ const BuyLetterHistory = () => {
                           )}
                         </td>
                       </tr>
-                    ))}
+                      {letter.version > 1 && (
+                        <tr style={{ backgroundColor: changes && changes.length > 0 ? "#fff8e1" : "#f5f5f5" }}>
+                          <td colSpan="9" style={{ padding: "12px 16px", borderBottom: "1px solid #e2e8f0" }}>
+                            <div style={{ fontSize: "0.85rem" }}>
+                              <div style={{ fontWeight: "600", color: changes && changes.length > 0 ? "#f57c00" : "#757575", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+                                <RefreshCw size={14} />
+                                Changes from previous version:
+                              </div>
+                              {changes && changes.length > 0 ? (
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "8px" }}>
+                                  {changes.map((change, idx) => (
+                                    <div key={idx} style={{ padding: "6px 10px", backgroundColor: "#ffffff", borderRadius: "4px", border: "1px solid #ffe0b2" }}>
+                                      <div style={{ fontWeight: "600", color: "#424242", marginBottom: "3px" }}>{change.field}:</div>
+                                      <div style={{ fontSize: "0.8rem", color: "#e53935" }}>
+                                        <span style={{ textDecoration: "line-through" }}>{change.oldValue}</span>
+                                      </div>
+                                      <div style={{ fontSize: "0.8rem", color: "#43a047", fontWeight: "500" }}>
+                                        → {change.newValue}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div style={{ padding: "8px 12px", backgroundColor: "#ffffff", borderRadius: "4px", border: "1px solid #e0e0e0", color: "#757575", fontStyle: "italic" }}>
+                                  No changes detected from previous version
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                    );})}
                   </tbody>
                 </table>
               </div>
@@ -1858,7 +2138,10 @@ const BuyLetterHistory = () => {
                     const out = {};
                     if (sel.vehicleRC && docs.vehicleRC)
                       out.vehicleRC = docs.vehicleRC;
-                    if (sel.aadhaar && docs.aadhaar) out.aadhaar = docs.aadhaar;
+                    if (sel.aadhaar && docs.aadhaar) {
+                      out.aadhaar = docs.aadhaar;
+                      out.aadhaarUploadMode = docs.aadhaarUploadMode;
+                    }
                     if (sel.pan && docs.pan) out.pan = docs.pan;
                     if (sel.vehicleKM && docs.vehicleKM)
                       out.vehicleKM = docs.vehicleKM;

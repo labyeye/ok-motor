@@ -135,7 +135,6 @@ const AdvancePayBillForm = () => {
     }
 
     setFormData(updatedData);
-    // clear validation error for this field
     if (name) {
       setErrors((prev) => {
         if (!prev || !prev[name]) return prev;
@@ -197,7 +196,6 @@ const AdvancePayBillForm = () => {
     });
     setErrors(errs);
 
-    // if there are errors, show alert and focus first missing field after user OKs alert
     const keys = Object.keys(errs);
     if (keys.length > 0) {
       const firstKey = keys[0];
@@ -214,7 +212,6 @@ const AdvancePayBillForm = () => {
           el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
         }
       } catch (err) {
-        // ignore
       }
     }
 
