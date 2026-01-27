@@ -41,6 +41,8 @@ const SellLetterHistory = () => {
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [chosenLanguage, setChosenLanguage] = useState(null); // 'hindi' | 'english'
   const [docSelections, setDocSelections] = useState({
+    letter: true,
+    invoice: true,
     vehicleRC: true,
     aadhaar: true,
     pan: true,
@@ -861,68 +863,75 @@ const SellLetterHistory = () => {
 
       await simulateProgress();
 
-      const existingPdfBytes = await loadPDFTemplate("sellletter.pdf");
-      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      // Start with empty PDF if letter is not selected, otherwise load template
+      let pdfDoc;
+      if (documentsToInclude?.letter === true) {
+        const existingPdfBytes = await loadPDFTemplate("sellletter.pdf");
+        pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-      const formattedLetter = {
-        ...letter,
-        buyerName1: letter.buyerName,
-        buyerName2: letter.buyerName,
-        saleDate: formatDate(letter.saleDate),
-        saleTime: formatTime12Hour(letter.saleTime),
-        vehiclekm: formatKm(letter.vehiclekm),
-        todayDate: formatDate(letter.todayDate || new Date()),
-        todayTime: formatTime12Hour(letter.todayTime || "12:00"),
-        previousDate: formatDate(
-          letter.previousDate || letter.todayDate || new Date(),
-        ),
-        previousTime: formatTime12Hour(
-          letter.previousTime || letter.todayTime || "12:00",
-        ),
-        amountInWords: formatIndianAmountInWords(letter.saleAmount),
-        saleAmount: formatRupee(letter.saleAmount),
-        sellerphone: letter.sellerphone || "9876543210",
-        selleraadhar: letter.selleraadhar || "764465626571",
-      };
-      for (const [fieldName, position] of Object.entries(hindiFieldPositions)) {
-        if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
-          const combinedPhones = `${formattedLetter.buyerPhone}${
-            formattedLetter.buyerPhone2
-              ? ` , ${formattedLetter.buyerPhone2}`
-              : ""
-          }`;
-          pdfDoc.getPages()[0].drawText(combinedPhones, {
-            x: position.x,
-            y: position.y,
-            size: position.size,
-            weight: "bold",
+        const formattedLetter = {
+          ...letter,
+          buyerName1: letter.buyerName,
+          buyerName2: letter.buyerName,
+          saleDate: formatDate(letter.saleDate),
+          saleTime: formatTime12Hour(letter.saleTime),
+          vehiclekm: formatKm(letter.vehiclekm),
+          todayDate: formatDate(letter.todayDate || new Date()),
+          todayTime: formatTime12Hour(letter.todayTime || "12:00"),
+          previousDate: formatDate(
+            letter.previousDate || letter.todayDate || new Date(),
+          ),
+          previousTime: formatTime12Hour(
+            letter.previousTime || letter.todayTime || "12:00",
+          ),
+          amountInWords: formatIndianAmountInWords(letter.saleAmount),
+          saleAmount: formatRupee(letter.saleAmount),
+          sellerphone: letter.sellerphone || "9876543210",
+          selleraadhar: letter.selleraadhar || "764465626571",
+        };
+        for (const [fieldName, position] of Object.entries(hindiFieldPositions)) {
+          if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
+            const combinedPhones = `${formattedLetter.buyerPhone}${
+              formattedLetter.buyerPhone2
+                ? ` , ${formattedLetter.buyerPhone2}`
+                : ""
+            }`;
+            pdfDoc.getPages()[0].drawText(combinedPhones, {
+              x: position.x,
+              y: position.y,
+              size: position.size,
+              weight: "bold",
+              color: rgb(0, 0, 0),
+            });
+          } else if (fieldName !== "buyerPhone2" && formattedLetter[fieldName]) {
+            pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
+              x: position.x,
+              y: position.y,
+              size: position.size,
+              weight: "bold",
+              color: rgb(0, 0, 0),
+            });
+          }
+        }
+        if (formattedLetter.saleAmount && formattedLetter.amountInWords) {
+          const page = pdfDoc.getPages()[0];
+          const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+          const saleText = `${formattedLetter.saleAmount}`;
+          const xBase = hindiFieldPositions.saleAmount.x;
+          const yBase = hindiFieldPositions.saleAmount.y;
+          const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
+          page.drawText(formattedLetter.amountInWords, {
+            x: xBase + saleTextWidth + 8,
+            y: yBase,
+            size: 10,
             color: rgb(0, 0, 0),
-          });
-        } else if (fieldName !== "buyerPhone2" && formattedLetter[fieldName]) {
-          pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
-            x: position.x,
-            y: position.y,
-            size: position.size,
-            weight: "bold",
-            color: rgb(0, 0, 0),
+            font,
           });
         }
-      }
-      if (formattedLetter.saleAmount && formattedLetter.amountInWords) {
-        const page = pdfDoc.getPages()[0];
-        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-        const saleText = `${formattedLetter.saleAmount}`;
-        const xBase = hindiFieldPositions.saleAmount.x;
-        const yBase = hindiFieldPositions.saleAmount.y;
-        const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
-        page.drawText(formattedLetter.amountInWords, {
-          x: xBase + saleTextWidth + 8,
-          y: yBase,
-          size: 10,
-          color: rgb(0, 0, 0),
-          font,
-        });
+      } else {
+        // Create empty PDF if letter is not selected
+        pdfDoc = await PDFDocument.create();
       }
 
       // Insert document pages (Vehicle RC, Aadhaar, PAN, KM, Vehicle photos)
@@ -1205,9 +1214,11 @@ const SellLetterHistory = () => {
 
       await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
 
-      // add invoice page as final page
-      const invoicePage = pdfDoc.addPage([595, 842]);
-      await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+      // add invoice page as final page if selected
+      if (documentsToInclude?.invoice === true) {
+        const invoicePage = pdfDoc.addPage([595, 842]);
+        await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+      }
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -1232,70 +1243,79 @@ const SellLetterHistory = () => {
       setIsDownloading(true);
       setDownloadProgress(0);
       await simulateProgress();
-      const existingPdfBytes = await loadPDFTemplate("englishsell.pdf");
-      const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      // we'll add document pages first, then invoice as the final page
-      const formattedLetter = {
-        ...letter,
-        buyerName1: letter.buyerName,
-        buyerName2: letter.buyerName,
-        saleDate: formatDate(letter.saleDate),
-        saleTime: formatTime12Hour(letter.saleTime),
-        amountInWords: formatIndianAmountInWords(letter.saleAmount),
-        saleAmount: formatRupee(letter.saleAmount),
-        todayTime: formatTime12Hour(letter.todayTime || "12:00"),
-        previousDate: formatDate(
-          letter.previousDate || letter.todayDate || new Date(),
-        ),
-        previousTime: formatTime12Hour(
-          letter.previousTime || letter.todayTime || "12:00",
-        ),
-        vehiclekm: formatKm(letter.vehiclekm),
-        sellerphone: letter.sellerphone || "9876543210",
-        selleraadhar: letter.selleraadhar || "764465626571",
-      };
 
-      for (const [fieldName, position] of Object.entries(
-        englishFieldPositions,
-      )) {
-        if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
-          const combinedPhones = `${formattedLetter.buyerPhone}${
-            formattedLetter.buyerPhone2
-              ? ` , ${formattedLetter.buyerPhone2}`
-              : ""
-          }`;
-          pdfDoc.getPages()[0].drawText(combinedPhones, {
-            x: position.x,
-            y: position.y,
-            size: position.size,
-            weight: "bold",
+      // Start with empty PDF if letter is not selected, otherwise load template
+      let pdfDoc;
+      if (documentsToInclude?.letter === true) {
+        const existingPdfBytes = await loadPDFTemplate("englishsell.pdf");
+        pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+        // we'll add document pages first, then invoice as the final page
+        const formattedLetter = {
+          ...letter,
+          buyerName1: letter.buyerName,
+          buyerName2: letter.buyerName,
+          saleDate: formatDate(letter.saleDate),
+          saleTime: formatTime12Hour(letter.saleTime),
+          amountInWords: formatIndianAmountInWords(letter.saleAmount),
+          saleAmount: formatRupee(letter.saleAmount),
+          todayTime: formatTime12Hour(letter.todayTime || "12:00"),
+          previousDate: formatDate(
+            letter.previousDate || letter.todayDate || new Date(),
+          ),
+          previousTime: formatTime12Hour(
+            letter.previousTime || letter.todayTime || "12:00",
+          ),
+          vehiclekm: formatKm(letter.vehiclekm),
+          sellerphone: letter.sellerphone || "9876543210",
+          selleraadhar: letter.selleraadhar || "764465626571",
+        };
+
+        for (const [fieldName, position] of Object.entries(
+          englishFieldPositions,
+        )) {
+          if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
+            const combinedPhones = `${formattedLetter.buyerPhone}${
+              formattedLetter.buyerPhone2
+                ? ` , ${formattedLetter.buyerPhone2}`
+                : ""
+            }`;
+            pdfDoc.getPages()[0].drawText(combinedPhones, {
+              x: position.x,
+              y: position.y,
+              size: position.size,
+              weight: "bold",
+              color: rgb(0, 0, 0),
+            });
+          } else if (fieldName !== "buyerPhone2" && formattedLetter[fieldName]) {
+            pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
+              x: position.x,
+              y: position.y,
+              size: position.size,
+              weight: "bold",
+              color: rgb(0, 0, 0),
+            });
+          }
+        }
+        if (formattedLetter.saleAmount && formattedLetter.amountInWords) {
+          const page = pdfDoc.getPages()[0];
+          const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+          const saleText = `${formattedLetter.saleAmount}`;
+          const xBase = englishFieldPositions.saleAmount.x;
+          const yBase = englishFieldPositions.saleAmount.y;
+          const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
+          page.drawText(formattedLetter.amountInWords, {
+            x: xBase + saleTextWidth + 8,
+            y: yBase,
+            size: 10,
             color: rgb(0, 0, 0),
-          });
-        } else if (fieldName !== "buyerPhone2" && formattedLetter[fieldName]) {
-          pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
-            x: position.x,
-            y: position.y,
-            size: position.size,
-            weight: "bold",
-            color: rgb(0, 0, 0),
+            font,
           });
         }
-      }
-      if (formattedLetter.saleAmount && formattedLetter.amountInWords) {
-        const page = pdfDoc.getPages()[0];
-        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-        const saleText = `${formattedLetter.saleAmount}`;
-        const xBase = englishFieldPositions.saleAmount.x;
-        const yBase = englishFieldPositions.saleAmount.y;
-        const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
-        page.drawText(formattedLetter.amountInWords, {
-          x: xBase + saleTextWidth + 8,
-          y: yBase,
-          size: 10,
-          color: rgb(0, 0, 0),
-          font,
-        });
+      } else {
+        // Create empty PDF if letter is not selected
+        pdfDoc = await PDFDocument.create();
       }
 
       // Insert document pages (packed 2x2)
@@ -1544,9 +1564,11 @@ const SellLetterHistory = () => {
 
       await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
 
-      // add invoice page as final page
-      const invoicePage = pdfDoc.addPage([595, 842]);
-      await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+      // add invoice page as final page if selected
+      if (documentsToInclude?.invoice === true) {
+        const invoicePage = pdfDoc.addPage([595, 842]);
+        await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+      }
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -2568,88 +2590,299 @@ const SellLetterHistory = () => {
         )}
         {showDocumentModal && selectedLetter && (
           <div style={styles.modalOverlay}>
-            <div style={styles.modalContent}>
-              <h3 style={styles.modalTitle}>Select Documents to Include</h3>
-              <p style={styles.modalText}>
-                Choose which supporting documents to include in the sell letter
-                PDF.
-              </p>
-              <div style={{ marginBottom: 12 }}>
-                <label style={{ display: "block", marginBottom: 8 }}>
-                  <input
-                    type="checkbox"
-                    checked={!!docSelections.vehicleRC}
-                    onChange={(e) =>
-                      setDocSelections((s) => ({
-                        ...s,
-                        vehicleRC: e.target.checked,
-                      }))
-                    }
-                  />
-                  &nbsp;Vehicle RC (front/back)
-                </label>
-                <label style={{ display: "block", marginBottom: 8 }}>
-                  <input
-                    type="checkbox"
-                    checked={!!docSelections.aadhaar}
-                    onChange={(e) =>
-                      setDocSelections((s) => ({
-                        ...s,
-                        aadhaar: e.target.checked,
-                      }))
-                    }
-                  />
-                  &nbsp;Aadhaar (front/back)
-                </label>
-                <label style={{ display: "block", marginBottom: 8 }}>
-                  <input
-                    type="checkbox"
-                    checked={!!docSelections.pan}
-                    onChange={(e) =>
-                      setDocSelections((s) => ({ ...s, pan: e.target.checked }))
-                    }
-                  />
-                  &nbsp;PAN Card
-                </label>
-                <label style={{ display: "block", marginBottom: 8 }}>
-                  <input
-                    type="checkbox"
-                    checked={!!docSelections.vehicleKM}
-                    onChange={(e) =>
-                      setDocSelections((s) => ({
-                        ...s,
-                        vehicleKM: e.target.checked,
-                      }))
-                    }
-                  />
-                  &nbsp;Vehicle KM Photo
-                </label>
-                <label style={{ display: "block", marginBottom: 8 }}>
-                  <input
-                    type="checkbox"
-                    checked={!!docSelections.vehiclePhotos}
-                    onChange={(e) =>
-                      setDocSelections((s) => ({
-                        ...s,
-                        vehiclePhotos: e.target.checked,
-                      }))
-                    }
-                  />
-                  &nbsp;Vehicle Photos
-                </label>
+            <div style={{
+              ...styles.modalContent,
+              maxWidth: "500px",
+              padding: 0,
+            }}>
+              <div style={{
+                padding: "20px 24px",
+                borderBottom: "1px solid #e2e8f0",
+                backgroundColor: "#f8fafc",
+              }}>
+                <h3 style={{
+                  margin: 0,
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  color: "#1e293b",
+                }}>Select Items to Include</h3>
+                <p style={{
+                  margin: "6px 0 0 0",
+                  fontSize: "14px",
+                  color: "#64748b",
+                }}>
+                  Choose which items to include in the PDF
+                </p>
               </div>
-              <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ padding: "20px 24px" }}>
+                <div style={{
+                  marginBottom: "16px",
+                  paddingBottom: "16px",
+                  borderBottom: "1px solid #e2e8f0",
+                }}>
+                  <div style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    color: "#475569",
+                    marginBottom: "12px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}>Main Documents</div>
+                  <label style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    marginBottom: "8px",
+                    backgroundColor: docSelections.letter ? "#f0f9ff" : "transparent",
+                    border: `2px solid ${docSelections.letter ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.letter}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({ ...s, letter: e.target.checked }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Sell Letter</span>
+                  </label>
+                  <label style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    marginBottom: "8px",
+                    backgroundColor: docSelections.invoice ? "#f0f9ff" : "transparent",
+                    border: `2px solid ${docSelections.invoice ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.invoice}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({ ...s, invoice: e.target.checked }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Invoice</span>
+                  </label>
+                </div>
+                <div style={{ marginBottom: "8px" }}>
+                  <div style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    color: "#475569",
+                    marginBottom: "12px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}>Supporting Documents</div>
+                  <label style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    marginBottom: "8px",
+                    backgroundColor: docSelections.vehicleRC ? "#f0f9ff" : "transparent",
+                    border: `2px solid ${docSelections.vehicleRC ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.vehicleRC}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({
+                          ...s,
+                          vehicleRC: e.target.checked,
+                        }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Vehicle RC (Front/Back)</span>
+                  </label>
+                  <label style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    marginBottom: "8px",
+                    backgroundColor: docSelections.aadhaar ? "#f0f9ff" : "transparent",
+                    border: `2px solid ${docSelections.aadhaar ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.aadhaar}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({
+                          ...s,
+                          aadhaar: e.target.checked,
+                        }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Aadhaar (Front/Back)</span>
+                  </label>
+                  <label style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    marginBottom: "8px",
+                    backgroundColor: docSelections.pan ? "#f0f9ff" : "transparent",
+                    border: `2px solid ${docSelections.pan ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.pan}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({ ...s, pan: e.target.checked }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>PAN Card</span>
+                  </label>
+                  <label style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    marginBottom: "8px",
+                    backgroundColor: docSelections.vehicleKM ? "#f0f9ff" : "transparent",
+                    border: `2px solid ${docSelections.vehicleKM ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.vehicleKM}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({
+                          ...s,
+                          vehicleKM: e.target.checked,
+                        }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Vehicle KM Photo</span>
+                  </label>
+                  <label style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    backgroundColor: docSelections.vehiclePhotos ? "#f0f9ff" : "transparent",
+                    border: `2px solid ${docSelections.vehiclePhotos ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.vehiclePhotos}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({
+                          ...s,
+                          vehiclePhotos: e.target.checked,
+                        }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Vehicle Photos</span>
+                  </label>
+                </div>
+              </div>
+              <div style={{
+                display: "flex",
+                gap: "12px",
+                padding: "16px 24px",
+                borderTop: "1px solid #e2e8f0",
+                backgroundColor: "#f8fafc",
+              }}>
                 <button
-                  style={styles.cancelButton}
+                  style={{
+                    flex: 1,
+                    padding: "10px 16px",
+                    backgroundColor: "#ffffff",
+                    color: "#475569",
+                    border: "2px solid #e2e8f0",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
                   onClick={() => setShowDocumentModal(false)}
                 >
                   Cancel
                 </button>
                 <button
-                  style={styles.saveButton}
+                  style={{
+                    flex: 1,
+                    padding: "10px 16px",
+                    backgroundColor: "#0284c7",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
                   onClick={() => {
                     const buildFilteredDocs = (docs = {}, sel = {}) => {
-                      const out = {};
+                      const out = {
+                        letter: sel.letter,
+                        invoice: sel.invoice,
+                      };
                       if (sel.vehicleRC && docs.vehicleRC)
                         out.vehicleRC = docs.vehicleRC;
                       if (sel.aadhaar && docs.aadhaar) {

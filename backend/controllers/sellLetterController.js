@@ -117,7 +117,7 @@ exports.createSellLetter = [
       sellLetterData.documents = {
         vehicleRC: uploadedUrls.vehicleRC,
         aadhaar: uploadedUrls.aadhaar,
-        aadhaarUploadMode: body.aadhaarUploadMode || "separate",
+        aadhaarUploadMode: bodyData.aadhaarUploadMode || "separate",
         pan: uploadedUrls.pan,
         vehicleKM: uploadedUrls.vehicleKM,
         vehiclePhotos: uploadedUrls.vehiclePhotos,

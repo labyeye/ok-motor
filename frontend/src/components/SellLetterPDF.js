@@ -40,8 +40,25 @@ import logo1 from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 import ImageCropper from "./ImageCropper";
 import FileUploadModal from "./FileUploadModal";
-import { isPdfFile, isImageFile } from "../utils/pdfHandler";
-import {extractImagesFromPdf } from "../utils/pdfHandler";
+import {
+  isPdfFile,
+  isImageFile,
+  extractImagesFromPdf,
+  convertPdfToImages,
+} from "../utils/pdfHandler";
+
+// helper to turn dataURL into File
+const dataUrlToFile = (dataUrl, filename) => {
+  const arr = dataUrl.split(",");
+  const mime = arr[0].match(/:(.*?);/)[1] || "image/png";
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+};
 
 const SellLetterForm = () => {
   const { user, logout } = useContext(AuthContext);
@@ -491,6 +508,18 @@ const SellLetterForm = () => {
     setShowFileUploadModal(true);
   };
 
+  // Remove/clear an uploaded image
+  const handleRemoveFile = (fieldName) => {
+    setFilesState((prev) => ({
+      ...prev,
+      [fieldName]: null,
+    }));
+    setFilePreviews((prev) => ({
+      ...prev,
+      [fieldName]: null,
+    }));
+  };
+
   const handleFileUploadSelect = async (file, uploadType) => {
     if (!file || !uploadModalFieldName) {
       setShowFileUploadModal(false);
@@ -500,31 +529,50 @@ const SellLetterForm = () => {
     try {
       // Handle PDF files
       if (isPdfFile(file)) {
-        // Preserve PDF upload and surface a preview URL so PDF docs render like templates
+        // Convert first page of PDF to PNG and use that for upload + preview
+        let convertedFile = null;
+        let previewImage = null;
+        try {
+          const pdfImages = await convertPdfToImages(file);
+          if (Array.isArray(pdfImages) && pdfImages[0]?.data) {
+            previewImage = pdfImages[0].data;
+            convertedFile = dataUrlToFile(
+              pdfImages[0].data,
+              `${uploadModalFieldName || "document"}.png`,
+            );
+          }
+        } catch (err) {
+          console.warn("PDF to image conversion failed", err);
+        }
+
+        // fallback: use original PDF if conversion failed
         const pdfData = await extractImagesFromPdf(file);
         const pdfUrl = pdfData?.url || URL.createObjectURL(file);
+
+        const finalFile = convertedFile || file;
+        const effectivePreview = previewImage || pdfUrl;
         
         // Special handling for Aadhaar based on upload mode
         if (uploadModalFieldName === "aadhaarFront" && aadhaarUploadMode === "single") {
           // Single file mode: use for both front and back
           setFilesState((prev) => ({
             ...prev,
-            aadhaarFront: file,
-            aadhaarBack: file,
+            aadhaarFront: finalFile,
+            aadhaarBack: finalFile,
           }));
           setFilePreviews((prev) => ({
             ...prev,
-            aadhaarFront: pdfUrl,
-            aadhaarBack: pdfUrl,
+            aadhaarFront: effectivePreview,
+            aadhaarBack: effectivePreview,
           }));
         } else {
           setFilesState((prev) => ({
             ...prev,
-            [uploadModalFieldName]: file,
+            [uploadModalFieldName]: finalFile,
           }));
           setFilePreviews((prev) => ({
             ...prev,
-            [uploadModalFieldName]: pdfUrl,
+            [uploadModalFieldName]: effectivePreview,
           }));
         }
         setShowFileUploadModal(false);
@@ -3604,13 +3652,28 @@ const SellLetterForm = () => {
                 {aadhaarUploadMode === "single" ? (
                   <div style={styles.formField}>
                     <label style={styles.formLabel}>Aadhaar (Front and Back)</label>
-                    <button
-                      type="button"
-                      onClick={() => handleFileInput("aadhaarFront", true)}
-                      style={styles.uploadBtn}
-                    >
-                      <Image size={20} /> Choose File
-                    </button>
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        onClick={() => handleFileInput("aadhaarFront", true)}
+                        style={styles.uploadBtn}
+                      >
+                        <Image size={20} /> {filePreviews.aadhaarFront ? "Change" : "Choose File"}
+                      </button>
+                      {filePreviews.aadhaarFront && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleRemoveFile("aadhaarFront");
+                            setFilesState(prev => ({ ...prev, aadhaarBack: null }));
+                            setFilePreviews(prev => ({ ...prev, aadhaarBack: null }));
+                          }}
+                          style={{ ...styles.uploadBtn, backgroundColor: "#ef4444" }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
                     {filePreviews.aadhaarFront && (
                       <img
                         src={filePreviews.aadhaarFront}
@@ -3623,13 +3686,24 @@ const SellLetterForm = () => {
                   <>
                     <div style={styles.formField}>
                       <label style={styles.formLabel}>Aadhaar (Front)</label>
-                      <button
-                        type="button"
-                        onClick={() => handleFileInput("aadhaarFront", true)}
-                        style={styles.uploadBtn}
-                      >
-                        <Image size={20} /> Choose File
-                      </button>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          onClick={() => handleFileInput("aadhaarFront", true)}
+                          style={styles.uploadBtn}
+                        >
+                          <Image size={20} /> {filePreviews.aadhaarFront ? "Change" : "Choose File"}
+                        </button>
+                        {filePreviews.aadhaarFront && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile("aadhaarFront")}
+                            style={{ ...styles.uploadBtn, backgroundColor: "#ef4444" }}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
                       {filePreviews.aadhaarFront && (
                         <img
                           src={filePreviews.aadhaarFront}
@@ -3641,13 +3715,24 @@ const SellLetterForm = () => {
 
                     <div style={styles.formField}>
                       <label style={styles.formLabel}>Aadhaar (Back)</label>
-                      <button
-                        type="button"
-                        onClick={() => handleFileInput("aadhaarBack", true)}
-                        style={styles.uploadBtn}
-                      >
-                        <Image size={20} /> Choose File
-                      </button>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          onClick={() => handleFileInput("aadhaarBack", true)}
+                          style={styles.uploadBtn}
+                        >
+                          <Image size={20} /> {filePreviews.aadhaarBack ? "Change" : "Choose File"}
+                        </button>
+                        {filePreviews.aadhaarBack && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile("aadhaarBack")}
+                            style={{ ...styles.uploadBtn, backgroundColor: "#ef4444" }}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
                       {filePreviews.aadhaarBack && (
                         <img
                           src={filePreviews.aadhaarBack}
