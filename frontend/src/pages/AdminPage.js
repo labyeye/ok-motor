@@ -215,7 +215,8 @@ const AdminPage = () => {
     } catch (e) {
       console.error("Error fetching vehicle stats", e);
     }
-  }, [fetchIncompleteLetters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (user && activeMenu === "Dashboard") {
