@@ -759,8 +759,9 @@ const BuyLetterForm = () => {
     try {
       // Handle PDF files
       if (isPdfFile(file)) {
-        // Store PDF directly for aadhaar
-        const pdfUrl = URL.createObjectURL(file);
+        // Keep the PDF file, but also derive a preview URL via helper so PDF uploads render like templates
+        const pdfData = await extractImagesFromPdf(file);
+        const pdfUrl = pdfData?.url || URL.createObjectURL(file);
         setFilesState((prev) => ({
           ...prev,
           [uploadModalFieldName]: file,
@@ -842,14 +843,6 @@ const BuyLetterForm = () => {
     setCropImageSrc(null);
     setCropFieldName(null);
     setCropFileName(null);
-  };
-
-  const handleMultipleFiles = (e, fieldName) => {
-    const fileList = Array.from(e.target.files || []);
-    const limited = fileList.slice(0, 4);
-    setFilesState((prev) => ({ ...prev, [fieldName]: limited }));
-    const prevs = limited.map((f) => URL.createObjectURL(f));
-    setFilePreviews((prev) => ({ ...prev, [fieldName]: prevs }));
   };
 
   const removeVehiclePhoto = (index) => {

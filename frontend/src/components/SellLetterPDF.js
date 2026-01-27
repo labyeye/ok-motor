@@ -40,6 +40,7 @@ import logo1 from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 import ImageCropper from "./ImageCropper";
 import FileUploadModal from "./FileUploadModal";
+import { isPdfFile, isImageFile } from "../utils/pdfHandler";
 import { isPdfFile, isImageFile, extractImagesFromPdf } from "../utils/pdfHandler";
 
 const SellLetterForm = () => {
@@ -488,8 +489,9 @@ const SellLetterForm = () => {
     try {
       // Handle PDF files
       if (isPdfFile(file)) {
-        // Store PDF directly for aadhaar
-        const pdfUrl = URL.createObjectURL(file);
+        // Preserve PDF upload and surface a preview URL so PDF docs render like templates
+        const pdfData = await extractImagesFromPdf(file);
+        const pdfUrl = pdfData?.url || URL.createObjectURL(file);
         setFilesState((prev) => ({
           ...prev,
           [uploadModalFieldName]: file,
@@ -569,14 +571,6 @@ const SellLetterForm = () => {
     setCropImageSrc(null);
     setCropFieldName(null);
     setCropFileName(null);
-  };
-
-  const handleMultipleFiles = (e, fieldName) => {
-    const fileList = Array.from(e.target.files || []);
-    const limited = fileList.slice(0, 4);
-    setFilesState((prev) => ({ ...prev, [fieldName]: limited }));
-    const prevs = limited.map((f) => URL.createObjectURL(f));
-    setFilePreviews((prev) => ({ ...prev, [fieldName]: prevs }));
   };
 
   const removeVehiclePhoto = (index) => {
