@@ -58,7 +58,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         setSearchTerm("");
       }
     }
-  }, [externalSearchTerm]);
+  }, [externalSearchTerm, searchTerm]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "";

@@ -215,7 +215,7 @@ const AdminPage = () => {
     } catch (e) {
       console.error("Error fetching vehicle stats", e);
     }
-  }, []);
+  }, [fetchIncompleteLetters]);
 
   useEffect(() => {
     if (user && activeMenu === "Dashboard") {
@@ -472,7 +472,7 @@ const AdminPage = () => {
       fetchFreeServicesData();
       fetchIncompleteLetters();
     }
-  }, [user, activeMenu, fetchDashboardData, fetchFreeServicesData]);
+  }, [user, activeMenu, fetchDashboardData, fetchFreeServicesData, fetchIncompleteLetters]);
 
   // Debounce free services search and fetch from server
   useEffect(() => {
