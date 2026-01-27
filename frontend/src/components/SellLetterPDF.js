@@ -41,7 +41,7 @@ import AuthContext from "../context/AuthContext";
 import ImageCropper from "./ImageCropper";
 import FileUploadModal from "./FileUploadModal";
 import { isPdfFile, isImageFile } from "../utils/pdfHandler";
-import { isPdfFile, isImageFile, extractImagesFromPdf } from "../utils/pdfHandler";
+import {extractImagesFromPdf } from "../utils/pdfHandler";
 
 const SellLetterForm = () => {
   const { user, logout } = useContext(AuthContext);
