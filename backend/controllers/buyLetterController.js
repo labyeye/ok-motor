@@ -138,7 +138,19 @@ exports.createBuyLetter = [
           `^${escapeRegExp(String(buyLetterData.registrationNumber).trim())}$`,
           "i"
         );
-        const existing = await BuyLetter.findOne({ registrationNumber: regex });
+        const query = { registrationNumber: regex };
+        
+        // When editing (previousVersionId exists), exclude that document and its versions from duplicate check
+        if (buyLetterData.previousVersionId) {
+          query._id = { $ne: buyLetterData.previousVersionId };
+          // Also exclude other versions of the same original document
+          if (buyLetterData.originalDocumentId) {
+            query.originalDocumentId = { $ne: buyLetterData.originalDocumentId };
+            query._id = { $nin: [buyLetterData.previousVersionId, buyLetterData.originalDocumentId] };
+          }
+        }
+        
+        const existing = await BuyLetter.findOne(query);
         if (existing) {
           // Return conflict with existing document so frontend can reuse it
           return res
