@@ -200,8 +200,7 @@ const SellLetterForm = () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE =
-        process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+      const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
@@ -300,16 +299,19 @@ const SellLetterForm = () => {
         // If server returned stored document URLs, show them as previews
         if (full.documents) {
           const previews = {};
-          
+
           // Set aadhaarUploadMode based on loaded document
           if (full.documents.aadhaarUploadMode) {
             setAadhaarUploadMode(full.documents.aadhaarUploadMode);
           } else {
             // Detect mode from existing data
-            const sameUrl = full.documents.aadhaar?.front === full.documents.aadhaar?.back;
-            setAadhaarUploadMode(sameUrl && full.documents.aadhaar?.front ? "single" : "separate");
+            const sameUrl =
+              full.documents.aadhaar?.front === full.documents.aadhaar?.back;
+            setAadhaarUploadMode(
+              sameUrl && full.documents.aadhaar?.front ? "single" : "separate",
+            );
           }
-          
+
           if (full.documents.vehicleRC) {
             previews.vehicleRCFront = full.documents.vehicleRC.front || null;
             previews.vehicleRCBack = full.documents.vehicleRC.back || null;
@@ -551,9 +553,12 @@ const SellLetterForm = () => {
 
         const finalFile = convertedFile || file;
         const effectivePreview = previewImage || pdfUrl;
-        
+
         // Special handling for Aadhaar based on upload mode
-        if (uploadModalFieldName === "aadhaarFront" && aadhaarUploadMode === "single") {
+        if (
+          uploadModalFieldName === "aadhaarFront" &&
+          aadhaarUploadMode === "single"
+        ) {
           // Single file mode: use for both front and back
           setFilesState((prev) => ({
             ...prev,
@@ -1405,7 +1410,7 @@ const SellLetterForm = () => {
             form.append(key, String(value));
           }
         });
-        
+
         // Add aadhaarUploadMode to the form
         form.append("aadhaarUploadMode", aadhaarUploadMode);
 
@@ -1582,7 +1587,7 @@ const SellLetterForm = () => {
     previousDate: { x: 243, y: 517, size: 11 },
     previousTime: { x: 363, y: 517, size: 11 },
     buyerPhone: { x: 85, y: 240, size: 11 },
-    buyerEmail: { x: 200, y: 240, size: 10 },
+    // buyerEmail: { x: 200, y: 240, size: 10 },
     buyerPhone2: { x: 150, y: 240, size: 11 },
     buyerAadhar: { x: 111, y: 222, size: 11 },
     witnessName: { x: 70, y: 122, size: 11 },
@@ -1612,7 +1617,7 @@ const SellLetterForm = () => {
     previousDate: { x: 240 - 16, y: 538, size: 11 },
     previousTime: { x: 340 - 16, y: 538, size: 11 },
     buyerPhone: { x: 109, y: 282, size: 11 },
-    buyerEmail: { x: 200, y: 282, size: 10 },
+    // buyerEmail: { x: 200, y: 282, size: 10 },
     buyerPhone2: { x: 115, y: 282, size: 11 },
     buyerAadhar: { x: 137, y: 263, size: 11 },
     witnessName: { x: 105, y: 135, size: 11 },
@@ -2078,11 +2083,19 @@ const SellLetterForm = () => {
   };
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    // Remove any time portion (e.g., 'T00:00:00') if present
+    let ds = dateString;
+    try {
+      if (typeof ds === "string" && ds.includes("T")) ds = ds.split("T")[0];
+      const date = new Date(ds);
+      if (isNaN(date.getTime())) return "";
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch (err) {
+      return "";
+    }
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
@@ -3596,8 +3609,22 @@ const SellLetterForm = () => {
                   <label style={{ ...styles.formLabel, marginBottom: "12px" }}>
                     Aadhaar Upload Mode
                   </label>
-                  <div style={{ display: "flex", gap: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "16px",
+                      marginBottom: "16px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                      }}
+                    >
                       <input
                         type="radio"
                         name="aadhaarUploadMode"
@@ -3606,12 +3633,12 @@ const SellLetterForm = () => {
                         onChange={(e) => {
                           setAadhaarUploadMode(e.target.value);
                           // Clear aadhaar files when switching modes
-                          setFilesState(prev => ({
+                          setFilesState((prev) => ({
                             ...prev,
                             aadhaarFront: null,
                             aadhaarBack: null,
                           }));
-                          setFilePreviews(prev => ({
+                          setFilePreviews((prev) => ({
                             ...prev,
                             aadhaarFront: null,
                             aadhaarBack: null,
@@ -3619,9 +3646,18 @@ const SellLetterForm = () => {
                         }}
                         style={{ cursor: "pointer" }}
                       />
-                      <span style={{ fontSize: "14px" }}>Single File (Front + Back in one PDF/Image)</span>
+                      <span style={{ fontSize: "14px" }}>
+                        Single File (Front + Back in one PDF/Image)
+                      </span>
                     </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                      }}
+                    >
                       <input
                         type="radio"
                         name="aadhaarUploadMode"
@@ -3630,12 +3666,12 @@ const SellLetterForm = () => {
                         onChange={(e) => {
                           setAadhaarUploadMode(e.target.value);
                           // Clear aadhaar files when switching modes
-                          setFilesState(prev => ({
+                          setFilesState((prev) => ({
                             ...prev,
                             aadhaarFront: null,
                             aadhaarBack: null,
                           }));
-                          setFilePreviews(prev => ({
+                          setFilePreviews((prev) => ({
                             ...prev,
                             aadhaarFront: null,
                             aadhaarBack: null,
@@ -3643,7 +3679,9 @@ const SellLetterForm = () => {
                         }}
                         style={{ cursor: "pointer" }}
                       />
-                      <span style={{ fontSize: "14px" }}>Two Separate Images (Front & Back)</span>
+                      <span style={{ fontSize: "14px" }}>
+                        Two Separate Images (Front & Back)
+                      </span>
                     </label>
                   </div>
                 </div>
@@ -3651,24 +3689,38 @@ const SellLetterForm = () => {
                 {/* Render upload fields based on mode */}
                 {aadhaarUploadMode === "single" ? (
                   <div style={styles.formField}>
-                    <label style={styles.formLabel}>Aadhaar (Front and Back)</label>
-                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    <label style={styles.formLabel}>
+                      Aadhaar (Front and Back)
+                    </label>
+                    <div
+                      style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
+                    >
                       <button
                         type="button"
                         onClick={() => handleFileInput("aadhaarFront", true)}
                         style={styles.uploadBtn}
                       >
-                        <Image size={20} /> {filePreviews.aadhaarFront ? "Change" : "Choose File"}
+                        <Image size={20} />{" "}
+                        {filePreviews.aadhaarFront ? "Change" : "Choose File"}
                       </button>
                       {filePreviews.aadhaarFront && (
                         <button
                           type="button"
                           onClick={() => {
                             handleRemoveFile("aadhaarFront");
-                            setFilesState(prev => ({ ...prev, aadhaarBack: null }));
-                            setFilePreviews(prev => ({ ...prev, aadhaarBack: null }));
+                            setFilesState((prev) => ({
+                              ...prev,
+                              aadhaarBack: null,
+                            }));
+                            setFilePreviews((prev) => ({
+                              ...prev,
+                              aadhaarBack: null,
+                            }));
                           }}
-                          style={{ ...styles.uploadBtn, backgroundColor: "#ef4444" }}
+                          style={{
+                            ...styles.uploadBtn,
+                            backgroundColor: "#ef4444",
+                          }}
                         >
                           Remove
                         </button>
@@ -3686,19 +3738,29 @@ const SellLetterForm = () => {
                   <>
                     <div style={styles.formField}>
                       <label style={styles.formLabel}>Aadhaar (Front)</label>
-                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
                         <button
                           type="button"
                           onClick={() => handleFileInput("aadhaarFront", true)}
                           style={styles.uploadBtn}
                         >
-                          <Image size={20} /> {filePreviews.aadhaarFront ? "Change" : "Choose File"}
+                          <Image size={20} />{" "}
+                          {filePreviews.aadhaarFront ? "Change" : "Choose File"}
                         </button>
                         {filePreviews.aadhaarFront && (
                           <button
                             type="button"
                             onClick={() => handleRemoveFile("aadhaarFront")}
-                            style={{ ...styles.uploadBtn, backgroundColor: "#ef4444" }}
+                            style={{
+                              ...styles.uploadBtn,
+                              backgroundColor: "#ef4444",
+                            }}
                           >
                             Remove
                           </button>
@@ -3715,19 +3777,29 @@ const SellLetterForm = () => {
 
                     <div style={styles.formField}>
                       <label style={styles.formLabel}>Aadhaar (Back)</label>
-                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
                         <button
                           type="button"
                           onClick={() => handleFileInput("aadhaarBack", true)}
                           style={styles.uploadBtn}
                         >
-                          <Image size={20} /> {filePreviews.aadhaarBack ? "Change" : "Choose File"}
+                          <Image size={20} />{" "}
+                          {filePreviews.aadhaarBack ? "Change" : "Choose File"}
                         </button>
                         {filePreviews.aadhaarBack && (
                           <button
                             type="button"
                             onClick={() => handleRemoveFile("aadhaarBack")}
-                            style={{ ...styles.uploadBtn, backgroundColor: "#ef4444" }}
+                            style={{
+                              ...styles.uploadBtn,
+                              backgroundColor: "#ef4444",
+                            }}
                           >
                             Remove
                           </button>

@@ -38,6 +38,7 @@ const SellLetterHistory = () => {
   const [expandedMenus, setExpandedMenus] = useState({});
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [selectedLetter, setSelectedLetter] = useState(null);
+  const [languageAction, setLanguageAction] = useState(null); // 'download' | 'preview'
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [chosenLanguage, setChosenLanguage] = useState(null); // 'hindi' | 'english'
   const [docSelections, setDocSelections] = useState({
@@ -123,11 +124,19 @@ const SellLetterHistory = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    // If the value includes a time portion like '2024-05-01T00:00:00', strip it
+    let ds = dateString;
+    try {
+      if (typeof ds === "string" && ds.includes("T")) ds = ds.split("T")[0];
+      const date = new Date(ds);
+      if (isNaN(date.getTime())) return "";
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch (err) {
+      return "";
+    }
   };
 
   // Helper to get field label in readable format
@@ -176,25 +185,43 @@ const SellLetterHistory = () => {
 
     const changes = [];
     const fieldsToCompare = [
-      "vehicleName", "vehicleModel", "vehicleColor", "registrationNumber",
-      "chassisNumber", "engineNumber", "vehiclekm", "vehicleCondition",
-      "pucStatus", "insuranceStatus", "insuranceCompany", "insurancePolicyNumber",
-      "buyerName", "buyerFatherName", "buyerAddress", "buyerPhone",
-      "buyerPhone2", "buyerEmail", "buyerAadhar", "saleAmount",
-      "paymentMethod", "witnessName", "witnessPhone", "note"
+      "vehicleName",
+      "vehicleModel",
+      "vehicleColor",
+      "registrationNumber",
+      "chassisNumber",
+      "engineNumber",
+      "vehiclekm",
+      "vehicleCondition",
+      "pucStatus",
+      "insuranceStatus",
+      "insuranceCompany",
+      "insurancePolicyNumber",
+      "buyerName",
+      "buyerFatherName",
+      "buyerAddress",
+      "buyerPhone",
+      "buyerPhone2",
+      "buyerEmail",
+      "buyerAadhar",
+      "saleAmount",
+      "paymentMethod",
+      "witnessName",
+      "witnessPhone",
+      "note",
     ];
 
     // Check if we have previousVersion data populated
     if (letter.previousVersion) {
-      fieldsToCompare.forEach(field => {
+      fieldsToCompare.forEach((field) => {
         const oldValue = letter.previousVersion[field];
         const newValue = letter[field];
-        
+
         if (oldValue !== newValue && (oldValue || newValue)) {
           changes.push({
             field: getFieldLabel(field),
             oldValue: oldValue || "(empty)",
-            newValue: newValue || "(empty)"
+            newValue: newValue || "(empty)",
           });
         }
       });
@@ -205,81 +232,96 @@ const SellLetterHistory = () => {
         { old: "todayDate", new: "todayDate", label: "Today's Date" },
         { old: "previousDate", new: "previousDate", label: "Previous Date" },
         { old: "pucIssueDate", new: "pucIssueDate", label: "PUC Issue Date" },
-        { old: "pucExpiryDate", new: "pucExpiryDate", label: "PUC Expiry Date" },
-        { old: "insuranceExpiryDate", new: "insuranceExpiryDate", label: "Insurance Expiry Date" }
+        {
+          old: "pucExpiryDate",
+          new: "pucExpiryDate",
+          label: "PUC Expiry Date",
+        },
+        {
+          old: "insuranceExpiryDate",
+          new: "insuranceExpiryDate",
+          label: "Insurance Expiry Date",
+        },
       ];
 
       dateFields.forEach(({ old, new: newField, label }) => {
-        const oldDate = letter.previousVersion[old] ? formatDate(letter.previousVersion[old]) : "";
+        const oldDate = letter.previousVersion[old]
+          ? formatDate(letter.previousVersion[old])
+          : "";
         const newDate = letter[newField] ? formatDate(letter[newField]) : "";
         if (oldDate !== newDate && (oldDate || newDate)) {
           changes.push({
             field: label,
             oldValue: oldDate || "(empty)",
-            newValue: newDate || "(empty)"
+            newValue: newDate || "(empty)",
           });
         }
       });
 
       // Check time fields
       const timeFields = ["saleTime", "todayTime", "previousTime"];
-      timeFields.forEach(field => {
+      timeFields.forEach((field) => {
         const oldValue = letter.previousVersion[field];
         const newValue = letter[field];
         if (oldValue !== newValue && (oldValue || newValue)) {
           changes.push({
             field: getFieldLabel(field),
             oldValue: oldValue || "(empty)",
-            newValue: newValue || "(empty)"
+            newValue: newValue || "(empty)",
           });
         }
       });
 
       // Check document changes
       const checkDocumentChange = (docPath, label) => {
-        const getNestedValue = (obj, path) => path.split('.').reduce((acc, part) => acc?.[part], obj);
-        const oldDoc = getNestedValue(letter.previousVersion.documents, docPath);
+        const getNestedValue = (obj, path) =>
+          path.split(".").reduce((acc, part) => acc?.[part], obj);
+        const oldDoc = getNestedValue(
+          letter.previousVersion.documents,
+          docPath,
+        );
         const newDoc = getNestedValue(letter.documents, docPath);
-        
+
         if (oldDoc !== newDoc) {
           if (!oldDoc && newDoc) {
             changes.push({
               field: label,
               oldValue: "Not uploaded",
-              newValue: "Uploaded"
+              newValue: "Uploaded",
             });
           } else if (oldDoc && !newDoc) {
             changes.push({
               field: label,
               oldValue: "Uploaded",
-              newValue: "Removed"
+              newValue: "Removed",
             });
           } else if (oldDoc && newDoc && oldDoc !== newDoc) {
             changes.push({
               field: label,
               oldValue: "Updated (old document)",
-              newValue: "Updated (new document)"
+              newValue: "Updated (new document)",
             });
           }
         }
       };
 
       // Check all document types
-      checkDocumentChange('vehicleRC.front', 'Vehicle RC - Front');
-      checkDocumentChange('vehicleRC.back', 'Vehicle RC - Back');
-      checkDocumentChange('aadhaar.front', 'Aadhaar - Front');
-      checkDocumentChange('aadhaar.back', 'Aadhaar - Back');
-      checkDocumentChange('pan', 'PAN Card');
-      checkDocumentChange('vehicleKM', 'Vehicle KM Photo');
+      checkDocumentChange("vehicleRC.front", "Vehicle RC - Front");
+      checkDocumentChange("vehicleRC.back", "Vehicle RC - Back");
+      checkDocumentChange("aadhaar.front", "Aadhaar - Front");
+      checkDocumentChange("aadhaar.back", "Aadhaar - Back");
+      checkDocumentChange("pan", "PAN Card");
+      checkDocumentChange("vehicleKM", "Vehicle KM Photo");
 
       // Check vehicle photos count
-      const oldPhotosCount = letter.previousVersion.documents?.vehiclePhotos?.length || 0;
+      const oldPhotosCount =
+        letter.previousVersion.documents?.vehiclePhotos?.length || 0;
       const newPhotosCount = letter.documents?.vehiclePhotos?.length || 0;
       if (oldPhotosCount !== newPhotosCount) {
         changes.push({
-          field: 'Vehicle Photos',
-          oldValue: `${oldPhotosCount} photo${oldPhotosCount !== 1 ? 's' : ''}`,
-          newValue: `${newPhotosCount} photo${newPhotosCount !== 1 ? 's' : ''}`
+          field: "Vehicle Photos",
+          oldValue: `${oldPhotosCount} photo${oldPhotosCount !== 1 ? "s" : ""}`,
+          newValue: `${newPhotosCount} photo${newPhotosCount !== 1 ? "s" : ""}`,
         });
       }
     }
@@ -510,10 +552,11 @@ const SellLetterHistory = () => {
 
   const handleDownload = (letter) => {
     setSelectedLetter(letter);
+    setLanguageAction("download");
     setShowLanguageModal(true);
   };
 
-  const handleViewLetter = async (letter) => {
+  const handleViewLetter = async (letter, language = "english") => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
@@ -522,8 +565,10 @@ const SellLetterHistory = () => {
         setDownloadProgress((prev) => Math.min(prev + 10, 90));
       }, 100);
 
-      // Generate PDF (using English version for preview)
-      const existingPdfBytes = await loadPDFTemplate("englishsell.pdf");
+      // Choose template based on language
+      const templateName =
+        language === "hindi" ? "sellletter.pdf" : "englishsell.pdf";
+      const existingPdfBytes = await loadPDFTemplate(templateName);
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const formattedLetter = {
@@ -534,7 +579,10 @@ const SellLetterHistory = () => {
         saleTime: formatTime12Hour(letter.saleTime),
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
         saleAmount: formatRupee(letter.saleAmount),
+        todayDate: formatDate(letter.todayDate),
+        todayDate1: formatDate(letter.todayDate),
         todayTime: formatTime12Hour(letter.todayTime || "12:00"),
+        todayTime1: formatTime12Hour(letter.todayTime || "12:00"),
         previousDate: formatDate(
           letter.previousDate || letter.todayDate || new Date(),
         ),
@@ -546,9 +594,9 @@ const SellLetterHistory = () => {
         selleraadhar: letter.selleraadhar || "764465626571",
       };
 
-      for (const [fieldName, position] of Object.entries(
-        englishFieldPositions,
-      )) {
+      const fieldPositions =
+        language === "hindi" ? hindiFieldPositions : englishFieldPositions;
+      for (const [fieldName, position] of Object.entries(fieldPositions)) {
         if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
           const combinedPhones = `${formattedLetter.buyerPhone}${
             formattedLetter.buyerPhone2
@@ -577,11 +625,13 @@ const SellLetterHistory = () => {
         const page = pdfDoc.getPages()[0];
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
         const saleText = `${formattedLetter.saleAmount}`;
-        const xBase = englishFieldPositions.saleAmount.x;
-        const yBase = englishFieldPositions.saleAmount.y;
+        // Use the selected field positions so Hindi/English templates align correctly
+        const xBase = fieldPositions.saleAmount.x;
+        const yBase = fieldPositions.saleAmount.y;
         const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
+        const offsetMultiplier = language === "hindi" ? 1.4 : 3;
         page.drawText(formattedLetter.amountInWords, {
-          x: xBase + saleTextWidth + 8,
+          x: xBase + saleTextWidth + offsetMultiplier * (fieldPositions.saleAmount.size / 2),
           y: yBase,
           size: 10,
           color: rgb(0, 0, 0),
@@ -633,7 +683,7 @@ const SellLetterHistory = () => {
           const singleAadhaarItem = [];
           if (documentsObj.aadhaar) {
             const uploadMode = documentsObj.aadhaarUploadMode || "separate";
-            
+
             if (uploadMode === "single") {
               // Single file mode: render full-page separately
               if (documentsObj.aadhaar.front) {
@@ -649,7 +699,10 @@ const SellLetterHistory = () => {
                   title: "Aadhaar - Front",
                   url: documentsObj.aadhaar.front,
                 });
-              if (documentsObj.aadhaar.back && documentsObj.aadhaar.back !== documentsObj.aadhaar.front)
+              if (
+                documentsObj.aadhaar.back &&
+                documentsObj.aadhaar.back !== documentsObj.aadhaar.front
+              )
                 items.push({
                   title: "Aadhaar - Back",
                   url: documentsObj.aadhaar.back,
@@ -679,8 +732,15 @@ const SellLetterHistory = () => {
               const xPos = margin + i * (colWidth + colGap);
               const yTop = 700;
 
-              const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-              page.drawText(item.title, { x: xPos, y: yTop, size: 10, font: titleFont });
+              const titleFont = await pdfDoc.embedFont(
+                StandardFonts.HelveticaBold,
+              );
+              page.drawText(item.title, {
+                x: xPos,
+                y: yTop,
+                size: 10,
+                font: titleFont,
+              });
 
               const embedded = await embedImageFromUrl(pdfDoc, item.url);
               if (embedded) {
@@ -711,9 +771,9 @@ const SellLetterHistory = () => {
             const page = pdfDoc.addPage([595, 842]);
             const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
             const item = singleAadhaarItem[0];
-            
+
             page.drawText(item.title, { x: 50, y: 790, size: 14, font });
-            
+
             const embedded = await embedImageFromUrl(pdfDoc, item.url);
             if (embedded) {
               const pageWidth = 595;
@@ -721,19 +781,19 @@ const SellLetterHistory = () => {
               const margin = 50;
               const maxWidth = pageWidth - 2 * margin;
               const maxHeight = pageHeight - 150;
-              
+
               const { width, height } = embedded.scale(1);
               let drawW = maxWidth;
               let drawH = (height / width) * drawW;
-              
+
               if (drawH > maxHeight) {
                 drawH = maxHeight;
                 drawW = (width / height) * drawH;
               }
-              
+
               const xPos = (pageWidth - drawW) / 2;
               const yPos = 750 - drawH;
-              
+
               page.drawImage(embedded, {
                 x: xPos,
                 y: yPos,
@@ -889,7 +949,9 @@ const SellLetterHistory = () => {
           sellerphone: letter.sellerphone || "9876543210",
           selleraadhar: letter.selleraadhar || "764465626571",
         };
-        for (const [fieldName, position] of Object.entries(hindiFieldPositions)) {
+        for (const [fieldName, position] of Object.entries(
+          hindiFieldPositions,
+        )) {
           if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
             const combinedPhones = `${formattedLetter.buyerPhone}${
               formattedLetter.buyerPhone2
@@ -903,7 +965,10 @@ const SellLetterHistory = () => {
               weight: "bold",
               color: rgb(0, 0, 0),
             });
-          } else if (fieldName !== "buyerPhone2" && formattedLetter[fieldName]) {
+          } else if (
+            fieldName !== "buyerPhone2" &&
+            formattedLetter[fieldName]
+          ) {
             pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
               x: position.x,
               y: position.y,
@@ -971,7 +1036,7 @@ const SellLetterHistory = () => {
         const singleAadhaarItem = [];
         if (documentsObj.aadhaar) {
           const uploadMode = documentsObj.aadhaarUploadMode || "separate";
-          
+
           if (uploadMode === "single") {
             // Single file mode: render full-page separately
             if (documentsObj.aadhaar.front) {
@@ -987,7 +1052,10 @@ const SellLetterHistory = () => {
                 title: "Aadhaar - Front",
                 url: documentsObj.aadhaar.front,
               });
-            if (documentsObj.aadhaar.back && documentsObj.aadhaar.back !== documentsObj.aadhaar.front)
+            if (
+              documentsObj.aadhaar.back &&
+              documentsObj.aadhaar.back !== documentsObj.aadhaar.front
+            )
               items.push({
                 title: "Aadhaar - Back",
                 url: documentsObj.aadhaar.back,
@@ -1017,8 +1085,15 @@ const SellLetterHistory = () => {
             const xPos = margin + i * (colWidth + colGap);
             const yTop = 700;
 
-            const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-            page.drawText(item.title, { x: xPos, y: yTop, size: 10, font: titleFont });
+            const titleFont = await pdfDoc.embedFont(
+              StandardFonts.HelveticaBold,
+            );
+            page.drawText(item.title, {
+              x: xPos,
+              y: yTop,
+              size: 10,
+              font: titleFont,
+            });
 
             const embedded = await embedImageFromUrl(pdfDoc, item.url);
             if (embedded) {
@@ -1049,7 +1124,7 @@ const SellLetterHistory = () => {
           const page = pdfDoc.addPage([595, 842]);
           const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
           const item = singleAadhaarItem[0];
-          
+
           try {
             const logoUrl = logo1;
             const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
@@ -1087,28 +1162,28 @@ const SellLetterHistory = () => {
               color: rgb(0.9, 0.9, 0.9),
             });
           } catch (err) {}
-          
+
           page.drawText(item.title, { x: 50, y: 720, size: 14, font });
-          
+
           const embedded = await embedImageFromUrl(pdfDoc, item.url);
           if (embedded) {
             const pageWidth = 595;
             const margin = 50;
             const maxWidth = pageWidth - 2 * margin;
             const maxHeight = 660;
-            
+
             const { width, height } = embedded.scale(1);
             let drawW = maxWidth;
             let drawH = (height / width) * drawW;
-            
+
             if (drawH > maxHeight) {
               drawH = maxHeight;
               drawW = (width / height) * drawH;
             }
-            
+
             const xPos = (pageWidth - drawW) / 2;
             const yPos = 690 - drawH;
-            
+
             page.drawImage(embedded, {
               x: xPos,
               y: yPos,
@@ -1287,7 +1362,10 @@ const SellLetterHistory = () => {
               weight: "bold",
               color: rgb(0, 0, 0),
             });
-          } else if (fieldName !== "buyerPhone2" && formattedLetter[fieldName]) {
+          } else if (
+            fieldName !== "buyerPhone2" &&
+            formattedLetter[fieldName]
+          ) {
             pdfDoc.getPages()[0].drawText(String(formattedLetter[fieldName]), {
               x: position.x,
               y: position.y,
@@ -1301,17 +1379,18 @@ const SellLetterHistory = () => {
           const page = pdfDoc.getPages()[0];
           const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-          const saleText = `${formattedLetter.saleAmount}`;
-          const xBase = englishFieldPositions.saleAmount.x;
-          const yBase = englishFieldPositions.saleAmount.y;
-          const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
-          page.drawText(formattedLetter.amountInWords, {
-            x: xBase + saleTextWidth + 8,
-            y: yBase,
-            size: 10,
-            color: rgb(0, 0, 0),
-            font,
-          });
+            const saleText = `${formattedLetter.saleAmount}`;
+            const xBase = englishFieldPositions.saleAmount.x;
+            const yBase = englishFieldPositions.saleAmount.y;
+            const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
+            const offsetMultiplier = 3; // English template spacing
+            page.drawText(formattedLetter.amountInWords, {
+              x: xBase + saleTextWidth + offsetMultiplier * (englishFieldPositions.saleAmount.size / 2),
+              y: yBase,
+              size: 10,
+              color: rgb(0, 0, 0),
+              font,
+            });
         }
       } else {
         // Create empty PDF if letter is not selected
@@ -1355,7 +1434,7 @@ const SellLetterHistory = () => {
         const singleAadhaarItem = [];
         if (documentsObj.aadhaar) {
           const uploadMode = documentsObj.aadhaarUploadMode || "separate";
-          
+
           if (uploadMode === "single") {
             // Single file mode: render full-page separately
             if (documentsObj.aadhaar.front) {
@@ -1371,7 +1450,10 @@ const SellLetterHistory = () => {
                 title: "Aadhaar - Front",
                 url: documentsObj.aadhaar.front,
               });
-            if (documentsObj.aadhaar.back && documentsObj.aadhaar.back !== documentsObj.aadhaar.front)
+            if (
+              documentsObj.aadhaar.back &&
+              documentsObj.aadhaar.back !== documentsObj.aadhaar.front
+            )
               items.push({
                 title: "Aadhaar - Back",
                 url: documentsObj.aadhaar.back,
@@ -1401,8 +1483,15 @@ const SellLetterHistory = () => {
             const xPos = margin + i * (colWidth + colGap);
             const yTop = 700;
 
-            const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-            page.drawText(item.title, { x: xPos, y: yTop, size: 10, font: titleFont });
+            const titleFont = await pdfDoc.embedFont(
+              StandardFonts.HelveticaBold,
+            );
+            page.drawText(item.title, {
+              x: xPos,
+              y: yTop,
+              size: 10,
+              font: titleFont,
+            });
 
             const embedded = await embedImageFromUrl(pdfDoc, item.url);
             if (embedded) {
@@ -1433,7 +1522,7 @@ const SellLetterHistory = () => {
           const page = pdfDoc.addPage([595, 842]);
           const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
           const item = singleAadhaarItem[0];
-          
+
           try {
             const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
             const logoImg = await pdfDoc.embedPng(logoBytes);
@@ -1458,28 +1547,28 @@ const SellLetterHistory = () => {
               color: rgb(255, 255, 255),
             });
           } catch (err) {}
-          
+
           page.drawText(item.title, { x: 50, y: 720, size: 14, font });
-          
+
           const embedded = await embedImageFromUrl(pdfDoc, item.url);
           if (embedded) {
             const pageWidth = 595;
             const margin = 50;
             const maxWidth = pageWidth - 2 * margin;
             const maxHeight = 660;
-            
+
             const { width, height } = embedded.scale(1);
             let drawW = maxWidth;
             let drawH = (height / width) * drawW;
-            
+
             if (drawH > maxHeight) {
               drawH = maxHeight;
               drawW = (width / height) * drawH;
             }
-            
+
             const xPos = (pageWidth - drawW) / 2;
             const yPos = 690 - drawH;
-            
+
             page.drawImage(embedded, {
               x: xPos,
               y: yPos,
@@ -2033,14 +2122,11 @@ const SellLetterHistory = () => {
             return;
           }
 
-          await axios.delete(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+          await axios.delete(`https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
             },
-          );
+          });
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
           alert("Sell letter deleted successfully!");
         } else {
@@ -2390,12 +2476,21 @@ const SellLetterHistory = () => {
                             <td style={styles.tableCell}>
                               {letter.buyerName}
                               {letter.version > 1 && (
-                                <span style={{ fontSize: "0.75rem", color: "#ff9800", marginLeft: "6px", fontWeight: "600" }}>
+                                <span
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    color: "#ff9800",
+                                    marginLeft: "6px",
+                                    fontWeight: "600",
+                                  }}
+                                >
                                   (v{letter.version})
                                 </span>
                               )}
                             </td>
-                            <td style={styles.tableCell}>{letter.vehicleModel}</td>
+                            <td style={styles.tableCell}>
+                              {letter.vehicleModel}
+                            </td>
                             <td style={styles.tableCell}>
                               {`${letter.vehicleName || ""} ${
                                 letter.vehicleModel || ""
@@ -2413,7 +2508,13 @@ const SellLetterHistory = () => {
                             <td style={styles.tableCell}>
                               {formatDate(letter.createdAt)}
                               {letter.editedAt && (
-                                <div style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "2px" }}>
+                                <div
+                                  style={{
+                                    fontSize: "0.7rem",
+                                    color: "#64748b",
+                                    marginTop: "2px",
+                                  }}
+                                >
                                   Edited: {formatDate(letter.editedAt)}
                                 </div>
                               )}
@@ -2426,73 +2527,152 @@ const SellLetterHistory = () => {
                                   : ""}
                             </td>
                             <td style={styles.tableCell}>
-                          <button
-                            onClick={() => handleViewLetter(letter)}
-                            style={styles.iconButton}
-                            title="View"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDownload(letter)}
-                            style={styles.iconButton}
-                            title="Download"
-                          >
-                            <Download size={16} />
-                          </button>
-                          {user?.role === "admin" && (
-                            <>
                               <button
-                                onClick={() => handleEdit(letter)}
+                                onClick={() => {
+                                  setSelectedLetter(letter);
+                                  setLanguageAction("preview");
+                                  setShowLanguageModal(true);
+                                }}
                                 style={styles.iconButton}
-                                title="Edit"
+                                title="View"
                               >
-                                <Edit size={16} />
+                                <Eye size={16} />
                               </button>
                               <button
-                                onClick={() => handleDelete(letter._id)}
+                                onClick={() => handleDownload(letter)}
                                 style={styles.iconButton}
-                                title="Delete"
+                                title="Download"
                               >
-                                <Trash2 size={16} />
+                                <Download size={16} />
                               </button>
-                            </>
-                          )}
-                        </td>
-                      </tr>
-                      {letter.version > 1 && (
-                        <tr style={{ backgroundColor: changes && changes.length > 0 ? "#fff8e1" : "#f5f5f5" }}>
-                          <td colSpan="8" style={{ padding: "12px 16px", borderBottom: "1px solid #e2e8f0" }}>
-                            <div style={{ fontSize: "0.85rem" }}>
-                              <div style={{ fontWeight: "600", color: changes && changes.length > 0 ? "#f57c00" : "#757575", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-                                <RefreshCw size={14} />
-                                Changes from previous version:
-                              </div>
-                              {changes && changes.length > 0 ? (
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "8px" }}>
-                                  {changes.map((change, idx) => (
-                                    <div key={idx} style={{ padding: "6px 10px", backgroundColor: "#ffffff", borderRadius: "4px", border: "1px solid #ffe0b2" }}>
-                                      <div style={{ fontWeight: "600", color: "#424242", marginBottom: "3px" }}>{change.field}:</div>
-                                      <div style={{ fontSize: "0.8rem", color: "#e53935" }}>
-                                        <span style={{ textDecoration: "line-through" }}>{change.oldValue}</span>
-                                      </div>
-                                      <div style={{ fontSize: "0.8rem", color: "#43a047", fontWeight: "500" }}>
-                                        → {change.newValue}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div style={{ padding: "8px 12px", backgroundColor: "#ffffff", borderRadius: "4px", border: "1px solid #e0e0e0", color: "#757575", fontStyle: "italic" }}>
-                                  No changes detected from previous version
-                                </div>
+                              {user?.role === "admin" && (
+                                <>
+                                  <button
+                                    onClick={() => handleEdit(letter)}
+                                    style={styles.iconButton}
+                                    title="Edit"
+                                  >
+                                    <Edit size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(letter._id)}
+                                    style={styles.iconButton}
+                                    title="Delete"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </>
                               )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                    );})}
+                            </td>
+                          </tr>
+                          {letter.version > 1 && (
+                            <tr
+                              style={{
+                                backgroundColor:
+                                  changes && changes.length > 0
+                                    ? "#fff8e1"
+                                    : "#f5f5f5",
+                              }}
+                            >
+                              <td
+                                colSpan="8"
+                                style={{
+                                  padding: "12px 16px",
+                                  borderBottom: "1px solid #e2e8f0",
+                                }}
+                              >
+                                <div style={{ fontSize: "0.85rem" }}>
+                                  <div
+                                    style={{
+                                      fontWeight: "600",
+                                      color:
+                                        changes && changes.length > 0
+                                          ? "#f57c00"
+                                          : "#757575",
+                                      marginBottom: "8px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "6px",
+                                    }}
+                                  >
+                                    <RefreshCw size={14} />
+                                    Changes from previous version:
+                                  </div>
+                                  {changes && changes.length > 0 ? (
+                                    <div
+                                      style={{
+                                        display: "grid",
+                                        gridTemplateColumns:
+                                          "repeat(auto-fit, minmax(300px, 1fr))",
+                                        gap: "8px",
+                                      }}
+                                    >
+                                      {changes.map((change, idx) => (
+                                        <div
+                                          key={idx}
+                                          style={{
+                                            padding: "6px 10px",
+                                            backgroundColor: "#ffffff",
+                                            borderRadius: "4px",
+                                            border: "1px solid #ffe0b2",
+                                          }}
+                                        >
+                                          <div
+                                            style={{
+                                              fontWeight: "600",
+                                              color: "#424242",
+                                              marginBottom: "3px",
+                                            }}
+                                          >
+                                            {change.field}:
+                                          </div>
+                                          <div
+                                            style={{
+                                              fontSize: "0.8rem",
+                                              color: "#e53935",
+                                            }}
+                                          >
+                                            <span
+                                              style={{
+                                                textDecoration: "line-through",
+                                              }}
+                                            >
+                                              {change.oldValue}
+                                            </span>
+                                          </div>
+                                          <div
+                                            style={{
+                                              fontSize: "0.8rem",
+                                              color: "#43a047",
+                                              fontWeight: "500",
+                                            }}
+                                          >
+                                            → {change.newValue}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div
+                                      style={{
+                                        padding: "8px 12px",
+                                        backgroundColor: "#ffffff",
+                                        borderRadius: "4px",
+                                        border: "1px solid #e0e0e0",
+                                        color: "#757575",
+                                        fontStyle: "italic",
+                                      }}
+                                    >
+                                      No changes detected from previous version
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -2536,18 +2716,25 @@ const SellLetterHistory = () => {
                   onClick={() => {
                     setChosenLanguage("english");
                     setShowLanguageModal(false);
-                    // initialize selections based on available documents
-                    setDocSelections({
-                      vehicleRC: !!selectedLetter.documents?.vehicleRC,
-                      aadhaar: !!selectedLetter.documents?.aadhaar,
-                      pan: !!selectedLetter.documents?.pan,
-                      vehicleKM: !!selectedLetter.documents?.vehicleKM,
-                      vehiclePhotos: !!(
-                        selectedLetter.documents?.vehiclePhotos &&
-                        selectedLetter.documents.vehiclePhotos.length
-                      ),
-                    });
-                    setShowDocumentModal(true);
+                    if (languageAction === "download") {
+                      // initialize selections based on available documents
+                      setDocSelections({
+                        vehicleRC: !!selectedLetter.documents?.vehicleRC,
+                        aadhaar: !!selectedLetter.documents?.aadhaar,
+                        pan: !!selectedLetter.documents?.pan,
+                        vehicleKM: !!selectedLetter.documents?.vehicleKM,
+                        vehiclePhotos: !!(
+                          selectedLetter.documents?.vehiclePhotos &&
+                          selectedLetter.documents.vehiclePhotos.length
+                        ),
+                        letter: true,
+                        invoice: true,
+                      });
+                      setShowDocumentModal(true);
+                    } else if (languageAction === "preview") {
+                      handleViewLetter(selectedLetter, "english");
+                      setLanguageAction(null);
+                    }
                   }}
                 >
                   English PDF
@@ -2557,17 +2744,24 @@ const SellLetterHistory = () => {
                   onClick={() => {
                     setChosenLanguage("hindi");
                     setShowLanguageModal(false);
-                    setDocSelections({
-                      vehicleRC: !!selectedLetter.documents?.vehicleRC,
-                      aadhaar: !!selectedLetter.documents?.aadhaar,
-                      pan: !!selectedLetter.documents?.pan,
-                      vehicleKM: !!selectedLetter.documents?.vehicleKM,
-                      vehiclePhotos: !!(
-                        selectedLetter.documents?.vehiclePhotos &&
-                        selectedLetter.documents.vehiclePhotos.length
-                      ),
-                    });
-                    setShowDocumentModal(true);
+                    if (languageAction === "download") {
+                      setDocSelections({
+                        vehicleRC: !!selectedLetter.documents?.vehicleRC,
+                        aadhaar: !!selectedLetter.documents?.aadhaar,
+                        pan: !!selectedLetter.documents?.pan,
+                        vehicleKM: !!selectedLetter.documents?.vehicleKM,
+                        vehiclePhotos: !!(
+                          selectedLetter.documents?.vehiclePhotos &&
+                          selectedLetter.documents.vehiclePhotos.length
+                        ),
+                        letter: true,
+                        invoice: true,
+                      });
+                      setShowDocumentModal(true);
+                    } else if (languageAction === "preview") {
+                      handleViewLetter(selectedLetter, "hindi");
+                      setLanguageAction(null);
+                    }
                   }}
                 >
                   Hindi PDF
@@ -2590,60 +2784,83 @@ const SellLetterHistory = () => {
         )}
         {showDocumentModal && selectedLetter && (
           <div style={styles.modalOverlay}>
-            <div style={{
-              ...styles.modalContent,
-              maxWidth: "500px",
-              padding: 0,
-            }}>
-              <div style={{
-                padding: "20px 24px",
-                borderBottom: "1px solid #e2e8f0",
-                backgroundColor: "#f8fafc",
-              }}>
-                <h3 style={{
-                  margin: 0,
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "#1e293b",
-                }}>Select Items to Include</h3>
-                <p style={{
-                  margin: "6px 0 0 0",
-                  fontSize: "14px",
-                  color: "#64748b",
-                }}>
+            <div
+              style={{
+                ...styles.modalContent,
+                maxWidth: "500px",
+                padding: 0,
+              }}
+            >
+              <div
+                style={{
+                  padding: "20px 24px",
+                  borderBottom: "1px solid #e2e8f0",
+                  backgroundColor: "#f8fafc",
+                }}
+              >
+                <h3
+                  style={{
+                    margin: 0,
+                    fontSize: "18px",
+                    fontWeight: "600",
+                    color: "#1e293b",
+                  }}
+                >
+                  Select Items to Include
+                </h3>
+                <p
+                  style={{
+                    margin: "6px 0 0 0",
+                    fontSize: "14px",
+                    color: "#64748b",
+                  }}
+                >
                   Choose which items to include in the PDF
                 </p>
               </div>
               <div style={{ padding: "20px 24px" }}>
-                <div style={{
-                  marginBottom: "16px",
-                  paddingBottom: "16px",
-                  borderBottom: "1px solid #e2e8f0",
-                }}>
-                  <div style={{
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    color: "#475569",
-                    marginBottom: "12px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                  }}>Main Documents</div>
-                  <label style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    marginBottom: "8px",
-                    backgroundColor: docSelections.letter ? "#f0f9ff" : "transparent",
-                    border: `2px solid ${docSelections.letter ? "#0284c7" : "#e2e8f0"}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}>
+                <div
+                  style={{
+                    marginBottom: "16px",
+                    paddingBottom: "16px",
+                    borderBottom: "1px solid #e2e8f0",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      color: "#475569",
+                      marginBottom: "12px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    Main Documents
+                  </div>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      marginBottom: "8px",
+                      backgroundColor: docSelections.letter
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.letter ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={!!docSelections.letter}
                       onChange={(e) =>
-                        setDocSelections((s) => ({ ...s, letter: e.target.checked }))
+                        setDocSelections((s) => ({
+                          ...s,
+                          letter: e.target.checked,
+                        }))
                       }
                       style={{
                         width: "18px",
@@ -2653,24 +2870,39 @@ const SellLetterHistory = () => {
                         cursor: "pointer",
                       }}
                     />
-                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Sell Letter</span>
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Sell Letter
+                    </span>
                   </label>
-                  <label style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    marginBottom: "8px",
-                    backgroundColor: docSelections.invoice ? "#f0f9ff" : "transparent",
-                    border: `2px solid ${docSelections.invoice ? "#0284c7" : "#e2e8f0"}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      marginBottom: "8px",
+                      backgroundColor: docSelections.invoice
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.invoice ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={!!docSelections.invoice}
                       onChange={(e) =>
-                        setDocSelections((s) => ({ ...s, invoice: e.target.checked }))
+                        setDocSelections((s) => ({
+                          ...s,
+                          invoice: e.target.checked,
+                        }))
                       }
                       style={{
                         width: "18px",
@@ -2680,29 +2912,45 @@ const SellLetterHistory = () => {
                         cursor: "pointer",
                       }}
                     />
-                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Invoice</span>
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Invoice
+                    </span>
                   </label>
                 </div>
                 <div style={{ marginBottom: "8px" }}>
-                  <div style={{
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    color: "#475569",
-                    marginBottom: "12px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                  }}>Supporting Documents</div>
-                  <label style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    marginBottom: "8px",
-                    backgroundColor: docSelections.vehicleRC ? "#f0f9ff" : "transparent",
-                    border: `2px solid ${docSelections.vehicleRC ? "#0284c7" : "#e2e8f0"}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}>
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      color: "#475569",
+                      marginBottom: "12px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    Supporting Documents
+                  </div>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      marginBottom: "8px",
+                      backgroundColor: docSelections.vehicleRC
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.vehicleRC ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={!!docSelections.vehicleRC}
@@ -2720,19 +2968,31 @@ const SellLetterHistory = () => {
                         cursor: "pointer",
                       }}
                     />
-                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Vehicle RC (Front/Back)</span>
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Vehicle RC (Front/Back)
+                    </span>
                   </label>
-                  <label style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    marginBottom: "8px",
-                    backgroundColor: docSelections.aadhaar ? "#f0f9ff" : "transparent",
-                    border: `2px solid ${docSelections.aadhaar ? "#0284c7" : "#e2e8f0"}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      marginBottom: "8px",
+                      backgroundColor: docSelections.aadhaar
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.aadhaar ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={!!docSelections.aadhaar}
@@ -2750,24 +3010,39 @@ const SellLetterHistory = () => {
                         cursor: "pointer",
                       }}
                     />
-                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Aadhaar (Front/Back)</span>
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Aadhaar (Front/Back)
+                    </span>
                   </label>
-                  <label style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    marginBottom: "8px",
-                    backgroundColor: docSelections.pan ? "#f0f9ff" : "transparent",
-                    border: `2px solid ${docSelections.pan ? "#0284c7" : "#e2e8f0"}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      marginBottom: "8px",
+                      backgroundColor: docSelections.pan
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.pan ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={!!docSelections.pan}
                       onChange={(e) =>
-                        setDocSelections((s) => ({ ...s, pan: e.target.checked }))
+                        setDocSelections((s) => ({
+                          ...s,
+                          pan: e.target.checked,
+                        }))
                       }
                       style={{
                         width: "18px",
@@ -2777,19 +3052,31 @@ const SellLetterHistory = () => {
                         cursor: "pointer",
                       }}
                     />
-                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>PAN Card</span>
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      PAN Card
+                    </span>
                   </label>
-                  <label style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    marginBottom: "8px",
-                    backgroundColor: docSelections.vehicleKM ? "#f0f9ff" : "transparent",
-                    border: `2px solid ${docSelections.vehicleKM ? "#0284c7" : "#e2e8f0"}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      marginBottom: "8px",
+                      backgroundColor: docSelections.vehicleKM
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.vehicleKM ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={!!docSelections.vehicleKM}
@@ -2807,18 +3094,30 @@ const SellLetterHistory = () => {
                         cursor: "pointer",
                       }}
                     />
-                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Vehicle KM Photo</span>
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Vehicle KM Photo
+                    </span>
                   </label>
-                  <label style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    backgroundColor: docSelections.vehiclePhotos ? "#f0f9ff" : "transparent",
-                    border: `2px solid ${docSelections.vehiclePhotos ? "#0284c7" : "#e2e8f0"}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      backgroundColor: docSelections.vehiclePhotos
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.vehiclePhotos ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={!!docSelections.vehiclePhotos}
@@ -2836,17 +3135,27 @@ const SellLetterHistory = () => {
                         cursor: "pointer",
                       }}
                     />
-                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Vehicle Photos</span>
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Vehicle Photos
+                    </span>
                   </label>
                 </div>
               </div>
-              <div style={{
-                display: "flex",
-                gap: "12px",
-                padding: "16px 24px",
-                borderTop: "1px solid #e2e8f0",
-                backgroundColor: "#f8fafc",
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  padding: "16px 24px",
+                  borderTop: "1px solid #e2e8f0",
+                  backgroundColor: "#f8fafc",
+                }}
+              >
                 <button
                   style={{
                     flex: 1,
@@ -3001,7 +3310,8 @@ const SellLetterHistory = () => {
               <div
                 style={{
                   flex: 1,
-                  overflow: "hidden",
+                  overflow: "auto",
+                  WebkitOverflowScrolling: "touch",
                   backgroundColor: "#525659",
                 }}
               >
@@ -3010,7 +3320,7 @@ const SellLetterHistory = () => {
                   type="application/pdf"
                   style={{
                     width: "100%",
-                    height: "600px",
+                    height: "calc(100vh - 220px)",
                     border: "none",
                   }}
                   aria-label="Sell Letter PDF Preview"
@@ -3019,7 +3329,7 @@ const SellLetterHistory = () => {
                     src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
                     style={{
                       width: "100%",
-                      height: "600px",
+                      height: "calc(100vh - 220px)",
                       border: "none",
                     }}
                     title="Sell Letter PDF Preview"

@@ -60,11 +60,18 @@ const ServiceHistory = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    let ds = dateString;
+    try {
+      if (typeof ds === "string" && ds.includes("T")) ds = ds.split("T")[0];
+      const date = new Date(ds);
+      if (isNaN(date.getTime())) return "";
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch (err) {
+      return "";
+    }
   };
   const simulateProgress = () => {
     return new Promise((resolve) => {
@@ -411,9 +418,7 @@ const ServiceHistory = () => {
         token ? `${token.substring(0, 20)}...` : "No token",
       );
 
-      const response = await axios.get(
-        "https://ok-motor-51l3.vercel.app/api/auth/me",
-      );
+      const response = await axios.get("https://ok-motor-51l3.vercel.app/api/auth/me");
       console.log("Auth test successful:", response.data);
     } catch (error) {
       console.error("Auth test failed:", error);
@@ -515,9 +520,7 @@ const ServiceHistory = () => {
   const performDelete = async () => {
     const id = confirmTargetId;
     try {
-      await axios.delete(
-        `https://ok-motor-51l3.vercel.app/api/service-bills/${id}`,
-      );
+      await axios.delete(`https://ok-motor-51l3.vercel.app/api/service-bills/${id}`);
       setServiceBills((prev) => prev.filter((bill) => bill._id !== id));
     } catch (error) {
       console.error("Error deleting service bill:", error);

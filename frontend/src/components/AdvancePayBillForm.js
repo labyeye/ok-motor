@@ -211,8 +211,7 @@ const AdvancePayBillForm = () => {
           el.style.borderColor = "#ef4444";
           el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
         }
-      } catch (err) {
-      }
+      } catch (err) {}
     }
 
     return errs;

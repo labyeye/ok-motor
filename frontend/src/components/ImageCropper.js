@@ -3,11 +3,7 @@ import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { X, Check, RotateCw } from "lucide-react";
 
-const ImageCropper = ({
-  imageSrc,
-  onCancel,
-  onCropComplete,
-}) => {
+const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
   const [crop, setCrop] = useState({
     unit: "%",
     width: 50,
@@ -29,7 +25,7 @@ const ImageCropper = ({
     const canvas = document.createElement("canvas");
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
-    
+
     // compute bounding box for rotated crop
     const cropWidth = completedCrop.width * scaleX;
     const cropHeight = completedCrop.height * scaleY;
@@ -40,7 +36,7 @@ const ImageCropper = ({
     // rotated canvas size so image isn't clipped
     canvas.width = Math.ceil(cropWidth * cos + cropHeight * sin);
     canvas.height = Math.ceil(cropWidth * sin + cropHeight * cos);
-    
+
     const ctx = canvas.getContext("2d");
 
     // move origin to center, rotate, then draw cropped area centered
@@ -56,18 +52,22 @@ const ImageCropper = ({
       -cropWidth / 2,
       -cropHeight / 2,
       cropWidth,
-      cropHeight
+      cropHeight,
     );
 
     return new Promise((resolve) => {
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          console.error("Canvas is empty");
-          return;
-        }
-        const file = new File([blob], "cropped.jpg", { type: "image/jpeg" });
-        resolve(file);
-      }, "image/jpeg", 0.95);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            console.error("Canvas is empty");
+            return;
+          }
+          const file = new File([blob], "cropped.jpg", { type: "image/jpeg" });
+          resolve(file);
+        },
+        "image/jpeg",
+        0.95,
+      );
     });
   };
 

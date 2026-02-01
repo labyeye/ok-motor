@@ -43,7 +43,7 @@ const AuthForm = ({ isLogin }) => {
       }
     } catch (err) {
       setError(
-        err.response?.data?.message || "Login failed. Please try again."
+        err.response?.data?.message || "Login failed. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -135,7 +135,11 @@ const AuthForm = ({ isLogin }) => {
         .auth-container {
           display: flex;
           min-height: 100vh;
-          font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          font-family:
+            "Inter",
+            -apple-system,
+            BlinkMacSystemFont,
+            sans-serif;
           background-image: url("https://ik.imagekit.io/okmotors/dash.png");
           background-size: cover;
           background-position: center;

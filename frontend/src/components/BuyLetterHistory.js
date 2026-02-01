@@ -42,6 +42,7 @@ const BuyLetterHistory = () => {
   const [selectedLetter, setSelectedLetter] = useState(null);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [chosenLanguage, setChosenLanguage] = useState(null);
+  const [languageAction, setLanguageAction] = useState(null); // 'download' | 'preview'
   const [docSelections, setDocSelections] = useState({
     letter: true,
     invoice: true,
@@ -71,11 +72,18 @@ const BuyLetterHistory = () => {
   const [previewLetter, setPreviewLetter] = useState(null);
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    let ds = dateString;
+    try {
+      if (typeof ds === "string" && ds.includes("T")) ds = ds.split("T")[0];
+      const date = new Date(ds);
+      if (isNaN(date.getTime())) return "";
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch (err) {
+      return "";
+    }
   };
 
   // Helper to get field label in readable format
@@ -123,90 +131,120 @@ const BuyLetterHistory = () => {
 
     const changes = [];
     const fieldsToCompare = [
-      "sellerName", "sellerFatherName", "sellerCurrentAddress", "selleraadhar",
-      "sellerpan", "selleraadharphone", "selleraadharphone2", "vehicleName",
-      "vehicleModel", "vehicleColor", "registrationNumber", "chassisNumber",
-      "engineNumber", "vehiclekm", "vehicleCondition", "buyerName",
-      "buyerFatherName", "buyerCurrentAddress", "buyernames", "buyerphone",
-      "witnessname", "witnessphone", "dealername", "dealeraddress",
-      "returnpersonname", "saleAmount", "paymentMethod", "note"
+      "sellerName",
+      "sellerFatherName",
+      "sellerCurrentAddress",
+      "selleraadhar",
+      "sellerpan",
+      "selleraadharphone",
+      "selleraadharphone2",
+      "vehicleName",
+      "vehicleModel",
+      "vehicleColor",
+      "registrationNumber",
+      "chassisNumber",
+      "engineNumber",
+      "vehiclekm",
+      "vehicleCondition",
+      "buyerName",
+      "buyerFatherName",
+      "buyerCurrentAddress",
+      "buyernames",
+      "buyerphone",
+      "witnessname",
+      "witnessphone",
+      "dealername",
+      "dealeraddress",
+      "returnpersonname",
+      "saleAmount",
+      "paymentMethod",
+      "note",
     ];
 
     // Check if we have previousVersion data populated
     if (letter.previousVersion) {
-      fieldsToCompare.forEach(field => {
+      fieldsToCompare.forEach((field) => {
         const oldValue = letter.previousVersion[field];
         const newValue = letter[field];
-        
+
         if (oldValue !== newValue && (oldValue || newValue)) {
           changes.push({
             field: getFieldLabel(field),
             oldValue: oldValue || "(empty)",
-            newValue: newValue || "(empty)"
+            newValue: newValue || "(empty)",
           });
         }
       });
 
       // Check date fields
-      const oldSaleDate = letter.previousVersion.saleDate ? formatDate(letter.previousVersion.saleDate) : "";
+      const oldSaleDate = letter.previousVersion.saleDate
+        ? formatDate(letter.previousVersion.saleDate)
+        : "";
       const newSaleDate = letter.saleDate ? formatDate(letter.saleDate) : "";
       if (oldSaleDate !== newSaleDate && (oldSaleDate || newSaleDate)) {
         changes.push({
           field: "Sale Date",
           oldValue: oldSaleDate || "(empty)",
-          newValue: newSaleDate || "(empty)"
+          newValue: newSaleDate || "(empty)",
         });
       }
 
-      const oldTodayDate = letter.previousVersion.todayDate ? formatDate(letter.previousVersion.todayDate) : "";
+      const oldTodayDate = letter.previousVersion.todayDate
+        ? formatDate(letter.previousVersion.todayDate)
+        : "";
       const newTodayDate = letter.todayDate ? formatDate(letter.todayDate) : "";
       if (oldTodayDate !== newTodayDate && (oldTodayDate || newTodayDate)) {
         changes.push({
           field: "Today's Date",
           oldValue: oldTodayDate || "(empty)",
-          newValue: newTodayDate || "(empty)"
+          newValue: newTodayDate || "(empty)",
         });
       }
       const checkDocumentChange = (docPath, label) => {
-        const getNestedValue = (obj, path) => path.split('.').reduce((acc, part) => acc?.[part], obj);
-        const oldDoc = getNestedValue(letter.previousVersion.documents, docPath);
+        const getNestedValue = (obj, path) =>
+          path.split(".").reduce((acc, part) => acc?.[part], obj);
+        const oldDoc = getNestedValue(
+          letter.previousVersion.documents,
+          docPath,
+        );
         const newDoc = getNestedValue(letter.documents, docPath);
-        
+
         if (oldDoc !== newDoc) {
           if (!oldDoc && newDoc) {
             changes.push({
               field: label,
               oldValue: "Not uploaded",
-              newValue: "Uploaded"
+              newValue: "Uploaded",
             });
           } else if (oldDoc && !newDoc) {
             changes.push({
               field: label,
               oldValue: "Uploaded",
-              newValue: "Removed"
+              newValue: "Removed",
             });
           } else if (oldDoc && newDoc && oldDoc !== newDoc) {
             changes.push({
               field: label,
               oldValue: "Updated (old document)",
-              newValue: "Updated (new document)"
+              newValue: "Updated (new document)",
             });
           }
         }
       };
-      checkDocumentChange('vehicleRC.front', 'Vehicle RC - Front');
-      checkDocumentChange('vehicleRC.back', 'Vehicle RC - Back');
-      checkDocumentChange('aadhaar.front', 'Aadhaar - Front');
-      checkDocumentChange('aadhaar.back', 'Aadhaar - Back');
-      checkDocumentChange('pan', 'PAN Card');
-      checkDocumentChange('vehicleKM', 'Vehicle KM Photo');
-      const oldPhotosCount = letter.previousVersion.documents?.vehiclePhotos?.length || 0;
+      checkDocumentChange("vehicleRC.front", "Vehicle RC - Front");
+      checkDocumentChange("vehicleRC.back", "Vehicle RC - Back");
+      checkDocumentChange("aadhaar.front", "Aadhaar - Front");
+      checkDocumentChange("aadhaar.back", "Aadhaar - Back");
+      checkDocumentChange("pan", "PAN Card");
+      checkDocumentChange("vehicleKM", "Vehicle KM Photo");
+      const oldPhotosCount =
+        letter.previousVersion.documents?.vehiclePhotos?.length || 0;
       const newPhotosCount = letter.documents?.vehiclePhotos?.length || 0;
       if (oldPhotosCount !== newPhotosCount) {
         changes.push({
-          field: 'Vehicle Photos',
-          oldValue: `${oldPhotosCount} photo${oldPhotosCount !== 1 ? 's' : ''}`,
-          newValue: `${newPhotosCount} photo${newPhotosCount !== 1 ? 's' : ''}`
+          field: "Vehicle Photos",
+          oldValue: `${oldPhotosCount} photo${oldPhotosCount !== 1 ? "s" : ""}`,
+          newValue: `${newPhotosCount} photo${newPhotosCount !== 1 ? "s" : ""}`,
         });
       }
     }
@@ -394,7 +432,7 @@ const BuyLetterHistory = () => {
     const singleAadhaarItem = [];
     if (documentsObj.aadhaar) {
       const uploadMode = documentsObj.aadhaarUploadMode || "separate";
-      
+
       if (uploadMode === "single") {
         // Single file mode: render full-page separately
         if (documentsObj.aadhaar.front) {
@@ -467,7 +505,12 @@ const BuyLetterHistory = () => {
         const yTop = 700;
 
         const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-        page.drawText(item.title, { x: xPos, y: yTop, size: 10, font: titleFont });
+        page.drawText(item.title, {
+          x: xPos,
+          y: yTop,
+          size: 10,
+          font: titleFont,
+        });
 
         const embedded = await embedImageFromUrl(pdfDoc, item.url);
         if (embedded) {
@@ -505,7 +548,7 @@ const BuyLetterHistory = () => {
       const page = pdfDoc.addPage([595, 842]);
       const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const item = singleAadhaarItem[0];
-      
+
       try {
         const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
         const logoImg = await pdfDoc.embedPng(logoBytes);
@@ -518,28 +561,28 @@ const BuyLetterHistory = () => {
         });
         page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
       } catch (err) {}
-      
+
       page.drawText(item.title, { x: 50, y: 720, size: 14, font });
-      
+
       const embedded = await embedImageFromUrl(pdfDoc, item.url);
       if (embedded) {
         const pageWidth = 595;
         const margin = 50;
         const maxWidth = pageWidth - 2 * margin;
         const maxHeight = 660;
-        
+
         const { width, height } = embedded.scale(1);
         let drawW = maxWidth;
         let drawH = (height / width) * drawW;
-        
+
         if (drawH > maxHeight) {
           drawH = maxHeight;
           drawW = (width / height) * drawH;
         }
-        
+
         const xPos = (pageWidth - drawW) / 2;
         const yPos = 690 - drawH;
-        
+
         page.drawImage(embedded, {
           x: xPos,
           y: yPos,
@@ -1100,11 +1143,12 @@ const BuyLetterHistory = () => {
     }
   };
   const handleDownload = (letter) => {
+    setLanguageAction("download");
     setSelectedLetter(letter);
     setShowLanguageModal(true);
   };
 
-  const handleViewLetter = async (letter) => {
+  const handleViewLetter = async (letter, language = "hindi") => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
@@ -1114,8 +1158,10 @@ const BuyLetterHistory = () => {
         setDownloadProgress((prev) => Math.min(prev + 10, 90));
       }, 100);
 
-      // Load and fill the buy letter template (Hindi version for preview)
-      const existingPdfBytes = await loadPDFTemplate("buyletter.pdf");
+      // Load and fill the buy letter template depending on chosen language
+      const template =
+        language === "english" ? "englishbuyletter.pdf" : "buyletter.pdf";
+      const existingPdfBytes = await loadPDFTemplate(template);
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const formattedData = {
@@ -1138,8 +1184,9 @@ const BuyLetterHistory = () => {
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
       };
 
-      // Fill the template fields
-      for (const [fieldName, position] of Object.entries(fieldPositions)) {
+      // Choose positions map based on language and fill the template fields
+      const positions = language === "hindi" ? fieldPositions : englishFieldPositions;
+      for (const [fieldName, position] of Object.entries(positions)) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
@@ -1150,19 +1197,20 @@ const BuyLetterHistory = () => {
         }
       }
 
-      // Add amount in words
+      // Add amount in words using selected positions and a language-specific offset
       const saleAmountText = formattedData.saleAmount || "";
       const saleAmountWidth =
-        saleAmountText.length * (fieldPositions.saleAmount.size / 2);
+        saleAmountText.length * (positions.saleAmount.size / 2);
+      const offsetMultiplier = language === "hindi" ? 1.4 : 3;
       const amountInWordsX =
-        fieldPositions.saleAmount.x +
+        positions.saleAmount.x +
         saleAmountWidth +
-        1.4 * (fieldPositions.saleAmount.size / 2);
+        offsetMultiplier * (positions.saleAmount.size / 2);
 
       pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
         x: amountInWordsX,
-        y: fieldPositions.saleAmount.y,
-        size: fieldPositions.saleAmount.size,
+        y: positions.saleAmount.y,
+        size: positions.saleAmount.size,
         color: rgb(0, 0, 0),
       });
 
@@ -1596,14 +1644,11 @@ const BuyLetterHistory = () => {
           return;
         }
 
-        await axios.delete(
-          `https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        await axios.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
         setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
         alert("Buy letter deleted successfully!");
       } else {
@@ -1855,12 +1900,21 @@ const BuyLetterHistory = () => {
                             <td style={styles.tableCell}>
                               {letter.sellerName}
                               {letter.version > 1 && (
-                                <span style={{ fontSize: "0.75rem", color: "#ff9800", marginLeft: "6px", fontWeight: "600" }}>
+                                <span
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    color: "#ff9800",
+                                    marginLeft: "6px",
+                                    fontWeight: "600",
+                                  }}
+                                >
                                   (v{letter.version})
                                 </span>
                               )}
                             </td>
-                            <td style={styles.tableCell}>{letter.vehicleModel}</td>
+                            <td style={styles.tableCell}>
+                              {letter.vehicleModel}
+                            </td>
                             <td style={styles.tableCell}>
                               {`${letter.vehicleName || ""} ${
                                 letter.vehicleModel || ""
@@ -1879,7 +1933,13 @@ const BuyLetterHistory = () => {
                             <td style={styles.tableCell}>
                               {formatDate(letter.createdAt)}
                               {letter.editedAt && (
-                                <div style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "2px" }}>
+                                <div
+                                  style={{
+                                    fontSize: "0.7rem",
+                                    color: "#64748b",
+                                    marginTop: "2px",
+                                  }}
+                                >
                                   Edited: {formatDate(letter.editedAt)}
                                 </div>
                               )}
@@ -1892,74 +1952,153 @@ const BuyLetterHistory = () => {
                                   : ""}
                             </td>
                             <td style={styles.tableCell}>
-                          <button
-                            onClick={() => handleViewLetter(letter)}
-                            style={styles.iconButton}
-                            title="View"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDownload(letter)}
-                            style={styles.iconButton}
-                            title="Download"
-                          >
-                            <Download size={16} />
-                          </button>
-                          {}
-                          {user?.role !== "staff" && (
-                            <>
                               <button
-                                onClick={() => handleEdit(letter)}
+                                onClick={() => {
+                                  setLanguageAction("preview");
+                                  setSelectedLetter(letter);
+                                  setShowLanguageModal(true);
+                                }}
                                 style={styles.iconButton}
-                                title="Edit"
+                                title="View"
                               >
-                                <Edit size={16} />
+                                <Eye size={16} />
                               </button>
                               <button
-                                onClick={() => handleDelete(letter._id)}
+                                onClick={() => handleDownload(letter)}
                                 style={styles.iconButton}
-                                title="Delete"
+                                title="Download"
                               >
-                                <Trash2 size={16} />
+                                <Download size={16} />
                               </button>
-                            </>
-                          )}
-                        </td>
-                      </tr>
-                      {letter.version > 1 && (
-                        <tr style={{ backgroundColor: changes && changes.length > 0 ? "#fff8e1" : "#f5f5f5" }}>
-                          <td colSpan="9" style={{ padding: "12px 16px", borderBottom: "1px solid #e2e8f0" }}>
-                            <div style={{ fontSize: "0.85rem" }}>
-                              <div style={{ fontWeight: "600", color: changes && changes.length > 0 ? "#f57c00" : "#757575", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-                                <RefreshCw size={14} />
-                                Changes from previous version:
-                              </div>
-                              {changes && changes.length > 0 ? (
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "8px" }}>
-                                  {changes.map((change, idx) => (
-                                    <div key={idx} style={{ padding: "6px 10px", backgroundColor: "#ffffff", borderRadius: "4px", border: "1px solid #ffe0b2" }}>
-                                      <div style={{ fontWeight: "600", color: "#424242", marginBottom: "3px" }}>{change.field}:</div>
-                                      <div style={{ fontSize: "0.8rem", color: "#e53935" }}>
-                                        <span style={{ textDecoration: "line-through" }}>{change.oldValue}</span>
-                                      </div>
-                                      <div style={{ fontSize: "0.8rem", color: "#43a047", fontWeight: "500" }}>
-                                        → {change.newValue}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div style={{ padding: "8px 12px", backgroundColor: "#ffffff", borderRadius: "4px", border: "1px solid #e0e0e0", color: "#757575", fontStyle: "italic" }}>
-                                  No changes detected from previous version
-                                </div>
+                              {}
+                              {user?.role !== "staff" && (
+                                <>
+                                  <button
+                                    onClick={() => handleEdit(letter)}
+                                    style={styles.iconButton}
+                                    title="Edit"
+                                  >
+                                    <Edit size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(letter._id)}
+                                    style={styles.iconButton}
+                                    title="Delete"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </>
                               )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                    );})}
+                            </td>
+                          </tr>
+                          {letter.version > 1 && (
+                            <tr
+                              style={{
+                                backgroundColor:
+                                  changes && changes.length > 0
+                                    ? "#fff8e1"
+                                    : "#f5f5f5",
+                              }}
+                            >
+                              <td
+                                colSpan="9"
+                                style={{
+                                  padding: "12px 16px",
+                                  borderBottom: "1px solid #e2e8f0",
+                                }}
+                              >
+                                <div style={{ fontSize: "0.85rem" }}>
+                                  <div
+                                    style={{
+                                      fontWeight: "600",
+                                      color:
+                                        changes && changes.length > 0
+                                          ? "#f57c00"
+                                          : "#757575",
+                                      marginBottom: "8px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "6px",
+                                    }}
+                                  >
+                                    <RefreshCw size={14} />
+                                    Changes from previous version:
+                                  </div>
+                                  {changes && changes.length > 0 ? (
+                                    <div
+                                      style={{
+                                        display: "grid",
+                                        gridTemplateColumns:
+                                          "repeat(auto-fit, minmax(300px, 1fr))",
+                                        gap: "8px",
+                                      }}
+                                    >
+                                      {changes.map((change, idx) => (
+                                        <div
+                                          key={idx}
+                                          style={{
+                                            padding: "6px 10px",
+                                            backgroundColor: "#ffffff",
+                                            borderRadius: "4px",
+                                            border: "1px solid #ffe0b2",
+                                          }}
+                                        >
+                                          <div
+                                            style={{
+                                              fontWeight: "600",
+                                              color: "#424242",
+                                              marginBottom: "3px",
+                                            }}
+                                          >
+                                            {change.field}:
+                                          </div>
+                                          <div
+                                            style={{
+                                              fontSize: "0.8rem",
+                                              color: "#e53935",
+                                            }}
+                                          >
+                                            <span
+                                              style={{
+                                                textDecoration: "line-through",
+                                              }}
+                                            >
+                                              {change.oldValue}
+                                            </span>
+                                          </div>
+                                          <div
+                                            style={{
+                                              fontSize: "0.8rem",
+                                              color: "#43a047",
+                                              fontWeight: "500",
+                                            }}
+                                          >
+                                            → {change.newValue}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div
+                                      style={{
+                                        padding: "8px 12px",
+                                        backgroundColor: "#ffffff",
+                                        borderRadius: "4px",
+                                        border: "1px solid #e0e0e0",
+                                        color: "#757575",
+                                        fontStyle: "italic",
+                                      }}
+                                    >
+                                      No changes detected from previous version
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -2014,17 +2153,23 @@ const BuyLetterHistory = () => {
                   onClick={() => {
                     setChosenLanguage("english");
                     setShowLanguageModal(false);
-                    setDocSelections({
-                      vehicleRC: !!selectedLetter.documents?.vehicleRC,
-                      aadhaar: !!selectedLetter.documents?.aadhaar,
-                      pan: !!selectedLetter.documents?.pan,
-                      vehicleKM: !!selectedLetter.documents?.vehicleKM,
-                      vehiclePhotos: !!(
-                        selectedLetter.documents?.vehiclePhotos &&
-                        selectedLetter.documents.vehiclePhotos.length
-                      ),
-                    });
-                    setShowDocumentModal(true);
+                    if (languageAction === "download") {
+                      setDocSelections({
+                        vehicleRC: !!selectedLetter.documents?.vehicleRC,
+                        aadhaar: !!selectedLetter.documents?.aadhaar,
+                        pan: !!selectedLetter.documents?.pan,
+                        vehicleKM: !!selectedLetter.documents?.vehicleKM,
+                        vehiclePhotos: !!(
+                          selectedLetter.documents?.vehiclePhotos &&
+                          selectedLetter.documents.vehiclePhotos.length
+                        ),
+                      });
+                      setShowDocumentModal(true);
+                    } else if (languageAction === "preview") {
+                      // generate preview in English
+                      handleViewLetter(selectedLetter, "english");
+                      setLanguageAction(null);
+                    }
                   }}
                   style={{
                     flex: 1,
@@ -2046,17 +2191,23 @@ const BuyLetterHistory = () => {
                   onClick={() => {
                     setChosenLanguage("hindi");
                     setShowLanguageModal(false);
-                    setDocSelections({
-                      vehicleRC: !!selectedLetter.documents?.vehicleRC,
-                      aadhaar: !!selectedLetter.documents?.aadhaar,
-                      pan: !!selectedLetter.documents?.pan,
-                      vehicleKM: !!selectedLetter.documents?.vehicleKM,
-                      vehiclePhotos: !!(
-                        selectedLetter.documents?.vehiclePhotos &&
-                        selectedLetter.documents.vehiclePhotos.length
-                      ),
-                    });
-                    setShowDocumentModal(true);
+                    if (languageAction === "download") {
+                      setDocSelections({
+                        vehicleRC: !!selectedLetter.documents?.vehicleRC,
+                        aadhaar: !!selectedLetter.documents?.aadhaar,
+                        pan: !!selectedLetter.documents?.pan,
+                        vehicleKM: !!selectedLetter.documents?.vehicleKM,
+                        vehiclePhotos: !!(
+                          selectedLetter.documents?.vehiclePhotos &&
+                          selectedLetter.documents.vehiclePhotos.length
+                        ),
+                      });
+                      setShowDocumentModal(true);
+                    } else if (languageAction === "preview") {
+                      // generate preview in Hindi
+                      handleViewLetter(selectedLetter, "hindi");
+                      setLanguageAction(null);
+                    }
                   }}
                   style={{
                     flex: 1,
@@ -2081,60 +2232,83 @@ const BuyLetterHistory = () => {
       )}
       {showDocumentModal && selectedLetter && (
         <div style={modalStyles.overlay}>
-          <div style={{
-            ...modalStyles.modal,
-            maxWidth: "500px",
-            padding: 0,
-          }}>
-            <div style={{
-              padding: "20px 24px",
-              borderBottom: "1px solid #e2e8f0",
-              backgroundColor: "#f8fafc",
-            }}>
-              <h3 style={{
-                margin: 0,
-                fontSize: "18px",
-                fontWeight: "600",
-                color: "#1e293b",
-              }}>Select Items to Include</h3>
-              <p style={{
-                margin: "6px 0 0 0",
-                fontSize: "14px",
-                color: "#64748b",
-              }}>
+          <div
+            style={{
+              ...modalStyles.modal,
+              maxWidth: "500px",
+              padding: 0,
+            }}
+          >
+            <div
+              style={{
+                padding: "20px 24px",
+                borderBottom: "1px solid #e2e8f0",
+                backgroundColor: "#f8fafc",
+              }}
+            >
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  color: "#1e293b",
+                }}
+              >
+                Select Items to Include
+              </h3>
+              <p
+                style={{
+                  margin: "6px 0 0 0",
+                  fontSize: "14px",
+                  color: "#64748b",
+                }}
+              >
                 Choose which items to include in the PDF
               </p>
             </div>
             <div style={{ padding: "20px 24px" }}>
-              <div style={{
-                marginBottom: "16px",
-                paddingBottom: "16px",
-                borderBottom: "1px solid #e2e8f0",
-              }}>
-                <div style={{
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  color: "#475569",
-                  marginBottom: "12px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}>Main Documents</div>
-                <label style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "10px 12px",
-                  marginBottom: "8px",
-                  backgroundColor: docSelections.letter ? "#f0f9ff" : "transparent",
-                  border: `2px solid ${docSelections.letter ? "#0284c7" : "#e2e8f0"}`,
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}>
+              <div
+                style={{
+                  marginBottom: "16px",
+                  paddingBottom: "16px",
+                  borderBottom: "1px solid #e2e8f0",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    color: "#475569",
+                    marginBottom: "12px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  Main Documents
+                </div>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    marginBottom: "8px",
+                    backgroundColor: docSelections.letter
+                      ? "#f0f9ff"
+                      : "transparent",
+                    border: `2px solid ${docSelections.letter ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={!!docSelections.letter}
                     onChange={(e) =>
-                      setDocSelections((s) => ({ ...s, letter: e.target.checked }))
+                      setDocSelections((s) => ({
+                        ...s,
+                        letter: e.target.checked,
+                      }))
                     }
                     style={{
                       width: "18px",
@@ -2144,24 +2318,39 @@ const BuyLetterHistory = () => {
                       cursor: "pointer",
                     }}
                   />
-                  <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Buy Letter</span>
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      color: "#1e293b",
+                    }}
+                  >
+                    Buy Letter
+                  </span>
                 </label>
-                <label style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "10px 12px",
-                  marginBottom: "8px",
-                  backgroundColor: docSelections.invoice ? "#f0f9ff" : "transparent",
-                  border: `2px solid ${docSelections.invoice ? "#0284c7" : "#e2e8f0"}`,
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    marginBottom: "8px",
+                    backgroundColor: docSelections.invoice
+                      ? "#f0f9ff"
+                      : "transparent",
+                    border: `2px solid ${docSelections.invoice ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={!!docSelections.invoice}
                     onChange={(e) =>
-                      setDocSelections((s) => ({ ...s, invoice: e.target.checked }))
+                      setDocSelections((s) => ({
+                        ...s,
+                        invoice: e.target.checked,
+                      }))
                     }
                     style={{
                       width: "18px",
@@ -2171,29 +2360,45 @@ const BuyLetterHistory = () => {
                       cursor: "pointer",
                     }}
                   />
-                  <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Invoice</span>
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      color: "#1e293b",
+                    }}
+                  >
+                    Invoice
+                  </span>
                 </label>
               </div>
               <div style={{ marginBottom: "8px" }}>
-                <div style={{
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  color: "#475569",
-                  marginBottom: "12px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}>Supporting Documents</div>
-                <label style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "10px 12px",
-                  marginBottom: "8px",
-                  backgroundColor: docSelections.vehicleRC ? "#f0f9ff" : "transparent",
-                  border: `2px solid ${docSelections.vehicleRC ? "#0284c7" : "#e2e8f0"}`,
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    color: "#475569",
+                    marginBottom: "12px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  Supporting Documents
+                </div>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    marginBottom: "8px",
+                    backgroundColor: docSelections.vehicleRC
+                      ? "#f0f9ff"
+                      : "transparent",
+                    border: `2px solid ${docSelections.vehicleRC ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={!!docSelections.vehicleRC}
@@ -2211,19 +2416,31 @@ const BuyLetterHistory = () => {
                       cursor: "pointer",
                     }}
                   />
-                  <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Vehicle RC (Front/Back)</span>
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      color: "#1e293b",
+                    }}
+                  >
+                    Vehicle RC (Front/Back)
+                  </span>
                 </label>
-                <label style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "10px 12px",
-                  marginBottom: "8px",
-                  backgroundColor: docSelections.aadhaar ? "#f0f9ff" : "transparent",
-                  border: `2px solid ${docSelections.aadhaar ? "#0284c7" : "#e2e8f0"}`,
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    marginBottom: "8px",
+                    backgroundColor: docSelections.aadhaar
+                      ? "#f0f9ff"
+                      : "transparent",
+                    border: `2px solid ${docSelections.aadhaar ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={!!docSelections.aadhaar}
@@ -2241,19 +2458,31 @@ const BuyLetterHistory = () => {
                       cursor: "pointer",
                     }}
                   />
-                  <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Aadhaar (Front/Back)</span>
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      color: "#1e293b",
+                    }}
+                  >
+                    Aadhaar (Front/Back)
+                  </span>
                 </label>
-                <label style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "10px 12px",
-                  marginBottom: "8px",
-                  backgroundColor: docSelections.pan ? "#f0f9ff" : "transparent",
-                  border: `2px solid ${docSelections.pan ? "#0284c7" : "#e2e8f0"}`,
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    marginBottom: "8px",
+                    backgroundColor: docSelections.pan
+                      ? "#f0f9ff"
+                      : "transparent",
+                    border: `2px solid ${docSelections.pan ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={!!docSelections.pan}
@@ -2268,19 +2497,31 @@ const BuyLetterHistory = () => {
                       cursor: "pointer",
                     }}
                   />
-                  <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>PAN Card</span>
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      color: "#1e293b",
+                    }}
+                  >
+                    PAN Card
+                  </span>
                 </label>
-                <label style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "10px 12px",
-                  marginBottom: "8px",
-                  backgroundColor: docSelections.vehicleKM ? "#f0f9ff" : "transparent",
-                  border: `2px solid ${docSelections.vehicleKM ? "#0284c7" : "#e2e8f0"}`,
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    marginBottom: "8px",
+                    backgroundColor: docSelections.vehicleKM
+                      ? "#f0f9ff"
+                      : "transparent",
+                    border: `2px solid ${docSelections.vehicleKM ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={!!docSelections.vehicleKM}
@@ -2298,18 +2539,30 @@ const BuyLetterHistory = () => {
                       cursor: "pointer",
                     }}
                   />
-                  <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Vehicle KM Photo</span>
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      color: "#1e293b",
+                    }}
+                  >
+                    Vehicle KM Photo
+                  </span>
                 </label>
-                <label style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "10px 12px",
-                  backgroundColor: docSelections.vehiclePhotos ? "#f0f9ff" : "transparent",
-                  border: `2px solid ${docSelections.vehiclePhotos ? "#0284c7" : "#e2e8f0"}`,
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    backgroundColor: docSelections.vehiclePhotos
+                      ? "#f0f9ff"
+                      : "transparent",
+                    border: `2px solid ${docSelections.vehiclePhotos ? "#0284c7" : "#e2e8f0"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={!!docSelections.vehiclePhotos}
@@ -2327,17 +2580,27 @@ const BuyLetterHistory = () => {
                       cursor: "pointer",
                     }}
                   />
-                  <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>Vehicle Photos</span>
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      color: "#1e293b",
+                    }}
+                  >
+                    Vehicle Photos
+                  </span>
                 </label>
               </div>
             </div>
-            <div style={{
-              display: "flex",
-              gap: "12px",
-              padding: "16px 24px",
-              borderTop: "1px solid #e2e8f0",
-              backgroundColor: "#f8fafc",
-            }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                padding: "16px 24px",
+                borderTop: "1px solid #e2e8f0",
+                backgroundColor: "#f8fafc",
+              }}
+            >
               <button
                 style={{
                   flex: 1,
@@ -2497,7 +2760,8 @@ const BuyLetterHistory = () => {
             <div
               style={{
                 flex: 1,
-                overflow: "hidden",
+                overflow: "auto",
+                WebkitOverflowScrolling: "touch",
                 backgroundColor: "#525659",
               }}
             >
@@ -2506,7 +2770,7 @@ const BuyLetterHistory = () => {
                 type="application/pdf"
                 style={{
                   width: "100%",
-                  height: "600px",
+                  height: "calc(100vh - 220px)",
                   border: "none",
                 }}
                 aria-label="Buy Letter PDF Preview"
@@ -2515,7 +2779,7 @@ const BuyLetterHistory = () => {
                   src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
                   style={{
                     width: "100%",
-                    height: "600px",
+                    height: "calc(100vh - 220px)",
                     border: "none",
                   }}
                   title="Buy Letter PDF Preview"

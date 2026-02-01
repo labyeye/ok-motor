@@ -195,7 +195,7 @@ const UpdatesList = () => {
         { status: current === "Active" ? "Inactive" : "Active" },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       fetchUpdates();
     } catch (err) {

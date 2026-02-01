@@ -1912,10 +1912,9 @@ const AdminPage = () => {
                 placeholder="Search vehicles (reg. no, model, name)..."
                 value={historyQuery}
                 ref={historyInputRef}
-                onFocus={() => setIsHistoryModalOpen(true)}
+                onClick={() => setIsHistoryModalOpen(true)}
                 onChange={(e) => {
                   setHistoryQuery(e.target.value);
-                  if (!isHistoryModalOpen) setIsHistoryModalOpen(true);
                 }}
                 className="history-search-input"
               />

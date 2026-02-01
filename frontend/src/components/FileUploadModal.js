@@ -44,7 +44,7 @@ const FileUploadModal = ({ onSelect, onCancel, allowPdf = false }) => {
 
         <div style={styles.content}>
           <p style={styles.subtitle}>Choose how you want to upload:</p>
-          
+
           <div style={styles.optionsContainer}>
             {/* Camera Option */}
             <button
@@ -65,7 +65,9 @@ const FileUploadModal = ({ onSelect, onCancel, allowPdf = false }) => {
             >
               <Upload size={48} style={styles.icon} />
               <span style={styles.optionLabel}>Upload Image</span>
-              <span style={styles.optionDesc}>Choose from gallery or files</span>
+              <span style={styles.optionDesc}>
+                Choose from gallery or files
+              </span>
             </button>
 
             {/* Upload PDF Option */}
