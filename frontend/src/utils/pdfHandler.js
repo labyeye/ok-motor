@@ -21,8 +21,8 @@ export const extractImagesFromPdf = async (pdfFile) => {
 export const convertPdfToImages = async (pdfFile) => {
   try {
     const pdfjsLib = await import("pdfjs-dist");
-    // Use CDN worker to ensure it's always available
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.530/pdf.worker.min.mjs`;
+    // Use jsDelivr CDN worker to ensure it's always available
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.530/build/pdf.worker.min.mjs`;
 
     const arrayBuffer = await pdfFile.arrayBuffer();
     const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
