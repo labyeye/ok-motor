@@ -1432,6 +1432,40 @@ const SellLetterForm = () => {
             .forEach((f) => form.append("vehiclePhotos", f));
         }
 
+        // If editing and some files weren't changed, preserve existing URLs
+        if (editLetter?._id && editLetter.documents) {
+          const preservedDocs = {};
+
+          // Preserve Vehicle RC URLs if not uploading new files
+          if (!filesState.vehicleRCFront && filePreviews.vehicleRCFront) {
+            preservedDocs.vehicleRCFront = filePreviews.vehicleRCFront;
+          }
+          if (!filesState.vehicleRCBack && filePreviews.vehicleRCBack) {
+            preservedDocs.vehicleRCBack = filePreviews.vehicleRCBack;
+          }
+
+          // Preserve Aadhaar URLs if not uploading new files
+          if (!filesState.aadhaarFront && filePreviews.aadhaarFront) {
+            preservedDocs.aadhaarFront = filePreviews.aadhaarFront;
+          }
+          if (!filesState.aadhaarBack && filePreviews.aadhaarBack) {
+            preservedDocs.aadhaarBack = filePreviews.aadhaarBack;
+          }
+
+          // Preserve other documents if not uploading new files
+          if (!filesState.panPhoto && filePreviews.panPhoto) {
+            preservedDocs.panPhoto = filePreviews.panPhoto;
+          }
+          if (!filesState.vehicleKMPhoto && filePreviews.vehicleKMPhoto) {
+            preservedDocs.vehicleKMPhoto = filePreviews.vehicleKMPhoto;
+          }
+
+          // Send preserved URLs to backend
+          if (Object.keys(preservedDocs).length > 0) {
+            form.append("preservedDocuments", JSON.stringify(preservedDocs));
+          }
+        }
+
         if (isElectron) {
           response = await apiService.post("/api/sell-letters", form);
         } else {
