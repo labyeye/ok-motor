@@ -21,26 +21,8 @@ export const extractImagesFromPdf = async (pdfFile) => {
 export const convertPdfToImages = async (pdfFile) => {
   try {
     const pdfjsLib = await import("pdfjs-dist");
-
-    // Prefer a locally served worker placed in `frontend/public` (served at root).
-    // This avoids bundler path/fingerprint issues in production. If that file
-    // is not present or not reachable, fall back to a CDN-hosted worker.
-    const publicWorker = (process.env.PUBLIC_URL || "") + "/pdf.worker.min.mjs";
-    try {
-      // Probe the public path to see if worker is available (HEAD request).
-      const resp = await fetch(publicWorker, { method: "HEAD" });
-      if (resp.ok) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = publicWorker;
-      } else {
-        // fallback to a stable CDN copy
-        pdfjsLib.GlobalWorkerOptions.workerSrc =
-          "https://unpkg.com/pdfjs-dist@3.8.162/build/pdf.worker.min.js";
-      }
-    } catch (err) {
-      // network/probe failed — use CDN fallback
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://unpkg.com/pdfjs-dist@3.8.162/build/pdf.worker.min.js";
-    }
+    // Use CDN worker to ensure it's always available
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.530/pdf.worker.min.mjs`;
 
     const arrayBuffer = await pdfFile.arrayBuffer();
     const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
