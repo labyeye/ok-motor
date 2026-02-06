@@ -1021,23 +1021,6 @@ const BuyLetterForm = () => {
     setUploadModalAllowPdf(false);
   };
 
-  const handleMultipleFileInput = (fieldName) => {
-    // For multiple files, we handle them without the modal for now
-    // Create temporary input element
-    const input = document.createElement("input");
-    input.type = "file";
-    input.multiple = true;
-    input.accept = "image/*";
-    input.onchange = (e) => {
-      const fileList = Array.from(e.target.files || []);
-      const limited = fileList.slice(0, 4);
-      setFilesState((prev) => ({ ...prev, [fieldName]: limited }));
-      const prevs = limited.map((f) => URL.createObjectURL(f));
-      setFilePreviews((prev) => ({ ...prev, [fieldName]: prevs }));
-    };
-    input.click();
-  };
-
   const onCropCancel = () => {
     setShowCropper(false);
     setCropImageSrc(null);
@@ -1107,19 +1090,6 @@ const BuyLetterForm = () => {
     setCropImageSrc(null);
     setCropFieldName(null);
     setCropFileName(null);
-  };
-
-  const removeVehiclePhoto = (index) => {
-    setFilesState((prev) => {
-      const arr = (prev.vehiclePhotos || []).slice();
-      arr.splice(index, 1);
-      return { ...prev, vehiclePhotos: arr };
-    });
-    setFilePreviews((prev) => {
-      const arr = (prev.vehiclePhotos || []).slice();
-      arr.splice(index, 1);
-      return { ...prev, vehiclePhotos: arr };
-    });
   };
 
   const handleSaveAndDownload = async () => {
