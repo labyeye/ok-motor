@@ -17,7 +17,7 @@ exports.createSellLetter = [
     { name: "aadhaarFront" },
     { name: "aadhaarBack" },
     { name: "panPhoto" },
-    { name: "vehicleKMPhoto" },
+    { name: "deliveryPhoto" },
     { name: "vehiclePhotos" },
   ]),
   async (req, res) => {
@@ -52,7 +52,7 @@ exports.createSellLetter = [
         vehicleRC: { front: null, back: null },
         aadhaar: { front: null, back: null },
         pan: null,
-        vehicleKM: null,
+        deliveryPhoto: null,
         vehiclePhotos: [],
       };
 
@@ -92,10 +92,10 @@ exports.createSellLetter = [
         if (files.panPhoto && files.panPhoto[0]) {
           uploadedUrls.pan = await processFile(files.panPhoto[0], "pan-photo");
         }
-        if (files.vehicleKMPhoto && files.vehicleKMPhoto[0]) {
-          uploadedUrls.vehicleKM = await processFile(
-            files.vehicleKMPhoto[0],
-            "vehicle-km",
+        if (files.deliveryPhoto && files.deliveryPhoto[0]) {
+          uploadedUrls.deliveryPhoto = await processFile(
+            files.deliveryPhoto[0],
+            "delivery-photo",
           );
         }
         if (files.vehiclePhotos && files.vehiclePhotos.length) {
@@ -120,7 +120,7 @@ exports.createSellLetter = [
         aadhaar: uploadedUrls.aadhaar,
         aadhaarUploadMode: bodyData.aadhaarUploadMode || "separate",
         pan: uploadedUrls.pan,
-        vehicleKM: uploadedUrls.vehicleKM,
+        deliveryPhoto: uploadedUrls.deliveryPhoto,
         vehiclePhotos: uploadedUrls.vehiclePhotos,
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };

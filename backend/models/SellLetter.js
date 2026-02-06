@@ -91,7 +91,7 @@ const SellLetterSchema = new mongoose.Schema(
         default: "separate",
       },
       pan: { type: String },
-      vehicleKM: { type: String },
+      deliveryPhoto: { type: String },
       vehiclePhotos: [{ type: String }],
       meta: { type: Object },
     },

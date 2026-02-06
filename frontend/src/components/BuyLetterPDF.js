@@ -92,7 +92,7 @@ const BuyLetterForm = () => {
     aadhaarFront: null,
     aadhaarBack: null,
     panPhoto: null,
-    vehicleKMPhoto: null,
+    deliveryPhoto: null,
     insuranceNOCFront: null, // Replaced vehiclePhotos
     insuranceNOCBack: null,
     // vehiclePhotos: [], // Removed as replaced by Insurance NOC
@@ -318,8 +318,9 @@ const BuyLetterForm = () => {
           }
           if (full.documents.pan)
             previews.panPhoto = full.documents.pan || null;
-          if (full.documents.vehicleKM)
-            previews.vehicleKMPhoto = full.documents.vehicleKM || null;
+          if (full.documents.deliveryPhoto || full.documents.vehicleKM)
+            previews.deliveryPhoto =
+              full.documents.deliveryPhoto || full.documents.vehicleKM || null;
 
           // Load Insurance NOC
           if (full.documents.insuranceNOCUploadMode) {
@@ -742,12 +743,7 @@ const BuyLetterForm = () => {
         filesState.aadhaarFront ||
         filesState.aadhaarBack ||
         filesState.panPhoto ||
-        filesState.vehicleKMPhoto ||
-        filesState.vehicleRCBack ||
-        filesState.aadhaarFront ||
-        filesState.aadhaarBack ||
-        filesState.panPhoto ||
-        filesState.vehicleKMPhoto ||
+        filesState.deliveryPhoto ||
         filesState.insuranceNOCFront ||
         filesState.insuranceNOCBack;
 
@@ -778,8 +774,8 @@ const BuyLetterForm = () => {
         if (filesState.aadhaarBack)
           form.append("aadhaarBack", filesState.aadhaarBack);
         if (filesState.panPhoto) form.append("panPhoto", filesState.panPhoto);
-        if (filesState.vehicleKMPhoto)
-          form.append("vehicleKMPhoto", filesState.vehicleKMPhoto);
+        if (filesState.deliveryPhoto)
+          form.append("deliveryPhoto", filesState.deliveryPhoto);
 
         // Insurance NOC
         if (filesState.insuranceNOCFront)
@@ -811,8 +807,8 @@ const BuyLetterForm = () => {
           if (!filesState.panPhoto && filePreviews.panPhoto) {
             preservedDocs.panPhoto = filePreviews.panPhoto;
           }
-          if (!filesState.vehicleKMPhoto && filePreviews.vehicleKMPhoto) {
-            preservedDocs.vehicleKMPhoto = filePreviews.vehicleKMPhoto;
+          if (!filesState.deliveryPhoto && filePreviews.deliveryPhoto) {
+            preservedDocs.deliveryPhoto = filePreviews.deliveryPhoto;
           }
 
           // Preserve Insurance NOC
@@ -1470,8 +1466,11 @@ const BuyLetterForm = () => {
         }
         if (documentsObj.pan)
           items.push({ title: "PAN Card", url: documentsObj.pan });
-        if (documentsObj.vehicleKM)
-          items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
+        if (documentsObj.deliveryPhoto || documentsObj.vehicleKM)
+          items.push({
+            title: "Delivery Photo",
+            url: documentsObj.deliveryPhoto || documentsObj.vehicleKM,
+          });
         if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
           documentsObj.vehiclePhotos.forEach((u, i) =>
             items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
@@ -3609,24 +3608,22 @@ const BuyLetterForm = () => {
                 </div>
 
                 <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    Vehicle KM (Odometer) Photo
-                  </label>
+                  <label style={styles.formLabel}>Delivery Photo</label>
                   <div
                     style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
                   >
                     <button
                       type="button"
-                      onClick={() => handleFileInput("vehicleKMPhoto")}
+                      onClick={() => handleFileInput("deliveryPhoto")}
                       style={styles.uploadBtn}
                     >
                       <Image size={20} />{" "}
-                      {filePreviews.vehicleKMPhoto ? "Change" : "Choose File"}
+                      {filePreviews.deliveryPhoto ? "Change" : "Choose File"}
                     </button>
-                    {filePreviews.vehicleKMPhoto && (
+                    {filePreviews.deliveryPhoto && (
                       <button
                         type="button"
-                        onClick={() => handleRemoveFile("vehicleKMPhoto")}
+                        onClick={() => handleRemoveFile("deliveryPhoto")}
                         style={{
                           ...styles.uploadBtn,
                           backgroundColor: "#ef4444",
@@ -3636,10 +3633,10 @@ const BuyLetterForm = () => {
                       </button>
                     )}
                   </div>
-                  {filePreviews.vehicleKMPhoto && (
+                  {filePreviews.deliveryPhoto && (
                     <img
-                      src={filePreviews.vehicleKMPhoto}
-                      alt="km"
+                      src={filePreviews.deliveryPhoto}
+                      alt="delivery"
                       style={styles.previewImg}
                     />
                   )}

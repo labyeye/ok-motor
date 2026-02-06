@@ -311,7 +311,8 @@ const SellLetterHistory = () => {
       checkDocumentChange("aadhaar.front", "Aadhaar - Front");
       checkDocumentChange("aadhaar.back", "Aadhaar - Back");
       checkDocumentChange("pan", "PAN Card");
-      checkDocumentChange("vehicleKM", "Vehicle KM Photo");
+      checkDocumentChange("deliveryPhoto", "Delivery Photo") ||
+        checkDocumentChange("vehicleKM", "Delivery Photo");
 
       // Check vehicle photos count
       const oldPhotosCount =
@@ -631,7 +632,10 @@ const SellLetterHistory = () => {
         const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
         const offsetMultiplier = language === "hindi" ? 1.4 : 3;
         page.drawText(formattedLetter.amountInWords, {
-          x: xBase + saleTextWidth + offsetMultiplier * (fieldPositions.saleAmount.size / 2),
+          x:
+            xBase +
+            saleTextWidth +
+            offsetMultiplier * (fieldPositions.saleAmount.size / 2),
           y: yBase,
           size: 10,
           color: rgb(0, 0, 0),
@@ -711,8 +715,11 @@ const SellLetterHistory = () => {
           }
           if (documentsObj.pan)
             items.push({ title: "PAN Card", url: documentsObj.pan });
-          if (documentsObj.vehicleKM)
-            items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
+          if (documentsObj.deliveryPhoto || documentsObj.vehicleKM)
+            items.push({
+              title: "Delivery Photo",
+              url: documentsObj.deliveryPhoto || documentsObj.vehicleKM,
+            });
           if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
             documentsObj.vehiclePhotos.forEach((u, i) =>
               items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
@@ -1064,8 +1071,11 @@ const SellLetterHistory = () => {
         }
         if (documentsObj.pan)
           items.push({ title: "PAN Card", url: documentsObj.pan });
-        if (documentsObj.vehicleKM)
-          items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
+        if (documentsObj.deliveryPhoto || documentsObj.vehicleKM)
+          items.push({
+            title: "Delivery Photo",
+            url: documentsObj.deliveryPhoto || documentsObj.vehicleKM,
+          });
         if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
           documentsObj.vehiclePhotos.forEach((u, i) =>
             items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
@@ -1379,18 +1389,21 @@ const SellLetterHistory = () => {
           const page = pdfDoc.getPages()[0];
           const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-            const saleText = `${formattedLetter.saleAmount}`;
-            const xBase = englishFieldPositions.saleAmount.x;
-            const yBase = englishFieldPositions.saleAmount.y;
-            const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
-            const offsetMultiplier = 3; // English template spacing
-            page.drawText(formattedLetter.amountInWords, {
-              x: xBase + saleTextWidth + offsetMultiplier * (englishFieldPositions.saleAmount.size / 2),
-              y: yBase,
-              size: 10,
-              color: rgb(0, 0, 0),
-              font,
-            });
+          const saleText = `${formattedLetter.saleAmount}`;
+          const xBase = englishFieldPositions.saleAmount.x;
+          const yBase = englishFieldPositions.saleAmount.y;
+          const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
+          const offsetMultiplier = 3; // English template spacing
+          page.drawText(formattedLetter.amountInWords, {
+            x:
+              xBase +
+              saleTextWidth +
+              offsetMultiplier * (englishFieldPositions.saleAmount.size / 2),
+            y: yBase,
+            size: 10,
+            color: rgb(0, 0, 0),
+            font,
+          });
         }
       } else {
         // Create empty PDF if letter is not selected
@@ -1462,8 +1475,11 @@ const SellLetterHistory = () => {
         }
         if (documentsObj.pan)
           items.push({ title: "PAN Card", url: documentsObj.pan });
-        if (documentsObj.vehicleKM)
-          items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
+        if (documentsObj.deliveryPhoto || documentsObj.vehicleKM)
+          items.push({
+            title: "Delivery Photo",
+            url: documentsObj.deliveryPhoto || documentsObj.vehicleKM,
+          });
         if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
           documentsObj.vehiclePhotos.forEach((u, i) =>
             items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
@@ -2122,11 +2138,14 @@ const SellLetterHistory = () => {
             return;
           }
 
-          await axios.delete(`https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
+          await axios.delete(
+            `https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             },
-          });
+          );
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
           alert("Sell letter deleted successfully!");
         } else {
@@ -2722,7 +2741,10 @@ const SellLetterHistory = () => {
                         vehicleRC: !!selectedLetter.documents?.vehicleRC,
                         aadhaar: !!selectedLetter.documents?.aadhaar,
                         pan: !!selectedLetter.documents?.pan,
-                        vehicleKM: !!selectedLetter.documents?.vehicleKM,
+                        vehicleKM: !!(
+                          selectedLetter.documents?.deliveryPhoto ||
+                          selectedLetter.documents?.vehicleKM
+                        ),
                         vehiclePhotos: !!(
                           selectedLetter.documents?.vehiclePhotos &&
                           selectedLetter.documents.vehiclePhotos.length
@@ -2749,7 +2771,10 @@ const SellLetterHistory = () => {
                         vehicleRC: !!selectedLetter.documents?.vehicleRC,
                         aadhaar: !!selectedLetter.documents?.aadhaar,
                         pan: !!selectedLetter.documents?.pan,
-                        vehicleKM: !!selectedLetter.documents?.vehicleKM,
+                        vehicleKM: !!(
+                          selectedLetter.documents?.deliveryPhoto ||
+                          selectedLetter.documents?.vehicleKM
+                        ),
                         vehiclePhotos: !!(
                           selectedLetter.documents?.vehiclePhotos &&
                           selectedLetter.documents.vehiclePhotos.length
@@ -3199,8 +3224,12 @@ const SellLetterHistory = () => {
                         out.aadhaarUploadMode = docs.aadhaarUploadMode;
                       }
                       if (sel.pan && docs.pan) out.pan = docs.pan;
-                      if (sel.vehicleKM && docs.vehicleKM)
-                        out.vehicleKM = docs.vehicleKM;
+                      if (
+                        sel.vehicleKM &&
+                        (docs.deliveryPhoto || docs.vehicleKM)
+                      )
+                        out.deliveryPhoto =
+                          docs.deliveryPhoto || docs.vehicleKM;
                       if (sel.vehiclePhotos && docs.vehiclePhotos)
                         out.vehiclePhotos = docs.vehiclePhotos;
                       return out;

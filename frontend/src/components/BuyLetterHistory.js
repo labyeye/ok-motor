@@ -236,7 +236,8 @@ const BuyLetterHistory = () => {
       checkDocumentChange("aadhaar.front", "Aadhaar - Front");
       checkDocumentChange("aadhaar.back", "Aadhaar - Back");
       checkDocumentChange("pan", "PAN Card");
-      checkDocumentChange("vehicleKM", "Vehicle KM Photo");
+      checkDocumentChange("deliveryPhoto", "Delivery Photo") ||
+        checkDocumentChange("vehicleKM", "Delivery Photo");
       const oldPhotosCount =
         letter.previousVersion.documents?.vehiclePhotos?.length || 0;
       const newPhotosCount = letter.documents?.vehiclePhotos?.length || 0;
@@ -467,8 +468,14 @@ const BuyLetterHistory = () => {
     // Collect other documents
     if (documentsObj.pan && documentsObj.pan !== null)
       items.push({ title: "PAN Card", url: documentsObj.pan });
-    if (documentsObj.vehicleKM && documentsObj.vehicleKM !== null)
-      items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
+    if (
+      (documentsObj.deliveryPhoto || documentsObj.vehicleKM) &&
+      (documentsObj.deliveryPhoto !== null || documentsObj.vehicleKM !== null)
+    )
+      items.push({
+        title: "Delivery Photo",
+        url: documentsObj.deliveryPhoto || documentsObj.vehicleKM,
+      });
     if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
       documentsObj.vehiclePhotos.forEach((u, i) =>
         items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
@@ -1185,7 +1192,8 @@ const BuyLetterHistory = () => {
       };
 
       // Choose positions map based on language and fill the template fields
-      const positions = language === "hindi" ? fieldPositions : englishFieldPositions;
+      const positions =
+        language === "hindi" ? fieldPositions : englishFieldPositions;
       for (const [fieldName, position] of Object.entries(positions)) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
@@ -1644,11 +1652,14 @@ const BuyLetterHistory = () => {
           return;
         }
 
-        await axios.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        await axios.delete(
+          `https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
         setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
         alert("Buy letter deleted successfully!");
       } else {
@@ -2158,7 +2169,10 @@ const BuyLetterHistory = () => {
                         vehicleRC: !!selectedLetter.documents?.vehicleRC,
                         aadhaar: !!selectedLetter.documents?.aadhaar,
                         pan: !!selectedLetter.documents?.pan,
-                        vehicleKM: !!selectedLetter.documents?.vehicleKM,
+                        vehicleKM: !!(
+                          selectedLetter.documents?.deliveryPhoto ||
+                          selectedLetter.documents?.vehicleKM
+                        ),
                         vehiclePhotos: !!(
                           selectedLetter.documents?.vehiclePhotos &&
                           selectedLetter.documents.vehiclePhotos.length
@@ -2196,7 +2210,10 @@ const BuyLetterHistory = () => {
                         vehicleRC: !!selectedLetter.documents?.vehicleRC,
                         aadhaar: !!selectedLetter.documents?.aadhaar,
                         pan: !!selectedLetter.documents?.pan,
-                        vehicleKM: !!selectedLetter.documents?.vehicleKM,
+                        vehicleKM: !!(
+                          selectedLetter.documents?.deliveryPhoto ||
+                          selectedLetter.documents?.vehicleKM
+                        ),
                         vehiclePhotos: !!(
                           selectedLetter.documents?.vehiclePhotos &&
                           selectedLetter.documents.vehiclePhotos.length
@@ -2644,8 +2661,8 @@ const BuyLetterHistory = () => {
                       out.aadhaarUploadMode = docs.aadhaarUploadMode;
                     }
                     if (sel.pan && docs.pan) out.pan = docs.pan;
-                    if (sel.vehicleKM && docs.vehicleKM)
-                      out.vehicleKM = docs.vehicleKM;
+                    if (sel.vehicleKM && (docs.deliveryPhoto || docs.vehicleKM))
+                      out.deliveryPhoto = docs.deliveryPhoto || docs.vehicleKM;
                     if (sel.vehiclePhotos && docs.vehiclePhotos)
                       out.vehiclePhotos = docs.vehiclePhotos;
                     return out;

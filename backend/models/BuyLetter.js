@@ -76,7 +76,7 @@ const BuyLetterSchema = new mongoose.Schema({
       default: "separate",
     },
     pan: { type: String },
-    vehicleKM: { type: String },
+    deliveryPhoto: { type: String },
     insuranceNOC: {
       front: { type: String },
       back: { type: String },

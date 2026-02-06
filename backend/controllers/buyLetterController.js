@@ -18,7 +18,7 @@ exports.createBuyLetter = [
     { name: "aadhaarFront" },
     { name: "aadhaarBack" },
     { name: "panPhoto" },
-    { name: "vehicleKMPhoto" },
+    { name: "deliveryPhoto" },
     { name: "insuranceNOCFront" },
     { name: "insuranceNOCBack" },
     { name: "vehiclePhotos" },
@@ -59,7 +59,7 @@ exports.createBuyLetter = [
         vehicleRC: { front: null, back: null },
         aadhaar: { front: null, back: null },
         pan: null,
-        vehicleKM: null,
+        deliveryPhoto: null,
         insuranceNOC: { front: null, back: null },
         vehiclePhotos: [],
       };
@@ -127,13 +127,13 @@ exports.createBuyLetter = [
           uploadedUrls.pan = preservedDocs.panPhoto;
         }
 
-        if (files.vehicleKMPhoto && files.vehicleKMPhoto[0]) {
-          uploadedUrls.vehicleKM = await processFile(
-            files.vehicleKMPhoto[0],
-            "vehicle-km",
+        if (files.deliveryPhoto && files.deliveryPhoto[0]) {
+          uploadedUrls.deliveryPhoto = await processFile(
+            files.deliveryPhoto[0],
+            "delivery-photo",
           );
-        } else if (preservedDocs.vehicleKMPhoto) {
-          uploadedUrls.vehicleKM = preservedDocs.vehicleKMPhoto;
+        } else if (preservedDocs.deliveryPhoto) {
+          uploadedUrls.deliveryPhoto = preservedDocs.deliveryPhoto;
         }
 
         if (files.vehiclePhotos && files.vehiclePhotos.length) {
@@ -176,7 +176,7 @@ exports.createBuyLetter = [
         aadhaar: uploadedUrls.aadhaar,
         aadhaarUploadMode: body.aadhaarUploadMode || "separate",
         pan: uploadedUrls.pan,
-        vehicleKM: uploadedUrls.vehicleKM,
+        deliveryPhoto: uploadedUrls.deliveryPhoto,
         insuranceNOC: uploadedUrls.insuranceNOC,
         insuranceNOCUploadMode: body.insuranceNOCUploadMode || "separate",
         vehiclePhotos: uploadedUrls.vehiclePhotos,
@@ -234,13 +234,11 @@ exports.createBuyLetter = [
         (error.code === 11000 || error.name === "MongoServerError")
       ) {
         const dupKey = error.keyValue || {};
-        return res
-          .status(409)
-          .json({
-            message: "Duplicate key error",
-            dupKey,
-            error: error.message,
-          });
+        return res.status(409).json({
+          message: "Duplicate key error",
+          dupKey,
+          error: error.message,
+        });
       }
 
       res.status(500).json({

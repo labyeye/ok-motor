@@ -157,7 +157,7 @@ const SellLetterForm = () => {
     aadhaarFront: null,
     aadhaarBack: null,
     panPhoto: null,
-    vehicleKMPhoto: null,
+    deliveryPhoto: null,
     vehiclePhotos: [],
   });
   const [filePreviews, setFilePreviews] = useState({});
@@ -339,8 +339,9 @@ const SellLetterForm = () => {
           }
           if (full.documents.pan)
             previews.panPhoto = full.documents.pan || null;
-          if (full.documents.vehicleKM)
-            previews.vehicleKMPhoto = full.documents.vehicleKM || null;
+          if (full.documents.deliveryPhoto || full.documents.vehicleKM)
+            previews.deliveryPhoto =
+              full.documents.deliveryPhoto || full.documents.vehicleKM || null;
           if (Array.isArray(full.documents.vehiclePhotos))
             previews.vehiclePhotos = full.documents.vehiclePhotos;
 
@@ -1443,7 +1444,7 @@ const SellLetterForm = () => {
         filesState.aadhaarFront ||
         filesState.aadhaarBack ||
         filesState.panPhoto ||
-        filesState.vehicleKMPhoto ||
+        filesState.deliveryPhoto ||
         (filesState.vehiclePhotos && filesState.vehiclePhotos.length > 0);
 
       if (hasFiles) {
@@ -1472,8 +1473,8 @@ const SellLetterForm = () => {
         if (filesState.aadhaarBack)
           form.append("aadhaarBack", filesState.aadhaarBack);
         if (filesState.panPhoto) form.append("panPhoto", filesState.panPhoto);
-        if (filesState.vehicleKMPhoto)
-          form.append("vehicleKMPhoto", filesState.vehicleKMPhoto);
+        if (filesState.deliveryPhoto)
+          form.append("deliveryPhoto", filesState.deliveryPhoto);
         if (filesState.vehiclePhotos && filesState.vehiclePhotos.length) {
           filesState.vehiclePhotos
             .slice(0, 4)
@@ -1504,8 +1505,8 @@ const SellLetterForm = () => {
           if (!filesState.panPhoto && filePreviews.panPhoto) {
             preservedDocs.panPhoto = filePreviews.panPhoto;
           }
-          if (!filesState.vehicleKMPhoto && filePreviews.vehicleKMPhoto) {
-            preservedDocs.vehicleKMPhoto = filePreviews.vehicleKMPhoto;
+          if (!filesState.deliveryPhoto && filePreviews.deliveryPhoto) {
+            preservedDocs.deliveryPhoto = filePreviews.deliveryPhoto;
           }
 
           // Send preserved URLs to backend
@@ -4103,20 +4104,18 @@ const SellLetterForm = () => {
                 </div>
 
                 <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    Vehicle KM (Odometer) Photo
-                  </label>
+                  <label style={styles.formLabel}>Delivery Photo</label>
                   <button
                     type="button"
-                    onClick={() => handleFileInput("vehicleKMPhoto")}
+                    onClick={() => handleFileInput("deliveryPhoto")}
                     style={styles.uploadBtn}
                   >
                     <Image size={20} /> Choose File
                   </button>
-                  {filePreviews.vehicleKMPhoto && (
+                  {filePreviews.deliveryPhoto && (
                     <img
-                      src={filePreviews.vehicleKMPhoto}
-                      alt="km"
+                      src={filePreviews.deliveryPhoto}
+                      alt="delivery"
                       style={styles.previewImg}
                     />
                   )}

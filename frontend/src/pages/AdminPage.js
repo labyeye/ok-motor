@@ -291,7 +291,8 @@ const AdminPage = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const endpoint = "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
+      const endpoint =
+        "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
       const params = { limit: 2000 };
       if (search && String(search).trim() !== "")
         params.search = String(search).trim();
@@ -390,8 +391,8 @@ const AdminPage = () => {
           if (!letter.documents?.aadhaar?.back)
             missingFields.push("Aadhaar Back");
           if (!letter.documents?.pan) missingFields.push("PAN Card");
-          if (!letter.documents?.vehicleKM)
-            missingFields.push("Vehicle KM Photo");
+          if (!letter.documents?.deliveryPhoto && !letter.documents?.vehicleKM)
+            missingFields.push("Delivery Photo");
           if (
             !letter.documents?.vehiclePhotos ||
             letter.documents.vehiclePhotos.length === 0
@@ -442,8 +443,8 @@ const AdminPage = () => {
           if (!letter.documents?.aadhaar?.back)
             missingFields.push("Aadhaar Back");
           if (!letter.documents?.pan) missingFields.push("PAN Card");
-          if (!letter.documents?.vehicleKM)
-            missingFields.push("Vehicle KM Photo");
+          if (!letter.documents?.deliveryPhoto && !letter.documents?.vehicleKM)
+            missingFields.push("Delivery Photo");
           if (
             !letter.documents?.vehiclePhotos ||
             letter.documents.vehiclePhotos.length === 0
@@ -473,7 +474,13 @@ const AdminPage = () => {
       fetchFreeServicesData();
       fetchIncompleteLetters();
     }
-  }, [user, activeMenu, fetchDashboardData, fetchFreeServicesData, fetchIncompleteLetters]);
+  }, [
+    user,
+    activeMenu,
+    fetchDashboardData,
+    fetchFreeServicesData,
+    fetchIncompleteLetters,
+  ]);
 
   // Debounce free services search and fetch from server
   useEffect(() => {
@@ -1184,9 +1191,12 @@ const AdminPage = () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-        const resp = await axios.get("https://ok-motor-51l3.vercel.app/api/sell-letters", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const resp = await axios.get(
+          "https://ok-motor-51l3.vercel.app/api/sell-letters",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
 
         // fetch standalone PUC
         const resPUC = await axios.get(
@@ -1395,9 +1405,12 @@ const AdminPage = () => {
         const token = localStorage.getItem("token");
         if (!token) return;
         // reuse sell-letters endpoint and filter client-side for insurance expiry
-        const resp = await axios.get("https://ok-motor-51l3.vercel.app/api/sell-letters", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const resp = await axios.get(
+          "https://ok-motor-51l3.vercel.app/api/sell-letters",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
 
         const data = resp.data || [];
         // fetch standalone insurance
