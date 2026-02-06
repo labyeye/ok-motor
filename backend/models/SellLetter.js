@@ -76,6 +76,11 @@ const SellLetterSchema = new mongoose.Schema(
         front: { type: String },
         back: { type: String },
       },
+      vehicleRCUploadMode: {
+        type: String,
+        enum: ["single", "separate"],
+        default: "separate",
+      },
       aadhaar: {
         front: { type: String },
         back: { type: String },
@@ -107,7 +112,7 @@ const SellLetterSchema = new mongoose.Schema(
 
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("SellLetter", SellLetterSchema);

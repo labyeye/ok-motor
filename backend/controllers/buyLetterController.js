@@ -19,6 +19,8 @@ exports.createBuyLetter = [
     { name: "aadhaarBack" },
     { name: "panPhoto" },
     { name: "vehicleKMPhoto" },
+    { name: "insuranceNOCFront" },
+    { name: "insuranceNOCBack" },
     { name: "vehiclePhotos" },
   ]),
   async (req, res) => {
@@ -58,6 +60,7 @@ exports.createBuyLetter = [
         aadhaar: { front: null, back: null },
         pan: null,
         vehicleKM: null,
+        insuranceNOC: { front: null, back: null },
         vehiclePhotos: [],
       };
 
@@ -65,11 +68,12 @@ exports.createBuyLetter = [
       let preservedDocs = {};
       if (body.preservedDocuments) {
         try {
-          preservedDocs = typeof body.preservedDocuments === 'string' 
-            ? JSON.parse(body.preservedDocuments) 
-            : body.preservedDocuments;
+          preservedDocs =
+            typeof body.preservedDocuments === "string"
+              ? JSON.parse(body.preservedDocuments)
+              : body.preservedDocuments;
         } catch (e) {
-          console.error('Failed to parse preservedDocuments:', e);
+          console.error("Failed to parse preservedDocuments:", e);
         }
       }
 
@@ -84,62 +88,80 @@ exports.createBuyLetter = [
         if (files.vehicleRCFront && files.vehicleRCFront[0]) {
           uploadedUrls.vehicleRC.front = await processFile(
             files.vehicleRCFront[0],
-            "vehicle-rc-front"
+            "vehicle-rc-front",
           );
         } else if (preservedDocs.vehicleRCFront) {
           uploadedUrls.vehicleRC.front = preservedDocs.vehicleRCFront;
         }
-        
+
         if (files.vehicleRCBack && files.vehicleRCBack[0]) {
           uploadedUrls.vehicleRC.back = await processFile(
             files.vehicleRCBack[0],
-            "vehicle-rc-back"
+            "vehicle-rc-back",
           );
         } else if (preservedDocs.vehicleRCBack) {
           uploadedUrls.vehicleRC.back = preservedDocs.vehicleRCBack;
         }
-        
+
         if (files.aadhaarFront && files.aadhaarFront[0]) {
           uploadedUrls.aadhaar.front = await processFile(
             files.aadhaarFront[0],
-            "aadhaar-front"
+            "aadhaar-front",
           );
         } else if (preservedDocs.aadhaarFront) {
           uploadedUrls.aadhaar.front = preservedDocs.aadhaarFront;
         }
-        
+
         if (files.aadhaarBack && files.aadhaarBack[0]) {
           uploadedUrls.aadhaar.back = await processFile(
             files.aadhaarBack[0],
-            "aadhaar-back"
+            "aadhaar-back",
           );
         } else if (preservedDocs.aadhaarBack) {
           uploadedUrls.aadhaar.back = preservedDocs.aadhaarBack;
         }
-        
+
         if (files.panPhoto && files.panPhoto[0]) {
           uploadedUrls.pan = await processFile(files.panPhoto[0], "pan-photo");
         } else if (preservedDocs.panPhoto) {
           uploadedUrls.pan = preservedDocs.panPhoto;
         }
-        
+
         if (files.vehicleKMPhoto && files.vehicleKMPhoto[0]) {
           uploadedUrls.vehicleKM = await processFile(
             files.vehicleKMPhoto[0],
-            "vehicle-km"
+            "vehicle-km",
           );
         } else if (preservedDocs.vehicleKMPhoto) {
           uploadedUrls.vehicleKM = preservedDocs.vehicleKMPhoto;
         }
-        
+
         if (files.vehiclePhotos && files.vehiclePhotos.length) {
           for (let i = 0; i < files.vehiclePhotos.length && i < 10; i++) {
             const url = await processFile(
               files.vehiclePhotos[i],
-              `vehicle-photo-${i}`
+              `vehicle-photo-${i}`,
             );
             uploadedUrls.vehiclePhotos.push(url);
           }
+        }
+
+        if (files.insuranceNOCFront && files.insuranceNOCFront[0]) {
+          uploadedUrls.insuranceNOC.front = await processFile(
+            files.insuranceNOCFront[0],
+            "insurance-noc-front",
+          );
+        } else if (preservedDocs.insuranceNOCFront) {
+          uploadedUrls.insuranceNOC.front = preservedDocs.insuranceNOCFront;
+        }
+
+        if (files.insuranceNOCBack && files.insuranceNOCBack[0]) {
+          uploadedUrls.insuranceNOC.back = await processFile(
+            files.insuranceNOCBack[0],
+            "insurance-noc-back",
+          );
+        } else if (preservedDocs.insuranceNOCBack) {
+          uploadedUrls.insuranceNOC.back = preservedDocs.insuranceNOCBack;
         }
       } catch (uploadErr) {
         console.error("Image upload failed, aborting create:", uploadErr);
@@ -150,10 +172,13 @@ exports.createBuyLetter = [
 
       buyLetterData.documents = {
         vehicleRC: uploadedUrls.vehicleRC,
+        vehicleRCUploadMode: body.vehicleRCUploadMode || "separate",
         aadhaar: uploadedUrls.aadhaar,
         aadhaarUploadMode: body.aadhaarUploadMode || "separate",
         pan: uploadedUrls.pan,
         vehicleKM: uploadedUrls.vehicleKM,
+        insuranceNOC: uploadedUrls.insuranceNOC,
+        insuranceNOCUploadMode: body.insuranceNOCUploadMode || "separate",
         vehiclePhotos: uploadedUrls.vehiclePhotos,
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };
@@ -167,29 +192,34 @@ exports.createBuyLetter = [
       ) {
         const regex = new RegExp(
           `^${escapeRegExp(String(buyLetterData.registrationNumber).trim())}$`,
-          "i"
+          "i",
         );
         const query = { registrationNumber: regex };
-        
+
         // When editing (previousVersionId exists), exclude that document and its versions from duplicate check
         if (buyLetterData.previousVersionId) {
           query._id = { $ne: buyLetterData.previousVersionId };
           // Also exclude other versions of the same original document
           if (buyLetterData.originalDocumentId) {
-            query.originalDocumentId = { $ne: buyLetterData.originalDocumentId };
-            query._id = { $nin: [buyLetterData.previousVersionId, buyLetterData.originalDocumentId] };
+            query.originalDocumentId = {
+              $ne: buyLetterData.originalDocumentId,
+            };
+            query._id = {
+              $nin: [
+                buyLetterData.previousVersionId,
+                buyLetterData.originalDocumentId,
+              ],
+            };
           }
         }
-        
+
         const existing = await BuyLetter.findOne(query);
         if (existing) {
           // Return conflict with existing document so frontend can reuse it
-          return res
-            .status(409)
-            .json({
-              message: "Buy letter with this registration number already exists",
-              existing,
-            });
+          return res.status(409).json({
+            message: "Buy letter with this registration number already exists",
+            existing,
+          });
         }
       }
 
@@ -199,11 +229,18 @@ exports.createBuyLetter = [
       res.status(201).json(savedBuyLetter);
     } catch (error) {
       console.error("Error creating buy letter:", error);
-      if (error && (error.code === 11000 || error.name === "MongoServerError")) {
+      if (
+        error &&
+        (error.code === 11000 || error.name === "MongoServerError")
+      ) {
         const dupKey = error.keyValue || {};
         return res
           .status(409)
-          .json({ message: "Duplicate key error", dupKey, error: error.message });
+          .json({
+            message: "Duplicate key error",
+            dupKey,
+            error: error.message,
+          });
       }
 
       res.status(500).json({
@@ -234,13 +271,16 @@ exports.getBuyLetters = async (req, res) => {
       .limit(limit)
       .populate("user", "name role")
       .populate("vehicle")
-      .populate("previousVersionId", "sellerName sellerFatherName sellerCurrentAddress selleraadhar sellerpan selleraadharphone selleraadharphone2 vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition buyerName buyerFatherName buyerCurrentAddress buyernames buyerphone witnessname witnessphone dealername dealeraddress returnpersonname saleDate saleTime saleAmount paymentMethod todayDate todayTime note documents")
+      .populate(
+        "previousVersionId",
+        "sellerName sellerFatherName sellerCurrentAddress selleraadhar sellerpan selleraadharphone selleraadharphone2 vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition buyerName buyerFatherName buyerCurrentAddress buyernames buyerphone witnessname witnessphone dealername dealeraddress returnpersonname saleDate saleTime saleAmount paymentMethod todayDate todayTime note documents",
+      )
       .lean();
 
     // Rename populated field for frontend convenience
-    const buyLettersWithPrevious = buyLetters.map(letter => ({
+    const buyLettersWithPrevious = buyLetters.map((letter) => ({
       ...letter,
-      previousVersion: letter.previousVersionId
+      previousVersion: letter.previousVersionId,
     }));
 
     const total = await BuyLetter.countDocuments(conditions);
@@ -322,7 +362,7 @@ exports.updateBuyLetter = async (req, res) => {
     buyLetter = await BuyLetter.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     res.json(buyLetter);

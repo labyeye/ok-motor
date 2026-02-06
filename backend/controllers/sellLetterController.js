@@ -68,25 +68,25 @@ exports.createSellLetter = [
         if (files.vehicleRCFront && files.vehicleRCFront[0]) {
           uploadedUrls.vehicleRC.front = await processFile(
             files.vehicleRCFront[0],
-            "vehicle-rc-front"
+            "vehicle-rc-front",
           );
         }
         if (files.vehicleRCBack && files.vehicleRCBack[0]) {
           uploadedUrls.vehicleRC.back = await processFile(
             files.vehicleRCBack[0],
-            "vehicle-rc-back"
+            "vehicle-rc-back",
           );
         }
         if (files.aadhaarFront && files.aadhaarFront[0]) {
           uploadedUrls.aadhaar.front = await processFile(
             files.aadhaarFront[0],
-            "aadhaar-front"
+            "aadhaar-front",
           );
         }
         if (files.aadhaarBack && files.aadhaarBack[0]) {
           uploadedUrls.aadhaar.back = await processFile(
             files.aadhaarBack[0],
-            "aadhaar-back"
+            "aadhaar-back",
           );
         }
         if (files.panPhoto && files.panPhoto[0]) {
@@ -95,14 +95,14 @@ exports.createSellLetter = [
         if (files.vehicleKMPhoto && files.vehicleKMPhoto[0]) {
           uploadedUrls.vehicleKM = await processFile(
             files.vehicleKMPhoto[0],
-            "vehicle-km"
+            "vehicle-km",
           );
         }
         if (files.vehiclePhotos && files.vehiclePhotos.length) {
           for (let i = 0; i < files.vehiclePhotos.length && i < 10; i++) {
             const url = await processFile(
               files.vehiclePhotos[i],
-              `vehicle-photo-${i}`
+              `vehicle-photo-${i}`,
             );
             uploadedUrls.vehiclePhotos.push(url);
           }
@@ -116,6 +116,7 @@ exports.createSellLetter = [
 
       sellLetterData.documents = {
         vehicleRC: uploadedUrls.vehicleRC,
+        vehicleRCUploadMode: bodyData.vehicleRCUploadMode || "separate",
         aadhaar: uploadedUrls.aadhaar,
         aadhaarUploadMode: bodyData.aadhaarUploadMode || "separate",
         pan: uploadedUrls.pan,
@@ -246,13 +247,16 @@ exports.getSellLetters = async (req, res) => {
       .sort({ createdAt: -1 })
       .select("-__v")
       .populate("user", "name role")
-      .populate("previousVersionId", "vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition pucIssueDate pucExpiryDate pucStatus insuranceStatus insuranceExpiryDate insuranceCompany insurancePolicyNumber buyerName buyerFatherName buyerAddress buyerPhone buyerPhone2 buyerEmail buyerAadhar saleDate saleTime saleAmount paymentMethod todayDate todayTime previousDate previousTime witnessName witnessPhone note documents")
+      .populate(
+        "previousVersionId",
+        "vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition pucIssueDate pucExpiryDate pucStatus insuranceStatus insuranceExpiryDate insuranceCompany insurancePolicyNumber buyerName buyerFatherName buyerAddress buyerPhone buyerPhone2 buyerEmail buyerAadhar saleDate saleTime saleAmount paymentMethod todayDate todayTime previousDate previousTime witnessName witnessPhone note documents",
+      )
       .lean();
 
     // Rename populated field for frontend convenience
-    const sellLettersWithPrevious = sellLetters.map(letter => ({
+    const sellLettersWithPrevious = sellLetters.map((letter) => ({
       ...letter,
-      previousVersion: letter.previousVersionId
+      previousVersion: letter.previousVersionId,
     }));
 
     res.json(sellLettersWithPrevious);
@@ -300,13 +304,16 @@ exports.getMySellLetters = async (req, res) => {
       .sort({ createdAt: -1 })
       .select("-__v")
       .populate("user", "name role")
-      .populate("previousVersionId", "vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition pucIssueDate pucExpiryDate pucStatus insuranceStatus insuranceExpiryDate insuranceCompany insurancePolicyNumber buyerName buyerFatherName buyerAddress buyerPhone buyerPhone2 buyerEmail buyerAadhar saleDate saleTime saleAmount paymentMethod todayDate todayTime previousDate previousTime witnessName witnessPhone note documents")
+      .populate(
+        "previousVersionId",
+        "vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition pucIssueDate pucExpiryDate pucStatus insuranceStatus insuranceExpiryDate insuranceCompany insurancePolicyNumber buyerName buyerFatherName buyerAddress buyerPhone buyerPhone2 buyerEmail buyerAadhar saleDate saleTime saleAmount paymentMethod todayDate todayTime previousDate previousTime witnessName witnessPhone note documents",
+      )
       .lean();
 
     // Rename populated field for frontend convenience
-    const sellLettersWithPrevious = sellLetters.map(letter => ({
+    const sellLettersWithPrevious = sellLetters.map((letter) => ({
       ...letter,
-      previousVersion: letter.previousVersionId
+      previousVersion: letter.previousVersionId,
     }));
 
     res.json(sellLettersWithPrevious);
@@ -352,7 +359,7 @@ exports.updateSellLetter = async (req, res) => {
     const updated = await SellLetter.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     res.json(updated);

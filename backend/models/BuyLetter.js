@@ -61,6 +61,11 @@ const BuyLetterSchema = new mongoose.Schema({
       front: { type: String },
       back: { type: String },
     },
+    vehicleRCUploadMode: {
+      type: String,
+      enum: ["single", "separate"],
+      default: "separate",
+    },
     aadhaar: {
       front: { type: String },
       back: { type: String },
@@ -72,6 +77,15 @@ const BuyLetterSchema = new mongoose.Schema({
     },
     pan: { type: String },
     vehicleKM: { type: String },
+    insuranceNOC: {
+      front: { type: String },
+      back: { type: String },
+    },
+    insuranceNOCUploadMode: {
+      type: String,
+      enum: ["single", "separate"],
+      default: "separate",
+    },
     vehiclePhotos: [{ type: String }],
     meta: {
       uploadedAt: { type: Date },

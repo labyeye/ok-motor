@@ -83,6 +83,9 @@ const BuyLetterForm = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [loadingVehicles, setLoadingVehicles] = useState(false);
   const [aadhaarUploadMode, setAadhaarUploadMode] = useState("separate"); // "single" or "separate"
+  const [vehicleRCUploadMode, setVehicleRCUploadMode] = useState("separate"); // "single" or "separate"
+  const [insuranceNOCUploadMode, setInsuranceNOCUploadMode] =
+    useState("separate"); // "single" or "separate"
   const [filesState, setFilesState] = useState({
     vehicleRCFront: null,
     vehicleRCBack: null,
@@ -90,7 +93,9 @@ const BuyLetterForm = () => {
     aadhaarBack: null,
     panPhoto: null,
     vehicleKMPhoto: null,
-    vehiclePhotos: [],
+    insuranceNOCFront: null, // Replaced vehiclePhotos
+    insuranceNOCBack: null,
+    // vehiclePhotos: [], // Removed as replaced by Insurance NOC
   });
 
   const [filePreviews, setFilePreviews] = useState({});
@@ -288,6 +293,21 @@ const BuyLetterForm = () => {
             );
           }
 
+          // Set vehicleRCUploadMode based on loaded document
+          if (full.documents.vehicleRCUploadMode) {
+            setVehicleRCUploadMode(full.documents.vehicleRCUploadMode);
+          } else {
+            // Detect mode from existing data
+            const sameUrl =
+              full.documents.vehicleRC?.front ===
+              full.documents.vehicleRC?.back;
+            setVehicleRCUploadMode(
+              sameUrl && full.documents.vehicleRC?.front
+                ? "single"
+                : "separate",
+            );
+          }
+
           if (full.documents.vehicleRC) {
             previews.vehicleRCFront = full.documents.vehicleRC.front || null;
             previews.vehicleRCBack = full.documents.vehicleRC.back || null;
@@ -300,8 +320,31 @@ const BuyLetterForm = () => {
             previews.panPhoto = full.documents.pan || null;
           if (full.documents.vehicleKM)
             previews.vehicleKMPhoto = full.documents.vehicleKM || null;
+
+          // Load Insurance NOC
+          if (full.documents.insuranceNOCUploadMode) {
+            setInsuranceNOCUploadMode(full.documents.insuranceNOCUploadMode);
+          } else {
+            const sameUrl =
+              full.documents.insuranceNOC?.front ===
+              full.documents.insuranceNOC?.back;
+            setInsuranceNOCUploadMode(
+              sameUrl && full.documents.insuranceNOC?.front
+                ? "single"
+                : "separate",
+            );
+          }
+          if (full.documents.insuranceNOC) {
+            previews.insuranceNOCFront =
+              full.documents.insuranceNOC.front || null;
+            previews.insuranceNOCBack =
+              full.documents.insuranceNOC.back || null;
+          }
+
+          /* Vehicle Photos removed 
           if (Array.isArray(full.documents.vehiclePhotos))
-            previews.vehiclePhotos = full.documents.vehiclePhotos;
+            previews.vehiclePhotos = full.documents.vehiclePhotos; 
+          */
 
           setFilePreviews((prev) => ({ ...prev, ...previews }));
         }
@@ -700,7 +743,13 @@ const BuyLetterForm = () => {
         filesState.aadhaarBack ||
         filesState.panPhoto ||
         filesState.vehicleKMPhoto ||
-        (filesState.vehiclePhotos && filesState.vehiclePhotos.length > 0);
+        filesState.vehicleRCBack ||
+        filesState.aadhaarFront ||
+        filesState.aadhaarBack ||
+        filesState.panPhoto ||
+        filesState.vehicleKMPhoto ||
+        filesState.insuranceNOCFront ||
+        filesState.insuranceNOCBack;
 
       if (hasFiles) {
         const form = new FormData();
@@ -714,10 +763,12 @@ const BuyLetterForm = () => {
           }
         });
 
-        // Add aadhaarUploadMode to the form
+        // Add modes to form
         form.append("aadhaarUploadMode", aadhaarUploadMode);
+        form.append("vehicleRCUploadMode", vehicleRCUploadMode);
+        form.append("insuranceNOCUploadMode", insuranceNOCUploadMode);
 
-        // append files using the field names expected by backend
+        // append files
         if (filesState.vehicleRCFront)
           form.append("vehicleRCFront", filesState.vehicleRCFront);
         if (filesState.vehicleRCBack)
@@ -729,11 +780,12 @@ const BuyLetterForm = () => {
         if (filesState.panPhoto) form.append("panPhoto", filesState.panPhoto);
         if (filesState.vehicleKMPhoto)
           form.append("vehicleKMPhoto", filesState.vehicleKMPhoto);
-        if (filesState.vehiclePhotos && filesState.vehiclePhotos.length) {
-          filesState.vehiclePhotos
-            .slice(0, 4)
-            .forEach((f) => form.append("vehiclePhotos", f));
-        }
+
+        // Insurance NOC
+        if (filesState.insuranceNOCFront)
+          form.append("insuranceNOCFront", filesState.insuranceNOCFront);
+        if (filesState.insuranceNOCBack)
+          form.append("insuranceNOCBack", filesState.insuranceNOCBack);
 
         // If editing and some files weren't changed, preserve existing URLs
         if (editLetter?._id && editLetter.documents) {
@@ -761,6 +813,14 @@ const BuyLetterForm = () => {
           }
           if (!filesState.vehicleKMPhoto && filePreviews.vehicleKMPhoto) {
             preservedDocs.vehicleKMPhoto = filePreviews.vehicleKMPhoto;
+          }
+
+          // Preserve Insurance NOC
+          if (!filesState.insuranceNOCFront && filePreviews.insuranceNOCFront) {
+            preservedDocs.insuranceNOCFront = filePreviews.insuranceNOCFront;
+          }
+          if (!filesState.insuranceNOCBack && filePreviews.insuranceNOCBack) {
+            preservedDocs.insuranceNOCBack = filePreviews.insuranceNOCBack;
           }
 
           // Send preserved URLs to backend
@@ -890,6 +950,36 @@ const BuyLetterForm = () => {
             aadhaarFront: effectivePreview,
             aadhaarBack: effectivePreview, // Use same preview for back
           }));
+        } else if (
+          uploadModalFieldName === "vehicleRCFront" &&
+          vehicleRCUploadMode === "single"
+        ) {
+          // Single file mode for Vehicle RC
+          setFilesState((prev) => ({
+            ...prev,
+            vehicleRCFront: finalFile,
+            vehicleRCBack: finalFile,
+          }));
+          setFilePreviews((prev) => ({
+            ...prev,
+            vehicleRCFront: effectivePreview,
+            vehicleRCBack: effectivePreview,
+          }));
+        } else if (
+          uploadModalFieldName === "insuranceNOCFront" &&
+          insuranceNOCUploadMode === "single"
+        ) {
+          // Single file mode for Insurance NOC
+          setFilesState((prev) => ({
+            ...prev,
+            insuranceNOCFront: finalFile,
+            insuranceNOCBack: finalFile,
+          }));
+          setFilePreviews((prev) => ({
+            ...prev,
+            insuranceNOCFront: effectivePreview,
+            insuranceNOCBack: effectivePreview,
+          }));
         } else {
           setFilesState((prev) => ({
             ...prev,
@@ -975,6 +1065,36 @@ const BuyLetterForm = () => {
         ...prev,
         aadhaarFront: url,
         aadhaarBack: url,
+      }));
+    } else if (
+      cropFieldName === "vehicleRCFront" &&
+      vehicleRCUploadMode === "single"
+    ) {
+      setFilesState((prev) => ({
+        ...prev,
+        vehicleRCFront: file,
+        vehicleRCBack: file,
+      }));
+      const url = URL.createObjectURL(file);
+      setFilePreviews((prev) => ({
+        ...prev,
+        vehicleRCFront: url,
+        vehicleRCBack: url,
+      }));
+    } else if (
+      cropFieldName === "insuranceNOCFront" &&
+      insuranceNOCUploadMode === "single"
+    ) {
+      setFilesState((prev) => ({
+        ...prev,
+        insuranceNOCFront: file,
+        insuranceNOCBack: file,
+      }));
+      const url = URL.createObjectURL(file);
+      setFilePreviews((prev) => ({
+        ...prev,
+        insuranceNOCFront: url,
+        insuranceNOCBack: url,
       }));
     } else {
       setFilesState((prev) => ({ ...prev, [cropFieldName]: file }));
@@ -1750,10 +1870,17 @@ const BuyLetterForm = () => {
           items.push({ title: "PAN Card", url: documentsObj.pan });
         if (documentsObj.vehicleKM)
           items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
-        if (documentsObj.vehiclePhotos && documentsObj.vehiclePhotos.length) {
-          documentsObj.vehiclePhotos.forEach((u, i) =>
-            items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
-          );
+        if (documentsObj.insuranceNOC) {
+          if (documentsObj.insuranceNOC.front)
+            items.push({
+              title: "Insurance NOC - Front",
+              url: documentsObj.insuranceNOC.front,
+            });
+          if (documentsObj.insuranceNOC.back)
+            items.push({
+              title: "Insurance NOC - Back",
+              url: documentsObj.insuranceNOC.back,
+            });
         }
 
         for (let i = 0; i < items.length; i += 4) {
@@ -3035,75 +3162,227 @@ const BuyLetterForm = () => {
                 <FileText style={styles.sectionIcon} /> Documents Upload
               </h2>
               <div style={styles.formGrid}>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Vehicle RC - Front</label>
+                {/* Vehicle RC Upload Mode Toggle */}
+                <div style={{ ...styles.formField, width: "100%" }}>
+                  <label style={{ ...styles.formLabel, marginBottom: "12px" }}>
+                    Vehicle RC Upload Mode
+                  </label>
                   <div
-                    style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
+                    style={{
+                      display: "flex",
+                      gap: "16px",
+                      marginBottom: "16px",
+                      flexWrap: "wrap",
+                    }}
                   >
-                    <button
-                      type="button"
-                      onClick={() => handleFileInput("vehicleRCFront")}
-                      style={styles.uploadBtn}
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                      }}
                     >
-                      <Image size={20} />{" "}
-                      {filePreviews.vehicleRCFront ? "Change" : "Choose File"}
-                    </button>
-                    {filePreviews.vehicleRCFront && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFile("vehicleRCFront")}
-                        style={{
-                          ...styles.uploadBtn,
-                          backgroundColor: "#ef4444",
+                      <input
+                        type="radio"
+                        name="vehicleRCUploadMode"
+                        value="single"
+                        checked={vehicleRCUploadMode === "single"}
+                        onChange={(e) => {
+                          setVehicleRCUploadMode(e.target.value);
+                          setFilesState((prev) => ({
+                            ...prev,
+                            vehicleRCFront: null,
+                            vehicleRCBack: null,
+                          }));
+                          setFilePreviews((prev) => ({
+                            ...prev,
+                            vehicleRCFront: null,
+                            vehicleRCBack: null,
+                          }));
                         }}
-                      >
-                        Remove
-                      </button>
-                    )}
+                        style={{ cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "14px" }}>
+                        Single File (Front + Back in one PDF/Image)
+                      </span>
+                    </label>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="vehicleRCUploadMode"
+                        value="separate"
+                        checked={vehicleRCUploadMode === "separate"}
+                        onChange={(e) => {
+                          setVehicleRCUploadMode(e.target.value);
+                          setFilesState((prev) => ({
+                            ...prev,
+                            vehicleRCFront: null,
+                            vehicleRCBack: null,
+                          }));
+                          setFilePreviews((prev) => ({
+                            ...prev,
+                            vehicleRCFront: null,
+                            vehicleRCBack: null,
+                          }));
+                        }}
+                        style={{ cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "14px" }}>
+                        Two Separate Images (Front & Back)
+                      </span>
+                    </label>
                   </div>
-                  {filePreviews.vehicleRCFront && (
-                    <img
-                      src={filePreviews.vehicleRCFront}
-                      alt="rc-front"
-                      style={styles.previewImg}
-                    />
-                  )}
                 </div>
 
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Vehicle RC - Back</label>
-                  <div
-                    style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleFileInput("vehicleRCBack")}
-                      style={styles.uploadBtn}
+                {vehicleRCUploadMode === "single" ? (
+                  <div style={styles.formField}>
+                    <label style={styles.formLabel}>
+                      Vehicle RC (Front and Back)
+                    </label>
+                    <div
+                      style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
                     >
-                      <Image size={20} />{" "}
-                      {filePreviews.vehicleRCBack ? "Change" : "Choose File"}
-                    </button>
-                    {filePreviews.vehicleRCBack && (
                       <button
                         type="button"
-                        onClick={() => handleRemoveFile("vehicleRCBack")}
-                        style={{
-                          ...styles.uploadBtn,
-                          backgroundColor: "#ef4444",
-                        }}
+                        onClick={() => handleFileInput("vehicleRCFront", true)}
+                        style={styles.uploadBtn}
                       >
-                        Remove
+                        <Image size={20} />{" "}
+                        {filePreviews.vehicleRCFront ? "Change" : "Choose File"}
                       </button>
+                      {filePreviews.vehicleRCFront && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleRemoveFile("vehicleRCFront");
+                            setFilesState((prev) => ({
+                              ...prev,
+                              vehicleRCBack: null,
+                            }));
+                            setFilePreviews((prev) => ({
+                              ...prev,
+                              vehicleRCBack: null,
+                            }));
+                          }}
+                          style={{
+                            ...styles.uploadBtn,
+                            backgroundColor: "#ef4444",
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    {filePreviews.vehicleRCFront && (
+                      <img
+                        src={filePreviews.vehicleRCFront}
+                        alt="rc-front"
+                        style={styles.previewImg}
+                      />
                     )}
                   </div>
-                  {filePreviews.vehicleRCBack && (
-                    <img
-                      src={filePreviews.vehicleRCBack}
-                      alt="rc-back"
-                      style={styles.previewImg}
-                    />
-                  )}
-                </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "16px",
+                      flexWrap: "wrap",
+                      width: "100%",
+                    }}
+                  >
+                    <div style={{ ...styles.formField, flex: "1 1 200px" }}>
+                      <label style={styles.formLabel}>Vehicle RC - Front</label>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleFileInput("vehicleRCFront", true)
+                          }
+                          style={styles.uploadBtn}
+                        >
+                          <Image size={20} />{" "}
+                          {filePreviews.vehicleRCFront
+                            ? "Change"
+                            : "Choose File"}
+                        </button>
+                        {filePreviews.vehicleRCFront && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile("vehicleRCFront")}
+                            style={{
+                              ...styles.uploadBtn,
+                              backgroundColor: "#ef4444",
+                            }}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      {filePreviews.vehicleRCFront && (
+                        <img
+                          src={filePreviews.vehicleRCFront}
+                          alt="rc-front"
+                          style={styles.previewImg}
+                        />
+                      )}
+                    </div>
+
+                    <div style={{ ...styles.formField, flex: "1 1 200px" }}>
+                      <label style={styles.formLabel}>Vehicle RC - Back</label>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleFileInput("vehicleRCBack", true)}
+                          style={styles.uploadBtn}
+                        >
+                          <Image size={20} />{" "}
+                          {filePreviews.vehicleRCBack
+                            ? "Change"
+                            : "Choose File"}
+                        </button>
+                        {filePreviews.vehicleRCBack && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile("vehicleRCBack")}
+                            style={{
+                              ...styles.uploadBtn,
+                              backgroundColor: "#ef4444",
+                            }}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      {filePreviews.vehicleRCBack && (
+                        <img
+                          src={filePreviews.vehicleRCBack}
+                          alt="rc-back"
+                          style={styles.previewImg}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Aadhaar Upload Mode Toggle */}
                 <div style={{ ...styles.formField, width: "100%" }}>
@@ -3331,7 +3610,7 @@ const BuyLetterForm = () => {
                   >
                     <button
                       type="button"
-                      onClick={() => handleFileInput("panPhoto")}
+                      onClick={() => handleFileInput("panPhoto", true)}
                       style={styles.uploadBtn}
                     >
                       <Image size={20} />{" "}
@@ -3396,43 +3675,239 @@ const BuyLetterForm = () => {
                   )}
                 </div>
 
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    Vehicle Photos (up to 4)
+                {/* Insurance NOC Upload Mode Toggle */}
+                <div style={{ ...styles.formField, width: "100%" }}>
+                  <label style={{ ...styles.formLabel, marginBottom: "12px" }}>
+                    Insurance NOC Upload Mode
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => handleMultipleFileInput("vehiclePhotos")}
-                    style={styles.uploadBtn}
-                  >
-                    <Image size={20} /> Choose Files
-                  </button>
                   <div
                     style={{
                       display: "flex",
-                      gap: "8px",
-                      marginTop: "8px",
+                      gap: "16px",
+                      marginBottom: "16px",
                       flexWrap: "wrap",
                     }}
                   >
-                    {(filePreviews.vehiclePhotos || []).map((p, idx) => (
-                      <div key={idx} style={{ position: "relative" }}>
-                        <img
-                          src={p}
-                          alt={`vehicle-${idx}`}
-                          style={styles.previewImgSmall}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeVehiclePhoto(idx)}
-                          style={styles.removePreviewBtn}
-                        >
-                          x
-                        </button>
-                      </div>
-                    ))}
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="insuranceNOCUploadMode"
+                        value="single"
+                        checked={insuranceNOCUploadMode === "single"}
+                        onChange={(e) => {
+                          setInsuranceNOCUploadMode(e.target.value);
+                          setFilesState((prev) => ({
+                            ...prev,
+                            insuranceNOCFront: null,
+                            insuranceNOCBack: null,
+                          }));
+                          setFilePreviews((prev) => ({
+                            ...prev,
+                            insuranceNOCFront: null,
+                            insuranceNOCBack: null,
+                          }));
+                        }}
+                        style={{ cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "14px" }}>
+                        Single File (Front + Back in one PDF/Image)
+                      </span>
+                    </label>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="insuranceNOCUploadMode"
+                        value="separate"
+                        checked={insuranceNOCUploadMode === "separate"}
+                        onChange={(e) => {
+                          setInsuranceNOCUploadMode(e.target.value);
+                          setFilesState((prev) => ({
+                            ...prev,
+                            insuranceNOCFront: null,
+                            insuranceNOCBack: null,
+                          }));
+                          setFilePreviews((prev) => ({
+                            ...prev,
+                            insuranceNOCFront: null,
+                            insuranceNOCBack: null,
+                          }));
+                        }}
+                        style={{ cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "14px" }}>
+                        Two Separate Images (Front & Back)
+                      </span>
+                    </label>
                   </div>
                 </div>
+
+                {insuranceNOCUploadMode === "single" ? (
+                  <div style={styles.formField}>
+                    <label style={styles.formLabel}>
+                      Insurance NOC (Front and Back)
+                    </label>
+                    <div
+                      style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleFileInput("insuranceNOCFront", true)
+                        }
+                        style={styles.uploadBtn}
+                      >
+                        <Image size={20} />{" "}
+                        {filePreviews.insuranceNOCFront
+                          ? "Change"
+                          : "Choose File"}
+                      </button>
+                      {filePreviews.insuranceNOCFront && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleRemoveFile("insuranceNOCFront");
+                            setFilesState((prev) => ({
+                              ...prev,
+                              insuranceNOCBack: null,
+                            }));
+                            setFilePreviews((prev) => ({
+                              ...prev,
+                              insuranceNOCBack: null,
+                            }));
+                          }}
+                          style={{
+                            ...styles.uploadBtn,
+                            backgroundColor: "#ef4444",
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    {filePreviews.insuranceNOCFront && (
+                      <img
+                        src={filePreviews.insuranceNOCFront}
+                        alt="noc-front"
+                        style={styles.previewImg}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "16px",
+                      flexWrap: "wrap",
+                      width: "100%",
+                    }}
+                  >
+                    <div style={{ ...styles.formField, flex: "1 1 200px" }}>
+                      <label style={styles.formLabel}>
+                        Insurance NOC - Front
+                      </label>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleFileInput("insuranceNOCFront", true)
+                          }
+                          style={styles.uploadBtn}
+                        >
+                          <Image size={20} />{" "}
+                          {filePreviews.insuranceNOCFront
+                            ? "Change"
+                            : "Choose File"}
+                        </button>
+                        {filePreviews.insuranceNOCFront && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveFile("insuranceNOCFront")
+                            }
+                            style={{
+                              ...styles.uploadBtn,
+                              backgroundColor: "#ef4444",
+                            }}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      {filePreviews.insuranceNOCFront && (
+                        <img
+                          src={filePreviews.insuranceNOCFront}
+                          alt="noc-front"
+                          style={styles.previewImg}
+                        />
+                      )}
+                    </div>
+
+                    <div style={{ ...styles.formField, flex: "1 1 200px" }}>
+                      <label style={styles.formLabel}>
+                        Insurance NOC - Back
+                      </label>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleFileInput("insuranceNOCBack", true)
+                          }
+                          style={styles.uploadBtn}
+                        >
+                          <Image size={20} />{" "}
+                          {filePreviews.insuranceNOCBack
+                            ? "Change"
+                            : "Choose File"}
+                        </button>
+                        {filePreviews.insuranceNOCBack && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile("insuranceNOCBack")}
+                            style={{
+                              ...styles.uploadBtn,
+                              backgroundColor: "#ef4444",
+                            }}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      {filePreviews.insuranceNOCBack && (
+                        <img
+                          src={filePreviews.insuranceNOCBack}
+                          alt="noc-back"
+                          style={styles.previewImg}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

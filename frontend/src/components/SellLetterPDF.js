@@ -150,6 +150,7 @@ const SellLetterForm = () => {
   );
   const [isSaving, setIsSaving] = useState(false);
   const [aadhaarUploadMode, setAadhaarUploadMode] = useState("separate");
+  const [vehicleRCUploadMode, setVehicleRCUploadMode] = useState("separate");
   const [filesState, setFilesState] = useState({
     vehicleRCFront: null,
     vehicleRCBack: null,
@@ -200,7 +201,8 @@ const SellLetterForm = () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+      const API_BASE =
+        process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
@@ -309,6 +311,21 @@ const SellLetterForm = () => {
               full.documents.aadhaar?.front === full.documents.aadhaar?.back;
             setAadhaarUploadMode(
               sameUrl && full.documents.aadhaar?.front ? "single" : "separate",
+            );
+          }
+
+          // Set vehicleRCUploadMode based on loaded document
+          if (full.documents.vehicleRCUploadMode) {
+            setVehicleRCUploadMode(full.documents.vehicleRCUploadMode);
+          } else {
+            // Detect mode from existing data
+            const sameUrl =
+              full.documents.vehicleRC?.front ===
+              full.documents.vehicleRC?.back;
+            setVehicleRCUploadMode(
+              sameUrl && full.documents.vehicleRC?.front
+                ? "single"
+                : "separate",
             );
           }
 
@@ -570,6 +587,21 @@ const SellLetterForm = () => {
             aadhaarFront: effectivePreview,
             aadhaarBack: effectivePreview,
           }));
+        } else if (
+          uploadModalFieldName === "vehicleRCFront" &&
+          vehicleRCUploadMode === "single"
+        ) {
+          // Single file mode for Vehicle RC
+          setFilesState((prev) => ({
+            ...prev,
+            vehicleRCFront: finalFile,
+            vehicleRCBack: finalFile,
+          }));
+          setFilePreviews((prev) => ({
+            ...prev,
+            vehicleRCFront: effectivePreview,
+            vehicleRCBack: effectivePreview,
+          }));
         } else {
           setFilesState((prev) => ({
             ...prev,
@@ -655,6 +687,21 @@ const SellLetterForm = () => {
         ...prev,
         aadhaarFront: url,
         aadhaarBack: url,
+      }));
+    } else if (
+      cropFieldName === "vehicleRCFront" &&
+      vehicleRCUploadMode === "single"
+    ) {
+      setFilesState((prev) => ({
+        ...prev,
+        vehicleRCFront: file,
+        vehicleRCBack: file,
+      }));
+      const url = URL.createObjectURL(file);
+      setFilePreviews((prev) => ({
+        ...prev,
+        vehicleRCFront: url,
+        vehicleRCBack: url,
       }));
     } else {
       setFilesState((prev) => ({ ...prev, [cropFieldName]: file }));
@@ -1413,6 +1460,7 @@ const SellLetterForm = () => {
 
         // Add aadhaarUploadMode to the form
         form.append("aadhaarUploadMode", aadhaarUploadMode);
+        form.append("vehicleRCUploadMode", vehicleRCUploadMode);
 
         // append files using the field names expected by backend
         if (filesState.vehicleRCFront)
@@ -3602,41 +3650,227 @@ const SellLetterForm = () => {
                 <img style={styles.sectionIcon} alt="" /> Documents Upload
               </h2>
               <div style={styles.formGrid}>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Vehicle RC - Front</label>
-                  <button
-                    type="button"
-                    onClick={() => handleFileInput("vehicleRCFront")}
-                    style={styles.uploadBtn}
+                {/* Vehicle RC Upload Mode Toggle */}
+                <div style={{ ...styles.formField, width: "100%" }}>
+                  <label style={{ ...styles.formLabel, marginBottom: "12px" }}>
+                    Vehicle RC Upload Mode
+                  </label>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "16px",
+                      marginBottom: "16px",
+                      flexWrap: "wrap",
+                    }}
                   >
-                    <Image size={20} /> Choose File
-                  </button>
-                  {filePreviews.vehicleRCFront && (
-                    <img
-                      src={filePreviews.vehicleRCFront}
-                      alt="rc-front"
-                      style={styles.previewImg}
-                    />
-                  )}
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="vehicleRCUploadMode"
+                        value="single"
+                        checked={vehicleRCUploadMode === "single"}
+                        onChange={(e) => {
+                          setVehicleRCUploadMode(e.target.value);
+                          setFilesState((prev) => ({
+                            ...prev,
+                            vehicleRCFront: null,
+                            vehicleRCBack: null,
+                          }));
+                          setFilePreviews((prev) => ({
+                            ...prev,
+                            vehicleRCFront: null,
+                            vehicleRCBack: null,
+                          }));
+                        }}
+                        style={{ cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "14px" }}>
+                        Single File (Front + Back in one PDF/Image)
+                      </span>
+                    </label>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="vehicleRCUploadMode"
+                        value="separate"
+                        checked={vehicleRCUploadMode === "separate"}
+                        onChange={(e) => {
+                          setVehicleRCUploadMode(e.target.value);
+                          setFilesState((prev) => ({
+                            ...prev,
+                            vehicleRCFront: null,
+                            vehicleRCBack: null,
+                          }));
+                          setFilePreviews((prev) => ({
+                            ...prev,
+                            vehicleRCFront: null,
+                            vehicleRCBack: null,
+                          }));
+                        }}
+                        style={{ cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "14px" }}>
+                        Two Separate Images (Front & Back)
+                      </span>
+                    </label>
+                  </div>
                 </div>
 
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Vehicle RC - Back</label>
-                  <button
-                    type="button"
-                    onClick={() => handleFileInput("vehicleRCBack")}
-                    style={styles.uploadBtn}
+                {vehicleRCUploadMode === "single" ? (
+                  <div style={styles.formField}>
+                    <label style={styles.formLabel}>
+                      Vehicle RC (Front and Back)
+                    </label>
+                    <div
+                      style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleFileInput("vehicleRCFront", true)}
+                        style={styles.uploadBtn}
+                      >
+                        <Image size={20} />{" "}
+                        {filePreviews.vehicleRCFront ? "Change" : "Choose File"}
+                      </button>
+                      {filePreviews.vehicleRCFront && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleRemoveFile("vehicleRCFront");
+                            setFilesState((prev) => ({
+                              ...prev,
+                              vehicleRCBack: null,
+                            }));
+                            setFilePreviews((prev) => ({
+                              ...prev,
+                              vehicleRCBack: null,
+                            }));
+                          }}
+                          style={{
+                            ...styles.uploadBtn,
+                            backgroundColor: "#ef4444",
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    {filePreviews.vehicleRCFront && (
+                      <img
+                        src={filePreviews.vehicleRCFront}
+                        alt="rc-front"
+                        style={styles.previewImg}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "16px",
+                      flexWrap: "wrap",
+                      width: "100%",
+                    }}
                   >
-                    <Image size={20} /> Choose File
-                  </button>
-                  {filePreviews.vehicleRCBack && (
-                    <img
-                      src={filePreviews.vehicleRCBack}
-                      alt="rc-back"
-                      style={styles.previewImg}
-                    />
-                  )}
-                </div>
+                    <div style={{ ...styles.formField, flex: "1 1 200px" }}>
+                      <label style={styles.formLabel}>Vehicle RC - Front</label>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleFileInput("vehicleRCFront", true)
+                          }
+                          style={styles.uploadBtn}
+                        >
+                          <Image size={20} />{" "}
+                          {filePreviews.vehicleRCFront
+                            ? "Change"
+                            : "Choose File"}
+                        </button>
+                        {filePreviews.vehicleRCFront && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile("vehicleRCFront")}
+                            style={{
+                              ...styles.uploadBtn,
+                              backgroundColor: "#ef4444",
+                            }}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      {filePreviews.vehicleRCFront && (
+                        <img
+                          src={filePreviews.vehicleRCFront}
+                          alt="rc-front"
+                          style={styles.previewImg}
+                        />
+                      )}
+                    </div>
+
+                    <div style={{ ...styles.formField, flex: "1 1 200px" }}>
+                      <label style={styles.formLabel}>Vehicle RC - Back</label>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleFileInput("vehicleRCBack", true)}
+                          style={styles.uploadBtn}
+                        >
+                          <Image size={20} />{" "}
+                          {filePreviews.vehicleRCBack
+                            ? "Change"
+                            : "Choose File"}
+                        </button>
+                        {filePreviews.vehicleRCBack && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile("vehicleRCBack")}
+                            style={{
+                              ...styles.uploadBtn,
+                              backgroundColor: "#ef4444",
+                            }}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      {filePreviews.vehicleRCBack && (
+                        <img
+                          src={filePreviews.vehicleRCBack}
+                          alt="rc-back"
+                          style={styles.previewImg}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Aadhaar Upload Mode Toggle */}
                 <div style={{ ...styles.formField, width: "100%" }}>
@@ -3854,7 +4088,7 @@ const SellLetterForm = () => {
                   <label style={styles.formLabel}>PAN Card Photo</label>
                   <button
                     type="button"
-                    onClick={() => handleFileInput("panPhoto")}
+                    onClick={() => handleFileInput("panPhoto", true)}
                     style={styles.uploadBtn}
                   >
                     <Image size={20} /> Choose File
