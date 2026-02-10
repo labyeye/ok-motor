@@ -1045,7 +1045,8 @@ const BuyLetterHistory = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `buy_letter_${letter._id}.pdf`);
+      const reg = letter.registrationNumber || letter.vehicle?.registrationNumber || letter._id;
+      link.setAttribute("download", `OKM-BUY-${reg}.pdf`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -1136,7 +1137,8 @@ const BuyLetterHistory = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `buy_letter_english_${letter._id}.pdf`);
+      const reg = letter.registrationNumber || letter.vehicle?.registrationNumber || letter._id;
+      link.setAttribute("download", `OKM-BUY-${reg}.pdf`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

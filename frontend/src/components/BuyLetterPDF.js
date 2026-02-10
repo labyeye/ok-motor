@@ -828,11 +828,13 @@ const BuyLetterForm = () => {
         if (isElectron) {
           response = await apiService.post("/api/buy-letters", form);
         } else {
+          // Increase timeout for large multipart uploads (up to 2 minutes)
           response = await axios.post(
             "https://ok-motor-51l3.vercel.app/api/buy-letters",
             form,
             {
               headers: { "Content-Type": "multipart/form-data" },
+              timeout: 120000,
             },
           );
         }

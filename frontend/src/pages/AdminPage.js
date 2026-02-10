@@ -393,11 +393,14 @@ const AdminPage = () => {
           if (!letter.documents?.pan) missingFields.push("PAN Card");
           if (!letter.documents?.deliveryPhoto && !letter.documents?.vehicleKM)
             missingFields.push("Delivery Photo");
+          // Previously we flagged missing "Vehicle Photos" here.
+          // The buy-letter model now uses an Insurance NOC document instead.
+          // Check for Insurance NOC (front/back) and flag if missing.
           if (
-            !letter.documents?.vehiclePhotos ||
-            letter.documents.vehiclePhotos.length === 0
+            !letter.documents?.insuranceNOC?.front &&
+            !letter.documents?.insuranceNOC?.back
           )
-            missingFields.push("Vehicle Photos");
+            missingFields.push("Insurance NOC");
 
           return {
             ...letter,
@@ -1659,7 +1662,6 @@ const AdminPage = () => {
                   <th>Seller Name</th>
                   <th>Buyer Name</th>
                   <th>Vehicle</th>
-                  <th>Sale Amount</th>
                   <th>Created At</th>
                   <th>Missing Fields</th>
                 </tr>

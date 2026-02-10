@@ -448,16 +448,19 @@ const ServiceHistory = () => {
         return;
       }
 
-      const result = await pdfService.generateServiceBillPDFOffline(bill);
+      const result = await pdfService.generateServiceBillPDF(bill);
 
       if (result.success && result.blob) {
-        const url = window.URL.createObjectURL(result.blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", `service-bill-${billId}.pdf`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        if (!result.saved) {
+          const url = window.URL.createObjectURL(result.blob);
+          const link = document.createElement("a");
+          link.href = url;
+          const reg = bill.registrationNumber || bill._id || bill.billNumber;
+          link.setAttribute("download", `OKM-SERVICE-${reg}.pdf`);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
       } else {
         throw new Error(result.error || "Failed to generate PDF");
       }
@@ -490,7 +493,7 @@ const ServiceHistory = () => {
         return;
       }
 
-      const result = await pdfService.generateServiceBillPDFOffline(bill);
+      const result = await pdfService.generateServiceBillPDF(bill, true);
 
       if (result.success && result.blob) {
         const url = URL.createObjectURL(result.blob);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
+import pdfService from "../services/pdfService";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -316,26 +317,31 @@ const AdvanceHistory = () => {
         return;
       }
       await simulateProgress();
-      const response = await axios.get(
-        `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
-        {
-          responseType: "blob",
-          timeout: 30000,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Cache-Control": "no-cache",
-          },
-        },
-      );
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `advance-bill-${billId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      const bill = advanceBills.find((b) => b._id === billId);
+      if (!bill) {
+        alert("Advance bill not found. Please refresh.");
+        return;
+      }
+
+      // Generate PDF client-side (offline/online) using pdfService
+      const result = await pdfService.generateAdvanceBillPDF(bill);
+      if (result.success && result.blob) {
+        // If the PDF was already saved by fileSaveService (electron or browser fallback), skip creating another download link
+        if (!result.saved) {
+          const url = window.URL.createObjectURL(result.blob);
+          const link = document.createElement("a");
+          link.href = url;
+          const reg = bill.registrationNumber || bill.billNumber || bill._id;
+          link.setAttribute("download", `OKM-ADVANCE-${reg}.pdf`);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        }
+      } else {
+        throw new Error(result.error || "Failed to generate PDF");
+      }
     } catch (error) {
       console.error("Error downloading PDF:", error);
       if (error.response?.status === 401) {
@@ -397,28 +403,30 @@ const AdvanceHistory = () => {
         return;
       }
 
-      const response = await axios.get(
-        `https://ok-motor-51l3.vercel.app/api/advance-bills/${billId}/download`,
-        {
-          responseType: "blob",
-          timeout: 30000,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Cache-Control": "no-cache",
-          },
-        },
-      );
-
-      const url = URL.createObjectURL(new Blob([response.data]));
       const bill = advanceBills.find((b) => b._id === billId);
+      if (!bill) {
+        alert("Advance bill not found. Please refresh.");
+        clearInterval(progressInterval);
+        setIsDownloading(false);
+        return;
+      }
 
-      clearInterval(progressInterval);
-      setDownloadProgress(100);
-      setIsDownloading(false);
+      // Generate PDF client-side (offline/online) using pdfService (previewOnly=true)
+      const result = await pdfService.generateAdvanceBillPDF(bill, true);
 
-      setPreviewPdfUrl(url);
-      setPreviewBill(bill);
-      setShowPreviewModal(true);
+      if (result.success && result.blob) {
+        const url = URL.createObjectURL(result.blob);
+
+        clearInterval(progressInterval);
+        setDownloadProgress(100);
+        setIsDownloading(false);
+
+        setPreviewPdfUrl(url);
+        setPreviewBill(bill);
+        setShowPreviewModal(true);
+      } else {
+        throw new Error(result.error || "Failed to generate preview");
+      }
     } catch (error) {
       console.error("Error generating preview:", error);
       alert("Failed to generate preview. Please try again.");

@@ -543,19 +543,19 @@ class PDFService {
     }
   }
 
-  async generateServiceBillPDF(billData) {
+  async generateServiceBillPDF(billData, previewOnly = false) {
     if (networkService.getStatus()) {
       try {
-        return await this.generateServiceBillPDFOnline(billData);
+        return await this.generateServiceBillPDFOnline(billData, previewOnly);
       } catch (error) {
         console.log("Online PDF generation failed, using offline:", error);
       }
     }
 
-    return await this.generateServiceBillPDFOffline(billData);
+    return await this.generateServiceBillPDFOffline(billData, previewOnly);
   }
 
-  async generateServiceBillPDFOnline(billData) {
+  async generateServiceBillPDFOnline(billData, previewOnly = false) {
     try {
       const response = await axios.post(
         `${this.baseURL}/api/service-bills/generate-pdf`,
@@ -573,14 +573,16 @@ class PDFService {
 
       let saveRes = null;
       try {
-        const filename = `service-bill-${
-          billData._id || billData.registrationNumber || Date.now()
-        }.pdf`;
-        saveRes = await fileSaveService.savePdfToDefaultDir(
-          filename,
-          buffer,
-          "service",
-        );
+        if (!previewOnly) {
+          const filename = `service-bill-${
+            billData._id || billData.registrationNumber || Date.now()
+          }.pdf`;
+          saveRes = await fileSaveService.savePdfToDefaultDir(
+            filename,
+            buffer,
+            "service",
+          );
+        }
       } catch (saveErr) {
         console.warn(
           "Silent save failed for service bill:",
@@ -600,7 +602,7 @@ class PDFService {
     }
   }
 
-  async generateServiceBillPDFOffline(serviceBill) {
+  async generateServiceBillPDFOffline(serviceBill, previewOnly = false) {
     try {
       if (!serviceBill || typeof serviceBill !== "object") {
         throw new Error("Invalid serviceBill parameter: must be an object");
@@ -1559,14 +1561,17 @@ class PDFService {
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
 
-      const filename = `service-bill-${
-        serviceBill._id || serviceBill.registrationNumber
-      }-${Date.now()}.pdf`;
-      const saveRes = await fileSaveService.savePdfToDefaultDir(
-        filename,
-        pdfBytes,
-        "service",
-      );
+      let saveRes = null;
+      if (!previewOnly) {
+        const filename = `service-bill-${
+          serviceBill._id || serviceBill.registrationNumber
+        }-${Date.now()}.pdf`;
+        saveRes = await fileSaveService.savePdfToDefaultDir(
+          filename,
+          pdfBytes,
+          "service",
+        );
+      }
 
       return {
         success: true,
@@ -1581,18 +1586,18 @@ class PDFService {
     }
   }
 
-  async generateAdvanceBillPDF(billData) {
+  async generateAdvanceBillPDF(billData, previewOnly = false) {
     if (networkService.getStatus()) {
       try {
-        return await this.generateAdvanceBillPDFOnline(billData);
+        return await this.generateAdvanceBillPDFOnline(billData, previewOnly);
       } catch (error) {
         console.log("Online PDF generation failed, using offline:", error);
       }
     }
-    return await this.generateAdvanceBillPDFOffline(billData);
+    return await this.generateAdvanceBillPDFOffline(billData, previewOnly);
   }
 
-  async generateAdvanceBillPDFOnline(billData) {
+  async generateAdvanceBillPDFOnline(billData, previewOnly = false) {
     try {
       const response = await axios.post(
         `${this.baseURL}/api/advance-bills/generate-pdf`,
@@ -1610,14 +1615,16 @@ class PDFService {
 
       let saveRes = null;
       try {
-        const filename = `advance-bill-${
-          billData._id || billData.registrationNumber || Date.now()
-        }.pdf`;
-        saveRes = await fileSaveService.savePdfToDefaultDir(
-          filename,
-          buffer,
-          "advance",
-        );
+        if (!previewOnly) {
+          const filename = `advance-bill-${
+            billData._id || billData.registrationNumber || Date.now()
+          }.pdf`;
+          saveRes = await fileSaveService.savePdfToDefaultDir(
+            filename,
+            buffer,
+            "advance",
+          );
+        }
       } catch (saveErr) {
         console.warn(
           "Silent save failed for advance bill:",
@@ -1637,7 +1644,7 @@ class PDFService {
     }
   }
 
-  async generateAdvanceBillPDFOffline(advanceBill) {
+  async generateAdvanceBillPDFOffline(advanceBill, previewOnly = false) {
     try {
       const pdfDoc = await PDFDocument.create();
       const page = pdfDoc.addPage([595, 842]);
@@ -2180,14 +2187,17 @@ class PDFService {
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
 
-      const filename = `advance-bill-${
-        advanceBill._id || advanceBill.registrationNumber
-      }-${Date.now()}.pdf`;
-      const saveRes = await fileSaveService.savePdfToDefaultDir(
-        filename,
-        pdfBytes,
-        "advance",
-      );
+      let saveRes = null;
+      if (!previewOnly) {
+        const filename = `advance-bill-${
+          advanceBill._id || advanceBill.registrationNumber
+        }-${Date.now()}.pdf`;
+        saveRes = await fileSaveService.savePdfToDefaultDir(
+          filename,
+          pdfBytes,
+          "advance",
+        );
+      }
 
       return {
         success: true,
