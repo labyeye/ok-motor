@@ -32,7 +32,7 @@ const InsuranceForm = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [editId, setEditId] = useState(null);
-  const [isFetching, setIsFetching] = useState(false);
+  const [, setIsFetching] = useState(false);
 
   // Sidebar states
   const [activeMenu, setActiveMenu] = useState("Insurance");
@@ -121,7 +121,6 @@ const InsuranceForm = () => {
 
       const vehicleData = vehicleRes?.data || {};
       const insData = insuranceRes?.data || {};
-      const pucData = pucRes?.data || {};
 
       setFormData((prev) => ({
         ...prev,

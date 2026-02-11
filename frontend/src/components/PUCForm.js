@@ -30,7 +30,7 @@ const PUCForm = () => {
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [isFetching, setIsFetching] = useState(false);
+  const [, setIsFetching] = useState(false);
 
   // Sidebar states
   const [activeMenu, setActiveMenu] = useState("PUC");

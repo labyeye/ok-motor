@@ -434,7 +434,6 @@ const BikeHistory = ({ externalSearchTerm }) => {
       if (formattedData.saleAmount && formattedData.amountInWords) {
         const page = pdfDoc.getPages()[0];
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-        const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
 
         const saleText = `${formattedData.saleAmount}`;
         const xBase = sellLetterFieldPositions.saleAmount.x;
@@ -1645,7 +1644,6 @@ const BikeHistory = ({ externalSearchTerm }) => {
       if (formattedData.saleAmount && formattedData.amountInWords) {
         const page = pdfDoc.getPages()[0];
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-        const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
 
         const saleText = `${formattedData.saleAmount}`;
         const xBase = sellLetterFieldPositions.saleAmount.x;

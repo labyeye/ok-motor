@@ -81,7 +81,7 @@ const AdminPage = () => {
   const [error, setError] = useState(null);
   const [freeServices, setFreeServices] = useState([]);
   const [freeServicesLoading, setFreeServicesLoading] = useState(true);
-  const [freeSearch, setFreeSearch] = useState("");
+  const [freeSearch, ] = useState("");
   const navigate = useNavigate();
 
   const [extraStats, setExtraStats] = useState({
@@ -1012,7 +1012,6 @@ const AdminPage = () => {
   };
 
   const FreeServicesTable = () => {
-    const freeSearchRef = useRef(null);
     const [serviceFilter, setServiceFilter] = useState("all");
     const normalize = (s = "") =>
       String(s)
