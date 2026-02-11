@@ -98,7 +98,7 @@ const InsuranceForm = () => {
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
       // Fetch vehicle details from sell-letters and master insurance/puc records in parallel
-      const [vehicleRes, insuranceRes, pucRes] = await Promise.all([
+      const [vehicleRes, insuranceRes] = await Promise.all([
         axios
           .get(
             `${API_BASE_URL}/sell-letters/vehicle-details?registrationNumber=${encodeURIComponent(
