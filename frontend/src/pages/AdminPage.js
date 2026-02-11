@@ -291,8 +291,7 @@ const AdminPage = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const endpoint =
-        "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
+      const endpoint = "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
       const params = { limit: 2000 };
       if (search && String(search).trim() !== "")
         params.search = String(search).trim();
@@ -1014,6 +1013,7 @@ const AdminPage = () => {
 
   const FreeServicesTable = () => {
     const freeSearchRef = useRef(null);
+    const [serviceFilter, setServiceFilter] = useState("all");
     const normalize = (s = "") =>
       String(s)
         .toLowerCase()
@@ -1080,20 +1080,24 @@ const AdminPage = () => {
       <div className="free-services-card">
         <h3 className="card-title">Free Service Usage (Sold Vehicles)</h3>
 
-        <div className="free-services-search">
-          <div className="history-search-box" style={{ width: 320 }}>
-            <Search size={18} className="history-search-icon" />
-            <input
-              ref={freeSearchRef}
-              type="text"
-              placeholder="Search by reg. number..."
-              value={freeSearch}
-              onChange={(e) => setFreeSearch(e.target.value)}
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={(e) => e.stopPropagation()}
-              autoComplete="off"
-              className="history-search-input"
-            />
+        <div
+          className="free-services-search"
+          style={{ display: "flex", gap: 12, alignItems: "center" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <label style={{ fontSize: "0.85rem", color: "#475569" }}>
+              Show:
+            </label>
+            <select
+              value={serviceFilter}
+              onChange={(e) => setServiceFilter(e.target.value)}
+              style={{ padding: "6px 8px", borderRadius: 6 }}
+            >
+              <option value="all">All</option>
+              <option value="1">1st free service</option>
+              <option value="2">2nd free service</option>
+              <option value="3">3rd free service</option>
+            </select>
           </div>
         </div>
 
@@ -1123,60 +1127,67 @@ const AdminPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {processed.map((item, idx) => {
-                  const { row, nextPending } = item;
-                  return (
-                    <tr
-                      key={`${row.registrationNumber}-${idx}`}
-                      onClick={() => {
-                        if (row.registrationNumber) {
-                          setHistoryQuery(row.registrationNumber);
-                          setIsHistoryModalOpen(true);
-                        }
-                      }}
-                    >
-                      <td>{formatDate(row.saleDate)}</td>
-                      <td>{row.buyerName || "-"}</td>
-                      <td>{row.buyerPhone || "-"}</td>
-                      <td>{row.registrationNumber || "-"}</td>
-                      <td>{row.vehicleBrand || "-"}</td>
-                      <td>{row.vehicleModel || "-"}</td>
-                      <td>{row.month1 ? formatDate(row.month1) : "-"}</td>
-                      <td>{row.month2 ? formatDate(row.month2) : "-"}</td>
-                      <td>{row.month3 ? formatDate(row.month3) : "-"}</td>
-                      <td>{(row.usedCount || 0) + "/3"}</td>
-                      <td>
-                        {(() => {
-                          if ((row.usedCount || 0) >= 3)
-                            return <span>All free services done</span>;
-                          if (!nextPending) return <span>Pending</span>;
+                {processed
+                  .filter((item) => {
+                    if (serviceFilter === "all") return true;
+                    const sel = Number(serviceFilter);
+                    // show rows whose next pending service index matches the selected filter
+                    return item.nextPending && item.nextPending.idx === sel;
+                  })
+                  .map((item, idx) => {
+                    const { row, nextPending } = item;
+                    return (
+                      <tr
+                        key={`${row.registrationNumber}-${idx}`}
+                        onClick={() => {
+                          if (row.registrationNumber) {
+                            setHistoryQuery(row.registrationNumber);
+                            setIsHistoryModalOpen(true);
+                          }
+                        }}
+                      >
+                        <td>{formatDate(row.saleDate)}</td>
+                        <td>{row.buyerName || "-"}</td>
+                        <td>{row.buyerPhone || "-"}</td>
+                        <td>{row.registrationNumber || "-"}</td>
+                        <td>{row.vehicleBrand || "-"}</td>
+                        <td>{row.vehicleModel || "-"}</td>
+                        <td>{row.month1 ? formatDate(row.month1) : "-"}</td>
+                        <td>{row.month2 ? formatDate(row.month2) : "-"}</td>
+                        <td>{row.month3 ? formatDate(row.month3) : "-"}</td>
+                        <td>{(row.usedCount || 0) + "/3"}</td>
+                        <td>
+                          {(() => {
+                            if ((row.usedCount || 0) >= 3)
+                              return <span>All free services done</span>;
+                            if (!nextPending) return <span>Pending</span>;
 
-                          const days = nextPending.daysUntil;
-                          const ord = ordinal(nextPending.idx);
-                          if (days < 0) {
+                            const days = nextPending.daysUntil;
+                            const ord = ordinal(nextPending.idx);
+                            if (days < 0) {
+                              return (
+                                <span style={{ color: "#ef4444" }}>
+                                  {ord} service overdue by {Math.abs(days)}d
+                                </span>
+                              );
+                            }
+                            if (days === 0) {
+                              return (
+                                <span style={{ color: "#f59e0b" }}>
+                                  {ord} service due today
+                                </span>
+                              );
+                            }
                             return (
-                              <span style={{ color: "#ef4444" }}>
-                                {ord} service overdue by {Math.abs(days)}d
+                              <span style={{ color: "#10b981" }}>
+                                {ord} service due in {days}d
                               </span>
                             );
-                          }
-                          if (days === 0) {
-                            return (
-                              <span style={{ color: "#f59e0b" }}>
-                                {ord} service due today
-                              </span>
-                            );
-                          }
-                          return (
-                            <span style={{ color: "#10b981" }}>
-                              {ord} service due in {days}d
-                            </span>
-                          );
-                        })()}
-                      </td>
-                    </tr>
-                  );
-                })}
+                          })()}
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
@@ -1189,17 +1200,15 @@ const AdminPage = () => {
     const [items, setItems] = useState([]);
     const [loadingItems, setLoadingItems] = useState(true);
     const [search, setSearch] = useState("");
+    const [showAllPuc, setShowAllPuc] = useState(false);
 
     const fetchPucData = useCallback(async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-        const resp = await axios.get(
-          "https://ok-motor-51l3.vercel.app/api/sell-letters",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        const resp = await axios.get("https://ok-motor-51l3.vercel.app/api/sell-letters", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
         // fetch standalone PUC
         const resPUC = await axios.get(
@@ -1332,66 +1341,93 @@ const AdminPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {processed.map((it, idx) => {
-                  const { row, expiry, daysUntil } = it;
-                  return (
-                    <tr
-                      key={`${row._id}-${idx}`}
-                      onClick={() => {
-                        if (row.displayReg) {
-                          setHistoryQuery(row.displayReg);
-                          setIsHistoryModalOpen(true);
-                        }
-                      }}
-                    >
-                      <td>{row.displayReg || "-"}</td>
-                      <td>{row.displayName || "-"}</td>
-                      <td>{row.displayPhone || "-"}</td>
-                      <td>{row.displayVehicle || "-"}</td>
-                      <td>{expiry ? formatDate(expiry) : "-"}</td>
-                      <td>
-                        {daysUntil < 0 ? (
-                          <span style={{ color: "#ef4444" }}>
-                            {Math.abs(daysUntil)}d overdue
-                          </span>
-                        ) : daysUntil === 0 ? (
-                          <span style={{ color: "#f59e0b" }}>Due today</span>
-                        ) : (
-                          <span style={{ color: "#10b981" }}>{daysUntil}d</span>
-                        )}
-                      </td>
-                      <td>
-                        {row.type === "sell_letter" ? (
-                          <span
-                            style={{
-                              fontSize: "0.75rem",
-                              padding: "2px 6px",
-                              backgroundColor: "#e0f2fe",
-                              color: "#0284c7",
-                              borderRadius: "4px",
-                            }}
-                          >
-                            Sold Vehicle
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              fontSize: "0.75rem",
-                              padding: "2px 6px",
-                              backgroundColor: "#f3e8ff",
-                              color: "#7e22ce",
-                              borderRadius: "4px",
-                            }}
-                          >
-                            PUC Only
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {(showAllPuc ? processed : processed.slice(0, 10)).map(
+                  (it, idx) => {
+                    const { row, expiry, daysUntil } = it;
+                    return (
+                      <tr
+                        key={`${row._id}-${idx}`}
+                        onClick={() => {
+                          if (row.displayReg) {
+                            setHistoryQuery(row.displayReg);
+                            setIsHistoryModalOpen(true);
+                          }
+                        }}
+                      >
+                        <td>{row.displayReg || "-"}</td>
+                        <td>{row.displayName || "-"}</td>
+                        <td>{row.displayPhone || "-"}</td>
+                        <td>{row.displayVehicle || "-"}</td>
+                        <td>{expiry ? formatDate(expiry) : "-"}</td>
+                        <td>
+                          {daysUntil < 0 ? (
+                            <span style={{ color: "#ef4444" }}>
+                              {Math.abs(daysUntil)}d overdue
+                            </span>
+                          ) : daysUntil === 0 ? (
+                            <span style={{ color: "#f59e0b" }}>Due today</span>
+                          ) : (
+                            <span style={{ color: "#10b981" }}>
+                              {daysUntil}d
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          {row.type === "sell_letter" ? (
+                            <span
+                              style={{
+                                fontSize: "0.75rem",
+                                padding: "2px 6px",
+                                backgroundColor: "#e0f2fe",
+                                color: "#0284c7",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              Sold Vehicle
+                            </span>
+                          ) : (
+                            <span
+                              style={{
+                                fontSize: "0.75rem",
+                                padding: "2px 6px",
+                                backgroundColor: "#f3e8ff",
+                                color: "#7e22ce",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              PUC Only
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  },
+                )}
               </tbody>
             </table>
+            {processed.length > 10 && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: 8,
+                }}
+              >
+                <button
+                  onClick={() => setShowAllPuc((s) => !s)}
+                  style={{
+                    padding: "8px 12px",
+                    backgroundColor: "#088395",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                  }}
+                >
+                  {showAllPuc ? "Show Less" : "View All Table"}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1402,18 +1438,16 @@ const AdminPage = () => {
     const [items, setItems] = useState([]);
     const [loadingItems, setLoadingItems] = useState(true);
     const [search, setSearch] = useState("");
+    const [showAllInsurance, setShowAllInsurance] = useState(false);
 
     const fetchInsuranceData = useCallback(async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
         // reuse sell-letters endpoint and filter client-side for insurance expiry
-        const resp = await axios.get(
-          "https://ok-motor-51l3.vercel.app/api/sell-letters",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        const resp = await axios.get("https://ok-motor-51l3.vercel.app/api/sell-letters", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
         const data = resp.data || [];
         // fetch standalone insurance
@@ -1549,63 +1583,90 @@ const AdminPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {processed.map((it, idx) => {
-                  const { row, expiry, daysUntil } = it;
-                  return (
-                    <tr key={`${row._id}-${idx}`}>
-                      <td>{row.displayReg || "-"}</td>
-                      <td>{row.displayName || "-"}</td>
-                      <td>{row.displayPhone || "-"}</td>
-                      <td>{row.displayVehicle || "-"}</td>
-                      <td>
-                        {expiry
-                          ? new Date(expiry).toLocaleDateString("en-IN")
-                          : "-"}
-                      </td>
-                      <td>
-                        {daysUntil < 0 ? (
-                          <span style={{ color: "#ef4444" }}>
-                            {Math.abs(daysUntil)}d overdue
-                          </span>
-                        ) : daysUntil === 0 ? (
-                          <span style={{ color: "#f59e0b" }}>Due today</span>
-                        ) : (
-                          <span style={{ color: "#10b981" }}>{daysUntil}d</span>
-                        )}
-                      </td>
-                      <td>{row.displayCompany || "-"}</td>
-                      <td>
-                        {row.type === "sell_letter" ? (
-                          <span
-                            style={{
-                              fontSize: "0.75rem",
-                              padding: "2px 6px",
-                              backgroundColor: "#e0f2fe",
-                              color: "#0284c7",
-                              borderRadius: "4px",
-                            }}
-                          >
-                            Sold Vehicle
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              fontSize: "0.75rem",
-                              padding: "2px 6px",
-                              backgroundColor: "#f3e8ff",
-                              color: "#7e22ce",
-                              borderRadius: "4px",
-                            }}
-                          >
-                            Insurance Only
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {(showAllInsurance ? processed : processed.slice(0, 10)).map(
+                  (it, idx) => {
+                    const { row, expiry, daysUntil } = it;
+                    return (
+                      <tr key={`${row._id}-${idx}`}>
+                        <td>{row.displayReg || "-"}</td>
+                        <td>{row.displayName || "-"}</td>
+                        <td>{row.displayPhone || "-"}</td>
+                        <td>{row.displayVehicle || "-"}</td>
+                        <td>
+                          {expiry
+                            ? new Date(expiry).toLocaleDateString("en-IN")
+                            : "-"}
+                        </td>
+                        <td>
+                          {daysUntil < 0 ? (
+                            <span style={{ color: "#ef4444" }}>
+                              {Math.abs(daysUntil)}d overdue
+                            </span>
+                          ) : daysUntil === 0 ? (
+                            <span style={{ color: "#f59e0b" }}>Due today</span>
+                          ) : (
+                            <span style={{ color: "#10b981" }}>
+                              {daysUntil}d
+                            </span>
+                          )}
+                        </td>
+                        <td>{row.displayCompany || "-"}</td>
+                        <td>
+                          {row.type === "sell_letter" ? (
+                            <span
+                              style={{
+                                fontSize: "0.75rem",
+                                padding: "2px 6px",
+                                backgroundColor: "#e0f2fe",
+                                color: "#0284c7",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              Sold Vehicle
+                            </span>
+                          ) : (
+                            <span
+                              style={{
+                                fontSize: "0.75rem",
+                                padding: "2px 6px",
+                                backgroundColor: "#f3e8ff",
+                                color: "#7e22ce",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              Insurance Only
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  },
+                )}
               </tbody>
             </table>
+            {processed.length > 10 && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: 8,
+                }}
+              >
+                <button
+                  onClick={() => setShowAllInsurance((s) => !s)}
+                  style={{
+                    padding: "8px 12px",
+                    backgroundColor: "#088395",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                  }}
+                >
+                  {showAllInsurance ? "Show Less" : "View All Table"}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1614,6 +1675,7 @@ const AdminPage = () => {
 
   const IncompleteBuyLettersTable = () => {
     const [search, setSearch] = useState("");
+    const [showAllIncompleteBuy, setShowAllIncompleteBuy] = useState(false);
 
     const filteredLetters = incompleteBuyLetters.filter((letter) => {
       const q = search.toLowerCase().trim();
@@ -1667,7 +1729,10 @@ const AdminPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredLetters.map((letter) => (
+                {(showAllIncompleteBuy
+                  ? filteredLetters
+                  : filteredLetters.slice(0, 10)
+                ).map((letter) => (
                   <tr key={letter._id}>
                     <td>{letter.registrationNumber || "-"}</td>
                     <td>{letter.sellerName || "-"}</td>
@@ -1707,6 +1772,29 @@ const AdminPage = () => {
                 ))}
               </tbody>
             </table>
+            {filteredLetters.length > 10 && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: 8,
+                }}
+              >
+                <button
+                  onClick={() => setShowAllIncompleteBuy((s) => !s)}
+                  style={{
+                    padding: "8px 12px",
+                    backgroundColor: "#088395",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                  }}
+                >
+                  {showAllIncompleteBuy ? "Show Less" : "View All Table"}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1715,6 +1803,7 @@ const AdminPage = () => {
 
   const IncompleteSellLettersTable = () => {
     const [search, setSearch] = useState("");
+    const [showAllIncompleteSell, setShowAllIncompleteSell] = useState(false);
 
     const filteredLetters = incompleteSellLetters.filter((letter) => {
       const q = search.toLowerCase().trim();
@@ -1769,7 +1858,10 @@ const AdminPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredLetters.map((letter) => (
+                {(showAllIncompleteSell
+                  ? filteredLetters
+                  : filteredLetters.slice(0, 10)
+                ).map((letter) => (
                   <tr key={letter._id}>
                     <td>{letter.registrationNumber || "-"}</td>
                     <td>{letter.buyerName || "-"}</td>
@@ -1808,6 +1900,29 @@ const AdminPage = () => {
                 ))}
               </tbody>
             </table>
+            {filteredLetters.length > 10 && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: 8,
+                }}
+              >
+                <button
+                  onClick={() => setShowAllIncompleteSell((s) => !s)}
+                  style={{
+                    padding: "8px 12px",
+                    backgroundColor: "#088395",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                  }}
+                >
+                  {showAllIncompleteSell ? "Show Less" : "View All Table"}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
