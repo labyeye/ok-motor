@@ -161,6 +161,13 @@ exports.createServiceBill = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating service bill:", error);
+    if (error && (error.code === 11000 || error.name === "MongoServerError")) {
+      return res.status(409).json({
+        success: false,
+        message: "Duplicate key error",
+        error: error.keyValue || error.message,
+      });
+    }
     res.status(500).json({
       success: false,
       message: error.message,
@@ -392,70 +399,86 @@ exports.getServiceBill = async (req, res) => {
 
 exports.updateServiceBill = async (req, res) => {
   try {
-    let query = { _id: req.params.id };
-    if (req.user.role !== "admin") {
-      query.user = req.user._id;
-    }
-    let serviceBill = await ServiceBill.findOne(query);
-
+    const serviceBill = await ServiceBill.findById(req.params.id);
     if (!serviceBill) {
-      return res.status(404).json({
-        success: false,
-        message: "Service bill not found",
-      });
+      return res.status(404).json({ success: false, message: "Service bill not found" });
     }
 
-    serviceBill = Object.assign(serviceBill, req.body);
+    // Permission: allow owner or admin
+    if (req.user.role !== "admin" && String(serviceBill.user) !== String(req.user._id)) {
+      return res.status(403).json({ success: false, message: "Not authorized to update this service bill" });
+    }
 
-    if (
-      req.body.serviceItems ||
-      req.body.discount ||
-      req.body.taxRate ||
-      req.body.advancePaid
-    ) {
-      serviceBill.totalAmount = serviceBill.serviceItems.reduce((sum, item) => {
+    // Prepare update data
+    const updateData = { ...req.body };
+    // Do not allow changing billNumber on edit
+    if (updateData.billNumber) delete updateData.billNumber;
+
+    // If serviceItems / financial fields are present, normalize and recalc totals
+    const willRecalc =
+      Object.prototype.hasOwnProperty.call(req.body, "serviceItems") ||
+      Object.prototype.hasOwnProperty.call(req.body, "discount") ||
+      Object.prototype.hasOwnProperty.call(req.body, "discountPercentage") ||
+      Object.prototype.hasOwnProperty.call(req.body, "discountType") ||
+      Object.prototype.hasOwnProperty.call(req.body, "taxRate") ||
+      Object.prototype.hasOwnProperty.call(req.body, "advancePaid");
+
+    if (willRecalc) {
+      const items = (req.body.serviceItems && Array.isArray(req.body.serviceItems))
+        ? req.body.serviceItems
+        : serviceBill.serviceItems || [];
+
+      const normalized = items.map((item) => {
         const qty = parseFloat(item.quantity) || 0;
         const rate = parseFloat(item.rate) || 0;
         const amount =
-          item.amount !== undefined &&
-          item.amount !== null &&
-          item.amount !== ""
+          item.amount !== undefined && item.amount !== null && item.amount !== ""
             ? parseFloat(item.amount) || 0
             : rate * qty;
-        return sum + amount;
-      }, 0);
-      serviceBill.taxAmount =
-        (serviceBill.taxRate / 100) * serviceBill.totalAmount;
-      serviceBill.grandTotal =
-        serviceBill.totalAmount +
-        serviceBill.taxAmount -
-        (serviceBill.discount || 0);
-      serviceBill.balanceDue =
-        serviceBill.grandTotal - (serviceBill.advancePaid || 0);
+        return { ...item, quantity: qty, rate: rate, amount };
+      });
+
+      updateData.serviceItems = normalized;
+      updateData.totalAmount = normalized.reduce((sum, it) => sum + (parseFloat(it.amount) || 0), 0);
+      updateData.taxAmount = ((parseFloat(req.body.taxRate) || parseFloat(serviceBill.taxRate) || 0) / 100) * updateData.totalAmount;
+
+      let discountAmount = 0;
+      const discountType = req.body.discountType || serviceBill.discountType || "fixed";
+      if (discountType === "percentage") {
+        const pct = parseFloat(req.body.discountPercentage) || parseFloat(serviceBill.discountPercentage) || 0;
+        discountAmount = (pct / 100) * updateData.totalAmount;
+      } else {
+        discountAmount = parseFloat(req.body.discount) || parseFloat(serviceBill.discount) || 0;
+      }
+
+      updateData.grandTotal = updateData.totalAmount + updateData.taxAmount - discountAmount;
+      updateData.balanceDue = updateData.grandTotal - (parseFloat(req.body.advancePaid) || parseFloat(serviceBill.advancePaid) || 0);
     }
 
-    await serviceBill.save();
+    updateData.editedAt = new Date();
+    updateData.editedBy = req.user._id;
 
-    if (
-      req.body.serviceItems ||
-      req.body.taxRate ||
-      req.body.discount ||
-      req.body.advancePaid
-    ) {
-      const pdfUrl = await generateServiceBillPDF(serviceBill);
-      serviceBill.pdfUrl = pdfUrl;
-      await serviceBill.save();
+    const updated = await ServiceBill.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true, runValidators: true });
+
+    // Re-generate PDF if financials changed (best-effort)
+    if (willRecalc) {
+      try {
+        const buffer = await generateServiceBillPDF(updated, true);
+        // When generateServiceBillPDF returns a Buffer, we can't derive a URL here reliably.
+        // Save timestamp to indicate regeneration; frontend can request fresh PDF via download route.
+        await ServiceBill.findByIdAndUpdate(updated._id, { $set: { pdfUpdatedAt: new Date() } });
+      } catch (pdfErr) {
+        console.error("Failed generating PDF after update:", pdfErr);
+      }
     }
 
-    res.status(200).json({
-      success: true,
-      data: serviceBill,
-    });
+    res.status(200).json({ success: true, data: updated });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    console.error("Error updating service bill:", error);
+    if (error && (error.code === 11000 || error.name === "MongoServerError")) {
+      return res.status(409).json({ success: false, message: "Duplicate key error", error: error.keyValue || error.message });
+    }
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 

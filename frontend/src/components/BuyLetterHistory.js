@@ -42,7 +42,7 @@ const BuyLetterHistory = () => {
   const [selectedLetter, setSelectedLetter] = useState(null);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [chosenLanguage, setChosenLanguage] = useState(null);
-  const [languageAction, setLanguageAction] = useState(null); // 'download' | 'preview'
+  const [languageAction, setLanguageAction] = useState(null);
   const [docSelections, setDocSelections] = useState({
     letter: true,
     invoice: true,
@@ -66,7 +66,6 @@ const BuyLetterHistory = () => {
   const [confirmTargetId, setConfirmTargetId] = useState(null);
   const [confirmTargetType, setConfirmTargetType] = useState(null);
 
-  // Preview modal states
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
   const [previewLetter, setPreviewLetter] = useState(null);
@@ -86,7 +85,6 @@ const BuyLetterHistory = () => {
     }
   };
 
-  // Helper to get field label in readable format
   const getFieldLabel = (fieldName) => {
     const labels = {
       sellerName: "Seller Name",
@@ -125,7 +123,6 @@ const BuyLetterHistory = () => {
     return labels[fieldName] || fieldName;
   };
 
-  // Function to detect and display changes
   const getChanges = (letter) => {
     if (!letter.previousVersionId || letter.version === 1) return null;
 
@@ -161,7 +158,6 @@ const BuyLetterHistory = () => {
       "note",
     ];
 
-    // Check if we have previousVersion data populated
     if (letter.previousVersion) {
       fieldsToCompare.forEach((field) => {
         const oldValue = letter.previousVersion[field];
@@ -176,7 +172,6 @@ const BuyLetterHistory = () => {
         }
       });
 
-      // Check date fields
       const oldSaleDate = letter.previousVersion.saleDate
         ? formatDate(letter.previousVersion.saleDate)
         : "";
@@ -394,7 +389,7 @@ const BuyLetterHistory = () => {
       }, 100);
     });
   };
-  // helper to embed remote images into pdf-lib
+
   const embedImageFromUrl = async (pdfDoc, url) => {
     try {
       const res = await fetch(url);
@@ -408,14 +403,12 @@ const BuyLetterHistory = () => {
     }
   };
 
-  // add document image pages (4 per page, 2x2 grid)
   const addDocumentPages = async (pdfDoc, documentsObj) => {
     if (!documentsObj) return;
     const items = [];
-    const rcItems = []; // Separate RC items to handle as one row
-    const aadhaarItems = []; // Separate Aadhaar items to handle as one row like RC
+    const rcItems = [];
+    const aadhaarItems = [];
 
-    // Collect RC items
     if (documentsObj.vehicleRC) {
       if (documentsObj.vehicleRC.front && documentsObj.vehicleRC.front !== null)
         rcItems.push({
@@ -429,13 +422,11 @@ const BuyLetterHistory = () => {
         });
     }
 
-    // Collect Aadhaar items based on upload mode
     const singleAadhaarItem = [];
     if (documentsObj.aadhaar) {
       const uploadMode = documentsObj.aadhaarUploadMode || "separate";
 
       if (uploadMode === "single") {
-        // Single file mode: render full-page separately
         if (documentsObj.aadhaar.front) {
           singleAadhaarItem.push({
             title: "Aadhaar (Front and Back)",
@@ -443,14 +434,13 @@ const BuyLetterHistory = () => {
           });
         }
       } else {
-        // Separate mode: show front and back separately like Vehicle RC
         if (documentsObj.aadhaar.front && documentsObj.aadhaar.front !== null) {
           aadhaarItems.push({
             title: "Aadhaar - Front",
             url: documentsObj.aadhaar.front,
           });
         }
-        // Only add back if it's different from front (avoid duplicate when PDF is uploaded in old format)
+
         if (
           documentsObj.aadhaar.back &&
           documentsObj.aadhaar.back !== null &&
@@ -464,8 +454,6 @@ const BuyLetterHistory = () => {
       }
     }
 
-    // Collect other documents
-    // Collect other documents
     if (documentsObj.pan && documentsObj.pan !== null)
       items.push({ title: "PAN Card", url: documentsObj.pan });
     if (
@@ -481,11 +469,12 @@ const BuyLetterHistory = () => {
         items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
       );
     }
-
-    // Helper function to render 2-column layout page
     const renderTwoColumnPage = async (pageItems, pageTitle = null) => {
       const page = pdfDoc.addPage([595, 842]);
       try {
+        const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
         const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
         const logoImg = await pdfDoc.embedPng(logoBytes);
         page.drawRectangle({
@@ -496,13 +485,53 @@ const BuyLetterHistory = () => {
           color: rgb(0.047, 0.098, 0.196),
         });
         page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
-      } catch (err) {
-        // ignore header errors
-      }
+        page.drawText("UDAYAM-BR-26-0028550", {
+          x: 330,
+          y: 805,
+          size: 14,
+          color: rgb(1, 1, 1),
+          font: headerFont,
+        });
+        page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+          x: 330,
+          y: 785,
+          size: 14,
+          color: rgb(1, 1, 1),
+          font: headerFont,
+        });
+        try {
+          const thank = "Thank you for your business!";
+          const addr =
+            "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+          const thankW = headerFont.widthOfTextAtSize(thank, 12);
+          const addrW = regularFont.widthOfTextAtSize(addr, 9);
+          const centerXThank = (595 - thankW) / 2;
+          const centerXAddr = (595 - addrW) / 2;
 
-      // Compact side-by-side layout in one row
+          page.drawLine({
+            start: { x: 20, y: 52 },
+            end: { x: 575, y: 52 },
+            thickness: 0.5,
+            color: rgb(0.8, 0.8, 0.8),
+          });
+          page.drawText(thank, {
+            x: centerXThank,
+            y: 40,
+            size: 12,
+            color: rgb(0, 0, 0),
+            font: headerFont,
+          });
+          page.drawText(addr, {
+            x: centerXAddr,
+            y: 26,
+            size: 9,
+            color: rgb(0.45, 0.45, 0.45),
+            font: regularFont,
+          });
+        } catch (e) {}
+      } catch (err) {}
       const margin = 40;
-      const colWidth = (595 - 3 * margin) / 2; // Two equal columns
+      const colWidth = (595 - 3 * margin) / 2;
       const colGap = margin;
       const maxHeight = 250;
 
@@ -543,20 +572,19 @@ const BuyLetterHistory = () => {
       }
     };
 
-    // Create page with RC items (compact 2-column layout)
     if (rcItems.length > 0) {
       await renderTwoColumnPage(rcItems);
     }
 
-    // Create page with Aadhaar items
-    // If single mode: render full-page, otherwise use 2-column layout
     if (singleAadhaarItem.length > 0) {
-      // Full-page rendering for single Aadhaar
       const page = pdfDoc.addPage([595, 842]);
       const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const item = singleAadhaarItem[0];
 
       try {
+        const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
         const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
         const logoImg = await pdfDoc.embedPng(logoBytes);
         page.drawRectangle({
@@ -567,6 +595,50 @@ const BuyLetterHistory = () => {
           color: rgb(0.047, 0.098, 0.196),
         });
         page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+        page.drawText("UDAYAM-BR-26-0028550", {
+          x: 330,
+          y: 805,
+          size: 14,
+          color: rgb(1, 1, 1),
+          font: headerFont,
+        });
+        page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+          x: 330,
+          y: 785,
+          size: 14,
+          color: rgb(1, 1, 1),
+          font: headerFont,
+        });
+        try {
+          const thank = "Thank you for your business!";
+          const addr =
+            "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+          const thankW = headerFont.widthOfTextAtSize(thank, 12);
+          const addrW = regularFont.widthOfTextAtSize(addr, 9);
+          const centerXThank = (595 - thankW) / 2;
+          const centerXAddr = (595 - addrW) / 2;
+
+          page.drawLine({
+            start: { x: 20, y: 52 },
+            end: { x: 575, y: 52 },
+            thickness: 0.5,
+            color: rgb(0.8, 0.8, 0.8),
+          });
+          page.drawText(thank, {
+            x: centerXThank,
+            y: 40,
+            size: 12,
+            color: rgb(0, 0, 0),
+            font: headerFont,
+          });
+          page.drawText(addr, {
+            x: centerXAddr,
+            y: 26,
+            size: 9,
+            color: rgb(0.45, 0.45, 0.45),
+            font: regularFont,
+          });
+        } catch (e) {}
       } catch (err) {}
 
       page.drawText(item.title, { x: 50, y: 720, size: 14, font });
@@ -598,16 +670,17 @@ const BuyLetterHistory = () => {
         });
       }
     } else if (aadhaarItems.length > 0) {
-      // 2-column layout for separate mode
       await renderTwoColumnPage(aadhaarItems);
     }
 
-    // Add remaining documents (2 per page as before)
     for (let i = 0; i < items.length; i += 2) {
       const page = pdfDoc.addPage([595, 842]);
       try {
+        const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
         const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
         const logoImg = await pdfDoc.embedPng(logoBytes);
+
         page.drawRectangle({
           x: 0,
           y: 780,
@@ -616,9 +689,51 @@ const BuyLetterHistory = () => {
           color: rgb(0.047, 0.098, 0.196),
         });
         page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
-      } catch (err) {
-        // ignore header errors
-      }
+        page.drawText("UDAYAM-BR-26-0028550", {
+          x: 330,
+          y: 805,
+          size: 14,
+          color: rgb(1, 1, 1),
+          font: headerFont,
+        });
+        page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+          x: 330,
+          y: 785,
+          size: 14,
+          color: rgb(1, 1, 1),
+          font: headerFont,
+        });
+        try {
+          const thank = "Thank you for your business!";
+          const addr =
+            "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+          const thankW = headerFont.widthOfTextAtSize(thank, 12);
+          const addrW = regularFont.widthOfTextAtSize(addr, 9);
+          const centerXThank = (595 - thankW) / 2;
+          const centerXAddr = (595 - addrW) / 2;
+
+          page.drawLine({
+            start: { x: 20, y: 52 },
+            end: { x: 575, y: 52 },
+            thickness: 0.5,
+            color: rgb(0.8, 0.8, 0.8),
+          });
+          page.drawText(thank, {
+            x: centerXThank,
+            y: 40,
+            size: 12,
+            color: rgb(0, 0, 0),
+            font: headerFont,
+          });
+          page.drawText(addr, {
+            x: centerXAddr,
+            y: 26,
+            size: 9,
+            color: rgb(0.45, 0.45, 0.45),
+            font: regularFont,
+          });
+        } catch (e) {}
+      } catch (err) {}
 
       const yPositions = [740, 390];
 
@@ -975,7 +1090,6 @@ const BuyLetterHistory = () => {
 
       await simulateProgress();
 
-      // Start with empty PDF if letter is not selected, otherwise load template
       let pdfDoc;
       if (documentsToInclude?.letter === true) {
         const existingPdfBytes = await loadPDFTemplate("buyletter.pdf");
@@ -1027,17 +1141,14 @@ const BuyLetterHistory = () => {
           color: rgb(0, 0, 0),
         });
       } else {
-        // Create empty PDF if letter is not selected
         pdfDoc = await PDFDocument.create();
       }
 
-      // Add invoice if selected
       if (documentsToInclude?.invoice === true) {
         const invoicePage = pdfDoc.addPage([595, 842]);
         await drawVehicleInvoice(invoicePage, pdfDoc, letter);
       }
 
-      // Add document pages
       await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
 
       const pdfBytes = await pdfDoc.save();
@@ -1045,7 +1156,10 @@ const BuyLetterHistory = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      const reg = letter.registrationNumber || letter.vehicle?.registrationNumber || letter._id;
+      const reg =
+        letter.registrationNumber ||
+        letter.vehicle?.registrationNumber ||
+        letter._id;
       link.setAttribute("download", `OKM-BUY-${reg}.pdf`);
       document.body.appendChild(link);
       link.click();
@@ -1067,7 +1181,6 @@ const BuyLetterHistory = () => {
 
       await simulateProgress();
 
-      // Start with empty PDF if letter is not selected, otherwise load template
       let pdfDoc;
       if (documentsToInclude?.letter === true) {
         const existingPdfBytes = await loadPDFTemplate("englishbuyletter.pdf");
@@ -1119,17 +1232,14 @@ const BuyLetterHistory = () => {
           color: rgb(0, 0, 0),
         });
       } else {
-        // Create empty PDF if letter is not selected
         pdfDoc = await PDFDocument.create();
       }
 
-      // Add invoice if selected
       if (documentsToInclude?.invoice === true) {
         const invoicePage = pdfDoc.addPage([595, 842]);
         await drawVehicleInvoice(invoicePage, pdfDoc, letter);
       }
 
-      // Add document pages
       await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
 
       const pdfBytes = await pdfDoc.save();
@@ -1137,7 +1247,10 @@ const BuyLetterHistory = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      const reg = letter.registrationNumber || letter.vehicle?.registrationNumber || letter._id;
+      const reg =
+        letter.registrationNumber ||
+        letter.vehicle?.registrationNumber ||
+        letter._id;
       link.setAttribute("download", `OKM-BUY-${reg}.pdf`);
       document.body.appendChild(link);
       link.click();
@@ -1162,12 +1275,10 @@ const BuyLetterHistory = () => {
       setIsDownloading(true);
       setDownloadProgress(0);
 
-      // Simulate progress
       const progressInterval = setInterval(() => {
         setDownloadProgress((prev) => Math.min(prev + 10, 90));
       }, 100);
 
-      // Load and fill the buy letter template depending on chosen language
       const template =
         language === "english" ? "englishbuyletter.pdf" : "buyletter.pdf";
       const existingPdfBytes = await loadPDFTemplate(template);
@@ -1193,7 +1304,6 @@ const BuyLetterHistory = () => {
         amountInWords: formatIndianAmountInWords(letter.saleAmount),
       };
 
-      // Choose positions map based on language and fill the template fields
       const positions =
         language === "hindi" ? fieldPositions : englishFieldPositions;
       for (const [fieldName, position] of Object.entries(positions)) {
@@ -1207,7 +1317,6 @@ const BuyLetterHistory = () => {
         }
       }
 
-      // Add amount in words using selected positions and a language-specific offset
       const saleAmountText = formattedData.saleAmount || "";
       const saleAmountWidth =
         saleAmountText.length * (positions.saleAmount.size / 2);
@@ -1224,11 +1333,9 @@ const BuyLetterHistory = () => {
         color: rgb(0, 0, 0),
       });
 
-      // Add invoice page
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
-      // Add document pages if available
       if (letter.documents) {
         await addDocumentPages(pdfDoc, letter.documents);
       }
@@ -1241,7 +1348,6 @@ const BuyLetterHistory = () => {
       setDownloadProgress(100);
       setIsDownloading(false);
 
-      // Show preview modal
       setPreviewPdfUrl(url);
       setPreviewLetter(letter);
       setShowPreviewModal(true);
@@ -1283,26 +1389,26 @@ const BuyLetterHistory = () => {
       rotate: degrees(45),
     });
 
-     page.drawText("UDAYAM-BR-26-0028550", {
-          x: 330,
-          y: 815,
-          size: 14,
-          color: rgb(1, 1, 1),
-          font: font,
-        });
-        page.drawText("GSTIN: 22ABCDE1234F1Z5", {
-          x: 330,
-          y: 795,
-          size: 14,
-          color: rgb(1, 1, 1),
-          font: font,
-        });  
-        try {
-          page.drawText(
-            "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
-            { x: 50, y: 28, size: 8, color: rgb(1, 1, 1), font },
-          );
-        } catch (e) {}
+    page.drawText("UDAYAM-BR-26-0028550", {
+      x: 330,
+      y: 815,
+      size: 14,
+      color: rgb(1, 1, 1),
+      font: font,
+    });
+    page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+      x: 330,
+      y: 795,
+      size: 14,
+      color: rgb(1, 1, 1),
+      font: font,
+    });
+    try {
+      page.drawText(
+        "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+        { x: 50, y: 28, size: 8, color: rgb(1, 1, 1), font },
+      );
+    } catch (e) {}
     page.drawText(
       "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
       {
@@ -1667,14 +1773,11 @@ const BuyLetterHistory = () => {
           return;
         }
 
-        await axios.delete(
-          `https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        await axios.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
         setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
         alert("Buy letter deleted successfully!");
       } else {
@@ -1957,18 +2060,16 @@ const BuyLetterHistory = () => {
                               )}
                             </td>
                             <td style={styles.tableCell}>
-                              {formatDate(letter.createdAt)}
-                              {letter.editedAt && (
-                                <div
-                                  style={{
-                                    fontSize: "0.7rem",
-                                    color: "#64748b",
-                                    marginTop: "2px",
-                                  }}
-                                >
-                                  Edited: {formatDate(letter.editedAt)}
+                              <div>
+                                <div>
+                                  Created: {letter.saleDate ? formatDate(letter.saleDate) : formatDate(letter.createdAt)}
                                 </div>
-                              )}
+                                {letter.editedAt && (
+                                  <div style={{ color: "#64748b", fontSize: "0.9em", marginTop: "4px" }}>
+                                    Edited: {formatDate(letter.editedAt)}
+                                  </div>
+                                )}
+                              </div>
                             </td>
                             <td style={styles.tableCell}>
                               {letter.user && letter.user.role === "admin"
@@ -2195,7 +2296,6 @@ const BuyLetterHistory = () => {
                       });
                       setShowDocumentModal(true);
                     } else if (languageAction === "preview") {
-                      // generate preview in English
                       handleViewLetter(selectedLetter, "english");
                       setLanguageAction(null);
                     }
@@ -2236,7 +2336,6 @@ const BuyLetterHistory = () => {
                       });
                       setShowDocumentModal(true);
                     } else if (languageAction === "preview") {
-                      // generate preview in Hindi
                       handleViewLetter(selectedLetter, "hindi");
                       setLanguageAction(null);
                     }

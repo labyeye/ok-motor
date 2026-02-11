@@ -357,9 +357,23 @@ exports.updateBuyLetter = async (req, res) => {
       return res.status(404).json({ message: "Buy letter not found" });
     }
 
+    // Build update object: preserve saleDate unless explicitly provided
+    const updateData = { ...req.body };
+    if (!Object.prototype.hasOwnProperty.call(req.body, "saleDate")) {
+      // ensure saleDate is not overwritten
+      delete updateData.saleDate;
+    } else if (req.body.saleDate) {
+      // normalize provided saleDate
+      updateData.saleDate = new Date(req.body.saleDate);
+    }
+
+    // Set edited metadata
+    updateData.editedAt = new Date();
+    updateData.editedBy = req.user.id;
+
     buyLetter = await BuyLetter.findByIdAndUpdate(
       req.params.id,
-      { $set: req.body },
+      { $set: updateData },
       { new: true, runValidators: true },
     );
 

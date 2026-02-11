@@ -595,8 +595,52 @@ const SellLetterHistory = () => {
         selleraadhar: letter.selleraadhar || "764465626571",
       };
 
+      // Helper: draw consistent header/footer on a page
+      const drawHeaderFooter = async (pdfDoc, page) => {
+        try {
+          const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+          const logoUrl = logo1;
+          const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
+          const logoImg = await pdfDoc.embedPng(logoBytes);
+
+          // Header
+          page.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });
+          page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+          try { page.drawImage(logoImg, { x: 180, y: 430, width: 260, height: 220, opacity: 0.3 }); } catch (e) {}
+          page.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 805, size: 14, color: rgb(1, 1, 1), font: headerFont });
+          page.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 785, size: 14, color: rgb(1, 1, 1), font: headerFont });
+
+          // Footer - centered thank you + muted address line
+          try {
+            const thank = "Thank you for your business!";
+            const addr = "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+            const thankW = headerFont.widthOfTextAtSize(thank, 12);
+            const addrW = regularFont.widthOfTextAtSize(addr, 9);
+            const centerXThank = (595 - thankW) / 2;
+            const centerXAddr = (595 - addrW) / 2;
+
+            page.drawLine({ start: { x: 20, y: 52 }, end: { x: 575, y: 52 }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
+            page.drawText(thank, { x: centerXThank, y: 40, size: 12, color: rgb(0, 0, 0), font: headerFont });
+            page.drawText(addr, { x: centerXAddr, y: 26, size: 9, color: rgb(0.45, 0.45, 0.45), font: regularFont });
+          } catch (e) {}
+        } catch (err) {
+          console.warn("Failed to draw header/footer:", err);
+        }
+      };
+
       const fieldPositions =
         language === "hindi" ? hindiFieldPositions : englishFieldPositions;
+      // Add header/footer to all pages except the first (letter) page
+      try {
+        const pages = pdfDoc.getPages();
+        for (let i = 1; i < pages.length; i++) {
+          try {
+            await drawHeaderFooter(pdfDoc, pages[i]);
+          } catch (err) {}
+        }
+      } catch (e) {}
+
       for (const [fieldName, position] of Object.entries(fieldPositions)) {
         if (fieldName === "buyerPhone" && formattedLetter.buyerPhone) {
           const combinedPhones = `${formattedLetter.buyerPhone}${
@@ -667,7 +711,7 @@ const SellLetterHistory = () => {
         const addDocumentPages = async (pdfDoc, documentsObj) => {
           if (!documentsObj) return;
           const items = [];
-          const rcItems = []; // Separate RC items
+          const rcItems = []; 
 
           // Collect RC items
           if (documentsObj.vehicleRC) {
@@ -682,8 +726,6 @@ const SellLetterHistory = () => {
                 url: documentsObj.vehicleRC.back,
               });
           }
-
-          // Collect Aadhaar documents based on upload mode
           const singleAadhaarItem = [];
           if (documentsObj.aadhaar) {
             const uploadMode = documentsObj.aadhaarUploadMode || "separate";
@@ -729,6 +771,9 @@ const SellLetterHistory = () => {
           // Create first page with RC items (compact 2-column layout)
           if (rcItems.length > 0) {
             const page = pdfDoc.addPage([595, 842]);
+            try {
+              await drawHeaderFooter(pdfDoc, page);
+            } catch (e) {}
             const margin = 40;
             const colWidth = (595 - 3 * margin) / 2;
             const colGap = margin;
@@ -776,10 +821,13 @@ const SellLetterHistory = () => {
           // Render single Aadhaar as full page
           if (singleAadhaarItem.length > 0) {
             const page = pdfDoc.addPage([595, 842]);
+            try {
+              await drawHeaderFooter(pdfDoc, page);
+            } catch (e) {}
             const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
             const item = singleAadhaarItem[0];
 
-            page.drawText(item.title, { x: 50, y: 790, size: 14, font });
+            page.drawText(item.title, { x: 50, y: 753, size: 14, font });
 
             const embedded = await embedImageFromUrl(pdfDoc, item.url);
             if (embedded) {
@@ -813,6 +861,9 @@ const SellLetterHistory = () => {
           // Add remaining documents (2 per page)
           for (let i = 0; i < items.length; i += 2) {
             const page = pdfDoc.addPage([595, 842]);
+            try {
+              await drawHeaderFooter(pdfDoc, page);
+            } catch (e) {}
             const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
             const yPositions = [740, 390];
 
@@ -1253,14 +1304,14 @@ const SellLetterHistory = () => {
             page.drawText("UDAYAM-BR-26-0028550", {
               x: 330,
               y: 805,
-              size: 18,
+              size: 14,
               color: rgb(1, 1, 1),
               font,
             });
             page.drawText("GSTIN: 22ABCDE1234F1Z5", {
               x: 330,
               y: 785,
-              size: 18,
+              size: 14,
               color: rgb(1, 1, 1),
               font,
             });
@@ -1330,7 +1381,10 @@ const SellLetterHistory = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      const reg = letter.registrationNumber || letter.vehicle?.registrationNumber || letter._id;
+      const reg =
+        letter.registrationNumber ||
+        letter.vehicle?.registrationNumber ||
+        letter._id;
       link.setAttribute("download", `OKM-SELL-${reg}.pdf`);
       document.body.appendChild(link);
       link.click();
@@ -1701,7 +1755,10 @@ const SellLetterHistory = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      const reg = letter.registrationNumber || letter.vehicle?.registrationNumber || letter._id;
+      const reg =
+        letter.registrationNumber ||
+        letter.vehicle?.registrationNumber ||
+        letter._id;
       link.setAttribute("download", `OKM-SELL-${reg}.pdf`);
       document.body.appendChild(link);
       link.click();
@@ -1751,25 +1808,25 @@ const SellLetterHistory = () => {
     });
 
     page.drawText("UDAYAM-BR-26-0028550", {
-          x: 330,
-          y: 815,
-          size: 14,
-          color: rgb(1, 1, 1),
-          font: boldFont,
-        });
-        page.drawText("GSTIN: 22ABCDE1234F1Z5", {
-          x: 330,
-          y: 795,
-          size: 14,
-          color: rgb(1, 1, 1),
-          font: boldFont,
-        });
-        try {
-          page.drawText(
-            "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
-            { x: 50, y: 28, size: 8, color: rgb(1, 1, 1), font: boldFont },
-          );
-        } catch (e) {}
+      x: 330,
+      y: 815,
+      size: 14,
+      color: rgb(1, 1, 1),
+      font: boldFont,
+    });
+    page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+      x: 330,
+      y: 795,
+      size: 14,
+      color: rgb(1, 1, 1),
+      font: boldFont,
+    });
+    try {
+      page.drawText(
+        "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+        { x: 50, y: 28, size: 8, color: rgb(1, 1, 1), font: boldFont },
+      );
+    } catch (e) {}
     page.drawRectangle({
       x: 0,
       y: 750,
@@ -2187,14 +2244,11 @@ const SellLetterHistory = () => {
             return;
           }
 
-          await axios.delete(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+          await axios.delete(`https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
             },
-          );
+          });
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
           alert("Sell letter deleted successfully!");
         } else {

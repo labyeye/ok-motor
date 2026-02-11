@@ -20,6 +20,7 @@ import {
   X,
   Download,
   Eye,
+  Shield,
   Menu,
   Settings,
   RefreshCw,
@@ -304,6 +305,38 @@ const BikeHistory = ({ externalSearchTerm }) => {
         note: letter.note || "",
       };
 
+      // Add header/footer to pages after the first (leave first page as the letter)
+      try {
+        const pages = pdfDoc.getPages();
+        if (pages.length > 1) {
+          const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+          const logoUrl = logo1;
+          const logoImageBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
+          const logoImage = await pdfDoc.embedPng(logoImageBytes);
+
+          for (let i = 1; i < pages.length; i++) {
+            const p = pages[i];
+            try {
+              p.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });
+              p.drawImage(logoImage, { x: 50, y: 740, width: 160, height: 130 });
+              try { p.drawImage(logoImage, { x: 280, y: 200, width: 370, height: 300, opacity: 0.3, rotate: degrees(45) }); } catch(e) {}
+              p.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 815, size: 14, color: rgb(1,1,1), font: headerFont });
+              p.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 795, size: 14, color: rgb(1,1,1), font: headerFont });
+              const thank = "Thank you for your business!";
+              const addr = "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+              const thankW = headerFont.widthOfTextAtSize(thank, 12);
+              const addrW = regularFont.widthOfTextAtSize(addr, 8);
+              const cxThank = (595 - thankW) / 2;
+              const cxAddr = (595 - addrW) / 2;
+              p.drawLine({ start: { x: 20, y: 52 }, end: { x: 575, y: 52 }, thickness: 0.5, color: rgb(0.8,0.8,0.8) });
+              p.drawText(thank, { x: cxThank, y: 40, size: 12, color: rgb(0,0,0), font: headerFont });
+              p.drawText(addr, { x: cxAddr, y: 26, size: 8, color: rgb(0.4,0.4,0.4), font: regularFont });
+            } catch (e) {}
+          }
+        }
+      } catch (err) { console.warn('Failed to add header/footer to sellletter preview template pages', err); }
+
       for (const [fieldName, position] of Object.entries(
         buyLetterFieldPositions,
       )) {
@@ -487,16 +520,17 @@ const BikeHistory = ({ externalSearchTerm }) => {
       color: rgb(1, 1, 1),
       font: fontBold,
     });
-    page.drawText(
-      "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
-      {
-        x: 50,
-        y: 770,
-        size: 8,
-        color: rgb(0.8, 0.8, 0.8),
-        font: font,
-      },
-    );
+    try {
+      const thank = "Thank you for your business!";
+      const addr = "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+      const thankW = fontBold.widthOfTextAtSize(thank, 12);
+      const addrW = font.widthOfTextAtSize(addr, 8);
+      const cxThank = (595 - thankW) / 2;
+      const cxAddr = (595 - addrW) / 2;
+      page.drawLine({ start: { x: 20, y: 52 }, end: { x: 575, y: 52 }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
+      page.drawText(thank, { x: cxThank, y: 40, size: 12, color: rgb(0, 0, 0), font: fontBold });
+      page.drawText(addr, { x: cxAddr, y: 26, size: 8, color: rgb(0.4, 0.4, 0.4), font: font });
+    } catch (e) {}
     page.drawRectangle({
       x: 0,
       y: 750,
@@ -1360,21 +1394,34 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
     try {
       setLoading(true);
-      const [buyLetters, sellLetters, serviceBills, advanceBills] =
-        await Promise.all([
-          axios.get(
-            `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
-          ),
-          axios.get(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
-          ),
-          axios.get(
-            `https://ok-motor-51l3.vercel.app/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
-          ),
-          axios.get(
-            `https://ok-motor-51l3.vercel.app/api/advance-bills/by-registration?registrationNumber=${searchTerm}`,
-          ),
-        ]);
+      const [
+        buyLetters,
+        sellLetters,
+        serviceBills,
+        advanceBills,
+        insuranceResp,
+        pucResp,
+      ] = await Promise.all([
+        axios.get(
+          `https://ok-motor-51l3.vercel.app/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
+        ),
+        axios.get(
+          `https://ok-motor-51l3.vercel.app/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
+        ),
+        axios.get(
+          `https://ok-motor-51l3.vercel.app/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
+        ),
+        axios.get(
+          `https://ok-motor-51l3.vercel.app/api/advance-bills/by-registration?registrationNumber=${searchTerm}`,
+        ),
+        // insurance and puc endpoints return single records (or 404) when queried by vehicle
+        axios
+          .get(`https://ok-motor-51l3.vercel.app/api/insurance/vehicle/${encodeURIComponent(searchTerm)}`)
+          .catch((e) => ({ status: e.response?.status || 500, data: null })),
+        axios
+          .get(`https://ok-motor-51l3.vercel.app/api/puc/vehicle/${encodeURIComponent(searchTerm)}`)
+          .catch((e) => ({ status: e.response?.status || 500, data: null })),
+      ]);
 
       const buyData =
         buyLetters.status === 200
@@ -1413,6 +1460,23 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return;
       }
 
+      console.log("insuranceResp:", insuranceResp && insuranceResp.status, insuranceResp && insuranceResp.data);
+      console.log("pucResp:", pucResp && pucResp.status, pucResp && pucResp.data);
+
+      const insuranceData =
+        insuranceResp && insuranceResp.status === 200 && insuranceResp.data
+          ? Array.isArray(insuranceResp.data)
+            ? insuranceResp.data
+            : [insuranceResp.data]
+          : [];
+
+      const pucData =
+        pucResp && pucResp.status === 200 && pucResp.data
+          ? Array.isArray(pucResp.data)
+            ? pucResp.data
+            : [pucResp.data]
+          : [];
+
       const combinedData = [
         ...buyData.map((item) => ({
           ...item,
@@ -1433,6 +1497,16 @@ const BikeHistory = ({ externalSearchTerm }) => {
           ...item,
           type: "advance",
           date: item.createdAt,
+        })),
+        ...insuranceData.map((item) => ({
+          ...item,
+          type: "insurance",
+          date: item.insuranceExpiryDate || item.insuranceExpiry || item.createdAt,
+        })),
+        ...pucData.map((item) => ({
+          ...item,
+          type: "puc",
+          date: item.pucIssueDate || item.pucExpiry || item.createdAt,
         })),
       ];
 
@@ -1642,6 +1716,15 @@ const BikeHistory = ({ externalSearchTerm }) => {
         const pdfUrl = URL.createObjectURL(pdfBlob);
         setPdfUrl(pdfUrl);
         setShowPdfModal(true);
+        return;
+      }
+      // insurance and puc don't have PDFs; open their history pages instead
+      else if (type === "insurance") {
+        navigate(`/insurance/history?reg=${encodeURIComponent(searchTerm)}`);
+        return;
+      } else if (type === "puc") {
+        navigate(`/puc/history?reg=${encodeURIComponent(searchTerm)}`);
+        return;
       }
     } catch (error) {
       console.error("Error fetching PDF:", error);
@@ -1701,6 +1784,12 @@ const BikeHistory = ({ externalSearchTerm }) => {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+      } else if (type === "insurance") {
+        navigate(`/insurance/history?reg=${encodeURIComponent(searchTerm)}`);
+        return;
+      } else if (type === "puc") {
+        navigate(`/puc/history?reg=${encodeURIComponent(searchTerm)}`);
+        return;
       }
     } catch (error) {
       console.error("Error downloading PDF:", error);
@@ -1746,6 +1835,10 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return <Wrench size={16} color="#10b981" />;
       case "advance":
         return <FileText size={16} color="#f59e0b" />;
+      case "insurance":
+        return <Shield size={16} color="#0ea5e9" />;
+      case "puc":
+        return <FileText size={16} color="#94a3b8" />;
       default:
         return <FileText size={16} />;
     }
@@ -1761,6 +1854,10 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return "Serviced";
       case "advance":
         return "Advance Payment";
+      case "insurance":
+        return "Insurance";
+      case "puc":
+        return "PUC";
       default:
         return "Activity";
     }
@@ -1776,6 +1873,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
     if (item.type === "advance") {
       return `Rs.${item.advancePaid}`;
     }
+    // insurance / puc do not have an amount to display in history
     return "";
   };
 
@@ -1794,6 +1892,10 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return `Service_Bill_${registrationNumber}_${date}.pdf`;
       case "advance":
         return `Advance_Receipt_${registrationNumber}_${date}.pdf`;
+      case "insurance":
+        return `Insurance_${registrationNumber}_${date}.pdf`;
+      case "puc":
+        return `PUC_${registrationNumber}_${date}.pdf`;
       default:
         return `Document_${registrationNumber}_${date}.pdf`;
     }
@@ -1813,6 +1915,17 @@ const BikeHistory = ({ externalSearchTerm }) => {
     }
     if (item.type === "advance") {
       return `Advance payment by ${item.customerName}`;
+    }
+    if (item.type === "insurance") {
+      const policy = item.insurancePolicyNumber || item.insurancePolicyNo || item.insurancePolicyNo || "-";
+      const comp = item.insuranceCompany || "-";
+      const exp = item.insuranceExpiryDate || item.insuranceExpiry || null;
+      return `Policy: ${policy} • ${comp}${exp ? ` • Exp: ${new Date(exp).toLocaleDateString('en-IN')}` : ""}`;
+    }
+    if (item.type === "puc") {
+      const pucNo = item.pucNumber || item.pucNo || "-";
+      const exp = item.pucExpiryDate || item.pucExpiry || null;
+      return `PUC: ${pucNo}${exp ? ` • Exp: ${new Date(exp).toLocaleDateString('en-IN')}` : ""}`;
     }
     return "";
   };
@@ -2108,13 +2221,38 @@ const BikeHistory = ({ externalSearchTerm }) => {
                       style={styles.tableRow}
                     >
                       <td style={styles.tableCell}>
-                        {new Date(item.date).toLocaleString("en-IN", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {item.type === "buy" || item.type === "sell" ? (
+                          <div>
+                            <div>
+                              Created: {item.createdAt ? new Date(item.createdAt).toLocaleString("en-IN", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }) : (item.saleDate ? new Date(item.saleDate).toLocaleString("en-IN") : new Date(item.date).toLocaleString("en-IN"))}
+                            </div>
+                            {item.editedAt && (
+                              <div style={{ color: "#64748b", fontSize: "0.9em" }}>
+                                Edited: {new Date(item.editedAt).toLocaleString("en-IN", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          new Date(item.date).toLocaleString("en-IN", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        )}
                       </td>
                       <td style={styles.tableCell}>
                         <div

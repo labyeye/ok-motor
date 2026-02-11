@@ -32,6 +32,7 @@ const InsuranceForm = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [editId, setEditId] = useState(null);
+  const [isFetching, setIsFetching] = useState(false);
 
   // Sidebar states
   const [activeMenu, setActiveMenu] = useState("Insurance");
@@ -41,6 +42,7 @@ const InsuranceForm = () => {
   const [formData, setFormData] = useState({
     personName: "",
     personPhone: "",
+    personEmail: "",
     vehicleModel: "",
     brand: "",
     year: "",
@@ -61,6 +63,7 @@ const InsuranceForm = () => {
       setFormData({
         personName: data.personName || "",
         personPhone: data.personPhone || "",
+        personEmail: data.personEmail || data.email || "",
         vehicleModel: data.vehicleModel || "",
         brand: data.brand || "",
         year: data.year || "",
@@ -79,6 +82,75 @@ const InsuranceForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleRegNoKeyDown = async (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const reg = formData.regNo?.trim();
+    if (!reg) return;
+
+    try {
+      setIsFetching(true);
+      const token = localStorage.getItem("token");
+
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+      // Fetch vehicle details from sell-letters and master insurance/puc records in parallel
+      const [vehicleRes, insuranceRes, pucRes] = await Promise.all([
+        axios
+          .get(
+            `${API_BASE_URL}/sell-letters/vehicle-details?registrationNumber=${encodeURIComponent(
+              reg,
+            )}`,
+            { headers },
+          )
+          .catch(() => null),
+        axios
+          .get(`${API_BASE_URL}/insurance/vehicle/${encodeURIComponent(reg)}`, {
+            headers,
+          })
+          .catch(() => null),
+        axios
+          .get(`${API_BASE_URL}/puc/vehicle/${encodeURIComponent(reg)}`, {
+            headers,
+          })
+          .catch(() => null),
+      ]);
+
+      const vehicleData = vehicleRes?.data || {};
+      const insData = insuranceRes?.data || {};
+      const pucData = pucRes?.data || {};
+
+      setFormData((prev) => ({
+        ...prev,
+        // person fields prefer insurance master, fall back to vehicle data
+        personName: insData.personName || vehicleData.personName || prev.personName,
+        personPhone: insData.personPhone || vehicleData.personPhone || prev.personPhone,
+        personEmail: insData.personEmail || vehicleData.personEmail || prev.personEmail,
+
+        // vehicle metadata
+        vehicleModel: insData.vehicleModel || vehicleData.vehicleModel || prev.vehicleModel,
+        brand: insData.brand || vehicleData.brand || prev.brand,
+        year: insData.year || vehicleData.year || prev.year,
+
+        // insurance specifics
+        insuranceCompany: insData.insuranceCompany || vehicleData.insuranceCompany || prev.insuranceCompany,
+        insurancePolicyNo:
+          insData.insurancePolicyNumber || insData.insurancePolicyNo || vehicleData.insurancePolicyNumber || prev.insurancePolicyNo,
+        insuranceExpiry: insData.insuranceExpiryDate
+          ? new Date(insData.insuranceExpiryDate).toISOString().split("T")[0]
+          : vehicleData.insuranceExpiryDate
+          ? new Date(vehicleData.insuranceExpiryDate).toISOString().split("T")[0]
+          : prev.insuranceExpiry,
+      }));
+    } catch (err) {
+      console.error("Failed to fetch vehicle details:", err);
+      alert(err.response?.data?.message || "No data found for this registration");
+    } finally {
+      setIsFetching(false);
+    }
   };
 
   const API_BASE_URL = "https://ok-motor-51l3.vercel.app/api";
@@ -117,6 +189,7 @@ const InsuranceForm = () => {
         setFormData({
           personName: "",
           personPhone: "",
+          personEmail: "",
           vehicleModel: "",
           brand: "",
           year: "",
@@ -634,6 +707,17 @@ const InsuranceForm = () => {
                 />
               </div>
               <div style={styles.formGroup}>
+                <label style={styles.label}>Person Email</label>
+                <input
+                  type="email"
+                  name="personEmail"
+                  value={formData.personEmail}
+                  onChange={handleChange}
+                  style={styles.input}
+                  placeholder="name@example.com"
+                />
+              </div>
+              <div style={styles.formGroup}>
                 <label style={styles.label}>Vehicle Model</label>
                 <input
                   type="text"
@@ -670,6 +754,7 @@ const InsuranceForm = () => {
                   name="regNo"
                   value={formData.regNo}
                   onChange={handleChange}
+                  onKeyDown={handleRegNoKeyDown}
                   style={styles.input}
                   required
                 />

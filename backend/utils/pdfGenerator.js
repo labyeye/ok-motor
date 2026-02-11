@@ -223,7 +223,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
     // Render GSTIN next to UDAYAM when missing — prefer bill value, then env, then fallback
     try {
       const headerGSTIN =
-        (serviceBill && serviceBill.businessGSTIN) || process.env.DEFAULT_GSTIN || "10BZFPR3150P1Z8";
+        (serviceBill && serviceBill.businessGSTIN) || process.env.DEFAULT_GSTIN || "22ABCDE1234F1Z5";
       currentPage.drawText(`GSTIN: ${headerGSTIN}`, {
         x: 400,
         y: 795,
@@ -233,7 +233,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       });
     } catch (e) {
       // fallback to a safe hardcoded GSTIN if anything goes wrong
-      currentPage.drawText("GSTIN: 10BZFPR3150P1Z8", {
+      currentPage.drawText("GSTIN: 22ABCDE1234F1Z5", {
         x: 400,
         y: 795,
         size: 14,

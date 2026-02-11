@@ -579,15 +579,47 @@ const ServiceBillForm = () => {
         }
 
         try {
-          const saveResponse = await retryRequest(() =>
-            axios.post(`${API_BASE_URL}/service-bills`, formattedData, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              timeout: 30000,
-            }),
-          );
+          const formattedDataForServer = { ...formattedData };
+          // Remove client-side versioning/offline-only fields before sending to server
+          [
+            "previousVersionId",
+            "originalDocumentId",
+            "version",
+            "editedAt",
+            "editedBy",
+            "_id",
+            "billNumber",
+          ].forEach((k) => delete formattedDataForServer[k]);
+
+          let saveResponse;
+          if (formData._id) {
+            // Edit existing bill -> PUT
+            saveResponse = await retryRequest(() =>
+              axios.put(
+                `${API_BASE_URL}/service-bills/${formData._id}`,
+                formattedDataForServer,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                  timeout: 30000,
+                },
+              ),
+            );
+          } else {
+            // Create new bill -> POST
+            saveResponse = await retryRequest(() =>
+              axios.post(`${API_BASE_URL}/service-bills`, formattedDataForServer, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                timeout: 30000,
+              }),
+            );
+          }
+
           if (!saveResponse.data?.data?._id) {
             throw new Error("Invalid response format from server");
           }
@@ -677,6 +709,11 @@ const ServiceBillForm = () => {
 
           if (error.response?.status === 503) {
             alert("Server is temporarily unavailable. Please try again later.");
+            return;
+          }
+
+          if (error.response?.status === 409) {
+            alert("Bill already exists. Please refresh and try again.");
             return;
           }
 

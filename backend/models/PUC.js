@@ -4,12 +4,17 @@ const PUCSchema = new mongoose.Schema(
   {
     personName: { type: String, required: true },
     personPhone: { type: String }, // Phone number
+    personEmail: { type: String },
     vehicleModel: { type: String },
     brand: { type: String },
     year: { type: String },
     regNo: { type: String, required: true },
+    vehicleRegNo: { type: String, index: true },
     pucNumber: { type: String },
-    pucExpiry: { type: Date, required: true },
+    pucIssueDate: { type: Date },
+    pucExpiry: { type: Date },
+    pucExpiryDate: { type: Date },
+    pucStatus: { type: String },
 
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },

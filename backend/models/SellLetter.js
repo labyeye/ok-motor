@@ -17,6 +17,8 @@ const SellLetterSchema = new mongoose.Schema(
     },
     chassisNumber: { type: String },
     engineNumber: { type: String },
+    insuranceId: { type: mongoose.Schema.Types.ObjectId, ref: "Insurance", default: null },
+    pucId: { type: mongoose.Schema.Types.ObjectId, ref: "PUC", default: null },
     vehiclekm: { type: String },
     vehicleCondition: { type: String, enum: ["running", "notRunning"] },
 

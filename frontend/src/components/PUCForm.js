@@ -30,6 +30,7 @@ const PUCForm = () => {
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isFetching, setIsFetching] = useState(false);
 
   // Sidebar states
   const [activeMenu, setActiveMenu] = useState("PUC");
@@ -39,6 +40,7 @@ const PUCForm = () => {
   const [formData, setFormData] = useState({
     personName: "",
     personPhone: "",
+    personEmail: "",
     vehicleModel: "",
     brand: "",
     year: "",
@@ -66,6 +68,66 @@ const PUCForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleRegNoKeyDown = async (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const reg = formData.regNo?.trim();
+    if (!reg) return;
+
+    try {
+      setIsFetching(true);
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+      const [vehicleRes, pucRes, insuranceRes] = await Promise.all([
+        axios
+          .get(
+            `${API_BASE_URL}/sell-letters/vehicle-details?registrationNumber=${encodeURIComponent(
+              reg,
+            )}`,
+            { headers },
+          )
+          .catch(() => null),
+        axios
+          .get(`${API_BASE_URL}/puc/vehicle/${encodeURIComponent(reg)}`, {
+            headers,
+          })
+          .catch(() => null),
+        axios
+          .get(`${API_BASE_URL}/insurance/vehicle/${encodeURIComponent(reg)}`, {
+            headers,
+          })
+          .catch(() => null),
+      ]);
+
+      const vehicleData = vehicleRes?.data || {};
+      const pucData = pucRes?.data || {};
+      const insData = insuranceRes?.data || {};
+
+      setFormData((prev) => ({
+        ...prev,
+        personName: pucData.personName || insData.personName || vehicleData.personName || prev.personName,
+        personPhone: pucData.personPhone || insData.personPhone || vehicleData.personPhone || prev.personPhone,
+        personEmail: pucData.personEmail || insData.personEmail || vehicleData.personEmail || prev.personEmail,
+        vehicleModel: pucData.vehicleModel || insData.vehicleModel || vehicleData.vehicleModel || prev.vehicleModel,
+        brand: pucData.brand || insData.brand || vehicleData.brand || prev.brand,
+        year: pucData.year || insData.year || vehicleData.year || prev.year,
+        pucNumber: pucData.pucNumber || vehicleData.pucNumber || prev.pucNumber,
+        pucExpiry: pucData.pucExpiryDate
+          ? new Date(pucData.pucExpiryDate).toISOString().split("T")[0]
+          : vehicleData.pucExpiryDate
+          ? new Date(vehicleData.pucExpiryDate).toISOString().split("T")[0]
+          : prev.pucExpiry,
+      }));
+    } catch (err) {
+      console.error("Failed to fetch vehicle/puc details:", err);
+      alert(err.response?.data?.message || "No data found for this registration");
+    } finally {
+      setIsFetching(false);
+    }
   };
 
   const API_BASE_URL = "https://ok-motor-51l3.vercel.app/api";
@@ -634,6 +696,17 @@ const PUCForm = () => {
                 />
               </div>
               <div style={styles.formGroup}>
+                <label style={styles.label}>Person Email</label>
+                <input
+                  type="email"
+                  name="personEmail"
+                  value={formData.personEmail}
+                  onChange={handleChange}
+                  style={styles.input}
+                  placeholder="name@example.com"
+                />
+              </div>
+              <div style={styles.formGroup}>
                 <label style={styles.label}>Vehicle Model</label>
                 <input
                   type="text"
@@ -670,6 +743,7 @@ const PUCForm = () => {
                   name="regNo"
                   value={formData.regNo}
                   onChange={handleChange}
+                  onKeyDown={handleRegNoKeyDown}
                   style={styles.input}
                   required
                 />

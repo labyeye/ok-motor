@@ -89,3 +89,53 @@ exports.updateInsurance = async (req, res) => {
     });
   }
 };
+
+exports.getInsuranceByVehicle = async (req, res) => {
+  try {
+    const { vehicleRegNo } = req.params;
+    if (!vehicleRegNo) {
+      return res.status(400).json({ message: "vehicleRegNo is required" });
+    }
+
+    const regex = new RegExp(`^${vehicleRegNo}$`, "i");
+    console.log("getInsuranceByVehicle called for:", vehicleRegNo);
+    const insurance = await Insurance.findOne({
+      $or: [{ vehicleRegNo: regex }, { regNo: regex }],
+    });
+    console.log("getInsuranceByVehicle result:", !!insurance);
+
+    if (!insurance) return res.status(404).json({ message: "Not found" });
+
+    res.json(insurance);
+  } catch (error) {
+    console.error("Error fetching insurance by vehicle:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// Upsert insurance by vehicleRegNo (create or update)
+exports.upsertInsuranceByVehicle = async (req, res) => {
+  try {
+    const { vehicleRegNo } = req.params;
+    if (!vehicleRegNo) {
+      return res.status(400).json({ message: "vehicleRegNo is required" });
+    }
+
+    const data = {
+      ...req.body,
+      vehicleRegNo,
+      user: req.user?.id,
+    };
+
+    const insurance = await Insurance.findOneAndUpdate(
+      { vehicleRegNo },
+      data,
+      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+    );
+
+    res.json(insurance);
+  } catch (error) {
+    console.error("Error upserting insurance:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};

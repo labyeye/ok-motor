@@ -474,6 +474,7 @@ exports.getFreeServiceUsage = async (req, res) => {
                   $and: [
                     { $eq: ["$registrationNumber", "$$reg"] },
                     { $gte: ["$serviceDate", "$$saleDate"] },
+                    { $eq: ["$serviceType", "custom"] },
                   ],
                 },
               },

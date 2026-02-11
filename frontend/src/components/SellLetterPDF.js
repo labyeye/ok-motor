@@ -1145,14 +1145,14 @@ const SellLetterForm = () => {
             page.drawText("UDAYAM-BR-26-0028550", {
               x: 330,
               y: 805,
-              size: 18,
+              size: 14,
               color: rgb(255, 255, 255, 1),
               font,
             });
             page.drawText("GSTIN: 22ABCDE1234F1Z5", {
               x: 330,
               y: 780,
-              size: 18,
+              size: 14,
               color: rgb(255, 255, 255, 1),
               font,
             });
@@ -2138,14 +2138,14 @@ const SellLetterForm = () => {
     });
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
-      y: 395,
+      y: 425,
       size: 14,
       color: rgb(1, 1, 1),
       font: boldFont,
     });
     page.drawText("GSTIN: 22ABCDE1234F1Z5", {
       x: 330,
-      y: 375,
+      y: 405,
       size: 14,
       color: rgb(1, 1, 1),
       font: boldFont,
@@ -2734,14 +2734,14 @@ const SellLetterForm = () => {
             page.drawText("UDAYAM-BR-26-0028550", {
               x: 330,
               y: 805,
-              size: 18,
+              size: 14,
               color: rgb(255, 255, 255, 1),
               font,
             });
             page.drawText("GSTIN: 22ABCDE1234F1Z5", {
               x: 330,
               y: 780,
-              size: 18,
+              size: 14,
               color: rgb(255, 255, 255, 1),
               font,
             });

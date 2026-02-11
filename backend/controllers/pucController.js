@@ -78,3 +78,48 @@ exports.deletePUC = async (req, res) => {
     });
   }
 };
+
+exports.getPUCByVehicle = async (req, res) => {
+  try {
+    const { vehicleRegNo } = req.params;
+    if (!vehicleRegNo) {
+      return res.status(400).json({ message: "vehicleRegNo is required" });
+    }
+
+    const regex = new RegExp(`^${vehicleRegNo}$`, "i");
+    console.log("getPUCByVehicle called for:", vehicleRegNo);
+    const puc = await PUC.findOne({ $or: [{ vehicleRegNo: regex }, { regNo: regex }] });
+    console.log("getPUCByVehicle result:", !!puc);
+    if (!puc) return res.status(404).json({ message: "Not found" });
+    res.json(puc);
+  } catch (error) {
+    console.error("Error fetching PUC by vehicle:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+exports.upsertPUCByVehicle = async (req, res) => {
+  try {
+    const { vehicleRegNo } = req.params;
+    if (!vehicleRegNo) {
+      return res.status(400).json({ message: "vehicleRegNo is required" });
+    }
+
+    const data = {
+      ...req.body,
+      vehicleRegNo,
+      user: req.user?.id,
+    };
+
+    const puc = await PUC.findOneAndUpdate(
+      { vehicleRegNo },
+      data,
+      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+    );
+
+    res.json(puc);
+  } catch (error) {
+    console.error("Error upserting PUC:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};

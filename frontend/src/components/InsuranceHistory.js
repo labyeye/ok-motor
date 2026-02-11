@@ -550,6 +550,7 @@ const InsuranceHistory = () => {
                   <tr>
                     <th style={styles.th}>Person Name</th>
                     <th style={styles.th}>Phone</th>
+                    <th style={styles.th}>Email</th>
                     <th style={styles.th}>Vehicle</th>
                     <th style={styles.th}>Reg No</th>
                     <th style={styles.th}>Policy No</th>
@@ -563,6 +564,7 @@ const InsuranceHistory = () => {
                     <tr key={item._id}>
                       <td style={styles.td}>{item.personName}</td>
                       <td style={styles.td}>{item.personPhone}</td>
+                      <td style={styles.td}>{item.personEmail || item.email || ""}</td>
                       <td style={styles.td}>
                         {item.brand} {item.vehicleModel} ({item.year})
                       </td>

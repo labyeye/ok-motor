@@ -57,6 +57,10 @@ const ServiceHistory = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
   const [previewBill, setPreviewBill] = useState(null);
+  const [showChangesModal, setShowChangesModal] = useState(false);
+  const [changesList, setChangesList] = useState([]);
+  const [changesTargetBill, setChangesTargetBill] = useState(null);
+  const [isComputingChanges, setIsComputingChanges] = useState(false);
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -98,8 +102,57 @@ const ServiceHistory = () => {
           const serviceResponse = await axios.get(
             `https://ok-motor-51l3.vercel.app/api/service-bills?page=${currentPage}`,
           );
-          setServiceBills(serviceResponse.data.data || serviceResponse.data);
+          const serviceData = serviceResponse.data.data || serviceResponse.data || [];
           setTotalPages(serviceResponse.data.totalPages || 1);
+
+          // If some bills have previousVersionId, fetch those previous docs
+          try {
+            const prevIds = serviceData
+              .map((b) => b.previousVersionId)
+              .filter((id) => !!id);
+
+            if (prevIds.length > 0) {
+              const token = localStorage.getItem("token");
+              const headers = token ? { Authorization: `Bearer ${token}` } : {};
+              const uniquePrevIds = [...new Set(prevIds)];
+              const prevFetches = await Promise.all(
+                uniquePrevIds.map((id) =>
+                  axios
+                    .get(`https://ok-motor-51l3.vercel.app/api/service-bills/${id}`, {
+                      headers,
+                    })
+                    .then((r) => r.data.data || r.data)
+                    .catch(() => null),
+                ),
+              );
+
+              const prevMap = {};
+              uniquePrevIds.forEach((id, idx) => {
+                const p = prevFetches[idx];
+                if (p) {
+                  p._isPreviousVersion = true;
+                  prevMap[id] = p;
+                }
+              });
+
+              // Merge: for each bill, keep it and insert previous version right after if available
+              const merged = [];
+              serviceData.forEach((b) => {
+                merged.push(b);
+                const pid = b.previousVersionId;
+                if (pid && prevMap[pid] && !merged.find((x) => x._id === pid)) {
+                  merged.push(prevMap[pid]);
+                }
+              });
+
+              setServiceBills(merged);
+            } else {
+              setServiceBills(serviceData);
+            }
+          } catch (err) {
+            // if previous-version fetch fails, just set primary list
+            setServiceBills(serviceData);
+          }
 
           const purchaseResponse = await axios.get(
             `${config.API_BASE_URL}/buy-letter`,
@@ -124,7 +177,27 @@ const ServiceHistory = () => {
             const sortedData = serviceResult.data.sort(
               (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
             );
-            setServiceBills(sortedData);
+
+            // include previous versions (offline): fetch by id and insert adjacent
+            const merged = [];
+            for (const b of sortedData) {
+              merged.push(b);
+              const pid = b.previousVersionId;
+              if (pid) {
+                try {
+                  const found = await offlineStorage.findById("serviceBills", pid);
+                  if (found.success && found.data && !merged.find((x) => x._id === pid)) {
+                    const prev = found.data;
+                    prev._isPreviousVersion = true;
+                    merged.push(prev);
+                  }
+                } catch (err) {
+                  // ignore missing previous
+                }
+              }
+            }
+
+            setServiceBills(merged);
           } else {
             setServiceBills([]);
           }
@@ -512,6 +585,91 @@ const ServiceHistory = () => {
       console.error("Error generating preview:", error);
       alert("Failed to generate preview. Please try again.");
       setIsDownloading(false);
+    }
+  };
+
+  const getChanges = (current = {}, previous = {}) => {
+    const changes = [];
+
+    const simpleFields = [
+      "customerName",
+      "customerPhone",
+      "customerAddress",
+      "vehicleBrand",
+      "vehicleModel",
+      "registrationNumber",
+      "kmReading",
+      "grandTotal",
+      "paymentStatus",
+    ];
+
+    simpleFields.forEach((f) => {
+      const a = (current[f] || "") + "";
+      const b = (previous[f] || "") + "";
+      if (a !== b) {
+        changes.push({ field: f, from: b, to: a });
+      }
+    });
+
+    const curItems = Array.isArray(current.serviceItems) ? current.serviceItems : [];
+    const prevItems = Array.isArray(previous.serviceItems) ? previous.serviceItems : [];
+    if (curItems.length !== prevItems.length) {
+      changes.push({ field: "serviceItems", from: `${prevItems.length} items`, to: `${curItems.length} items` });
+    } else {
+      for (let i = 0; i < Math.min(curItems.length, 5); i++) {
+        const ci = curItems[i] || {};
+        const pi = prevItems[i] || {};
+        if ((ci.description || "") !== (pi.description || "") || (ci.amount || 0) !== (pi.amount || 0)) {
+          changes.push({ field: `serviceItems[${i}]`, from: `${pi.description || ""} (${pi.amount || 0})`, to: `${ci.description || ""} (${ci.amount || 0})` });
+        }
+      }
+    }
+
+    ["issuesReported", "technicianNotes", "warrantyInfo"].forEach((f) => {
+      const a = (current[f] || "") + "";
+      const b = (previous[f] || "") + "";
+      if (a !== b) changes.push({ field: f, from: b, to: a });
+    });
+
+    return changes;
+  };
+
+  const handleViewChanges = async (bill) => {
+    try {
+      if (!bill) return;
+      const prevId = bill.previousVersionId || bill.originalDocumentId;
+      if (!prevId) {
+        alert("No previous version available to compare");
+        return;
+      }
+
+      setIsComputingChanges(true);
+      let previous;
+      if (!navigator.onLine) {
+        const offlineStorage = (await import("../services/offlineStorage")).default;
+        const found = await offlineStorage.findById("serviceBills", prevId);
+        previous = found.success ? found.data : null;
+      } else {
+        const token = localStorage.getItem("token");
+        const resp = await axios.get(`https://ok-motor-51l3.vercel.app/api/service-bills/${prevId}`, { headers: { Authorization: `Bearer ${token}` } });
+        previous = resp.data.data || resp.data;
+      }
+
+      if (!previous) {
+        alert("Previous version not found");
+        setIsComputingChanges(false);
+        return;
+      }
+
+      const changes = getChanges(bill, previous);
+      setChangesList(changes);
+      setChangesTargetBill({ current: bill, previous });
+      setShowChangesModal(true);
+    } catch (error) {
+      console.error("Error fetching previous version:", error);
+      alert("Failed to fetch previous version");
+    } finally {
+      setIsComputingChanges(false);
     }
   };
 
@@ -1085,7 +1243,13 @@ const ServiceHistory = () => {
                   </thead>
                   <tbody>
                     {serviceBills.map((bill) => (
-                      <tr key={bill._id} style={styles.tableRow}>
+                      <tr
+                        key={bill._id}
+                        style={{
+                          ...styles.tableRow,
+                          ...(bill._isPreviousVersion ? styles.previousRow : {}),
+                        }}
+                      >
                         <td style={styles.tableCell}>{bill.customerName}</td>
                         <td style={styles.tableCell}>
                           {`${bill.vehicleBrand} ${bill.vehicleModel}`
@@ -1096,6 +1260,39 @@ const ServiceHistory = () => {
                         </td>
                         <td style={styles.tableCell}>
                           {bill.registrationNumber}
+                          {bill._isPreviousVersion ? (
+                            <span
+                              style={{
+                                marginLeft: 8,
+                                padding: "2px 6px",
+                                backgroundColor: "#e2e8f0",
+                                color: "#475569",
+                                borderRadius: 6,
+                                fontSize: "0.7rem",
+                                fontWeight: 600,
+                              }}
+                              title="Previous version"
+                            >
+                              Previous
+                            </span>
+                          ) : (
+                            bill.previousVersionId && (
+                              <span
+                                style={{
+                                  marginLeft: 8,
+                                  padding: "2px 6px",
+                                  backgroundColor: "#fde68a",
+                                  color: "#92400e",
+                                  borderRadius: 6,
+                                  fontSize: "0.7rem",
+                                  fontWeight: 600,
+                                }}
+                                title="This is a newer version"
+                              >
+                                Updated
+                              </span>
+                            )
+                          )}
                         </td>
                         <td style={styles.tableCell}>
                           ₹
@@ -1165,7 +1362,7 @@ const ServiceHistory = () => {
                               <Download size={16} />
                             )}
                           </button>
-                          {user?.role === "admin" && (
+                          {user?.role === "admin" && !bill._isPreviousVersion && (
                             <>
                               <button
                                 onClick={() => handleEdit(bill)}
@@ -1182,6 +1379,34 @@ const ServiceHistory = () => {
                                 <Trash2 size={16} />
                               </button>
                             </>
+                          )}
+
+                          {/* View changes button - for newer versions or to compare newer vs previous */}
+                          {bill._isPreviousVersion ? (
+                            (() => {
+                              const newer = serviceBills.find((s) => s.previousVersionId === bill._id);
+                              return newer ? (
+                                <button
+                                  onClick={() => handleViewChanges(newer)}
+                                  style={styles.iconButton}
+                                  title="View Changes (newer)"
+                                  disabled={isComputingChanges}
+                                >
+                                  <ChevronRight size={16} />
+                                </button>
+                              ) : null;
+                            })()
+                          ) : (
+                            bill.previousVersionId && (
+                              <button
+                                onClick={() => handleViewChanges(bill)}
+                                style={styles.iconButton}
+                                title="View Changes"
+                                disabled={isComputingChanges}
+                              >
+                                <ChevronRight size={16} />
+                              </button>
+                            )
                           )}
                         </td>
                       </tr>
@@ -1372,6 +1597,59 @@ const ServiceHistory = () => {
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showChangesModal && changesTargetBill && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1200,
+            padding: 20,
+          }}
+          onClick={() => setShowChangesModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "min(900px, 96%)",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              background: "#fff",
+              borderRadius: 12,
+              boxShadow: "0 10px 30px rgba(2,6,23,0.2)",
+            }}
+          >
+            <div style={{ padding: 18, borderBottom: "1px solid #e6edf3", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0 }}>{`Changes — ${changesTargetBill.current.billNumber || changesTargetBill.current._id}`}</h3>
+              <button onClick={() => setShowChangesModal(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 6 }}><X /></button>
+            </div>
+            <div style={{ padding: 18 }}>
+              {changesList.length === 0 ? (
+                <p style={{ color: "#64748b" }}>No changes detected compared to previous version.</p>
+              ) : (
+                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                  {changesList.map((c, idx) => (
+                    <li key={idx} style={{ padding: "10px 0", borderBottom: "1px solid #f1f5f9" }}>
+                      <strong style={{ display: "block", color: "#0f172a" }}>{c.field}</strong>
+                      <div style={{ color: "#475569" }}>From: {c.from || <em>empty</em>}</div>
+                      <div style={{ color: "#0f172a", marginTop: 6 }}>To: {c.to || <em>empty</em>}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div style={{ padding: 18, borderTop: "1px solid #e6edf3", display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={() => setShowChangesModal(false)} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}>Close</button>
             </div>
           </div>
         </div>
@@ -1692,6 +1970,11 @@ const styles = {
     alignItems: "center",
     height: "200px",
     color: "#64748b",
+  },
+  previousRow: {
+    backgroundColor: "#fbfdfe",
+    color: "#64748b",
+    fontStyle: "italic",
   },
   emptyState: {
     display: "flex",

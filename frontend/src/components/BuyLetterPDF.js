@@ -46,7 +46,6 @@ import {
   convertPdfToImages,
 } from "../utils/pdfHandler";
 
-// helper to turn dataURL into File
 const dataUrlToFile = (dataUrl, filename) => {
   const arr = dataUrl.split(",");
   const mime = arr[0].match(/:(.*?);/)[1] || "image/png";
@@ -82,10 +81,10 @@ const BuyLetterForm = () => {
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [loadingVehicles, setLoadingVehicles] = useState(false);
-  const [aadhaarUploadMode, setAadhaarUploadMode] = useState("separate"); // "single" or "separate"
-  const [vehicleRCUploadMode, setVehicleRCUploadMode] = useState("separate"); // "single" or "separate"
+  const [aadhaarUploadMode, setAadhaarUploadMode] = useState("separate");
+  const [vehicleRCUploadMode, setVehicleRCUploadMode] = useState("separate");
   const [insuranceNOCUploadMode, setInsuranceNOCUploadMode] =
-    useState("separate"); // "single" or "separate"
+    useState("separate");
   const [filesState, setFilesState] = useState({
     vehicleRCFront: null,
     vehicleRCBack: null,
@@ -93,25 +92,21 @@ const BuyLetterForm = () => {
     aadhaarBack: null,
     panPhoto: null,
     deliveryPhoto: null,
-    insuranceNOCFront: null, // Replaced vehiclePhotos
+    insuranceNOCFront: null,
     insuranceNOCBack: null,
-    // vehiclePhotos: [], // Removed as replaced by Insurance NOC
   });
 
   const [filePreviews, setFilePreviews] = useState({});
 
-  // Crop states
   const [showCropper, setShowCropper] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState(null);
   const [cropFieldName, setCropFieldName] = useState(null);
   const [cropFileName, setCropFileName] = useState(null);
 
-  // Upload modal states
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [uploadModalFieldName, setUploadModalFieldName] = useState(null);
   const [uploadModalAllowPdf, setUploadModalAllowPdf] = useState(false);
 
-  // cleanup object URLs when component unmounts
   useEffect(() => {
     return () => {
       try {
@@ -235,8 +230,6 @@ const BuyLetterForm = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // If navigated here to edit an existing buy letter, fetch the full record
-  // (list entries may not include documents). Normalize date fields for inputs
   useEffect(() => {
     const loadFullEditLetter = async () => {
       try {
@@ -273,7 +266,7 @@ const BuyLetterForm = () => {
         setFormData((prev) => ({
           ...prev,
           ...normalized,
-          // keep times as-is if present, else use previous state
+
           saleTime: full.saleTime || prev.saleTime,
           todayTime: full.todayTime || prev.todayTime,
         }));
@@ -281,11 +274,9 @@ const BuyLetterForm = () => {
         if (full.documents) {
           const previews = {};
 
-          // Set aadhaarUploadMode based on loaded document
           if (full.documents.aadhaarUploadMode) {
             setAadhaarUploadMode(full.documents.aadhaarUploadMode);
           } else {
-            // Detect mode from existing data
             const sameUrl =
               full.documents.aadhaar?.front === full.documents.aadhaar?.back;
             setAadhaarUploadMode(
@@ -293,11 +284,9 @@ const BuyLetterForm = () => {
             );
           }
 
-          // Set vehicleRCUploadMode based on loaded document
           if (full.documents.vehicleRCUploadMode) {
             setVehicleRCUploadMode(full.documents.vehicleRCUploadMode);
           } else {
-            // Detect mode from existing data
             const sameUrl =
               full.documents.vehicleRC?.front ===
               full.documents.vehicleRC?.back;
@@ -322,7 +311,6 @@ const BuyLetterForm = () => {
             previews.deliveryPhoto =
               full.documents.deliveryPhoto || full.documents.vehicleKM || null;
 
-          // Load Insurance NOC
           if (full.documents.insuranceNOCUploadMode) {
             setInsuranceNOCUploadMode(full.documents.insuranceNOCUploadMode);
           } else {
@@ -341,11 +329,6 @@ const BuyLetterForm = () => {
             previews.insuranceNOCBack =
               full.documents.insuranceNOC.back || null;
           }
-
-          /* Vehicle Photos removed 
-          if (Array.isArray(full.documents.vehiclePhotos))
-            previews.vehiclePhotos = full.documents.vehiclePhotos; 
-          */
 
           setFilePreviews((prev) => ({ ...prev, ...previews }));
         }
@@ -736,7 +719,6 @@ const BuyLetterForm = () => {
         }),
       };
 
-      // If any files are selected, submit as multipart/form-data so backend can process images
       const hasFiles =
         filesState.vehicleRCFront ||
         filesState.vehicleRCBack ||
@@ -749,7 +731,7 @@ const BuyLetterForm = () => {
 
       if (hasFiles) {
         const form = new FormData();
-        // append all scalar/primitive fields
+
         Object.entries(dataToSave).forEach(([key, value]) => {
           if (value === undefined || value === null) return;
           if (typeof value === "object") {
@@ -759,12 +741,10 @@ const BuyLetterForm = () => {
           }
         });
 
-        // Add modes to form
         form.append("aadhaarUploadMode", aadhaarUploadMode);
         form.append("vehicleRCUploadMode", vehicleRCUploadMode);
         form.append("insuranceNOCUploadMode", insuranceNOCUploadMode);
 
-        // append files
         if (filesState.vehicleRCFront)
           form.append("vehicleRCFront", filesState.vehicleRCFront);
         if (filesState.vehicleRCBack)
@@ -777,17 +757,14 @@ const BuyLetterForm = () => {
         if (filesState.deliveryPhoto)
           form.append("deliveryPhoto", filesState.deliveryPhoto);
 
-        // Insurance NOC
         if (filesState.insuranceNOCFront)
           form.append("insuranceNOCFront", filesState.insuranceNOCFront);
         if (filesState.insuranceNOCBack)
           form.append("insuranceNOCBack", filesState.insuranceNOCBack);
 
-        // If editing and some files weren't changed, preserve existing URLs
         if (editLetter?._id && editLetter.documents) {
           const preservedDocs = {};
 
-          // Preserve Vehicle RC URLs if not uploading new files
           if (!filesState.vehicleRCFront && filePreviews.vehicleRCFront) {
             preservedDocs.vehicleRCFront = filePreviews.vehicleRCFront;
           }
@@ -795,7 +772,6 @@ const BuyLetterForm = () => {
             preservedDocs.vehicleRCBack = filePreviews.vehicleRCBack;
           }
 
-          // Preserve Aadhaar URLs if not uploading new files
           if (!filesState.aadhaarFront && filePreviews.aadhaarFront) {
             preservedDocs.aadhaarFront = filePreviews.aadhaarFront;
           }
@@ -803,7 +779,6 @@ const BuyLetterForm = () => {
             preservedDocs.aadhaarBack = filePreviews.aadhaarBack;
           }
 
-          // Preserve other documents if not uploading new files
           if (!filesState.panPhoto && filePreviews.panPhoto) {
             preservedDocs.panPhoto = filePreviews.panPhoto;
           }
@@ -811,7 +786,6 @@ const BuyLetterForm = () => {
             preservedDocs.deliveryPhoto = filePreviews.deliveryPhoto;
           }
 
-          // Preserve Insurance NOC
           if (!filesState.insuranceNOCFront && filePreviews.insuranceNOCFront) {
             preservedDocs.insuranceNOCFront = filePreviews.insuranceNOCFront;
           }
@@ -819,7 +793,6 @@ const BuyLetterForm = () => {
             preservedDocs.insuranceNOCBack = filePreviews.insuranceNOCBack;
           }
 
-          // Send preserved URLs to backend
           if (Object.keys(preservedDocs).length > 0) {
             form.append("preservedDocuments", JSON.stringify(preservedDocs));
           }
@@ -828,7 +801,6 @@ const BuyLetterForm = () => {
         if (isElectron) {
           response = await apiService.post("/api/buy-letters", form);
         } else {
-          // Increase timeout for large multipart uploads (up to 2 minutes)
           response = await axios.post(
             "https://ok-motor-51l3.vercel.app/api/buy-letters",
             form,
@@ -839,8 +811,6 @@ const BuyLetterForm = () => {
           );
         }
       } else {
-        // No new files uploaded: if editing, send just the form data (don't force preserve old docs)
-        // If new, send with empty documents or no documents field
         const payload = { ...dataToSave };
 
         if (isElectron) {
@@ -881,14 +851,12 @@ const BuyLetterForm = () => {
     }
   };
 
-  // File input handlers (mirror SellLetter behavior)
   const handleFileInput = (fieldName, allowPdf = false) => {
     setUploadModalFieldName(fieldName);
     setUploadModalAllowPdf(allowPdf);
     setShowFileUploadModal(true);
   };
 
-  // Remove/clear an uploaded image
   const handleRemoveFile = (fieldName) => {
     setFilesState((prev) => ({
       ...prev,
@@ -907,9 +875,7 @@ const BuyLetterForm = () => {
     }
 
     try {
-      // Handle PDF files
       if (isPdfFile(file)) {
-        // Convert first page of PDF to PNG and use that for upload + preview
         let convertedFile = null;
         let previewImage = null;
         try {
@@ -925,34 +891,30 @@ const BuyLetterForm = () => {
           console.warn("PDF to image conversion failed", err);
         }
 
-        // fallback: use original PDF if conversion failed
         const pdfData = await extractImagesFromPdf(file);
         const pdfUrl = pdfData?.url || URL.createObjectURL(file);
 
         const finalFile = convertedFile || file;
         const effectivePreview = previewImage || pdfUrl;
 
-        // Special handling for Aadhaar based on upload mode
         if (
           uploadModalFieldName === "aadhaarFront" &&
           aadhaarUploadMode === "single"
         ) {
-          // Single file mode: use for both front and back
           setFilesState((prev) => ({
             ...prev,
             aadhaarFront: finalFile,
-            aadhaarBack: finalFile, // Use same image/PDF for back
+            aadhaarBack: finalFile,
           }));
           setFilePreviews((prev) => ({
             ...prev,
             aadhaarFront: effectivePreview,
-            aadhaarBack: effectivePreview, // Use same preview for back
+            aadhaarBack: effectivePreview,
           }));
         } else if (
           uploadModalFieldName === "vehicleRCFront" &&
           vehicleRCUploadMode === "single"
         ) {
-          // Single file mode for Vehicle RC
           setFilesState((prev) => ({
             ...prev,
             vehicleRCFront: finalFile,
@@ -967,7 +929,6 @@ const BuyLetterForm = () => {
           uploadModalFieldName === "insuranceNOCFront" &&
           insuranceNOCUploadMode === "single"
         ) {
-          // Single file mode for Insurance NOC
           setFilesState((prev) => ({
             ...prev,
             insuranceNOCFront: finalFile,
@@ -992,7 +953,6 @@ const BuyLetterForm = () => {
         return;
       }
 
-      // Handle image files - show cropper
       if (isImageFile(file)) {
         const url = URL.createObjectURL(file);
         setCropImageSrc(url);
@@ -1003,7 +963,6 @@ const BuyLetterForm = () => {
         return;
       }
 
-      // Invalid file type
       alert("Please select a valid image or PDF file");
       setShowFileUploadModal(false);
     } catch (error) {
@@ -1033,9 +992,7 @@ const BuyLetterForm = () => {
       type: "image/jpeg",
     });
 
-    // Special handling for Aadhaar based on upload mode
     if (cropFieldName === "aadhaarFront" && aadhaarUploadMode === "single") {
-      // Single file mode: use for both front and back
       setFilesState((prev) => ({
         ...prev,
         aadhaarFront: file,
@@ -1083,7 +1040,6 @@ const BuyLetterForm = () => {
       setFilePreviews((prev) => ({ ...prev, [cropFieldName]: url }));
     }
 
-    // Reset crop state
     setShowCropper(false);
     setCropImageSrc(null);
     setCropFieldName(null);
@@ -1092,15 +1048,12 @@ const BuyLetterForm = () => {
 
   const handleSaveAndDownload = async () => {
     try {
-      // validate form and focus first missing field if any
       const errs = validateForm();
       if (Object.keys(errs || {}).length > 0) return;
       setIsDownloading(true);
       setIsSaving(true);
       const savedLetter = await saveBuyLetter();
 
-      // Pass the saved letter data but DON'T include documents for initial download
-      // Documents are only included when downloading from history
       if (selectedLanguage === "hindi") {
         await fillAndDownloadHindiPdf(savedLetter, false);
       } else {
@@ -1321,11 +1274,9 @@ const BuyLetterForm = () => {
 
       let savedLetterData;
 
-      // Use provided letter data if available (from save operation)
       if (providedLetterData) {
         savedLetterData = providedLetterData;
       } else {
-        // Otherwise fetch existing letter
         let existingLetter;
         if (isElectron) {
           existingLetter = await apiService.get(
@@ -1337,7 +1288,6 @@ const BuyLetterForm = () => {
           );
         }
 
-        // apiService returns `response.data` (or directly the data). Normalize both shapes.
         const existingList =
           existingLetter && existingLetter.data !== undefined
             ? existingLetter.data
@@ -1347,7 +1297,7 @@ const BuyLetterForm = () => {
           savedLetterData = existingList[0];
         } else {
           let response = await apiService.post("/api/buy-letters", formData);
-          // normalize post response too
+
           savedLetterData =
             response && response.data ? response.data : response;
         }
@@ -1422,7 +1372,6 @@ const BuyLetterForm = () => {
         color: rgb(0, 0, 0),
       });
 
-      // Helper function to embed images from URL
       const embedImageFromUrl = async (url) => {
         try {
           const res = await fetch(url);
@@ -1436,12 +1385,10 @@ const BuyLetterForm = () => {
         }
       };
 
-      // Add document pages before invoice
       const addDocumentPages = async (documentsObj) => {
         if (!documentsObj) return;
         const items = [];
 
-        // Add documents in order: RC, Aadhaar, PAN, KM, Vehicle Photos
         if (documentsObj.vehicleRC) {
           if (documentsObj.vehicleRC.front)
             items.push({
@@ -1479,7 +1426,6 @@ const BuyLetterForm = () => {
           );
         }
 
-        // Add 4 images per page in a 2x2 grid
         for (let i = 0; i < items.length; i += 4) {
           const page = pdfDoc.addPage([595, 842]);
           const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -1489,7 +1435,6 @@ const BuyLetterForm = () => {
             const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
             const logoImg = await pdfDoc.embedPng(logoBytes);
 
-            // Header
             page.drawRectangle({
               x: 0,
               y: 780,
@@ -1500,7 +1445,6 @@ const BuyLetterForm = () => {
 
             page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
 
-            // Watermarks
             try {
               page.drawImage(logoImg, {
                 x: 180,
@@ -1532,36 +1476,37 @@ const BuyLetterForm = () => {
               color: rgb(1, 1, 1),
               font,
             });
-            // Footer for document pages (address / phone / gstin)
+
             try {
-              page.drawText(
-                "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
-                {
-                  x: 50,
-                  y: 28,
-                  size: 8,
-                  color: rgb(1, 1, 1),
-                  font,
-                },
-              );
-            } catch (e) {
-              // ignore footer errors
-            }
-            // Footer for document pages (address / phone / gstin)
-            try {
-              page.drawText(
-                "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
-                {
-                  x: 50,
-                  y: 28,
-                  size: 8,
-                  color: rgb(1, 1, 1),
-                  font,
-                },
-              );
-            } catch (e) {
-              // ignore footer errors
-            }
+              const thank = "Thank you for your business!";
+              const addr =
+                "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+              const thankW = font.widthOfTextAtSize(thank, 12);
+              const addrFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+              const addrW = addrFont.widthOfTextAtSize(addr, 9);
+              const centerXThank = (595 - thankW) / 2;
+              const centerXAddr = (595 - addrW) / 2;
+              page.drawLine({
+                start: { x: 20, y: 52 },
+                end: { x: 575, y: 52 },
+                thickness: 0.5,
+                color: rgb(0.8, 0.8, 0.8),
+              });
+              page.drawText(thank, {
+                x: centerXThank,
+                y: 40,
+                size: 12,
+                color: rgb(0, 0, 0),
+                font,
+              });
+              page.drawText(addr, {
+                x: centerXAddr,
+                y: 26,
+                size: 9,
+                color: rgb(0.45, 0.45, 0.45),
+                font: addrFont,
+              });
+            } catch (e) {}
             page.drawRectangle({
               x: 0,
               y: 750,
@@ -1571,7 +1516,6 @@ const BuyLetterForm = () => {
             });
           } catch (err) {}
 
-          // 2x2 grid positions
           const cols = [40, 315];
           const rows = [720, 360];
           for (let cell = 0; cell < 4; cell++) {
@@ -1615,7 +1559,6 @@ const BuyLetterForm = () => {
         }
       };
 
-      // Add document pages only if includeDocuments is true (i.e., from history)
       if (includeDocuments && savedLetterData?.documents) {
         await addDocumentPages(savedLetterData.documents);
       }
@@ -1739,11 +1682,9 @@ const BuyLetterForm = () => {
 
       let savedLetterData;
 
-      // Use provided letter data if available (from save operation)
       if (providedLetterData) {
         savedLetterData = providedLetterData;
       } else {
-        // Otherwise fetch existing letter
         let existingLetter = await apiService.get(
           `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
         );
@@ -1831,7 +1772,6 @@ const BuyLetterForm = () => {
         });
       }
 
-      // Helper function to embed images from URL
       const embedImageFromUrl = async (url) => {
         try {
           const res = await fetch(url);
@@ -1845,7 +1785,6 @@ const BuyLetterForm = () => {
         }
       };
 
-      // Add document pages before invoice
       const addDocumentPages = async (documentsObj) => {
         if (!documentsObj) return;
         const items = [];
@@ -1993,7 +1932,6 @@ const BuyLetterForm = () => {
         }
       };
 
-      // Add document pages only if includeDocuments is true (i.e., from history)
       if (includeDocuments && savedLetterData?.documents) {
         await addDocumentPages(savedLetterData.documents);
       }
@@ -2050,7 +1988,6 @@ const BuyLetterForm = () => {
       setPreviewLanguage(language);
       setIsGeneratingPreview(true);
 
-      // validate before preview
       const errs = validateForm();
       if (Object.keys(errs || {}).length > 0) {
         setIsGeneratingPreview(false);
@@ -2198,7 +2135,7 @@ const BuyLetterForm = () => {
       size: 14,
       color: rgb(1, 1, 1),
       font: font,
-    }); 
+    });
     page.drawText(
       "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
       {
@@ -2529,31 +2466,35 @@ const BuyLetterForm = () => {
       color: rgb(0.6, 0.6, 0.6),
     });
 
-    page.drawLine({
-      start: { x: 50, y: 70 },
-      end: { x: 545, y: 70 },
-      thickness: 0.5,
-      color: rgb(0.8, 0.8, 0.8),
-    });
-
-    page.drawText("Thank you for your business!", {
-      x: 220,
-      y: 50,
-      size: 12,
-      color: rgb(0.047, 0.098, 0.196),
-      font: boldFont,
-    });
-
-    page.drawText(
-      "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014",
-      {
-        x: 160,
+    try {
+      const thank = "Thank you for your business!";
+      const addr =
+        "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+      const thankW = boldFont.widthOfTextAtSize(thank, 12);
+      const addrW = font.widthOfTextAtSize(addr, 9);
+      const centerXThank = (595 - thankW) / 2;
+      const centerXAddr = (595 - addrW) / 2;
+      page.drawLine({
+        start: { x: 20, y: 70 },
+        end: { x: 575, y: 70 },
+        thickness: 0.5,
+        color: rgb(0.8, 0.8, 0.8),
+      });
+      page.drawText(thank, {
+        x: centerXThank,
+        y: 50,
+        size: 12,
+        color: rgb(0.047, 0.098, 0.196),
+        font: boldFont,
+      });
+      page.drawText(addr, {
+        x: centerXAddr,
         y: 30,
-        size: 8,
+        size: 9,
         color: rgb(0.5, 0.5, 0.5),
         font: font,
-      },
-    );
+      });
+    } catch (e) {}
   };
 
   return (
@@ -2701,7 +2642,7 @@ const BuyLetterForm = () => {
           </div>
 
           <form className="form" style={styles.form}>
-            {/* Vehicle Selection from Inventory */}
+            {}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <Car style={styles.sectionIcon} /> Select Vehicle from Inventory

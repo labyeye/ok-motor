@@ -1,5 +1,5 @@
 
-const { PDFDocument, rgb, degrees } = require("pdf-lib");
+const { PDFDocument, rgb, degrees, StandardFonts } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
 
@@ -155,6 +155,48 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const firstPage = pdfDoc.getPages()[0];
 
+    // embed logo for header/footer if available
+    let logoImage = null;
+    try {
+      const logoPath = path.join(__dirname, "../../frontend/src/images/okmotorback.png");
+      if (fs.existsSync(logoPath)) {
+        const logoBytes = fs.readFileSync(logoPath);
+        logoImage = await pdfDoc.embedPng(logoBytes);
+      }
+    } catch (logoErr) {
+      console.warn("Logo not found for buy letter header:", logoErr.message || logoErr);
+      logoImage = null;
+    }
+
+    const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    const addHeaderFooterToPage = (page) => {
+      try {
+        page.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });
+        if (logoImage) {
+          page.drawImage(logoImage, { x: 50, y: 743, width: 150, height: 120 });
+          try { page.drawImage(logoImage, { x: 180, y: 430, width: 260, height: 220, opacity: 0.3 }); } catch (e) {}
+        }
+        page.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 805, size: 14, color: rgb(1, 1, 1), font: headerFont });
+        page.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 785, size: 14, color: rgb(1, 1, 1), font: headerFont });
+
+        try {
+          const thank = "Thank you for your business!";
+          const addr = "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+          const thankW = headerFont.widthOfTextAtSize(thank, 12);
+          const addrW = regularFont.widthOfTextAtSize(addr, 9);
+          const centerXThank = (595 - thankW) / 2;
+          const centerXAddr = (595 - addrW) / 2;
+          page.drawLine({ start: { x: 20, y: 52 }, end: { x: 575, y: 52 }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
+          page.drawText(thank, { x: centerXThank, y: 40, size: 12, color: rgb(0, 0, 0), font: headerFont });
+          page.drawText(addr, { x: centerXAddr, y: 26, size: 9, color: rgb(0.45, 0.45, 0.45), font: regularFont });
+        } catch (e) {}
+      } catch (err) {
+        console.warn("Failed to draw header/footer on page:", err && err.message ? err.message : err);
+      }
+    };
+
     
     const formattedData = {
       ...buyLetterData,
@@ -250,6 +292,12 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
       size: 20,
       color: rgb(0, 0, 0),
     });
+
+    // apply header/footer to all pages except the first (letter) page
+    const allPages = pdfDoc.getPages();
+    for (let i = 1; i < allPages.length; i++) {
+      try { addHeaderFooterToPage(allPages[i]); } catch (e) { console.warn('Header/footer draw failed on page', i, e && e.message ? e.message : e); }
+    }
 
     if (returnBuffer) {
       const pdfBytes = await pdfDoc.save();
