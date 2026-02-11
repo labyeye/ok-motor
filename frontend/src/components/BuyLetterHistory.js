@@ -1283,13 +1283,26 @@ const BuyLetterHistory = () => {
       rotate: degrees(45),
     });
 
-    page.drawText("UDAYAM-BR-26-0028550", {
-      x: 330,
-      y: 805,
-      size: 18,
-      color: rgb(1, 1, 1),
-      font: font,
-    });
+     page.drawText("UDAYAM-BR-26-0028550", {
+          x: 330,
+          y: 815,
+          size: 14,
+          color: rgb(1, 1, 1),
+          font: font,
+        });
+        page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+          x: 330,
+          y: 795,
+          size: 14,
+          color: rgb(1, 1, 1),
+          font: font,
+        });  
+        try {
+          page.drawText(
+            "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+            { x: 50, y: 28, size: 8, color: rgb(1, 1, 1), font },
+          );
+        } catch (e) {}
     page.drawText(
       "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
       {

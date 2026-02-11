@@ -401,6 +401,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       if (formattedData.saleAmount && formattedData.amountInWords) {
         const page = pdfDoc.getPages()[0];
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
 
         const saleText = `${formattedData.saleAmount}`;
         const xBase = sellLetterFieldPositions.saleAmount.x;
@@ -440,6 +441,8 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
   const drawVehicleInvoice = async (page, pdfDoc, letter) => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
+
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const logoUrl = logo1;
     const logoImageBytes = await fetch(logoUrl).then((res) =>
@@ -472,10 +475,17 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
-      y: 805,
-      size: 18,
+      y: 815,
+      size: 14,
       color: rgb(1, 1, 1),
-      font: font,
+      font: fontBold,
+    });
+    page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+      x: 330,
+      y: 795,
+      size: 14,
+      color: rgb(1, 1, 1),
+      font: fontBold,
     });
     page.drawText(
       "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
@@ -902,10 +912,17 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
-      y: 805,
-      size: 18,
+      y: 815,
+      size: 14,
       color: rgb(1, 1, 1),
-      font: font,
+      font: boldFont,
+    });
+    page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+      x: 330,
+      y: 795,
+      size: 14,
+      color: rgb(1, 1, 1),
+      font: boldFont,
     });
     page.drawText(
       "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
@@ -1196,10 +1213,17 @@ const BikeHistory = ({ externalSearchTerm }) => {
     });
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
-      y: 385,
-      size: 18,
+      y: 395,
+      size: 14,
       color: rgb(1, 1, 1),
-      font: font,
+      font: boldFont,
+    });
+    page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+      x: 330,
+      y: 375,
+      size: 14,
+      color: rgb(1, 1, 1),
+      font: boldFont,
     });
 
     page.drawText("TERMS & CONDITIONS", {
@@ -1547,6 +1571,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       if (formattedData.saleAmount && formattedData.amountInWords) {
         const page = pdfDoc.getPages()[0];
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
 
         const saleText = `${formattedData.saleAmount}`;
         const xBase = sellLetterFieldPositions.saleAmount.x;

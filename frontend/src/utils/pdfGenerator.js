@@ -196,6 +196,13 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.8, 0.8, 0.8),
       font: fontBold,
     });
+    currentPage.drawText("GSTIN: 22ABCDE1234F1Z5", {
+      x: 400,
+      y: 780,
+      size: 14,
+      color: rgb(0.8, 0.8, 0.8),
+      font: fontBold,
+    });
 
     // Title Section
     currentPage.drawRectangle({

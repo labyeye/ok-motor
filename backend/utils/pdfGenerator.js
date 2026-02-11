@@ -220,7 +220,19 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.8, 0.8, 0.8),
       font: fontBold,
     });
-    if (serviceBill.taxEnabled) {
+    // Render GSTIN next to UDAYAM when missing — prefer bill value, then env, then fallback
+    try {
+      const headerGSTIN =
+        (serviceBill && serviceBill.businessGSTIN) || process.env.DEFAULT_GSTIN || "10BZFPR3150P1Z8";
+      currentPage.drawText(`GSTIN: ${headerGSTIN}`, {
+        x: 400,
+        y: 795,
+        size: 14,
+        color: rgb(0.8, 0.8, 0.8),
+        font: fontBold,
+      });
+    } catch (e) {
+      // fallback to a safe hardcoded GSTIN if anything goes wrong
       currentPage.drawText("GSTIN: 10BZFPR3150P1Z8", {
         x: 400,
         y: 795,

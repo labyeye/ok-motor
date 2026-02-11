@@ -201,8 +201,7 @@ const SellLetterForm = () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE =
-        process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+      const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
@@ -1150,6 +1149,73 @@ const SellLetterForm = () => {
               color: rgb(255, 255, 255, 1),
               font,
             });
+            page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+              x: 330,
+              y: 780,
+              size: 18,
+              color: rgb(255, 255, 255, 1),
+              font,
+            });
+            // Footer for document pages (address / phone / gstin)
+            try {
+              page.drawText(
+                "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+                {
+                  x: 50,
+                  y: 28,
+                  size: 8,
+                  color: rgb(1, 1, 1),
+                  font,
+                },
+              );
+            } catch (e) {
+              // ignore footer errors
+            }
+            // Footer for document pages (address / phone / gstin)
+            try {
+              page.drawText(
+                "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+                {
+                  x: 50,
+                  y: 28,
+                  size: 8,
+                  color: rgb(1, 1, 1),
+                  font,
+                },
+              );
+            } catch (e) {
+              // ignore footer errors
+            }
+            // Footer for document pages (address / phone / gstin)
+            try {
+              page.drawText(
+                "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+                {
+                  x: 50,
+                  y: 28,
+                  size: 8,
+                  color: rgb(0.8, 0.8, 0.8),
+                  font,
+                },
+              );
+            } catch (e) {
+              // ignore footer errors on older pdf-lib builds
+            }
+            // Footer for document pages (address / phone / gstin)
+            try {
+              page.drawText(
+                "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+                {
+                  x: 50,
+                  y: 28,
+                  size: 8,
+                  color: rgb(0.8, 0.8, 0.8),
+                  font,
+                },
+              );
+            } catch (e) {
+              // ignore footer errors on older pdf-lib builds
+            }
             page.drawRectangle({
               x: 0,
               y: 750,
@@ -1751,10 +1817,17 @@ const SellLetterForm = () => {
 
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
-      y: 805,
-      size: 18,
+      y: 815,
+      size: 14,
       color: rgb(1, 1, 1),
-      font: font,
+      font: boldFont,
+    });
+    page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+      x: 330,
+      y: 795,
+      size: 14,
+      color: rgb(1, 1, 1),
+      font: boldFont,
     });
     page.drawRectangle({
       x: 0,
@@ -2065,10 +2138,17 @@ const SellLetterForm = () => {
     });
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
-      y: 415,
-      size: 18,
+      y: 395,
+      size: 14,
       color: rgb(1, 1, 1),
-      font: font,
+      font: boldFont,
+    });
+    page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+      x: 330,
+      y: 375,
+      size: 14,
+      color: rgb(1, 1, 1),
+      font: boldFont,
     });
 
     page.drawText("TERMS & CONDITIONS", {
@@ -2390,6 +2470,13 @@ const SellLetterForm = () => {
               color: rgb(255, 255, 255, 1),
               font,
             });
+            page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+              x: 330,
+              y: 780,
+              size: 18,
+              color: rgb(255, 255, 255, 1),
+              font,
+            });
             page.drawRectangle({
               x: 0,
               y: 750,
@@ -2647,6 +2734,13 @@ const SellLetterForm = () => {
             page.drawText("UDAYAM-BR-26-0028550", {
               x: 330,
               y: 805,
+              size: 18,
+              color: rgb(255, 255, 255, 1),
+              font,
+            });
+            page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+              x: 330,
+              y: 780,
               size: 18,
               color: rgb(255, 255, 255, 1),
               font,

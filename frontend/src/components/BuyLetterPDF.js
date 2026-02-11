@@ -1525,6 +1525,43 @@ const BuyLetterForm = () => {
               color: rgb(1, 1, 1),
               font,
             });
+            page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+              x: 330,
+              y: 785,
+              size: 18,
+              color: rgb(1, 1, 1),
+              font,
+            });
+            // Footer for document pages (address / phone / gstin)
+            try {
+              page.drawText(
+                "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+                {
+                  x: 50,
+                  y: 28,
+                  size: 8,
+                  color: rgb(1, 1, 1),
+                  font,
+                },
+              );
+            } catch (e) {
+              // ignore footer errors
+            }
+            // Footer for document pages (address / phone / gstin)
+            try {
+              page.drawText(
+                "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+                {
+                  x: 50,
+                  y: 28,
+                  size: 8,
+                  color: rgb(1, 1, 1),
+                  font,
+                },
+              );
+            } catch (e) {
+              // ignore footer errors
+            }
             page.drawRectangle({
               x: 0,
               y: 750,
@@ -1897,6 +1934,13 @@ const BuyLetterForm = () => {
               color: rgb(1, 1, 1),
               font,
             });
+            page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+              x: 330,
+              y: 785,
+              size: 18,
+              color: rgb(1, 1, 1),
+              font,
+            });
             page.drawRectangle({
               x: 0,
               y: 750,
@@ -2143,11 +2187,18 @@ const BuyLetterForm = () => {
 
     page.drawText("UDAYAM-BR-26-0028550", {
       x: 330,
-      y: 803,
-      size: 18,
+      y: 805,
+      size: 14,
       color: rgb(1, 1, 1),
       font: font,
     });
+    page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+      x: 330,
+      y: 785,
+      size: 14,
+      color: rgb(1, 1, 1),
+      font: font,
+    }); 
     page.drawText(
       "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
       {

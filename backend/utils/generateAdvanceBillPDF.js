@@ -189,7 +189,13 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       color: rgb(0.8, 0.8, 0.8),
       font: fontBold,
     });
-
+     page.drawText("GSTIN: 10BZFPR3150P1Z8", {
+        x: 400,
+        y: 795,
+        size: 14,
+        color: rgb(0.8, 0.8, 0.8),
+        font: fontBold,
+      });
     page.drawRectangle({
       x: 0,
       y: 750,

@@ -134,6 +134,13 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
     color: rgb(0.8, 0.8, 0.8),
     font: fontBold,
   });
+  page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+    x: 400,
+    y: 795,
+    size: 14,
+    color: rgb(0.8, 0.8, 0.8),
+    font: fontBold,
+  });
   page.drawRectangle({
     x: 0,
     y: 750,
