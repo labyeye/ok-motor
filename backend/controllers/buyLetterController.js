@@ -19,8 +19,8 @@ exports.createBuyLetter = [
     { name: "aadhaarBack" },
     { name: "panPhoto" },
     { name: "deliveryPhoto" },
-    { name: "insuranceNOCFront" },
-    { name: "insuranceNOCBack" },
+    // support multiple NOC pages/files
+    { name: "insuranceNOC", maxCount: 20 },
     { name: "vehiclePhotos" },
   ]),
   async (req, res) => {
@@ -60,7 +60,8 @@ exports.createBuyLetter = [
         aadhaar: { front: null, back: null },
         pan: null,
         deliveryPhoto: null,
-        insuranceNOC: { front: null, back: null },
+        // insuranceNOC.pages will store ordered page urls (images or single-page PDFs)
+        insuranceNOC: { pages: [] },
         vehiclePhotos: [],
       };
 
@@ -77,11 +78,29 @@ exports.createBuyLetter = [
         }
       }
 
-      const processFile = async (file, nameHint) => {
+      const { PDFDocument } = require('pdf-lib');
+
+      const processImageFile = async (file, nameHint) => {
         const compressed = await compressBuffer(file.buffer, 100);
         const filename = `${Date.now()}-${nameHint}`;
-        const uploaded = await uploadBufferToImageKit(compressed, filename);
+        const uploaded = await uploadBufferToImageKit(compressed, filename, file.mimetype || 'image/jpeg');
         return uploaded.url;
+      };
+
+      const processPdfFileToPages = async (file, nameHint) => {
+        // Split multi-page PDF into single-page PDF buffers and upload each page separately
+        const srcPdf = await PDFDocument.load(file.buffer);
+        const pageUrls = [];
+        for (let i = 0; i < srcPdf.getPageCount(); i++) {
+          const newPdf = await PDFDocument.create();
+          const [copied] = await newPdf.copyPages(srcPdf, [i]);
+          newPdf.addPage(copied);
+          const singlePageBytes = await newPdf.save();
+          const filename = `${Date.now()}-${nameHint}-page-${i + 1}.pdf`;
+          const uploaded = await uploadBufferToImageKit(Buffer.from(singlePageBytes), filename, 'application/pdf');
+          pageUrls.push(uploaded.url);
+        }
+        return pageUrls;
       };
 
       try {
@@ -146,22 +165,22 @@ exports.createBuyLetter = [
           }
         }
 
-        if (files.insuranceNOCFront && files.insuranceNOCFront[0]) {
-          uploadedUrls.insuranceNOC.front = await processFile(
-            files.insuranceNOCFront[0],
-            "insurance-noc-front",
-          );
-        } else if (preservedDocs.insuranceNOCFront) {
-          uploadedUrls.insuranceNOC.front = preservedDocs.insuranceNOCFront;
-        }
-
-        if (files.insuranceNOCBack && files.insuranceNOCBack[0]) {
-          uploadedUrls.insuranceNOC.back = await processFile(
-            files.insuranceNOCBack[0],
-            "insurance-noc-back",
-          );
-        } else if (preservedDocs.insuranceNOCBack) {
-          uploadedUrls.insuranceNOC.back = preservedDocs.insuranceNOCBack;
+        // Handle multiple insuranceNOC uploads (images or PDFs)
+        if (files.insuranceNOC && files.insuranceNOC.length) {
+          for (let i = 0; i < files.insuranceNOC.length && uploadedUrls.insuranceNOC.pages.length < 50; i++) {
+            const f = files.insuranceNOC[i];
+            if (f.mimetype === 'application/pdf' || f.originalname?.toLowerCase().endsWith('.pdf')) {
+              // split into pages and append all page urls
+              const pageUrls = await processPdfFileToPages(f, `insurance-noc-${i}`);
+              uploadedUrls.insuranceNOC.pages.push(...pageUrls);
+            } else {
+              const url = await processImageFile(f, `insurance-noc-${i}`);
+              uploadedUrls.insuranceNOC.pages.push(url);
+            }
+          }
+        } else if (preservedDocs.insuranceNOC && Array.isArray(preservedDocs.insuranceNOC)) {
+          // preservedDocs may contain array of urls
+          uploadedUrls.insuranceNOC.pages = uploadedUrls.insuranceNOC.pages.concat(preservedDocs.insuranceNOC);
         }
       } catch (uploadErr) {
         console.error("Image upload failed, aborting create:", uploadErr);

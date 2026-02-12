@@ -34,7 +34,6 @@ import {
 } from "lucide-react";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
-
 import { useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import ImageCropper from "./ImageCropper";
@@ -94,6 +93,8 @@ const BuyLetterForm = () => {
     deliveryPhoto: null,
     insuranceNOCFront: null,
     insuranceNOCBack: null,
+    // new: support multiple NOC files (images or PDFs)
+    insuranceNOC: [],
   });
 
   const [filePreviews, setFilePreviews] = useState({});
@@ -106,6 +107,8 @@ const BuyLetterForm = () => {
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [uploadModalFieldName, setUploadModalFieldName] = useState(null);
   const [uploadModalAllowPdf, setUploadModalAllowPdf] = useState(false);
+  const [uploadModalAllowMultiple, setUploadModalAllowMultiple] =
+    useState(false);
 
   useEffect(() => {
     return () => {
@@ -314,20 +317,17 @@ const BuyLetterForm = () => {
           if (full.documents.insuranceNOCUploadMode) {
             setInsuranceNOCUploadMode(full.documents.insuranceNOCUploadMode);
           } else {
-            const sameUrl =
-              full.documents.insuranceNOC?.front ===
-              full.documents.insuranceNOC?.back;
+            // determine mode based on pages count
+            const pages = full.documents.insuranceNOC?.pages || [];
             setInsuranceNOCUploadMode(
-              sameUrl && full.documents.insuranceNOC?.front
-                ? "single"
-                : "separate",
+              pages.length <= 1 ? "single" : "separate",
             );
           }
-          if (full.documents.insuranceNOC) {
-            previews.insuranceNOCFront =
-              full.documents.insuranceNOC.front || null;
-            previews.insuranceNOCBack =
-              full.documents.insuranceNOC.back || null;
+          if (
+            full.documents.insuranceNOC &&
+            Array.isArray(full.documents.insuranceNOC.pages)
+          ) {
+            previews.insuranceNOC = full.documents.insuranceNOC.pages.slice();
           }
 
           setFilePreviews((prev) => ({ ...prev, ...previews }));
@@ -727,7 +727,8 @@ const BuyLetterForm = () => {
         filesState.panPhoto ||
         filesState.deliveryPhoto ||
         filesState.insuranceNOCFront ||
-        filesState.insuranceNOCBack;
+        filesState.insuranceNOCBack ||
+        (filesState.insuranceNOC && filesState.insuranceNOC.length > 0);
 
       if (hasFiles) {
         const form = new FormData();
@@ -762,6 +763,13 @@ const BuyLetterForm = () => {
         if (filesState.insuranceNOCBack)
           form.append("insuranceNOCBack", filesState.insuranceNOCBack);
 
+        // append multiple insurance NOC files (images or PDFs)
+        if (filesState.insuranceNOC && filesState.insuranceNOC.length) {
+          for (let i = 0; i < filesState.insuranceNOC.length; i++) {
+            form.append("insuranceNOC", filesState.insuranceNOC[i]);
+          }
+        }
+
         if (editLetter?._id && editLetter.documents) {
           const preservedDocs = {};
 
@@ -791,6 +799,19 @@ const BuyLetterForm = () => {
           }
           if (!filesState.insuranceNOCBack && filePreviews.insuranceNOCBack) {
             preservedDocs.insuranceNOCBack = filePreviews.insuranceNOCBack;
+          }
+
+          // preserve multi NOC pages if present
+          if (
+            !filesState.insuranceNOC ||
+            filesState.insuranceNOC.length === 0
+          ) {
+            if (
+              filePreviews.insuranceNOC &&
+              Array.isArray(filePreviews.insuranceNOC)
+            ) {
+              preservedDocs.insuranceNOC = filePreviews.insuranceNOC;
+            }
           }
 
           if (Object.keys(preservedDocs).length > 0) {
@@ -854,6 +875,8 @@ const BuyLetterForm = () => {
   const handleFileInput = (fieldName, allowPdf = false) => {
     setUploadModalFieldName(fieldName);
     setUploadModalAllowPdf(allowPdf);
+    // only allow multiple selection for insurance NOC
+    setUploadModalAllowMultiple(fieldName === "insuranceNOC");
     setShowFileUploadModal(true);
   };
 
@@ -875,6 +898,44 @@ const BuyLetterForm = () => {
     }
 
     try {
+      // If multiple files were returned (when allowMultiple used)
+      if (Array.isArray(file)) {
+        // currently only multi-support for insuranceNOC
+        if (uploadModalFieldName === "insuranceNOC") {
+          const filesArr = file;
+          // save original files for upload
+          setFilesState((prev) => ({ ...prev, insuranceNOC: filesArr }));
+
+          // build previews: for images use object URL, for PDFs try to get first-page image
+          const previews = [];
+          for (const f of filesArr) {
+            if (isImageFile(f)) {
+              previews.push(URL.createObjectURL(f));
+            } else if (isPdfFile(f)) {
+              try {
+                const pdfImages = await convertPdfToImages(f);
+                if (Array.isArray(pdfImages) && pdfImages.length) {
+                  // push all pages' data urls so user can see count and first page
+                  pdfImages.forEach((p) => previews.push(p.data));
+                } else {
+                  previews.push(URL.createObjectURL(f));
+                }
+              } catch (err) {
+                previews.push(URL.createObjectURL(f));
+              }
+            } else {
+              previews.push(URL.createObjectURL(f));
+            }
+          }
+
+          setFilePreviews((prev) => ({ ...prev, insuranceNOC: previews }));
+          setShowFileUploadModal(false);
+          return;
+        }
+        // fallback: if array but not insuranceNOC, take first
+        file = file[0];
+      }
+
       if (isPdfFile(file)) {
         let convertedFile = null;
         let previewImage = null;
@@ -896,61 +957,6 @@ const BuyLetterForm = () => {
 
         const finalFile = convertedFile || file;
         const effectivePreview = previewImage || pdfUrl;
-
-        if (
-          uploadModalFieldName === "aadhaarFront" &&
-          aadhaarUploadMode === "single"
-        ) {
-          setFilesState((prev) => ({
-            ...prev,
-            aadhaarFront: finalFile,
-            aadhaarBack: finalFile,
-          }));
-          setFilePreviews((prev) => ({
-            ...prev,
-            aadhaarFront: effectivePreview,
-            aadhaarBack: effectivePreview,
-          }));
-        } else if (
-          uploadModalFieldName === "vehicleRCFront" &&
-          vehicleRCUploadMode === "single"
-        ) {
-          setFilesState((prev) => ({
-            ...prev,
-            vehicleRCFront: finalFile,
-            vehicleRCBack: finalFile,
-          }));
-          setFilePreviews((prev) => ({
-            ...prev,
-            vehicleRCFront: effectivePreview,
-            vehicleRCBack: effectivePreview,
-          }));
-        } else if (
-          uploadModalFieldName === "insuranceNOCFront" &&
-          insuranceNOCUploadMode === "single"
-        ) {
-          setFilesState((prev) => ({
-            ...prev,
-            insuranceNOCFront: finalFile,
-            insuranceNOCBack: finalFile,
-          }));
-          setFilePreviews((prev) => ({
-            ...prev,
-            insuranceNOCFront: effectivePreview,
-            insuranceNOCBack: effectivePreview,
-          }));
-        } else {
-          setFilesState((prev) => ({
-            ...prev,
-            [uploadModalFieldName]: finalFile,
-          }));
-          setFilePreviews((prev) => ({
-            ...prev,
-            [uploadModalFieldName]: effectivePreview,
-          }));
-        }
-        setShowFileUploadModal(false);
-        return;
       }
 
       if (isImageFile(file)) {
@@ -1415,6 +1421,7 @@ const BuyLetterForm = () => {
         }
         if (documentsObj.pan)
           items.push({ title: "PAN Card", url: documentsObj.pan });
+        // insuranceNOC pages are handled separately (each page must become its own PDF page)
         if (documentsObj.deliveryPhoto || documentsObj.vehicleKM)
           items.push({
             title: "Delivery Photo",
@@ -3347,6 +3354,79 @@ const BuyLetterForm = () => {
                   </div>
                 )}
 
+                {/* Multiple NOC pages upload (images or multi-page PDF) */}
+                <div style={{ ...styles.formField, width: "100%" }}>
+                  <label style={styles.formLabel}>Insurance NOC Pages</label>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleFileInput("insuranceNOC", true)}
+                      style={styles.uploadBtn}
+                    >
+                      <Image size={20} />{" "}
+                      {filePreviews.insuranceNOC ? "Change" : "Upload Pages"}
+                    </button>
+                    {filePreviews.insuranceNOC && (
+                      <div style={{ fontSize: "14px", color: "#333" }}>
+                        {Array.isArray(filePreviews.insuranceNOC)
+                          ? `${filePreviews.insuranceNOC.length} page(s)`
+                          : "1 page"}
+                      </div>
+                    )}
+                    {filePreviews.insuranceNOC && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilesState((prev) => ({
+                            ...prev,
+                            insuranceNOC: [],
+                          }));
+                          setFilePreviews((prev) => ({
+                            ...prev,
+                            insuranceNOC: null,
+                          }));
+                        }}
+                        style={{
+                          ...styles.uploadBtn,
+                          backgroundColor: "#ef4444",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {filePreviews.insuranceNOC &&
+                    Array.isArray(filePreviews.insuranceNOC) && (
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          marginTop: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {filePreviews.insuranceNOC.slice(0, 6).map((u, idx) => (
+                          <img
+                            key={idx}
+                            src={u}
+                            alt={`noc-${idx + 1}`}
+                            style={{
+                              width: 100,
+                              height: 80,
+                              objectFit: "cover",
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                </div>
+
                 {/* Aadhaar Upload Mode Toggle */}
                 <div style={{ ...styles.formField, width: "100%" }}>
                   <label style={{ ...styles.formLabel, marginBottom: "12px" }}>
@@ -3636,10 +3716,10 @@ const BuyLetterForm = () => {
                   )}
                 </div>
 
-                {/* Insurance NOC Upload Mode Toggle */}
+                {/* Aadhaar Upload Mode Toggle */}
                 <div style={{ ...styles.formField, width: "100%" }}>
                   <label style={{ ...styles.formLabel, marginBottom: "12px" }}>
-                    Insurance NOC Upload Mode
+                    Aadhaar Upload Mode
                   </label>
                   <div
                     style={{
@@ -3659,20 +3739,21 @@ const BuyLetterForm = () => {
                     >
                       <input
                         type="radio"
-                        name="insuranceNOCUploadMode"
+                        name="aadhaarUploadMode"
                         value="single"
-                        checked={insuranceNOCUploadMode === "single"}
+                        checked={aadhaarUploadMode === "single"}
                         onChange={(e) => {
-                          setInsuranceNOCUploadMode(e.target.value);
+                          setAadhaarUploadMode(e.target.value);
+                          // Clear aadhaar files when switching modes
                           setFilesState((prev) => ({
                             ...prev,
-                            insuranceNOCFront: null,
-                            insuranceNOCBack: null,
+                            aadhaarFront: null,
+                            aadhaarBack: null,
                           }));
                           setFilePreviews((prev) => ({
                             ...prev,
-                            insuranceNOCFront: null,
-                            insuranceNOCBack: null,
+                            aadhaarFront: null,
+                            aadhaarBack: null,
                           }));
                         }}
                         style={{ cursor: "pointer" }}
@@ -3691,20 +3772,21 @@ const BuyLetterForm = () => {
                     >
                       <input
                         type="radio"
-                        name="insuranceNOCUploadMode"
+                        name="aadhaarUploadMode"
                         value="separate"
-                        checked={insuranceNOCUploadMode === "separate"}
+                        checked={aadhaarUploadMode === "separate"}
                         onChange={(e) => {
-                          setInsuranceNOCUploadMode(e.target.value);
+                          setAadhaarUploadMode(e.target.value);
+                          // Clear aadhaar files when switching modes
                           setFilesState((prev) => ({
                             ...prev,
-                            insuranceNOCFront: null,
-                            insuranceNOCBack: null,
+                            aadhaarFront: null,
+                            aadhaarBack: null,
                           }));
                           setFilePreviews((prev) => ({
                             ...prev,
-                            insuranceNOCFront: null,
-                            insuranceNOCBack: null,
+                            aadhaarFront: null,
+                            aadhaarBack: null,
                           }));
                         }}
                         style={{ cursor: "pointer" }}
@@ -3716,38 +3798,35 @@ const BuyLetterForm = () => {
                   </div>
                 </div>
 
-                {insuranceNOCUploadMode === "single" ? (
+                {/* Render upload fields based on mode */}
+                {aadhaarUploadMode === "single" ? (
                   <div style={styles.formField}>
                     <label style={styles.formLabel}>
-                      Insurance NOC (Front and Back)
+                      Aadhaar (Front and Back)
                     </label>
                     <div
                       style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
                     >
                       <button
                         type="button"
-                        onClick={() =>
-                          handleFileInput("insuranceNOCFront", true)
-                        }
+                        onClick={() => handleFileInput("aadhaarFront", true)}
                         style={styles.uploadBtn}
                       >
                         <Image size={20} />{" "}
-                        {filePreviews.insuranceNOCFront
-                          ? "Change"
-                          : "Choose File"}
+                        {filePreviews.aadhaarFront ? "Change" : "Choose File"}
                       </button>
-                      {filePreviews.insuranceNOCFront && (
+                      {filePreviews.aadhaarFront && (
                         <button
                           type="button"
                           onClick={() => {
-                            handleRemoveFile("insuranceNOCFront");
+                            handleRemoveFile("aadhaarFront");
                             setFilesState((prev) => ({
                               ...prev,
-                              insuranceNOCBack: null,
+                              aadhaarBack: null,
                             }));
                             setFilePreviews((prev) => ({
                               ...prev,
-                              insuranceNOCBack: null,
+                              aadhaarBack: null,
                             }));
                           }}
                           style={{
@@ -3759,10 +3838,10 @@ const BuyLetterForm = () => {
                         </button>
                       )}
                     </div>
-                    {filePreviews.insuranceNOCFront && (
+                    {filePreviews.aadhaarFront && (
                       <img
-                        src={filePreviews.insuranceNOCFront}
-                        alt="noc-front"
+                        src={filePreviews.aadhaarFront}
+                        alt="aadhaar"
                         style={styles.previewImg}
                       />
                     )}
@@ -3777,9 +3856,7 @@ const BuyLetterForm = () => {
                     }}
                   >
                     <div style={{ ...styles.formField, flex: "1 1 200px" }}>
-                      <label style={styles.formLabel}>
-                        Insurance NOC - Front
-                      </label>
+                      <label style={styles.formLabel}>Aadhaar (Front)</label>
                       <div
                         style={{
                           display: "flex",
@@ -3789,22 +3866,16 @@ const BuyLetterForm = () => {
                       >
                         <button
                           type="button"
-                          onClick={() =>
-                            handleFileInput("insuranceNOCFront", true)
-                          }
+                          onClick={() => handleFileInput("aadhaarFront", true)}
                           style={styles.uploadBtn}
                         >
                           <Image size={20} />{" "}
-                          {filePreviews.insuranceNOCFront
-                            ? "Change"
-                            : "Choose File"}
+                          {filePreviews.aadhaarFront ? "Change" : "Choose File"}
                         </button>
-                        {filePreviews.insuranceNOCFront && (
+                        {filePreviews.aadhaarFront && (
                           <button
                             type="button"
-                            onClick={() =>
-                              handleRemoveFile("insuranceNOCFront")
-                            }
+                            onClick={() => handleRemoveFile("aadhaarFront")}
                             style={{
                               ...styles.uploadBtn,
                               backgroundColor: "#ef4444",
@@ -3814,19 +3885,17 @@ const BuyLetterForm = () => {
                           </button>
                         )}
                       </div>
-                      {filePreviews.insuranceNOCFront && (
+                      {filePreviews.aadhaarFront && (
                         <img
-                          src={filePreviews.insuranceNOCFront}
-                          alt="noc-front"
+                          src={filePreviews.aadhaarFront}
+                          alt="aadhaar-front"
                           style={styles.previewImg}
                         />
                       )}
                     </div>
 
                     <div style={{ ...styles.formField, flex: "1 1 200px" }}>
-                      <label style={styles.formLabel}>
-                        Insurance NOC - Back
-                      </label>
+                      <label style={styles.formLabel}>Aadhaar (Back)</label>
                       <div
                         style={{
                           display: "flex",
@@ -3836,20 +3905,16 @@ const BuyLetterForm = () => {
                       >
                         <button
                           type="button"
-                          onClick={() =>
-                            handleFileInput("insuranceNOCBack", true)
-                          }
+                          onClick={() => handleFileInput("aadhaarBack", true)}
                           style={styles.uploadBtn}
                         >
                           <Image size={20} />{" "}
-                          {filePreviews.insuranceNOCBack
-                            ? "Change"
-                            : "Choose File"}
+                          {filePreviews.aadhaarBack ? "Change" : "Choose File"}
                         </button>
-                        {filePreviews.insuranceNOCBack && (
+                        {filePreviews.aadhaarBack && (
                           <button
                             type="button"
-                            onClick={() => handleRemoveFile("insuranceNOCBack")}
+                            onClick={() => handleRemoveFile("aadhaarBack")}
                             style={{
                               ...styles.uploadBtn,
                               backgroundColor: "#ef4444",
@@ -3859,16 +3924,159 @@ const BuyLetterForm = () => {
                           </button>
                         )}
                       </div>
-                      {filePreviews.insuranceNOCBack && (
+                      {filePreviews.aadhaarBack && (
                         <img
-                          src={filePreviews.insuranceNOCBack}
-                          alt="noc-back"
+                          src={filePreviews.aadhaarBack}
+                          alt="aadhaar-back"
                           style={styles.previewImg}
                         />
                       )}
                     </div>
                   </div>
                 )}
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>PAN Card Photo</label>
+                  <div
+                    style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleFileInput("panPhoto", true)}
+                      style={styles.uploadBtn}
+                    >
+                      <Image size={20} />{" "}
+                      {filePreviews.panPhoto ? "Change" : "Choose File"}
+                    </button>
+                    {filePreviews.panPhoto && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile("panPhoto")}
+                        style={{
+                          ...styles.uploadBtn,
+                          backgroundColor: "#ef4444",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {filePreviews.panPhoto && (
+                    <img
+                      src={filePreviews.panPhoto}
+                      alt="pan"
+                      style={styles.previewImg}
+                    />
+                  )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>Delivery Photo</label>
+                  <div
+                    style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleFileInput("deliveryPhoto")}
+                      style={styles.uploadBtn}
+                    >
+                      <Image size={20} />{" "}
+                      {filePreviews.deliveryPhoto ? "Change" : "Choose File"}
+                    </button>
+                    {filePreviews.deliveryPhoto && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile("deliveryPhoto")}
+                        style={{
+                          ...styles.uploadBtn,
+                          backgroundColor: "#ef4444",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {filePreviews.deliveryPhoto && (
+                    <img
+                      src={filePreviews.deliveryPhoto}
+                      alt="delivery"
+                      style={styles.previewImg}
+                    />
+                  )}
+                </div>
+
+                {/* Multiple NOC pages upload (images or multi-page PDF) */}
+                <div style={{ ...styles.formField, width: "100%" }}>
+                  <label style={styles.formLabel}>Insurance NOC Pages</label>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleFileInput("insuranceNOC", true)}
+                      style={styles.uploadBtn}
+                    >
+                      <Image size={20} />{" "}
+                      {filePreviews.insuranceNOC ? "Change" : "Upload Pages"}
+                    </button>
+                    {filePreviews.insuranceNOC && (
+                      <div style={{ fontSize: "14px", color: "#333" }}>
+                        {Array.isArray(filePreviews.insuranceNOC)
+                          ? `${filePreviews.insuranceNOC.length} page(s)`
+                          : "1 page"}
+                      </div>
+                    )}
+                    {filePreviews.insuranceNOC && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilesState((prev) => ({
+                            ...prev,
+                            insuranceNOC: [],
+                          }));
+                          setFilePreviews((prev) => ({
+                            ...prev,
+                            insuranceNOC: null,
+                          }));
+                        }}
+                        style={{
+                          ...styles.uploadBtn,
+                          backgroundColor: "#ef4444",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {filePreviews.insuranceNOC &&
+                    Array.isArray(filePreviews.insuranceNOC) && (
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          marginTop: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {filePreviews.insuranceNOC.slice(0, 6).map((u, idx) => (
+                          <img
+                            key={idx}
+                            src={u}
+                            alt={`noc-${idx + 1}`}
+                            style={{
+                              width: 100,
+                              height: 80,
+                              objectFit: "cover",
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                </div>
               </div>
             </div>
 
@@ -4321,6 +4529,7 @@ const BuyLetterForm = () => {
             onSelect={handleFileUploadSelect}
             onCancel={closeFileUploadModal}
             allowPdf={uploadModalAllowPdf}
+            allowMultiple={uploadModalAllowMultiple}
           />
         )}
       </div>

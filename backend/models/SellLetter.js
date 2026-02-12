@@ -95,6 +95,14 @@ const SellLetterSchema = new mongoose.Schema(
       pan: { type: String },
       deliveryPhoto: { type: String },
       vehiclePhotos: [{ type: String }],
+      insuranceNOC: {
+        pages: [{ type: String }],
+      },
+      insuranceNOCUploadMode: {
+        type: String,
+        enum: ["single", "separate"],
+        default: "separate",
+      },
       meta: { type: Object },
     },
 

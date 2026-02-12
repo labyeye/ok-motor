@@ -395,10 +395,8 @@ const AdminPage = () => {
           // Previously we flagged missing "Vehicle Photos" here.
           // The buy-letter model now uses an Insurance NOC document instead.
           // Check for Insurance NOC (front/back) and flag if missing.
-          if (
-            !letter.documents?.insuranceNOC?.front &&
-            !letter.documents?.insuranceNOC?.back
-          )
+          // Insurance NOC now stored as pages array
+          if (!letter.documents?.insuranceNOC?.pages || letter.documents.insuranceNOC.pages.length === 0)
             missingFields.push("Insurance NOC");
 
           return {

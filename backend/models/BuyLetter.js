@@ -78,8 +78,8 @@ const BuyLetterSchema = new mongoose.Schema({
     pan: { type: String },
     deliveryPhoto: { type: String },
     insuranceNOC: {
-      front: { type: String },
-      back: { type: String },
+      // store NOC as ordered array of page URLs (each page can be image or single-page PDF)
+      pages: [{ type: String }],
     },
     insuranceNOCUploadMode: {
       type: String,

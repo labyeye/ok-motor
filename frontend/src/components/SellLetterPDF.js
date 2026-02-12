@@ -159,6 +159,7 @@ const SellLetterForm = () => {
     panPhoto: null,
     deliveryPhoto: null,
     vehiclePhotos: [],
+    insuranceNOC: [],
   });
   const [filePreviews, setFilePreviews] = useState({});
 
@@ -172,6 +173,7 @@ const SellLetterForm = () => {
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [uploadModalFieldName, setUploadModalFieldName] = useState(null);
   const [uploadModalAllowPdf, setUploadModalAllowPdf] = useState(false);
+  const [uploadModalAllowMultiple, setUploadModalAllowMultiple] = useState(false);
 
   const [, setSavedSellLetter] = useState(null);
 
@@ -524,6 +526,7 @@ const SellLetterForm = () => {
   const handleFileInput = (fieldName, allowPdf = false) => {
     setUploadModalFieldName(fieldName);
     setUploadModalAllowPdf(allowPdf);
+    setUploadModalAllowMultiple(fieldName === "insuranceNOC");
     setShowFileUploadModal(true);
   };
 
@@ -546,6 +549,31 @@ const SellLetterForm = () => {
     }
 
     try {
+      // handle multiple files selection for insuranceNOC
+      if (Array.isArray(file)) {
+        if (uploadModalFieldName === "insuranceNOC") {
+          const filesArr = file;
+          setFilesState((prev) => ({ ...prev, insuranceNOC: filesArr }));
+          const previews = [];
+          for (const f of filesArr) {
+            if (isImageFile(f)) previews.push(URL.createObjectURL(f));
+            else if (isPdfFile(f)) {
+              try {
+                const pdfImages = await convertPdfToImages(f);
+                if (Array.isArray(pdfImages) && pdfImages.length) {
+                  pdfImages.forEach((p) => previews.push(p.data));
+                } else previews.push(URL.createObjectURL(f));
+              } catch (err) {
+                previews.push(URL.createObjectURL(f));
+              }
+            } else previews.push(URL.createObjectURL(f));
+          }
+          setFilePreviews((prev) => ({ ...prev, insuranceNOC: previews }));
+          setShowFileUploadModal(false);
+          return;
+        }
+        file = file[0];
+      }
       // Handle PDF files
       if (isPdfFile(file)) {
         // Convert first page of PDF to PNG and use that for upload + preview
@@ -1270,6 +1298,61 @@ const SellLetterForm = () => {
             }
           }
         }
+        // Add insurance NOC pages as individual PDF pages (preserve order)
+        if (documentsObj.insuranceNOC && Array.isArray(documentsObj.insuranceNOC.pages)) {
+          for (let i = 0; i < documentsObj.insuranceNOC.pages.length; i++) {
+            const url = documentsObj.insuranceNOC.pages[i];
+            try {
+              const res = await fetch(url);
+              const contentType = res.headers.get('content-type') || '';
+              const bytes = await res.arrayBuffer();
+              if (contentType.includes('pdf')) {
+                try {
+                  const srcPdf = await PDFDocument.load(bytes);
+                  const [copied] = await pdfDoc.copyPages(srcPdf, [0]);
+                  pdfDoc.addPage(copied);
+                } catch (err) {
+                  console.warn('Failed to copy PDF NOC page, fallback embedding as image', err);
+                  try {
+                    const embedded = await pdfDoc.embedJpg(bytes);
+                    const page = pdfDoc.addPage([595, 842]);
+                    const { width, height } = embedded.scale(1);
+                    const maxW = 555;
+                    const maxH = 802;
+                    let drawW = maxW;
+                    let drawH = (height / width) * drawW;
+                    if (drawH > maxH) {
+                      drawH = maxH;
+                      drawW = (width / height) * drawH;
+                    }
+                    page.drawImage(embedded, { x: 20, y: 20, width: drawW, height: drawH });
+                  } catch (e) {}
+                }
+              } else {
+                try {
+                  const embedded = contentType.includes('png')
+                    ? await pdfDoc.embedPng(bytes)
+                    : await pdfDoc.embedJpg(bytes);
+                  const page = pdfDoc.addPage([595, 842]);
+                  const { width, height } = embedded.scale(1);
+                  const maxW = 555;
+                  const maxH = 802;
+                  let drawW = maxW;
+                  let drawH = (height / width) * drawW;
+                  if (drawH > maxH) {
+                    drawH = maxH;
+                    drawW = (width / height) * drawH;
+                  }
+                  page.drawImage(embedded, { x: 20, y: 20, width: drawW, height: drawH });
+                } catch (e) {
+                  console.warn('Failed to embed NOC image page', e);
+                }
+              }
+            } catch (err) {
+              console.warn('Failed to fetch insurance NOC page', url, err);
+            }
+          }
+        }
       };
 
       // add invoice as final page
@@ -1511,7 +1594,8 @@ const SellLetterForm = () => {
         filesState.aadhaarBack ||
         filesState.panPhoto ||
         filesState.deliveryPhoto ||
-        (filesState.vehiclePhotos && filesState.vehiclePhotos.length > 0);
+        (filesState.vehiclePhotos && filesState.vehiclePhotos.length > 0) ||
+        (filesState.insuranceNOC && filesState.insuranceNOC.length > 0);
 
       if (hasFiles) {
         const form = new FormData();
@@ -1546,6 +1630,13 @@ const SellLetterForm = () => {
             .slice(0, 4)
             .forEach((f) => form.append("vehiclePhotos", f));
         }
+        // append multiple insurance NOC files if present
+        if (filesState.insuranceNOC && filesState.insuranceNOC.length) {
+          for (let i = 0; i < filesState.insuranceNOC.length; i++) {
+            form.append("insuranceNOC", filesState.insuranceNOC[i]);
+          }
+          form.append("insuranceNOCUploadMode", "separate");
+        }
 
         // If editing and some files weren't changed, preserve existing URLs
         if (editLetter?._id && editLetter.documents) {
@@ -1573,6 +1664,10 @@ const SellLetterForm = () => {
           }
           if (!filesState.deliveryPhoto && filePreviews.deliveryPhoto) {
             preservedDocs.deliveryPhoto = filePreviews.deliveryPhoto;
+          }
+          // preserve insurance NOC pages if not uploading new ones
+          if ((!filesState.insuranceNOC || filesState.insuranceNOC.length === 0) && filePreviews.insuranceNOC) {
+            preservedDocs.insuranceNOC = filePreviews.insuranceNOC;
           }
 
           // Send preserved URLs to backend
@@ -4254,6 +4349,44 @@ const SellLetterForm = () => {
                     ))}
                   </div>
                 </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>Insurance NOC Pages</label>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <button
+                      type="button"
+                      onClick={() => handleFileInput("insuranceNOC", true)}
+                      style={styles.uploadBtn}
+                    >
+                      <Image size={20} /> {filePreviews.insuranceNOC ? "Change" : "Upload Pages"}
+                    </button>
+                    {filePreviews.insuranceNOC && (
+                      <div style={{ fontSize: "14px", color: "#333" }}>
+                        {Array.isArray(filePreviews.insuranceNOC)
+                          ? `${filePreviews.insuranceNOC.length} page(s)`
+                          : "1 page"}
+                      </div>
+                    )}
+                    {filePreviews.insuranceNOC && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilesState((prev) => ({ ...prev, insuranceNOC: [] }));
+                          setFilePreviews((prev) => ({ ...prev, insuranceNOC: null }));
+                        }}
+                        style={{ ...styles.uploadBtn, backgroundColor: "#ef4444" }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {filePreviews.insuranceNOC && Array.isArray(filePreviews.insuranceNOC) && (
+                    <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
+                      {filePreviews.insuranceNOC.slice(0, 6).map((u, idx) => (
+                        <img key={idx} src={u} alt={`noc-${idx + 1}`} style={{ width: 100, height: 80, objectFit: "cover" }} />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -4385,6 +4518,7 @@ const SellLetterForm = () => {
             onSelect={handleFileUploadSelect}
             onCancel={closeFileUploadModal}
             allowPdf={uploadModalAllowPdf}
+            allowMultiple={uploadModalAllowMultiple}
           />
         )}
       </div>

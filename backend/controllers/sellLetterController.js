@@ -21,6 +21,7 @@ exports.createSellLetter = [
     { name: "panPhoto" },
     { name: "deliveryPhoto" },
     { name: "vehiclePhotos" },
+    { name: "insuranceNOC", maxCount: 20 },
   ]),
   async (req, res) => {
     try {
@@ -144,14 +145,32 @@ exports.createSellLetter = [
         pan: null,
         deliveryPhoto: null,
         vehiclePhotos: [],
+        insuranceNOC: { pages: [] },
       };
 
       // helper to process single file
-      const processFile = async (file, nameHint) => {
+      const { PDFDocument } = require('pdf-lib');
+
+      const processImageFile = async (file, nameHint) => {
         const compressed = await compressBuffer(file.buffer, 100);
         const filename = `${Date.now()}-${nameHint}`;
-        const uploaded = await uploadBufferToImageKit(compressed, filename);
+        const uploaded = await uploadBufferToImageKit(compressed, filename, file.mimetype || 'image/jpeg');
         return uploaded.url;
+      };
+
+      const processPdfFileToPages = async (file, nameHint) => {
+        const srcPdf = await PDFDocument.load(file.buffer);
+        const pageUrls = [];
+        for (let i = 0; i < srcPdf.getPageCount(); i++) {
+          const newPdf = await PDFDocument.create();
+          const [copied] = await newPdf.copyPages(srcPdf, [i]);
+          newPdf.addPage(copied);
+          const singlePageBytes = await newPdf.save();
+          const filename = `${Date.now()}-${nameHint}-page-${i + 1}.pdf`;
+          const uploaded = await uploadBufferToImageKit(Buffer.from(singlePageBytes), filename, 'application/pdf');
+          pageUrls.push(uploaded.url);
+        }
+        return pageUrls;
       };
 
       try {
@@ -197,6 +216,19 @@ exports.createSellLetter = [
             uploadedUrls.vehiclePhotos.push(url);
           }
         }
+        // process insuranceNOC files if present
+        if (files.insuranceNOC && files.insuranceNOC.length) {
+          for (let i = 0; i < files.insuranceNOC.length && uploadedUrls.insuranceNOC.pages.length < 50; i++) {
+            const f = files.insuranceNOC[i];
+            if (f.mimetype === 'application/pdf' || f.originalname?.toLowerCase().endsWith('.pdf')) {
+              const pageUrls = await processPdfFileToPages(f, `insurance-noc-${i}`);
+              uploadedUrls.insuranceNOC.pages.push(...pageUrls);
+            } else {
+              const url = await processImageFile(f, `insurance-noc-${i}`);
+              uploadedUrls.insuranceNOC.pages.push(url);
+            }
+          }
+        }
       } catch (uploadErr) {
         console.error("Image upload failed, aborting create:", uploadErr);
         return res
@@ -212,6 +244,8 @@ exports.createSellLetter = [
         pan: uploadedUrls.pan,
         deliveryPhoto: uploadedUrls.deliveryPhoto,
         vehiclePhotos: uploadedUrls.vehiclePhotos,
+        insuranceNOC: uploadedUrls.insuranceNOC,
+        insuranceNOCUploadMode: bodyData.insuranceNOCUploadMode || "separate",
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };
 

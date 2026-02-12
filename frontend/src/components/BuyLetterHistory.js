@@ -403,11 +403,43 @@ const BuyLetterHistory = () => {
     }
   };
 
+  // Embed either an image (png/jpg) or a single-page PDF from a URL.
+  // Returns an object: { kind: 'image', embedded } or { kind: 'pdf', embeddedPage }
+  const embedAssetFromUrl = async (pdfDoc, url) => {
+    try {
+      const res = await fetch(url);
+      const contentType = (res.headers.get("content-type") || "").toLowerCase();
+      const bytes = await res.arrayBuffer();
+
+      if (contentType.includes("pdf") || url.toLowerCase().endsWith('.pdf')) {
+        // embed the PDF page(s) - for single-page PDFs this embeds the first page
+        const embeddedPages = await pdfDoc.embedPdf(bytes);
+        // embeddedPages is an array; use first page
+        if (Array.isArray(embeddedPages) && embeddedPages.length > 0)
+          return { kind: "pdf", embeddedPage: embeddedPages[0] };
+        return null;
+      }
+
+      if (contentType.includes("png")) {
+        const img = await pdfDoc.embedPng(bytes);
+        return { kind: "image", embedded: img };
+      }
+
+      // fallback to jpg
+      const img = await pdfDoc.embedJpg(bytes);
+      return { kind: "image", embedded: img };
+    } catch (err) {
+      console.warn("Failed to embed asset from", url, err);
+      return null;
+    }
+  };
+
   const addDocumentPages = async (pdfDoc, documentsObj) => {
     if (!documentsObj) return;
     const items = [];
     const rcItems = [];
     const aadhaarItems = [];
+    const nocItems = []; // New array for NOC images
 
     if (documentsObj.vehicleRC) {
       if (documentsObj.vehicleRC.front && documentsObj.vehicleRC.front !== null)
@@ -454,6 +486,28 @@ const BuyLetterHistory = () => {
       }
     }
 
+    // Support multiple shapes for stored NOC pages:
+    // - documents.insuranceNOC.pages (preferred)
+    // - documents.insuranceNOC (legacy array)
+    // - documents.noc (older key)
+    if (documentsObj.insuranceNOC) {
+      // If object with pages array
+      if (Array.isArray(documentsObj.insuranceNOC.pages)) {
+        documentsObj.insuranceNOC.pages.forEach((p, idx) =>
+          nocItems.push({ title: `NOC Document ${idx + 1}`, url: p }),
+        );
+      } else if (Array.isArray(documentsObj.insuranceNOC)) {
+        documentsObj.insuranceNOC.forEach((p, idx) =>
+          nocItems.push({ title: `NOC Document ${idx + 1}`, url: p }),
+        );
+      }
+    } else if (documentsObj.noc && documentsObj.noc.length) {
+      // fallback for older shapes
+      documentsObj.noc.forEach((nocUrl, index) => {
+        nocItems.push({ title: `NOC Document ${index + 1}`, url: nocUrl });
+      });
+    }
+
     if (documentsObj.pan && documentsObj.pan !== null)
       items.push({ title: "PAN Card", url: documentsObj.pan });
     if (
@@ -469,6 +523,7 @@ const BuyLetterHistory = () => {
         items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
       );
     }
+
     const renderTwoColumnPage = async (pageItems, pageTitle = null) => {
       const page = pdfDoc.addPage([595, 842]);
       try {
@@ -572,6 +627,138 @@ const BuyLetterHistory = () => {
       }
     };
 
+    const renderSingleImagePerPage = async (pageItems) => {
+      for (const item of pageItems) {
+        const page = pdfDoc.addPage([595, 842]);
+
+        // Draw header (same as renderTwoColumnPage)
+        try {
+          const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+          const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
+          const logoImg = await pdfDoc.embedPng(logoBytes);
+          page.drawRectangle({
+            x: 0,
+            y: 780,
+            width: 595,
+            height: 80,
+            color: rgb(0.047, 0.098, 0.196),
+          });
+          page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+          page.drawText("UDAYAM-BR-26-0028550", {
+            x: 330,
+            y: 805,
+            size: 14,
+            color: rgb(1, 1, 1),
+            font: headerFont,
+          });
+          page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+            x: 330,
+            y: 785,
+            size: 14,
+            color: rgb(1, 1, 1),
+            font: headerFont,
+          });
+
+          try {
+            const thank = "Thank you for your business!";
+            const addr =
+              "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+            const thankW = headerFont.widthOfTextAtSize(thank, 12);
+            const addrW = regularFont.widthOfTextAtSize(addr, 9);
+            const centerXThank = (595 - thankW) / 2;
+            const centerXAddr = (595 - addrW) / 2;
+
+            page.drawLine({
+              start: { x: 20, y: 52 },
+              end: { x: 575, y: 52 },
+              thickness: 0.5,
+              color: rgb(0.8, 0.8, 0.8),
+            });
+            page.drawText(thank, {
+              x: centerXThank,
+              y: 40,
+              size: 12,
+              color: rgb(0, 0, 0),
+              font: headerFont,
+            });
+            page.drawText(addr, {
+              x: centerXAddr,
+              y: 26,
+              size: 9,
+              color: rgb(0.45, 0.45, 0.45),
+              font: regularFont,
+            });
+          } catch (e) {}
+        } catch (err) {}
+
+        const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        const titleY = 700;
+        page.drawText(item.title, { x: 50, y: titleY, size: 12, font: titleFont });
+
+        const asset = await embedAssetFromUrl(pdfDoc, item.url);
+        if (!asset) continue;
+
+        const pageWidth = 595;
+        const margin = 50;
+        const maxWidth = pageWidth - 2 * margin;
+        const maxHeight = 660;
+
+        if (asset.kind === "image") {
+          const embedded = asset.embedded;
+          const { width, height } = embedded.scale(1);
+          let drawW = maxWidth;
+          let drawH = (height / width) * drawW;
+
+          if (drawH > maxHeight) {
+            drawH = maxHeight;
+            drawW = (width / height) * drawH;
+          }
+
+          const xPos = (pageWidth - drawW) / 2;
+          const yPos = titleY - drawH - 15;
+
+          page.drawImage(embedded, {
+            x: xPos,
+            y: yPos,
+            width: drawW,
+            height: drawH,
+          });
+        } else if (asset.kind === "pdf") {
+          const embeddedPage = asset.embeddedPage;
+          const embeddedWidth = embeddedPage.width || embeddedPage.getWidth?.() || 595;
+          const embeddedHeight = embeddedPage.height || embeddedPage.getHeight?.() || 842;
+
+          let drawW = maxWidth;
+          let drawH = (embeddedHeight / embeddedWidth) * drawW;
+          if (drawH > maxHeight) {
+            drawH = maxHeight;
+            drawW = (embeddedWidth / embeddedHeight) * drawH;
+          }
+
+          const xPos = (pageWidth - drawW) / 2;
+          const yPos = titleY - drawH - 15;
+
+          try {
+            page.drawPage(embeddedPage, {
+              x: xPos,
+              y: yPos,
+              width: drawW,
+              height: drawH,
+            });
+          } catch (err) {
+            try {
+              const asImage = await pdfDoc.embedJpg(await fetch(item.url).then((r) => r.arrayBuffer()));
+              page.drawImage(asImage, { x: xPos, y: yPos, width: drawW, height: drawH });
+            } catch (err2) {
+              console.warn("Failed to draw embedded PDF page for", item.url, err2);
+            }
+          }
+        }
+      }
+    };
+
     if (rcItems.length > 0) {
       await renderTwoColumnPage(rcItems);
     }
@@ -580,66 +767,6 @@ const BuyLetterHistory = () => {
       const page = pdfDoc.addPage([595, 842]);
       const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const item = singleAadhaarItem[0];
-
-      try {
-        const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-        const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-        const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
-        const logoImg = await pdfDoc.embedPng(logoBytes);
-        page.drawRectangle({
-          x: 0,
-          y: 780,
-          width: 595,
-          height: 80,
-          color: rgb(0.047, 0.098, 0.196),
-        });
-        page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
-        page.drawText("UDAYAM-BR-26-0028550", {
-          x: 330,
-          y: 805,
-          size: 14,
-          color: rgb(1, 1, 1),
-          font: headerFont,
-        });
-        page.drawText("GSTIN: 22ABCDE1234F1Z5", {
-          x: 330,
-          y: 785,
-          size: 14,
-          color: rgb(1, 1, 1),
-          font: headerFont,
-        });
-        try {
-          const thank = "Thank you for your business!";
-          const addr =
-            "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
-          const thankW = headerFont.widthOfTextAtSize(thank, 12);
-          const addrW = regularFont.widthOfTextAtSize(addr, 9);
-          const centerXThank = (595 - thankW) / 2;
-          const centerXAddr = (595 - addrW) / 2;
-
-          page.drawLine({
-            start: { x: 20, y: 52 },
-            end: { x: 575, y: 52 },
-            thickness: 0.5,
-            color: rgb(0.8, 0.8, 0.8),
-          });
-          page.drawText(thank, {
-            x: centerXThank,
-            y: 40,
-            size: 12,
-            color: rgb(0, 0, 0),
-            font: headerFont,
-          });
-          page.drawText(addr, {
-            x: centerXAddr,
-            y: 26,
-            size: 9,
-            color: rgb(0.45, 0.45, 0.45),
-            font: regularFont,
-          });
-        } catch (e) {}
-      } catch (err) {}
 
       page.drawText(item.title, { x: 50, y: 720, size: 14, font });
 
@@ -673,68 +800,12 @@ const BuyLetterHistory = () => {
       await renderTwoColumnPage(aadhaarItems);
     }
 
+    if (nocItems.length > 0) {
+      await renderSingleImagePerPage(nocItems);
+    }
+
     for (let i = 0; i < items.length; i += 2) {
       const page = pdfDoc.addPage([595, 842]);
-      try {
-        const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-        const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-        const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
-        const logoImg = await pdfDoc.embedPng(logoBytes);
-
-        page.drawRectangle({
-          x: 0,
-          y: 780,
-          width: 595,
-          height: 80,
-          color: rgb(0.047, 0.098, 0.196),
-        });
-        page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
-        page.drawText("UDAYAM-BR-26-0028550", {
-          x: 330,
-          y: 805,
-          size: 14,
-          color: rgb(1, 1, 1),
-          font: headerFont,
-        });
-        page.drawText("GSTIN: 22ABCDE1234F1Z5", {
-          x: 330,
-          y: 785,
-          size: 14,
-          color: rgb(1, 1, 1),
-          font: headerFont,
-        });
-        try {
-          const thank = "Thank you for your business!";
-          const addr =
-            "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
-          const thankW = headerFont.widthOfTextAtSize(thank, 12);
-          const addrW = regularFont.widthOfTextAtSize(addr, 9);
-          const centerXThank = (595 - thankW) / 2;
-          const centerXAddr = (595 - addrW) / 2;
-
-          page.drawLine({
-            start: { x: 20, y: 52 },
-            end: { x: 575, y: 52 },
-            thickness: 0.5,
-            color: rgb(0.8, 0.8, 0.8),
-          });
-          page.drawText(thank, {
-            x: centerXThank,
-            y: 40,
-            size: 12,
-            color: rgb(0, 0, 0),
-            font: headerFont,
-          });
-          page.drawText(addr, {
-            x: centerXAddr,
-            y: 26,
-            size: 9,
-            color: rgb(0.45, 0.45, 0.45),
-            font: regularFont,
-          });
-        } catch (e) {}
-      } catch (err) {}
-
       const yPositions = [740, 390];
 
       for (let cell = 0; cell < 2; cell++) {
@@ -2062,10 +2133,19 @@ const BuyLetterHistory = () => {
                             <td style={styles.tableCell}>
                               <div>
                                 <div>
-                                  Created: {letter.saleDate ? formatDate(letter.saleDate) : formatDate(letter.createdAt)}
+                                  Created:{" "}
+                                  {letter.saleDate
+                                    ? formatDate(letter.saleDate)
+                                    : formatDate(letter.createdAt)}
                                 </div>
                                 {letter.editedAt && (
-                                  <div style={{ color: "#64748b", fontSize: "0.9em", marginTop: "4px" }}>
+                                  <div
+                                    style={{
+                                      color: "#64748b",
+                                      fontSize: "0.9em",
+                                      marginTop: "4px",
+                                    }}
+                                  >
                                     Edited: {formatDate(letter.editedAt)}
                                   </div>
                                 )}
@@ -2685,6 +2765,7 @@ const BuyLetterHistory = () => {
                     display: "flex",
                     alignItems: "center",
                     padding: "10px 12px",
+                    marginBottom: "8px",
                     backgroundColor: docSelections.vehiclePhotos
                       ? "#f0f9ff"
                       : "transparent",

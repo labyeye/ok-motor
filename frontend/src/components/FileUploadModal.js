@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { Camera, Upload, FileText, X } from "lucide-react";
 
-const FileUploadModal = ({ onSelect, onCancel, allowPdf = false }) => {
+const FileUploadModal = ({ onSelect, onCancel, allowPdf = false, allowMultiple = false }) => {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const pdfInputRef = useRef(null);
@@ -25,9 +25,10 @@ const FileUploadModal = ({ onSelect, onCancel, allowPdf = false }) => {
   };
 
   const handleFileSelect = (e, type) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onSelect(file, type);
+    const files = Array.from(e.target.files || []);
+    if (files.length) {
+      if (allowMultiple) onSelect(files, type);
+      else onSelect(files[0], type);
     }
     e.target.value = null;
   };
@@ -91,6 +92,7 @@ const FileUploadModal = ({ onSelect, onCancel, allowPdf = false }) => {
           ref={cameraInputRef}
           accept="image/*"
           capture="environment"
+          multiple={allowMultiple}
           onChange={(e) => handleFileSelect(e, "camera")}
           style={{ display: "none" }}
         />
@@ -98,6 +100,7 @@ const FileUploadModal = ({ onSelect, onCancel, allowPdf = false }) => {
           type="file"
           ref={fileInputRef}
           accept="image/*"
+          multiple={allowMultiple}
           onChange={(e) => handleFileSelect(e, "upload")}
           style={{ display: "none" }}
         />
@@ -106,6 +109,7 @@ const FileUploadModal = ({ onSelect, onCancel, allowPdf = false }) => {
             type="file"
             ref={pdfInputRef}
             accept="application/pdf"
+            multiple={allowMultiple}
             onChange={(e) => handleFileSelect(e, "pdf")}
             style={{ display: "none" }}
           />
