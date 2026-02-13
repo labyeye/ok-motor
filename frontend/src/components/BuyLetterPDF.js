@@ -45,17 +45,6 @@ import {
   convertPdfToImages,
 } from "../utils/pdfHandler";
 
-const dataUrlToFile = (dataUrl, filename) => {
-  const arr = dataUrl.split(",");
-  const mime = arr[0].match(/:(.*?);/)[1] || "image/png";
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  return new File([u8arr], filename, { type: mime });
-};
 
 const BuyLetterForm = () => {
   const { user, logout } = useContext(AuthContext);
@@ -1012,7 +1001,6 @@ const BuyLetterForm = () => {
           const pdfImages = await convertPdfToImages(file);
           if (Array.isArray(pdfImages) && pdfImages[0]?.data) {
             // preview available in pdfImages[0].data; converted file not needed here
-            const _ = pdfImages[0].data; // intentionally ignore but ensure conversion attempted
             // create a File if needed by the cropper/flow elsewhere
             // const converted = dataUrlToFile(pdfImages[0].data, `${uploadModalFieldName || "document"}.png`);
           }
