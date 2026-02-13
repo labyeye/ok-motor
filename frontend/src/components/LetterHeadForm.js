@@ -39,12 +39,12 @@ const LetterHeadForm = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  // Sidebar states
+  
   const [activeMenu, setActiveMenu] = useState("Letter Head");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Preview modal states
+  
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewData, setPreviewData] = useState(null);
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
@@ -52,7 +52,7 @@ const LetterHeadForm = () => {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     to: "",
-    recipientName: "", // New field
+    recipientName: "", 
     subject: "",
     message: "",
   });
@@ -104,7 +104,7 @@ const LetterHeadForm = () => {
       await axios.delete(`${API_BASE_URL}/letter-heads/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchHistory(); // Refresh table
+      fetchHistory(); 
     } catch (error) {
       console.error("Error deleting letter head:", error);
       alert("Failed to delete letter head");
@@ -117,7 +117,7 @@ const LetterHeadForm = () => {
       return;
     }
 
-    // Sanitize data for preview
+    
     const sanitize = (str) =>
       typeof str === "string" ? str.replace(/\t/g, " ") : str;
 
@@ -129,14 +129,14 @@ const LetterHeadForm = () => {
       message: sanitize(formData.message),
     };
 
-    // Generate PDF for preview
+    
     try {
       const result = await pdfService.generateLetterHeadPDF(
         {
           ...sanitizedData,
           user: user,
         },
-        true, // previewOnly = true
+        true, 
       );
 
       if (result.success) {
@@ -170,7 +170,7 @@ const LetterHeadForm = () => {
         return;
       }
 
-      // 1. Save to Backend
+      
       if (navigator.onLine) {
         try {
           if (editingId) {
@@ -200,7 +200,7 @@ const LetterHeadForm = () => {
         }
       }
 
-      // 2. Generate PDF using the new service method
+      
       const result = await pdfService.generateLetterHeadPDF({
         ...previewData,
         user: user,
@@ -212,8 +212,8 @@ const LetterHeadForm = () => {
         } else {
           saveAs(result.blob, `letter-head-${Date.now()}.pdf`);
         }
-        await fetchHistory(); // Refresh table
-        // Reset form after successful save
+        await fetchHistory(); 
+        
         handleCancelEdit();
       } else {
         alert("Failed to generate PDF: " + (result.error || "Unknown error"));
@@ -386,7 +386,7 @@ const LetterHeadForm = () => {
           ...letter,
           user: user,
         },
-        true, // previewOnly = true
+        true, 
       );
 
       if (result.success) {
@@ -410,10 +410,10 @@ const LetterHeadForm = () => {
       backgroundColor: "#EBF4F6",
       fontFamily: "'Inter', sans-serif",
     },
-    // Sidebar Styles
+    
     sidebar: {
       width: "280px",
-      backgroundColor: "#071952", // Dark Blue
+      backgroundColor: "#071952", 
       color: "#f8fafc",
       boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
       position: "sticky",
@@ -484,7 +484,7 @@ const LetterHeadForm = () => {
       fontWeight: "500",
     },
     submenu: {
-      backgroundColor: "#051238", // Slightly darker
+      backgroundColor: "#051238", 
       overflow: "hidden",
     },
     submenuItem: {
@@ -508,19 +508,19 @@ const LetterHeadForm = () => {
       borderTop: "1px solid #1e293b",
       transition: "all 0.2s ease",
     },
-    // Main Content
+    
     mainContent: {
       flex: 1,
       overflowY: "auto",
       height: "100vh",
-      backgroundColor: "#ffffffff", // Light gray background for contrast
+      backgroundColor: "#ffffffff", 
     },
     contentPadding: {
       padding: isMobile ? "24px 16px" : "32px",
       maxWidth: "1200px",
       margin: "0 auto",
     },
-    // Form specific styles
+    
     header: {
       display: "flex",
       justifyContent: "space-between",
@@ -620,7 +620,7 @@ const LetterHeadForm = () => {
       backgroundColor: "#94a3b8",
       cursor: "not-allowed",
     },
-    // Table Styles
+    
     tableCard: {
       backgroundColor: "#fff",
       borderRadius: "12px",
@@ -690,7 +690,7 @@ const LetterHeadForm = () => {
         paddingTop: isMobile ? "60px" : "0",
       }}
     >
-      {/* Mobile Sidebar Overlay */}
+      {}
       {isSidebarOpen && isMobile && (
         <div
           style={styles.sidebarOverlay}
@@ -698,7 +698,7 @@ const LetterHeadForm = () => {
         ></div>
       )}
 
-      {/* Mobile Top Bar */}
+      {}
       <div
         style={{
           ...styles.topBar,
@@ -713,7 +713,7 @@ const LetterHeadForm = () => {
         </div>
       </div>
 
-      {/* Sidebar */}
+      {}
       <div
         style={{
           ...styles.sidebar,
@@ -823,10 +823,10 @@ const LetterHeadForm = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
-          {/* Header */}
+          {}
           <div style={styles.header}>
             <div style={styles.titleGroup}>
               <div
@@ -952,7 +952,7 @@ const LetterHeadForm = () => {
             </div>
           </div>
 
-          {/* History Table */}
+          {}
           <div style={styles.tableCard}>
             <h2 style={styles.tableTitle}>Recent Letter Heads</h2>
             {loadingHistory ? (
@@ -1033,7 +1033,7 @@ const LetterHeadForm = () => {
         </div>
       </div>
 
-      {/* Preview Modal */}
+      {}
       {showPreviewModal && previewData && previewPdfUrl && (
         <div
           style={{
@@ -1070,7 +1070,7 @@ const LetterHeadForm = () => {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
+            {}
             <div
               style={{
                 padding: "20px 24px",
@@ -1117,7 +1117,7 @@ const LetterHeadForm = () => {
               </button>
             </div>
 
-            {/* Modal Body - PDF Preview */}
+            {}
             <div
               style={{
                 flex: 1,
@@ -1147,7 +1147,7 @@ const LetterHeadForm = () => {
               </object>
             </div>
 
-            {/* Modal Footer */}
+            {}
             <div
               style={{
                 padding: "20px 24px",

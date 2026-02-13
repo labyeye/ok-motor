@@ -33,7 +33,7 @@ const InsuranceHistory = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Sidebar states
+  
   const [activeMenu, setActiveMenu] = useState("Insurance");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -382,7 +382,7 @@ const InsuranceHistory = () => {
         paddingTop: isMobile ? "60px" : "0",
       }}
     >
-      {/* Mobile Sidebar Overlay */}
+      {}
       {isSidebarOpen && isMobile && (
         <div
           style={styles.sidebarOverlay}
@@ -390,7 +390,7 @@ const InsuranceHistory = () => {
         ></div>
       )}
 
-      {/* Mobile Top Bar */}
+      {}
       <div
         style={{
           ...styles.topBar,
@@ -405,7 +405,7 @@ const InsuranceHistory = () => {
         </div>
       </div>
 
-      {/* Sidebar */}
+      {}
       <div
         style={{
           ...styles.sidebar,
@@ -515,10 +515,10 @@ const InsuranceHistory = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
-          {/* Header */}
+          {}
           <div style={styles.header}>
             <div style={styles.titleGroup}>
               <div

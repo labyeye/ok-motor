@@ -1,8 +1,8 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 function stripComments(src) {
-  let out = '';
+  let out = "";
   let i = 0;
   let len = src.length;
   let inSingle = false;
@@ -10,40 +10,40 @@ function stripComments(src) {
   let inTemplate = false;
   let inBlock = false;
   let inLine = false;
-  let prev = '';
+  let prev = "";
 
   while (i < len) {
     const ch = src[i];
     const next = src[i + 1];
 
     if (inBlock) {
-      if (ch === '*' && next === '/') {
+      if (ch === "*" && next === "/") {
         inBlock = false;
         i += 2;
         continue;
       }
       // preserve newlines inside block comments to keep line numbers
-      if (ch === '\n') out += '\n';
+      if (ch === "\n") out += "\n";
       i++;
       continue;
     }
 
     if (inLine) {
-      if (ch === '\n') {
+      if (ch === "\n") {
         inLine = false;
-        out += '\n';
+        out += "\n";
       }
       i++;
       continue;
     }
 
     if (!inSingle && !inDouble && !inTemplate) {
-      if (ch === '/' && next === '*') {
+      if (ch === "/" && next === "*") {
         inBlock = true;
         i += 2;
         continue;
       }
-      if (ch === '/' && next === '/') {
+      if (ch === "/" && next === "/") {
         inLine = true;
         i += 2;
         continue;
@@ -59,9 +59,17 @@ function stripComments(src) {
         const c = src[i];
         out += c;
         if (c === "\\") {
-          if (i + 1 < len) { out += src[i+1]; i += 2; continue; }
+          if (i + 1 < len) {
+            out += src[i + 1];
+            i += 2;
+            continue;
+          }
         }
-        if (c === "'") { inSingle = false; i++; break; }
+        if (c === "'") {
+          inSingle = false;
+          i++;
+          break;
+        }
         i++;
       }
       continue;
@@ -75,15 +83,23 @@ function stripComments(src) {
         const c = src[i];
         out += c;
         if (c === "\\") {
-          if (i + 1 < len) { out += src[i+1]; i += 2; continue; }
+          if (i + 1 < len) {
+            out += src[i + 1];
+            i += 2;
+            continue;
+          }
         }
-        if (c === '"') { inDouble = false; i++; break; }
+        if (c === '"') {
+          inDouble = false;
+          i++;
+          break;
+        }
         i++;
       }
       continue;
     }
 
-    if (ch === '`' && !inSingle && !inDouble) {
+    if (ch === "`" && !inSingle && !inDouble) {
       out += ch;
       inTemplate = !inTemplate;
       i++;
@@ -91,9 +107,17 @@ function stripComments(src) {
         const c = src[i];
         out += c;
         if (c === "\\") {
-          if (i + 1 < len) { out += src[i+1]; i += 2; continue; }
+          if (i + 1 < len) {
+            out += src[i + 1];
+            i += 2;
+            continue;
+          }
         }
-        if (c === '`') { inTemplate = false; i++; break; }
+        if (c === "`") {
+          inTemplate = false;
+          i++;
+          break;
+        }
         i++;
       }
       continue;
@@ -107,17 +131,47 @@ function stripComments(src) {
 }
 
 const targets = [
-  path.join(__dirname, '..', 'frontend', 'src', 'components', 'SellLetterHistory.js'),
-  path.join(__dirname, '..', 'frontend', 'src', 'components', 'SellLetterPDF.js'),
+  path.join(
+    __dirname,
+    "..",
+    "frontend",
+    "src",
+    "components",
+    "BikeHistory.js",
+  ),
+  path.join(
+    __dirname,
+    "..",
+    "frontend",
+    "src",
+    "components",
+    "InsuranceForm.js",
+  ),
+  path.join(
+    __dirname,
+    "..",
+    "frontend",
+    "src",
+    "components",
+    "InsuranceHistory.js",
+  ),
+  path.join(
+    __dirname,
+    "..",
+    "frontend",
+    "src",
+    "components",
+    "LetterHeadForm.js",
+  ),
 ];
 
 for (const t of targets) {
   try {
-    const src = fs.readFileSync(t, 'utf8');
+    const src = fs.readFileSync(t, "utf8");
     const stripped = stripComments(src);
-    fs.writeFileSync(t, stripped, 'utf8');
-    console.log('Stripped comments for', t);
+    fs.writeFileSync(t, stripped, "utf8");
+    console.log("Stripped comments for", t);
   } catch (err) {
-    console.error('Failed for', t, err);
+    console.error("Failed for", t, err);
   }
 }

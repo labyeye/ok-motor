@@ -34,7 +34,7 @@ const InsuranceForm = () => {
   const [editId, setEditId] = useState(null);
   const [, setIsFetching] = useState(false);
 
-  // Sidebar states
+  
   const [activeMenu, setActiveMenu] = useState("Insurance");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -56,7 +56,7 @@ const InsuranceForm = () => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
 
-    // Check for edit mode
+    
     if (location.state && location.state.insuranceData) {
       const data = location.state.insuranceData;
       setEditId(data._id);
@@ -97,7 +97,7 @@ const InsuranceForm = () => {
 
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-      // Fetch vehicle details from sell-letters and master insurance/puc records in parallel
+      
       const [vehicleRes, insuranceRes] = await Promise.all([
         axios
           .get(
@@ -124,17 +124,17 @@ const InsuranceForm = () => {
 
       setFormData((prev) => ({
         ...prev,
-        // person fields prefer insurance master, fall back to vehicle data
+        
         personName: insData.personName || vehicleData.personName || prev.personName,
         personPhone: insData.personPhone || vehicleData.personPhone || prev.personPhone,
         personEmail: insData.personEmail || vehicleData.personEmail || prev.personEmail,
 
-        // vehicle metadata
+        
         vehicleModel: insData.vehicleModel || vehicleData.vehicleModel || prev.vehicleModel,
         brand: insData.brand || vehicleData.brand || prev.brand,
         year: insData.year || vehicleData.year || prev.year,
 
-        // insurance specifics
+        
         insuranceCompany: insData.insuranceCompany || vehicleData.insuranceCompany || prev.insuranceCompany,
         insurancePolicyNo:
           insData.insurancePolicyNumber || insData.insurancePolicyNo || vehicleData.insurancePolicyNumber || prev.insurancePolicyNo,
@@ -522,7 +522,7 @@ const InsuranceForm = () => {
         paddingTop: isMobile ? "60px" : "0",
       }}
     >
-      {/* Mobile Sidebar Overlay */}
+      {}
       {isSidebarOpen && isMobile && (
         <div
           style={styles.sidebarOverlay}
@@ -530,7 +530,7 @@ const InsuranceForm = () => {
         ></div>
       )}
 
-      {/* Mobile Top Bar */}
+      {}
       <div
         style={{
           ...styles.topBar,
@@ -545,7 +545,7 @@ const InsuranceForm = () => {
         </div>
       </div>
 
-      {/* Sidebar */}
+      {}
       <div
         style={{
           ...styles.sidebar,
@@ -655,10 +655,10 @@ const InsuranceForm = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
-          {/* Header */}
+          {}
           <div style={styles.header}>
             <div style={styles.titleGroup}>
               <div

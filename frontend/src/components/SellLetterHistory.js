@@ -38,9 +38,9 @@ const SellLetterHistory = () => {
   const [expandedMenus, setExpandedMenus] = useState({});
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [selectedLetter, setSelectedLetter] = useState(null);
-  const [languageAction, setLanguageAction] = useState(null); // 'download' | 'preview'
+  const [languageAction, setLanguageAction] = useState(null);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
-  const [chosenLanguage, setChosenLanguage] = useState(null); // 'hindi' | 'english'
+  const [chosenLanguage, setChosenLanguage] = useState(null);
   const [docSelections, setDocSelections] = useState({
     letter: true,
     invoice: true,
@@ -58,7 +58,6 @@ const SellLetterHistory = () => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Preview modal states
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
   const [previewLetter, setPreviewLetter] = useState(null);
@@ -124,7 +123,7 @@ const SellLetterHistory = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    // If the value includes a time portion like '2024-05-01T00:00:00', strip it
+
     let ds = dateString;
     try {
       if (typeof ds === "string" && ds.includes("T")) ds = ds.split("T")[0];
@@ -139,7 +138,6 @@ const SellLetterHistory = () => {
     }
   };
 
-  // Helper to get field label in readable format
   const getFieldLabel = (fieldName) => {
     const labels = {
       vehicleName: "Vehicle Name",
@@ -179,7 +177,6 @@ const SellLetterHistory = () => {
     return labels[fieldName] || fieldName;
   };
 
-  // Function to detect and display changes
   const getChanges = (letter) => {
     if (!letter.previousVersionId || letter.version === 1) return null;
 
@@ -211,7 +208,6 @@ const SellLetterHistory = () => {
       "note",
     ];
 
-    // Check if we have previousVersion data populated
     if (letter.previousVersion) {
       fieldsToCompare.forEach((field) => {
         const oldValue = letter.previousVersion[field];
@@ -226,7 +222,6 @@ const SellLetterHistory = () => {
         }
       });
 
-      // Check date fields
       const dateFields = [
         { old: "saleDate", new: "saleDate", label: "Sale Date" },
         { old: "todayDate", new: "todayDate", label: "Today's Date" },
@@ -258,7 +253,6 @@ const SellLetterHistory = () => {
         }
       });
 
-      // Check time fields
       const timeFields = ["saleTime", "todayTime", "previousTime"];
       timeFields.forEach((field) => {
         const oldValue = letter.previousVersion[field];
@@ -272,7 +266,6 @@ const SellLetterHistory = () => {
         }
       });
 
-      // Check document changes
       const checkDocumentChange = (docPath, label) => {
         const getNestedValue = (obj, path) =>
           path.split(".").reduce((acc, part) => acc?.[part], obj);
@@ -305,7 +298,6 @@ const SellLetterHistory = () => {
         }
       };
 
-      // Check all document types
       checkDocumentChange("vehicleRC.front", "Vehicle RC - Front");
       checkDocumentChange("vehicleRC.back", "Vehicle RC - Back");
       checkDocumentChange("aadhaar.front", "Aadhaar - Front");
@@ -314,7 +306,6 @@ const SellLetterHistory = () => {
       checkDocumentChange("deliveryPhoto", "Delivery Photo") ||
         checkDocumentChange("vehicleKM", "Delivery Photo");
 
-      // Check vehicle photos count
       const oldPhotosCount =
         letter.previousVersion.documents?.vehiclePhotos?.length || 0;
       const newPhotosCount = letter.documents?.vehiclePhotos?.length || 0;
@@ -510,6 +501,83 @@ const SellLetterHistory = () => {
       }, 100);
     });
   };
+  // Module-scoped header/footer drawer used by multiple PDF generators
+  const drawHeaderFooter = async (pdfDoc, page) => {
+    try {
+      const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const logoUrl = logo1;
+      const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
+      const logoImg = await pdfDoc.embedPng(logoBytes);
+
+      // Header
+      page.drawRectangle({
+        x: 0,
+        y: 780,
+        width: 595,
+        height: 80,
+        color: rgb(0.047, 0.098, 0.196),
+      });
+      page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+      try {
+        page.drawImage(logoImg, {
+          x: 180,
+          y: 430,
+          width: 260,
+          height: 220,
+          opacity: 0.3,
+        });
+      } catch (e) {}
+      page.drawText("UDAYAM-BR-26-0028550", {
+        x: 330,
+        y: 805,
+        size: 14,
+        color: rgb(1, 1, 1),
+        font: headerFont,
+      });
+      page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+        x: 330,
+        y: 785,
+        size: 14,
+        color: rgb(1, 1, 1),
+        font: headerFont,
+      });
+
+      // Footer
+      try {
+        const thank = "Thank you for your business!";
+        const addr =
+          "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+        const thankW = headerFont.widthOfTextAtSize(thank, 12);
+        const addrW = regularFont.widthOfTextAtSize(addr, 9);
+        const centerXThank = (595 - thankW) / 2;
+        const centerXAddr = (595 - addrW) / 2;
+
+        page.drawLine({
+          start: { x: 20, y: 52 },
+          end: { x: 575, y: 52 },
+          thickness: 0.5,
+          color: rgb(0.8, 0.8, 0.8),
+        });
+        page.drawText(thank, {
+          x: centerXThank,
+          y: 40,
+          size: 12,
+          color: rgb(0, 0, 0),
+          font: headerFont,
+        });
+        page.drawText(addr, {
+          x: centerXAddr,
+          y: 26,
+          size: 9,
+          color: rgb(0.45, 0.45, 0.45),
+          font: regularFont,
+        });
+      } catch (e) {}
+    } catch (err) {
+      console.warn("Failed to draw header/footer:", err);
+    }
+  };
   const formatKm = (val) => {
     const num = parseFloat(val.toString().replace(/,/g, ""));
     return isNaN(num)
@@ -566,7 +634,6 @@ const SellLetterHistory = () => {
         setDownloadProgress((prev) => Math.min(prev + 10, 90));
       }, 100);
 
-      // Choose template based on language
       const templateName =
         language === "hindi" ? "sellletter.pdf" : "englishsell.pdf";
       const existingPdfBytes = await loadPDFTemplate(templateName);
@@ -595,43 +662,9 @@ const SellLetterHistory = () => {
         selleraadhar: letter.selleraadhar || "764465626571",
       };
 
-      // Helper: draw consistent header/footer on a page
-      const drawHeaderFooter = async (pdfDoc, page) => {
-        try {
-          const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-          const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-          const logoUrl = logo1;
-          const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
-          const logoImg = await pdfDoc.embedPng(logoBytes);
-
-          // Header
-          page.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });
-          page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
-          try { page.drawImage(logoImg, { x: 180, y: 430, width: 260, height: 220, opacity: 0.3 }); } catch (e) {}
-          page.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 805, size: 14, color: rgb(1, 1, 1), font: headerFont });
-          page.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 785, size: 14, color: rgb(1, 1, 1), font: headerFont });
-
-          // Footer - centered thank you + muted address line
-          try {
-            const thank = "Thank you for your business!";
-            const addr = "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
-            const thankW = headerFont.widthOfTextAtSize(thank, 12);
-            const addrW = regularFont.widthOfTextAtSize(addr, 9);
-            const centerXThank = (595 - thankW) / 2;
-            const centerXAddr = (595 - addrW) / 2;
-
-            page.drawLine({ start: { x: 20, y: 52 }, end: { x: 575, y: 52 }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
-            page.drawText(thank, { x: centerXThank, y: 40, size: 12, color: rgb(0, 0, 0), font: headerFont });
-            page.drawText(addr, { x: centerXAddr, y: 26, size: 9, color: rgb(0.45, 0.45, 0.45), font: regularFont });
-          } catch (e) {}
-        } catch (err) {
-          console.warn("Failed to draw header/footer:", err);
-        }
-      };
-
       const fieldPositions =
         language === "hindi" ? hindiFieldPositions : englishFieldPositions;
-      // Add header/footer to all pages except the first (letter) page
+
       try {
         const pages = pdfDoc.getPages();
         for (let i = 1; i < pages.length; i++) {
@@ -670,7 +703,7 @@ const SellLetterHistory = () => {
         const page = pdfDoc.getPages()[0];
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
         const saleText = `${formattedLetter.saleAmount}`;
-        // Use the selected field positions so Hindi/English templates align correctly
+
         const xBase = fieldPositions.saleAmount.x;
         const yBase = fieldPositions.saleAmount.y;
         const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
@@ -687,13 +720,10 @@ const SellLetterHistory = () => {
         });
       }
 
-      // Add invoice page
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
-      // Add document pages if available
       if (letter.documents) {
-        // Define addDocumentPages inline for preview
         const embedImageFromUrl = async (pdfDoc, url) => {
           try {
             const res = await fetch(url);
@@ -711,9 +741,8 @@ const SellLetterHistory = () => {
         const addDocumentPages = async (pdfDoc, documentsObj) => {
           if (!documentsObj) return;
           const items = [];
-          const rcItems = []; 
+          const rcItems = [];
 
-          // Collect RC items
           if (documentsObj.vehicleRC) {
             if (documentsObj.vehicleRC.front)
               rcItems.push({
@@ -731,7 +760,6 @@ const SellLetterHistory = () => {
             const uploadMode = documentsObj.aadhaarUploadMode || "separate";
 
             if (uploadMode === "single") {
-              // Single file mode: render full-page separately
               if (documentsObj.aadhaar.front) {
                 singleAadhaarItem.push({
                   title: "Aadhaar (Front and Back)",
@@ -739,7 +767,6 @@ const SellLetterHistory = () => {
                 });
               }
             } else {
-              // Separate mode: show front and back separately in 2-per-page layout
               if (documentsObj.aadhaar.front)
                 items.push({
                   title: "Aadhaar - Front",
@@ -768,7 +795,6 @@ const SellLetterHistory = () => {
             );
           }
 
-          // Collect new multi-page documents: Insurance Certificate, Vehicle NOC, Vehicle Buy Receipt
           const insuranceCertificateItems = [];
           const vehicleNOCItems = [];
           const vehicleBuyReceiptItems = [];
@@ -776,11 +802,17 @@ const SellLetterHistory = () => {
           if (documentsObj.insuranceCertificate) {
             if (Array.isArray(documentsObj.insuranceCertificate.pages)) {
               documentsObj.insuranceCertificate.pages.forEach((p, idx) =>
-                insuranceCertificateItems.push({ title: `Insurance Certificate ${idx + 1}`, url: p }),
+                insuranceCertificateItems.push({
+                  title: `Insurance Certificate ${idx + 1}`,
+                  url: p,
+                }),
               );
             } else if (Array.isArray(documentsObj.insuranceCertificate)) {
               documentsObj.insuranceCertificate.forEach((p, idx) =>
-                insuranceCertificateItems.push({ title: `Insurance Certificate ${idx + 1}`, url: p }),
+                insuranceCertificateItems.push({
+                  title: `Insurance Certificate ${idx + 1}`,
+                  url: p,
+                }),
               );
             }
           }
@@ -788,11 +820,17 @@ const SellLetterHistory = () => {
           if (documentsObj.vehicleNOC) {
             if (Array.isArray(documentsObj.vehicleNOC.pages)) {
               documentsObj.vehicleNOC.pages.forEach((p, idx) =>
-                vehicleNOCItems.push({ title: `Vehicle NOC ${idx + 1}`, url: p }),
+                vehicleNOCItems.push({
+                  title: `Vehicle NOC ${idx + 1}`,
+                  url: p,
+                }),
               );
             } else if (Array.isArray(documentsObj.vehicleNOC)) {
               documentsObj.vehicleNOC.forEach((p, idx) =>
-                vehicleNOCItems.push({ title: `Vehicle NOC ${idx + 1}`, url: p }),
+                vehicleNOCItems.push({
+                  title: `Vehicle NOC ${idx + 1}`,
+                  url: p,
+                }),
               );
             }
           }
@@ -800,20 +838,21 @@ const SellLetterHistory = () => {
           if (documentsObj.vehicleBuyReceipt) {
             if (Array.isArray(documentsObj.vehicleBuyReceipt.pages)) {
               documentsObj.vehicleBuyReceipt.pages.forEach((p, idx) =>
-                vehicleBuyReceiptItems.push({ title: `Vehicle Buy Receipt ${idx + 1}`, url: p }),
+                vehicleBuyReceiptItems.push({
+                  title: `Vehicle Buy Receipt ${idx + 1}`,
+                  url: p,
+                }),
               );
             } else if (Array.isArray(documentsObj.vehicleBuyReceipt)) {
               documentsObj.vehicleBuyReceipt.forEach((p, idx) =>
-                vehicleBuyReceiptItems.push({ title: `Vehicle Buy Receipt ${idx + 1}`, url: p }),
+                vehicleBuyReceiptItems.push({
+                  title: `Vehicle Buy Receipt ${idx + 1}`,
+                  url: p,
+                }),
               );
             }
           }
 
-          // embedding of assets (images/pdf) is handled inline where needed
-
-          // Renderer for single-page-per-upload documents is handled inline below
-
-          // Create first page with RC items (compact 2-column layout)
           if (rcItems.length > 0) {
             const page = pdfDoc.addPage([595, 842]);
             try {
@@ -863,7 +902,6 @@ const SellLetterHistory = () => {
             }
           }
 
-          // Render single Aadhaar as full page
           if (singleAadhaarItem.length > 0) {
             const page = pdfDoc.addPage([595, 842]);
             try {
@@ -903,7 +941,6 @@ const SellLetterHistory = () => {
             }
           }
 
-          // Add remaining documents (2 per page)
           for (let i = 0; i < items.length; i += 2) {
             const page = pdfDoc.addPage([595, 842]);
             try {
@@ -1026,7 +1063,6 @@ const SellLetterHistory = () => {
 
       await simulateProgress();
 
-      // Start with empty PDF if letter is not selected, otherwise load template
       let pdfDoc;
       if (documentsToInclude?.letter === true) {
         const existingPdfBytes = await loadPDFTemplate("sellletter.pdf");
@@ -1098,11 +1134,9 @@ const SellLetterHistory = () => {
           });
         }
       } else {
-        // Create empty PDF if letter is not selected
         pdfDoc = await PDFDocument.create();
       }
 
-      // Insert document pages (Vehicle RC, Aadhaar, PAN, KM, Vehicle photos)
       const embedImageFromUrl = async (pdfDoc, url) => {
         try {
           const res = await fetch(url);
@@ -1119,9 +1153,8 @@ const SellLetterHistory = () => {
       const addDocumentPages = async (pdfDoc, documentsObj) => {
         if (!documentsObj) return;
         const items = [];
-        const rcItems = []; // Separate RC items
+        const rcItems = [];
 
-        // Collect RC items
         if (documentsObj.vehicleRC) {
           if (documentsObj.vehicleRC.front)
             rcItems.push({
@@ -1135,13 +1168,11 @@ const SellLetterHistory = () => {
             });
         }
 
-        // Collect Aadhaar documents based on upload mode
         const singleAadhaarItem = [];
         if (documentsObj.aadhaar) {
           const uploadMode = documentsObj.aadhaarUploadMode || "separate";
 
           if (uploadMode === "single") {
-            // Single file mode: render full-page separately
             if (documentsObj.aadhaar.front) {
               singleAadhaarItem.push({
                 title: "Aadhaar (Front and Back)",
@@ -1149,7 +1180,6 @@ const SellLetterHistory = () => {
               });
             }
           } else {
-            // Separate mode: show front and back separately in 2-per-page layout
             if (documentsObj.aadhaar.front)
               items.push({
                 title: "Aadhaar - Front",
@@ -1178,7 +1208,6 @@ const SellLetterHistory = () => {
           );
         }
 
-        // Create first page with RC items (compact 2-column layout)
         if (rcItems.length > 0) {
           const page = pdfDoc.addPage([595, 842]);
           const margin = 40;
@@ -1225,7 +1254,6 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Render single Aadhaar as full page with header
         if (singleAadhaarItem.length > 0) {
           const page = pdfDoc.addPage([595, 842]);
           const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -1312,65 +1340,12 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Add remaining documents (2 per page)
         for (let i = 0; i < items.length; i += 2) {
           const page = pdfDoc.addPage([595, 842]);
-          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
           try {
-            const logoUrl = logo1;
-            const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
-            const logoImg = await pdfDoc.embedPng(logoBytes);
-
-            // invoice-style header
-            page.drawRectangle({
-              x: 0,
-              y: 780,
-              width: 595,
-              height: 80,
-              color: rgb(0.047, 0.098, 0.196),
-            });
-            page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
-            try {
-              page.drawImage(logoImg, {
-                x: 180,
-                y: 430,
-                width: 260,
-                height: 220,
-                opacity: 0.3,
-              });
-              page.drawImage(logoImg, {
-                x: 180,
-                y: 130,
-                width: 260,
-                height: 220,
-                opacity: 0.3,
-              });
-            } catch (wmErr) {}
-            page.drawText("UDAYAM-BR-26-0028550", {
-              x: 330,
-              y: 805,
-              size: 14,
-              color: rgb(1, 1, 1),
-              font,
-            });
-            page.drawText("GSTIN: 22ABCDE1234F1Z5", {
-              x: 330,
-              y: 785,
-              size: 14,
-              color: rgb(1, 1, 1),
-              font,
-            });
-            page.drawRectangle({
-              x: 0,
-              y: 750,
-              width: 595,
-              height: 30,
-              color: rgb(0.9, 0.9, 0.9),
-            });
-          } catch (err) {
-            // ignore header errors
-          }
-
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
           const yPositions = [740, 390];
 
           for (let cell = 0; cell < 2; cell++) {
@@ -1415,7 +1390,6 @@ const SellLetterHistory = () => {
 
       await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
 
-      // add invoice page as final page if selected
       if (documentsToInclude?.invoice === true) {
         const invoicePage = pdfDoc.addPage([595, 842]);
         await drawVehicleInvoice(invoicePage, pdfDoc, letter);
@@ -1449,13 +1423,11 @@ const SellLetterHistory = () => {
       setDownloadProgress(0);
       await simulateProgress();
 
-      // Start with empty PDF if letter is not selected, otherwise load template
       let pdfDoc;
       if (documentsToInclude?.letter === true) {
         const existingPdfBytes = await loadPDFTemplate("englishsell.pdf");
         pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-        // we'll add document pages first, then invoice as the final page
         const formattedLetter = {
           ...letter,
           buyerName1: letter.buyerName,
@@ -1513,7 +1485,7 @@ const SellLetterHistory = () => {
           const xBase = englishFieldPositions.saleAmount.x;
           const yBase = englishFieldPositions.saleAmount.y;
           const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
-          const offsetMultiplier = 3; // English template spacing
+          const offsetMultiplier = 3;
           page.drawText(formattedLetter.amountInWords, {
             x:
               xBase +
@@ -1526,11 +1498,9 @@ const SellLetterHistory = () => {
           });
         }
       } else {
-        // Create empty PDF if letter is not selected
         pdfDoc = await PDFDocument.create();
       }
 
-      // Insert document pages (packed 2x2)
       const embedImageFromUrl = async (pdfDoc, url) => {
         try {
           const res = await fetch(url);
@@ -1547,9 +1517,8 @@ const SellLetterHistory = () => {
       const addDocumentPages = async (pdfDoc, documentsObj) => {
         if (!documentsObj) return;
         const items = [];
-        const rcItems = []; // Separate RC items
+        const rcItems = [];
 
-        // Collect RC items
         if (documentsObj.vehicleRC) {
           if (documentsObj.vehicleRC.front)
             rcItems.push({
@@ -1563,13 +1532,11 @@ const SellLetterHistory = () => {
             });
         }
 
-        // Collect Aadhaar documents based on upload mode
         const singleAadhaarItem = [];
         if (documentsObj.aadhaar) {
           const uploadMode = documentsObj.aadhaarUploadMode || "separate";
 
           if (uploadMode === "single") {
-            // Single file mode: render full-page separately
             if (documentsObj.aadhaar.front) {
               singleAadhaarItem.push({
                 title: "Aadhaar (Front and Back)",
@@ -1577,7 +1544,6 @@ const SellLetterHistory = () => {
               });
             }
           } else {
-            // Separate mode: show front and back separately in 2-per-page layout
             if (documentsObj.aadhaar.front)
               items.push({
                 title: "Aadhaar - Front",
@@ -1606,7 +1572,6 @@ const SellLetterHistory = () => {
           );
         }
 
-        // Create first page with RC items (compact 2-column layout)
         if (rcItems.length > 0) {
           const page = pdfDoc.addPage([595, 842]);
           const margin = 40;
@@ -1653,7 +1618,6 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Render single Aadhaar as full page with header
         if (singleAadhaarItem.length > 0) {
           const page = pdfDoc.addPage([595, 842]);
           const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -1714,37 +1678,12 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Add remaining documents (2 per page)
         for (let i = 0; i < items.length; i += 2) {
           const page = pdfDoc.addPage([595, 842]);
-          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
           try {
-            const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
-            const logoImg = await pdfDoc.embedPng(logoBytes);
-            page.drawRectangle({
-              x: 0,
-              y: 780,
-              width: 595,
-              height: 80,
-              color: rgb(0.047, 0.098, 0.196),
-            });
-            page.drawImage(logoImg, {
-              x: 50,
-              y: 792 - 60,
-              width: 120,
-              height: 60,
-            });
-            page.drawText("OK Motors", {
-              x: 190,
-              y: 815,
-              size: 14,
-              font,
-              color: rgb(255, 255, 255),
-            });
-          } catch (err) {
-            // ignore header errors
-          }
-
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
           const yPositions = [740, 390];
 
           for (let cell = 0; cell < 2; cell++) {
@@ -1789,7 +1728,6 @@ const SellLetterHistory = () => {
 
       await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
 
-      // add invoice page as final page if selected
       if (documentsToInclude?.invoice === true) {
         const invoicePage = pdfDoc.addPage([595, 842]);
         await drawVehicleInvoice(invoicePage, pdfDoc, letter);
@@ -2289,11 +2227,14 @@ const SellLetterHistory = () => {
             return;
           }
 
-          await axios.delete(`https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
+          await axios.delete(
+            `https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             },
-          });
+          );
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
           alert("Sell letter deleted successfully!");
         } else {
@@ -2884,7 +2825,6 @@ const SellLetterHistory = () => {
                     setChosenLanguage("english");
                     setShowLanguageModal(false);
                     if (languageAction === "download") {
-                      // initialize selections based on available documents
                       setDocSelections({
                         vehicleRC: !!selectedLetter.documents?.vehicleRC,
                         aadhaar: !!selectedLetter.documents?.aadhaar,
@@ -3389,7 +3329,7 @@ const SellLetterHistory = () => {
                     );
 
                     setShowDocumentModal(false);
-                    // trigger PDF generation based on chosen language
+
                     if (chosenLanguage === "hindi") {
                       fillAndDownloadHindiPdf(selectedLetter, filtered);
                     } else {
