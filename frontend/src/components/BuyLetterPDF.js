@@ -1026,8 +1026,8 @@ const BuyLetterForm = () => {
         const pdfData = await extractImagesFromPdf(file);
         const pdfUrl = pdfData?.url || URL.createObjectURL(file);
 
-        const finalFile = convertedFile || file;
-        const effectivePreview = previewImage || pdfUrl;
+        // use convertedFile/previewImage when available, otherwise keep original file/url
+        // (no local variable needed here)
       }
 
       if (isImageFile(file)) {
@@ -1490,9 +1490,8 @@ const BuyLetterForm = () => {
             const page = pdfDoc.addPage([595, 842]);
 
             // header/footer similar to the two-column pages
-            try {
-              const fontB = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-              const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+              try {
+                const fontB = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
               const logoUrl = logo1;
               const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
               const logoImg = await pdfDoc.embedPng(logoBytes);
@@ -2004,9 +2003,8 @@ const BuyLetterForm = () => {
           for (let idx = 0; idx < pageItems.length; idx++) {
             const url = pageItems[idx];
             const page = pdfDoc.addPage([595, 842]);
-            try {
-              const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-              const regFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+              try {
+                const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
               const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
               const logoImg = await pdfDoc.embedPng(logoBytes);
               page.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });

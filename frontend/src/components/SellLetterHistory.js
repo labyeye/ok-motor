@@ -833,68 +833,7 @@ const SellLetterHistory = () => {
             }
           };
 
-          const renderSingleImagePerPage = async (pageItems) => {
-            for (const item of pageItems) {
-              const page = pdfDoc.addPage([595, 842]);
-              try {
-                const logoUrl = logo1;
-                const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
-                const logoImg = await pdfDoc.embedPng(logoBytes);
-                page.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });
-                page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
-                page.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 805, size: 14, color: rgb(1, 1, 1) });
-                page.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 785, size: 14, color: rgb(1, 1, 1) });
-              } catch (e) {}
-
-              const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-              const titleY = 700;
-              page.drawText(item.title, { x: 50, y: titleY, size: 12, font: titleFont });
-
-              const asset = await embedAssetFromUrl(pdfDoc, item.url);
-              if (!asset) continue;
-
-              const pageWidth = 595;
-              const margin = 50;
-              const maxWidth = pageWidth - 2 * margin;
-              const maxHeight = 660;
-
-              if (asset.kind === "image") {
-                const embedded = asset.embedded;
-                const { width, height } = embedded.scale(1);
-                let drawW = maxWidth;
-                let drawH = (height / width) * drawW;
-                if (drawH > maxHeight) {
-                  drawH = maxHeight;
-                  drawW = (width / height) * drawH;
-                }
-                const xPos = (pageWidth - drawW) / 2;
-                const yPos = titleY - drawH - 15;
-                page.drawImage(embedded, { x: xPos, y: yPos, width: drawW, height: drawH });
-              } else if (asset.kind === "pdf") {
-                const embeddedPage = asset.embeddedPage;
-                const embeddedWidth = embeddedPage.width || embeddedPage.getWidth?.() || 595;
-                const embeddedHeight = embeddedPage.height || embeddedPage.getHeight?.() || 842;
-                let drawW = maxWidth;
-                let drawH = (embeddedHeight / embeddedWidth) * drawW;
-                if (drawH > maxHeight) {
-                  drawH = maxHeight;
-                  drawW = (embeddedWidth / embeddedHeight) * drawH;
-                }
-                const xPos = (pageWidth - drawW) / 2;
-                const yPos = titleY - drawH - 15;
-                try {
-                  page.drawPage(embeddedPage, { x: xPos, y: yPos, width: drawW, height: drawH });
-                } catch (err) {
-                  try {
-                    const asImage = await pdfDoc.embedJpg(await fetch(item.url).then((r) => r.arrayBuffer()));
-                    page.drawImage(asImage, { x: xPos, y: yPos, width: drawW, height: drawH });
-                  } catch (err2) {
-                    console.warn("Failed to draw embedded PDF page for", item.url, err2);
-                  }
-                }
-              }
-            }
-          };
+          // Renderer for single-page-per-upload documents is handled inline below
 
           // Create first page with RC items (compact 2-column layout)
           if (rcItems.length > 0) {
