@@ -1008,26 +1008,24 @@ const BuyLetterForm = () => {
       }
 
       if (isPdfFile(file)) {
-        let convertedFile = null;
-        let previewImage = null;
         try {
           const pdfImages = await convertPdfToImages(file);
           if (Array.isArray(pdfImages) && pdfImages[0]?.data) {
-            previewImage = pdfImages[0].data;
-            convertedFile = dataUrlToFile(
-              pdfImages[0].data,
-              `${uploadModalFieldName || "document"}.png`,
-            );
+            // preview available in pdfImages[0].data; converted file not needed here
+            const _ = pdfImages[0].data; // intentionally ignore but ensure conversion attempted
+            // create a File if needed by the cropper/flow elsewhere
+            // const converted = dataUrlToFile(pdfImages[0].data, `${uploadModalFieldName || "document"}.png`);
           }
         } catch (err) {
           console.warn("PDF to image conversion failed", err);
         }
 
-        const pdfData = await extractImagesFromPdf(file);
-        const pdfUrl = pdfData?.url || URL.createObjectURL(file);
-
-        // use convertedFile/previewImage when available, otherwise keep original file/url
-        // (no local variable needed here)
+        // attempt to extract images from PDF; result may include a preview URL
+        try {
+          await extractImagesFromPdf(file);
+        } catch (e) {
+          // ignore extraction errors at preview stage
+        }
       }
 
       if (isImageFile(file)) {

@@ -809,29 +809,7 @@ const SellLetterHistory = () => {
             }
           }
 
-          // helper to embed either an image or a single-page PDF
-          const embedAssetFromUrl = async (pdfDoc, url) => {
-            try {
-              const res = await fetch(url);
-              const contentType = (res.headers.get("content-type") || "").toLowerCase();
-              const bytes = await res.arrayBuffer();
-              if (contentType.includes("pdf") || url.toLowerCase().endsWith('.pdf')) {
-                const embeddedPages = await pdfDoc.embedPdf(bytes);
-                if (Array.isArray(embeddedPages) && embeddedPages.length > 0)
-                  return { kind: "pdf", embeddedPage: embeddedPages[0] };
-                return null;
-              }
-              if (contentType.includes("png")) {
-                const img = await pdfDoc.embedPng(bytes);
-                return { kind: "image", embedded: img };
-              }
-              const img = await pdfDoc.embedJpg(bytes);
-              return { kind: "image", embedded: img };
-            } catch (err) {
-              console.warn("Failed to embed asset from", url, err);
-              return null;
-            }
-          };
+          // embedding of assets (images/pdf) is handled inline where needed
 
           // Renderer for single-page-per-upload documents is handled inline below
 
