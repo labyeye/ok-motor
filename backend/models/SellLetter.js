@@ -95,10 +95,27 @@ const SellLetterSchema = new mongoose.Schema(
       pan: { type: String },
       deliveryPhoto: { type: String },
       vehiclePhotos: [{ type: String }],
-      insuranceNOC: {
+      // New documents: insuranceCertificate, vehicleNOC, vehicleBuyReceipt
+      insuranceCertificate: {
         pages: [{ type: String }],
       },
-      insuranceNOCUploadMode: {
+      insuranceCertificateUploadMode: {
+        type: String,
+        enum: ["single", "separate"],
+        default: "separate",
+      },
+      vehicleNOC: {
+        pages: [{ type: String }],
+      },
+      vehicleNOCUploadMode: {
+        type: String,
+        enum: ["single", "separate"],
+        default: "separate",
+      },
+      vehicleBuyReceipt: {
+        pages: [{ type: String }],
+      },
+      vehicleBuyReceiptUploadMode: {
         type: String,
         enum: ["single", "separate"],
         default: "separate",

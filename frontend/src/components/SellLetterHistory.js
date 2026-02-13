@@ -768,6 +768,134 @@ const SellLetterHistory = () => {
             );
           }
 
+          // Collect new multi-page documents: Insurance Certificate, Vehicle NOC, Vehicle Buy Receipt
+          const insuranceCertificateItems = [];
+          const vehicleNOCItems = [];
+          const vehicleBuyReceiptItems = [];
+
+          if (documentsObj.insuranceCertificate) {
+            if (Array.isArray(documentsObj.insuranceCertificate.pages)) {
+              documentsObj.insuranceCertificate.pages.forEach((p, idx) =>
+                insuranceCertificateItems.push({ title: `Insurance Certificate ${idx + 1}`, url: p }),
+              );
+            } else if (Array.isArray(documentsObj.insuranceCertificate)) {
+              documentsObj.insuranceCertificate.forEach((p, idx) =>
+                insuranceCertificateItems.push({ title: `Insurance Certificate ${idx + 1}`, url: p }),
+              );
+            }
+          }
+
+          if (documentsObj.vehicleNOC) {
+            if (Array.isArray(documentsObj.vehicleNOC.pages)) {
+              documentsObj.vehicleNOC.pages.forEach((p, idx) =>
+                vehicleNOCItems.push({ title: `Vehicle NOC ${idx + 1}`, url: p }),
+              );
+            } else if (Array.isArray(documentsObj.vehicleNOC)) {
+              documentsObj.vehicleNOC.forEach((p, idx) =>
+                vehicleNOCItems.push({ title: `Vehicle NOC ${idx + 1}`, url: p }),
+              );
+            }
+          }
+
+          if (documentsObj.vehicleBuyReceipt) {
+            if (Array.isArray(documentsObj.vehicleBuyReceipt.pages)) {
+              documentsObj.vehicleBuyReceipt.pages.forEach((p, idx) =>
+                vehicleBuyReceiptItems.push({ title: `Vehicle Buy Receipt ${idx + 1}`, url: p }),
+              );
+            } else if (Array.isArray(documentsObj.vehicleBuyReceipt)) {
+              documentsObj.vehicleBuyReceipt.forEach((p, idx) =>
+                vehicleBuyReceiptItems.push({ title: `Vehicle Buy Receipt ${idx + 1}`, url: p }),
+              );
+            }
+          }
+
+          // helper to embed either an image or a single-page PDF
+          const embedAssetFromUrl = async (pdfDoc, url) => {
+            try {
+              const res = await fetch(url);
+              const contentType = (res.headers.get("content-type") || "").toLowerCase();
+              const bytes = await res.arrayBuffer();
+              if (contentType.includes("pdf") || url.toLowerCase().endsWith('.pdf')) {
+                const embeddedPages = await pdfDoc.embedPdf(bytes);
+                if (Array.isArray(embeddedPages) && embeddedPages.length > 0)
+                  return { kind: "pdf", embeddedPage: embeddedPages[0] };
+                return null;
+              }
+              if (contentType.includes("png")) {
+                const img = await pdfDoc.embedPng(bytes);
+                return { kind: "image", embedded: img };
+              }
+              const img = await pdfDoc.embedJpg(bytes);
+              return { kind: "image", embedded: img };
+            } catch (err) {
+              console.warn("Failed to embed asset from", url, err);
+              return null;
+            }
+          };
+
+          const renderSingleImagePerPage = async (pageItems) => {
+            for (const item of pageItems) {
+              const page = pdfDoc.addPage([595, 842]);
+              try {
+                const logoUrl = logo1;
+                const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
+                const logoImg = await pdfDoc.embedPng(logoBytes);
+                page.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });
+                page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+                page.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 805, size: 14, color: rgb(1, 1, 1) });
+                page.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 785, size: 14, color: rgb(1, 1, 1) });
+              } catch (e) {}
+
+              const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+              const titleY = 700;
+              page.drawText(item.title, { x: 50, y: titleY, size: 12, font: titleFont });
+
+              const asset = await embedAssetFromUrl(pdfDoc, item.url);
+              if (!asset) continue;
+
+              const pageWidth = 595;
+              const margin = 50;
+              const maxWidth = pageWidth - 2 * margin;
+              const maxHeight = 660;
+
+              if (asset.kind === "image") {
+                const embedded = asset.embedded;
+                const { width, height } = embedded.scale(1);
+                let drawW = maxWidth;
+                let drawH = (height / width) * drawW;
+                if (drawH > maxHeight) {
+                  drawH = maxHeight;
+                  drawW = (width / height) * drawH;
+                }
+                const xPos = (pageWidth - drawW) / 2;
+                const yPos = titleY - drawH - 15;
+                page.drawImage(embedded, { x: xPos, y: yPos, width: drawW, height: drawH });
+              } else if (asset.kind === "pdf") {
+                const embeddedPage = asset.embeddedPage;
+                const embeddedWidth = embeddedPage.width || embeddedPage.getWidth?.() || 595;
+                const embeddedHeight = embeddedPage.height || embeddedPage.getHeight?.() || 842;
+                let drawW = maxWidth;
+                let drawH = (embeddedHeight / embeddedWidth) * drawW;
+                if (drawH > maxHeight) {
+                  drawH = maxHeight;
+                  drawW = (embeddedWidth / embeddedHeight) * drawH;
+                }
+                const xPos = (pageWidth - drawW) / 2;
+                const yPos = titleY - drawH - 15;
+                try {
+                  page.drawPage(embeddedPage, { x: xPos, y: yPos, width: drawW, height: drawH });
+                } catch (err) {
+                  try {
+                    const asImage = await pdfDoc.embedJpg(await fetch(item.url).then((r) => r.arrayBuffer()));
+                    page.drawImage(asImage, { x: xPos, y: yPos, width: drawW, height: drawH });
+                  } catch (err2) {
+                    console.warn("Failed to draw embedded PDF page for", item.url, err2);
+                  }
+                }
+              }
+            }
+          };
+
           // Create first page with RC items (compact 2-column layout)
           if (rcItems.length > 0) {
             const page = pdfDoc.addPage([595, 842]);

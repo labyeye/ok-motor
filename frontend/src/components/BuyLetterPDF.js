@@ -82,8 +82,12 @@ const BuyLetterForm = () => {
   const [loadingVehicles, setLoadingVehicles] = useState(false);
   const [aadhaarUploadMode, setAadhaarUploadMode] = useState("separate");
   const [vehicleRCUploadMode, setVehicleRCUploadMode] = useState("separate");
-  const [insuranceNOCUploadMode, setInsuranceNOCUploadMode] =
+  const [insuranceCertificateUploadMode, setInsuranceCertificateUploadMode] =
     useState("separate");
+  const [vehicleNOCUploadMode, setVehicleNOCUploadMode] = useState("separate");
+  const [vehicleBuyReceiptUploadMode, setVehicleBuyReceiptUploadMode] =
+    useState("separate");
+
   const [filesState, setFilesState] = useState({
     vehicleRCFront: null,
     vehicleRCBack: null,
@@ -91,10 +95,10 @@ const BuyLetterForm = () => {
     aadhaarBack: null,
     panPhoto: null,
     deliveryPhoto: null,
-    insuranceNOCFront: null,
-    insuranceNOCBack: null,
-    // new: support multiple NOC files (images or PDFs)
-    insuranceNOC: [],
+    // multi-page document arrays
+    insuranceCertificate: [],
+    vehicleNOC: [],
+    vehicleBuyReceipt: [],
   });
 
   const [filePreviews, setFilePreviews] = useState({});
@@ -185,6 +189,13 @@ const BuyLetterForm = () => {
           engineNumber: "",
           vehiclekm: "",
           vehicleCondition: "running",
+          pucIssueDate: "",
+          pucExpiryDate: "",
+          pucStatus: "",
+          insuranceExpiryDate: "",
+          insuranceStatus: "",
+          insuranceCompany: "",
+          insurancePolicyNumber: "",
           buyerName: "",
           buyerFatherName: "",
           buyerCurrentAddress: "",
@@ -258,6 +269,9 @@ const BuyLetterForm = () => {
 
         const normalized = {
           ...full,
+          pucIssueDate: toInputDate(full.pucIssueDate),
+          pucExpiryDate: toInputDate(full.pucExpiryDate),
+          insuranceExpiryDate: toInputDate(full.insuranceExpiryDate),
           saleDate:
             toInputDate(full.saleDate) ||
             new Date().toISOString().split("T")[0],
@@ -314,20 +328,53 @@ const BuyLetterForm = () => {
             previews.deliveryPhoto =
               full.documents.deliveryPhoto || full.documents.vehicleKM || null;
 
-          if (full.documents.insuranceNOCUploadMode) {
-            setInsuranceNOCUploadMode(full.documents.insuranceNOCUploadMode);
+          // insuranceCertificate
+          if (full.documents.insuranceCertificateUploadMode) {
+            setInsuranceCertificateUploadMode(
+              full.documents.insuranceCertificateUploadMode,
+            );
           } else {
-            // determine mode based on pages count
-            const pages = full.documents.insuranceNOC?.pages || [];
-            setInsuranceNOCUploadMode(
+            const pages = full.documents.insuranceCertificate?.pages || [];
+            setInsuranceCertificateUploadMode(
               pages.length <= 1 ? "single" : "separate",
             );
           }
           if (
-            full.documents.insuranceNOC &&
-            Array.isArray(full.documents.insuranceNOC.pages)
+            full.documents.insuranceCertificate &&
+            Array.isArray(full.documents.insuranceCertificate.pages)
           ) {
-            previews.insuranceNOC = full.documents.insuranceNOC.pages.slice();
+            previews.insuranceCertificate =
+              full.documents.insuranceCertificate.pages.slice();
+          }
+
+          // vehicleNOC
+          if (full.documents.vehicleNOCUploadMode) {
+            setVehicleNOCUploadMode(full.documents.vehicleNOCUploadMode);
+          } else {
+            const pages = full.documents.vehicleNOC?.pages || [];
+            setVehicleNOCUploadMode(pages.length <= 1 ? "single" : "separate");
+          }
+          if (full.documents.vehicleNOC && Array.isArray(full.documents.vehicleNOC.pages)) {
+            previews.vehicleNOC = full.documents.vehicleNOC.pages.slice();
+          }
+
+          // vehicleBuyReceipt
+          if (full.documents.vehicleBuyReceiptUploadMode) {
+            setVehicleBuyReceiptUploadMode(
+              full.documents.vehicleBuyReceiptUploadMode,
+            );
+          } else {
+            const pages = full.documents.vehicleBuyReceipt?.pages || [];
+            setVehicleBuyReceiptUploadMode(
+              pages.length <= 1 ? "single" : "separate",
+            );
+          }
+          if (
+            full.documents.vehicleBuyReceipt &&
+            Array.isArray(full.documents.vehicleBuyReceipt.pages)
+          ) {
+            previews.vehicleBuyReceipt =
+              full.documents.vehicleBuyReceipt.pages.slice();
           }
 
           setFilePreviews((prev) => ({ ...prev, ...previews }));
@@ -726,9 +773,9 @@ const BuyLetterForm = () => {
         filesState.aadhaarBack ||
         filesState.panPhoto ||
         filesState.deliveryPhoto ||
-        filesState.insuranceNOCFront ||
-        filesState.insuranceNOCBack ||
-        (filesState.insuranceNOC && filesState.insuranceNOC.length > 0);
+        (filesState.insuranceCertificate && filesState.insuranceCertificate.length > 0) ||
+        (filesState.vehicleNOC && filesState.vehicleNOC.length > 0) ||
+        (filesState.vehicleBuyReceipt && filesState.vehicleBuyReceipt.length > 0);
 
       if (hasFiles) {
         const form = new FormData();
@@ -744,7 +791,9 @@ const BuyLetterForm = () => {
 
         form.append("aadhaarUploadMode", aadhaarUploadMode);
         form.append("vehicleRCUploadMode", vehicleRCUploadMode);
-        form.append("insuranceNOCUploadMode", insuranceNOCUploadMode);
+        form.append("insuranceCertificateUploadMode", insuranceCertificateUploadMode);
+        form.append("vehicleNOCUploadMode", vehicleNOCUploadMode);
+        form.append("vehicleBuyReceiptUploadMode", vehicleBuyReceiptUploadMode);
 
         if (filesState.vehicleRCFront)
           form.append("vehicleRCFront", filesState.vehicleRCFront);
@@ -758,15 +807,20 @@ const BuyLetterForm = () => {
         if (filesState.deliveryPhoto)
           form.append("deliveryPhoto", filesState.deliveryPhoto);
 
-        if (filesState.insuranceNOCFront)
-          form.append("insuranceNOCFront", filesState.insuranceNOCFront);
-        if (filesState.insuranceNOCBack)
-          form.append("insuranceNOCBack", filesState.insuranceNOCBack);
-
-        // append multiple insurance NOC files (images or PDFs)
-        if (filesState.insuranceNOC && filesState.insuranceNOC.length) {
-          for (let i = 0; i < filesState.insuranceNOC.length; i++) {
-            form.append("insuranceNOC", filesState.insuranceNOC[i]);
+        // append multiple files for new multi-page documents
+        if (filesState.insuranceCertificate && filesState.insuranceCertificate.length) {
+          for (let i = 0; i < filesState.insuranceCertificate.length; i++) {
+            form.append("insuranceCertificate", filesState.insuranceCertificate[i]);
+          }
+        }
+        if (filesState.vehicleNOC && filesState.vehicleNOC.length) {
+          for (let i = 0; i < filesState.vehicleNOC.length; i++) {
+            form.append("vehicleNOC", filesState.vehicleNOC[i]);
+          }
+        }
+        if (filesState.vehicleBuyReceipt && filesState.vehicleBuyReceipt.length) {
+          for (let i = 0; i < filesState.vehicleBuyReceipt.length; i++) {
+            form.append("vehicleBuyReceipt", filesState.vehicleBuyReceipt[i]);
           }
         }
 
@@ -794,23 +848,31 @@ const BuyLetterForm = () => {
             preservedDocs.deliveryPhoto = filePreviews.deliveryPhoto;
           }
 
-          if (!filesState.insuranceNOCFront && filePreviews.insuranceNOCFront) {
-            preservedDocs.insuranceNOCFront = filePreviews.insuranceNOCFront;
-          }
-          if (!filesState.insuranceNOCBack && filePreviews.insuranceNOCBack) {
-            preservedDocs.insuranceNOCBack = filePreviews.insuranceNOCBack;
-          }
-
-          // preserve multi NOC pages if present
+          // preserve multi-page documents if not re-uploaded
           if (
-            !filesState.insuranceNOC ||
-            filesState.insuranceNOC.length === 0
+            !filesState.insuranceCertificate ||
+            filesState.insuranceCertificate.length === 0
           ) {
             if (
-              filePreviews.insuranceNOC &&
-              Array.isArray(filePreviews.insuranceNOC)
+              filePreviews.insuranceCertificate &&
+              Array.isArray(filePreviews.insuranceCertificate)
             ) {
-              preservedDocs.insuranceNOC = filePreviews.insuranceNOC;
+              preservedDocs.insuranceCertificate = filePreviews.insuranceCertificate;
+            }
+          }
+
+          if (!filesState.vehicleNOC || filesState.vehicleNOC.length === 0) {
+            if (filePreviews.vehicleNOC && Array.isArray(filePreviews.vehicleNOC)) {
+              preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
+            }
+          }
+
+          if (!filesState.vehicleBuyReceipt || filesState.vehicleBuyReceipt.length === 0) {
+            if (
+              filePreviews.vehicleBuyReceipt &&
+              Array.isArray(filePreviews.vehicleBuyReceipt)
+            ) {
+              preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
             }
           }
 
@@ -875,8 +937,12 @@ const BuyLetterForm = () => {
   const handleFileInput = (fieldName, allowPdf = false) => {
     setUploadModalFieldName(fieldName);
     setUploadModalAllowPdf(allowPdf);
-    // only allow multiple selection for insurance NOC
-    setUploadModalAllowMultiple(fieldName === "insuranceNOC");
+    // allow multiple selection for these multi-page documents
+    setUploadModalAllowMultiple(
+      fieldName === "insuranceCertificate" ||
+        fieldName === "vehicleNOC" ||
+        fieldName === "vehicleBuyReceipt",
+    );
     setShowFileUploadModal(true);
   };
 
@@ -900,11 +966,15 @@ const BuyLetterForm = () => {
     try {
       // If multiple files were returned (when allowMultiple used)
       if (Array.isArray(file)) {
-        // currently only multi-support for insuranceNOC
-        if (uploadModalFieldName === "insuranceNOC") {
-          const filesArr = file;
+        const filesArr = file;
+        // support multiple selection for the three new multi-page document fields
+        if (
+          uploadModalFieldName === "insuranceCertificate" ||
+          uploadModalFieldName === "vehicleNOC" ||
+          uploadModalFieldName === "vehicleBuyReceipt"
+        ) {
           // save original files for upload
-          setFilesState((prev) => ({ ...prev, insuranceNOC: filesArr }));
+          setFilesState((prev) => ({ ...prev, [uploadModalFieldName]: filesArr }));
 
           // build previews: for images use object URL, for PDFs try to get first-page image
           const previews = [];
@@ -928,11 +998,12 @@ const BuyLetterForm = () => {
             }
           }
 
-          setFilePreviews((prev) => ({ ...prev, insuranceNOC: previews }));
+          setFilePreviews((prev) => ({ ...prev, [uploadModalFieldName]: previews }));
           setShowFileUploadModal(false);
           return;
         }
-        // fallback: if array but not insuranceNOC, take first
+
+        // fallback: if array but not a multi-page doc, take first
         file = file[0];
       }
 
@@ -1026,19 +1097,21 @@ const BuyLetterForm = () => {
         vehicleRCBack: url,
       }));
     } else if (
-      cropFieldName === "insuranceNOCFront" &&
-      insuranceNOCUploadMode === "single"
+      (cropFieldName === "insuranceCertificate" &&
+        insuranceCertificateUploadMode === "single") ||
+      (cropFieldName === "vehicleNOC" && vehicleNOCUploadMode === "single") ||
+      (cropFieldName === "vehicleBuyReceipt" &&
+        vehicleBuyReceiptUploadMode === "single")
     ) {
+      // For single-mode multi-page documents, store the single cropped image as a single-element array
       setFilesState((prev) => ({
         ...prev,
-        insuranceNOCFront: file,
-        insuranceNOCBack: file,
+        [cropFieldName]: [file],
       }));
       const url = URL.createObjectURL(file);
       setFilePreviews((prev) => ({
         ...prev,
-        insuranceNOCFront: url,
-        insuranceNOCBack: url,
+        [cropFieldName]: [url],
       }));
     } else {
       setFilesState((prev) => ({ ...prev, [cropFieldName]: file }));
@@ -1407,6 +1480,122 @@ const BuyLetterForm = () => {
               url: documentsObj.vehicleRC.back,
             });
         }
+
+        // Render certain multi-page documents as one image/PDF page each,
+        // immediately after Vehicle RC and before Aadhaar in the output.
+        const renderSingleImagePerPage = async (pagesArray, pageTitlePrefix) => {
+          if (!pagesArray || !pagesArray.length) return;
+          for (let p = 0; p < pagesArray.length; p++) {
+            const url = pagesArray[p];
+            const page = pdfDoc.addPage([595, 842]);
+
+            // header/footer similar to the two-column pages
+            try {
+              const fontB = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+              const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+              const logoUrl = logo1;
+              const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
+              const logoImg = await pdfDoc.embedPng(logoBytes);
+
+              page.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });
+              page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+              try {
+                page.drawImage(logoImg, { x: 180, y: 430, width: 260, height: 220, opacity: 0.3 });
+                page.drawImage(logoImg, { x: 180, y: 130, width: 260, height: 220, opacity: 0.3 });
+              } catch (wmErr) {}
+
+              page.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 805, size: 18, color: rgb(1, 1, 1), font: fontB });
+              page.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 785, size: 18, color: rgb(1, 1, 1), font: fontB });
+
+              try {
+                const thank = "Thank you for your business!";
+                const addr = "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+                const thankW = fontB.widthOfTextAtSize(thank, 12);
+                const addrFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+                const addrW = addrFont.widthOfTextAtSize(addr, 9);
+                const centerXThank = (595 - thankW) / 2;
+                const centerXAddr = (595 - addrW) / 2;
+                page.drawLine({ start: { x: 20, y: 52 }, end: { x: 575, y: 52 }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
+                page.drawText(thank, { x: centerXThank, y: 40, size: 12, color: rgb(0, 0, 0), font: fontB });
+                page.drawText(addr, { x: centerXAddr, y: 26, size: 9, color: rgb(0.45, 0.45, 0.45), font: addrFont });
+              } catch (e) {}
+              page.drawRectangle({ x: 0, y: 750, width: 595, height: 30, color: rgb(0.9, 0.9, 0.9) });
+            } catch (err) {}
+
+            const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            page.drawText(`${pageTitlePrefix} - Page ${p + 1}`, { x: 50, y: 700, size: 12, font: titleFont });
+
+            // Try to embed image or single-page PDF
+            try {
+              const res = await fetch(url);
+              const contentType = (res.headers.get("content-type") || "").toLowerCase();
+              const bytes = await res.arrayBuffer();
+
+              if (contentType.includes("pdf") || url.toLowerCase().endsWith('.pdf')) {
+                const embedded = await pdfDoc.embedPdf(bytes);
+                const embeddedPage = Array.isArray(embedded) && embedded.length ? embedded[0] : null;
+                if (embeddedPage) {
+                  const embeddedWidth = embeddedPage.width || embeddedPage.getWidth?.() || 595;
+                  const embeddedHeight = embeddedPage.height || embeddedPage.getHeight?.() || 842;
+                  const pageWidth = 595;
+                  const margin = 50;
+                  const maxWidth = pageWidth - 2 * margin;
+                  const maxHeight = 660;
+                  let drawW = maxWidth;
+                  let drawH = (embeddedHeight / embeddedWidth) * drawW;
+                  if (drawH > maxHeight) {
+                    drawH = maxHeight;
+                    drawW = (embeddedWidth / embeddedHeight) * drawH;
+                  }
+                  const xPos = (pageWidth - drawW) / 2;
+                  const yPos = 690 - drawH;
+                  try {
+                    page.drawPage(embeddedPage, { x: xPos, y: yPos, width: drawW, height: drawH });
+                  } catch (err) {
+                    try {
+                      const asImg = await pdfDoc.embedJpg(bytes);
+                      page.drawImage(asImg, { x: xPos, y: yPos, width: drawW, height: drawH });
+                    } catch (err2) {
+                      console.warn('Failed to render embedded pdf page', url, err2);
+                    }
+                  }
+                }
+              } else {
+                let embedded;
+                if (contentType.includes("png")) embedded = await pdfDoc.embedPng(bytes);
+                else embedded = await pdfDoc.embedJpg(bytes);
+                const { width, height } = embedded.scale(1);
+                const pageWidth = 595;
+                const margin = 50;
+                const maxWidth = pageWidth - 2 * margin;
+                const maxHeight = 660;
+                let drawW = maxWidth;
+                let drawH = (height / width) * drawW;
+                if (drawH > maxHeight) {
+                  drawH = maxHeight;
+                  drawW = (width / height) * drawH;
+                }
+                const xPos = (pageWidth - drawW) / 2;
+                const yPos = 690 - drawH;
+                page.drawImage(embedded, { x: xPos, y: yPos, width: drawW, height: drawH });
+              }
+            } catch (err) {
+              console.warn("Failed to render document page", url, err);
+            }
+          }
+        };
+
+        // Execute renderers for the new documents in the desired order
+        if (documentsObj.insuranceCertificate && Array.isArray(documentsObj.insuranceCertificate.pages) && documentsObj.insuranceCertificate.pages.length) {
+          await renderSingleImagePerPage(documentsObj.insuranceCertificate.pages, 'Insurance Certificate');
+        }
+        if (documentsObj.vehicleNOC && Array.isArray(documentsObj.vehicleNOC.pages) && documentsObj.vehicleNOC.pages.length) {
+          await renderSingleImagePerPage(documentsObj.vehicleNOC.pages, 'Vehicle NOC');
+        }
+        if (documentsObj.vehicleBuyReceipt && Array.isArray(documentsObj.vehicleBuyReceipt.pages) && documentsObj.vehicleBuyReceipt.pages.length) {
+          await renderSingleImagePerPage(documentsObj.vehicleBuyReceipt.pages, 'Vehicle Buy Receipt');
+        }
+
         if (documentsObj.aadhaar) {
           if (documentsObj.aadhaar.front)
             items.push({
@@ -1808,6 +1997,94 @@ const BuyLetterForm = () => {
               url: documentsObj.vehicleRC.back,
             });
         }
+
+        // Render the new multi-page documents (one per PDF page) after Vehicle RC
+        const renderSingleImagePerPageLocal = async (pageItems, pageTitlePrefix) => {
+          if (!pageItems || !pageItems.length) return;
+          for (let idx = 0; idx < pageItems.length; idx++) {
+            const url = pageItems[idx];
+            const page = pdfDoc.addPage([595, 842]);
+            try {
+              const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+              const regFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+              const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
+              const logoImg = await pdfDoc.embedPng(logoBytes);
+              page.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });
+              page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
+              page.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 805, size: 18, color: rgb(1,1,1), font: headerFont });
+              page.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 785, size: 18, color: rgb(1,1,1), font: headerFont });
+              page.drawRectangle({ x: 0, y: 750, width: 595, height: 30, color: rgb(0.9, 0.9, 0.9) });
+            } catch (err) {}
+
+            const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            page.drawText(`${pageTitlePrefix} - Page ${idx + 1}`, { x: 50, y: 700, size: 12, font: titleFont });
+
+            try {
+              const res = await fetch(url);
+              const contentType = (res.headers.get("content-type") || "").toLowerCase();
+              const bytes = await res.arrayBuffer();
+              const pageWidth = 595;
+              const margin = 50;
+              const maxWidth = pageWidth - 2 * margin;
+              const maxHeight = 660;
+
+              if (contentType.includes("pdf") || url.toLowerCase().endsWith('.pdf')) {
+                const embedded = await pdfDoc.embedPdf(bytes);
+                const embeddedPage = Array.isArray(embedded) && embedded.length ? embedded[0] : null;
+                if (embeddedPage) {
+                  const embeddedWidth = embeddedPage.width || embeddedPage.getWidth?.() || 595;
+                  const embeddedHeight = embeddedPage.height || embeddedPage.getHeight?.() || 842;
+                  let drawW = maxWidth;
+                  let drawH = (embeddedHeight / embeddedWidth) * drawW;
+                  if (drawH > maxHeight) { drawH = maxHeight; drawW = (embeddedWidth / embeddedHeight) * drawH; }
+                  const xPos = (pageWidth - drawW) / 2;
+                  const yPos = 690 - drawH;
+                  try { page.drawPage(embeddedPage, { x: xPos, y: yPos, width: drawW, height: drawH }); }
+                  catch (err) { try { const asImg = await pdfDoc.embedJpg(bytes); page.drawImage(asImg, { x: xPos, y: yPos, width: drawW, height: drawH }); } catch (e) {} }
+                }
+              } else {
+                let embedded;
+                if (contentType.includes("png")) embedded = await pdfDoc.embedPng(bytes);
+                else embedded = await pdfDoc.embedJpg(bytes);
+                const { width, height } = embedded.scale(1);
+                let drawW = maxWidth;
+                let drawH = (height / width) * drawW;
+                if (drawH > maxHeight) { drawH = maxHeight; drawW = (width / height) * drawH; }
+                const xPos = (pageWidth - drawW) / 2;
+                const yPos = 690 - drawH;
+                page.drawImage(embedded, { x: xPos, y: yPos, width: drawW, height: drawH });
+              }
+            } catch (err) {
+              console.warn('Error rendering multi-page doc', url, err);
+            }
+          }
+        };
+
+        // insuranceCertificate
+        if (documentsObj.insuranceCertificate) {
+          if (Array.isArray(documentsObj.insuranceCertificate.pages)) {
+            await renderSingleImagePerPageLocal(documentsObj.insuranceCertificate.pages, 'Insurance Certificate');
+          } else if (Array.isArray(documentsObj.insuranceCertificate)) {
+            await renderSingleImagePerPageLocal(documentsObj.insuranceCertificate, 'Insurance Certificate');
+          }
+        }
+        // vehicleNOC
+        if (documentsObj.vehicleNOC) {
+          if (Array.isArray(documentsObj.vehicleNOC.pages)) {
+            await renderSingleImagePerPageLocal(documentsObj.vehicleNOC.pages, 'Vehicle NOC');
+          } else if (Array.isArray(documentsObj.vehicleNOC)) {
+            await renderSingleImagePerPageLocal(documentsObj.vehicleNOC, 'Vehicle NOC');
+          }
+        }
+        // vehicleBuyReceipt
+        if (documentsObj.vehicleBuyReceipt) {
+          if (Array.isArray(documentsObj.vehicleBuyReceipt.pages)) {
+            await renderSingleImagePerPageLocal(documentsObj.vehicleBuyReceipt.pages, 'Vehicle Buy Receipt');
+          } else if (Array.isArray(documentsObj.vehicleBuyReceipt)) {
+            await renderSingleImagePerPageLocal(documentsObj.vehicleBuyReceipt, 'Vehicle Buy Receipt');
+          }
+        }
+
         if (documentsObj.aadhaar) {
           if (documentsObj.aadhaar.front)
             items.push({
@@ -1824,18 +2101,6 @@ const BuyLetterForm = () => {
           items.push({ title: "PAN Card", url: documentsObj.pan });
         if (documentsObj.vehicleKM)
           items.push({ title: "Vehicle KM", url: documentsObj.vehicleKM });
-        if (documentsObj.insuranceNOC) {
-          if (documentsObj.insuranceNOC.front)
-            items.push({
-              title: "Insurance NOC - Front",
-              url: documentsObj.insuranceNOC.front,
-            });
-          if (documentsObj.insuranceNOC.back)
-            items.push({
-              title: "Insurance NOC - Back",
-              url: documentsObj.insuranceNOC.back,
-            });
-        }
 
         for (let i = 0; i < items.length; i += 4) {
           const page = pdfDoc.addPage([595, 842]);
@@ -3354,77 +3619,95 @@ const BuyLetterForm = () => {
                   </div>
                 )}
 
-                {/* Multiple NOC pages upload (images or multi-page PDF) */}
+                {/* Insurance Certificate (multi-page) */}
                 <div style={{ ...styles.formField, width: "100%" }}>
-                  <label style={styles.formLabel}>Insurance NOC Pages</label>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "8px",
-                      alignItems: "center",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleFileInput("insuranceNOC", true)}
-                      style={styles.uploadBtn}
-                    >
-                      <Image size={20} />{" "}
-                      {filePreviews.insuranceNOC ? "Change" : "Upload Pages"}
+                  <label style={styles.formLabel}>Insurance Certificate Pages</label>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <button type="button" onClick={() => handleFileInput("insuranceCertificate", true)} style={styles.uploadBtn}>
+                      <Image size={20} /> {filePreviews.insuranceCertificate ? "Change" : "Upload Pages"}
                     </button>
-                    {filePreviews.insuranceNOC && (
+                    {filePreviews.insuranceCertificate && (
                       <div style={{ fontSize: "14px", color: "#333" }}>
-                        {Array.isArray(filePreviews.insuranceNOC)
-                          ? `${filePreviews.insuranceNOC.length} page(s)`
-                          : "1 page"}
+                        {Array.isArray(filePreviews.insuranceCertificate) ? `${filePreviews.insuranceCertificate.length} page(s)` : "1 page"}
                       </div>
                     )}
-                    {filePreviews.insuranceNOC && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFilesState((prev) => ({
-                            ...prev,
-                            insuranceNOC: [],
-                          }));
-                          setFilePreviews((prev) => ({
-                            ...prev,
-                            insuranceNOC: null,
-                          }));
-                        }}
-                        style={{
-                          ...styles.uploadBtn,
-                          backgroundColor: "#ef4444",
-                        }}
-                      >
+                    {filePreviews.insuranceCertificate && (
+                      <button type="button" onClick={() => {
+                        setFilesState((prev) => ({ ...prev, insuranceCertificate: [] }));
+                        setFilePreviews((prev) => ({ ...prev, insuranceCertificate: null }));
+                      }} style={{ ...styles.uploadBtn, backgroundColor: "#ef4444" }}>
                         Remove
                       </button>
                     )}
                   </div>
-                  {filePreviews.insuranceNOC &&
-                    Array.isArray(filePreviews.insuranceNOC) && (
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "8px",
-                          marginTop: "8px",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        {filePreviews.insuranceNOC.slice(0, 6).map((u, idx) => (
-                          <img
-                            key={idx}
-                            src={u}
-                            alt={`noc-${idx + 1}`}
-                            style={{
-                              width: 100,
-                              height: 80,
-                              objectFit: "cover",
-                            }}
-                          />
-                        ))}
+                  {filePreviews.insuranceCertificate && Array.isArray(filePreviews.insuranceCertificate) && (
+                    <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
+                      {filePreviews.insuranceCertificate.slice(0, 6).map((u, idx) => (
+                        <img key={idx} src={u} alt={`insurance-cert-${idx + 1}`} style={{ width: 100, height: 80, objectFit: "cover" }} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Vehicle NOC (multi-page) */}
+                <div style={{ ...styles.formField, width: "100%" }}>
+                  <label style={styles.formLabel}>Vehicle NOC Pages</label>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <button type="button" onClick={() => handleFileInput("vehicleNOC", true)} style={styles.uploadBtn}>
+                      <Image size={20} /> {filePreviews.vehicleNOC ? "Change" : "Upload Pages"}
+                    </button>
+                    {filePreviews.vehicleNOC && (
+                      <div style={{ fontSize: "14px", color: "#333" }}>
+                        {Array.isArray(filePreviews.vehicleNOC) ? `${filePreviews.vehicleNOC.length} page(s)` : "1 page"}
                       </div>
                     )}
+                    {filePreviews.vehicleNOC && (
+                      <button type="button" onClick={() => {
+                        setFilesState((prev) => ({ ...prev, vehicleNOC: [] }));
+                        setFilePreviews((prev) => ({ ...prev, vehicleNOC: null }));
+                      }} style={{ ...styles.uploadBtn, backgroundColor: "#ef4444" }}>
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {filePreviews.vehicleNOC && Array.isArray(filePreviews.vehicleNOC) && (
+                    <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
+                      {filePreviews.vehicleNOC.slice(0, 6).map((u, idx) => (
+                        <img key={idx} src={u} alt={`vehicle-noc-${idx + 1}`} style={{ width: 100, height: 80, objectFit: "cover" }} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Vehicle Buy Receipt (multi-page) */}
+                <div style={{ ...styles.formField, width: "100%" }}>
+                  <label style={styles.formLabel}>Vehicle Buy Receipt Pages</label>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <button type="button" onClick={() => handleFileInput("vehicleBuyReceipt", true)} style={styles.uploadBtn}>
+                      <Image size={20} /> {filePreviews.vehicleBuyReceipt ? "Change" : "Upload Pages"}
+                    </button>
+                    {filePreviews.vehicleBuyReceipt && (
+                      <div style={{ fontSize: "14px", color: "#333" }}>
+                        {Array.isArray(filePreviews.vehicleBuyReceipt) ? `${filePreviews.vehicleBuyReceipt.length} page(s)` : "1 page"}
+                      </div>
+                    )}
+                    {filePreviews.vehicleBuyReceipt && (
+                      <button type="button" onClick={() => {
+                        setFilesState((prev) => ({ ...prev, vehicleBuyReceipt: [] }));
+                        setFilePreviews((prev) => ({ ...prev, vehicleBuyReceipt: null }));
+                      }} style={{ ...styles.uploadBtn, backgroundColor: "#ef4444" }}>
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {filePreviews.vehicleBuyReceipt && Array.isArray(filePreviews.vehicleBuyReceipt) && (
+                    <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
+                      {filePreviews.vehicleBuyReceipt.slice(0, 6).map((u, idx) => (
+                        <img key={idx} src={u} alt={`vehicle-buy-receipt-${idx + 1}`} style={{ width: 100, height: 80, objectFit: "cover" }} />
+                      ))}
+                    </div>
+                  )}
+
                 </div>
 
                 {/* Aadhaar Upload Mode Toggle */}
@@ -3717,370 +4000,149 @@ const BuyLetterForm = () => {
                 </div>
 
                 {/* Aadhaar Upload Mode Toggle */}
-                <div style={{ ...styles.formField, width: "100%" }}>
-                  <label style={{ ...styles.formLabel, marginBottom: "12px" }}>
-                    Aadhaar Upload Mode
-                  </label>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "16px",
-                      marginBottom: "16px",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <label
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="aadhaarUploadMode"
-                        value="single"
-                        checked={aadhaarUploadMode === "single"}
-                        onChange={(e) => {
-                          setAadhaarUploadMode(e.target.value);
-                          // Clear aadhaar files when switching modes
-                          setFilesState((prev) => ({
-                            ...prev,
-                            aadhaarFront: null,
-                            aadhaarBack: null,
-                          }));
-                          setFilePreviews((prev) => ({
-                            ...prev,
-                            aadhaarFront: null,
-                            aadhaarBack: null,
-                          }));
-                        }}
-                        style={{ cursor: "pointer" }}
-                      />
-                      <span style={{ fontSize: "14px" }}>
-                        Single File (Front + Back in one PDF/Image)
-                      </span>
-                    </label>
-                    <label
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="aadhaarUploadMode"
-                        value="separate"
-                        checked={aadhaarUploadMode === "separate"}
-                        onChange={(e) => {
-                          setAadhaarUploadMode(e.target.value);
-                          // Clear aadhaar files when switching modes
-                          setFilesState((prev) => ({
-                            ...prev,
-                            aadhaarFront: null,
-                            aadhaarBack: null,
-                          }));
-                          setFilePreviews((prev) => ({
-                            ...prev,
-                            aadhaarFront: null,
-                            aadhaarBack: null,
-                          }));
-                        }}
-                        style={{ cursor: "pointer" }}
-                      />
-                      <span style={{ fontSize: "14px" }}>
-                        Two Separate Images (Front & Back)
-                      </span>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Render upload fields based on mode */}
-                {aadhaarUploadMode === "single" ? (
-                  <div style={styles.formField}>
-                    <label style={styles.formLabel}>
-                      Aadhaar (Front and Back)
-                    </label>
-                    <div
-                      style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => handleFileInput("aadhaarFront", true)}
-                        style={styles.uploadBtn}
-                      >
-                        <Image size={20} />{" "}
-                        {filePreviews.aadhaarFront ? "Change" : "Choose File"}
-                      </button>
-                      {filePreviews.aadhaarFront && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            handleRemoveFile("aadhaarFront");
-                            setFilesState((prev) => ({
-                              ...prev,
-                              aadhaarBack: null,
-                            }));
-                            setFilePreviews((prev) => ({
-                              ...prev,
-                              aadhaarBack: null,
-                            }));
-                          }}
-                          style={{
-                            ...styles.uploadBtn,
-                            backgroundColor: "#ef4444",
-                          }}
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                    {filePreviews.aadhaarFront && (
-                      <img
-                        src={filePreviews.aadhaarFront}
-                        alt="aadhaar"
-                        style={styles.previewImg}
-                      />
-                    )}
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "16px",
-                      flexWrap: "wrap",
-                      width: "100%",
-                    }}
-                  >
-                    <div style={{ ...styles.formField, flex: "1 1 200px" }}>
-                      <label style={styles.formLabel}>Aadhaar (Front)</label>
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "8px",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => handleFileInput("aadhaarFront", true)}
-                          style={styles.uploadBtn}
-                        >
-                          <Image size={20} />{" "}
-                          {filePreviews.aadhaarFront ? "Change" : "Choose File"}
-                        </button>
-                        {filePreviews.aadhaarFront && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveFile("aadhaarFront")}
-                            style={{
-                              ...styles.uploadBtn,
-                              backgroundColor: "#ef4444",
-                            }}
-                          >
-                            Remove
-                          </button>
-                        )}
-                      </div>
-                      {filePreviews.aadhaarFront && (
-                        <img
-                          src={filePreviews.aadhaarFront}
-                          alt="aadhaar-front"
-                          style={styles.previewImg}
-                        />
-                      )}
-                    </div>
-
-                    <div style={{ ...styles.formField, flex: "1 1 200px" }}>
-                      <label style={styles.formLabel}>Aadhaar (Back)</label>
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "8px",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => handleFileInput("aadhaarBack", true)}
-                          style={styles.uploadBtn}
-                        >
-                          <Image size={20} />{" "}
-                          {filePreviews.aadhaarBack ? "Change" : "Choose File"}
-                        </button>
-                        {filePreviews.aadhaarBack && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveFile("aadhaarBack")}
-                            style={{
-                              ...styles.uploadBtn,
-                              backgroundColor: "#ef4444",
-                            }}
-                          >
-                            Remove
-                          </button>
-                        )}
-                      </div>
-                      {filePreviews.aadhaarBack && (
-                        <img
-                          src={filePreviews.aadhaarBack}
-                          alt="aadhaar-back"
-                          style={styles.previewImg}
-                        />
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>PAN Card Photo</label>
-                  <div
-                    style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleFileInput("panPhoto", true)}
-                      style={styles.uploadBtn}
-                    >
-                      <Image size={20} />{" "}
-                      {filePreviews.panPhoto ? "Change" : "Choose File"}
-                    </button>
-                    {filePreviews.panPhoto && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFile("panPhoto")}
-                        style={{
-                          ...styles.uploadBtn,
-                          backgroundColor: "#ef4444",
-                        }}
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                  {filePreviews.panPhoto && (
-                    <img
-                      src={filePreviews.panPhoto}
-                      alt="pan"
-                      style={styles.previewImg}
-                    />
-                  )}
-                </div>
-
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Delivery Photo</label>
-                  <div
-                    style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleFileInput("deliveryPhoto")}
-                      style={styles.uploadBtn}
-                    >
-                      <Image size={20} />{" "}
-                      {filePreviews.deliveryPhoto ? "Change" : "Choose File"}
-                    </button>
-                    {filePreviews.deliveryPhoto && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFile("deliveryPhoto")}
-                        style={{
-                          ...styles.uploadBtn,
-                          backgroundColor: "#ef4444",
-                        }}
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                  {filePreviews.deliveryPhoto && (
-                    <img
-                      src={filePreviews.deliveryPhoto}
-                      alt="delivery"
-                      style={styles.previewImg}
-                    />
-                  )}
-                </div>
-
-                {/* Multiple NOC pages upload (images or multi-page PDF) */}
-                <div style={{ ...styles.formField, width: "100%" }}>
-                  <label style={styles.formLabel}>Insurance NOC Pages</label>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "8px",
-                      alignItems: "center",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleFileInput("insuranceNOC", true)}
-                      style={styles.uploadBtn}
-                    >
-                      <Image size={20} />{" "}
-                      {filePreviews.insuranceNOC ? "Change" : "Upload Pages"}
-                    </button>
-                    {filePreviews.insuranceNOC && (
-                      <div style={{ fontSize: "14px", color: "#333" }}>
-                        {Array.isArray(filePreviews.insuranceNOC)
-                          ? `${filePreviews.insuranceNOC.length} page(s)`
-                          : "1 page"}
-                      </div>
-                    )}
-                    {filePreviews.insuranceNOC && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFilesState((prev) => ({
-                            ...prev,
-                            insuranceNOC: [],
-                          }));
-                          setFilePreviews((prev) => ({
-                            ...prev,
-                            insuranceNOC: null,
-                          }));
-                        }}
-                        style={{
-                          ...styles.uploadBtn,
-                          backgroundColor: "#ef4444",
-                        }}
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                  {filePreviews.insuranceNOC &&
-                    Array.isArray(filePreviews.insuranceNOC) && (
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "8px",
-                          marginTop: "8px",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        {filePreviews.insuranceNOC.slice(0, 6).map((u, idx) => (
-                          <img
-                            key={idx}
-                            src={u}
-                            alt={`noc-${idx + 1}`}
-                            style={{
-                              width: 100,
-                              height: 80,
-                              objectFit: "cover",
-                            }}
-                          />
-                        ))}
-                      </div>
-                    )}
-                </div>
+                
               </div>
             </div>
 
             <div style={styles.formSection}>
+              <h2 style={styles.sectionTitle}>
+                <Calendar style={styles.sectionIcon} /> PUC & Insurance
+              </h2>
+              <div style={styles.formGrid}>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Calendar style={styles.formIcon} />
+                    PUC Issue Date || PUC जारी तिथि
+                  </label>
+                  <input
+                    type="date"
+                    name="pucIssueDate"
+                    value={formData.pucIssueDate || ""}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedInput("pucIssueDate")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "pucIssueDate" ? styles.inputFocused : {}),
+                    }}
+                  />
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Calendar style={styles.formIcon} />
+                    PUC Expiry Date || PUC समाप्ति तिथि
+                  </label>
+                  <input
+                    type="date"
+                    name="pucExpiryDate"
+                    value={formData.pucExpiryDate || ""}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedInput("pucExpiryDate")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "pucExpiryDate" ? styles.inputFocused : {}),
+                    }}
+                  />
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <AlertCircle style={styles.formIcon} />
+                    PUC Status || PUC स्थिति
+                  </label>
+                  <input
+                    type="text"
+                    name="pucStatus"
+                    value={formData.pucStatus || ""}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedInput("pucStatus")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "pucStatus" ? styles.inputFocused : {}),
+                    }}
+                  />
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <Calendar style={styles.formIcon} />
+                    Insurance Expiry Date || बीमा समाप्ति तिथि
+                  </label>
+                  <input
+                    type="date"
+                    name="insuranceExpiryDate"
+                    value={formData.insuranceExpiryDate || ""}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedInput("insuranceExpiryDate")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "insuranceExpiryDate" ? styles.inputFocused : {}),
+                    }}
+                  />
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <AlertCircle style={styles.formIcon} />
+                    Insurance Status || बीमा स्थिति
+                  </label>
+                  <input
+                    type="text"
+                    name="insuranceStatus"
+                    value={formData.insuranceStatus || ""}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedInput("insuranceStatus")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "insuranceStatus" ? styles.inputFocused : {}),
+                    }}
+                  />
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <User style={styles.formIcon} />
+                    Insurance Company || बीमा कंपनी
+                  </label>
+                  <input
+                    type="text"
+                    name="insuranceCompany"
+                    value={formData.insuranceCompany || ""}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedInput("insuranceCompany")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "insuranceCompany" ? styles.inputFocused : {}),
+                    }}
+                  />
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>
+                    <User style={styles.formIcon} />
+                    Insurance Policy Number || पॉलिसी संख्या
+                  </label>
+                  <input
+                    type="text"
+                    name="insurancePolicyNumber"
+                    value={formData.insurancePolicyNumber || ""}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedInput("insurancePolicyNumber")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      ...(focusedInput === "insurancePolicyNumber" ? styles.inputFocused : {}),
+                    }}
+                  />
+                </div>
+              </div>
+
               <h2 style={styles.sectionTitle}>
                 <User style={styles.sectionIcon} /> Buyer Information
               </h2>

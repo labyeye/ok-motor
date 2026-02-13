@@ -31,6 +31,23 @@ const BuyLetterSchema = new mongoose.Schema({
     enum: ["running", "notRunning"],
   },
 
+  pucIssueDate: { type: Date },
+  pucExpiryDate: { type: Date },
+  pucStatus: {
+    type: String,
+    enum: ["Valid", "Expired", "Not Available"],
+  },
+
+  insuranceStatus: {
+    type: String,
+    enum: ["Valid", "Expired", "Not Available"],
+  },
+  insuranceExpiryDate: { type: Date },
+  insuranceCompany: { type: String, trim: true },
+  insurancePolicyNumber: { type: String, trim: true },
+  insuranceId: { type: mongoose.Schema.Types.ObjectId, ref: "Insurance", default: null },
+  pucId: { type: mongoose.Schema.Types.ObjectId, ref: "PUC", default: null },
+
   buyerName: { type: String, required: true },
   buyerFatherName: { type: String, required: true },
   buyerCurrentAddress: { type: String, required: true },
@@ -77,11 +94,28 @@ const BuyLetterSchema = new mongoose.Schema({
     },
     pan: { type: String },
     deliveryPhoto: { type: String },
-    insuranceNOC: {
-      // store NOC as ordered array of page URLs (each page can be image or single-page PDF)
+    // New documents: insuranceCertificate, vehicleNOC, vehicleBuyReceipt
+    insuranceCertificate: {
+      // store ordered array of page URLs (each page can be image or single-page PDF)
       pages: [{ type: String }],
     },
-    insuranceNOCUploadMode: {
+    insuranceCertificateUploadMode: {
+      type: String,
+      enum: ["single", "separate"],
+      default: "separate",
+    },
+    vehicleNOC: {
+      pages: [{ type: String }],
+    },
+    vehicleNOCUploadMode: {
+      type: String,
+      enum: ["single", "separate"],
+      default: "separate",
+    },
+    vehicleBuyReceipt: {
+      pages: [{ type: String }],
+    },
+    vehicleBuyReceiptUploadMode: {
       type: String,
       enum: ["single", "separate"],
       default: "separate",

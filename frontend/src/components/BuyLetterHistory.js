@@ -120,6 +120,13 @@ const BuyLetterHistory = () => {
       todayTime: "Today's Time",
       note: "Note",
     };
+    labels.pucIssueDate = "PUC Issue Date";
+    labels.pucExpiryDate = "PUC Expiry Date";
+    labels.pucStatus = "PUC Status";
+    labels.insuranceExpiryDate = "Insurance Expiry Date";
+    labels.insuranceStatus = "Insurance Status";
+    labels.insuranceCompany = "Insurance Company";
+    labels.insurancePolicyNumber = "Insurance Policy Number";
     return labels[fieldName] || fieldName;
   };
 
@@ -144,6 +151,13 @@ const BuyLetterHistory = () => {
       "vehiclekm",
       "vehicleCondition",
       "buyerName",
+      "pucIssueDate",
+      "pucExpiryDate",
+      "pucStatus",
+      "insuranceExpiryDate",
+      "insuranceStatus",
+      "insuranceCompany",
+      "insurancePolicyNumber",
       "buyerFatherName",
       "buyerCurrentAddress",
       "buyernames",
@@ -439,7 +453,9 @@ const BuyLetterHistory = () => {
     const items = [];
     const rcItems = [];
     const aadhaarItems = [];
-    const nocItems = []; // New array for NOC images
+    const insuranceCertificateItems = [];
+    const vehicleNOCItems = [];
+    const vehicleBuyReceiptItems = [];
 
     if (documentsObj.vehicleRC) {
       if (documentsObj.vehicleRC.front && documentsObj.vehicleRC.front !== null)
@@ -486,26 +502,41 @@ const BuyLetterHistory = () => {
       }
     }
 
-    // Support multiple shapes for stored NOC pages:
-    // - documents.insuranceNOC.pages (preferred)
-    // - documents.insuranceNOC (legacy array)
-    // - documents.noc (older key)
-    if (documentsObj.insuranceNOC) {
-      // If object with pages array
-      if (Array.isArray(documentsObj.insuranceNOC.pages)) {
-        documentsObj.insuranceNOC.pages.forEach((p, idx) =>
-          nocItems.push({ title: `NOC Document ${idx + 1}`, url: p }),
+    // New multi-page documents: Insurance Certificate, Vehicle NOC, Vehicle Buy Receipt
+    if (documentsObj.insuranceCertificate) {
+      if (Array.isArray(documentsObj.insuranceCertificate.pages)) {
+        documentsObj.insuranceCertificate.pages.forEach((p, idx) =>
+          insuranceCertificateItems.push({ title: `Insurance Certificate ${idx + 1}`, url: p }),
         );
-      } else if (Array.isArray(documentsObj.insuranceNOC)) {
-        documentsObj.insuranceNOC.forEach((p, idx) =>
-          nocItems.push({ title: `NOC Document ${idx + 1}`, url: p }),
+      } else if (Array.isArray(documentsObj.insuranceCertificate)) {
+        documentsObj.insuranceCertificate.forEach((p, idx) =>
+          insuranceCertificateItems.push({ title: `Insurance Certificate ${idx + 1}`, url: p }),
         );
       }
-    } else if (documentsObj.noc && documentsObj.noc.length) {
-      // fallback for older shapes
-      documentsObj.noc.forEach((nocUrl, index) => {
-        nocItems.push({ title: `NOC Document ${index + 1}`, url: nocUrl });
-      });
+    }
+
+    if (documentsObj.vehicleNOC) {
+      if (Array.isArray(documentsObj.vehicleNOC.pages)) {
+        documentsObj.vehicleNOC.pages.forEach((p, idx) =>
+          vehicleNOCItems.push({ title: `Vehicle NOC ${idx + 1}`, url: p }),
+        );
+      } else if (Array.isArray(documentsObj.vehicleNOC)) {
+        documentsObj.vehicleNOC.forEach((p, idx) =>
+          vehicleNOCItems.push({ title: `Vehicle NOC ${idx + 1}`, url: p }),
+        );
+      }
+    }
+
+    if (documentsObj.vehicleBuyReceipt) {
+      if (Array.isArray(documentsObj.vehicleBuyReceipt.pages)) {
+        documentsObj.vehicleBuyReceipt.pages.forEach((p, idx) =>
+          vehicleBuyReceiptItems.push({ title: `Vehicle Buy Receipt ${idx + 1}`, url: p }),
+        );
+      } else if (Array.isArray(documentsObj.vehicleBuyReceipt)) {
+        documentsObj.vehicleBuyReceipt.forEach((p, idx) =>
+          vehicleBuyReceiptItems.push({ title: `Vehicle Buy Receipt ${idx + 1}`, url: p }),
+        );
+      }
     }
 
     if (documentsObj.pan && documentsObj.pan !== null)
@@ -800,8 +831,15 @@ const BuyLetterHistory = () => {
       await renderTwoColumnPage(aadhaarItems);
     }
 
-    if (nocItems.length > 0) {
-      await renderSingleImagePerPage(nocItems);
+    // Render Insurance Certificate, Vehicle NOC, Vehicle Buy Receipt pages (one per PDF page)
+    if (insuranceCertificateItems.length > 0) {
+      await renderSingleImagePerPage(insuranceCertificateItems);
+    }
+    if (vehicleNOCItems.length > 0) {
+      await renderSingleImagePerPage(vehicleNOCItems);
+    }
+    if (vehicleBuyReceiptItems.length > 0) {
+      await renderSingleImagePerPage(vehicleBuyReceiptItems);
     }
 
     for (let i = 0; i < items.length; i += 2) {

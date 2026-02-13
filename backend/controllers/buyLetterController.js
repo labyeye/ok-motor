@@ -1,5 +1,7 @@
 const BuyLetter = require("../models/BuyLetter");
 const Vehicle = require("../models/Vehicle");
+const Insurance = require("../models/Insurance");
+const PUC = require("../models/PUC");
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
@@ -19,8 +21,10 @@ exports.createBuyLetter = [
     { name: "aadhaarBack" },
     { name: "panPhoto" },
     { name: "deliveryPhoto" },
-    // support multiple NOC pages/files
-    { name: "insuranceNOC", maxCount: 20 },
+    // support multiple pages/files for new documents
+    { name: "insuranceCertificate", maxCount: 50 },
+    { name: "vehicleNOC", maxCount: 50 },
+    { name: "vehicleBuyReceipt", maxCount: 50 },
     { name: "vehiclePhotos" },
   ]),
   async (req, res) => {
@@ -46,6 +50,91 @@ exports.createBuyLetter = [
         }
       }
 
+        // Upsert Insurance and PUC records based on registration number (mirror Sell behavior)
+        const regNo = buyLetterData.registrationNumber;
+        if (regNo) {
+          try {
+            const hasInsuranceFields =
+              body.insuranceCompany ||
+              body.insurancePolicyNumber ||
+              body.insuranceExpiryDate ||
+              body.insuranceStatus;
+
+            if (hasInsuranceFields) {
+              const insuranceData = {
+                vehicleRegNo: regNo,
+                insuranceCompany: body.insuranceCompany,
+                insurancePolicyNumber: body.insurancePolicyNumber,
+                insuranceExpiryDate: body.insuranceExpiryDate
+                  ? new Date(body.insuranceExpiryDate)
+                  : undefined,
+                insuranceStatus: body.insuranceStatus,
+              };
+
+              const insuranceDoc = await Insurance.findOneAndUpdate(
+                { vehicleRegNo: regNo },
+                insuranceData,
+                { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+              );
+
+              if (insuranceDoc) {
+                buyLetterData.insuranceId = insuranceDoc._id;
+                buyLetterData.insuranceCompany = insuranceDoc.insuranceCompany;
+                buyLetterData.insurancePolicyNumber = insuranceDoc.insurancePolicyNumber;
+                buyLetterData.insuranceExpiryDate = insuranceDoc.insuranceExpiryDate;
+                buyLetterData.insuranceStatus = insuranceDoc.insuranceStatus;
+              }
+            } else {
+              const existingInsurance = await Insurance.findOne({ vehicleRegNo: new RegExp(`^${regNo}$`, "i") });
+              if (existingInsurance) {
+                buyLetterData.insuranceId = existingInsurance._id;
+                buyLetterData.insuranceCompany = existingInsurance.insuranceCompany;
+                buyLetterData.insurancePolicyNumber = existingInsurance.insurancePolicyNumber;
+                buyLetterData.insuranceExpiryDate = existingInsurance.insuranceExpiryDate;
+                buyLetterData.insuranceStatus = existingInsurance.insuranceStatus;
+              }
+            }
+          } catch (e) {
+            console.error("Insurance upsert/fetch failed (buy):", e);
+          }
+
+          try {
+            const hasPUCFields = body.pucIssueDate || body.pucExpiryDate || body.pucStatus;
+
+            if (hasPUCFields) {
+              const pucData = {
+                vehicleRegNo: regNo,
+                pucIssueDate: body.pucIssueDate ? new Date(body.pucIssueDate) : undefined,
+                pucExpiryDate: body.pucExpiryDate ? new Date(body.pucExpiryDate) : undefined,
+                pucStatus: body.pucStatus,
+              };
+
+              const pucDoc = await PUC.findOneAndUpdate(
+                { vehicleRegNo: regNo },
+                pucData,
+                { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+              );
+
+              if (pucDoc) {
+                buyLetterData.pucId = pucDoc._id;
+                buyLetterData.pucIssueDate = pucDoc.pucIssueDate;
+                buyLetterData.pucExpiryDate = pucDoc.pucExpiryDate;
+                buyLetterData.pucStatus = pucDoc.pucStatus;
+              }
+            } else {
+              const existingPUC = await PUC.findOne({ vehicleRegNo: new RegExp(`^${regNo}$`, "i") });
+              if (existingPUC) {
+                buyLetterData.pucId = existingPUC._id;
+                buyLetterData.pucIssueDate = existingPUC.pucIssueDate;
+                buyLetterData.pucExpiryDate = existingPUC.pucExpiryDate;
+                buyLetterData.pucStatus = existingPUC.pucStatus;
+              }
+            }
+          } catch (e) {
+            console.error("PUC upsert/fetch failed (buy):", e);
+          }
+        }
+
       if (buyLetterData.saleDate) {
         buyLetterData.saleDate = new Date(buyLetterData.saleDate);
       }
@@ -60,8 +149,10 @@ exports.createBuyLetter = [
         aadhaar: { front: null, back: null },
         pan: null,
         deliveryPhoto: null,
-        // insuranceNOC.pages will store ordered page urls (images or single-page PDFs)
-        insuranceNOC: { pages: [] },
+        // new multi-page documents
+        insuranceCertificate: { pages: [] },
+        vehicleNOC: { pages: [] },
+        vehicleBuyReceipt: { pages: [] },
         vehiclePhotos: [],
       };
 
@@ -165,22 +256,52 @@ exports.createBuyLetter = [
           }
         }
 
-        // Handle multiple insuranceNOC uploads (images or PDFs)
-        if (files.insuranceNOC && files.insuranceNOC.length) {
-          for (let i = 0; i < files.insuranceNOC.length && uploadedUrls.insuranceNOC.pages.length < 50; i++) {
-            const f = files.insuranceNOC[i];
+        // Handle multiple insuranceCertificate uploads (images or PDFs)
+        if (files.insuranceCertificate && files.insuranceCertificate.length) {
+          for (let i = 0; i < files.insuranceCertificate.length && uploadedUrls.insuranceCertificate.pages.length < 200; i++) {
+            const f = files.insuranceCertificate[i];
             if (f.mimetype === 'application/pdf' || f.originalname?.toLowerCase().endsWith('.pdf')) {
-              // split into pages and append all page urls
-              const pageUrls = await processPdfFileToPages(f, `insurance-noc-${i}`);
-              uploadedUrls.insuranceNOC.pages.push(...pageUrls);
+              const pageUrls = await processPdfFileToPages(f, `insurance-certificate-${i}`);
+              uploadedUrls.insuranceCertificate.pages.push(...pageUrls);
             } else {
-              const url = await processImageFile(f, `insurance-noc-${i}`);
-              uploadedUrls.insuranceNOC.pages.push(url);
+              const url = await processImageFile(f, `insurance-certificate-${i}`);
+              uploadedUrls.insuranceCertificate.pages.push(url);
             }
           }
-        } else if (preservedDocs.insuranceNOC && Array.isArray(preservedDocs.insuranceNOC)) {
-          // preservedDocs may contain array of urls
-          uploadedUrls.insuranceNOC.pages = uploadedUrls.insuranceNOC.pages.concat(preservedDocs.insuranceNOC);
+        } else if (preservedDocs.insuranceCertificate && Array.isArray(preservedDocs.insuranceCertificate)) {
+          uploadedUrls.insuranceCertificate.pages = uploadedUrls.insuranceCertificate.pages.concat(preservedDocs.insuranceCertificate);
+        }
+
+        // Handle multiple vehicleNOC uploads
+        if (files.vehicleNOC && files.vehicleNOC.length) {
+          for (let i = 0; i < files.vehicleNOC.length && uploadedUrls.vehicleNOC.pages.length < 200; i++) {
+            const f = files.vehicleNOC[i];
+            if (f.mimetype === 'application/pdf' || f.originalname?.toLowerCase().endsWith('.pdf')) {
+              const pageUrls = await processPdfFileToPages(f, `vehicle-noc-${i}`);
+              uploadedUrls.vehicleNOC.pages.push(...pageUrls);
+            } else {
+              const url = await processImageFile(f, `vehicle-noc-${i}`);
+              uploadedUrls.vehicleNOC.pages.push(url);
+            }
+          }
+        } else if (preservedDocs.vehicleNOC && Array.isArray(preservedDocs.vehicleNOC)) {
+          uploadedUrls.vehicleNOC.pages = uploadedUrls.vehicleNOC.pages.concat(preservedDocs.vehicleNOC);
+        }
+
+        // Handle multiple vehicleBuyReceipt uploads
+        if (files.vehicleBuyReceipt && files.vehicleBuyReceipt.length) {
+          for (let i = 0; i < files.vehicleBuyReceipt.length && uploadedUrls.vehicleBuyReceipt.pages.length < 200; i++) {
+            const f = files.vehicleBuyReceipt[i];
+            if (f.mimetype === 'application/pdf' || f.originalname?.toLowerCase().endsWith('.pdf')) {
+              const pageUrls = await processPdfFileToPages(f, `vehicle-buy-receipt-${i}`);
+              uploadedUrls.vehicleBuyReceipt.pages.push(...pageUrls);
+            } else {
+              const url = await processImageFile(f, `vehicle-buy-receipt-${i}`);
+              uploadedUrls.vehicleBuyReceipt.pages.push(url);
+            }
+          }
+        } else if (preservedDocs.vehicleBuyReceipt && Array.isArray(preservedDocs.vehicleBuyReceipt)) {
+          uploadedUrls.vehicleBuyReceipt.pages = uploadedUrls.vehicleBuyReceipt.pages.concat(preservedDocs.vehicleBuyReceipt);
         }
       } catch (uploadErr) {
         console.error("Image upload failed, aborting create:", uploadErr);
@@ -196,8 +317,12 @@ exports.createBuyLetter = [
         aadhaarUploadMode: body.aadhaarUploadMode || "separate",
         pan: uploadedUrls.pan,
         deliveryPhoto: uploadedUrls.deliveryPhoto,
-        insuranceNOC: uploadedUrls.insuranceNOC,
-        insuranceNOCUploadMode: body.insuranceNOCUploadMode || "separate",
+        insuranceCertificate: uploadedUrls.insuranceCertificate,
+        insuranceCertificateUploadMode: body.insuranceCertificateUploadMode || "separate",
+        vehicleNOC: uploadedUrls.vehicleNOC,
+        vehicleNOCUploadMode: body.vehicleNOCUploadMode || "separate",
+        vehicleBuyReceipt: uploadedUrls.vehicleBuyReceipt,
+        vehicleBuyReceiptUploadMode: body.vehicleBuyReceiptUploadMode || "separate",
         vehiclePhotos: uploadedUrls.vehiclePhotos,
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };
@@ -389,6 +514,57 @@ exports.updateBuyLetter = async (req, res) => {
     // Set edited metadata
     updateData.editedAt = new Date();
     updateData.editedBy = req.user.id;
+
+    // Auto-save / upsert Insurance and PUC master records when BuyLetter is updated
+    try {
+      const regNo = updateData.registrationNumber || buyLetter.registrationNumber;
+      if (regNo) {
+        const regRegex = new RegExp(`^${String(regNo).trim()}$`, "i");
+
+        const hasInsuranceFields = updateData.insuranceCompany || updateData.insurancePolicyNumber || updateData.insuranceExpiryDate || updateData.insuranceStatus;
+        if (hasInsuranceFields) {
+          const insuranceData = {
+            vehicleRegNo: regNo,
+            insuranceCompany: updateData.insuranceCompany,
+            insurancePolicyNumber: updateData.insurancePolicyNumber,
+            insuranceExpiryDate: updateData.insuranceExpiryDate ? new Date(updateData.insuranceExpiryDate) : undefined,
+            insuranceStatus: updateData.insuranceStatus,
+          };
+
+          const insuranceDoc = await Insurance.findOneAndUpdate(
+            { vehicleRegNo: regRegex },
+            insuranceData,
+            { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+          );
+
+          if (insuranceDoc) {
+            updateData.insuranceId = insuranceDoc._id;
+          }
+        }
+
+        const hasPUCFields = updateData.pucIssueDate || updateData.pucExpiryDate || updateData.pucStatus;
+        if (hasPUCFields) {
+          const pucData = {
+            vehicleRegNo: regNo,
+            pucIssueDate: updateData.pucIssueDate ? new Date(updateData.pucIssueDate) : undefined,
+            pucExpiryDate: updateData.pucExpiryDate ? new Date(updateData.pucExpiryDate) : undefined,
+            pucStatus: updateData.pucStatus,
+          };
+
+          const pucDoc = await PUC.findOneAndUpdate(
+            { vehicleRegNo: regRegex },
+            pucData,
+            { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+          );
+
+          if (pucDoc) {
+            updateData.pucId = pucDoc._id;
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to sync Insurance/PUC on buy update:", e);
+    }
 
     buyLetter = await BuyLetter.findByIdAndUpdate(
       req.params.id,

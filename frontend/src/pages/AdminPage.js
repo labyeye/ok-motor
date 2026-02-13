@@ -393,11 +393,10 @@ const AdminPage = () => {
           if (!letter.documents?.deliveryPhoto && !letter.documents?.vehicleKM)
             missingFields.push("Delivery Photo");
           // Previously we flagged missing "Vehicle Photos" here.
-          // The buy-letter model now uses an Insurance NOC document instead.
-          // Check for Insurance NOC (front/back) and flag if missing.
-          // Insurance NOC now stored as pages array
-          if (!letter.documents?.insuranceNOC?.pages || letter.documents.insuranceNOC.pages.length === 0)
-            missingFields.push("Insurance NOC");
+          // The buy-letter model now uses separate documents: Insurance Certificate, Vehicle NOC, Vehicle Buy Receipt.
+          // Flag missing Insurance Certificate if not present.
+          if (!letter.documents?.insuranceCertificate?.pages || letter.documents.insuranceCertificate.pages.length === 0)
+            missingFields.push("Insurance Certificate");
 
           return {
             ...letter,

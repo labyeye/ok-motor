@@ -21,7 +21,10 @@ exports.createSellLetter = [
     { name: "panPhoto" },
     { name: "deliveryPhoto" },
     { name: "vehiclePhotos" },
-    { name: "insuranceNOC", maxCount: 20 },
+    // new multi-page document fields
+    { name: "insuranceCertificate", maxCount: 50 },
+    { name: "vehicleNOC", maxCount: 50 },
+    { name: "vehicleBuyReceipt", maxCount: 50 },
   ]),
   async (req, res) => {
     try {
@@ -145,7 +148,9 @@ exports.createSellLetter = [
         pan: null,
         deliveryPhoto: null,
         vehiclePhotos: [],
-        insuranceNOC: { pages: [] },
+        insuranceCertificate: { pages: [] },
+        vehicleNOC: { pages: [] },
+        vehicleBuyReceipt: { pages: [] },
       };
 
       // helper to process single file
@@ -216,16 +221,44 @@ exports.createSellLetter = [
             uploadedUrls.vehiclePhotos.push(url);
           }
         }
-        // process insuranceNOC files if present
-        if (files.insuranceNOC && files.insuranceNOC.length) {
-          for (let i = 0; i < files.insuranceNOC.length && uploadedUrls.insuranceNOC.pages.length < 50; i++) {
-            const f = files.insuranceNOC[i];
+        // process insuranceCertificate files if present
+        if (files.insuranceCertificate && files.insuranceCertificate.length) {
+          for (let i = 0; i < files.insuranceCertificate.length && uploadedUrls.insuranceCertificate.pages.length < 200; i++) {
+            const f = files.insuranceCertificate[i];
             if (f.mimetype === 'application/pdf' || f.originalname?.toLowerCase().endsWith('.pdf')) {
-              const pageUrls = await processPdfFileToPages(f, `insurance-noc-${i}`);
-              uploadedUrls.insuranceNOC.pages.push(...pageUrls);
+              const pageUrls = await processPdfFileToPages(f, `insurance-certificate-${i}`);
+              uploadedUrls.insuranceCertificate.pages.push(...pageUrls);
             } else {
-              const url = await processImageFile(f, `insurance-noc-${i}`);
-              uploadedUrls.insuranceNOC.pages.push(url);
+              const url = await processImageFile(f, `insurance-certificate-${i}`);
+              uploadedUrls.insuranceCertificate.pages.push(url);
+            }
+          }
+        }
+
+        // process vehicleNOC files if present
+        if (files.vehicleNOC && files.vehicleNOC.length) {
+          for (let i = 0; i < files.vehicleNOC.length && uploadedUrls.vehicleNOC.pages.length < 200; i++) {
+            const f = files.vehicleNOC[i];
+            if (f.mimetype === 'application/pdf' || f.originalname?.toLowerCase().endsWith('.pdf')) {
+              const pageUrls = await processPdfFileToPages(f, `vehicle-noc-${i}`);
+              uploadedUrls.vehicleNOC.pages.push(...pageUrls);
+            } else {
+              const url = await processImageFile(f, `vehicle-noc-${i}`);
+              uploadedUrls.vehicleNOC.pages.push(url);
+            }
+          }
+        }
+
+        // process vehicleBuyReceipt files if present
+        if (files.vehicleBuyReceipt && files.vehicleBuyReceipt.length) {
+          for (let i = 0; i < files.vehicleBuyReceipt.length && uploadedUrls.vehicleBuyReceipt.pages.length < 200; i++) {
+            const f = files.vehicleBuyReceipt[i];
+            if (f.mimetype === 'application/pdf' || f.originalname?.toLowerCase().endsWith('.pdf')) {
+              const pageUrls = await processPdfFileToPages(f, `vehicle-buy-receipt-${i}`);
+              uploadedUrls.vehicleBuyReceipt.pages.push(...pageUrls);
+            } else {
+              const url = await processImageFile(f, `vehicle-buy-receipt-${i}`);
+              uploadedUrls.vehicleBuyReceipt.pages.push(url);
             }
           }
         }
@@ -244,8 +277,12 @@ exports.createSellLetter = [
         pan: uploadedUrls.pan,
         deliveryPhoto: uploadedUrls.deliveryPhoto,
         vehiclePhotos: uploadedUrls.vehiclePhotos,
-        insuranceNOC: uploadedUrls.insuranceNOC,
-        insuranceNOCUploadMode: bodyData.insuranceNOCUploadMode || "separate",
+        insuranceCertificate: uploadedUrls.insuranceCertificate,
+        insuranceCertificateUploadMode: bodyData.insuranceCertificateUploadMode || "separate",
+        vehicleNOC: uploadedUrls.vehicleNOC,
+        vehicleNOCUploadMode: bodyData.vehicleNOCUploadMode || "separate",
+        vehicleBuyReceipt: uploadedUrls.vehicleBuyReceipt,
+        vehicleBuyReceiptUploadMode: bodyData.vehicleBuyReceiptUploadMode || "separate",
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };
 
@@ -349,27 +386,46 @@ exports.getVehicleDetails = async (req, res) => {
       vehicleRecord.manufacturingYear || vehicleRecord.year || vehicleRecord.year || undefined;
 
     // If the found record is a SellLetter it may contain PUC/Insurance information
-    // and buyer contact details. Copy those fields when present.
-    if (vehicleRecord.pucIssueDate)
-      vehicleDetails.pucIssueDate = vehicleRecord.pucIssueDate;
-    if (vehicleRecord.pucExpiryDate)
-      vehicleDetails.pucExpiryDate = vehicleRecord.pucExpiryDate;
-    if (vehicleRecord.pucStatus)
-      vehicleDetails.pucStatus = vehicleRecord.pucStatus;
-    if (vehicleRecord.insuranceStatus)
-      vehicleDetails.insuranceStatus = vehicleRecord.insuranceStatus;
-    if (vehicleRecord.insuranceExpiryDate)
-      vehicleDetails.insuranceExpiryDate = vehicleRecord.insuranceExpiryDate;
-    if (vehicleRecord.insuranceCompany)
-      vehicleDetails.insuranceCompany = vehicleRecord.insuranceCompany;
+    // and buyer contact details. Copy those fields when present as a fallback.
+    if (vehicleRecord.pucIssueDate) vehicleDetails.pucIssueDate = vehicleRecord.pucIssueDate;
+    if (vehicleRecord.pucExpiryDate) vehicleDetails.pucExpiryDate = vehicleRecord.pucExpiryDate;
+    if (vehicleRecord.pucStatus) vehicleDetails.pucStatus = vehicleRecord.pucStatus;
+    if (vehicleRecord.insuranceStatus) vehicleDetails.insuranceStatus = vehicleRecord.insuranceStatus;
+    if (vehicleRecord.insuranceExpiryDate) vehicleDetails.insuranceExpiryDate = vehicleRecord.insuranceExpiryDate;
+    if (vehicleRecord.insuranceCompany) vehicleDetails.insuranceCompany = vehicleRecord.insuranceCompany;
     if (vehicleRecord.insurancePolicyNumber)
-      vehicleDetails.insurancePolicyNumber =
-        vehicleRecord.insurancePolicyNumber;
+      vehicleDetails.insurancePolicyNumber = vehicleRecord.insurancePolicyNumber;
 
     // Buyer contact details from SellLetter
     if (vehicleRecord.buyerName) vehicleDetails.personName = vehicleRecord.buyerName;
     if (vehicleRecord.buyerPhone) vehicleDetails.personPhone = vehicleRecord.buyerPhone;
     if (vehicleRecord.buyerEmail) vehicleDetails.personEmail = vehicleRecord.buyerEmail;
+
+    // Also attempt to load canonical Insurance and PUC master records by vehicleRegNo
+    try {
+      const regRegex = new RegExp(`^${String(vehicleDetails.registrationNumber).trim()}$`, "i");
+      const [insuranceDoc, pucDoc] = await Promise.all([
+        Insurance.findOne({ vehicleRegNo: regRegex }).lean(),
+        PUC.findOne({ vehicleRegNo: regRegex }).lean(),
+      ]);
+
+      if (insuranceDoc) {
+        vehicleDetails.insuranceCompany = insuranceDoc.insuranceCompany || vehicleDetails.insuranceCompany;
+        vehicleDetails.insurancePolicyNumber = insuranceDoc.insurancePolicyNumber || vehicleDetails.insurancePolicyNumber;
+        vehicleDetails.insuranceExpiryDate = insuranceDoc.insuranceExpiryDate || vehicleDetails.insuranceExpiryDate;
+        vehicleDetails.insuranceStatus = insuranceDoc.insuranceStatus || vehicleDetails.insuranceStatus;
+        vehicleDetails.insuranceId = insuranceDoc._id;
+      }
+
+      if (pucDoc) {
+        vehicleDetails.pucIssueDate = pucDoc.pucIssueDate || vehicleDetails.pucIssueDate;
+        vehicleDetails.pucExpiryDate = pucDoc.pucExpiryDate || vehicleDetails.pucExpiryDate;
+        vehicleDetails.pucStatus = pucDoc.pucStatus || vehicleDetails.pucStatus;
+        vehicleDetails.pucId = pucDoc._id;
+      }
+    } catch (e) {
+      console.error("Failed to load master Insurance/PUC records:", e);
+    }
 
     res.json(vehicleDetails);
   } catch (error) {
@@ -507,6 +563,54 @@ exports.updateSellLetter = async (req, res) => {
     // Set edited metadata
     updateData.editedAt = new Date();
     updateData.editedBy = req.user && req.user.id ? req.user.id : undefined;
+
+    // Two-way sync: if insurance or PUC fields are present in the update payload,
+    // persist them to the master Insurance / PUC collections using vehicle registration number
+    try {
+      const regNo = updateData.registrationNumber || sellLetter.registrationNumber;
+      if (regNo) {
+        const regRegex = new RegExp(`^${String(regNo).trim()}$`, "i");
+
+        const hasInsuranceFields = updateData.insuranceCompany || updateData.insurancePolicyNumber || updateData.insuranceExpiryDate || updateData.insuranceStatus;
+        if (hasInsuranceFields) {
+          const insuranceData = {
+            vehicleRegNo: regNo,
+            insuranceCompany: updateData.insuranceCompany,
+            insurancePolicyNumber: updateData.insurancePolicyNumber,
+            insuranceExpiryDate: updateData.insuranceExpiryDate ? new Date(updateData.insuranceExpiryDate) : undefined,
+            insuranceStatus: updateData.insuranceStatus,
+          };
+          const insuranceDoc = await Insurance.findOneAndUpdate(
+            { vehicleRegNo: regRegex },
+            insuranceData,
+            { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+          );
+          if (insuranceDoc) {
+            updateData.insuranceId = insuranceDoc._id;
+          }
+        }
+
+        const hasPUCFields = updateData.pucIssueDate || updateData.pucExpiryDate || updateData.pucStatus;
+        if (hasPUCFields) {
+          const pucData = {
+            vehicleRegNo: regNo,
+            pucIssueDate: updateData.pucIssueDate ? new Date(updateData.pucIssueDate) : undefined,
+            pucExpiryDate: updateData.pucExpiryDate ? new Date(updateData.pucExpiryDate) : undefined,
+            pucStatus: updateData.pucStatus,
+          };
+          const pucDoc = await PUC.findOneAndUpdate(
+            { vehicleRegNo: regRegex },
+            pucData,
+            { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+          );
+          if (pucDoc) {
+            updateData.pucId = pucDoc._id;
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to sync Insurance/PUC on sell update:", e);
+    }
 
     const updated = await SellLetter.findByIdAndUpdate(
       req.params.id,
