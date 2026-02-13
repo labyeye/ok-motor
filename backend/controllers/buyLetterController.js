@@ -178,6 +178,19 @@ exports.createBuyLetter = [
         return uploaded.url;
       };
 
+      // Generic single-file processor: accepts image or PDF and returns an upload URL.
+      const processFile = async (file, nameHint) => {
+        if (!file) return null;
+        const isPdf = file.mimetype === 'application/pdf' || (file.originalname && file.originalname.toLowerCase().endsWith('.pdf'));
+        if (isPdf) {
+          const filename = `${Date.now()}-${nameHint}.pdf`;
+          const uploaded = await uploadBufferToImageKit(file.buffer, filename, 'application/pdf');
+          return uploaded.url;
+        }
+        // fallback to image processing
+        return await processImageFile(file, nameHint);
+      };
+
       const processPdfFileToPages = async (file, nameHint) => {
         // Split multi-page PDF into single-page PDF buffers and upload each page separately
         const srcPdf = await PDFDocument.load(file.buffer);
