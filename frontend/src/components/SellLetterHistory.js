@@ -1345,7 +1345,6 @@ const SellLetterHistory = () => {
           try {
             await drawHeaderFooter(pdfDoc, page);
           } catch (e) {}
-          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
           const yPositions = [740, 390];
 
           for (let cell = 0; cell < 2; cell++) {
@@ -1683,7 +1682,6 @@ const SellLetterHistory = () => {
           try {
             await drawHeaderFooter(pdfDoc, page);
           } catch (e) {}
-          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
           const yPositions = [740, 390];
 
           for (let cell = 0; cell < 2; cell++) {
@@ -3427,6 +3425,7 @@ const SellLetterHistory = () => {
               <div
                 style={{
                   flex: 1,
+                  minHeight: 0,
                   overflow: "auto",
                   WebkitOverflowScrolling: "touch",
                   backgroundColor: "#525659",
@@ -3437,7 +3436,7 @@ const SellLetterHistory = () => {
                   type="application/pdf"
                   style={{
                     width: "100%",
-                    height: "calc(100vh - 220px)",
+                    height: "100%",
                     border: "none",
                   }}
                   aria-label="Sell Letter PDF Preview"
@@ -3446,7 +3445,7 @@ const SellLetterHistory = () => {
                     src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
                     style={{
                       width: "100%",
-                      height: "calc(100vh - 220px)",
+                      height: "100%",
                       border: "none",
                     }}
                     title="Sell Letter PDF Preview"

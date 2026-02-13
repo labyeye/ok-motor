@@ -4407,20 +4407,19 @@ const BuyLetterForm = () => {
                     <AlertCircle style={styles.formIcon} />
                     PUC Status || PUC स्थिति
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="pucStatus"
                     value={formData.pucStatus || ""}
                     onChange={handleChange}
                     onFocus={() => setFocusedInput("pucStatus")}
                     onBlur={() => setFocusedInput(null)}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "pucStatus"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                  />
+                    style={styles.formSelect}
+                  >
+                    <option value="">Select</option>
+                    <option value="Valid">Valid</option>
+                    <option value="Expired">Expired</option>
+                    <option value="Not Available">Not Available</option>
+                  </select>
                 </div>
 
                 <div style={styles.formField}>
@@ -4449,20 +4448,19 @@ const BuyLetterForm = () => {
                     <AlertCircle style={styles.formIcon} />
                     Insurance Status || बीमा स्थिति
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="insuranceStatus"
                     value={formData.insuranceStatus || ""}
                     onChange={handleChange}
                     onFocus={() => setFocusedInput("insuranceStatus")}
                     onBlur={() => setFocusedInput(null)}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "insuranceStatus"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                  />
+                    style={styles.formSelect}
+                  >
+                    <option value="">Select</option>
+                    <option value="Valid">Valid</option>
+                    <option value="Expired">Expired</option>
+                    <option value="Not Available">Not Available</option>
+                  </select>
                 </div>
 
                 <div style={styles.formField}>
