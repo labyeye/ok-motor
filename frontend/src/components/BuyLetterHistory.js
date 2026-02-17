@@ -441,19 +441,6 @@ const BuyLetterHistory = () => {
     });
   };
 
-  const embedImageFromUrl = async (pdfDoc, url) => {
-    try {
-      const res = await fetch(url);
-      const contentType = res.headers.get("content-type") || "";
-      const bytes = await res.arrayBuffer();
-      if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
-      return await pdfDoc.embedJpg(bytes);
-    } catch (err) {
-      console.warn("Failed to embed image from", url, err);
-      return null;
-    }
-  };
-
   const drawHeaderFooter = async (pdfDoc, page) => {
     try {
       const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
