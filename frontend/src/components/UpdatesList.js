@@ -20,7 +20,6 @@ import {
   Megaphone,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
-
 import logo from "../images/company.png";
 import ConfirmModal from "./ConfirmModal";
 

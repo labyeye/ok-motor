@@ -724,6 +724,21 @@ const SellLetterForm = () => {
         vehicleRCFront: url,
         vehicleRCBack: url,
       }));
+    } else if (
+      cropFieldName === "insuranceCertificate" ||
+      cropFieldName === "vehicleNOC" ||
+      cropFieldName === "vehicleBuyReceipt"
+    ) {
+      // Handle multi-page documents - store as array
+      setFilesState((prev) => ({
+        ...prev,
+        [cropFieldName]: [file],
+      }));
+      const url = URL.createObjectURL(file);
+      setFilePreviews((prev) => ({
+        ...prev,
+        [cropFieldName]: [url],
+      }));
     } else {
       setFilesState((prev) => ({ ...prev, [cropFieldName]: file }));
       const url = URL.createObjectURL(file);
@@ -1072,9 +1087,6 @@ const SellLetterForm = () => {
         }
       }
 
-      
-      
-
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
 
@@ -1402,25 +1414,46 @@ const SellLetterForm = () => {
           }
 
           if (
-            (!filesState.insuranceCertificate ||
-              filesState.insuranceCertificate.length === 0) &&
-            filePreviews.insuranceCertificate
+            (!filesState.vehiclePhotos ||
+              filesState.vehiclePhotos.length === 0) &&
+            filePreviews.vehiclePhotos &&
+            filePreviews.vehiclePhotos.length > 0
           ) {
-            preservedDocs.insuranceCertificate =
-              filePreviews.insuranceCertificate;
+            preservedDocs.vehiclePhotos = filePreviews.vehiclePhotos;
           }
+
           if (
-            (!filesState.vehicleNOC || filesState.vehicleNOC.length === 0) &&
-            filePreviews.vehicleNOC
+            !filesState.insuranceCertificate ||
+            filesState.insuranceCertificate.length === 0
           ) {
-            preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
+            if (
+              filePreviews.insuranceCertificate &&
+              Array.isArray(filePreviews.insuranceCertificate)
+            ) {
+              preservedDocs.insuranceCertificate =
+                filePreviews.insuranceCertificate;
+            }
           }
+
+          if (!filesState.vehicleNOC || filesState.vehicleNOC.length === 0) {
+            if (
+              filePreviews.vehicleNOC &&
+              Array.isArray(filePreviews.vehicleNOC)
+            ) {
+              preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
+            }
+          }
+
           if (
-            (!filesState.vehicleBuyReceipt ||
-              filesState.vehicleBuyReceipt.length === 0) &&
-            filePreviews.vehicleBuyReceipt
+            !filesState.vehicleBuyReceipt ||
+            filesState.vehicleBuyReceipt.length === 0
           ) {
-            preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
+            if (
+              filePreviews.vehicleBuyReceipt &&
+              Array.isArray(filePreviews.vehicleBuyReceipt)
+            ) {
+              preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
+            }
           }
 
           if (Object.keys(preservedDocs).length > 0) {
@@ -1436,7 +1469,7 @@ const SellLetterForm = () => {
             form,
             {
               headers: { "Content-Type": "multipart/form-data" },
-              timeout: 120000,
+              timeout: 300000, // 5 minutes timeout
             },
           );
         }
@@ -2107,23 +2140,50 @@ const SellLetterForm = () => {
       return "";
     }
   };
-  const fetchVehicleDetails = useCallback(async (registrationNumber) => {
-    try {
-      const response = await axios.get(
-        `https://ok-motor-51l3.vercel.app/api/sell-letters/vehicle-details?registrationNumber=${registrationNumber}`,
-      );
+  const fetchVehicleDetails = useCallback(
+    async (registrationNumber) => {
+      try {
+        const response = await axios.get(
+          `https://ok-motor-51l3.vercel.app/api/sell-letters/vehicle-details?registrationNumber=${registrationNumber}`,
+        );
 
-      if (response.data) {
-        setFormData((prev) => ({
-          ...prev,
-          ...response.data,
-          registrationNumber,
-        }));
+        if (response.data) {
+          const data = response.data;
+          // Format dates to YYYY-MM-DD for input fields
+          const formatDateForInput = (dateStr) => {
+            if (!dateStr) return "";
+            try {
+              const date = new Date(dateStr);
+              if (isNaN(date.getTime())) return "";
+              return date.toISOString().split("T")[0];
+            } catch (e) {
+              return "";
+            }
+          };
+
+          const formattedData = {
+            ...data,
+            pucIssueDate: formatDateForInput(data.pucIssueDate),
+            pucExpiryDate: formatDateForInput(data.pucExpiryDate),
+            insuranceExpiryDate: formatDateForInput(data.insuranceExpiryDate),
+            // Also format other dates if they exist and are relevant for the form
+            saleDate: data.saleDate
+              ? formatDateForInput(data.saleDate)
+              : formData.saleDate,
+          };
+
+          setFormData((prev) => ({
+            ...prev,
+            ...formattedData,
+            registrationNumber,
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching vehicle details:", error);
       }
-    } catch (error) {
-      console.error("Error fetching vehicle details:", error);
-    }
-  }, []);
+    },
+    [formData.saleDate],
+  );
 
   const fillAndDownloadHindiPdf = async () => {
     try {
@@ -2214,8 +2274,6 @@ const SellLetterForm = () => {
           });
         }
       }
-
-      
 
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
@@ -2326,8 +2384,6 @@ const SellLetterForm = () => {
           });
         }
       }
-
-      
 
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
@@ -3714,13 +3770,33 @@ const SellLetterForm = () => {
 
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>PAN Card Photo</label>
-                  <button
-                    type="button"
-                    onClick={() => handleFileInput("panPhoto", true)}
-                    style={styles.uploadBtn}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "center",
+                    }}
                   >
-                    <Image size={20} /> Choose File
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFileInput("panPhoto", true)}
+                      style={styles.uploadBtn}
+                    >
+                      <Image size={20} /> Choose File
+                    </button>
+                    {filePreviews.panPhoto && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile("panPhoto")}
+                        style={{
+                          ...styles.uploadBtn,
+                          backgroundColor: "#ef4444",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
                   {filePreviews.panPhoto && (
                     <img
                       src={filePreviews.panPhoto}
@@ -3732,13 +3808,33 @@ const SellLetterForm = () => {
 
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>Delivery Photo</label>
-                  <button
-                    type="button"
-                    onClick={() => handleFileInput("deliveryPhoto")}
-                    style={styles.uploadBtn}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "center",
+                    }}
                   >
-                    <Image size={20} /> Choose File
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFileInput("deliveryPhoto")}
+                      style={styles.uploadBtn}
+                    >
+                      <Image size={20} /> Choose File
+                    </button>
+                    {filePreviews.deliveryPhoto && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile("deliveryPhoto")}
+                        style={{
+                          ...styles.uploadBtn,
+                          backgroundColor: "#ef4444",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
                   {filePreviews.deliveryPhoto && (
                     <img
                       src={filePreviews.deliveryPhoto}

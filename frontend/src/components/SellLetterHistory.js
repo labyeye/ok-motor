@@ -49,6 +49,9 @@ const SellLetterHistory = () => {
     pan: true,
     vehicleKM: true,
     vehiclePhotos: true,
+    insuranceCertificate: true,
+    vehicleNOC: true,
+    vehicleBuyReceipt: true,
   });
   const [sellLetters, setSellLetters] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -208,12 +211,30 @@ const SellLetterHistory = () => {
       "note",
     ];
 
+    const normalize = (val) => {
+      if (val === null || val === undefined) return "";
+      return String(val).trim();
+    };
+
+    const normalizeDate = (val) => {
+      if (!val) return "";
+      try {
+        let ds = val;
+        if (typeof ds === "string" && ds.includes("T")) ds = ds.split("T")[0];
+        const date = new Date(ds);
+        if (isNaN(date.getTime())) return "";
+        return date.toISOString().split("T")[0];
+      } catch (e) {
+        return "";
+      }
+    };
+
     if (letter.previousVersion) {
       fieldsToCompare.forEach((field) => {
         const oldValue = letter.previousVersion[field];
         const newValue = letter[field];
 
-        if (oldValue !== newValue && (oldValue || newValue)) {
+        if (normalize(oldValue) !== normalize(newValue)) {
           changes.push({
             field: getFieldLabel(field),
             oldValue: oldValue || "(empty)",
@@ -240,15 +261,13 @@ const SellLetterHistory = () => {
       ];
 
       dateFields.forEach(({ old, new: newField, label }) => {
-        const oldDate = letter.previousVersion[old]
-          ? formatDate(letter.previousVersion[old])
-          : "";
-        const newDate = letter[newField] ? formatDate(letter[newField]) : "";
-        if (oldDate !== newDate && (oldDate || newDate)) {
+        const oldVal = letter.previousVersion[old];
+        const newVal = letter[newField];
+        if (normalizeDate(oldVal) !== normalizeDate(newVal)) {
           changes.push({
             field: label,
-            oldValue: oldDate || "(empty)",
-            newValue: newDate || "(empty)",
+            oldValue: formatDate(oldVal) || "(empty)",
+            newValue: formatDate(newVal) || "(empty)",
           });
         }
       });
@@ -257,7 +276,7 @@ const SellLetterHistory = () => {
       timeFields.forEach((field) => {
         const oldValue = letter.previousVersion[field];
         const newValue = letter[field];
-        if (oldValue !== newValue && (oldValue || newValue)) {
+        if (normalize(oldValue) !== normalize(newValue)) {
           changes.push({
             field: getFieldLabel(field),
             oldValue: oldValue || "(empty)",
@@ -275,7 +294,13 @@ const SellLetterHistory = () => {
         );
         const newDoc = getNestedValue(letter.documents, docPath);
 
-        if (oldDoc !== newDoc) {
+        const normalizeDoc = (val) => {
+          if (!val) return "";
+          if (typeof val === "object") return JSON.stringify(val);
+          return String(val).trim();
+        };
+
+        if (normalizeDoc(oldDoc) !== normalizeDoc(newDoc)) {
           if (!oldDoc && newDoc) {
             changes.push({
               field: label,
@@ -288,7 +313,7 @@ const SellLetterHistory = () => {
               oldValue: "Uploaded",
               newValue: "Removed",
             });
-          } else if (oldDoc && newDoc && oldDoc !== newDoc) {
+          } else if (oldDoc && newDoc) {
             changes.push({
               field: label,
               oldValue: "Updated (old document)",
@@ -305,6 +330,9 @@ const SellLetterHistory = () => {
       checkDocumentChange("pan", "PAN Card");
       checkDocumentChange("deliveryPhoto", "Delivery Photo") ||
         checkDocumentChange("vehicleKM", "Delivery Photo");
+      checkDocumentChange("insuranceCertificate", "Insurance Certificate");
+      checkDocumentChange("vehicleNOC", "Vehicle NOC");
+      checkDocumentChange("vehicleBuyReceipt", "Vehicle Buy Receipt");
 
       const oldPhotosCount =
         letter.previousVersion.documents?.vehiclePhotos?.length || 0;
@@ -610,6 +638,34 @@ const SellLetterHistory = () => {
 
     return `${formattedHours}:${formattedMinutes} ${ampm}`;
   };
+
+  const embedAssetFromUrl = async (pdfDoc, url) => {
+    try {
+      const res = await fetch(url);
+      const contentType = (res.headers.get("content-type") || "").toLowerCase();
+      const bytes = await res.arrayBuffer();
+
+      if (contentType.includes("pdf") || url.toLowerCase().endsWith(".pdf")) {
+        const embeddedPages = await pdfDoc.embedPdf(bytes);
+
+        if (Array.isArray(embeddedPages) && embeddedPages.length > 0)
+          return { kind: "pdf", embeddedPage: embeddedPages[0] };
+        return null;
+      }
+
+      if (contentType.includes("png")) {
+        const img = await pdfDoc.embedPng(bytes);
+        return { kind: "image", embedded: img };
+      }
+
+      const img = await pdfDoc.embedJpg(bytes);
+      return { kind: "image", embedded: img };
+    } catch (err) {
+      console.warn("Failed to embed asset from", url, err);
+      return null;
+    }
+  };
+
   const filteredLetters = sellLetters.filter(
     (letter) =>
       letter.vehicleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -724,23 +780,11 @@ const SellLetterHistory = () => {
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
       if (letter.documents) {
-        const embedImageFromUrl = async (pdfDoc, url) => {
-          try {
-            const res = await fetch(url);
-            const contentType = res.headers.get("content-type") || "";
-            const bytes = await res.arrayBuffer();
-            if (contentType.includes("png"))
-              return await pdfDoc.embedPng(bytes);
-            return await pdfDoc.embedJpg(bytes);
-          } catch (err) {
-            console.warn("Failed to embed image from", url, err);
-            return null;
-          }
-        };
-
         const addDocumentPages = async (pdfDoc, documentsObj) => {
           if (!documentsObj) return;
           const items = [];
+          const panItems = [];
+          const deliveryPhotoItems = [];
           const rcItems = [];
 
           if (documentsObj.vehicleRC) {
@@ -782,10 +826,11 @@ const SellLetterHistory = () => {
                 });
             }
           }
+          // Separate PAN and Delivery Photo into their own arrays for individual page rendering
           if (documentsObj.pan)
-            items.push({ title: "PAN Card", url: documentsObj.pan });
+            panItems.push({ title: "PAN Card", url: documentsObj.pan });
           if (documentsObj.deliveryPhoto || documentsObj.vehicleKM)
-            items.push({
+            deliveryPhotoItems.push({
               title: "Delivery Photo",
               url: documentsObj.deliveryPhoto || documentsObj.vehicleKM,
             });
@@ -878,9 +923,19 @@ const SellLetterHistory = () => {
                 font: titleFont,
               });
 
-              const embedded = await embedImageFromUrl(pdfDoc, item.url);
-              if (embedded) {
-                const { width, height } = embedded.scale(1);
+              const asset = await embedAssetFromUrl(pdfDoc, item.url);
+              if (asset) {
+                let width, height;
+                if (asset.kind === "image") {
+                  const dims = asset.embedded.scale(1);
+                  width = dims.width;
+                  height = dims.height;
+                } else {
+                  const p = asset.embeddedPage;
+                  width = p.width || p.getWidth?.() || 595;
+                  height = p.height || p.getHeight?.() || 842;
+                }
+
                 let drawW = colWidth - 20;
                 let drawH = (height / width) * drawW;
 
@@ -892,12 +947,23 @@ const SellLetterHistory = () => {
                 const centeredX = xPos + (colWidth - drawW) / 2;
                 const drawY = yTop - drawH - 15;
 
-                page.drawImage(embedded, {
-                  x: centeredX,
-                  y: drawY,
-                  width: drawW,
-                  height: drawH,
-                });
+                if (asset.kind === "image") {
+                  page.drawImage(asset.embedded, {
+                    x: centeredX,
+                    y: drawY,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } else {
+                  try {
+                    page.drawPage(asset.embeddedPage, {
+                      x: centeredX,
+                      y: drawY,
+                      width: drawW,
+                      height: drawH,
+                    });
+                  } catch (e) {}
+                }
               }
             }
           }
@@ -912,15 +978,25 @@ const SellLetterHistory = () => {
 
             page.drawText(item.title, { x: 50, y: 753, size: 14, font });
 
-            const embedded = await embedImageFromUrl(pdfDoc, item.url);
-            if (embedded) {
+            const asset = await embedAssetFromUrl(pdfDoc, item.url);
+            if (asset) {
               const pageWidth = 595;
               const pageHeight = 842;
               const margin = 50;
               const maxWidth = pageWidth - 2 * margin;
               const maxHeight = pageHeight - 150;
 
-              const { width, height } = embedded.scale(1);
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = asset.embedded.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                const p = asset.embeddedPage;
+                width = p.width || p.getWidth?.() || 595;
+                height = p.height || p.getHeight?.() || 842;
+              }
+
               let drawW = maxWidth;
               let drawH = (height / width) * drawW;
 
@@ -932,15 +1008,145 @@ const SellLetterHistory = () => {
               const xPos = (pageWidth - drawW) / 2;
               const yPos = 750 - drawH;
 
-              page.drawImage(embedded, {
-                x: xPos,
-                y: yPos,
-                width: drawW,
-                height: drawH,
-              });
+              if (asset.kind === "image") {
+                page.drawImage(asset.embedded, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } else {
+                try {
+                  page.drawPage(asset.embeddedPage, {
+                    x: xPos,
+                    y: yPos,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
+              }
             }
           }
 
+          // Render PAN Card on its own page (1 per page)
+          for (const item of panItems) {
+            const page = pdfDoc.addPage([595, 842]);
+            try {
+              await drawHeaderFooter(pdfDoc, page);
+            } catch (e) {}
+            const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+            const asset = await embedAssetFromUrl(pdfDoc, item.url);
+            if (asset) {
+              const pageWidth = 595;
+              const pageHeight = 842;
+              const margin = 50;
+              const maxWidth = pageWidth - 2 * margin;
+              const maxHeight = pageHeight - 150;
+
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = asset.embedded.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                const p = asset.embeddedPage;
+                width = p.width || p.getWidth?.() || 595;
+                height = p.height || p.getHeight?.() || 842;
+              }
+
+              let drawW = maxWidth;
+              let drawH = (height / width) * drawW;
+
+              if (drawH > maxHeight) {
+                drawH = maxHeight;
+                drawW = (width / height) * drawH;
+              }
+
+              const xPos = (pageWidth - drawW) / 2;
+              const yPos = 750 - drawH;
+
+              if (asset.kind === "image") {
+                page.drawImage(asset.embedded, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } else {
+                try {
+                  page.drawPage(asset.embeddedPage, {
+                    x: xPos,
+                    y: yPos,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
+              }
+            }
+          }
+
+          // Render Delivery Photo on its own page (1 per page)
+          for (const item of deliveryPhotoItems) {
+            const page = pdfDoc.addPage([595, 842]);
+            try {
+              await drawHeaderFooter(pdfDoc, page);
+            } catch (e) {}
+            const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+            const asset = await embedAssetFromUrl(pdfDoc, item.url);
+            if (asset) {
+              const pageWidth = 595;
+              const pageHeight = 842;
+              const margin = 50;
+              const maxWidth = pageWidth - 2 * margin;
+              const maxHeight = pageHeight - 150;
+
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = asset.embedded.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                const p = asset.embeddedPage;
+                width = p.width || p.getWidth?.() || 595;
+                height = p.height || p.getHeight?.() || 842;
+              }
+
+              let drawW = maxWidth;
+              let drawH = (height / width) * drawW;
+
+              if (drawH > maxHeight) {
+                drawH = maxHeight;
+                drawW = (width / height) * drawH;
+              }
+
+              const xPos = (pageWidth - drawW) / 2;
+              const yPos = 750 - drawH;
+
+              if (asset.kind === "image") {
+                page.drawImage(asset.embedded, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } else {
+                try {
+                  page.drawPage(asset.embeddedPage, {
+                    x: xPos,
+                    y: yPos,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
+              }
+            }
+          }
+
+          // Render other items (Aadhaar separate, Vehicle Photos) - 2 per page
           for (let i = 0; i < items.length; i += 2) {
             const page = pdfDoc.addPage([595, 842]);
             try {
@@ -955,11 +1161,21 @@ const SellLetterHistory = () => {
               const x = 50;
               const yTop = yPositions[cell];
               page.drawText(item.title, { x, y: yTop, size: 12, font });
-              const embedded = await embedImageFromUrl(pdfDoc, item.url);
-              if (embedded) {
+              const asset = await embedAssetFromUrl(pdfDoc, item.url);
+              if (asset) {
                 const cellMaxW = 500;
                 const cellMaxH = 320;
-                const { width, height } = embedded.scale(1);
+                let width, height;
+                if (asset.kind === "image") {
+                  const dims = asset.embedded.scale(1);
+                  width = dims.width;
+                  height = dims.height;
+                } else {
+                  const p = asset.embeddedPage;
+                  width = p.width || p.getWidth?.() || 595;
+                  height = p.height || p.getHeight?.() || 842;
+                }
+
                 let drawW = cellMaxW;
                 let drawH = (height / width) * drawW;
                 if (drawH > cellMaxH) {
@@ -967,12 +1183,201 @@ const SellLetterHistory = () => {
                   drawW = (width / height) * drawH;
                 }
                 const drawY = yTop - drawH - 10;
-                page.drawImage(embedded, {
-                  x,
-                  y: drawY,
+
+                if (asset.kind === "image") {
+                  page.drawImage(asset.embedded, {
+                    x,
+                    y: drawY,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } else {
+                  try {
+                    page.drawPage(asset.embeddedPage, {
+                      x,
+                      y: drawY,
+                      width: drawW,
+                      height: drawH,
+                    });
+                  } catch (e) {}
+                }
+              }
+            }
+          }
+
+          // Render Insurance Certificate items (1 per page)
+          for (const item of insuranceCertificateItems) {
+            const page = pdfDoc.addPage([595, 842]);
+            try {
+              await drawHeaderFooter(pdfDoc, page);
+            } catch (e) {}
+            const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+            const asset = await embedAssetFromUrl(pdfDoc, item.url);
+            if (asset) {
+              const pageWidth = 595;
+              const pageHeight = 842;
+              const margin = 50;
+              const maxWidth = pageWidth - 2 * margin;
+              const maxHeight = pageHeight - 150;
+
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = asset.embedded.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                const p = asset.embeddedPage;
+                width = p.width || p.getWidth?.() || 595;
+                height = p.height || p.getHeight?.() || 842;
+              }
+
+              let drawW = maxWidth;
+              let drawH = (height / width) * drawW;
+
+              if (drawH > maxHeight) {
+                drawH = maxHeight;
+                drawW = (width / height) * drawH;
+              }
+
+              const xPos = (pageWidth - drawW) / 2;
+              const yPos = 750 - drawH;
+
+              if (asset.kind === "image") {
+                page.drawImage(asset.embedded, {
+                  x: xPos,
+                  y: yPos,
                   width: drawW,
                   height: drawH,
                 });
+              } else {
+                try {
+                  page.drawPage(asset.embeddedPage, {
+                    x: xPos,
+                    y: yPos,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
+              }
+            }
+          }
+
+          // Render Vehicle NOC items (1 per page)
+          for (const item of vehicleNOCItems) {
+            const page = pdfDoc.addPage([595, 842]);
+            try {
+              await drawHeaderFooter(pdfDoc, page);
+            } catch (e) {}
+            const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+            const asset = await embedAssetFromUrl(pdfDoc, item.url);
+            if (asset) {
+              const pageWidth = 595;
+              const pageHeight = 842;
+              const margin = 50;
+              const maxWidth = pageWidth - 2 * margin;
+              const maxHeight = pageHeight - 150;
+
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = asset.embedded.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                const p = asset.embeddedPage;
+                width = p.width || p.getWidth?.() || 595;
+                height = p.height || p.getHeight?.() || 842;
+              }
+
+              let drawW = maxWidth;
+              let drawH = (height / width) * drawW;
+
+              if (drawH > maxHeight) {
+                drawH = maxHeight;
+                drawW = (width / height) * drawH;
+              }
+
+              const xPos = (pageWidth - drawW) / 2;
+              const yPos = 750 - drawH;
+
+              if (asset.kind === "image") {
+                page.drawImage(asset.embedded, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } else {
+                try {
+                  page.drawPage(asset.embeddedPage, {
+                    x: xPos,
+                    y: yPos,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
+              }
+            }
+          }
+
+          // Render Vehicle Buy Receipt items (1 per page)
+          for (const item of vehicleBuyReceiptItems) {
+            const page = pdfDoc.addPage([595, 842]);
+            try {
+              await drawHeaderFooter(pdfDoc, page);
+            } catch (e) {}
+            const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+            const asset = await embedAssetFromUrl(pdfDoc, item.url);
+            if (asset) {
+              const pageWidth = 595;
+              const pageHeight = 842;
+              const margin = 50;
+              const maxWidth = pageWidth - 2 * margin;
+              const maxHeight = pageHeight - 150;
+
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = asset.embedded.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                const p = asset.embeddedPage;
+                width = p.width || p.getWidth?.() || 595;
+                height = p.height || p.getHeight?.() || 842;
+              }
+
+              let drawW = maxWidth;
+              let drawH = (height / width) * drawW;
+
+              if (drawH > maxHeight) {
+                drawH = maxHeight;
+                drawW = (width / height) * drawH;
+              }
+
+              const xPos = (pageWidth - drawW) / 2;
+              const yPos = 750 - drawH;
+
+              if (asset.kind === "image") {
+                page.drawImage(asset.embedded, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } else {
+                try {
+                  page.drawPage(asset.embeddedPage, {
+                    x: xPos,
+                    y: yPos,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
               }
             }
           }
@@ -1137,15 +1542,32 @@ const SellLetterHistory = () => {
         pdfDoc = await PDFDocument.create();
       }
 
-      const embedImageFromUrl = async (pdfDoc, url) => {
+      const embedAssetFromUrl = async (pdfDoc, url) => {
         try {
           const res = await fetch(url);
-          const contentType = res.headers.get("content-type") || "";
+          const contentType = (
+            res.headers.get("content-type") || ""
+          ).toLowerCase();
           const bytes = await res.arrayBuffer();
-          if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
-          return await pdfDoc.embedJpg(bytes);
+
+          if (
+            contentType.includes("pdf") ||
+            url.toLowerCase().endsWith(".pdf")
+          ) {
+            const embeddedPages = await pdfDoc.embedPdf(bytes);
+            if (Array.isArray(embeddedPages) && embeddedPages.length > 0)
+              return { kind: "pdf", embeddedPage: embeddedPages[0] };
+            return null;
+          }
+
+          if (contentType.includes("png")) {
+            const img = await pdfDoc.embedPng(bytes);
+            return { kind: "image", embedded: img };
+          }
+          const img = await pdfDoc.embedJpg(bytes);
+          return { kind: "image", embedded: img };
         } catch (err) {
-          console.warn("Failed to embed image from", url, err);
+          console.warn("Failed to embed asset from", url, err);
           return null;
         }
       };
@@ -1153,6 +1575,8 @@ const SellLetterHistory = () => {
       const addDocumentPages = async (pdfDoc, documentsObj) => {
         if (!documentsObj) return;
         const items = [];
+        const panItems = [];
+        const deliveryPhotoItems = [];
         const rcItems = [];
 
         if (documentsObj.vehicleRC) {
@@ -1195,10 +1619,11 @@ const SellLetterHistory = () => {
               });
           }
         }
+        // Separate PAN and Delivery Photo into their own arrays for individual page rendering
         if (documentsObj.pan)
-          items.push({ title: "PAN Card", url: documentsObj.pan });
+          panItems.push({ title: "PAN Card", url: documentsObj.pan });
         if (documentsObj.deliveryPhoto || documentsObj.vehicleKM)
-          items.push({
+          deliveryPhotoItems.push({
             title: "Delivery Photo",
             url: documentsObj.deliveryPhoto || documentsObj.vehicleKM,
           });
@@ -1206,6 +1631,64 @@ const SellLetterHistory = () => {
           documentsObj.vehiclePhotos.forEach((u, i) =>
             items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
           );
+        }
+
+        const insuranceCertificateItems = [];
+        const vehicleNOCItems = [];
+        const vehicleBuyReceiptItems = [];
+
+        if (documentsObj.insuranceCertificate) {
+          if (Array.isArray(documentsObj.insuranceCertificate.pages)) {
+            documentsObj.insuranceCertificate.pages.forEach((p, idx) =>
+              insuranceCertificateItems.push({
+                title: `Insurance Certificate ${idx + 1}`,
+                url: p,
+              }),
+            );
+          } else if (Array.isArray(documentsObj.insuranceCertificate)) {
+            documentsObj.insuranceCertificate.forEach((p, idx) =>
+              insuranceCertificateItems.push({
+                title: `Insurance Certificate ${idx + 1}`,
+                url: p,
+              }),
+            );
+          }
+        }
+
+        if (documentsObj.vehicleNOC) {
+          if (Array.isArray(documentsObj.vehicleNOC.pages)) {
+            documentsObj.vehicleNOC.pages.forEach((p, idx) =>
+              vehicleNOCItems.push({
+                title: `Vehicle NOC ${idx + 1}`,
+                url: p,
+              }),
+            );
+          } else if (Array.isArray(documentsObj.vehicleNOC)) {
+            documentsObj.vehicleNOC.forEach((p, idx) =>
+              vehicleNOCItems.push({
+                title: `Vehicle NOC ${idx + 1}`,
+                url: p,
+              }),
+            );
+          }
+        }
+
+        if (documentsObj.vehicleBuyReceipt) {
+          if (Array.isArray(documentsObj.vehicleBuyReceipt.pages)) {
+            documentsObj.vehicleBuyReceipt.pages.forEach((p, idx) =>
+              vehicleBuyReceiptItems.push({
+                title: `Vehicle Buy Receipt ${idx + 1}`,
+                url: p,
+              }),
+            );
+          } else if (Array.isArray(documentsObj.vehicleBuyReceipt)) {
+            documentsObj.vehicleBuyReceipt.forEach((p, idx) =>
+              vehicleBuyReceiptItems.push({
+                title: `Vehicle Buy Receipt ${idx + 1}`,
+                url: p,
+              }),
+            );
+          }
         }
 
         if (rcItems.length > 0) {
@@ -1230,9 +1713,19 @@ const SellLetterHistory = () => {
               font: titleFont,
             });
 
-            const embedded = await embedImageFromUrl(pdfDoc, item.url);
-            if (embedded) {
-              const { width, height } = embedded.scale(1);
+            const asset = await embedAssetFromUrl(pdfDoc, item.url);
+            if (asset) {
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = asset.embedded.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                const p = asset.embeddedPage;
+                width = p.width || p.getWidth?.() || 595;
+                height = p.height || p.getHeight?.() || 842;
+              }
+
               let drawW = colWidth - 20;
               let drawH = (height / width) * drawW;
 
@@ -1244,12 +1737,23 @@ const SellLetterHistory = () => {
               const centeredX = xPos + (colWidth - drawW) / 2;
               const drawY = yTop - drawH - 15;
 
-              page.drawImage(embedded, {
-                x: centeredX,
-                y: drawY,
-                width: drawW,
-                height: drawH,
-              });
+              if (asset.kind === "image") {
+                page.drawImage(asset.embedded, {
+                  x: centeredX,
+                  y: drawY,
+                  width: drawW,
+                  height: drawH,
+                });
+              } else {
+                try {
+                  page.drawPage(asset.embeddedPage, {
+                    x: centeredX,
+                    y: drawY,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
+              }
             }
           }
         }
@@ -1312,14 +1816,24 @@ const SellLetterHistory = () => {
 
           page.drawText(item.title, { x: 50, y: 720, size: 14, font });
 
-          const embedded = await embedImageFromUrl(pdfDoc, item.url);
-          if (embedded) {
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
             const pageWidth = 595;
             const margin = 50;
             const maxWidth = pageWidth - 2 * margin;
             const maxHeight = 660;
 
-            const { width, height } = embedded.scale(1);
+            let width, height;
+            if (asset.kind === "image") {
+              const dims = asset.embedded.scale(1);
+              width = dims.width;
+              height = dims.height;
+            } else {
+              const p = asset.embeddedPage;
+              width = p.width || p.getWidth?.() || 595;
+              height = p.height || p.getHeight?.() || 842;
+            }
+
             let drawW = maxWidth;
             let drawH = (height / width) * drawW;
 
@@ -1331,12 +1845,141 @@ const SellLetterHistory = () => {
             const xPos = (pageWidth - drawW) / 2;
             const yPos = 690 - drawH;
 
-            page.drawImage(embedded, {
-              x: xPos,
-              y: yPos,
-              width: drawW,
-              height: drawH,
-            });
+            if (asset.kind === "image") {
+              page.drawImage(asset.embedded, {
+                x: xPos,
+                y: yPos,
+                width: drawW,
+                height: drawH,
+              });
+            } else {
+              try {
+                page.drawPage(asset.embeddedPage, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } catch (e) {}
+            }
+          }
+        }
+
+        // Render PAN Card on its own page (1 per page)
+        for (const item of panItems) {
+          const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            const pageWidth = 595;
+            const pageHeight = 842;
+            const margin = 50;
+            const maxWidth = pageWidth - 2 * margin;
+            const maxHeight = pageHeight - 150;
+
+            let width, height;
+            if (asset.kind === "image") {
+              const dims = asset.embedded.scale(1);
+              width = dims.width;
+              height = dims.height;
+            } else {
+              const p = asset.embeddedPage;
+              width = p.width || p.getWidth?.() || 595;
+              height = p.height || p.getHeight?.() || 842;
+            }
+
+            let drawW = maxWidth;
+            let drawH = (height / width) * drawW;
+
+            if (drawH > maxHeight) {
+              drawH = maxHeight;
+              drawW = (width / height) * drawH;
+            }
+
+            const xPos = (pageWidth - drawW) / 2;
+            const yPos = 750 - drawH;
+
+            if (asset.kind === "image") {
+              page.drawImage(asset.embedded, {
+                x: xPos,
+                y: yPos,
+                width: drawW,
+                height: drawH,
+              });
+            } else {
+              try {
+                page.drawPage(asset.embeddedPage, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } catch (e) {}
+            }
+          }
+        }
+
+        // Render Delivery Photo on its own page (1 per page)
+        for (const item of deliveryPhotoItems) {
+          const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            const pageWidth = 595;
+            const pageHeight = 842;
+            const margin = 50;
+            const maxWidth = pageWidth - 2 * margin;
+            const maxHeight = pageHeight - 150;
+
+            let width, height;
+            if (asset.kind === "image") {
+              const dims = asset.embedded.scale(1);
+              width = dims.width;
+              height = dims.height;
+            } else {
+              const p = asset.embeddedPage;
+              width = p.width || p.getWidth?.() || 595;
+              height = p.height || p.getHeight?.() || 842;
+            }
+
+            let drawW = maxWidth;
+            let drawH = (height / width) * drawW;
+
+            if (drawH > maxHeight) {
+              drawH = maxHeight;
+              drawW = (width / height) * drawH;
+            }
+
+            const xPos = (pageWidth - drawW) / 2;
+            const yPos = 750 - drawH;
+
+            if (asset.kind === "image") {
+              page.drawImage(asset.embedded, {
+                x: xPos,
+                y: yPos,
+                width: drawW,
+                height: drawH,
+              });
+            } else {
+              try {
+                page.drawPage(asset.embeddedPage, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } catch (e) {}
+            }
           }
         }
 
@@ -1364,11 +2007,21 @@ const SellLetterHistory = () => {
               font: titleFont,
             });
 
-            const embedded = await embedImageFromUrl(pdfDoc, item.url);
-            if (embedded) {
+            const asset = await embedAssetFromUrl(pdfDoc, item.url);
+            if (asset) {
               const cellMaxW = 500;
               const cellMaxH = 320;
-              const { width, height } = embedded.scale(1);
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = asset.embedded.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                const p = asset.embeddedPage;
+                width = p.width || p.getWidth?.() || 595;
+                height = p.height || p.getHeight?.() || 842;
+              }
+
               let drawW = cellMaxW;
               let drawH = (height / width) * drawW;
               if (drawH > cellMaxH) {
@@ -1376,23 +2029,211 @@ const SellLetterHistory = () => {
                 drawW = (width / height) * drawH;
               }
               const drawY = yTop - drawH - 10;
-              page.drawImage(embedded, {
-                x,
-                y: drawY,
+              if (asset.kind === "image") {
+                page.drawImage(asset.embedded, {
+                  x,
+                  y: drawY,
+                  width: drawW,
+                  height: drawH,
+                });
+              } else {
+                try {
+                  page.drawPage(asset.embeddedPage, {
+                    x,
+                    y: drawY,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
+              }
+            }
+          }
+        }
+
+        // Render Insurance Certificate items (1 per page)
+        for (const item of insuranceCertificateItems) {
+          const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            const pageWidth = 595;
+            const pageHeight = 842;
+            const margin = 50;
+            const maxWidth = pageWidth - 2 * margin;
+            const maxHeight = pageHeight - 150;
+
+            let width, height;
+            if (asset.kind === "image") {
+              const dims = asset.embedded.scale(1);
+              width = dims.width;
+              height = dims.height;
+            } else {
+              const p = asset.embeddedPage;
+              width = p.width || p.getWidth?.() || 595;
+              height = p.height || p.getHeight?.() || 842;
+            }
+
+            let drawW = maxWidth;
+            let drawH = (height / width) * drawW;
+
+            if (drawH > maxHeight) {
+              drawH = maxHeight;
+              drawW = (width / height) * drawH;
+            }
+
+            const xPos = (pageWidth - drawW) / 2;
+            const yPos = 750 - drawH;
+
+            if (asset.kind === "image") {
+              page.drawImage(asset.embedded, {
+                x: xPos,
+                y: yPos,
                 width: drawW,
                 height: drawH,
               });
+            } else {
+              try {
+                page.drawPage(asset.embeddedPage, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } catch (e) {}
+            }
+          }
+        }
+
+        // Render Vehicle NOC items (1 per page)
+        for (const item of vehicleNOCItems) {
+          const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            const pageWidth = 595;
+            const pageHeight = 842;
+            const margin = 50;
+            const maxWidth = pageWidth - 2 * margin;
+            const maxHeight = pageHeight - 150;
+
+            let width, height;
+            if (asset.kind === "image") {
+              const dims = asset.embedded.scale(1);
+              width = dims.width;
+              height = dims.height;
+            } else {
+              const p = asset.embeddedPage;
+              width = p.width || p.getWidth?.() || 595;
+              height = p.height || p.getHeight?.() || 842;
+            }
+
+            let drawW = maxWidth;
+            let drawH = (height / width) * drawW;
+
+            if (drawH > maxHeight) {
+              drawH = maxHeight;
+              drawW = (width / height) * drawH;
+            }
+
+            const xPos = (pageWidth - drawW) / 2;
+            const yPos = 750 - drawH;
+
+            if (asset.kind === "image") {
+              page.drawImage(asset.embedded, {
+                x: xPos,
+                y: yPos,
+                width: drawW,
+                height: drawH,
+              });
+            } else {
+              try {
+                page.drawPage(asset.embeddedPage, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } catch (e) {}
+            }
+          }
+        }
+
+        // Render Vehicle Buy Receipt items (1 per page)
+        for (const item of vehicleBuyReceiptItems) {
+          const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            const pageWidth = 595;
+            const pageHeight = 842;
+            const margin = 50;
+            const maxWidth = pageWidth - 2 * margin;
+            const maxHeight = pageHeight - 150;
+
+            let width, height;
+            if (asset.kind === "image") {
+              const dims = asset.embedded.scale(1);
+              width = dims.width;
+              height = dims.height;
+            } else {
+              const p = asset.embeddedPage;
+              width = p.width || p.getWidth?.() || 595;
+              height = p.height || p.getHeight?.() || 842;
+            }
+
+            let drawW = maxWidth;
+            let drawH = (height / width) * drawW;
+
+            if (drawH > maxHeight) {
+              drawH = maxHeight;
+              drawW = (width / height) * drawH;
+            }
+
+            const xPos = (pageWidth - drawW) / 2;
+            const yPos = 750 - drawH;
+
+            if (asset.kind === "image") {
+              page.drawImage(asset.embedded, {
+                x: xPos,
+                y: yPos,
+                width: drawW,
+                height: drawH,
+              });
+            } else {
+              try {
+                page.drawPage(asset.embeddedPage, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } catch (e) {}
             }
           }
         }
       };
 
-      await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
-
       if (documentsToInclude?.invoice === true) {
         const invoicePage = pdfDoc.addPage([595, 842]);
         await drawVehicleInvoice(invoicePage, pdfDoc, letter);
       }
+
+      await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -1500,15 +2341,32 @@ const SellLetterHistory = () => {
         pdfDoc = await PDFDocument.create();
       }
 
-      const embedImageFromUrl = async (pdfDoc, url) => {
+      const embedAssetFromUrl = async (pdfDoc, url) => {
         try {
           const res = await fetch(url);
-          const contentType = res.headers.get("content-type") || "";
+          const contentType = (
+            res.headers.get("content-type") || ""
+          ).toLowerCase();
           const bytes = await res.arrayBuffer();
-          if (contentType.includes("png")) return await pdfDoc.embedPng(bytes);
-          return await pdfDoc.embedJpg(bytes);
+
+          if (
+            contentType.includes("pdf") ||
+            url.toLowerCase().endsWith(".pdf")
+          ) {
+            const embeddedPages = await pdfDoc.embedPdf(bytes);
+            if (Array.isArray(embeddedPages) && embeddedPages.length > 0)
+              return { kind: "pdf", embeddedPage: embeddedPages[0] };
+            return null;
+          }
+
+          if (contentType.includes("png")) {
+            const img = await pdfDoc.embedPng(bytes);
+            return { kind: "image", embedded: img };
+          }
+          const img = await pdfDoc.embedJpg(bytes);
+          return { kind: "image", embedded: img };
         } catch (err) {
-          console.warn("Failed to embed image from", url, err);
+          console.warn("Failed to embed asset from", url, err);
           return null;
         }
       };
@@ -1516,6 +2374,8 @@ const SellLetterHistory = () => {
       const addDocumentPages = async (pdfDoc, documentsObj) => {
         if (!documentsObj) return;
         const items = [];
+        const panItems = [];
+        const deliveryPhotoItems = [];
         const rcItems = [];
 
         if (documentsObj.vehicleRC) {
@@ -1559,9 +2419,9 @@ const SellLetterHistory = () => {
           }
         }
         if (documentsObj.pan)
-          items.push({ title: "PAN Card", url: documentsObj.pan });
+          panItems.push({ title: "PAN Card", url: documentsObj.pan });
         if (documentsObj.deliveryPhoto || documentsObj.vehicleKM)
-          items.push({
+          deliveryPhotoItems.push({
             title: "Delivery Photo",
             url: documentsObj.deliveryPhoto || documentsObj.vehicleKM,
           });
@@ -1571,8 +2431,69 @@ const SellLetterHistory = () => {
           );
         }
 
+        const insuranceCertificateItems = [];
+        const vehicleNOCItems = [];
+        const vehicleBuyReceiptItems = [];
+
+        if (documentsObj.insuranceCertificate) {
+          if (Array.isArray(documentsObj.insuranceCertificate.pages)) {
+            documentsObj.insuranceCertificate.pages.forEach((p, idx) =>
+              insuranceCertificateItems.push({
+                title: `Insurance Certificate ${idx + 1}`,
+                url: p,
+              }),
+            );
+          } else if (Array.isArray(documentsObj.insuranceCertificate)) {
+            documentsObj.insuranceCertificate.forEach((p, idx) =>
+              insuranceCertificateItems.push({
+                title: `Insurance Certificate ${idx + 1}`,
+                url: p,
+              }),
+            );
+          }
+        }
+
+        if (documentsObj.vehicleNOC) {
+          if (Array.isArray(documentsObj.vehicleNOC.pages)) {
+            documentsObj.vehicleNOC.pages.forEach((p, idx) =>
+              vehicleNOCItems.push({
+                title: `Vehicle NOC ${idx + 1}`,
+                url: p,
+              }),
+            );
+          } else if (Array.isArray(documentsObj.vehicleNOC)) {
+            documentsObj.vehicleNOC.forEach((p, idx) =>
+              vehicleNOCItems.push({
+                title: `Vehicle NOC ${idx + 1}`,
+                url: p,
+              }),
+            );
+          }
+        }
+
+        if (documentsObj.vehicleBuyReceipt) {
+          if (Array.isArray(documentsObj.vehicleBuyReceipt.pages)) {
+            documentsObj.vehicleBuyReceipt.pages.forEach((p, idx) =>
+              vehicleBuyReceiptItems.push({
+                title: `Vehicle Buy Receipt ${idx + 1}`,
+                url: p,
+              }),
+            );
+          } else if (Array.isArray(documentsObj.vehicleBuyReceipt)) {
+            documentsObj.vehicleBuyReceipt.forEach((p, idx) =>
+              vehicleBuyReceiptItems.push({
+                title: `Vehicle Buy Receipt ${idx + 1}`,
+                url: p,
+              }),
+            );
+          }
+        }
+
         if (rcItems.length > 0) {
           const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
           const margin = 40;
           const colWidth = (595 - 3 * margin) / 2;
           const colGap = margin;
@@ -1593,9 +2514,19 @@ const SellLetterHistory = () => {
               font: titleFont,
             });
 
-            const embedded = await embedImageFromUrl(pdfDoc, item.url);
-            if (embedded) {
-              const { width, height } = embedded.scale(1);
+            const asset = await embedAssetFromUrl(pdfDoc, item.url);
+            if (asset) {
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = asset.embedded.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                const p = asset.embeddedPage;
+                width = p.width || p.getWidth?.() || 595;
+                height = p.height || p.getHeight?.() || 842;
+              }
+
               let drawW = colWidth - 20;
               let drawH = (height / width) * drawW;
 
@@ -1607,12 +2538,23 @@ const SellLetterHistory = () => {
               const centeredX = xPos + (colWidth - drawW) / 2;
               const drawY = yTop - drawH - 15;
 
-              page.drawImage(embedded, {
-                x: centeredX,
-                y: drawY,
-                width: drawW,
-                height: drawH,
-              });
+              if (asset.kind === "image") {
+                page.drawImage(asset.embedded, {
+                  x: centeredX,
+                  y: drawY,
+                  width: drawW,
+                  height: drawH,
+                });
+              } else {
+                try {
+                  page.drawPage(asset.embeddedPage, {
+                    x: centeredX,
+                    y: drawY,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
+              }
             }
           }
         }
@@ -1649,14 +2591,24 @@ const SellLetterHistory = () => {
 
           page.drawText(item.title, { x: 50, y: 720, size: 14, font });
 
-          const embedded = await embedImageFromUrl(pdfDoc, item.url);
-          if (embedded) {
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
             const pageWidth = 595;
             const margin = 50;
             const maxWidth = pageWidth - 2 * margin;
             const maxHeight = 660;
 
-            const { width, height } = embedded.scale(1);
+            let width, height;
+            if (asset.kind === "image") {
+              const dims = asset.embedded.scale(1);
+              width = dims.width;
+              height = dims.height;
+            } else {
+              const p = asset.embeddedPage;
+              width = p.width || p.getWidth?.() || 595;
+              height = p.height || p.getHeight?.() || 842;
+            }
+
             let drawW = maxWidth;
             let drawH = (height / width) * drawW;
 
@@ -1668,12 +2620,141 @@ const SellLetterHistory = () => {
             const xPos = (pageWidth - drawW) / 2;
             const yPos = 690 - drawH;
 
-            page.drawImage(embedded, {
-              x: xPos,
-              y: yPos,
-              width: drawW,
-              height: drawH,
-            });
+            if (asset.kind === "image") {
+              page.drawImage(asset.embedded, {
+                x: xPos,
+                y: yPos,
+                width: drawW,
+                height: drawH,
+              });
+            } else {
+              try {
+                page.drawPage(asset.embeddedPage, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } catch (e) {}
+            }
+          }
+        }
+
+        // Render PAN Card on its own page (1 per page)
+        for (const item of panItems) {
+          const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            const pageWidth = 595;
+            const pageHeight = 842;
+            const margin = 50;
+            const maxWidth = pageWidth - 2 * margin;
+            const maxHeight = pageHeight - 150;
+
+            let width, height;
+            if (asset.kind === "image") {
+              const dims = asset.embedded.scale(1);
+              width = dims.width;
+              height = dims.height;
+            } else {
+              const p = asset.embeddedPage;
+              width = p.width || p.getWidth?.() || 595;
+              height = p.height || p.getHeight?.() || 842;
+            }
+
+            let drawW = maxWidth;
+            let drawH = (height / width) * drawW;
+
+            if (drawH > maxHeight) {
+              drawH = maxHeight;
+              drawW = (width / height) * drawH;
+            }
+
+            const xPos = (pageWidth - drawW) / 2;
+            const yPos = 750 - drawH;
+
+            if (asset.kind === "image") {
+              page.drawImage(asset.embedded, {
+                x: xPos,
+                y: yPos,
+                width: drawW,
+                height: drawH,
+              });
+            } else {
+              try {
+                page.drawPage(asset.embeddedPage, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } catch (e) {}
+            }
+          }
+        }
+
+        // Render Delivery Photo on its own page (1 per page)
+        for (const item of deliveryPhotoItems) {
+          const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            const pageWidth = 595;
+            const pageHeight = 842;
+            const margin = 50;
+            const maxWidth = pageWidth - 2 * margin;
+            const maxHeight = pageHeight - 150;
+
+            let width, height;
+            if (asset.kind === "image") {
+              const dims = asset.embedded.scale(1);
+              width = dims.width;
+              height = dims.height;
+            } else {
+              const p = asset.embeddedPage;
+              width = p.width || p.getWidth?.() || 595;
+              height = p.height || p.getHeight?.() || 842;
+            }
+
+            let drawW = maxWidth;
+            let drawH = (height / width) * drawW;
+
+            if (drawH > maxHeight) {
+              drawH = maxHeight;
+              drawW = (width / height) * drawH;
+            }
+
+            const xPos = (pageWidth - drawW) / 2;
+            const yPos = 750 - drawH;
+
+            if (asset.kind === "image") {
+              page.drawImage(asset.embedded, {
+                x: xPos,
+                y: yPos,
+                width: drawW,
+                height: drawH,
+              });
+            } else {
+              try {
+                page.drawPage(asset.embeddedPage, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } catch (e) {}
+            }
           }
         }
 
@@ -1701,11 +2782,20 @@ const SellLetterHistory = () => {
               font: titleFont,
             });
 
-            const embedded = await embedImageFromUrl(pdfDoc, item.url);
-            if (embedded) {
+            const asset = await embedAssetFromUrl(pdfDoc, item.url);
+            if (asset) {
               const cellMaxW = 500;
               const cellMaxH = 320;
-              const { width, height } = embedded.scale(1);
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = asset.embedded.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                const p = asset.embeddedPage;
+                width = p.width || p.getWidth?.() || 595;
+                height = p.height || p.getHeight?.() || 842;
+              }
               let drawW = cellMaxW;
               let drawH = (height / width) * drawW;
               if (drawH > cellMaxH) {
@@ -1713,23 +2803,211 @@ const SellLetterHistory = () => {
                 drawW = (width / height) * drawH;
               }
               const drawY = yTop - drawH - 10;
-              page.drawImage(embedded, {
-                x,
-                y: drawY,
+              if (asset.kind === "image") {
+                page.drawImage(asset.embedded, {
+                  x,
+                  y: drawY,
+                  width: drawW,
+                  height: drawH,
+                });
+              } else {
+                try {
+                  page.drawPage(asset.embeddedPage, {
+                    x,
+                    y: drawY,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
+              }
+            }
+          }
+        }
+
+        // Render Insurance Certificate items (1 per page)
+        for (const item of insuranceCertificateItems) {
+          const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            const pageWidth = 595;
+            const pageHeight = 842;
+            const margin = 50;
+            const maxWidth = pageWidth - 2 * margin;
+            const maxHeight = pageHeight - 150;
+
+            let width, height;
+            if (asset.kind === "image") {
+              const dims = asset.embedded.scale(1);
+              width = dims.width;
+              height = dims.height;
+            } else {
+              const p = asset.embeddedPage;
+              width = p.width || p.getWidth?.() || 595;
+              height = p.height || p.getHeight?.() || 842;
+            }
+
+            let drawW = maxWidth;
+            let drawH = (height / width) * drawW;
+
+            if (drawH > maxHeight) {
+              drawH = maxHeight;
+              drawW = (width / height) * drawH;
+            }
+
+            const xPos = (pageWidth - drawW) / 2;
+            const yPos = 750 - drawH;
+
+            if (asset.kind === "image") {
+              page.drawImage(asset.embedded, {
+                x: xPos,
+                y: yPos,
                 width: drawW,
                 height: drawH,
               });
+            } else {
+              try {
+                page.drawPage(asset.embeddedPage, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } catch (e) {}
+            }
+          }
+        }
+
+        // Render Vehicle NOC items (1 per page)
+        for (const item of vehicleNOCItems) {
+          const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            const pageWidth = 595;
+            const pageHeight = 842;
+            const margin = 50;
+            const maxWidth = pageWidth - 2 * margin;
+            const maxHeight = pageHeight - 150;
+
+            let width, height;
+            if (asset.kind === "image") {
+              const dims = asset.embedded.scale(1);
+              width = dims.width;
+              height = dims.height;
+            } else {
+              const p = asset.embeddedPage;
+              width = p.width || p.getWidth?.() || 595;
+              height = p.height || p.getHeight?.() || 842;
+            }
+
+            let drawW = maxWidth;
+            let drawH = (height / width) * drawW;
+
+            if (drawH > maxHeight) {
+              drawH = maxHeight;
+              drawW = (width / height) * drawH;
+            }
+
+            const xPos = (pageWidth - drawW) / 2;
+            const yPos = 750 - drawH;
+
+            if (asset.kind === "image") {
+              page.drawImage(asset.embedded, {
+                x: xPos,
+                y: yPos,
+                width: drawW,
+                height: drawH,
+              });
+            } else {
+              try {
+                page.drawPage(asset.embeddedPage, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } catch (e) {}
+            }
+          }
+        }
+
+        // Render Vehicle Buy Receipt items (1 per page)
+        for (const item of vehicleBuyReceiptItems) {
+          const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            const pageWidth = 595;
+            const pageHeight = 842;
+            const margin = 50;
+            const maxWidth = pageWidth - 2 * margin;
+            const maxHeight = pageHeight - 150;
+
+            let width, height;
+            if (asset.kind === "image") {
+              const dims = asset.embedded.scale(1);
+              width = dims.width;
+              height = dims.height;
+            } else {
+              const p = asset.embeddedPage;
+              width = p.width || p.getWidth?.() || 595;
+              height = p.height || p.getHeight?.() || 842;
+            }
+
+            let drawW = maxWidth;
+            let drawH = (height / width) * drawW;
+
+            if (drawH > maxHeight) {
+              drawH = maxHeight;
+              drawW = (width / height) * drawH;
+            }
+
+            const xPos = (pageWidth - drawW) / 2;
+            const yPos = 750 - drawH;
+
+            if (asset.kind === "image") {
+              page.drawImage(asset.embedded, {
+                x: xPos,
+                y: yPos,
+                width: drawW,
+                height: drawH,
+              });
+            } else {
+              try {
+                page.drawPage(asset.embeddedPage, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } catch (e) {}
             }
           }
         }
       };
 
-      await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
-
       if (documentsToInclude?.invoice === true) {
         const invoicePage = pdfDoc.addPage([595, 842]);
         await drawVehicleInvoice(invoicePage, pdfDoc, letter);
       }
+
+      await addDocumentPages(pdfDoc, documentsToInclude || letter.documents);
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -3047,215 +4325,342 @@ const SellLetterHistory = () => {
                   >
                     Supporting Documents
                   </div>
-                  <label
+                  <div
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "10px 12px",
-                      marginBottom: "8px",
-                      backgroundColor: docSelections.vehicleRC
-                        ? "#f0f9ff"
-                        : "transparent",
-                      border: `2px solid ${docSelections.vehicleRC ? "#0284c7" : "#e2e8f0"}`,
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "10px",
                     }}
                   >
-                    <input
-                      type="checkbox"
-                      checked={!!docSelections.vehicleRC}
-                      onChange={(e) =>
-                        setDocSelections((s) => ({
-                          ...s,
-                          vehicleRC: e.target.checked,
-                        }))
-                      }
+                    <label
                       style={{
-                        width: "18px",
-                        height: "18px",
-                        marginRight: "12px",
-                        accentColor: "#0284c7",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "10px 12px",
+                        backgroundColor: docSelections.vehicleRC
+                          ? "#f0f9ff"
+                          : "transparent",
+                        border: `2px solid ${docSelections.vehicleRC ? "#0284c7" : "#e2e8f0"}`,
+                        borderRadius: "8px",
                         cursor: "pointer",
-                      }}
-                    />
-                    <span
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        color: "#1e293b",
+                        transition: "all 0.2s ease",
                       }}
                     >
-                      Vehicle RC (Front/Back)
-                    </span>
-                  </label>
-                  <label
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "10px 12px",
-                      marginBottom: "8px",
-                      backgroundColor: docSelections.aadhaar
-                        ? "#f0f9ff"
-                        : "transparent",
-                      border: `2px solid ${docSelections.aadhaar ? "#0284c7" : "#e2e8f0"}`,
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={!!docSelections.aadhaar}
-                      onChange={(e) =>
-                        setDocSelections((s) => ({
-                          ...s,
-                          aadhaar: e.target.checked,
-                        }))
-                      }
+                      <input
+                        type="checkbox"
+                        checked={!!docSelections.vehicleRC}
+                        onChange={(e) =>
+                          setDocSelections((s) => ({
+                            ...s,
+                            vehicleRC: e.target.checked,
+                          }))
+                        }
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          marginRight: "12px",
+                          accentColor: "#0284c7",
+                          cursor: "pointer",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          color: "#1e293b",
+                        }}
+                      >
+                        Vehicle RC (Front/Back)
+                      </span>
+                    </label>
+                    <label
                       style={{
-                        width: "18px",
-                        height: "18px",
-                        marginRight: "12px",
-                        accentColor: "#0284c7",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "10px 12px",
+                        backgroundColor: docSelections.aadhaar
+                          ? "#f0f9ff"
+                          : "transparent",
+                        border: `2px solid ${docSelections.aadhaar ? "#0284c7" : "#e2e8f0"}`,
+                        borderRadius: "8px",
                         cursor: "pointer",
-                      }}
-                    />
-                    <span
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        color: "#1e293b",
+                        transition: "all 0.2s ease",
                       }}
                     >
-                      Aadhaar (Front/Back)
-                    </span>
-                  </label>
-                  <label
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "10px 12px",
-                      marginBottom: "8px",
-                      backgroundColor: docSelections.pan
-                        ? "#f0f9ff"
-                        : "transparent",
-                      border: `2px solid ${docSelections.pan ? "#0284c7" : "#e2e8f0"}`,
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={!!docSelections.pan}
-                      onChange={(e) =>
-                        setDocSelections((s) => ({
-                          ...s,
-                          pan: e.target.checked,
-                        }))
-                      }
+                      <input
+                        type="checkbox"
+                        checked={!!docSelections.aadhaar}
+                        onChange={(e) =>
+                          setDocSelections((s) => ({
+                            ...s,
+                            aadhaar: e.target.checked,
+                          }))
+                        }
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          marginRight: "12px",
+                          accentColor: "#0284c7",
+                          cursor: "pointer",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          color: "#1e293b",
+                        }}
+                      >
+                        Aadhaar (Front/Back)
+                      </span>
+                    </label>
+                    <label
                       style={{
-                        width: "18px",
-                        height: "18px",
-                        marginRight: "12px",
-                        accentColor: "#0284c7",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "10px 12px",
+                        backgroundColor: docSelections.pan
+                          ? "#f0f9ff"
+                          : "transparent",
+                        border: `2px solid ${docSelections.pan ? "#0284c7" : "#e2e8f0"}`,
+                        borderRadius: "8px",
                         cursor: "pointer",
-                      }}
-                    />
-                    <span
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        color: "#1e293b",
+                        transition: "all 0.2s ease",
                       }}
                     >
-                      PAN Card
-                    </span>
-                  </label>
-                  <label
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "10px 12px",
-                      marginBottom: "8px",
-                      backgroundColor: docSelections.vehicleKM
-                        ? "#f0f9ff"
-                        : "transparent",
-                      border: `2px solid ${docSelections.vehicleKM ? "#0284c7" : "#e2e8f0"}`,
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={!!docSelections.vehicleKM}
-                      onChange={(e) =>
-                        setDocSelections((s) => ({
-                          ...s,
-                          vehicleKM: e.target.checked,
-                        }))
-                      }
+                      <input
+                        type="checkbox"
+                        checked={!!docSelections.pan}
+                        onChange={(e) =>
+                          setDocSelections((s) => ({
+                            ...s,
+                            pan: e.target.checked,
+                          }))
+                        }
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          marginRight: "12px",
+                          accentColor: "#0284c7",
+                          cursor: "pointer",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          color: "#1e293b",
+                        }}
+                      >
+                        PAN Card
+                      </span>
+                    </label>
+                    <label
                       style={{
-                        width: "18px",
-                        height: "18px",
-                        marginRight: "12px",
-                        accentColor: "#0284c7",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "10px 12px",
+                        backgroundColor: docSelections.vehicleKM
+                          ? "#f0f9ff"
+                          : "transparent",
+                        border: `2px solid ${docSelections.vehicleKM ? "#0284c7" : "#e2e8f0"}`,
+                        borderRadius: "8px",
                         cursor: "pointer",
-                      }}
-                    />
-                    <span
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        color: "#1e293b",
+                        transition: "all 0.2s ease",
                       }}
                     >
-                      Vehicle KM Photo
-                    </span>
-                  </label>
-                  <label
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "10px 12px",
-                      backgroundColor: docSelections.vehiclePhotos
-                        ? "#f0f9ff"
-                        : "transparent",
-                      border: `2px solid ${docSelections.vehiclePhotos ? "#0284c7" : "#e2e8f0"}`,
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={!!docSelections.vehiclePhotos}
-                      onChange={(e) =>
-                        setDocSelections((s) => ({
-                          ...s,
-                          vehiclePhotos: e.target.checked,
-                        }))
-                      }
+                      <input
+                        type="checkbox"
+                        checked={!!docSelections.vehicleKM}
+                        onChange={(e) =>
+                          setDocSelections((s) => ({
+                            ...s,
+                            vehicleKM: e.target.checked,
+                          }))
+                        }
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          marginRight: "12px",
+                          accentColor: "#0284c7",
+                          cursor: "pointer",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          color: "#1e293b",
+                        }}
+                      >
+                        Vehicle KM Photo
+                      </span>
+                    </label>
+                    <label
                       style={{
-                        width: "18px",
-                        height: "18px",
-                        marginRight: "12px",
-                        accentColor: "#0284c7",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "10px 12px",
+                        backgroundColor: docSelections.vehiclePhotos
+                          ? "#f0f9ff"
+                          : "transparent",
+                        border: `2px solid ${docSelections.vehiclePhotos ? "#0284c7" : "#e2e8f0"}`,
+                        borderRadius: "8px",
                         cursor: "pointer",
-                      }}
-                    />
-                    <span
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        color: "#1e293b",
+                        transition: "all 0.2s ease",
                       }}
                     >
-                      Vehicle Photos
-                    </span>
-                  </label>
+                      <input
+                        type="checkbox"
+                        checked={!!docSelections.vehiclePhotos}
+                        onChange={(e) =>
+                          setDocSelections((s) => ({
+                            ...s,
+                            vehiclePhotos: e.target.checked,
+                          }))
+                        }
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          marginRight: "12px",
+                          accentColor: "#0284c7",
+                          cursor: "pointer",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          color: "#1e293b",
+                        }}
+                      >
+                        Vehicle Photos
+                      </span>
+                    </label>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "10px 12px",
+                        backgroundColor: docSelections.insuranceCertificate
+                          ? "#f0f9ff"
+                          : "transparent",
+                        border: `2px solid ${docSelections.insuranceCertificate ? "#0284c7" : "#e2e8f0"}`,
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={!!docSelections.insuranceCertificate}
+                        onChange={(e) =>
+                          setDocSelections((s) => ({
+                            ...s,
+                            insuranceCertificate: e.target.checked,
+                          }))
+                        }
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          marginRight: "12px",
+                          accentColor: "#0284c7",
+                          cursor: "pointer",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          color: "#1e293b",
+                        }}
+                      >
+                        Insurance Certificate
+                      </span>
+                    </label>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "10px 12px",
+                        backgroundColor: docSelections.vehicleNOC
+                          ? "#f0f9ff"
+                          : "transparent",
+                        border: `2px solid ${docSelections.vehicleNOC ? "#0284c7" : "#e2e8f0"}`,
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={!!docSelections.vehicleNOC}
+                        onChange={(e) =>
+                          setDocSelections((s) => ({
+                            ...s,
+                            vehicleNOC: e.target.checked,
+                          }))
+                        }
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          marginRight: "12px",
+                          accentColor: "#0284c7",
+                          cursor: "pointer",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          color: "#1e293b",
+                        }}
+                      >
+                        Vehicle NOC
+                      </span>
+                    </label>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "10px 12px",
+                        backgroundColor: docSelections.vehicleBuyReceipt
+                          ? "#f0f9ff"
+                          : "transparent",
+                        border: `2px solid ${docSelections.vehicleBuyReceipt ? "#0284c7" : "#e2e8f0"}`,
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={!!docSelections.vehicleBuyReceipt}
+                        onChange={(e) =>
+                          setDocSelections((s) => ({
+                            ...s,
+                            vehicleBuyReceipt: e.target.checked,
+                          }))
+                        }
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          marginRight: "12px",
+                          accentColor: "#0284c7",
+                          cursor: "pointer",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          color: "#1e293b",
+                        }}
+                      >
+                        Vehicle Buy Receipt
+                      </span>
+                    </label>
+                  </div>
                 </div>
               </div>
               <div
@@ -3318,6 +4723,12 @@ const SellLetterHistory = () => {
                           docs.deliveryPhoto || docs.vehicleKM;
                       if (sel.vehiclePhotos && docs.vehiclePhotos)
                         out.vehiclePhotos = docs.vehiclePhotos;
+                      if (sel.insuranceCertificate && docs.insuranceCertificate)
+                        out.insuranceCertificate = docs.insuranceCertificate;
+                      if (sel.vehicleNOC && docs.vehicleNOC)
+                        out.vehicleNOC = docs.vehicleNOC;
+                      if (sel.vehicleBuyReceipt && docs.vehicleBuyReceipt)
+                        out.vehicleBuyReceipt = docs.vehicleBuyReceipt;
                       return out;
                     };
 
@@ -3368,9 +4779,10 @@ const SellLetterHistory = () => {
               style={{
                 backgroundColor: "#fff",
                 borderRadius: "12px",
-                maxWidth: "900px",
+                maxWidth: isMobile ? "95vw" : "1400px",
                 width: "100%",
-                maxHeight: "90vh",
+                height: isMobile ? "85vh" : "90vh",
+                maxHeight: isMobile ? "85vh" : "90vh",
                 display: "flex",
                 flexDirection: "column",
                 boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
@@ -3438,6 +4850,7 @@ const SellLetterHistory = () => {
                     width: "100%",
                     height: "100%",
                     border: "none",
+                    display: "block",
                   }}
                   aria-label="Sell Letter PDF Preview"
                 >
@@ -3447,6 +4860,7 @@ const SellLetterHistory = () => {
                       width: "100%",
                       height: "100%",
                       border: "none",
+                      display: "block",
                     }}
                     title="Sell Letter PDF Preview"
                   />

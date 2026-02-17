@@ -66,6 +66,13 @@ exports.createSellLetter = [
 
           if (hasInsuranceFields) {
             const insuranceData = {
+              personName: bodyData.buyerName || "Unknown",
+              personPhone: bodyData.buyerPhone || "",
+              personEmail: "",
+              vehicleModel: bodyData.vehicleModel || "",
+              brand: bodyData.vehicleName || "",
+              year: "",
+              regNo: regNo,
               vehicleRegNo: regNo,
               insuranceCompany: bodyData.insuranceCompany,
               insurancePolicyNumber: bodyData.insurancePolicyNumber,
@@ -73,29 +80,43 @@ exports.createSellLetter = [
                 ? new Date(bodyData.insuranceExpiryDate)
                 : undefined,
               insuranceStatus: bodyData.insuranceStatus,
+              user: req.user.id,
             };
 
             const insuranceDoc = await Insurance.findOneAndUpdate(
-              { vehicleRegNo: regNo },
+              { vehicleRegNo: new RegExp(`^${regNo}$`, "i") },
               insuranceData,
-              { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+              {
+                new: true,
+                upsert: true,
+                runValidators: true,
+                setDefaultsOnInsert: true,
+              },
             );
 
             if (insuranceDoc) {
               sellLetterData.insuranceId = insuranceDoc._id;
               sellLetterData.insuranceCompany = insuranceDoc.insuranceCompany;
-              sellLetterData.insurancePolicyNumber = insuranceDoc.insurancePolicyNumber;
-              sellLetterData.insuranceExpiryDate = insuranceDoc.insuranceExpiryDate;
+              sellLetterData.insurancePolicyNumber =
+                insuranceDoc.insurancePolicyNumber;
+              sellLetterData.insuranceExpiryDate =
+                insuranceDoc.insuranceExpiryDate;
               sellLetterData.insuranceStatus = insuranceDoc.insuranceStatus;
             }
           } else {
-            const existingInsurance = await Insurance.findOne({ vehicleRegNo: new RegExp(`^${regNo}$`, "i") });
+            const existingInsurance = await Insurance.findOne({
+              vehicleRegNo: new RegExp(`^${regNo}$`, "i"),
+            });
             if (existingInsurance) {
               sellLetterData.insuranceId = existingInsurance._id;
-              sellLetterData.insuranceCompany = existingInsurance.insuranceCompany;
-              sellLetterData.insurancePolicyNumber = existingInsurance.insurancePolicyNumber;
-              sellLetterData.insuranceExpiryDate = existingInsurance.insuranceExpiryDate;
-              sellLetterData.insuranceStatus = existingInsurance.insuranceStatus;
+              sellLetterData.insuranceCompany =
+                existingInsurance.insuranceCompany;
+              sellLetterData.insurancePolicyNumber =
+                existingInsurance.insurancePolicyNumber;
+              sellLetterData.insuranceExpiryDate =
+                existingInsurance.insuranceExpiryDate;
+              sellLetterData.insuranceStatus =
+                existingInsurance.insuranceStatus;
             }
           }
         } catch (e) {
@@ -104,20 +125,40 @@ exports.createSellLetter = [
 
         try {
           // PUC: same logic as insurance
-          const hasPUCFields = bodyData.pucIssueDate || bodyData.pucExpiryDate || bodyData.pucStatus;
+          const hasPUCFields =
+            bodyData.pucIssueDate ||
+            bodyData.pucExpiryDate ||
+            bodyData.pucStatus;
 
           if (hasPUCFields) {
             const pucData = {
+              personName: bodyData.buyerName || "Unknown",
+              personPhone: bodyData.buyerPhone || "",
+              personEmail: "",
+              vehicleModel: bodyData.vehicleModel || "",
+              brand: bodyData.vehicleName || "",
+              year: "",
+              regNo: regNo,
               vehicleRegNo: regNo,
-              pucIssueDate: bodyData.pucIssueDate ? new Date(bodyData.pucIssueDate) : undefined,
-              pucExpiryDate: bodyData.pucExpiryDate ? new Date(bodyData.pucExpiryDate) : undefined,
+              pucIssueDate: bodyData.pucIssueDate
+                ? new Date(bodyData.pucIssueDate)
+                : undefined,
+              pucExpiryDate: bodyData.pucExpiryDate
+                ? new Date(bodyData.pucExpiryDate)
+                : undefined,
               pucStatus: bodyData.pucStatus,
+              user: req.user.id,
             };
 
             const pucDoc = await PUC.findOneAndUpdate(
-              { vehicleRegNo: regNo },
+              { vehicleRegNo: new RegExp(`^${regNo}$`, "i") },
               pucData,
-              { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+              {
+                new: true,
+                upsert: true,
+                runValidators: true,
+                setDefaultsOnInsert: true,
+              },
             );
 
             if (pucDoc) {
@@ -127,7 +168,9 @@ exports.createSellLetter = [
               sellLetterData.pucStatus = pucDoc.pucStatus;
             }
           } else {
-            const existingPUC = await PUC.findOne({ vehicleRegNo: new RegExp(`^${regNo}$`, "i") });
+            const existingPUC = await PUC.findOne({
+              vehicleRegNo: new RegExp(`^${regNo}$`, "i"),
+            });
             if (existingPUC) {
               sellLetterData.pucId = existingPUC._id;
               sellLetterData.pucIssueDate = existingPUC.pucIssueDate;
@@ -153,23 +196,63 @@ exports.createSellLetter = [
         vehicleBuyReceipt: { pages: [] },
       };
 
+      try {
+        if (req.body.preservedDocuments) {
+          const p = JSON.parse(req.body.preservedDocuments);
+          if (p.vehicleRCFront) uploadedUrls.vehicleRC.front = p.vehicleRCFront;
+          if (p.vehicleRCBack) uploadedUrls.vehicleRC.back = p.vehicleRCBack;
+          if (p.aadhaarFront) uploadedUrls.aadhaar.front = p.aadhaarFront;
+          if (p.aadhaarBack) uploadedUrls.aadhaar.back = p.aadhaarBack;
+          if (p.panPhoto) uploadedUrls.pan = p.panPhoto;
+          if (p.deliveryPhoto) uploadedUrls.deliveryPhoto = p.deliveryPhoto;
+
+          if (p.vehiclePhotos && Array.isArray(p.vehiclePhotos)) {
+            uploadedUrls.vehiclePhotos = [...p.vehiclePhotos];
+          }
+          if (p.insuranceCertificate && Array.isArray(p.insuranceCertificate)) {
+            uploadedUrls.insuranceCertificate.pages = [
+              ...p.insuranceCertificate,
+            ];
+          }
+          if (p.vehicleNOC && Array.isArray(p.vehicleNOC)) {
+            uploadedUrls.vehicleNOC.pages = [...p.vehicleNOC];
+          }
+          if (p.vehicleBuyReceipt && Array.isArray(p.vehicleBuyReceipt)) {
+            uploadedUrls.vehicleBuyReceipt.pages = [...p.vehicleBuyReceipt];
+          }
+        }
+      } catch (e) {
+        console.error("Error parsing preservedDocuments:", e);
+      }
+
       // helper to process single file
-      const { PDFDocument } = require('pdf-lib');
+      const { PDFDocument } = require("pdf-lib");
 
       const processImageFile = async (file, nameHint) => {
         const compressed = await compressBuffer(file.buffer, 100);
         const filename = `${Date.now()}-${nameHint}`;
-        const uploaded = await uploadBufferToImageKit(compressed, filename, file.mimetype || 'image/jpeg');
+        const uploaded = await uploadBufferToImageKit(
+          compressed,
+          filename,
+          file.mimetype || "image/jpeg",
+        );
         return uploaded.url;
       };
 
       // Generic single-file processor: accepts image or PDF and returns an upload URL.
       const processFile = async (file, nameHint) => {
         if (!file) return null;
-        const isPdf = file.mimetype === 'application/pdf' || (file.originalname && file.originalname.toLowerCase().endsWith('.pdf'));
+        const isPdf =
+          file.mimetype === "application/pdf" ||
+          (file.originalname &&
+            file.originalname.toLowerCase().endsWith(".pdf"));
         if (isPdf) {
           const filename = `${Date.now()}-${nameHint}.pdf`;
-          const uploaded = await uploadBufferToImageKit(file.buffer, filename, 'application/pdf');
+          const uploaded = await uploadBufferToImageKit(
+            file.buffer,
+            filename,
+            "application/pdf",
+          );
           return uploaded.url;
         }
         // fallback to image processing
@@ -185,7 +268,11 @@ exports.createSellLetter = [
           newPdf.addPage(copied);
           const singlePageBytes = await newPdf.save();
           const filename = `${Date.now()}-${nameHint}-page-${i + 1}.pdf`;
-          const uploaded = await uploadBufferToImageKit(Buffer.from(singlePageBytes), filename, 'application/pdf');
+          const uploaded = await uploadBufferToImageKit(
+            Buffer.from(singlePageBytes),
+            filename,
+            "application/pdf",
+          );
           pageUrls.push(uploaded.url);
         }
         return pageUrls;
@@ -236,13 +323,27 @@ exports.createSellLetter = [
         }
         // process insuranceCertificate files if present
         if (files.insuranceCertificate && files.insuranceCertificate.length) {
-          for (let i = 0; i < files.insuranceCertificate.length && uploadedUrls.insuranceCertificate.pages.length < 200; i++) {
+          for (
+            let i = 0;
+            i < files.insuranceCertificate.length &&
+            uploadedUrls.insuranceCertificate.pages.length < 200;
+            i++
+          ) {
             const f = files.insuranceCertificate[i];
-            if (f.mimetype === 'application/pdf' || f.originalname?.toLowerCase().endsWith('.pdf')) {
-              const pageUrls = await processPdfFileToPages(f, `insurance-certificate-${i}`);
+            if (
+              f.mimetype === "application/pdf" ||
+              f.originalname?.toLowerCase().endsWith(".pdf")
+            ) {
+              const pageUrls = await processPdfFileToPages(
+                f,
+                `insurance-certificate-${i}`,
+              );
               uploadedUrls.insuranceCertificate.pages.push(...pageUrls);
             } else {
-              const url = await processImageFile(f, `insurance-certificate-${i}`);
+              const url = await processImageFile(
+                f,
+                `insurance-certificate-${i}`,
+              );
               uploadedUrls.insuranceCertificate.pages.push(url);
             }
           }
@@ -250,10 +351,21 @@ exports.createSellLetter = [
 
         // process vehicleNOC files if present
         if (files.vehicleNOC && files.vehicleNOC.length) {
-          for (let i = 0; i < files.vehicleNOC.length && uploadedUrls.vehicleNOC.pages.length < 200; i++) {
+          for (
+            let i = 0;
+            i < files.vehicleNOC.length &&
+            uploadedUrls.vehicleNOC.pages.length < 200;
+            i++
+          ) {
             const f = files.vehicleNOC[i];
-            if (f.mimetype === 'application/pdf' || f.originalname?.toLowerCase().endsWith('.pdf')) {
-              const pageUrls = await processPdfFileToPages(f, `vehicle-noc-${i}`);
+            if (
+              f.mimetype === "application/pdf" ||
+              f.originalname?.toLowerCase().endsWith(".pdf")
+            ) {
+              const pageUrls = await processPdfFileToPages(
+                f,
+                `vehicle-noc-${i}`,
+              );
               uploadedUrls.vehicleNOC.pages.push(...pageUrls);
             } else {
               const url = await processImageFile(f, `vehicle-noc-${i}`);
@@ -264,10 +376,21 @@ exports.createSellLetter = [
 
         // process vehicleBuyReceipt files if present
         if (files.vehicleBuyReceipt && files.vehicleBuyReceipt.length) {
-          for (let i = 0; i < files.vehicleBuyReceipt.length && uploadedUrls.vehicleBuyReceipt.pages.length < 200; i++) {
+          for (
+            let i = 0;
+            i < files.vehicleBuyReceipt.length &&
+            uploadedUrls.vehicleBuyReceipt.pages.length < 200;
+            i++
+          ) {
             const f = files.vehicleBuyReceipt[i];
-            if (f.mimetype === 'application/pdf' || f.originalname?.toLowerCase().endsWith('.pdf')) {
-              const pageUrls = await processPdfFileToPages(f, `vehicle-buy-receipt-${i}`);
+            if (
+              f.mimetype === "application/pdf" ||
+              f.originalname?.toLowerCase().endsWith(".pdf")
+            ) {
+              const pageUrls = await processPdfFileToPages(
+                f,
+                `vehicle-buy-receipt-${i}`,
+              );
               uploadedUrls.vehicleBuyReceipt.pages.push(...pageUrls);
             } else {
               const url = await processImageFile(f, `vehicle-buy-receipt-${i}`);
@@ -291,11 +414,13 @@ exports.createSellLetter = [
         deliveryPhoto: uploadedUrls.deliveryPhoto,
         vehiclePhotos: uploadedUrls.vehiclePhotos,
         insuranceCertificate: uploadedUrls.insuranceCertificate,
-        insuranceCertificateUploadMode: bodyData.insuranceCertificateUploadMode || "separate",
+        insuranceCertificateUploadMode:
+          bodyData.insuranceCertificateUploadMode || "separate",
         vehicleNOC: uploadedUrls.vehicleNOC,
         vehicleNOCUploadMode: bodyData.vehicleNOCUploadMode || "separate",
         vehicleBuyReceipt: uploadedUrls.vehicleBuyReceipt,
-        vehicleBuyReceiptUploadMode: bodyData.vehicleBuyReceiptUploadMode || "separate",
+        vehicleBuyReceiptUploadMode:
+          bodyData.vehicleBuyReceiptUploadMode || "separate",
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };
 
@@ -393,46 +518,72 @@ exports.getVehicleDetails = async (req, res) => {
     // from Vehicle, then fall back to other sources.
     vehicleDetails.brand =
       vehicleRecord.brand ||
-      (vehicleRecord.vehicleName ? vehicleRecord.vehicleName.split(" ")[0] : undefined);
+      (vehicleRecord.vehicleName
+        ? vehicleRecord.vehicleName.split(" ")[0]
+        : undefined);
 
     vehicleDetails.year =
-      vehicleRecord.manufacturingYear || vehicleRecord.year || vehicleRecord.year || undefined;
+      vehicleRecord.manufacturingYear ||
+      vehicleRecord.year ||
+      vehicleRecord.year ||
+      undefined;
 
     // If the found record is a SellLetter it may contain PUC/Insurance information
     // and buyer contact details. Copy those fields when present as a fallback.
-    if (vehicleRecord.pucIssueDate) vehicleDetails.pucIssueDate = vehicleRecord.pucIssueDate;
-    if (vehicleRecord.pucExpiryDate) vehicleDetails.pucExpiryDate = vehicleRecord.pucExpiryDate;
-    if (vehicleRecord.pucStatus) vehicleDetails.pucStatus = vehicleRecord.pucStatus;
-    if (vehicleRecord.insuranceStatus) vehicleDetails.insuranceStatus = vehicleRecord.insuranceStatus;
-    if (vehicleRecord.insuranceExpiryDate) vehicleDetails.insuranceExpiryDate = vehicleRecord.insuranceExpiryDate;
-    if (vehicleRecord.insuranceCompany) vehicleDetails.insuranceCompany = vehicleRecord.insuranceCompany;
+    if (vehicleRecord.pucIssueDate)
+      vehicleDetails.pucIssueDate = vehicleRecord.pucIssueDate;
+    if (vehicleRecord.pucExpiryDate)
+      vehicleDetails.pucExpiryDate = vehicleRecord.pucExpiryDate;
+    if (vehicleRecord.pucStatus)
+      vehicleDetails.pucStatus = vehicleRecord.pucStatus;
+    if (vehicleRecord.insuranceStatus)
+      vehicleDetails.insuranceStatus = vehicleRecord.insuranceStatus;
+    if (vehicleRecord.insuranceExpiryDate)
+      vehicleDetails.insuranceExpiryDate = vehicleRecord.insuranceExpiryDate;
+    if (vehicleRecord.insuranceCompany)
+      vehicleDetails.insuranceCompany = vehicleRecord.insuranceCompany;
     if (vehicleRecord.insurancePolicyNumber)
-      vehicleDetails.insurancePolicyNumber = vehicleRecord.insurancePolicyNumber;
+      vehicleDetails.insurancePolicyNumber =
+        vehicleRecord.insurancePolicyNumber;
 
     // Buyer contact details from SellLetter
-    if (vehicleRecord.buyerName) vehicleDetails.personName = vehicleRecord.buyerName;
-    if (vehicleRecord.buyerPhone) vehicleDetails.personPhone = vehicleRecord.buyerPhone;
-    if (vehicleRecord.buyerEmail) vehicleDetails.personEmail = vehicleRecord.buyerEmail;
+    if (vehicleRecord.buyerName)
+      vehicleDetails.personName = vehicleRecord.buyerName;
+    if (vehicleRecord.buyerPhone)
+      vehicleDetails.personPhone = vehicleRecord.buyerPhone;
+    if (vehicleRecord.buyerEmail)
+      vehicleDetails.personEmail = vehicleRecord.buyerEmail;
 
     // Also attempt to load canonical Insurance and PUC master records by vehicleRegNo
     try {
-      const regRegex = new RegExp(`^${String(vehicleDetails.registrationNumber).trim()}$`, "i");
+      const regRegex = new RegExp(
+        `^${String(vehicleDetails.registrationNumber).trim()}$`,
+        "i",
+      );
       const [insuranceDoc, pucDoc] = await Promise.all([
         Insurance.findOne({ vehicleRegNo: regRegex }).lean(),
         PUC.findOne({ vehicleRegNo: regRegex }).lean(),
       ]);
 
       if (insuranceDoc) {
-        vehicleDetails.insuranceCompany = insuranceDoc.insuranceCompany || vehicleDetails.insuranceCompany;
-        vehicleDetails.insurancePolicyNumber = insuranceDoc.insurancePolicyNumber || vehicleDetails.insurancePolicyNumber;
-        vehicleDetails.insuranceExpiryDate = insuranceDoc.insuranceExpiryDate || vehicleDetails.insuranceExpiryDate;
-        vehicleDetails.insuranceStatus = insuranceDoc.insuranceStatus || vehicleDetails.insuranceStatus;
+        vehicleDetails.insuranceCompany =
+          insuranceDoc.insuranceCompany || vehicleDetails.insuranceCompany;
+        vehicleDetails.insurancePolicyNumber =
+          insuranceDoc.insurancePolicyNumber ||
+          vehicleDetails.insurancePolicyNumber;
+        vehicleDetails.insuranceExpiryDate =
+          insuranceDoc.insuranceExpiryDate ||
+          vehicleDetails.insuranceExpiryDate;
+        vehicleDetails.insuranceStatus =
+          insuranceDoc.insuranceStatus || vehicleDetails.insuranceStatus;
         vehicleDetails.insuranceId = insuranceDoc._id;
       }
 
       if (pucDoc) {
-        vehicleDetails.pucIssueDate = pucDoc.pucIssueDate || vehicleDetails.pucIssueDate;
-        vehicleDetails.pucExpiryDate = pucDoc.pucExpiryDate || vehicleDetails.pucExpiryDate;
+        vehicleDetails.pucIssueDate =
+          pucDoc.pucIssueDate || vehicleDetails.pucIssueDate;
+        vehicleDetails.pucExpiryDate =
+          pucDoc.pucExpiryDate || vehicleDetails.pucExpiryDate;
         vehicleDetails.pucStatus = pucDoc.pucStatus || vehicleDetails.pucStatus;
         vehicleDetails.pucId = pucDoc._id;
       }
@@ -580,41 +731,85 @@ exports.updateSellLetter = async (req, res) => {
     // Two-way sync: if insurance or PUC fields are present in the update payload,
     // persist them to the master Insurance / PUC collections using vehicle registration number
     try {
-      const regNo = updateData.registrationNumber || sellLetter.registrationNumber;
+      const regNo =
+        updateData.registrationNumber || sellLetter.registrationNumber;
       if (regNo) {
         const regRegex = new RegExp(`^${String(regNo).trim()}$`, "i");
 
-        const hasInsuranceFields = updateData.insuranceCompany || updateData.insurancePolicyNumber || updateData.insuranceExpiryDate || updateData.insuranceStatus;
+        const hasInsuranceFields =
+          updateData.insuranceCompany ||
+          updateData.insurancePolicyNumber ||
+          updateData.insuranceExpiryDate ||
+          updateData.insuranceStatus;
         if (hasInsuranceFields) {
           const insuranceData = {
+            personName:
+              updateData.buyerName || sellLetter.buyerName || "Unknown",
+            personPhone: updateData.buyerPhone || sellLetter.buyerPhone || "",
+            personEmail: "",
+            vehicleModel:
+              updateData.vehicleModel || sellLetter.vehicleModel || "",
+            brand: updateData.vehicleName || sellLetter.vehicleName || "",
+            year: "",
+            regNo: regNo,
             vehicleRegNo: regNo,
             insuranceCompany: updateData.insuranceCompany,
             insurancePolicyNumber: updateData.insurancePolicyNumber,
-            insuranceExpiryDate: updateData.insuranceExpiryDate ? new Date(updateData.insuranceExpiryDate) : undefined,
+            insuranceExpiryDate: updateData.insuranceExpiryDate
+              ? new Date(updateData.insuranceExpiryDate)
+              : undefined,
             insuranceStatus: updateData.insuranceStatus,
+            user: req.user.id,
           };
           const insuranceDoc = await Insurance.findOneAndUpdate(
             { vehicleRegNo: regRegex },
             insuranceData,
-            { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+            {
+              new: true,
+              upsert: true,
+              runValidators: true,
+              setDefaultsOnInsert: true,
+            },
           );
           if (insuranceDoc) {
             updateData.insuranceId = insuranceDoc._id;
           }
         }
 
-        const hasPUCFields = updateData.pucIssueDate || updateData.pucExpiryDate || updateData.pucStatus;
+        const hasPUCFields =
+          updateData.pucIssueDate ||
+          updateData.pucExpiryDate ||
+          updateData.pucStatus;
         if (hasPUCFields) {
           const pucData = {
+            personName:
+              updateData.buyerName || sellLetter.buyerName || "Unknown",
+            personPhone: updateData.buyerPhone || sellLetter.buyerPhone || "",
+            personEmail: "",
+            vehicleModel:
+              updateData.vehicleModel || sellLetter.vehicleModel || "",
+            brand: updateData.vehicleName || sellLetter.vehicleName || "",
+            year: "",
+            regNo: regNo,
             vehicleRegNo: regNo,
-            pucIssueDate: updateData.pucIssueDate ? new Date(updateData.pucIssueDate) : undefined,
-            pucExpiryDate: updateData.pucExpiryDate ? new Date(updateData.pucExpiryDate) : undefined,
+            pucIssueDate: updateData.pucIssueDate
+              ? new Date(updateData.pucIssueDate)
+              : undefined,
+            pucExpiryDate: updateData.pucExpiryDate
+              ? new Date(updateData.pucExpiryDate)
+              : undefined,
             pucStatus: updateData.pucStatus,
+            user: req.user.id,
           };
           const pucDoc = await PUC.findOneAndUpdate(
             { vehicleRegNo: regRegex },
             pucData,
-            { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+            {
+              new: true,
+              upsert: true,
+              runValidators: true,
+              setDefaultsOnInsert: true,
+            },
           );
           if (pucDoc) {
             updateData.pucId = pucDoc._id;

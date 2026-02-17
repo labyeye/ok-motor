@@ -54,7 +54,7 @@ const ServiceBillForm = () => {
   const [showBusinessFields, setShowBusinessFields] = useState(false);
 
   const [formData, setFormData] = useState({
-    taxEnabled: false,
+    taxEnabled: true,
     includeBusinessInPdf: false,
     businessName: "",
     businessGSTIN: "",
@@ -82,7 +82,7 @@ const ServiceBillForm = () => {
     discount: 0,
     discountType: "fixed",
     discountPercentage: 0,
-    taxRate: 0,
+    taxRate: 18,
     paymentMethod: "cash",
     paymentStatus: "paid",
     advancePaid: 0,
@@ -99,8 +99,14 @@ const ServiceBillForm = () => {
       0,
     );
 
+    const totalRateValue = (data.serviceItems || []).reduce(
+      (sum, item) =>
+        sum + (parseFloat(item.rate) || 0) * (parseFloat(item.quantity) || 1),
+      0,
+    );
+
     const taxAmount = data.taxEnabled
-      ? ((data.taxRate || 0) / 100) * totalAmount
+      ? ((data.taxRate || 0) / 100) * totalRateValue
       : 0;
 
     let discountAmount = 0;
@@ -178,7 +184,17 @@ const ServiceBillForm = () => {
       const items = [...formData.serviceItems];
       const qty = parseFloat(items[index].quantity) || 1;
       const rateNum = parseFloat(cleanedValue) || 0;
-      const newAmount = parseFloat((rateNum * qty).toFixed(2));
+
+      // Calculate amount based on whether tax is enabled
+      // If tax enabled (18%), user wants Amount to be Rate - 18%
+      // So Amount = Rate * (1 - 0.18)
+      const taxRate = formData.taxEnabled
+        ? parseFloat(formData.taxRate) || 18
+        : 0;
+      const multiplier = formData.taxEnabled ? 1 - taxRate / 100 : 1;
+
+      // Calculate individual item amount with multiplier
+      const newAmount = parseFloat((rateNum * qty * multiplier).toFixed(2));
 
       items[index] = {
         ...items[index],
@@ -610,13 +626,17 @@ const ServiceBillForm = () => {
           } else {
             // Create new bill -> POST
             saveResponse = await retryRequest(() =>
-              axios.post(`${API_BASE_URL}/service-bills`, formattedDataForServer, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
+              axios.post(
+                `${API_BASE_URL}/service-bills`,
+                formattedDataForServer,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                  timeout: 30000,
                 },
-                timeout: 30000,
-              }),
+              ),
             );
           }
 
@@ -1621,17 +1641,16 @@ const ServiceBillForm = () => {
                     required
                   >
                     <option value="regular">Regular Service</option>
-                    <option value="premium">Premium Service</option>
-                    <option value="custom">Custom Service</option>
+                    <option value="free">Free Service</option>
                   </select>
                 </div>
 
-                {}
-                {formData.serviceType === "custom" && (
+                {/* Show custom description field if "free" (formerly custom) is selected */}
+                {formData.serviceType === "free" && (
                   <div style={styles.formField}>
                     <label style={styles.formLabel}>
                       <Wrench style={styles.formIcon} />
-                      Custom Service Description || कस्टम सेवा विवरण
+                      Free Service Description || फ्री सर्विस विवरण
                     </label>
                     <textarea
                       name="customServiceDescription"
@@ -1869,11 +1888,28 @@ const ServiceBillForm = () => {
                         checked={formData.taxEnabled}
                         onChange={() => {
                           const enabling = !formData.taxEnabled;
+                          const currentTaxRate = enabling ? 18 : 0;
+
+                          // Recalculate all item amounts based on new tax setting
+                          const updatedItems = formData.serviceItems.map(
+                            (item) => {
+                              const qty = parseFloat(item.quantity) || 1;
+                              const rate = parseFloat(item.rate) || 0;
+                              const multiplier = enabling
+                                ? 1 - currentTaxRate / 100
+                                : 1;
+                              const newAmount = parseFloat(
+                                (rate * qty * multiplier).toFixed(2),
+                              );
+                              return { ...item, amount: newAmount };
+                            },
+                          );
+
                           const newData = {
                             ...formData,
                             taxEnabled: enabling,
-
-                            taxRate: enabling ? 18 : 0,
+                            taxRate: currentTaxRate,
+                            serviceItems: updatedItems,
                             // if tax disabled, also disable include-in-pdf flag
                             includeBusinessInPdf: enabling
                               ? formData.includeBusinessInPdf

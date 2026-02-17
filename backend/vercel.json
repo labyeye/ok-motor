@@ -5,9 +5,15 @@
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["assets/**/*"]
+        "includeFiles": ["assets/**/*"],
+        "maxDuration": 60
       }
     }
   ],
-  "routes": [{ "src": "/api/(.*)", "dest": "server.js" }]
+  "routes": [{ "src": "/api/(.*)", "dest": "server.js" }],
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 60
+    }
+  }
 }

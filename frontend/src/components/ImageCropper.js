@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { X, Check, RotateCw } from "lucide-react";
@@ -12,9 +12,57 @@ const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
     y: 25,
   });
   const [rotation, setRotation] = useState(0);
+  const [rotatedImageSrc, setRotatedImageSrc] = useState(imageSrc);
   const [completedCrop, setCompletedCrop] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
   const imgRef = useRef(null);
+
+  // Create a rotated version of the image whenever rotation changes
+  useEffect(() => {
+    const rotateImage = async () => {
+      if (rotation === 0) {
+        setRotatedImageSrc(imageSrc);
+        return;
+      }
+
+      const img = new Image();
+      img.src = imageSrc;
+
+      await new Promise((resolve) => {
+        img.onload = resolve;
+      });
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // Calculate new canvas size after rotation
+      const rad = (rotation * Math.PI) / 180;
+      const sin = Math.abs(Math.sin(rad));
+      const cos = Math.abs(Math.cos(rad));
+
+      canvas.width = Math.ceil(img.width * cos + img.height * sin);
+      canvas.height = Math.ceil(img.width * sin + img.height * cos);
+
+      // Rotate and draw the image
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(rad);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+
+      setRotatedImageSrc(canvas.toDataURL("image/jpeg", 0.85));
+
+      // Reset crop when rotation changes
+      setCrop({
+        unit: "%",
+        width: 50,
+        height: 50,
+        x: 25,
+        y: 25,
+      });
+      setCompletedCrop(null);
+    };
+
+    rotateImage();
+  }, [rotation, imageSrc]);
 
   const getCroppedImg = async () => {
     if (!completedCrop || !imgRef.current) {
@@ -26,22 +74,13 @@ const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
 
-    // compute bounding box for rotated crop
     const cropWidth = completedCrop.width * scaleX;
     const cropHeight = completedCrop.height * scaleY;
-    const rad = (rotation * Math.PI) / 180;
-    const sin = Math.abs(Math.sin(rad));
-    const cos = Math.abs(Math.cos(rad));
 
-    // rotated canvas size so image isn't clipped
-    canvas.width = Math.ceil(cropWidth * cos + cropHeight * sin);
-    canvas.height = Math.ceil(cropWidth * sin + cropHeight * cos);
+    canvas.width = cropWidth;
+    canvas.height = cropHeight;
 
     const ctx = canvas.getContext("2d");
-
-    // move origin to center, rotate, then draw cropped area centered
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate(rad);
 
     ctx.drawImage(
       image,
@@ -49,25 +88,67 @@ const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
       completedCrop.y * scaleY,
       cropWidth,
       cropHeight,
-      -cropWidth / 2,
-      -cropHeight / 2,
+      0,
+      0,
       cropWidth,
       cropHeight,
     );
 
+    // Compress image to approximately 100KB
     return new Promise((resolve) => {
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            console.error("Canvas is empty");
-            return;
-          }
+      const compressImage = async (quality) => {
+        return new Promise((res) => {
+          canvas.toBlob(
+            (blob) => {
+              res(blob);
+            },
+            "image/jpeg",
+            quality,
+          );
+        });
+      };
+
+      const findOptimalQuality = async () => {
+        const targetSize = 100 * 1024; // 100KB
+        let quality = 0.9;
+        let blob = await compressImage(quality);
+
+        // If image is already small enough, return it
+        if (blob.size <= targetSize) {
           const file = new File([blob], "cropped.jpg", { type: "image/jpeg" });
           resolve(file);
-        },
-        "image/jpeg",
-        0.95,
-      );
+          return;
+        }
+
+        // Binary search for optimal quality
+        let minQuality = 0.1;
+        let maxQuality = 0.9;
+        let bestBlob = blob;
+
+        while (maxQuality - minQuality > 0.05) {
+          quality = (minQuality + maxQuality) / 2;
+          blob = await compressImage(quality);
+
+          if (blob.size > targetSize) {
+            maxQuality = quality;
+          } else {
+            minQuality = quality;
+            bestBlob = blob;
+          }
+        }
+
+        // If still too large, try one more time with minimum quality
+        if (bestBlob.size > targetSize * 1.5) {
+          bestBlob = await compressImage(0.5);
+        }
+
+        const file = new File([bestBlob], "cropped.jpg", {
+          type: "image/jpeg",
+        });
+        resolve(file);
+      };
+
+      findOptimalQuality();
     });
   };
 
@@ -104,13 +185,12 @@ const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
           >
             <img
               ref={imgRef}
-              src={imageSrc}
+              src={rotatedImageSrc}
               alt="Crop"
               style={{
                 maxWidth: "100%",
                 maxHeight: "55vh",
                 display: "block",
-                /* Do not visually rotate here; rotation is applied during export to keep crop box accurate */
               }}
             />
           </ReactCrop>
@@ -120,11 +200,11 @@ const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
           <div style={styles.sliderContainer}>
             <label style={styles.label}>Rotation</label>
             <button
-              onClick={() => setRotation((r) => r + 90)}
+              onClick={() => setRotation((r) => (r + 90) % 360)}
               style={styles.rotateBtn}
               type="button"
             >
-              <RotateCw size={16} /> Rotate
+              <RotateCw size={16} /> Rotate 90°
             </button>
           </div>
         </div>

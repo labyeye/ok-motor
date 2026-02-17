@@ -39,12 +39,10 @@ const LetterHeadForm = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  
   const [activeMenu, setActiveMenu] = useState("Letter Head");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewData, setPreviewData] = useState(null);
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
@@ -52,7 +50,7 @@ const LetterHeadForm = () => {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     to: "",
-    recipientName: "", 
+    recipientName: "",
     subject: "",
     message: "",
   });
@@ -104,7 +102,7 @@ const LetterHeadForm = () => {
       await axios.delete(`${API_BASE_URL}/letter-heads/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchHistory(); 
+      fetchHistory();
     } catch (error) {
       console.error("Error deleting letter head:", error);
       alert("Failed to delete letter head");
@@ -117,7 +115,6 @@ const LetterHeadForm = () => {
       return;
     }
 
-    
     const sanitize = (str) =>
       typeof str === "string" ? str.replace(/\t/g, " ") : str;
 
@@ -129,14 +126,13 @@ const LetterHeadForm = () => {
       message: sanitize(formData.message),
     };
 
-    
     try {
       const result = await pdfService.generateLetterHeadPDF(
         {
           ...sanitizedData,
           user: user,
         },
-        true, 
+        true,
       );
 
       if (result.success) {
@@ -170,7 +166,6 @@ const LetterHeadForm = () => {
         return;
       }
 
-      
       if (navigator.onLine) {
         try {
           if (editingId) {
@@ -200,7 +195,6 @@ const LetterHeadForm = () => {
         }
       }
 
-      
       const result = await pdfService.generateLetterHeadPDF({
         ...previewData,
         user: user,
@@ -212,8 +206,8 @@ const LetterHeadForm = () => {
         } else {
           saveAs(result.blob, `letter-head-${Date.now()}.pdf`);
         }
-        await fetchHistory(); 
-        
+        await fetchHistory();
+
         handleCancelEdit();
       } else {
         alert("Failed to generate PDF: " + (result.error || "Unknown error"));
@@ -386,7 +380,7 @@ const LetterHeadForm = () => {
           ...letter,
           user: user,
         },
-        true, 
+        true,
       );
 
       if (result.success) {
@@ -410,10 +404,10 @@ const LetterHeadForm = () => {
       backgroundColor: "#EBF4F6",
       fontFamily: "'Inter', sans-serif",
     },
-    
+
     sidebar: {
       width: "280px",
-      backgroundColor: "#071952", 
+      backgroundColor: "#071952",
       color: "#f8fafc",
       boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
       position: "sticky",
@@ -484,7 +478,7 @@ const LetterHeadForm = () => {
       fontWeight: "500",
     },
     submenu: {
-      backgroundColor: "#051238", 
+      backgroundColor: "#051238",
       overflow: "hidden",
     },
     submenuItem: {
@@ -508,19 +502,19 @@ const LetterHeadForm = () => {
       borderTop: "1px solid #1e293b",
       transition: "all 0.2s ease",
     },
-    
+
     mainContent: {
       flex: 1,
       overflowY: "auto",
       height: "100vh",
-      backgroundColor: "#ffffffff", 
+      backgroundColor: "#ffffffff",
     },
     contentPadding: {
       padding: isMobile ? "24px 16px" : "32px",
       maxWidth: "1200px",
       margin: "0 auto",
     },
-    
+
     header: {
       display: "flex",
       justifyContent: "space-between",
@@ -620,7 +614,7 @@ const LetterHeadForm = () => {
       backgroundColor: "#94a3b8",
       cursor: "not-allowed",
     },
-    
+
     tableCard: {
       backgroundColor: "#fff",
       borderRadius: "12px",

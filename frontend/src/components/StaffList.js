@@ -42,7 +42,9 @@ const StaffList = () => {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const response = await axios.get("https://ok-motor-51l3.vercel.app/api/users");
+        const response = await axios.get(
+          "https://ok-motor-51l3.vercel.app/api/users",
+        );
         setStaff(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         setError(

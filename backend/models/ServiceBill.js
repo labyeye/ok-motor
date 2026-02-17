@@ -29,7 +29,7 @@ const ServiceBillSchema = new mongoose.Schema(
     serviceType: {
       type: String,
       required: true,
-      enum: ["regular", "premium", "custom"],
+      enum: ["regular", "free"],
     },
     serviceItems: [
       {

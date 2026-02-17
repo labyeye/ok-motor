@@ -102,7 +102,8 @@ const ServiceHistory = () => {
           const serviceResponse = await axios.get(
             `https://ok-motor-51l3.vercel.app/api/service-bills?page=${currentPage}`,
           );
-          const serviceData = serviceResponse.data.data || serviceResponse.data || [];
+          const serviceData =
+            serviceResponse.data.data || serviceResponse.data || [];
           setTotalPages(serviceResponse.data.totalPages || 1);
 
           // If some bills have previousVersionId, fetch those previous docs
@@ -118,9 +119,12 @@ const ServiceHistory = () => {
               const prevFetches = await Promise.all(
                 uniquePrevIds.map((id) =>
                   axios
-                    .get(`https://ok-motor-51l3.vercel.app/api/service-bills/${id}`, {
-                      headers,
-                    })
+                    .get(
+                      `https://ok-motor-51l3.vercel.app/api/service-bills/${id}`,
+                      {
+                        headers,
+                      },
+                    )
                     .then((r) => r.data.data || r.data)
                     .catch(() => null),
                 ),
@@ -185,8 +189,15 @@ const ServiceHistory = () => {
               const pid = b.previousVersionId;
               if (pid) {
                 try {
-                  const found = await offlineStorage.findById("serviceBills", pid);
-                  if (found.success && found.data && !merged.find((x) => x._id === pid)) {
+                  const found = await offlineStorage.findById(
+                    "serviceBills",
+                    pid,
+                  );
+                  if (
+                    found.success &&
+                    found.data &&
+                    !merged.find((x) => x._id === pid)
+                  ) {
                     const prev = found.data;
                     prev._isPreviousVersion = true;
                     merged.push(prev);
@@ -491,7 +502,9 @@ const ServiceHistory = () => {
         token ? `${token.substring(0, 20)}...` : "No token",
       );
 
-      const response = await axios.get("https://ok-motor-51l3.vercel.app/api/auth/me");
+      const response = await axios.get(
+        "https://ok-motor-51l3.vercel.app/api/auth/me",
+      );
       console.log("Auth test successful:", response.data);
     } catch (error) {
       console.error("Auth test failed:", error);
@@ -611,16 +624,31 @@ const ServiceHistory = () => {
       }
     });
 
-    const curItems = Array.isArray(current.serviceItems) ? current.serviceItems : [];
-    const prevItems = Array.isArray(previous.serviceItems) ? previous.serviceItems : [];
+    const curItems = Array.isArray(current.serviceItems)
+      ? current.serviceItems
+      : [];
+    const prevItems = Array.isArray(previous.serviceItems)
+      ? previous.serviceItems
+      : [];
     if (curItems.length !== prevItems.length) {
-      changes.push({ field: "serviceItems", from: `${prevItems.length} items`, to: `${curItems.length} items` });
+      changes.push({
+        field: "serviceItems",
+        from: `${prevItems.length} items`,
+        to: `${curItems.length} items`,
+      });
     } else {
       for (let i = 0; i < Math.min(curItems.length, 5); i++) {
         const ci = curItems[i] || {};
         const pi = prevItems[i] || {};
-        if ((ci.description || "") !== (pi.description || "") || (ci.amount || 0) !== (pi.amount || 0)) {
-          changes.push({ field: `serviceItems[${i}]`, from: `${pi.description || ""} (${pi.amount || 0})`, to: `${ci.description || ""} (${ci.amount || 0})` });
+        if (
+          (ci.description || "") !== (pi.description || "") ||
+          (ci.amount || 0) !== (pi.amount || 0)
+        ) {
+          changes.push({
+            field: `serviceItems[${i}]`,
+            from: `${pi.description || ""} (${pi.amount || 0})`,
+            to: `${ci.description || ""} (${ci.amount || 0})`,
+          });
         }
       }
     }
@@ -646,12 +674,16 @@ const ServiceHistory = () => {
       setIsComputingChanges(true);
       let previous;
       if (!navigator.onLine) {
-        const offlineStorage = (await import("../services/offlineStorage")).default;
+        const offlineStorage = (await import("../services/offlineStorage"))
+          .default;
         const found = await offlineStorage.findById("serviceBills", prevId);
         previous = found.success ? found.data : null;
       } else {
         const token = localStorage.getItem("token");
-        const resp = await axios.get(`https://ok-motor-51l3.vercel.app/api/service-bills/${prevId}`, { headers: { Authorization: `Bearer ${token}` } });
+        const resp = await axios.get(
+          `https://ok-motor-51l3.vercel.app/api/service-bills/${prevId}`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
         previous = resp.data.data || resp.data;
       }
 
@@ -681,7 +713,9 @@ const ServiceHistory = () => {
   const performDelete = async () => {
     const id = confirmTargetId;
     try {
-      await axios.delete(`https://ok-motor-51l3.vercel.app/api/service-bills/${id}`);
+      await axios.delete(
+        `https://ok-motor-51l3.vercel.app/api/service-bills/${id}`,
+      );
       setServiceBills((prev) => prev.filter((bill) => bill._id !== id));
     } catch (error) {
       console.error("Error deleting service bill:", error);
@@ -1247,7 +1281,9 @@ const ServiceHistory = () => {
                         key={bill._id}
                         style={{
                           ...styles.tableRow,
-                          ...(bill._isPreviousVersion ? styles.previousRow : {}),
+                          ...(bill._isPreviousVersion
+                            ? styles.previousRow
+                            : {}),
                         }}
                       >
                         <td style={styles.tableCell}>{bill.customerName}</td>
@@ -1362,52 +1398,53 @@ const ServiceHistory = () => {
                               <Download size={16} />
                             )}
                           </button>
-                          {user?.role === "admin" && !bill._isPreviousVersion && (
-                            <>
-                              <button
-                                onClick={() => handleEdit(bill)}
-                                style={styles.iconButton}
-                                title="Edit"
-                              >
-                                <Pencil size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(bill._id)}
-                                style={styles.iconButton}
-                                title="Delete"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </>
-                          )}
+                          {user?.role === "admin" &&
+                            !bill._isPreviousVersion && (
+                              <>
+                                <button
+                                  onClick={() => handleEdit(bill)}
+                                  style={styles.iconButton}
+                                  title="Edit"
+                                >
+                                  <Pencil size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(bill._id)}
+                                  style={styles.iconButton}
+                                  title="Delete"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </>
+                            )}
 
                           {/* View changes button - for newer versions or to compare newer vs previous */}
-                          {bill._isPreviousVersion ? (
-                            (() => {
-                              const newer = serviceBills.find((s) => s.previousVersionId === bill._id);
-                              return newer ? (
+                          {bill._isPreviousVersion
+                            ? (() => {
+                                const newer = serviceBills.find(
+                                  (s) => s.previousVersionId === bill._id,
+                                );
+                                return newer ? (
+                                  <button
+                                    onClick={() => handleViewChanges(newer)}
+                                    style={styles.iconButton}
+                                    title="View Changes (newer)"
+                                    disabled={isComputingChanges}
+                                  >
+                                    <ChevronRight size={16} />
+                                  </button>
+                                ) : null;
+                              })()
+                            : bill.previousVersionId && (
                                 <button
-                                  onClick={() => handleViewChanges(newer)}
+                                  onClick={() => handleViewChanges(bill)}
                                   style={styles.iconButton}
-                                  title="View Changes (newer)"
+                                  title="View Changes"
                                   disabled={isComputingChanges}
                                 >
                                   <ChevronRight size={16} />
                                 </button>
-                              ) : null;
-                            })()
-                          ) : (
-                            bill.previousVersionId && (
-                              <button
-                                onClick={() => handleViewChanges(bill)}
-                                style={styles.iconButton}
-                                title="View Changes"
-                                disabled={isComputingChanges}
-                              >
-                                <ChevronRight size={16} />
-                              </button>
-                            )
-                          )}
+                              )}
                         </td>
                       </tr>
                     ))}
@@ -1629,27 +1666,79 @@ const ServiceHistory = () => {
               boxShadow: "0 10px 30px rgba(2,6,23,0.2)",
             }}
           >
-            <div style={{ padding: 18, borderBottom: "1px solid #e6edf3", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>{`Changes — ${changesTargetBill.current.billNumber || changesTargetBill.current._id}`}</h3>
-              <button onClick={() => setShowChangesModal(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 6 }}><X /></button>
+            <div
+              style={{
+                padding: 18,
+                borderBottom: "1px solid #e6edf3",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <h3
+                style={{ margin: 0 }}
+              >{`Changes — ${changesTargetBill.current.billNumber || changesTargetBill.current._id}`}</h3>
+              <button
+                onClick={() => setShowChangesModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 6,
+                }}
+              >
+                <X />
+              </button>
             </div>
             <div style={{ padding: 18 }}>
               {changesList.length === 0 ? (
-                <p style={{ color: "#64748b" }}>No changes detected compared to previous version.</p>
+                <p style={{ color: "#64748b" }}>
+                  No changes detected compared to previous version.
+                </p>
               ) : (
                 <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                   {changesList.map((c, idx) => (
-                    <li key={idx} style={{ padding: "10px 0", borderBottom: "1px solid #f1f5f9" }}>
-                      <strong style={{ display: "block", color: "#0f172a" }}>{c.field}</strong>
-                      <div style={{ color: "#475569" }}>From: {c.from || <em>empty</em>}</div>
-                      <div style={{ color: "#0f172a", marginTop: 6 }}>To: {c.to || <em>empty</em>}</div>
+                    <li
+                      key={idx}
+                      style={{
+                        padding: "10px 0",
+                        borderBottom: "1px solid #f1f5f9",
+                      }}
+                    >
+                      <strong style={{ display: "block", color: "#0f172a" }}>
+                        {c.field}
+                      </strong>
+                      <div style={{ color: "#475569" }}>
+                        From: {c.from || <em>empty</em>}
+                      </div>
+                      <div style={{ color: "#0f172a", marginTop: 6 }}>
+                        To: {c.to || <em>empty</em>}
+                      </div>
                     </li>
                   ))}
                 </ul>
               )}
             </div>
-            <div style={{ padding: 18, borderTop: "1px solid #e6edf3", display: "flex", justifyContent: "flex-end" }}>
-              <button onClick={() => setShowChangesModal(false)} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}>Close</button>
+            <div
+              style={{
+                padding: 18,
+                borderTop: "1px solid #e6edf3",
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                onClick={() => setShowChangesModal(false)}
+                style={{
+                  padding: "8px 14px",
+                  borderRadius: 8,
+                  border: "1px solid #cbd5e1",
+                  background: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

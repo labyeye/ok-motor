@@ -114,13 +114,16 @@ const BuyLetterForm = () => {
   }, [filePreviews]);
 
   const formatDateForInput = (dateString) => {
-    if (!dateString) return new Date().toISOString().split("T")[0];
+    if (!dateString) return "";
     try {
+      if (typeof dateString === "string" && dateString.includes("T")) {
+        return dateString.split("T")[0];
+      }
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return new Date().toISOString().split("T")[0];
+      if (isNaN(date.getTime())) return "";
       return date.toISOString().split("T")[0];
     } catch (error) {
-      return new Date().toISOString().split("T")[0];
+      return "";
     }
   };
 
@@ -326,12 +329,15 @@ const BuyLetterForm = () => {
               pages.length <= 1 ? "single" : "separate",
             );
           }
-          if (
-            full.documents.insuranceCertificate &&
-            Array.isArray(full.documents.insuranceCertificate.pages)
-          ) {
-            previews.insuranceCertificate =
-              full.documents.insuranceCertificate.pages.slice();
+          // Handle both old format (direct array) and new format (pages array)
+          if (full.documents.insuranceCertificate) {
+            if (Array.isArray(full.documents.insuranceCertificate.pages)) {
+              previews.insuranceCertificate =
+                full.documents.insuranceCertificate.pages.slice();
+            } else if (Array.isArray(full.documents.insuranceCertificate)) {
+              previews.insuranceCertificate =
+                full.documents.insuranceCertificate.slice();
+            }
           }
 
           if (full.documents.vehicleNOCUploadMode) {
@@ -340,11 +346,13 @@ const BuyLetterForm = () => {
             const pages = full.documents.vehicleNOC?.pages || [];
             setVehicleNOCUploadMode(pages.length <= 1 ? "single" : "separate");
           }
-          if (
-            full.documents.vehicleNOC &&
-            Array.isArray(full.documents.vehicleNOC.pages)
-          ) {
-            previews.vehicleNOC = full.documents.vehicleNOC.pages.slice();
+          // Handle both old format (direct array) and new format (pages array)
+          if (full.documents.vehicleNOC) {
+            if (Array.isArray(full.documents.vehicleNOC.pages)) {
+              previews.vehicleNOC = full.documents.vehicleNOC.pages.slice();
+            } else if (Array.isArray(full.documents.vehicleNOC)) {
+              previews.vehicleNOC = full.documents.vehicleNOC.slice();
+            }
           }
 
           if (full.documents.vehicleBuyReceiptUploadMode) {
@@ -357,12 +365,15 @@ const BuyLetterForm = () => {
               pages.length <= 1 ? "single" : "separate",
             );
           }
-          if (
-            full.documents.vehicleBuyReceipt &&
-            Array.isArray(full.documents.vehicleBuyReceipt.pages)
-          ) {
-            previews.vehicleBuyReceipt =
-              full.documents.vehicleBuyReceipt.pages.slice();
+          // Handle both old format (direct array) and new format (pages array)
+          if (full.documents.vehicleBuyReceipt) {
+            if (Array.isArray(full.documents.vehicleBuyReceipt.pages)) {
+              previews.vehicleBuyReceipt =
+                full.documents.vehicleBuyReceipt.pages.slice();
+            } else if (Array.isArray(full.documents.vehicleBuyReceipt)) {
+              previews.vehicleBuyReceipt =
+                full.documents.vehicleBuyReceipt.slice();
+            }
           }
 
           setFilePreviews((prev) => ({ ...prev, ...previews }));
@@ -850,6 +861,15 @@ const BuyLetterForm = () => {
           }
 
           if (
+            (!filesState.vehiclePhotos ||
+              filesState.vehiclePhotos.length === 0) &&
+            filePreviews.vehiclePhotos &&
+            filePreviews.vehiclePhotos.length > 0
+          ) {
+            preservedDocs.vehiclePhotos = filePreviews.vehiclePhotos;
+          }
+
+          if (
             !filesState.insuranceCertificate ||
             filesState.insuranceCertificate.length === 0
           ) {
@@ -896,7 +916,7 @@ const BuyLetterForm = () => {
             form,
             {
               headers: { "Content-Type": "multipart/form-data" },
-              timeout: 120000,
+              timeout: 300000, // 5 minutes timeout
             },
           );
         }
@@ -1039,6 +1059,39 @@ const BuyLetterForm = () => {
         return;
       }
 
+      // Handle PDF files for single-file fields when allowPdf is true
+      if (isPdfFile(file) && uploadModalAllowPdf) {
+        setFilesState((prev) => ({
+          ...prev,
+          [uploadModalFieldName]: file,
+        }));
+
+        // Create preview for PDF
+        try {
+          const pdfImages = await convertPdfToImages(file);
+          if (Array.isArray(pdfImages) && pdfImages[0]?.data) {
+            setFilePreviews((prev) => ({
+              ...prev,
+              [uploadModalFieldName]: pdfImages[0].data,
+            }));
+          } else {
+            setFilePreviews((prev) => ({
+              ...prev,
+              [uploadModalFieldName]: URL.createObjectURL(file),
+            }));
+          }
+        } catch (err) {
+          console.warn("PDF preview generation failed", err);
+          setFilePreviews((prev) => ({
+            ...prev,
+            [uploadModalFieldName]: URL.createObjectURL(file),
+          }));
+        }
+
+        setShowFileUploadModal(false);
+        return;
+      }
+
       alert("Please select a valid image or PDF file");
       setShowFileUploadModal(false);
     } catch (error) {
@@ -1096,12 +1149,11 @@ const BuyLetterForm = () => {
         vehicleRCBack: url,
       }));
     } else if (
-      (cropFieldName === "insuranceCertificate" &&
-        insuranceCertificateUploadMode === "single") ||
-      (cropFieldName === "vehicleNOC" && vehicleNOCUploadMode === "single") ||
-      (cropFieldName === "vehicleBuyReceipt" &&
-        vehicleBuyReceiptUploadMode === "single")
+      cropFieldName === "insuranceCertificate" ||
+      cropFieldName === "vehicleNOC" ||
+      cropFieldName === "vehicleBuyReceipt"
     ) {
+      // Handle multi-page documents - store as array
       setFilesState((prev) => ({
         ...prev,
         [cropFieldName]: [file],
@@ -4323,7 +4375,7 @@ const BuyLetterForm = () => {
                   >
                     <button
                       type="button"
-                      onClick={() => handleFileInput("deliveryPhoto")}
+                      onClick={() => handleFileInput("deliveryPhoto", true)}
                       style={styles.uploadBtn}
                     >
                       <Image size={20} />{" "}
@@ -4884,10 +4936,12 @@ const BuyLetterForm = () => {
             <div
               style={{
                 ...styles.modalContent,
-                width: isMobile ? "95vw" : "800px",
-                maxWidth: isMobile ? "95vw" : "90%",
-                height: isMobile ? "80vh" : undefined,
+                width: isMobile ? "95vw" : "1400px",
+                maxWidth: isMobile ? "95vw" : "95%",
+                height: isMobile ? "85vh" : "90vh",
                 overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
               }}
             >
               <h3 style={styles.modalTitle}>
@@ -4896,9 +4950,10 @@ const BuyLetterForm = () => {
               </h3>
               <div
                 style={{
-                  height: isMobile ? "65vh" : "70vh",
+                  flex: 1,
                   width: "100%",
                   marginBottom: "20px",
+                  minHeight: 0,
                 }}
               >
                 {previewPdf ? (

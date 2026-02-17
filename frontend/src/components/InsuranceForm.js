@@ -34,7 +34,6 @@ const InsuranceForm = () => {
   const [editId, setEditId] = useState(null);
   const [, setIsFetching] = useState(false);
 
-  
   const [activeMenu, setActiveMenu] = useState("Insurance");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -56,7 +55,6 @@ const InsuranceForm = () => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
 
-    
     if (location.state && location.state.insuranceData) {
       const data = location.state.insuranceData;
       setEditId(data._id);
@@ -97,7 +95,6 @@ const InsuranceForm = () => {
 
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-      
       const [vehicleRes, insuranceRes] = await Promise.all([
         axios
           .get(
@@ -124,29 +121,41 @@ const InsuranceForm = () => {
 
       setFormData((prev) => ({
         ...prev,
-        
-        personName: insData.personName || vehicleData.personName || prev.personName,
-        personPhone: insData.personPhone || vehicleData.personPhone || prev.personPhone,
-        personEmail: insData.personEmail || vehicleData.personEmail || prev.personEmail,
 
-        
-        vehicleModel: insData.vehicleModel || vehicleData.vehicleModel || prev.vehicleModel,
+        personName:
+          insData.personName || vehicleData.personName || prev.personName,
+        personPhone:
+          insData.personPhone || vehicleData.personPhone || prev.personPhone,
+        personEmail:
+          insData.personEmail || vehicleData.personEmail || prev.personEmail,
+
+        vehicleModel:
+          insData.vehicleModel || vehicleData.vehicleModel || prev.vehicleModel,
         brand: insData.brand || vehicleData.brand || prev.brand,
         year: insData.year || vehicleData.year || prev.year,
 
-        
-        insuranceCompany: insData.insuranceCompany || vehicleData.insuranceCompany || prev.insuranceCompany,
+        insuranceCompany:
+          insData.insuranceCompany ||
+          vehicleData.insuranceCompany ||
+          prev.insuranceCompany,
         insurancePolicyNo:
-          insData.insurancePolicyNumber || insData.insurancePolicyNo || vehicleData.insurancePolicyNumber || prev.insurancePolicyNo,
+          insData.insurancePolicyNumber ||
+          insData.insurancePolicyNo ||
+          vehicleData.insurancePolicyNumber ||
+          prev.insurancePolicyNo,
         insuranceExpiry: insData.insuranceExpiryDate
           ? new Date(insData.insuranceExpiryDate).toISOString().split("T")[0]
           : vehicleData.insuranceExpiryDate
-          ? new Date(vehicleData.insuranceExpiryDate).toISOString().split("T")[0]
-          : prev.insuranceExpiry,
+            ? new Date(vehicleData.insuranceExpiryDate)
+                .toISOString()
+                .split("T")[0]
+            : prev.insuranceExpiry,
       }));
     } catch (err) {
       console.error("Failed to fetch vehicle details:", err);
-      alert(err.response?.data?.message || "No data found for this registration");
+      alert(
+        err.response?.data?.message || "No data found for this registration",
+      );
     } finally {
       setIsFetching(false);
     }

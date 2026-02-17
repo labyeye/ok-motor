@@ -51,6 +51,9 @@ const BuyLetterHistory = () => {
     pan: true,
     vehicleKM: true,
     vehiclePhotos: true,
+    insuranceCertificate: true,
+    vehicleNOC: true,
+    vehicleBuyReceipt: true,
   });
   const [buyLetters, setBuyLetters] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -172,43 +175,72 @@ const BuyLetterHistory = () => {
       "note",
     ];
 
+    const normalize = (val) => {
+      if (val === null || val === undefined) return "";
+      return String(val).trim();
+    };
+
+    const normalizeDate = (val) => {
+      if (!val) return "";
+      try {
+        let ds = val;
+        if (typeof ds === "string" && ds.includes("T")) ds = ds.split("T")[0];
+        const date = new Date(ds);
+        if (isNaN(date.getTime())) return "";
+        return date.toISOString().split("T")[0];
+      } catch (e) {
+        return "";
+      }
+    };
+
     if (letter.previousVersion) {
       fieldsToCompare.forEach((field) => {
         const oldValue = letter.previousVersion[field];
         const newValue = letter[field];
 
-        if (oldValue !== newValue && (oldValue || newValue)) {
-          changes.push({
-            field: getFieldLabel(field),
-            oldValue: oldValue || "(empty)",
-            newValue: newValue || "(empty)",
-          });
+        if (
+          ["pucIssueDate", "pucExpiryDate", "insuranceExpiryDate"].includes(
+            field,
+          )
+        ) {
+          if (normalizeDate(oldValue) !== normalizeDate(newValue)) {
+            changes.push({
+              field: getFieldLabel(field),
+              oldValue: formatDate(oldValue) || "(empty)",
+              newValue: formatDate(newValue) || "(empty)",
+            });
+          }
+        } else {
+          if (normalize(oldValue) !== normalize(newValue)) {
+            changes.push({
+              field: getFieldLabel(field),
+              oldValue: oldValue || "(empty)",
+              newValue: newValue || "(empty)",
+            });
+          }
         }
       });
 
-      const oldSaleDate = letter.previousVersion.saleDate
-        ? formatDate(letter.previousVersion.saleDate)
-        : "";
-      const newSaleDate = letter.saleDate ? formatDate(letter.saleDate) : "";
-      if (oldSaleDate !== newSaleDate && (oldSaleDate || newSaleDate)) {
+      const oldSaleDate = normalizeDate(letter.previousVersion.saleDate);
+      const newSaleDate = normalizeDate(letter.saleDate);
+      if (oldSaleDate !== newSaleDate) {
         changes.push({
           field: "Sale Date",
-          oldValue: oldSaleDate || "(empty)",
-          newValue: newSaleDate || "(empty)",
+          oldValue: formatDate(letter.previousVersion.saleDate) || "(empty)",
+          newValue: formatDate(letter.saleDate) || "(empty)",
         });
       }
 
-      const oldTodayDate = letter.previousVersion.todayDate
-        ? formatDate(letter.previousVersion.todayDate)
-        : "";
-      const newTodayDate = letter.todayDate ? formatDate(letter.todayDate) : "";
-      if (oldTodayDate !== newTodayDate && (oldTodayDate || newTodayDate)) {
+      const oldTodayDate = normalizeDate(letter.previousVersion.todayDate);
+      const newTodayDate = normalizeDate(letter.todayDate);
+      if (oldTodayDate !== newTodayDate) {
         changes.push({
           field: "Today's Date",
-          oldValue: oldTodayDate || "(empty)",
-          newValue: newTodayDate || "(empty)",
+          oldValue: formatDate(letter.previousVersion.todayDate) || "(empty)",
+          newValue: formatDate(letter.todayDate) || "(empty)",
         });
       }
+
       const checkDocumentChange = (docPath, label) => {
         const getNestedValue = (obj, path) =>
           path.split(".").reduce((acc, part) => acc?.[part], obj);
@@ -218,7 +250,7 @@ const BuyLetterHistory = () => {
         );
         const newDoc = getNestedValue(letter.documents, docPath);
 
-        if (oldDoc !== newDoc) {
+        if (normalize(oldDoc) !== normalize(newDoc)) {
           if (!oldDoc && newDoc) {
             changes.push({
               field: label,
@@ -240,6 +272,7 @@ const BuyLetterHistory = () => {
           }
         }
       };
+
       checkDocumentChange("vehicleRC.front", "Vehicle RC - Front");
       checkDocumentChange("vehicleRC.back", "Vehicle RC - Back");
       checkDocumentChange("aadhaar.front", "Aadhaar - Front");
@@ -247,6 +280,10 @@ const BuyLetterHistory = () => {
       checkDocumentChange("pan", "PAN Card");
       checkDocumentChange("deliveryPhoto", "Delivery Photo") ||
         checkDocumentChange("vehicleKM", "Delivery Photo");
+      checkDocumentChange("insuranceCertificate", "Insurance Certificate");
+      checkDocumentChange("vehicleNOC", "Vehicle NOC");
+      checkDocumentChange("vehicleBuyReceipt", "Vehicle Buy Receipt");
+
       const oldPhotosCount =
         letter.previousVersion.documents?.vehiclePhotos?.length || 0;
       const newPhotosCount = letter.documents?.vehiclePhotos?.length || 0;
@@ -654,11 +691,22 @@ const BuyLetterHistory = () => {
           font: titleFont,
         });
 
-        const embedded = await embedImageFromUrl(pdfDoc, item.url);
-        if (embedded) {
-          const { width, height } = embedded.scale(1);
-          let drawW = colWidth - 20;
-          let drawH = (height / width) * drawW;
+        const asset = await embedAssetFromUrl(pdfDoc, item.url);
+        if (asset) {
+          let drawW, drawH;
+          let width, height;
+          if (asset.kind === "image") {
+            const dims = asset.embedded.scale(1);
+            width = dims.width;
+            height = dims.height;
+          } else {
+            const p = asset.embeddedPage;
+            width = p.width || p.getWidth?.() || 595;
+            height = p.height || p.getHeight?.() || 842;
+          }
+
+          drawW = colWidth - 20;
+          drawH = (height / width) * drawW;
 
           if (drawH > maxHeight) {
             drawH = maxHeight;
@@ -668,12 +716,23 @@ const BuyLetterHistory = () => {
           const centeredX = xPos + (colWidth - drawW) / 2;
           const drawY = yTop - drawH - 15;
 
-          page.drawImage(embedded, {
-            x: centeredX,
-            y: drawY,
-            width: drawW,
-            height: drawH,
-          });
+          if (asset.kind === "image") {
+            page.drawImage(asset.embedded, {
+              x: centeredX,
+              y: drawY,
+              width: drawW,
+              height: drawH,
+            });
+          } else {
+            try {
+              page.drawPage(asset.embeddedPage, {
+                x: centeredX,
+                y: drawY,
+                width: drawW,
+                height: drawH,
+              });
+            } catch (e) {}
+          }
         }
       }
     };
@@ -779,14 +838,24 @@ const BuyLetterHistory = () => {
 
       page.drawText(item.title, { x: 50, y: 720, size: 14, font });
 
-      const embedded = await embedImageFromUrl(pdfDoc, item.url);
-      if (embedded) {
+      const asset = await embedAssetFromUrl(pdfDoc, item.url);
+      if (asset) {
         const pageWidth = 595;
         const margin = 50;
         const maxWidth = pageWidth - 2 * margin;
         const maxHeight = 660;
 
-        const { width, height } = embedded.scale(1);
+        let width, height;
+        if (asset.kind === "image") {
+          const dims = asset.embedded.scale(1);
+          width = dims.width;
+          height = dims.height;
+        } else {
+          const p = asset.embeddedPage;
+          width = p.width || p.getWidth?.() || 595;
+          height = p.height || p.getHeight?.() || 842;
+        }
+
         let drawW = maxWidth;
         let drawH = (height / width) * drawW;
 
@@ -798,12 +867,23 @@ const BuyLetterHistory = () => {
         const xPos = (pageWidth - drawW) / 2;
         const yPos = 690 - drawH;
 
-        page.drawImage(embedded, {
-          x: xPos,
-          y: yPos,
-          width: drawW,
-          height: drawH,
-        });
+        if (asset.kind === "image") {
+          page.drawImage(asset.embedded, {
+            x: xPos,
+            y: yPos,
+            width: drawW,
+            height: drawH,
+          });
+        } else {
+          try {
+            page.drawPage(asset.embeddedPage, {
+              x: xPos,
+              y: yPos,
+              width: drawW,
+              height: drawH,
+            });
+          } catch (e) {}
+        }
       }
     } else if (aadhaarItems.length > 0) {
       await renderTwoColumnPage(aadhaarItems);
@@ -839,11 +919,22 @@ const BuyLetterHistory = () => {
 
         const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
         page.drawText(item.title, { x, y: yTop, size: 12, font: titleFont });
-        const embedded = await embedImageFromUrl(pdfDoc, item.url);
-        if (embedded) {
+        const asset = await embedAssetFromUrl(pdfDoc, item.url);
+        if (asset) {
           const cellMaxW = 500;
           const cellMaxH = 320;
-          const { width, height } = embedded.scale(1);
+
+          let width, height;
+          if (asset.kind === "image") {
+            const dims = asset.embedded.scale(1);
+            width = dims.width;
+            height = dims.height;
+          } else {
+            const p = asset.embeddedPage;
+            width = p.width || p.getWidth?.() || 595;
+            height = p.height || p.getHeight?.() || 842;
+          }
+
           let drawW = cellMaxW;
           let drawH = (height / width) * drawW;
           if (drawH > cellMaxH) {
@@ -851,12 +942,24 @@ const BuyLetterHistory = () => {
             drawW = (width / height) * drawH;
           }
           const drawY = yTop - drawH - 10;
-          page.drawImage(embedded, {
-            x,
-            y: drawY,
-            width: drawW,
-            height: drawH,
-          });
+
+          if (asset.kind === "image") {
+            page.drawImage(asset.embedded, {
+              x,
+              y: drawY,
+              width: drawW,
+              height: drawH,
+            });
+          } else {
+            try {
+              page.drawPage(asset.embeddedPage, {
+                x,
+                y: drawY,
+                width: drawW,
+                height: drawH,
+              });
+            } catch (e) {}
+          }
         }
       }
     }
@@ -2620,213 +2723,342 @@ const BuyLetterHistory = () => {
                 >
                   Supporting Documents
                 </div>
-                <label
+                <div
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    marginBottom: "8px",
-                    backgroundColor: docSelections.vehicleRC
-                      ? "#f0f9ff"
-                      : "transparent",
-                    border: `2px solid ${docSelections.vehicleRC ? "#0284c7" : "#e2e8f0"}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "10px",
                   }}
                 >
-                  <input
-                    type="checkbox"
-                    checked={!!docSelections.vehicleRC}
-                    onChange={(e) =>
-                      setDocSelections((s) => ({
-                        ...s,
-                        vehicleRC: e.target.checked,
-                      }))
-                    }
+                  <label
                     style={{
-                      width: "18px",
-                      height: "18px",
-                      marginRight: "12px",
-                      accentColor: "#0284c7",
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      backgroundColor: docSelections.vehicleRC
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.vehicleRC ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
                       cursor: "pointer",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      color: "#1e293b",
+                      transition: "all 0.2s ease",
                     }}
                   >
-                    Vehicle RC (Front/Back)
-                  </span>
-                </label>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    marginBottom: "8px",
-                    backgroundColor: docSelections.aadhaar
-                      ? "#f0f9ff"
-                      : "transparent",
-                    border: `2px solid ${docSelections.aadhaar ? "#0284c7" : "#e2e8f0"}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!docSelections.aadhaar}
-                    onChange={(e) =>
-                      setDocSelections((s) => ({
-                        ...s,
-                        aadhaar: e.target.checked,
-                      }))
-                    }
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.vehicleRC}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({
+                          ...s,
+                          vehicleRC: e.target.checked,
+                        }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Vehicle RC (Front/Back)
+                    </span>
+                  </label>
+                  <label
                     style={{
-                      width: "18px",
-                      height: "18px",
-                      marginRight: "12px",
-                      accentColor: "#0284c7",
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      backgroundColor: docSelections.aadhaar
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.aadhaar ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
                       cursor: "pointer",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      color: "#1e293b",
+                      transition: "all 0.2s ease",
                     }}
                   >
-                    Aadhaar (Front/Back)
-                  </span>
-                </label>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    marginBottom: "8px",
-                    backgroundColor: docSelections.pan
-                      ? "#f0f9ff"
-                      : "transparent",
-                    border: `2px solid ${docSelections.pan ? "#0284c7" : "#e2e8f0"}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!docSelections.pan}
-                    onChange={(e) =>
-                      setDocSelections((s) => ({ ...s, pan: e.target.checked }))
-                    }
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.aadhaar}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({
+                          ...s,
+                          aadhaar: e.target.checked,
+                        }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Aadhaar (Front/Back)
+                    </span>
+                  </label>
+                  <label
                     style={{
-                      width: "18px",
-                      height: "18px",
-                      marginRight: "12px",
-                      accentColor: "#0284c7",
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      backgroundColor: docSelections.pan
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.pan ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
                       cursor: "pointer",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      color: "#1e293b",
+                      transition: "all 0.2s ease",
                     }}
                   >
-                    PAN Card
-                  </span>
-                </label>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    marginBottom: "8px",
-                    backgroundColor: docSelections.vehicleKM
-                      ? "#f0f9ff"
-                      : "transparent",
-                    border: `2px solid ${docSelections.vehicleKM ? "#0284c7" : "#e2e8f0"}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!docSelections.vehicleKM}
-                    onChange={(e) =>
-                      setDocSelections((s) => ({
-                        ...s,
-                        vehicleKM: e.target.checked,
-                      }))
-                    }
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.pan}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({
+                          ...s,
+                          pan: e.target.checked,
+                        }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      PAN Card
+                    </span>
+                  </label>
+                  <label
                     style={{
-                      width: "18px",
-                      height: "18px",
-                      marginRight: "12px",
-                      accentColor: "#0284c7",
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      backgroundColor: docSelections.vehicleKM
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.vehicleKM ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
                       cursor: "pointer",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      color: "#1e293b",
+                      transition: "all 0.2s ease",
                     }}
                   >
-                    Vehicle KM Photo
-                  </span>
-                </label>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    marginBottom: "8px",
-                    backgroundColor: docSelections.vehiclePhotos
-                      ? "#f0f9ff"
-                      : "transparent",
-                    border: `2px solid ${docSelections.vehiclePhotos ? "#0284c7" : "#e2e8f0"}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!docSelections.vehiclePhotos}
-                    onChange={(e) =>
-                      setDocSelections((s) => ({
-                        ...s,
-                        vehiclePhotos: e.target.checked,
-                      }))
-                    }
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.vehicleKM}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({
+                          ...s,
+                          vehicleKM: e.target.checked,
+                        }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Vehicle KM Photo
+                    </span>
+                  </label>
+                  <label
                     style={{
-                      width: "18px",
-                      height: "18px",
-                      marginRight: "12px",
-                      accentColor: "#0284c7",
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      backgroundColor: docSelections.vehiclePhotos
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.vehiclePhotos ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
                       cursor: "pointer",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      color: "#1e293b",
+                      transition: "all 0.2s ease",
                     }}
                   >
-                    Vehicle Photos
-                  </span>
-                </label>
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.vehiclePhotos}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({
+                          ...s,
+                          vehiclePhotos: e.target.checked,
+                        }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Vehicle Photos
+                    </span>
+                  </label>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      backgroundColor: docSelections.insuranceCertificate
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.insuranceCertificate ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.insuranceCertificate}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({
+                          ...s,
+                          insuranceCertificate: e.target.checked,
+                        }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Insurance Certificate
+                    </span>
+                  </label>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      backgroundColor: docSelections.vehicleNOC
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.vehicleNOC ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.vehicleNOC}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({
+                          ...s,
+                          vehicleNOC: e.target.checked,
+                        }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Vehicle NOC
+                    </span>
+                  </label>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      backgroundColor: docSelections.vehicleBuyReceipt
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.vehicleBuyReceipt ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.vehicleBuyReceipt}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({
+                          ...s,
+                          vehicleBuyReceipt: e.target.checked,
+                        }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Vehicle Buy Receipt
+                    </span>
+                  </label>
+                </div>
               </div>
             </div>
             <div
@@ -2885,6 +3117,12 @@ const BuyLetterHistory = () => {
                       out.deliveryPhoto = docs.deliveryPhoto || docs.vehicleKM;
                     if (sel.vehiclePhotos && docs.vehiclePhotos)
                       out.vehiclePhotos = docs.vehiclePhotos;
+                    if (sel.insuranceCertificate && docs.insuranceCertificate)
+                      out.insuranceCertificate = docs.insuranceCertificate;
+                    if (sel.vehicleNOC && docs.vehicleNOC)
+                      out.vehicleNOC = docs.vehicleNOC;
+                    if (sel.vehicleBuyReceipt && docs.vehicleBuyReceipt)
+                      out.vehicleBuyReceipt = docs.vehicleBuyReceipt;
                     return out;
                   };
 
@@ -2940,9 +3178,10 @@ const BuyLetterHistory = () => {
             style={{
               backgroundColor: "#fff",
               borderRadius: "12px",
-              maxWidth: "900px",
+              maxWidth: isMobile ? "95vw" : "1400px",
               width: "100%",
-              maxHeight: "90vh",
+              height: isMobile ? "85vh" : "90vh",
+              maxHeight: isMobile ? "85vh" : "90vh",
               display: "flex",
               flexDirection: "column",
               boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",

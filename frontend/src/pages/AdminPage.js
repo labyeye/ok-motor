@@ -81,7 +81,7 @@ const AdminPage = () => {
   const [error, setError] = useState(null);
   const [freeServices, setFreeServices] = useState([]);
   const [freeServicesLoading, setFreeServicesLoading] = useState(true);
-  const [freeSearch, ] = useState("");
+  const [freeSearch] = useState("");
   const navigate = useNavigate();
 
   const [extraStats, setExtraStats] = useState({
@@ -291,7 +291,8 @@ const AdminPage = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const endpoint = "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
+      const endpoint =
+        "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
       const params = { limit: 2000 };
       if (search && String(search).trim() !== "")
         params.search = String(search).trim();
@@ -395,7 +396,10 @@ const AdminPage = () => {
           // Previously we flagged missing "Vehicle Photos" here.
           // The buy-letter model now uses separate documents: Insurance Certificate, Vehicle NOC, Vehicle Buy Receipt.
           // Flag missing Insurance Certificate if not present.
-          if (!letter.documents?.insuranceCertificate?.pages || letter.documents.insuranceCertificate.pages.length === 0)
+          if (
+            !letter.documents?.insuranceCertificate?.pages ||
+            letter.documents.insuranceCertificate.pages.length === 0
+          )
             missingFields.push("Insurance Certificate");
 
           return {
@@ -1202,9 +1206,12 @@ const AdminPage = () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-        const resp = await axios.get("https://ok-motor-51l3.vercel.app/api/sell-letters", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const resp = await axios.get(
+          "https://ok-motor-51l3.vercel.app/api/sell-letters",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
 
         // fetch standalone PUC
         const resPUC = await axios.get(
@@ -1441,9 +1448,12 @@ const AdminPage = () => {
         const token = localStorage.getItem("token");
         if (!token) return;
         // reuse sell-letters endpoint and filter client-side for insurance expiry
-        const resp = await axios.get("https://ok-motor-51l3.vercel.app/api/sell-letters", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const resp = await axios.get(
+          "https://ok-motor-51l3.vercel.app/api/sell-letters",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
 
         const data = resp.data || [];
         // fetch standalone insurance

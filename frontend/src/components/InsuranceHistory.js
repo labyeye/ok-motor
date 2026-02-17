@@ -33,7 +33,6 @@ const InsuranceHistory = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  
   const [activeMenu, setActiveMenu] = useState("Insurance");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -564,7 +563,9 @@ const InsuranceHistory = () => {
                     <tr key={item._id}>
                       <td style={styles.td}>{item.personName}</td>
                       <td style={styles.td}>{item.personPhone}</td>
-                      <td style={styles.td}>{item.personEmail || item.email || ""}</td>
+                      <td style={styles.td}>
+                        {item.personEmail || item.email || ""}
+                      </td>
                       <td style={styles.td}>
                         {item.brand} {item.vehicleModel} ({item.year})
                       </td>

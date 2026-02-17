@@ -109,22 +109,41 @@ const PUCForm = () => {
 
       setFormData((prev) => ({
         ...prev,
-        personName: pucData.personName || insData.personName || vehicleData.personName || prev.personName,
-        personPhone: pucData.personPhone || insData.personPhone || vehicleData.personPhone || prev.personPhone,
-        personEmail: pucData.personEmail || insData.personEmail || vehicleData.personEmail || prev.personEmail,
-        vehicleModel: pucData.vehicleModel || insData.vehicleModel || vehicleData.vehicleModel || prev.vehicleModel,
-        brand: pucData.brand || insData.brand || vehicleData.brand || prev.brand,
+        personName:
+          pucData.personName ||
+          insData.personName ||
+          vehicleData.personName ||
+          prev.personName,
+        personPhone:
+          pucData.personPhone ||
+          insData.personPhone ||
+          vehicleData.personPhone ||
+          prev.personPhone,
+        personEmail:
+          pucData.personEmail ||
+          insData.personEmail ||
+          vehicleData.personEmail ||
+          prev.personEmail,
+        vehicleModel:
+          pucData.vehicleModel ||
+          insData.vehicleModel ||
+          vehicleData.vehicleModel ||
+          prev.vehicleModel,
+        brand:
+          pucData.brand || insData.brand || vehicleData.brand || prev.brand,
         year: pucData.year || insData.year || vehicleData.year || prev.year,
         pucNumber: pucData.pucNumber || vehicleData.pucNumber || prev.pucNumber,
         pucExpiry: pucData.pucExpiryDate
           ? new Date(pucData.pucExpiryDate).toISOString().split("T")[0]
           : vehicleData.pucExpiryDate
-          ? new Date(vehicleData.pucExpiryDate).toISOString().split("T")[0]
-          : prev.pucExpiry,
+            ? new Date(vehicleData.pucExpiryDate).toISOString().split("T")[0]
+            : prev.pucExpiry,
       }));
     } catch (err) {
       console.error("Failed to fetch vehicle/puc details:", err);
-      alert(err.response?.data?.message || "No data found for this registration");
+      alert(
+        err.response?.data?.message || "No data found for this registration",
+      );
     } finally {
       setIsFetching(false);
     }

@@ -1038,15 +1038,20 @@ class PDFService {
 
       const isCustomService =
         serviceBill.serviceType &&
-        serviceBill.serviceType.toLowerCase() === "custom";
+        (serviceBill.serviceType.toLowerCase() === "custom" ||
+          serviceBill.serviceType.toLowerCase() === "free");
       const hasCustomDesc =
         serviceBill.customServiceDescription &&
         serviceBill.customServiceDescription.trim() !== "";
 
       if (isCustomService && hasCustomDesc) {
         const customDescY = columnY - 25 - serviceDetails.length * 15;
+        const descLabel =
+          serviceBill.serviceType.toLowerCase() === "free"
+            ? "Free Service Description:"
+            : "Custom Service Description:";
 
-        currentPage.drawText("Custom Service Description:", {
+        currentPage.drawText(descLabel, {
           x: rightColumnX + 10,
           y: customDescY,
           size: 10,

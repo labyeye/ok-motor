@@ -78,14 +78,14 @@ app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
 // Body parsing middleware
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Add timeout middleware
 app.use((req, res, next) => {
-  // Set timeout for all requests to 60 seconds
-  req.setTimeout(60000);
-  res.setTimeout(60000);
+  // Set timeout for all requests to 120 seconds
+  req.setTimeout(120000);
+  res.setTimeout(120000);
   next();
 });
 

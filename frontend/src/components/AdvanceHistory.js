@@ -450,9 +450,12 @@ const AdvanceHistory = () => {
         return;
       }
 
-      await axios.delete(`https://ok-motor-51l3.vercel.app/api/advance-bills/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(
+        `https://ok-motor-51l3.vercel.app/api/advance-bills/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       setAdvanceBills((prev) => prev.filter((bill) => bill._id !== id));
     } catch (error) {
       console.error("Error deleting advance bill:", error);

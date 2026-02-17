@@ -309,33 +309,92 @@ const BikeHistory = ({ externalSearchTerm }) => {
       try {
         const pages = pdfDoc.getPages();
         if (pages.length > 1) {
-          const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          const headerFont = await pdfDoc.embedFont(
+            StandardFonts.HelveticaBold,
+          );
           const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
           const logoUrl = logo1;
-          const logoImageBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
+          const logoImageBytes = await fetch(logoUrl).then((r) =>
+            r.arrayBuffer(),
+          );
           const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
           for (let i = 1; i < pages.length; i++) {
             const p = pages[i];
             try {
-              p.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });
-              p.drawImage(logoImage, { x: 50, y: 740, width: 160, height: 130 });
-              try { p.drawImage(logoImage, { x: 280, y: 200, width: 370, height: 300, opacity: 0.3, rotate: degrees(45) }); } catch(e) {}
-              p.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 815, size: 14, color: rgb(1,1,1), font: headerFont });
-              p.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 795, size: 14, color: rgb(1,1,1), font: headerFont });
+              p.drawRectangle({
+                x: 0,
+                y: 780,
+                width: 595,
+                height: 80,
+                color: rgb(0.047, 0.098, 0.196),
+              });
+              p.drawImage(logoImage, {
+                x: 50,
+                y: 740,
+                width: 160,
+                height: 130,
+              });
+              try {
+                p.drawImage(logoImage, {
+                  x: 280,
+                  y: 200,
+                  width: 370,
+                  height: 300,
+                  opacity: 0.3,
+                  rotate: degrees(45),
+                });
+              } catch (e) {}
+              p.drawText("UDAYAM-BR-26-0028550", {
+                x: 330,
+                y: 815,
+                size: 14,
+                color: rgb(1, 1, 1),
+                font: headerFont,
+              });
+              p.drawText("GSTIN: 22ABCDE1234F1Z5", {
+                x: 330,
+                y: 795,
+                size: 14,
+                color: rgb(1, 1, 1),
+                font: headerFont,
+              });
               const thank = "Thank you for your business!";
-              const addr = "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+              const addr =
+                "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
               const thankW = headerFont.widthOfTextAtSize(thank, 12);
               const addrW = regularFont.widthOfTextAtSize(addr, 8);
               const cxThank = (595 - thankW) / 2;
               const cxAddr = (595 - addrW) / 2;
-              p.drawLine({ start: { x: 20, y: 52 }, end: { x: 575, y: 52 }, thickness: 0.5, color: rgb(0.8,0.8,0.8) });
-              p.drawText(thank, { x: cxThank, y: 40, size: 12, color: rgb(0,0,0), font: headerFont });
-              p.drawText(addr, { x: cxAddr, y: 26, size: 8, color: rgb(0.4,0.4,0.4), font: regularFont });
+              p.drawLine({
+                start: { x: 20, y: 52 },
+                end: { x: 575, y: 52 },
+                thickness: 0.5,
+                color: rgb(0.8, 0.8, 0.8),
+              });
+              p.drawText(thank, {
+                x: cxThank,
+                y: 40,
+                size: 12,
+                color: rgb(0, 0, 0),
+                font: headerFont,
+              });
+              p.drawText(addr, {
+                x: cxAddr,
+                y: 26,
+                size: 8,
+                color: rgb(0.4, 0.4, 0.4),
+                font: regularFont,
+              });
             } catch (e) {}
           }
         }
-      } catch (err) { console.warn('Failed to add header/footer to sellletter preview template pages', err); }
+      } catch (err) {
+        console.warn(
+          "Failed to add header/footer to sellletter preview template pages",
+          err,
+        );
+      }
 
       for (const [fieldName, position] of Object.entries(
         buyLetterFieldPositions,
@@ -521,14 +580,32 @@ const BikeHistory = ({ externalSearchTerm }) => {
     });
     try {
       const thank = "Thank you for your business!";
-      const addr = "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+      const addr =
+        "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
       const thankW = fontBold.widthOfTextAtSize(thank, 12);
       const addrW = font.widthOfTextAtSize(addr, 8);
       const cxThank = (595 - thankW) / 2;
       const cxAddr = (595 - addrW) / 2;
-      page.drawLine({ start: { x: 20, y: 52 }, end: { x: 575, y: 52 }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
-      page.drawText(thank, { x: cxThank, y: 40, size: 12, color: rgb(0, 0, 0), font: fontBold });
-      page.drawText(addr, { x: cxAddr, y: 26, size: 8, color: rgb(0.4, 0.4, 0.4), font: font });
+      page.drawLine({
+        start: { x: 20, y: 52 },
+        end: { x: 575, y: 52 },
+        thickness: 0.5,
+        color: rgb(0.8, 0.8, 0.8),
+      });
+      page.drawText(thank, {
+        x: cxThank,
+        y: 40,
+        size: 12,
+        color: rgb(0, 0, 0),
+        font: fontBold,
+      });
+      page.drawText(addr, {
+        x: cxAddr,
+        y: 26,
+        size: 8,
+        color: rgb(0.4, 0.4, 0.4),
+        font: font,
+      });
     } catch (e) {}
     page.drawRectangle({
       x: 0,
@@ -1415,10 +1492,14 @@ const BikeHistory = ({ externalSearchTerm }) => {
         ),
         // insurance and puc endpoints return single records (or 404) when queried by vehicle
         axios
-          .get(`https://ok-motor-51l3.vercel.app/api/insurance/vehicle/${encodeURIComponent(searchTerm)}`)
+          .get(
+            `https://ok-motor-51l3.vercel.app/api/insurance/vehicle/${encodeURIComponent(searchTerm)}`,
+          )
           .catch((e) => ({ status: e.response?.status || 500, data: null })),
         axios
-          .get(`https://ok-motor-51l3.vercel.app/api/puc/vehicle/${encodeURIComponent(searchTerm)}`)
+          .get(
+            `https://ok-motor-51l3.vercel.app/api/puc/vehicle/${encodeURIComponent(searchTerm)}`,
+          )
           .catch((e) => ({ status: e.response?.status || 500, data: null })),
       ]);
 
@@ -1459,8 +1540,16 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return;
       }
 
-      console.log("insuranceResp:", insuranceResp && insuranceResp.status, insuranceResp && insuranceResp.data);
-      console.log("pucResp:", pucResp && pucResp.status, pucResp && pucResp.data);
+      console.log(
+        "insuranceResp:",
+        insuranceResp && insuranceResp.status,
+        insuranceResp && insuranceResp.data,
+      );
+      console.log(
+        "pucResp:",
+        pucResp && pucResp.status,
+        pucResp && pucResp.data,
+      );
 
       const insuranceData =
         insuranceResp && insuranceResp.status === 200 && insuranceResp.data
@@ -1500,7 +1589,8 @@ const BikeHistory = ({ externalSearchTerm }) => {
         ...insuranceData.map((item) => ({
           ...item,
           type: "insurance",
-          date: item.insuranceExpiryDate || item.insuranceExpiry || item.createdAt,
+          date:
+            item.insuranceExpiryDate || item.insuranceExpiry || item.createdAt,
         })),
         ...pucData.map((item) => ({
           ...item,
@@ -1915,15 +2005,19 @@ const BikeHistory = ({ externalSearchTerm }) => {
       return `Advance payment by ${item.customerName}`;
     }
     if (item.type === "insurance") {
-      const policy = item.insurancePolicyNumber || item.insurancePolicyNo || item.insurancePolicyNo || "-";
+      const policy =
+        item.insurancePolicyNumber ||
+        item.insurancePolicyNo ||
+        item.insurancePolicyNo ||
+        "-";
       const comp = item.insuranceCompany || "-";
       const exp = item.insuranceExpiryDate || item.insuranceExpiry || null;
-      return `Policy: ${policy} • ${comp}${exp ? ` • Exp: ${new Date(exp).toLocaleDateString('en-IN')}` : ""}`;
+      return `Policy: ${policy} • ${comp}${exp ? ` • Exp: ${new Date(exp).toLocaleDateString("en-IN")}` : ""}`;
     }
     if (item.type === "puc") {
       const pucNo = item.pucNumber || item.pucNo || "-";
       const exp = item.pucExpiryDate || item.pucExpiry || null;
-      return `PUC: ${pucNo}${exp ? ` • Exp: ${new Date(exp).toLocaleDateString('en-IN')}` : ""}`;
+      return `PUC: ${pucNo}${exp ? ` • Exp: ${new Date(exp).toLocaleDateString("en-IN")}` : ""}`;
     }
     return "";
   };
@@ -2222,23 +2316,39 @@ const BikeHistory = ({ externalSearchTerm }) => {
                         {item.type === "buy" || item.type === "sell" ? (
                           <div>
                             <div>
-                              Created: {item.createdAt ? new Date(item.createdAt).toLocaleString("en-IN", {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }) : (item.saleDate ? new Date(item.saleDate).toLocaleString("en-IN") : new Date(item.date).toLocaleString("en-IN"))}
+                              Created:{" "}
+                              {item.createdAt
+                                ? new Date(item.createdAt).toLocaleString(
+                                    "en-IN",
+                                    {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    },
+                                  )
+                                : item.saleDate
+                                  ? new Date(item.saleDate).toLocaleString(
+                                      "en-IN",
+                                    )
+                                  : new Date(item.date).toLocaleString("en-IN")}
                             </div>
                             {item.editedAt && (
-                              <div style={{ color: "#64748b", fontSize: "0.9em" }}>
-                                Edited: {new Date(item.editedAt).toLocaleString("en-IN", {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
+                              <div
+                                style={{ color: "#64748b", fontSize: "0.9em" }}
+                              >
+                                Edited:{" "}
+                                {new Date(item.editedAt).toLocaleString(
+                                  "en-IN",
+                                  {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  },
+                                )}
                               </div>
                             )}
                           </div>
