@@ -32,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import pdfService from "../services/pdfService";
 import logo from "../images/company.png";
+import PdfPreview from "./PdfPreview";
 
 const LetterHeadForm = () => {
   const { user, logout } = useContext(AuthContext);
@@ -1119,26 +1120,32 @@ const LetterHeadForm = () => {
                 backgroundColor: "#525659",
               }}
             >
-              <object
-                data={previewPdfUrl}
-                type="application/pdf"
-                style={{
-                  width: "100%",
-                  height: "600px",
-                  border: "none",
-                }}
-                aria-label="Letter Head PDF Preview"
-              >
-                <iframe
-                  src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+              {isMobile ? (
+                <PdfPreview pdfUrl={previewPdfUrl} />
+              ) : (
+                <object
+                  data={previewPdfUrl}
+                  type="application/pdf"
                   style={{
                     width: "100%",
-                    height: "600px",
+                    height: "100%",
                     border: "none",
+                    display: "block",
                   }}
-                  title="Letter Head PDF Preview"
-                />
-              </object>
+                  aria-label="Letter Head PDF Preview"
+                >
+                  <iframe
+                    src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      border: "none",
+                      display: "block",
+                    }}
+                    title="Letter Head PDF Preview"
+                  />
+                </object>
+              )}
             </div>
 
             {}

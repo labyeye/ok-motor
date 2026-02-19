@@ -693,6 +693,20 @@ const InsuranceForm = () => {
           <form onSubmit={handleSave} style={styles.formCard}>
             <div style={styles.grid}>
               <div style={styles.formGroup}>
+                <label style={{ fontWeight: "bold" }}>
+                  Registration Number
+                </label>
+                <input
+                  type="text"
+                  name="regNo"
+                  value={formData.regNo}
+                  onChange={handleChange}
+                  onKeyDown={handleRegNoKeyDown}
+                  style={styles.input}
+                  required
+                />
+              </div>
+              <div style={styles.formGroup}>
                 <label style={styles.label}>Person Name</label>
                 <input
                   type="text"
@@ -755,18 +769,7 @@ const InsuranceForm = () => {
                   style={styles.input}
                 />
               </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Registration Number</label>
-                <input
-                  type="text"
-                  name="regNo"
-                  value={formData.regNo}
-                  onChange={handleChange}
-                  onKeyDown={handleRegNoKeyDown}
-                  style={styles.input}
-                  required
-                />
-              </div>
+
               <div style={styles.formGroup}>
                 <label style={styles.label}>Insurance Policy No</label>
                 <input

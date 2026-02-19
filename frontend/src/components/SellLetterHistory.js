@@ -30,6 +30,7 @@ import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
+import PdfPreview from "./PdfPreview";
 
 const SellLetterHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -4843,28 +4844,32 @@ const SellLetterHistory = () => {
                   backgroundColor: "#525659",
                 }}
               >
-                <object
-                  data={previewPdfUrl}
-                  type="application/pdf"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    border: "none",
-                    display: "block",
-                  }}
-                  aria-label="Sell Letter PDF Preview"
-                >
-                  <iframe
-                    src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                {isMobile ? (
+                  <PdfPreview pdfUrl={previewPdfUrl} />
+                ) : (
+                  <object
+                    data={previewPdfUrl}
+                    type="application/pdf"
                     style={{
                       width: "100%",
                       height: "100%",
                       border: "none",
                       display: "block",
                     }}
-                    title="Sell Letter PDF Preview"
-                  />
-                </object>
+                    aria-label="Sell Letter PDF Preview"
+                  >
+                    <iframe
+                      src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        border: "none",
+                        display: "block",
+                      }}
+                      title="Sell Letter PDF Preview"
+                    />
+                  </object>
+                )}
               </div>
               <div
                 style={{

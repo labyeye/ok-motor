@@ -31,6 +31,7 @@ import pdfService from "../services/pdfService";
 import logo from "../images/company.png";
 import config from "../config/environment";
 import ConfirmModal from "./ConfirmModal";
+import PdfPreview from "./PdfPreview";
 
 const ServiceHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -1580,26 +1581,32 @@ const ServiceHistory = () => {
                 backgroundColor: "#525659",
               }}
             >
-              <object
-                data={previewPdfUrl}
-                type="application/pdf"
-                style={{
-                  width: "100%",
-                  height: "600px",
-                  border: "none",
-                }}
-                aria-label="Service Bill PDF Preview"
-              >
-                <iframe
-                  src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+              {isMobile ? (
+                <PdfPreview pdfUrl={previewPdfUrl} />
+              ) : (
+                <object
+                  data={previewPdfUrl}
+                  type="application/pdf"
                   style={{
                     width: "100%",
-                    height: "600px",
+                    height: "100%",
                     border: "none",
+                    display: "block",
                   }}
-                  title="Service Bill PDF Preview"
-                />
-              </object>
+                  aria-label="Service Bill PDF Preview"
+                >
+                  <iframe
+                    src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      border: "none",
+                      display: "block",
+                    }}
+                    title="Service Bill PDF Preview"
+                  />
+                </object>
+              )}
             </div>
             <div
               style={{

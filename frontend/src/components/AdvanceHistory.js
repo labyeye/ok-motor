@@ -29,6 +29,7 @@ import AuthContext from "../context/AuthContext";
 
 import logo from "../images/company.png";
 import ConfirmModal from "./ConfirmModal";
+import PdfPreview from "./PdfPreview";
 
 const AdvanceHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -966,26 +967,32 @@ const AdvanceHistory = () => {
                 backgroundColor: "#525659",
               }}
             >
-              <object
-                data={previewPdfUrl}
-                type="application/pdf"
-                style={{
-                  width: "100%",
-                  height: "600px",
-                  border: "none",
-                }}
-                aria-label="Advance Bill PDF Preview"
-              >
-                <iframe
-                  src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+              {isMobile ? (
+                <PdfPreview pdfUrl={previewPdfUrl} />
+              ) : (
+                <object
+                  data={previewPdfUrl}
+                  type="application/pdf"
                   style={{
                     width: "100%",
-                    height: "600px",
+                    height: "100%",
                     border: "none",
+                    display: "block",
                   }}
-                  title="Advance Bill PDF Preview"
-                />
-              </object>
+                  aria-label="Advance Bill PDF Preview"
+                >
+                  <iframe
+                    src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      border: "none",
+                      display: "block",
+                    }}
+                    title="Advance Bill PDF Preview"
+                  />
+                </object>
+              )}
             </div>
             <div
               style={{
