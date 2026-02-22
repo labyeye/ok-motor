@@ -41,7 +41,7 @@ const InsuranceForm = () => {
   const [formData, setFormData] = useState({
     personName: "",
     personPhone: "",
-    personEmail: "",
+    personEmail: "na@gmail.com",
     vehicleModel: "",
     brand: "",
     year: "",
@@ -61,7 +61,7 @@ const InsuranceForm = () => {
       setFormData({
         personName: data.personName || "",
         personPhone: data.personPhone || "",
-        personEmail: data.personEmail || data.email || "",
+        personEmail: data.personEmail || data.email || "na@gmail.com",
         vehicleModel: data.vehicleModel || "",
         brand: data.brand || "",
         year: data.year || "",
@@ -126,9 +126,8 @@ const InsuranceForm = () => {
           insData.personName || vehicleData.personName || prev.personName,
         personPhone:
           insData.personPhone || vehicleData.personPhone || prev.personPhone,
-        personEmail:
-          insData.personEmail || vehicleData.personEmail || prev.personEmail,
-
+          personEmail:
+          insData.personEmail || vehicleData.personEmail || prev.personEmail || "na@gmail.com",
         vehicleModel:
           insData.vehicleModel || vehicleData.vehicleModel || prev.vehicleModel,
         brand: insData.brand || vehicleData.brand || prev.brand,
@@ -177,8 +176,13 @@ const InsuranceForm = () => {
         return;
       }
 
+      const dataToSave = {
+        ...formData,
+        personEmail: formData.personEmail?.trim() || "na@gmail.com",
+      };
+
       if (editId) {
-        await axios.put(`${API_BASE_URL}/insurance/${editId}`, formData, {
+        await axios.put(`${API_BASE_URL}/insurance/${editId}`, dataToSave, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -187,7 +191,7 @@ const InsuranceForm = () => {
         alert("Insurance record updated successfully!");
         navigate("/insurance/history");
       } else {
-        await axios.post(`${API_BASE_URL}/insurance`, formData, {
+        await axios.post(`${API_BASE_URL}/insurance`, dataToSave, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -197,7 +201,7 @@ const InsuranceForm = () => {
         setFormData({
           personName: "",
           personPhone: "",
-          personEmail: "",
+          personEmail: "na@gmail.com",
           vehicleModel: "",
           brand: "",
           year: "",

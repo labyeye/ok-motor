@@ -65,18 +65,15 @@ const PUCForm = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, [location.state]);
 
+  const API_BASE_URL = "https://ok-motor-51l3.vercel.app/api";
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleRegNoKeyDown = async (e) => {
-    if (e.key !== "Enter") return;
-    e.preventDefault();
-
-    const reg = formData.regNo?.trim();
+  const fetchVehicleDetails = async (reg) => {
     if (!reg) return;
-
     try {
       setIsFetching(true);
       const token = localStorage.getItem("token");
@@ -149,7 +146,11 @@ const PUCForm = () => {
     }
   };
 
-  const API_BASE_URL = "https://ok-motor-51l3.vercel.app/api";
+  const handleRegNoKeyDown = async (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    await fetchVehicleDetails(formData.regNo?.trim());
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -702,6 +703,11 @@ const PUCForm = () => {
                   value={formData.regNo}
                   onChange={handleChange}
                   onKeyDown={handleRegNoKeyDown}
+                  onBlur={(e) => {
+                    if (e.target.value.trim() !== "") {
+                      fetchVehicleDetails(e.target.value.trim());
+                    }
+                  }}
                   style={styles.input}
                   required
                 />

@@ -2301,6 +2301,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                   <tr>
                     <th style={styles.tableHeader}>Date & Time</th>
                     <th style={styles.tableHeader}>Action</th>
+                    <th style={styles.tableHeader}>KM Reading</th>
                     <th style={styles.tableHeader}>Amount</th>
                     <th style={styles.tableHeader}>Details</th>
                     <th style={styles.tableHeader}>Actions</th>
@@ -2373,6 +2374,26 @@ const BikeHistory = ({ externalSearchTerm }) => {
                           {getActionIcon(item.type)}
                           {getActionLabel(item.type)}
                         </div>
+                      </td>
+                      <td style={styles.tableCell}>
+                        {item.type === "buy" && (
+                          <span style={{ fontWeight: 600, color: "#0f766e" }}>
+                            {item.vehiclekm ? formatKm(item.vehiclekm) : "—"}
+                          </span>
+                        )}
+                        {item.type === "sell" && (
+                          <span style={{ fontWeight: 600, color: "#b45309" }}>
+                            {item.vehiclekm ? formatKm(item.vehiclekm) : "—"}
+                          </span>
+                        )}
+                        {item.type === "service" && (
+                          <span style={{ fontWeight: 600, color: "#1d4ed8" }}>
+                            {item.kmReading ? formatKm(item.kmReading) : "—"}
+                          </span>
+                        )}
+                        {item.type !== "buy" && item.type !== "sell" && item.type !== "service" && (
+                          <span style={{ color: "#94a3b8" }}>—</span>
+                        )}
                       </td>
                       <td style={styles.tableCell}>{getAmount(item)}</td>
                       <td style={styles.tableCell}>{getDetails(item)}</td>

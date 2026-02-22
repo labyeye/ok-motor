@@ -921,96 +921,7 @@ const AdminPage = () => {
       );
     }
   };
-  const RecentTransactions = () => {
-    const renderTransactionList = (transactions) => {
-      if (loading) {
-        return Array(3)
-          .fill()
-          .map((_, index) => (
-            <div key={index} className="transaction-item shimmer">
-              <div className="transaction-info">
-                <p className="transaction-bike">Loading...</p>
-                <p className="transaction-customer">-</p>
-              </div>
-              <div className="transaction-details">
-                <p className="transaction-date">-</p>
-                <p className="transaction-amount">-</p>
-              </div>
-            </div>
-          ));
-      }
-
-      if (error) {
-        return <p className="error-message">{error}</p>;
-      }
-
-      if (!transactions || transactions.length === 0) {
-        return <p className="no-data">No recent transactions</p>;
-      }
-
-      return transactions.map((transaction, index) => (
-        <div key={index} className="transaction-item">
-          <div className="transaction-info">
-            <p className="transaction-bike">{transaction.vehicle || "-"}</p>
-            <p className="transaction-customer">
-              {transaction.name}{" "}
-              {transaction.serviceType ? `(${transaction.serviceType})` : ""}
-            </p>
-          </div>
-          <div className="transaction-details">
-            <p className="transaction-date">{formatDate(transaction.date)}</p>
-            <p className="transaction-amount">
-              {formatCurrency(transaction.amount)}
-            </p>
-          </div>
-        </div>
-      ));
-    };
-
-    return (
-      <div className="transactions-container">
-        <div className="transaction-card">
-          <h3 className="transaction-title">
-            <ShoppingCart size={18} />
-            Recent Purchases
-          </h3>
-          <div className="transaction-list">
-            {renderTransactionList(dashboardData.recentTransactions?.buy)}
-          </div>
-        </div>
-
-        <div className="transaction-card">
-          <h3 className="transaction-title">
-            <TrendingUp size={18} />
-            Recent Sales
-          </h3>
-          <div className="transaction-list">
-            {renderTransactionList(dashboardData.recentTransactions?.sell)}
-          </div>
-        </div>
-
-        <div className="transaction-card">
-          <h3 className="transaction-title">
-            <Wrench size={18} />
-            Recent Services
-          </h3>
-          <div className="transaction-list">
-            {renderTransactionList(dashboardData.recentTransactions?.service)}
-          </div>
-        </div>
-
-        <div className="transaction-card">
-          <h3 className="transaction-title">
-            <FileText size={18} />
-            Recent Advances
-          </h3>
-          <div className="transaction-list">
-            {renderTransactionList(dashboardData.recentTransactions?.advance)}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  
 
   const FreeServicesTable = () => {
     const [serviceFilter, setServiceFilter] = useState("all");
@@ -1076,22 +987,173 @@ const AdminPage = () => {
       return `${n}th`;
     };
 
-    return (
-      <div className="free-services-card">
-        <h3 className="card-title">Free Service Usage (Sold Vehicles)</h3>
+    const fsCardStyle = {
+      background: "#fff",
+      borderRadius: 16,
+      boxShadow: "0 4px 24px rgba(7,25,82,0.08)",
+      padding: "28px 28px 20px",
+      marginBottom: 32,
+    };
+    const fsTitleStyle = {
+      fontSize: "1.15rem",
+      fontWeight: 700,
+      color: "#071952",
+      margin: "0 0 18px 0",
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+    };
+    const fsFilterRowStyle = {
+      display: "flex",
+      gap: 12,
+      alignItems: "center",
+      marginBottom: 18,
+    };
+    const fsSelectStyle = {
+      padding: "7px 32px 7px 12px",
+      borderRadius: 8,
+      border: "1.5px solid #cbd5e1",
+      fontSize: "0.85rem",
+      color: "#1e293b",
+      background: "#f8fafc",
+      cursor: "pointer",
+      outline: "none",
+      appearance: "auto",
+    };
+    const fsLabelStyle = {
+      fontSize: "0.82rem",
+      fontWeight: 600,
+      color: "#64748b",
+      letterSpacing: "0.02em",
+    };
+    const fsTableWrapStyle = {
+      overflowX: "auto",
+      borderRadius: 12,
+      border: "1.5px solid #e2e8f0",
+      boxShadow: "0 1px 4px rgba(7,25,82,0.04)",
+    };
+    const fsThStyle = {
+      padding: "11px 14px",
+      textAlign: "left",
+      background: "#071952",
+      color: "#fff",
+      fontSize: "0.75rem",
+      fontWeight: 700,
+      letterSpacing: "0.04em",
+      whiteSpace: "nowrap",
+      borderBottom: "none",
+    };
+    const fsTdStyle = {
+      padding: "10px 14px",
+      fontSize: "0.8rem",
+      color: "#1e293b",
+      whiteSpace: "nowrap",
+      borderBottom: "1px solid #f1f5f9",
+      verticalAlign: "middle",
+    };
 
-        <div
-          className="free-services-search"
-          style={{ display: "flex", gap: 12, alignItems: "center" }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <label style={{ fontSize: "0.85rem", color: "#475569" }}>
-              Show:
-            </label>
+    const reminderBadge = (nextPending, usedCount) => {
+      if ((usedCount || 0) >= 3)
+        return (
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 4,
+            padding: "3px 10px", borderRadius: 20,
+            background: "#dcfce7", color: "#166534",
+            fontSize: "0.72rem", fontWeight: 700,
+          }}>✓ All done</span>
+        );
+      if (!nextPending)
+        return (
+          <span style={{
+            padding: "3px 10px", borderRadius: 20,
+            background: "#f1f5f9", color: "#64748b",
+            fontSize: "0.72rem", fontWeight: 600,
+          }}>Pending</span>
+        );
+      const days = nextPending.daysUntil;
+      const ord = ordinal(nextPending.idx);
+      if (days < 0)
+        return (
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 4,
+            padding: "3px 10px", borderRadius: 20,
+            background: "#fee2e2", color: "#991b1b",
+            fontSize: "0.72rem", fontWeight: 700,
+          }}>⚠ {ord} overdue {Math.abs(days)}d</span>
+        );
+      if (days === 0)
+        return (
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 4,
+            padding: "3px 10px", borderRadius: 20,
+            background: "#fef9c3", color: "#854d0e",
+            fontSize: "0.72rem", fontWeight: 700,
+          }}>⏰ {ord} due today</span>
+        );
+      if (days <= 7)
+        return (
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 4,
+            padding: "3px 10px", borderRadius: 20,
+            background: "#fef9c3", color: "#854d0e",
+            fontSize: "0.72rem", fontWeight: 700,
+          }}>🔔 {ord} in {days}d</span>
+        );
+      return (
+        <span style={{
+          display: "inline-flex", alignItems: "center", gap: 4,
+          padding: "3px 10px", borderRadius: 20,
+          background: "#dcfce7", color: "#166534",
+          fontSize: "0.72rem", fontWeight: 700,
+        }}>✓ {ord} in {days}d</span>
+      );
+    };
+
+    const usedBadge = (usedCount) => {
+      const used = usedCount || 0;
+      const color = used === 0 ? "#64748b" : used === 3 ? "#166534" : "#854d0e";
+      const bg = used === 0 ? "#f1f5f9" : used === 3 ? "#dcfce7" : "#fef9c3";
+      return (
+        <span style={{
+          display: "inline-block", padding: "2px 10px", borderRadius: 20,
+          background: bg, color, fontSize: "0.78rem", fontWeight: 700,
+        }}>{used}/3</span>
+      );
+    };
+
+    const monthDateCell = (dateStr, idx, usedCount) => {
+      const isUsed = (usedCount || 0) >= idx;
+      return (
+        <span style={{
+          display: "inline-block",
+          padding: "2px 8px",
+          borderRadius: 6,
+          background: isUsed ? "#dcfce7" : "#f1f5f9",
+          color: isUsed ? "#166534" : "#475569",
+          fontSize: "0.75rem",
+          fontWeight: isUsed ? 700 : 400,
+        }}>
+          {dateStr ? formatDate(dateStr) : "—"}
+          {isUsed && " ✓"}
+        </span>
+      );
+    };
+
+    return (
+      <div style={fsCardStyle}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, flexWrap: "wrap", gap: 12 }}>
+          <h3 style={fsTitleStyle}>
+            <span style={{ background: "#EBF4F6", borderRadius: 8, padding: "4px 10px", color: "#088395", fontSize: "1rem" }}>🔧</span>
+            Free Service Usage
+            <span style={{ fontSize: "0.8rem", fontWeight: 500, color: "#64748b" }}>(Sold Vehicles)</span>
+          </h3>
+          <div style={fsFilterRowStyle}>
+            <span style={fsLabelStyle}>Show:</span>
             <select
               value={serviceFilter}
               onChange={(e) => setServiceFilter(e.target.value)}
-              style={{ padding: "6px 8px", borderRadius: 6 }}
+              style={fsSelectStyle}
             >
               <option value="all">All</option>
               <option value="1">1st free service</option>
@@ -1102,28 +1164,23 @@ const AdminPage = () => {
         </div>
 
         {freeServicesLoading ? (
-          <div className="table-loading">Loading free service data...</div>
+          <div style={{ textAlign: "center", padding: "40px 0", color: "#64748b", fontSize: "0.9rem" }}>
+            <div style={{ fontSize: "1.5rem", marginBottom: 8 }}>⏳</div>
+            Loading free service data...
+          </div>
         ) : filtered.length === 0 ? (
-          <div className="no-data">No free service records available</div>
+          <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: "0.9rem" }}>
+            <div style={{ fontSize: "2rem", marginBottom: 8 }}>📋</div>
+            No free service records available
+          </div>
         ) : (
-          <div className="table-wrapper">
-            <table
-              className="free-services-table"
-              style={{ fontSize: "0.75rem" }}
-            >
+          <div style={fsTableWrapStyle}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
               <thead>
                 <tr>
-                  <th>Sell Letter Date</th>
-                  <th>Buyer Name</th>
-                  <th>Buyer Phone</th>
-                  <th>Registration Number</th>
-                  <th>Vehicle Brand</th>
-                  <th>Vehicle Model</th>
-                  <th>Month 1 - Free Service</th>
-                  <th>Month 2 - Free Service</th>
-                  <th>Month 3 - Free Service</th>
-                  <th>Used</th>
-                  <th>Reminder</th>
+                  {["Sell Date","Buyer Name","Phone","Reg. Number","Brand","Model","Month 1","Month 2","Month 3","Used","Reminder"].map((h) => (
+                    <th key={h} style={fsThStyle}>{h}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -1131,11 +1188,12 @@ const AdminPage = () => {
                   .filter((item) => {
                     if (serviceFilter === "all") return true;
                     const sel = Number(serviceFilter);
-                    // show rows whose next pending service index matches the selected filter
                     return item.nextPending && item.nextPending.idx === sel;
                   })
                   .map((item, idx) => {
                     const { row, nextPending } = item;
+                    const isOverdue = nextPending && nextPending.daysUntil < 0;
+                    const isDueSoon = nextPending && nextPending.daysUntil >= 0 && nextPending.daysUntil <= 7;
                     return (
                       <tr
                         key={`${row.registrationNumber}-${idx}`}
@@ -1145,46 +1203,31 @@ const AdminPage = () => {
                             setIsHistoryModalOpen(true);
                           }
                         }}
+                        style={{
+                          cursor: "pointer",
+                          background: isOverdue ? "#fff5f5" : isDueSoon ? "#fffbeb" : idx % 2 === 0 ? "#fff" : "#f8fafc",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = "#EBF4F6"}
+                        onMouseLeave={(e) => e.currentTarget.style.background = isOverdue ? "#fff5f5" : isDueSoon ? "#fffbeb" : idx % 2 === 0 ? "#fff" : "#f8fafc"}
                       >
-                        <td>{formatDate(row.saleDate)}</td>
-                        <td>{row.buyerName || "-"}</td>
-                        <td>{row.buyerPhone || "-"}</td>
-                        <td>{row.registrationNumber || "-"}</td>
-                        <td>{row.vehicleBrand || "-"}</td>
-                        <td>{row.vehicleModel || "-"}</td>
-                        <td>{row.month1 ? formatDate(row.month1) : "-"}</td>
-                        <td>{row.month2 ? formatDate(row.month2) : "-"}</td>
-                        <td>{row.month3 ? formatDate(row.month3) : "-"}</td>
-                        <td>{(row.usedCount || 0) + "/3"}</td>
-                        <td>
-                          {(() => {
-                            if ((row.usedCount || 0) >= 3)
-                              return <span>All free services done</span>;
-                            if (!nextPending) return <span>Pending</span>;
-
-                            const days = nextPending.daysUntil;
-                            const ord = ordinal(nextPending.idx);
-                            if (days < 0) {
-                              return (
-                                <span style={{ color: "#ef4444" }}>
-                                  {ord} service overdue by {Math.abs(days)}d
-                                </span>
-                              );
-                            }
-                            if (days === 0) {
-                              return (
-                                <span style={{ color: "#f59e0b" }}>
-                                  {ord} service due today
-                                </span>
-                              );
-                            }
-                            return (
-                              <span style={{ color: "#10b981" }}>
-                                {ord} service due in {days}d
-                              </span>
-                            );
-                          })()}
+                        <td style={fsTdStyle}>{formatDate(row.saleDate) || "—"}</td>
+                        <td style={{ ...fsTdStyle, fontWeight: 600, color: "#0f172a" }}>{row.buyerName || "—"}</td>
+                        <td style={{ ...fsTdStyle, color: "#475569" }}>{row.buyerPhone || "—"}</td>
+                        <td style={fsTdStyle}>
+                          <span style={{
+                            background: "#EBF4F6", color: "#088395",
+                            padding: "2px 8px", borderRadius: 6,
+                            fontWeight: 700, fontSize: "0.75rem",
+                          }}>{row.registrationNumber || "—"}</span>
                         </td>
+                        <td style={fsTdStyle}>{row.vehicleBrand || "—"}</td>
+                        <td style={fsTdStyle}>{row.vehicleModel || "—"}</td>
+                        <td style={fsTdStyle}>{monthDateCell(row.month1, 1, row.usedCount)}</td>
+                        <td style={fsTdStyle}>{monthDateCell(row.month2, 2, row.usedCount)}</td>
+                        <td style={fsTdStyle}>{monthDateCell(row.month3, 3, row.usedCount)}</td>
+                        <td style={fsTdStyle}>{usedBadge(row.usedCount)}</td>
+                        <td style={fsTdStyle}>{reminderBadge(nextPending, row.usedCount)}</td>
                       </tr>
                     );
                   })}
@@ -1308,130 +1351,113 @@ const AdminPage = () => {
       })
       .sort((a, b) => a.daysUntil - b.daysUntil);
 
-    return (
-      <div className="free-services-card">
-        <h3 className="card-title">PUC Expiry Reminders</h3>
+    const daysBadge = (daysUntil) => {
+      if (daysUntil < 0) return (
+        <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 10px", borderRadius:20, background:"#fee2e2", color:"#991b1b", fontSize:"0.72rem", fontWeight:700 }}>
+          ⚠ {Math.abs(daysUntil)}d overdue
+        </span>
+      );
+      if (daysUntil === 0) return (
+        <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 10px", borderRadius:20, background:"#fef9c3", color:"#854d0e", fontSize:"0.72rem", fontWeight:700 }}>
+          ⏰ Due today
+        </span>
+      );
+      if (daysUntil <= 7) return (
+        <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 10px", borderRadius:20, background:"#fef9c3", color:"#854d0e", fontSize:"0.72rem", fontWeight:700 }}>
+          🔔 {daysUntil}d left
+        </span>
+      );
+      return (
+        <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 10px", borderRadius:20, background:"#dcfce7", color:"#166534", fontSize:"0.72rem", fontWeight:700 }}>
+          ✓ {daysUntil}d left
+        </span>
+      );
+    };
 
-        <div className="free-services-search">
-          <div className="history-search-box" style={{ width: 320 }}>
-            <Search size={18} className="history-search-icon" />
+    const tThStyle = { padding:"11px 14px", textAlign:"left", background:"#071952", color:"#fff", fontSize:"0.75rem", fontWeight:700, letterSpacing:"0.04em", whiteSpace:"nowrap" };
+    const tTdStyle = { padding:"10px 14px", fontSize:"0.8rem", color:"#1e293b", whiteSpace:"nowrap", borderBottom:"1px solid #f1f5f9", verticalAlign:"middle" };
+
+    return (
+      <div style={{ background:"#fff", borderRadius:16, boxShadow:"0 4px 24px rgba(7,25,82,0.08)", padding:"28px 28px 20px", marginBottom:32 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18, flexWrap:"wrap", gap:12 }}>
+          <h3 style={{ fontSize:"1.15rem", fontWeight:700, color:"#071952", margin:0, display:"flex", alignItems:"center", gap:10 }}>
+            <span style={{ background:"#EBF4F6", borderRadius:8, padding:"4px 10px", color:"#088395", fontSize:"1rem" }}>📋</span>
+            PUC Expiry Reminders
+          </h3>
+          <div style={{ position:"relative" }}>
+            <Search size={15} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:"#94a3b8" }} />
             <input
               type="text"
-              placeholder="Search reg. no, vehicle or name..."
+              placeholder="Search reg, vehicle or name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="history-search-input"
+              style={{ paddingLeft:32, paddingRight:12, paddingTop:8, paddingBottom:8, border:"1.5px solid #cbd5e1", borderRadius:8, fontSize:"0.82rem", outline:"none", width:260, background:"#f8fafc" }}
             />
           </div>
         </div>
 
         {loadingItems ? (
-          <div className="table-loading">Loading PUC reminders...</div>
+          <div style={{ textAlign:"center", padding:"40px 0", color:"#64748b", fontSize:"0.9rem" }}>
+            <div style={{ fontSize:"1.5rem", marginBottom:8 }}>⏳</div>Loading PUC reminders...
+          </div>
         ) : processed.length === 0 ? (
-          <div className="no-data">No PUC expiries within 7 days</div>
+          <div style={{ textAlign:"center", padding:"40px 0", color:"#94a3b8", fontSize:"0.9rem" }}>
+            <div style={{ fontSize:"2rem", marginBottom:8 }}>✅</div>No PUC expiries to show
+          </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="free-services-table">
-              <thead>
-                <tr>
-                  <th>Registration</th>
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Vehicle</th>
-                  <th>PUC Expiry</th>
-                  <th>Days Left</th>
-                  <th>Source</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(showAllPuc ? processed : processed.slice(0, 10)).map(
-                  (it, idx) => {
+          <>
+            <div style={{ overflowX:"auto", borderRadius:12, border:"1.5px solid #e2e8f0", boxShadow:"0 1px 4px rgba(7,25,82,0.04)" }}>
+              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:"0.8rem" }}>
+                <thead>
+                  <tr>
+                    {["Registration","Name","Phone","Vehicle","PUC Expiry","Days Left","Source"].map(h => (
+                      <th key={h} style={tThStyle}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(showAllPuc ? processed : processed.slice(0, 10)).map((it, idx) => {
                     const { row, expiry, daysUntil } = it;
+                    const isOverdue = daysUntil < 0;
+                    const isDueSoon = daysUntil >= 0 && daysUntil <= 7;
                     return (
                       <tr
                         key={`${row._id}-${idx}`}
-                        onClick={() => {
-                          if (row.displayReg) {
-                            setHistoryQuery(row.displayReg);
-                            setIsHistoryModalOpen(true);
-                          }
-                        }}
+                        onClick={() => { if (row.displayReg) { setHistoryQuery(row.displayReg); setIsHistoryModalOpen(true); } }}
+                        style={{ cursor:"pointer", background: isOverdue ? "#fff5f5" : isDueSoon ? "#fffbeb" : idx % 2 === 0 ? "#fff" : "#f8fafc", transition:"background 0.15s" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#EBF4F6"}
+                        onMouseLeave={e => e.currentTarget.style.background = isOverdue ? "#fff5f5" : isDueSoon ? "#fffbeb" : idx % 2 === 0 ? "#fff" : "#f8fafc"}
                       >
-                        <td>{row.displayReg || "-"}</td>
-                        <td>{row.displayName || "-"}</td>
-                        <td>{row.displayPhone || "-"}</td>
-                        <td>{row.displayVehicle || "-"}</td>
-                        <td>{expiry ? formatDate(expiry) : "-"}</td>
-                        <td>
-                          {daysUntil < 0 ? (
-                            <span style={{ color: "#ef4444" }}>
-                              {Math.abs(daysUntil)}d overdue
-                            </span>
-                          ) : daysUntil === 0 ? (
-                            <span style={{ color: "#f59e0b" }}>Due today</span>
-                          ) : (
-                            <span style={{ color: "#10b981" }}>
-                              {daysUntil}d
-                            </span>
-                          )}
+                        <td style={tTdStyle}>
+                          <span style={{ background:"#EBF4F6", color:"#088395", padding:"2px 8px", borderRadius:6, fontWeight:700, fontSize:"0.75rem" }}>{row.displayReg || "—"}</span>
                         </td>
-                        <td>
-                          {row.type === "sell_letter" ? (
-                            <span
-                              style={{
-                                fontSize: "0.75rem",
-                                padding: "2px 6px",
-                                backgroundColor: "#e0f2fe",
-                                color: "#0284c7",
-                                borderRadius: "4px",
-                              }}
-                            >
-                              Sold Vehicle
-                            </span>
-                          ) : (
-                            <span
-                              style={{
-                                fontSize: "0.75rem",
-                                padding: "2px 6px",
-                                backgroundColor: "#f3e8ff",
-                                color: "#7e22ce",
-                                borderRadius: "4px",
-                              }}
-                            >
-                              PUC Only
-                            </span>
-                          )}
+                        <td style={{ ...tTdStyle, fontWeight:600, color:"#0f172a" }}>{row.displayName || "—"}</td>
+                        <td style={{ ...tTdStyle, color:"#475569" }}>{row.displayPhone || "—"}</td>
+                        <td style={tTdStyle}>{row.displayVehicle || "—"}</td>
+                        <td style={tTdStyle}>{expiry ? formatDate(expiry) : "—"}</td>
+                        <td style={tTdStyle}>{daysBadge(daysUntil)}</td>
+                        <td style={tTdStyle}>
+                          {row.type === "sell_letter"
+                            ? <span style={{ fontSize:"0.72rem", padding:"3px 8px", background:"#e0f2fe", color:"#0284c7", borderRadius:20, fontWeight:600 }}>Sold Vehicle</span>
+                            : <span style={{ fontSize:"0.72rem", padding:"3px 8px", background:"#f3e8ff", color:"#7e22ce", borderRadius:20, fontWeight:600 }}>PUC Only</span>}
                         </td>
                       </tr>
                     );
-                  },
-                )}
-              </tbody>
-            </table>
+                  })}
+                </tbody>
+              </table>
+            </div>
             {processed.length > 10 && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  marginTop: 8,
-                }}
-              >
+              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:12 }}>
                 <button
-                  onClick={() => setShowAllPuc((s) => !s)}
-                  style={{
-                    padding: "8px 12px",
-                    backgroundColor: "#088395",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 6,
-                    cursor: "pointer",
-                  }}
+                  onClick={() => setShowAllPuc(s => !s)}
+                  style={{ padding:"8px 18px", background:"#071952", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontSize:"0.82rem", fontWeight:600 }}
                 >
-                  {showAllPuc ? "Show Less" : "View All Table"}
+                  {showAllPuc ? "Show Less ▲" : `View All (${processed.length}) ▼`}
                 </button>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     );
@@ -1552,128 +1578,96 @@ const AdminPage = () => {
       })
       .sort((a, b) => a.daysUntil - b.daysUntil);
 
-    return (
-      <div className="free-services-card">
-        <h3 className="card-title">Insurance Expiry Reminders</h3>
+    const iThStyle = { padding:"11px 14px", textAlign:"left", background:"#071952", color:"#fff", fontSize:"0.75rem", fontWeight:700, letterSpacing:"0.04em", whiteSpace:"nowrap" };
+    const iTdStyle = { padding:"10px 14px", fontSize:"0.8rem", color:"#1e293b", whiteSpace:"nowrap", borderBottom:"1px solid #f1f5f9", verticalAlign:"middle" };
+    const iDaysBadge = (daysUntil) => {
+      if (daysUntil < 0) return <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 10px", borderRadius:20, background:"#fee2e2", color:"#991b1b", fontSize:"0.72rem", fontWeight:700 }}>⚠ {Math.abs(daysUntil)}d overdue</span>;
+      if (daysUntil === 0) return <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 10px", borderRadius:20, background:"#fef9c3", color:"#854d0e", fontSize:"0.72rem", fontWeight:700 }}>⏰ Due today</span>;
+      if (daysUntil <= 30) return <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 10px", borderRadius:20, background:"#fef9c3", color:"#854d0e", fontSize:"0.72rem", fontWeight:700 }}>🔔 {daysUntil}d left</span>;
+      return <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 10px", borderRadius:20, background:"#dcfce7", color:"#166534", fontSize:"0.72rem", fontWeight:700 }}>✓ {daysUntil}d left</span>;
+    };
 
-        <div className="free-services-search">
-          <div className="history-search-box" style={{ width: 320 }}>
-            <Search size={18} className="history-search-icon" />
+    return (
+      <div style={{ background:"#fff", borderRadius:16, boxShadow:"0 4px 24px rgba(7,25,82,0.08)", padding:"28px 28px 20px", marginBottom:32 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18, flexWrap:"wrap", gap:12 }}>
+          <h3 style={{ fontSize:"1.15rem", fontWeight:700, color:"#071952", margin:0, display:"flex", alignItems:"center", gap:10 }}>
+            <span style={{ background:"#EBF4F6", borderRadius:8, padding:"4px 10px", color:"#088395", fontSize:"1rem" }}>🛡️</span>
+            Insurance Expiry Reminders
+          </h3>
+          <div style={{ position:"relative" }}>
+            <Search size={15} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:"#94a3b8" }} />
             <input
               type="text"
-              placeholder="Search reg. no, vehicle or name..."
+              placeholder="Search reg, vehicle or name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="history-search-input"
+              style={{ paddingLeft:32, paddingRight:12, paddingTop:8, paddingBottom:8, border:"1.5px solid #cbd5e1", borderRadius:8, fontSize:"0.82rem", outline:"none", width:260, background:"#f8fafc" }}
             />
           </div>
         </div>
 
         {loadingItems ? (
-          <div className="table-loading">Loading insurance reminders...</div>
+          <div style={{ textAlign:"center", padding:"40px 0", color:"#64748b", fontSize:"0.9rem" }}>
+            <div style={{ fontSize:"1.5rem", marginBottom:8 }}>⏳</div>Loading insurance reminders...
+          </div>
         ) : processed.length === 0 ? (
-          <div className="no-data">No insurance expiries within 7 days</div>
+          <div style={{ textAlign:"center", padding:"40px 0", color:"#94a3b8", fontSize:"0.9rem" }}>
+            <div style={{ fontSize:"2rem", marginBottom:8 }}>✅</div>No insurance expiries to show
+          </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="free-services-table">
-              <thead>
-                <tr>
-                  <th>Registration</th>
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Vehicle</th>
-                  <th>Insurance Expiry</th>
-                  <th>Days Left</th>
-                  <th>Insurance Company</th>
-                  <th>Source</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(showAllInsurance ? processed : processed.slice(0, 10)).map(
-                  (it, idx) => {
+          <>
+            <div style={{ overflowX:"auto", borderRadius:12, border:"1.5px solid #e2e8f0", boxShadow:"0 1px 4px rgba(7,25,82,0.04)" }}>
+              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:"0.8rem" }}>
+                <thead>
+                  <tr>
+                    {["Registration","Name","Phone","Vehicle","Insurance Expiry","Days Left","Company","Source"].map(h => (
+                      <th key={h} style={iThStyle}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(showAllInsurance ? processed : processed.slice(0, 10)).map((it, idx) => {
                     const { row, expiry, daysUntil } = it;
+                    const isOverdue = daysUntil < 0;
+                    const isDueSoon = daysUntil >= 0 && daysUntil <= 30;
                     return (
-                      <tr key={`${row._id}-${idx}`}>
-                        <td>{row.displayReg || "-"}</td>
-                        <td>{row.displayName || "-"}</td>
-                        <td>{row.displayPhone || "-"}</td>
-                        <td>{row.displayVehicle || "-"}</td>
-                        <td>
-                          {expiry
-                            ? new Date(expiry).toLocaleDateString("en-IN")
-                            : "-"}
+                      <tr
+                        key={`${row._id}-${idx}`}
+                        style={{ cursor:"default", background: isOverdue ? "#fff5f5" : isDueSoon ? "#fffbeb" : idx % 2 === 0 ? "#fff" : "#f8fafc", transition:"background 0.15s" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#EBF4F6"}
+                        onMouseLeave={e => e.currentTarget.style.background = isOverdue ? "#fff5f5" : isDueSoon ? "#fffbeb" : idx % 2 === 0 ? "#fff" : "#f8fafc"}
+                      >
+                        <td style={iTdStyle}>
+                          <span style={{ background:"#EBF4F6", color:"#088395", padding:"2px 8px", borderRadius:6, fontWeight:700, fontSize:"0.75rem" }}>{row.displayReg || "—"}</span>
                         </td>
-                        <td>
-                          {daysUntil < 0 ? (
-                            <span style={{ color: "#ef4444" }}>
-                              {Math.abs(daysUntil)}d overdue
-                            </span>
-                          ) : daysUntil === 0 ? (
-                            <span style={{ color: "#f59e0b" }}>Due today</span>
-                          ) : (
-                            <span style={{ color: "#10b981" }}>
-                              {daysUntil}d
-                            </span>
-                          )}
-                        </td>
-                        <td>{row.displayCompany || "-"}</td>
-                        <td>
-                          {row.type === "sell_letter" ? (
-                            <span
-                              style={{
-                                fontSize: "0.75rem",
-                                padding: "2px 6px",
-                                backgroundColor: "#e0f2fe",
-                                color: "#0284c7",
-                                borderRadius: "4px",
-                              }}
-                            >
-                              Sold Vehicle
-                            </span>
-                          ) : (
-                            <span
-                              style={{
-                                fontSize: "0.75rem",
-                                padding: "2px 6px",
-                                backgroundColor: "#f3e8ff",
-                                color: "#7e22ce",
-                                borderRadius: "4px",
-                              }}
-                            >
-                              Insurance Only
-                            </span>
-                          )}
+                        <td style={{ ...iTdStyle, fontWeight:600, color:"#0f172a" }}>{row.displayName || "—"}</td>
+                        <td style={{ ...iTdStyle, color:"#475569" }}>{row.displayPhone || "—"}</td>
+                        <td style={iTdStyle}>{row.displayVehicle || "—"}</td>
+                        <td style={iTdStyle}>{expiry ? new Date(expiry).toLocaleDateString("en-IN") : "—"}</td>
+                        <td style={iTdStyle}>{iDaysBadge(daysUntil)}</td>
+                        <td style={iTdStyle}>{row.displayCompany || "—"}</td>
+                        <td style={iTdStyle}>
+                          {row.type === "sell_letter"
+                            ? <span style={{ fontSize:"0.72rem", padding:"3px 8px", background:"#e0f2fe", color:"#0284c7", borderRadius:20, fontWeight:600 }}>Sold Vehicle</span>
+                            : <span style={{ fontSize:"0.72rem", padding:"3px 8px", background:"#f3e8ff", color:"#7e22ce", borderRadius:20, fontWeight:600 }}>Insurance Only</span>}
                         </td>
                       </tr>
                     );
-                  },
-                )}
-              </tbody>
-            </table>
+                  })}
+                </tbody>
+              </table>
+            </div>
             {processed.length > 10 && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  marginTop: 8,
-                }}
-              >
+              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:12 }}>
                 <button
-                  onClick={() => setShowAllInsurance((s) => !s)}
-                  style={{
-                    padding: "8px 12px",
-                    backgroundColor: "#088395",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 6,
-                    cursor: "pointer",
-                  }}
+                  onClick={() => setShowAllInsurance(s => !s)}
+                  style={{ padding:"8px 18px", background:"#071952", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontSize:"0.82rem", fontWeight:600 }}
                 >
-                  {showAllInsurance ? "Show Less" : "View All Table"}
+                  {showAllInsurance ? "Show Less ▲" : `View All (${processed.length}) ▼`}
                 </button>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     );
@@ -1682,6 +1676,9 @@ const AdminPage = () => {
   const IncompleteBuyLettersTable = () => {
     const [search, setSearch] = useState("");
     const [showAllIncompleteBuy, setShowAllIncompleteBuy] = useState(false);
+
+    const bThStyle = { padding:"11px 14px", textAlign:"left", background:"#071952", color:"#fff", fontSize:"0.75rem", fontWeight:700, letterSpacing:"0.04em", whiteSpace:"nowrap" };
+    const bTdStyle = { padding:"10px 14px", fontSize:"0.8rem", color:"#1e293b", whiteSpace:"nowrap", borderBottom:"1px solid #f1f5f9", verticalAlign:"middle" };
 
     const filteredLetters = incompleteBuyLetters.filter((letter) => {
       const q = search.toLowerCase().trim();
@@ -1695,113 +1692,83 @@ const AdminPage = () => {
     });
 
     return (
-      <div className="free-services-card">
-        <h3 className="card-title" style={{ color: "#dc2626" }}>
-          Incomplete Buy Letters ({incompleteBuyLetters.length})
-        </h3>
-
-        <div className="free-services-search">
-          <div className="history-search-box" style={{ width: 320 }}>
-            <Search size={18} className="history-search-icon" />
+      <div style={{ background:"#fff", borderRadius:16, boxShadow:"0 4px 24px rgba(7,25,82,0.08)", padding:"28px 28px 20px", marginBottom:32 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18, flexWrap:"wrap", gap:12 }}>
+          <h3 style={{ fontSize:"1.15rem", fontWeight:700, color:"#dc2626", margin:0, display:"flex", alignItems:"center", gap:10 }}>
+            <span style={{ background:"#fee2e2", borderRadius:8, padding:"4px 10px", color:"#dc2626", fontSize:"1rem" }}>📋</span>
+            Incomplete Buy Letters
+            <span style={{ background:"#fee2e2", color:"#dc2626", borderRadius:20, padding:"2px 10px", fontSize:"0.78rem", fontWeight:700 }}>{incompleteBuyLetters.length}</span>
+          </h3>
+          <div style={{ position:"relative" }}>
+            <Search size={15} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:"#94a3b8" }} />
             <input
               type="text"
-              placeholder="Search reg. no, seller, buyer..."
+              placeholder="Search reg, seller or buyer..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="history-search-input"
+              style={{ paddingLeft:32, paddingRight:12, paddingTop:8, paddingBottom:8, border:"1.5px solid #cbd5e1", borderRadius:8, fontSize:"0.82rem", outline:"none", width:260, background:"#f8fafc" }}
             />
           </div>
         </div>
 
         {incompleteLoading ? (
-          <div className="table-loading">Loading incomplete buy letters...</div>
+          <div style={{ textAlign:"center", padding:"40px 0", color:"#64748b", fontSize:"0.9rem" }}>
+            <div style={{ fontSize:"1.5rem", marginBottom:8 }}>⏳</div>Loading incomplete buy letters...
+          </div>
         ) : filteredLetters.length === 0 ? (
-          <div className="no-data">
-            {incompleteBuyLetters.length === 0
-              ? "All buy letters are complete! ✅"
-              : "No matching records found"}
+          <div style={{ textAlign:"center", padding:"40px 0", color:"#94a3b8", fontSize:"0.9rem" }}>
+            <div style={{ fontSize:"2rem", marginBottom:8 }}>{incompleteBuyLetters.length === 0 ? "✅" : "🔍"}</div>
+            {incompleteBuyLetters.length === 0 ? "All buy letters are complete!" : "No matching records found"}
           </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="free-services-table">
-              <thead>
-                <tr>
-                  <th>Registration No</th>
-                  <th>Seller Name</th>
-                  <th>Buyer Name</th>
-                  <th>Vehicle</th>
-                  <th>Created At</th>
-                  <th>Missing Fields</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(showAllIncompleteBuy
-                  ? filteredLetters
-                  : filteredLetters.slice(0, 10)
-                ).map((letter) => (
-                  <tr key={letter._id}>
-                    <td>{letter.registrationNumber || "-"}</td>
-                    <td>{letter.sellerName || "-"}</td>
-                    <td>{letter.buyerName || "-"}</td>
-                    <td>
-                      {`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim() ||
-                        "-"}
-                    </td>
-                    <td>
-                      {letter.saleAmount
-                        ? `₹${new Intl.NumberFormat("en-IN").format(letter.saleAmount)}`
-                        : "-"}
-                    </td>
-                    <td>{formatDate(letter.createdAt)}</td>
-                    <td>
-                      <div style={{ maxWidth: "300px" }}>
-                        {letter.missingFields.map((field, idx) => (
-                          <span
-                            key={idx}
-                            style={{
-                              display: "inline-block",
-                              fontSize: "0.7rem",
-                              padding: "2px 6px",
-                              margin: "2px",
-                              backgroundColor: "#fee2e2",
-                              color: "#dc2626",
-                              borderRadius: "3px",
-                              border: "1px solid #fca5a5",
-                            }}
-                          >
-                            {field}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
+          <>
+            <div style={{ overflowX:"auto", borderRadius:12, border:"1.5px solid #e2e8f0", boxShadow:"0 1px 4px rgba(7,25,82,0.04)" }}>
+              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:"0.8rem" }}>
+                <thead>
+                  <tr>
+                    {["Registration No","Seller Name","Buyer Name","Vehicle","Created At","Missing Fields"].map(h => (
+                      <th key={h} style={bThStyle}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {(showAllIncompleteBuy ? filteredLetters : filteredLetters.slice(0, 10)).map((letter, idx) => (
+                    <tr
+                      key={letter._id}
+                      style={{ background:"#fff5f5", transition:"background 0.15s" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#EBF4F6"}
+                      onMouseLeave={e => e.currentTarget.style.background = "#fff5f5"}
+                    >
+                      <td style={bTdStyle}>
+                        <span style={{ background:"#EBF4F6", color:"#088395", padding:"2px 8px", borderRadius:6, fontWeight:700, fontSize:"0.75rem" }}>{letter.registrationNumber || "—"}</span>
+                      </td>
+                      <td style={{ ...bTdStyle, fontWeight:600, color:"#0f172a" }}>{letter.sellerName || "—"}</td>
+                      <td style={bTdStyle}>{letter.buyerName || "—"}</td>
+                      <td style={bTdStyle}>{`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim() || "—"}</td>
+                      <td style={{ ...bTdStyle, color:"#475569" }}>{formatDate(letter.createdAt)}</td>
+                      <td style={bTdStyle}>
+                        <div style={{ display:"flex", flexWrap:"wrap", gap:4, maxWidth:280 }}>
+                          {(letter.missingFields || []).map((field, i) => (
+                            <span key={i} style={{ display:"inline-flex", alignItems:"center", padding:"2px 8px", background:"#fee2e2", color:"#dc2626", borderRadius:20, fontSize:"0.7rem", fontWeight:600, border:"1px solid #fca5a5" }}>{field}</span>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {filteredLetters.length > 10 && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  marginTop: 8,
-                }}
-              >
+              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:12 }}>
                 <button
-                  onClick={() => setShowAllIncompleteBuy((s) => !s)}
-                  style={{
-                    padding: "8px 12px",
-                    backgroundColor: "#088395",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 6,
-                    cursor: "pointer",
-                  }}
+                  onClick={() => setShowAllIncompleteBuy(s => !s)}
+                  style={{ padding:"8px 18px", background:"#071952", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontSize:"0.82rem", fontWeight:600 }}
                 >
-                  {showAllIncompleteBuy ? "Show Less" : "View All Table"}
+                  {showAllIncompleteBuy ? "Show Less ▲" : `View All (${filteredLetters.length}) ▼`}
                 </button>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     );
@@ -1810,6 +1777,9 @@ const AdminPage = () => {
   const IncompleteSellLettersTable = () => {
     const [search, setSearch] = useState("");
     const [showAllIncompleteSell, setShowAllIncompleteSell] = useState(false);
+
+    const sThStyle = { padding:"11px 14px", textAlign:"left", background:"#071952", color:"#fff", fontSize:"0.75rem", fontWeight:700, letterSpacing:"0.04em", whiteSpace:"nowrap" };
+    const sTdStyle = { padding:"10px 14px", fontSize:"0.8rem", color:"#1e293b", whiteSpace:"nowrap", borderBottom:"1px solid #f1f5f9", verticalAlign:"middle" };
 
     const filteredLetters = incompleteSellLetters.filter((letter) => {
       const q = search.toLowerCase().trim();
@@ -1822,114 +1792,87 @@ const AdminPage = () => {
     });
 
     return (
-      <div className="free-services-card">
-        <h3 className="card-title" style={{ color: "#dc2626" }}>
-          Incomplete Sell Letters ({incompleteSellLetters.length})
-        </h3>
-
-        <div className="free-services-search">
-          <div className="history-search-box" style={{ width: 320 }}>
-            <Search size={18} className="history-search-icon" />
+      <div style={{ background:"#fff", borderRadius:16, boxShadow:"0 4px 24px rgba(7,25,82,0.08)", padding:"28px 28px 20px", marginBottom:32 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18, flexWrap:"wrap", gap:12 }}>
+          <h3 style={{ fontSize:"1.15rem", fontWeight:700, color:"#dc2626", margin:0, display:"flex", alignItems:"center", gap:10 }}>
+            <span style={{ background:"#fee2e2", borderRadius:8, padding:"4px 10px", color:"#dc2626", fontSize:"1rem" }}>📝</span>
+            Incomplete Sell Letters
+            <span style={{ background:"#fee2e2", color:"#dc2626", borderRadius:20, padding:"2px 10px", fontSize:"0.78rem", fontWeight:700 }}>{incompleteSellLetters.length}</span>
+          </h3>
+          <div style={{ position:"relative" }}>
+            <Search size={15} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:"#94a3b8" }} />
             <input
               type="text"
-              placeholder="Search reg. no, buyer, vehicle..."
+              placeholder="Search reg, buyer or vehicle..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="history-search-input"
+              style={{ paddingLeft:32, paddingRight:12, paddingTop:8, paddingBottom:8, border:"1.5px solid #cbd5e1", borderRadius:8, fontSize:"0.82rem", outline:"none", width:260, background:"#f8fafc" }}
             />
           </div>
         </div>
 
         {incompleteLoading ? (
-          <div className="table-loading">
-            Loading incomplete sell letters...
+          <div style={{ textAlign:"center", padding:"40px 0", color:"#64748b", fontSize:"0.9rem" }}>
+            <div style={{ fontSize:"1.5rem", marginBottom:8 }}>⏳</div>Loading incomplete sell letters...
           </div>
         ) : filteredLetters.length === 0 ? (
-          <div className="no-data">
-            {incompleteSellLetters.length === 0
-              ? "All sell letters are complete! ✅"
-              : "No matching records found"}
+          <div style={{ textAlign:"center", padding:"40px 0", color:"#94a3b8", fontSize:"0.9rem" }}>
+            <div style={{ fontSize:"2rem", marginBottom:8 }}>{incompleteSellLetters.length === 0 ? "✅" : "🔍"}</div>
+            {incompleteSellLetters.length === 0 ? "All sell letters are complete!" : "No matching records found"}
           </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="free-services-table">
-              <thead>
-                <tr>
-                  <th>Registration No</th>
-                  <th>Buyer Name</th>
-                  <th>Vehicle</th>
-                  <th>Sale Amount</th>
-                  <th>Created At</th>
-                  <th>Missing Fields</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(showAllIncompleteSell
-                  ? filteredLetters
-                  : filteredLetters.slice(0, 10)
-                ).map((letter) => (
-                  <tr key={letter._id}>
-                    <td>{letter.registrationNumber || "-"}</td>
-                    <td>{letter.buyerName || "-"}</td>
-                    <td>
-                      {`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim() ||
-                        "-"}
-                    </td>
-                    <td>
-                      {letter.saleAmount
-                        ? `₹${new Intl.NumberFormat("en-IN").format(letter.saleAmount)}`
-                        : "-"}
-                    </td>
-                    <td>{formatDate(letter.createdAt)}</td>
-                    <td>
-                      <div style={{ maxWidth: "300px" }}>
-                        {letter.missingFields.map((field, idx) => (
-                          <span
-                            key={idx}
-                            style={{
-                              display: "inline-block",
-                              fontSize: "0.7rem",
-                              padding: "2px 6px",
-                              margin: "2px",
-                              backgroundColor: "#fee2e2",
-                              color: "#dc2626",
-                              borderRadius: "3px",
-                              border: "1px solid #fca5a5",
-                            }}
-                          >
-                            {field}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
+          <>
+            <div style={{ overflowX:"auto", borderRadius:12, border:"1.5px solid #e2e8f0", boxShadow:"0 1px 4px rgba(7,25,82,0.04)" }}>
+              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:"0.8rem" }}>
+                <thead>
+                  <tr>
+                    {["Registration No","Buyer Name","Vehicle","Sale Amount","Created At","Missing Fields"].map(h => (
+                      <th key={h} style={sThStyle}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {(showAllIncompleteSell ? filteredLetters : filteredLetters.slice(0, 10)).map((letter, idx) => (
+                    <tr
+                      key={letter._id}
+                      style={{ background:"#fff5f5", transition:"background 0.15s" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#EBF4F6"}
+                      onMouseLeave={e => e.currentTarget.style.background = "#fff5f5"}
+                    >
+                      <td style={sTdStyle}>
+                        <span style={{ background:"#EBF4F6", color:"#088395", padding:"2px 8px", borderRadius:6, fontWeight:700, fontSize:"0.75rem" }}>{letter.registrationNumber || "—"}</span>
+                      </td>
+                      <td style={{ ...sTdStyle, fontWeight:600, color:"#0f172a" }}>{letter.buyerName || "—"}</td>
+                      <td style={sTdStyle}>{`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim() || "—"}</td>
+                      <td style={sTdStyle}>
+                        {letter.saleAmount
+                          ? <span style={{ fontWeight:700, color:"#166534" }}>₹{new Intl.NumberFormat("en-IN").format(letter.saleAmount)}</span>
+                          : <span style={{ color:"#94a3b8" }}>—</span>}
+                      </td>
+                      <td style={{ ...sTdStyle, color:"#475569" }}>{formatDate(letter.createdAt)}</td>
+                      <td style={sTdStyle}>
+                        <div style={{ display:"flex", flexWrap:"wrap", gap:4, maxWidth:280 }}>
+                          {(letter.missingFields || []).map((field, i) => (
+                            <span key={i} style={{ display:"inline-flex", alignItems:"center", padding:"2px 8px", background:"#fee2e2", color:"#dc2626", borderRadius:20, fontSize:"0.7rem", fontWeight:600, border:"1px solid #fca5a5" }}>{field}</span>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {filteredLetters.length > 10 && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  marginTop: 8,
-                }}
-              >
+              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:12 }}>
                 <button
-                  onClick={() => setShowAllIncompleteSell((s) => !s)}
-                  style={{
-                    padding: "8px 12px",
-                    backgroundColor: "#088395",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 6,
-                    cursor: "pointer",
-                  }}
+                  onClick={() => setShowAllIncompleteSell(s => !s)}
+                  style={{ padding:"8px 18px", background:"#071952", color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontSize:"0.82rem", fontWeight:600 }}
                 >
-                  {showAllIncompleteSell ? "Show Less" : "View All Table"}
+                  {showAllIncompleteSell ? "Show Less ▲" : `View All (${filteredLetters.length}) ▼`}
                 </button>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     );
@@ -2066,9 +2009,7 @@ const AdminPage = () => {
               <InsuranceReminderTable />
               <IncompleteBuyLettersTable />
               <IncompleteSellLettersTable />
-              <RecentTransactions />
               <ChartsSection />
-
               {!loading && !error}
             </>
           )}

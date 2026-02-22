@@ -162,14 +162,14 @@ const ServiceHistory = () => {
           const purchaseResponse = await axios.get(
             `${config.API_BASE_URL}/buy-letter`,
           );
-          setPurchaseHistory(
-            purchaseResponse.data.data || purchaseResponse.data,
-          );
+          const purchaseRaw = purchaseResponse.data.data || purchaseResponse.data;
+          setPurchaseHistory(Array.isArray(purchaseRaw) ? purchaseRaw : []);
 
           const sellResponse = await axios.get(
             `https://ok-motor-51l3.vercel.app/api/sell-letters`,
           );
-          setSellHistory(sellResponse.data.data || sellResponse.data);
+          const sellRaw = sellResponse.data.data || sellResponse.data;
+          setSellHistory(Array.isArray(sellRaw) ? sellRaw : []);
         } else {
           console.log(
             "Offline mode - loading service bills from local storage",
