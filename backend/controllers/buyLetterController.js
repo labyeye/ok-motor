@@ -75,6 +75,9 @@ exports.createBuyLetter = [
               insuranceExpiryDate: body.insuranceExpiryDate
                 ? new Date(body.insuranceExpiryDate)
                 : undefined,
+              insuranceExpiry: body.insuranceExpiryDate
+                ? new Date(body.insuranceExpiryDate)
+                : undefined,
               insuranceStatus: body.insuranceStatus,
               user: req.user.id,
             };
@@ -136,6 +139,9 @@ exports.createBuyLetter = [
                 ? new Date(body.pucIssueDate)
                 : undefined,
               pucExpiryDate: body.pucExpiryDate
+                ? new Date(body.pucExpiryDate)
+                : undefined,
+              pucExpiry: body.pucExpiryDate
                 ? new Date(body.pucExpiryDate)
                 : undefined,
               pucStatus: body.pucStatus,

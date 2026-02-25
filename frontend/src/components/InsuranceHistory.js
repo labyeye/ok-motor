@@ -573,9 +573,12 @@ const InsuranceHistory = () => {
                       <td style={styles.td}>{item.insurancePolicyNo}</td>
                       <td style={styles.td}>{item.insuranceCompany}</td>
                       <td style={styles.td}>
-                        {new Date(item.insuranceExpiry).toLocaleDateString(
-                          "en-IN",
-                        )}
+                        {(() => {
+                          const d = item.insuranceExpiry || item.insuranceExpiryDate;
+                          if (!d) return "—";
+                          const parsed = new Date(d);
+                          return isNaN(parsed) ? "—" : parsed.toLocaleDateString("en-IN");
+                        })()}
                       </td>
                       <td style={styles.td}>
                         <div style={{ display: "flex", gap: "8px" }}>

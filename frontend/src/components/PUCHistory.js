@@ -576,7 +576,12 @@ const PUCHistory = () => {
                       <td style={styles.td}>{item.regNo}</td>
                       <td style={styles.td}>{item.pucNumber}</td>
                       <td style={styles.td}>
-                        {new Date(item.pucExpiry).toLocaleDateString("en-IN")}
+                        {(() => {
+                          const d = item.pucExpiry || item.pucExpiryDate;
+                          if (!d) return "—";
+                          const parsed = new Date(d);
+                          return isNaN(parsed) ? "—" : parsed.toLocaleDateString("en-IN");
+                        })()}
                       </td>
                       <td style={styles.td}>
                         <div style={{ display: "flex", gap: "8px" }}>
