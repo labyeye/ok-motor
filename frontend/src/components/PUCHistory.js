@@ -25,6 +25,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
+import logoheader from "../images/okmotor.png";
 
 const PUCHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -242,17 +243,28 @@ const PUCHistory = () => {
       top: 0,
       left: 0,
       right: 0,
-      height: "60px",
-      backgroundColor: "#fff",
-      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-      zIndex: 14,
+      backgroundColor: "#071952",
+      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+      zIndex: 20,
       display: "flex",
+      flexDirection: "row",
       alignItems: "center",
-      padding: "0 16px",
+      justifyContent: "center",
+      padding: "0 1rem",
+    },
+    topBarLogo: {
+      width: "250px",
+    height: "auto",
+    margin: "-40px",
+      padding: 0,
+      display: "block",
     },
     hamburgerMenu: {
       cursor: "pointer",
-      color: "#1e293b",
+      padding: "8px",
+      position: "absolute",
+      left: "1rem",
+      color: "#ffffff",
     },
     nav: {
       padding: "16px 0",
@@ -409,8 +421,9 @@ const PUCHistory = () => {
           style={styles.hamburgerMenu}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
-          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+          {isSidebarOpen ? <X size={35} color="#ffffff" /> : <Menu size={35} color="#ffffff" />}
         </div>
+        <img src={logoheader} alt="logo" style={styles.topBarLogo} />
       </div>
 
       {/* Sidebar */}
@@ -553,60 +566,85 @@ const PUCHistory = () => {
             ) : history.length === 0 ? (
               <p>No PUC records found.</p>
             ) : (
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={styles.th}>Person Name</th>
-                    <th style={styles.th}>Phone</th>
-                    <th style={styles.th}>Vehicle</th>
-                    <th style={styles.th}>Reg No</th>
-                    <th style={styles.th}>PUC Certificate No</th>
-                    <th style={styles.th}>Expiry Date</th>
-                    <th style={styles.th}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((item) => (
-                    <tr key={item._id}>
-                      <td style={styles.td}>{item.personName}</td>
-                      <td style={styles.td}>{item.personPhone}</td>
-                      <td style={styles.td}>
-                        {item.brand} {item.vehicleModel} ({item.year})
-                      </td>
-                      <td style={styles.td}>{item.regNo}</td>
-                      <td style={styles.td}>{item.pucNumber}</td>
-                      <td style={styles.td}>
-                        {(() => {
-                          const d = item.pucExpiry || item.pucExpiryDate;
-                          if (!d) return "—";
-                          const parsed = new Date(d);
-                          return isNaN(parsed) ? "—" : parsed.toLocaleDateString("en-IN");
-                        })()}
-                      </td>
-                      <td style={styles.td}>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          <button
-                            style={{
-                              ...styles.deleteBtn,
-                              backgroundColor: "#e0f2fe",
-                              color: "#0284c7",
-                            }}
-                            onClick={() => handleEdit(item)}
-                          >
-                            <Edit size={16} /> Edit
-                          </button>
-                          <button
-                            style={styles.deleteBtn}
-                            onClick={() => handleDelete(item._id)}
-                          >
-                            <Trash2 size={16} /> Delete
-                          </button>
+              <>
+                {/* Desktop Table */}
+                {!isMobile && (
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.th}>Person Name</th>
+                        <th style={styles.th}>Phone</th>
+                        <th style={styles.th}>Vehicle</th>
+                        <th style={styles.th}>Reg No</th>
+                        <th style={styles.th}>PUC Certificate No</th>
+                        <th style={styles.th}>Expiry Date</th>
+                        <th style={styles.th}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.map((item) => (
+                        <tr key={item._id}>
+                          <td style={styles.td}>{item.personName}</td>
+                          <td style={styles.td}>{item.personPhone}</td>
+                          <td style={styles.td}>{item.brand} {item.vehicleModel} ({item.year})</td>
+                          <td style={styles.td}>{item.regNo}</td>
+                          <td style={styles.td}>{item.pucNumber}</td>
+                          <td style={styles.td}>
+                            {(() => {
+                              const d = item.pucExpiry || item.pucExpiryDate;
+                              if (!d) return "—";
+                              const parsed = new Date(d);
+                              return isNaN(parsed) ? "—" : parsed.toLocaleDateString("en-IN");
+                            })()}
+                          </td>
+                          <td style={styles.td}>
+                            <div style={{ display: "flex", gap: "8px" }}>
+                              <button style={{ ...styles.deleteBtn, backgroundColor: "#e0f2fe", color: "#0284c7" }} onClick={() => handleEdit(item)}><Edit size={16} /> Edit</button>
+                              <button style={styles.deleteBtn} onClick={() => handleDelete(item._id)}><Trash2 size={16} /> Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                {/* Mobile Cards */}
+                {isMobile && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {history.map((item) => {
+                      const expiry = item.pucExpiry || item.pucExpiryDate;
+                      const expiryStr = expiry ? (() => { const p = new Date(expiry); return isNaN(p) ? "—" : p.toLocaleDateString("en-IN"); })() : "—";
+                      return (
+                        <div key={item._id} style={{ backgroundColor: "#fff", borderRadius: "12px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+                          <div style={{ backgroundColor: "#071952", padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ color: "#fff", fontWeight: "700", fontSize: "0.95rem" }}>{item.regNo || "—"}</span>
+                            <span style={{ backgroundColor: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: "20px", padding: "3px 10px", fontSize: "0.72rem", fontWeight: "600" }}>PUC</span>
+                          </div>
+                          <div style={{ padding: "12px 14px" }}>
+                            <p style={{ margin: "0 0 8px 0", fontSize: "0.82rem", color: "#64748b" }}>{item.brand} {item.vehicleModel} {item.year ? `(${item.year})` : ""}</p>
+                            {[
+                              ["Name", item.personName],
+                              ["Phone", item.personPhone],
+                              ["PUC No", item.pucNumber],
+                              ["Expiry", expiryStr],
+                            ].map(([label, value]) => (
+                              <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid #f1f5f9" }}>
+                                <span style={{ fontSize: "0.78rem", color: "#94a3b8", fontWeight: "500" }}>{label}</span>
+                                <span style={{ fontSize: "0.82rem", color: "#1e293b", fontWeight: "600", textAlign: "right", maxWidth: "60%" }}>{value || "—"}</span>
+                              </div>
+                            ))}
+                            <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                              <button onClick={() => handleEdit(item)} style={{ flex: 1, padding: "8px", backgroundColor: "#e0f2fe", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#0284c7", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}><Edit size={14} /> Edit</button>
+                              <button onClick={() => handleDelete(item._id)} style={{ flex: 1, padding: "8px", backgroundColor: "#fee2e2", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#991b1b", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}><Trash2 size={14} /> Delete</button>
+                            </div>
+                          </div>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

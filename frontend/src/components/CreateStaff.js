@@ -15,10 +15,11 @@ import {
   Users,
   FileText,
   Bike,
-  Image,
   LogOut,
   Settings,
   RefreshCw,
+  Shield,
+  ImageIcon,
   Megaphone,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
@@ -140,6 +141,22 @@ const CreateStaff = () => {
       ],
     },
     {
+      name: "Insurance",
+      icon: Shield,
+      submenu: [
+        { name: "Add Insurance", path: "/insurance/create" },
+        { name: "Insurance List", path: "/insurance/history" },
+      ],
+    },
+    {
+      name: "PUC",
+      icon: FileText,
+      submenu: [
+        { name: "Add PUC", path: "/puc/create" },
+        { name: "PUC List", path: "/puc/history" },
+      ],
+    },
+    {
       name: "Updates",
       icon: RefreshCw,
       submenu: [
@@ -178,18 +195,18 @@ const CreateStaff = () => {
     },
     {
       name: "Gallery",
-      icon: Image,
+      icon: ImageIcon,
       path: "/gallery/manage",
-    },
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
     },
     {
       name: "Letter Head",
       icon: FileText,
       path: "/letter-head/create",
+    },
+    {
+      name: "Vehicle History",
+      icon: Bike,
+      path: "/bike-history",
     },
     {
       name: "Settings",

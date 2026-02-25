@@ -30,6 +30,7 @@ import AuthContext from "../context/AuthContext";
 import ConfirmModal from "./ConfirmModal";
 
 import logo from "../images/company.png";
+import logoheader from "../images/okmotor.png";
 
 const VehicleHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -233,6 +234,34 @@ const VehicleHistory = () => {
       backgroundColor: "#EBF4F6",
       fontFamily: "'Inter', sans-serif",
     },
+    topBar: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: "#071952",
+      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+      zIndex: 20,
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "0 1rem",
+    },
+    topBarLogo: {
+      width: "250px",
+    height: "auto",
+    margin: "-40px",
+      padding: 0,
+      display: "block",
+    },
+    hamburgerMenu: {
+      cursor: "pointer",
+      padding: "8px",
+      position: "absolute",
+      left: "1rem",
+      color: "#ffffff",
+    },
     sidebar: {
       width: "280px",
       backgroundColor: "#071952",
@@ -245,6 +274,7 @@ const VehicleHistory = () => {
       flexDirection: "column",
       boxSizing: "border-box",
       overflow: "hidden",
+      transition: "transform 0.3s ease",
     },
     sidebarHeader: {
       padding: "24px",
@@ -535,18 +565,16 @@ const VehicleHistory = () => {
       <div
         style={{
           ...styles.topBar,
-          display: isMobile && !isSidebarOpen ? "block" : "none",
+          display: isMobile && !isSidebarOpen ? "flex" : "none",
         }}
       >
         <div
-          style={{
-            ...styles.hamburgerMenu,
-            display: isMobile && !isSidebarOpen ? "block" : "none",
-          }}
+          style={styles.hamburgerMenu}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
-          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+          {isSidebarOpen ? <X size={35} color="#ffffff" /> : <Menu size={35} color="#ffffff" />}
         </div>
+        <img src={logoheader} alt="logo" style={styles.topBarLogo} />
       </div>
 
       {isSidebarOpen && isMobile && (

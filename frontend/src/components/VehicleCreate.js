@@ -14,18 +14,20 @@ import {
   Bike,
   Car,
   Upload,
-  Image,
   X,
   Menu,
   Save,
   User,
   RefreshCw,
   Megaphone,
+  Shield,
+  ImageIcon
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
+import logoheader from "../images/okmotor.png";
 
 const VehicleCreate = () => {
   const { user, logout } = useContext(AuthContext);
@@ -166,6 +168,22 @@ const VehicleCreate = () => {
       ],
     },
     {
+      name: "Insurance",
+      icon: Shield,
+      submenu: [
+        { name: "Add Insurance", path: "/insurance/create" },
+        { name: "Insurance List", path: "/insurance/history" },
+      ],
+    },
+    {
+      name: "PUC",
+      icon: FileText,
+      submenu: [
+        { name: "Add PUC", path: "/puc/create" },
+        { name: "PUC List", path: "/puc/history" },
+      ],
+    },
+    {
       name: "Updates",
       icon: RefreshCw,
       submenu: [
@@ -204,18 +222,18 @@ const VehicleCreate = () => {
     },
     {
       name: "Gallery",
-      icon: Image,
+      icon: ImageIcon,
       path: "/gallery/manage",
-    },
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
     },
     {
       name: "Letter Head",
       icon: FileText,
       path: "/letter-head/create",
+    },
+    {
+      name: "Vehicle History",
+      icon: Bike,
+      path: "/bike-history",
     },
     {
       name: "Settings",
@@ -407,6 +425,7 @@ const VehicleCreate = () => {
       flexDirection: "column",
       boxSizing: "border-box",
       overflow: "hidden",
+      transition: "transform 0.3s ease",
     },
     sidebarHeader: {
       padding: "24px",
@@ -643,16 +662,28 @@ const VehicleCreate = () => {
       top: 0,
       left: 0,
       right: 0,
-      padding: "1rem",
-      background: "#ffffff",
-      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+      backgroundColor: "#071952",
+      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
       zIndex: 20,
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "0 1rem",
+    },
+    topBarLogo: {
+      width: "250px",
+    height: "auto",
+    margin: "-40px",
+      padding: 0,
+      display: "block",
     },
     hamburgerMenu: {
       cursor: "pointer",
       padding: "8px",
-      borderRadius: "4px",
-      transition: "background-color 0.2s",
+      position: "absolute",
+      left: "1rem",
+      color: "#ffffff",
     },
     sidebarOverlay: {
       position: "fixed",
@@ -675,18 +706,16 @@ const VehicleCreate = () => {
       <div
         style={{
           ...styles.topBar,
-          display: isMobile && !isSidebarOpen ? "block" : "none",
+          display: isMobile && !isSidebarOpen ? "flex" : "none",
         }}
       >
         <div
-          style={{
-            ...styles.hamburgerMenu,
-            display: isMobile && !isSidebarOpen ? "block" : "none",
-          }}
+          style={styles.hamburgerMenu}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
-          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+          {isSidebarOpen ? <X size={35} color="#ffffff" /> : <Menu size={35} color="#ffffff" />}
         </div>
+        <img src={logoheader} alt="logo" style={styles.topBarLogo} />
       </div>
 
       {isSidebarOpen && isMobile && (

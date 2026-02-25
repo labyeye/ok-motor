@@ -11,7 +11,6 @@ import {
   ChevronDown,
   ChevronRight,
   FileText,
-  Image,
   Upload,
   Trash2,
   Eye,
@@ -23,6 +22,9 @@ import {
   ShipWheel,
   Megaphone,
   RefreshCw,
+
+  Shield,
+  ImageIcon
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 
@@ -174,6 +176,22 @@ const GalleryManagement = () => {
       ],
     },
     {
+      name: "Insurance",
+      icon: Shield,
+      submenu: [
+        { name: "Add Insurance", path: "/insurance/create" },
+        { name: "Insurance List", path: "/insurance/history" },
+      ],
+    },
+    {
+      name: "PUC",
+      icon: FileText,
+      submenu: [
+        { name: "Add PUC", path: "/puc/create" },
+        { name: "PUC List", path: "/puc/history" },
+      ],
+    },
+    {
       name: "Updates",
       icon: RefreshCw,
       submenu: [
@@ -212,18 +230,18 @@ const GalleryManagement = () => {
     },
     {
       name: "Gallery",
-      icon: Image,
+      icon: ImageIcon,
       path: "/gallery/manage",
-    },
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
     },
     {
       name: "Letter Head",
       icon: FileText,
       path: "/letter-head/create",
+    },
+    {
+      name: "Vehicle History",
+      icon: Bike,
+      path: "/bike-history",
     },
     {
       name: "Settings",

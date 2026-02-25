@@ -15,9 +15,12 @@ import {
   Settings,
   ShipWheel,
   Megaphone,
+  Menu,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "../images/company.png";
+import logoheader from "../images/okmotor.png";
 
 import AuthContext from "../context/AuthContext";
 
@@ -26,6 +29,14 @@ const StaffPage = () => {
 
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [expandedMenus, setExpandedMenus] = useState({});
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const [dashboardData, setDashboardData] = useState({
     totalBuyLetters: 0,
     totalSellLetters: 0,
@@ -403,9 +414,45 @@ const StaffPage = () => {
   );
 
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, paddingTop: isMobile ? "56px" : "0" }}>
+      {/* Mobile Top Bar */}
+      <div
+        style={{
+          ...styles.topBar,
+          display: isMobile && !isSidebarOpen ? "flex" : "none",
+        }}
+      >
+        <div
+          style={styles.hamburgerMenu}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? <X size={35} color="#ffffff" /> : <Menu size={35} color="#ffffff" />}
+        </div>
+        <img src={logoheader} alt="logo" style={styles.topBarLogo} />
+      </div>
+
+      {/* Sidebar Overlay */}
+      {isSidebarOpen && isMobile && (
+        <div
+          style={styles.sidebarOverlay}
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* Sidebar */}
-      <div style={styles.sidebar}>
+      <div
+        style={{
+          ...styles.sidebar,
+          ...(isMobile
+            ? {
+                transform: isSidebarOpen ? "translateX(0)" : "translateX(-100%)",
+                position: "fixed",
+                zIndex: 15,
+                top: 0,
+              }
+            : {}),
+        }}
+      >
         <div style={styles.sidebarHeader}>
           <img
             src={logo}
@@ -636,6 +683,45 @@ const styles = {
     backgroundColor: "#EBF4F6",
     fontFamily: "Arial, sans-serif",
   },
+  topBar: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#071952",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+    zIndex: 20,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 1rem",
+  },
+  topBarLogo: {
+    width: "250px",
+    height: "auto",
+    margin: "-40px",
+    padding: 0,
+    display: "block",
+  },
+  hamburgerMenu: {
+    cursor: "pointer",
+    padding: "8px",
+    borderRadius: "4px",
+    transition: "background-color 0.2s",
+    position: "absolute",
+    left: "1rem",
+    color: "#ffffff",
+  },
+  sidebarOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0, 0, 0, 0.5)",
+    zIndex: 14,
+  },
   // Sidebar Styles
   sidebar: {
     width: "280px",
@@ -649,6 +735,7 @@ const styles = {
     flexDirection: "column",
     boxSizing: "border-box",
     overflow: "hidden",
+    transition: "transform 0.3s ease",
   },
   sidebarHeader: {
     padding: "24px",

@@ -20,14 +20,16 @@ import {
   X,
   Settings,
   RefreshCw,
-  Image,
   Megaphone,
   Eye,
+  Shield,
+  ImageIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 
 import logo from "../images/company.png";
+import logoheader from "../images/okmotor.png";
 import ConfirmModal from "./ConfirmModal";
 import PdfPreview from "./PdfPreview";
 
@@ -516,6 +518,22 @@ const AdvanceHistory = () => {
       ],
     },
     {
+      name: "Insurance",
+      icon: Shield,
+      submenu: [
+        { name: "Add Insurance", path: "/insurance/create" },
+        { name: "Insurance List", path: "/insurance/history" },
+      ],
+    },
+    {
+      name: "PUC",
+      icon: FileText,
+      submenu: [
+        { name: "Add PUC", path: "/puc/create" },
+        { name: "PUC List", path: "/puc/history" },
+      ],
+    },
+    {
       name: "Updates",
       icon: RefreshCw,
       submenu: [
@@ -554,18 +572,18 @@ const AdvanceHistory = () => {
     },
     {
       name: "Gallery",
-      icon: Image,
+      icon: ImageIcon,
       path: "/gallery/manage",
-    },
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
     },
     {
       name: "Letter Head",
       icon: FileText,
       path: "/letter-head/create",
+    },
+    {
+      name: "Vehicle History",
+      icon: Bike,
+      path: "/bike-history",
     },
     {
       name: "Settings",
@@ -610,18 +628,20 @@ const AdvanceHistory = () => {
       <div
         style={{
           ...styles.topBar,
-          display: isMobile && !isSidebarOpen ? "block" : "none",
+          display: isMobile && !isSidebarOpen ? "flex" : "none",
         }}
       >
         <div
-          style={{
-            ...styles.hamburgerMenu,
-            display: isMobile && !isSidebarOpen ? "block" : "none",
-          }}
+          style={styles.hamburgerMenu}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
-          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+          {isSidebarOpen ? (
+            <X size={35} color="#ffffff" />
+          ) : (
+            <Menu size={35} color="#ffffff" />
+          )}
         </div>
+        <img src={logoheader} alt="logo" style={styles.topBarLogo} />
       </div>
 
       {isSidebarOpen && isMobile && (
@@ -761,90 +781,281 @@ const AdvanceHistory = () => {
             </div>
           ) : (
             <>
-              <div style={styles.tableContainer}>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th style={styles.tableHeader}>Customer</th>
-                      <th style={styles.tableHeader}>Vehicle</th>
-                      <th style={styles.tableHeader}>Reg No.</th>
-                      <th style={styles.tableHeader}>Total Amount</th>
-                      <th style={styles.tableHeader}>Advance Paid</th>
-                      <th style={styles.tableHeader}>Balance Due</th>
-                      <th style={styles.tableHeader}>Date</th>
-                      <th style={styles.tableHeader}>Created By</th>
-                      <th style={styles.tableHeader}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredBills.map((bill) => (
-                      <tr key={bill._id} style={styles.tableRow}>
-                        <td style={styles.tableCell}>{bill.customerName}</td>
-                        <td style={styles.tableCell}>
-                          {bill.vehicleBrand} {bill.vehicleModel}
-                        </td>
-                        <td style={styles.tableCell}>
-                          {bill.registrationNumber}
-                        </td>
-                        <td style={styles.tableCell}>
-                          ₹
-                          {new Intl.NumberFormat("en-IN").format(
-                            bill.grandTotal,
-                          )}
-                        </td>
-                        <td style={styles.tableCell}>
-                          ₹
-                          {new Intl.NumberFormat("en-IN").format(
-                            bill.advancePaid,
-                          )}
-                        </td>
-                        <td style={styles.tableCell}>
-                          ₹
-                          {new Intl.NumberFormat("en-IN").format(
-                            bill.balanceDue,
-                          )}
-                        </td>
-                        <td style={styles.tableCell}>
+              {/* Desktop Table */}
+              {!isMobile && (
+                <div style={styles.tableContainer}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.tableHeader}>Customer</th>
+                        <th style={styles.tableHeader}>Vehicle</th>
+                        <th style={styles.tableHeader}>Reg No.</th>
+                        <th style={styles.tableHeader}>Total Amount</th>
+                        <th style={styles.tableHeader}>Advance Paid</th>
+                        <th style={styles.tableHeader}>Balance Due</th>
+                        <th style={styles.tableHeader}>Date</th>
+                        <th style={styles.tableHeader}>Created By</th>
+                        <th style={styles.tableHeader}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredBills.map((bill) => (
+                        <tr key={bill._id} style={styles.tableRow}>
+                          <td style={styles.tableCell}>{bill.customerName}</td>
+                          <td style={styles.tableCell}>
+                            {bill.vehicleBrand} {bill.vehicleModel}
+                          </td>
+                          <td style={styles.tableCell}>
+                            {bill.registrationNumber}
+                          </td>
+                          <td style={styles.tableCell}>
+                            ₹
+                            {new Intl.NumberFormat("en-IN").format(
+                              bill.grandTotal,
+                            )}
+                          </td>
+                          <td style={styles.tableCell}>
+                            ₹
+                            {new Intl.NumberFormat("en-IN").format(
+                              bill.advancePaid,
+                            )}
+                          </td>
+                          <td style={styles.tableCell}>
+                            ₹
+                            {new Intl.NumberFormat("en-IN").format(
+                              bill.balanceDue,
+                            )}
+                          </td>
+                          <td style={styles.tableCell}>
+                            {formatDate(bill.createdAt)}
+                          </td>
+                          <td style={styles.tableCell}>
+                            {bill.user && bill.user.role === "admin"
+                              ? "admin"
+                              : bill.user && bill.user.name
+                                ? bill.user.name
+                                : ""}
+                          </td>
+                          <td style={styles.tableCell}>
+                            <button
+                              onClick={() => handleViewBill(bill._id)}
+                              style={styles.iconButton}
+                              title="View"
+                            >
+                              <Eye size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDownload(bill._id)}
+                              style={styles.iconButton}
+                              title="Download PDF"
+                            >
+                              <Download size={16} />
+                            </button>
+                            {user?.role === "admin" && (
+                              <button
+                                onClick={() => handleDelete(bill._id)}
+                                style={styles.iconButton}
+                                title="Delete"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Mobile Cards */}
+              {isMobile && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
+                  {filteredBills.map((bill) => (
+                    <div
+                      key={bill._id}
+                      style={{
+                        backgroundColor: "#fff",
+                        borderRadius: "12px",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                        border: "1px solid #e2e8f0",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          backgroundColor: "#071952",
+                          padding: "12px 14px",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: "#fff",
+                            fontWeight: "700",
+                            fontSize: "0.95rem",
+                          }}
+                        >
+                          {bill.registrationNumber || "—"}
+                        </span>
+                        <span
+                          style={{
+                            backgroundColor: "rgba(255,255,255,0.15)",
+                            color: "#fff",
+                            borderRadius: "20px",
+                            padding: "3px 10px",
+                            fontSize: "0.72rem",
+                            fontWeight: "600",
+                          }}
+                        >
                           {formatDate(bill.createdAt)}
-                        </td>
-                        <td style={styles.tableCell}>
-                          {bill.user && bill.user.role === "admin"
-                            ? "admin"
-                            : bill.user && bill.user.name
-                              ? bill.user.name
-                              : ""}
-                        </td>
-                        <td style={styles.tableCell}>
+                        </span>
+                      </div>
+                      <div style={{ padding: "12px 14px" }}>
+                        <p
+                          style={{
+                            margin: "0 0 8px 0",
+                            fontSize: "0.82rem",
+                            color: "#64748b",
+                          }}
+                        >
+                          {bill.vehicleBrand} {bill.vehicleModel}
+                        </p>
+                        {[
+                          ["Customer", bill.customerName],
+                          [
+                            "Total",
+                            `₹${new Intl.NumberFormat("en-IN").format(bill.grandTotal)}`,
+                          ],
+                          [
+                            "Advance",
+                            `₹${new Intl.NumberFormat("en-IN").format(bill.advancePaid)}`,
+                          ],
+                          [
+                            "Balance",
+                            `₹${new Intl.NumberFormat("en-IN").format(bill.balanceDue)}`,
+                          ],
+                          [
+                            "Created By",
+                            bill.user?.role === "admin"
+                              ? "admin"
+                              : bill.user?.name || "",
+                          ],
+                        ].map(([label, value]) => (
+                          <div
+                            key={label}
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              padding: "4px 0",
+                              borderBottom: "1px solid #f1f5f9",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.78rem",
+                                color: "#94a3b8",
+                                fontWeight: "500",
+                              }}
+                            >
+                              {label}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "0.82rem",
+                                color: "#1e293b",
+                                fontWeight: "600",
+                                textAlign: "right",
+                                maxWidth: "60%",
+                              }}
+                            >
+                              {value || "—"}
+                            </span>
+                          </div>
+                        ))}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "8px",
+                            marginTop: "12px",
+                          }}
+                        >
                           <button
                             onClick={() => handleViewBill(bill._id)}
-                            style={styles.iconButton}
-                            title="View"
+                            style={{
+                              flex: 1,
+                              padding: "8px",
+                              backgroundColor: "#e0f2fe",
+                              border: "none",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              fontSize: "0.78rem",
+                              color: "#0284c7",
+                              fontWeight: "500",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "4px",
+                            }}
                           >
-                            <Eye size={16} />
+                            <Eye size={14} /> View
                           </button>
                           <button
                             onClick={() => handleDownload(bill._id)}
-                            style={styles.iconButton}
-                            title="Download PDF"
+                            style={{
+                              flex: 1,
+                              padding: "8px",
+                              backgroundColor: "#f1f5f9",
+                              border: "none",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              fontSize: "0.78rem",
+                              color: "#334155",
+                              fontWeight: "500",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "4px",
+                            }}
                           >
-                            <Download size={16} />
+                            <Download size={14} /> PDF
                           </button>
-
                           {user?.role === "admin" && (
                             <button
                               onClick={() => handleDelete(bill._id)}
-                              style={styles.iconButton}
-                              title="Delete"
+                              style={{
+                                flex: 1,
+                                padding: "8px",
+                                backgroundColor: "#fee2e2",
+                                border: "none",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                fontSize: "0.78rem",
+                                color: "#991b1b",
+                                fontWeight: "500",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px",
+                              }}
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={14} /> Delete
                             </button>
                           )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div style={styles.pagination}>
                 <button
@@ -906,9 +1117,9 @@ const AdvanceHistory = () => {
             style={{
               backgroundColor: "#fff",
               borderRadius: "12px",
-              maxWidth: "900px",
+              maxWidth: "960px",
               width: "100%",
-              maxHeight: "90vh",
+              height: "90vh",
               display: "flex",
               flexDirection: "column",
               boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
@@ -963,8 +1174,9 @@ const AdvanceHistory = () => {
             <div
               style={{
                 flex: 1,
-                overflow: "hidden",
+                overflow: "auto",
                 backgroundColor: "#525659",
+                minHeight: 0,
               }}
             >
               {isMobile ? (
@@ -976,6 +1188,7 @@ const AdvanceHistory = () => {
                   style={{
                     width: "100%",
                     height: "100%",
+                    minHeight: "500px",
                     border: "none",
                     display: "block",
                   }}
@@ -986,6 +1199,7 @@ const AdvanceHistory = () => {
                     style={{
                       width: "100%",
                       height: "100%",
+                      minHeight: "500px",
                       border: "none",
                       display: "block",
                     }}
@@ -1046,16 +1260,28 @@ const styles = {
     top: 0,
     left: 0,
     right: 0,
-    padding: "1rem",
-    background: "#ffffff",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    backgroundColor: "#071952",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
     zIndex: 20,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 1rem",
+  },
+  topBarLogo: {
+    width: "250px",
+    height: "auto",
+    margin: "-40px",
+    padding: 0,
+    display: "block",
   },
   hamburgerMenu: {
     cursor: "pointer",
     padding: "8px",
-    borderRadius: "4px",
-    transition: "background-color 0.2s",
+    position: "absolute",
+    left: "1rem",
+    color: "#ffffff",
   },
   sidebarOverlay: {
     position: "fixed",

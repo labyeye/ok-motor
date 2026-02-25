@@ -147,26 +147,32 @@ const PdfPage = ({ page, viewport }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    if (canvasRef.current && page) {
-      const canvas = canvasRef.current;
-      const context = canvas.getContext("2d");
+    if (!canvasRef.current || !page) return;
 
-      // We might need to handle high DPI displays for crisp text
-      // But standard viewport handling is usually okay for preview
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
 
-      const renderContext = {
-        canvasContext: context,
-        viewport: viewport,
-      };
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
 
-      const renderTask = page.render(renderContext);
+    const renderContext = {
+      canvasContext: context,
+      viewport: viewport,
+    };
 
-      return () => {
-        renderTask.cancel();
-      };
-    }
+    const renderTask = page.render(renderContext);
+
+    renderTask.promise.catch((err) => {
+      // Suppress RenderingCancelledException — it's expected when the
+      // component unmounts or the page changes before rendering finishes.
+      if (err?.name !== "RenderingCancelledException") {
+        console.error("PDF render error:", err);
+      }
+    });
+
+    return () => {
+      renderTask.cancel();
+    };
   }, [page, viewport]);
 
   return (

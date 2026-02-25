@@ -32,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import pdfService from "../services/pdfService";
 import logo from "../images/company.png";
+import logoheader from "../images/okmotor.png";
 import PdfPreview from "./PdfPreview";
 
 const LetterHeadForm = () => {
@@ -253,6 +254,22 @@ const LetterHeadForm = () => {
       ],
     },
     {
+      name: "Insurance",
+      icon: Shield,
+      submenu: [
+        { name: "Add Insurance", path: "/insurance/create" },
+        { name: "Insurance List", path: "/insurance/history" },
+      ],
+    },
+    {
+      name: "PUC",
+      icon: FileText,
+      submenu: [
+        { name: "Add PUC", path: "/puc/create" },
+        { name: "PUC List", path: "/puc/history" },
+      ],
+    },
+    {
       name: "Updates",
       icon: RefreshCw,
       submenu: [
@@ -291,18 +308,18 @@ const LetterHeadForm = () => {
     },
     {
       name: "Gallery",
-      icon: Image,
+      icon: ImageIcon,
       path: "/gallery/manage",
-    },
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
     },
     {
       name: "Letter Head",
       icon: FileText,
       path: "/letter-head/create",
+    },
+    {
+      name: "Vehicle History",
+      icon: Bike,
+      path: "/bike-history",
     },
     {
       name: "Settings",
@@ -434,17 +451,28 @@ const LetterHeadForm = () => {
       top: 0,
       left: 0,
       right: 0,
-      height: "60px",
-      backgroundColor: "#fff",
-      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-      zIndex: 14,
+      backgroundColor: "#071952",
+      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+      zIndex: 20,
       display: "flex",
+      flexDirection: "row",
       alignItems: "center",
-      padding: "0 16px",
+      justifyContent: "center",
+      padding: "0 1rem",
+    },
+    topBarLogo: {
+      width: "250px",
+    height: "auto",
+    margin: "-40px",
+      padding: 0,
+      display: "block",
     },
     hamburgerMenu: {
       cursor: "pointer",
-      color: "#1e293b",
+      padding: "8px",
+      position: "absolute",
+      left: "1rem",
+      color: "#ffffff",
     },
     nav: {
       padding: "16px 0",
@@ -704,8 +732,9 @@ const LetterHeadForm = () => {
           style={styles.hamburgerMenu}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
-          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+          {isSidebarOpen ? <X size={35} color="#ffffff" /> : <Menu size={35} color="#ffffff" />}
         </div>
+        <img src={logoheader} alt="logo" style={styles.topBarLogo} />
       </div>
 
       {}

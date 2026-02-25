@@ -37,7 +37,7 @@ import logo1 from "../images/dash.png";
 import AuthContext from "../context/AuthContext";
 import axios from "axios";
 import BikeHistory from "../components/BikeHistory";
-
+import logoheader from "../images/okmotor.png";
 // Register ChartJS components
 ChartJS.register(
   CategoryScale,
@@ -855,7 +855,7 @@ const AdminPage = () => {
       </h3>
       <div
         className="cards-grid"
-        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))" }}
       >
         <div className="card" style={{ backgroundColor: "#ef4444" }}>
           <div className="card-content">
@@ -2933,6 +2933,7 @@ const AdminPage = () => {
         >
           {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
         </div>
+        <img src={logoheader} alt="logo" className="top-bar-logo" />
       </div>
 
       {/* Overlay for Mobile */}
@@ -3089,10 +3090,20 @@ const AdminPage = () => {
 
       <style>{`
       .top-bar{
-        padding: 1rem;
+        padding: 0.5rem 1rem;
         background: #ffffff;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
       }
+        .top-bar-logo{
+          display:none;
+          margin: 0;
+          padding: 0;
+          line-height: 0;
+        }
         .admin-container {
           display: flex;
           min-height: 100vh;
@@ -3865,7 +3876,29 @@ const AdminPage = () => {
           }
 
           .top-bar {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            background-color: #071952;
+            padding: 0 1rem;
+            position: relative;
+          }
+
+          .top-bar .hamburger-menu {
+            color: #ffffff;
+            position: absolute;
+            left: 1rem;
+          }
+
+          .top-bar-logo {
             display: block;
+            width: 250px;
+            height: auto;
+            margin: -40px;
+            padding: 0;
+            line-height: 0;
           }
 
           .sidebar-overlay {
@@ -3910,7 +3943,34 @@ const AdminPage = () => {
 
         @media (max-width: 480px) {
           .cards-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 1fr;
+          }
+          .card-content {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 0.4rem;
+          }
+
+          .card-icon {
+            order: 1;
+          }
+
+          .card-content > div:first-child {
+            order: 2;
+          }
+
+          .card-label {
+            font-size: 0.75rem;
+          }
+
+          .card-value {
+            font-size: 1.25rem;
+          }
+
+          .card-value.currency {
+            font-size: 1.1rem;
           }
 
           .revenue-grid {
@@ -3930,8 +3990,8 @@ const AdminPage = () => {
           }
 
           .banner-logo {
-            height: 180px;
-            width: 240px;
+            height: 200px;
+            width: 360px;
           }
         }
 

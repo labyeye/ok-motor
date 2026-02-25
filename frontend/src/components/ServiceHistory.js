@@ -21,7 +21,8 @@ import {
   Settings,
   RefreshCw,
   Megaphone,
-  Image,
+  Shield,
+  ImageIcon,
   Eye,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +33,7 @@ import logo from "../images/company.png";
 import config from "../config/environment";
 import ConfirmModal from "./ConfirmModal";
 import PdfPreview from "./PdfPreview";
+import logoheader from "../images/okmotor.png";
 
 const ServiceHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -39,13 +41,12 @@ const ServiceHistory = () => {
   const [activeMenu, setActiveMenu] = useState("Service History");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [serviceBills, setServiceBills] = useState([]);
-  const [purchaseHistory, setPurchaseHistory] = useState([]);
-  const [sellHistory, setSellHistory] = useState([]);
+  const [, setPurchaseHistory] = useState([]);
+  const [, setSellHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [showVehicleHistory, setShowVehicleHistory] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -281,35 +282,19 @@ const ServiceHistory = () => {
   }, []);
 
   const handleSearch = (e) => {
-    const term = e.target.value;
-    setSearchTerm(term);
-
-    if (term.length >= 3) {
-      setShowVehicleHistory(true);
-    } else {
-      setShowVehicleHistory(false);
-    }
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
   };
 
-  const getfilteredData = () => {
-    if (!searchTerm) return { purchase: [], sell: [], service: [] };
-
-    const lowerSearchTerm = searchTerm.toLowerCase();
-
-    return {
-      purchase: purchaseHistory.filter((item) =>
-        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm),
-      ),
-      sell: sellHistory.filter((item) =>
-        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm),
-      ),
-      service: serviceBills.filter((item) =>
-        item.registrationNumber?.toLowerCase().includes(lowerSearchTerm),
-      ),
-    };
-  };
-
-  const filteredData = getfilteredData();
+  const filteredServiceBills = searchTerm
+    ? serviceBills.filter(
+        (b) =>
+          b.registrationNumber
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          b.customerName?.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+    : serviceBills;
 
   const DownloadProgressModal = ({ progress, onClose }) => {
     return (
@@ -768,6 +753,22 @@ const ServiceHistory = () => {
       ],
     },
     {
+      name: "Insurance",
+      icon: Shield,
+      submenu: [
+        { name: "Add Insurance", path: "/insurance/create" },
+        { name: "Insurance List", path: "/insurance/history" },
+      ],
+    },
+    {
+      name: "PUC",
+      icon: FileText,
+      submenu: [
+        { name: "Add PUC", path: "/puc/create" },
+        { name: "PUC List", path: "/puc/history" },
+      ],
+    },
+    {
       name: "Updates",
       icon: RefreshCw,
       submenu: [
@@ -806,18 +807,18 @@ const ServiceHistory = () => {
     },
     {
       name: "Gallery",
-      icon: Image,
+      icon: ImageIcon,
       path: "/gallery/manage",
-    },
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
     },
     {
       name: "Letter Head",
       icon: FileText,
       path: "/letter-head/create",
+    },
+    {
+      name: "Vehicle History",
+      icon: Bike,
+      path: "/bike-history",
     },
     {
       name: "Settings",
@@ -861,18 +862,16 @@ const ServiceHistory = () => {
       <div
         style={{
           ...styles.topBar,
-          display: isMobile && !isSidebarOpen ? "block" : "none",
+          display: isMobile && !isSidebarOpen ? "flex" : "none",
         }}
       >
         <div
-          style={{
-            ...styles.hamburgerMenu,
-            display: isMobile && !isSidebarOpen ? "block" : "none",
-          }}
+          style={styles.hamburgerMenu}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
-          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+          {isSidebarOpen ? <X size={35} color="#ffffff" /> : <Menu size={35} color="#ffffff" />}
         </div>
+        <img src={logoheader} alt="logo" style={styles.topBarLogo} />
       </div>
 
       {isSidebarOpen && isMobile && (
@@ -995,8 +994,8 @@ const ServiceHistory = () => {
           <div style={styles.header}>
             <h1 style={styles.pageTitle}>Service History</h1>
             <p style={styles.pageSubtitle}>
-              {showVehicleHistory
-                ? `Showing history for vehicle: ${searchTerm}`
+              {searchTerm
+                ? `Showing results for: "${searchTerm}"`
                 : "View and manage all your service bills"}
             </p>
           </div>
@@ -1018,440 +1017,139 @@ const ServiceHistory = () => {
             <div style={styles.loadingContainer}>
               <p>Loading data...</p>
             </div>
-          ) : showVehicleHistory ? (
-            <>
-              {}
-              <div style={{ marginBottom: "32px" }}>
-                <h3
-                  style={{
-                    fontSize: "1.25rem",
-                    fontWeight: "600",
-                    marginBottom: "16px",
-                  }}
-                >
-                  Purchase History
-                </h3>
-                {filteredData.purchase.length > 0 ? (
-                  <div style={styles.tableContainer}>
-                    <table style={styles.table}>
-                      <thead>
-                        <tr>
-                          <th style={styles.tableHeader}>Seller</th>
-                          <th style={styles.tableHeader}>Vehicle</th>
-                          <th style={styles.tableHeader}>Reg No.</th>
-                          <th style={styles.tableHeader}>Purchase Date</th>
-                          <th style={styles.tableHeader}>Amount</th>
-                          <th style={styles.tableHeader}>Created By</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredData.purchase.map((item) => (
-                          <tr key={item._id} style={styles.tableRow}>
-                            <td style={styles.tableCell}>{item.sellerName}</td>
-                            <td style={styles.tableCell}>
-                              {item.vehicleBrand} {item.vehicleModel}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {item.registrationNumber}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {new Date(item.purchaseDate).toLocaleDateString()}
-                            </td>
-                            <td style={styles.tableCell}>
-                              ₹{item.purchaseAmount?.toFixed(2) || 0}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {item.user && item.user.role === "admin"
-                                ? "admin"
-                                : item.user && item.user.name
-                                  ? item.user.name
-                                  : ""}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p style={{ color: "#64748b" }}>No purchase records found</p>
-                )}
-              </div>
-
-              {}
-              <div style={{ marginBottom: "32px" }}>
-                <h3
-                  style={{
-                    fontSize: "1.25rem",
-                    fontWeight: "600",
-                    marginBottom: "16px",
-                  }}
-                >
-                  Sell History
-                </h3>
-                {filteredData.sell.length > 0 ? (
-                  <div style={styles.tableContainer}>
-                    <table style={styles.table}>
-                      <thead>
-                        <tr>
-                          <th style={styles.tableHeader}>Buyer</th>
-                          <th style={styles.tableHeader}>Vehicle</th>
-                          <th style={styles.tableHeader}>Reg No.</th>
-                          <th style={styles.tableHeader}>Sell Date</th>
-                          <th style={styles.tableHeader}>Amount</th>
-                          <th style={styles.tableHeader}>Created By</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredData.sell.map((item) => (
-                          <tr key={item._id} style={styles.tableRow}>
-                            <td style={styles.tableCell}>{item.buyerName}</td>
-                            <td style={styles.tableCell}>
-                              {item.vehicleBrand} {item.vehicleModel}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {item.registrationNumber}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {new Date(item.sellDate).toLocaleDateString()}
-                            </td>
-                            <td style={styles.tableCell}>
-                              ₹{item.sellAmount?.toFixed(2) || 0}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {item.user && item.user.role === "admin"
-                                ? "admin"
-                                : item.user && item.user.name
-                                  ? item.user.name
-                                  : ""}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p style={{ color: "#64748b" }}>No sell records found</p>
-                )}
-              </div>
-
-              {}
-              <div style={{ marginBottom: "32px" }}>
-                <h3
-                  style={{
-                    fontSize: "1.25rem",
-                    fontWeight: "600",
-                    marginBottom: "16px",
-                  }}
-                >
-                  Service History
-                </h3>
-                {filteredData.service.length > 0 ? (
-                  <div style={styles.tableContainer}>
-                    <table style={styles.table}>
-                      <thead>
-                        <tr>
-                          <th style={styles.tableHeader}>Customer</th>
-                          <th style={styles.tableHeader}>Vehicle</th>
-                          <th style={styles.tableHeader}>Reg No.</th>
-                          <th style={styles.tableHeader}>Amount</th>
-                          <th style={styles.tableHeader}>Date</th>
-                          <th style={styles.tableHeader}>Created By</th>
-                          <th style={styles.tableHeader}>Status</th>
-                          <th style={styles.tableHeader}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredData.service.map((bill) => (
-                          <tr key={bill._id} style={styles.tableRow}>
-                            <td style={styles.tableCell}>
-                              {bill.customerName}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {bill.vehicleBrand} {bill.vehicleModel}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {bill.registrationNumber}
-                            </td>
-                            <td style={styles.tableCell}>
-                              ₹{bill.grandTotal?.toFixed(2) || 0}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {new Date(bill.createdAt).toLocaleDateString()}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {bill.user && bill.user.role === "admin"
-                                ? "admin"
-                                : bill.user && bill.user.name
-                                  ? bill.user.name
-                                  : ""}
-                            </td>
-                            <td style={styles.tableCell}>
-                              <span
-                                style={{
-                                  ...styles.statusBadge,
-                                  ...(bill.paymentStatus === "paid"
-                                    ? styles.statusPaid
-                                    : bill.paymentStatus === "partial"
-                                      ? styles.statusPartial
-                                      : styles.statusPending),
-                                }}
-                              >
-                                {bill.paymentStatus}
-                              </span>
-                            </td>
-                            <td style={styles.tableCell}>
-                              <button
-                                onClick={() => handleDownload(bill._id)}
-                                style={styles.iconButton}
-                                title="Download"
-                                disabled={
-                                  downloadProgress[bill._id] !== undefined
-                                }
-                              >
-                                {downloadProgress[bill._id] !== undefined ? (
-                                  <div
-                                    style={{
-                                      width: "60px",
-                                      height: "4px",
-                                      backgroundColor: "#e2e8f0",
-                                      borderRadius: "2px",
-                                      overflow: "hidden",
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        width: `${downloadProgress[bill._id]}%`,
-                                        height: "100%",
-                                        backgroundColor: "#088395",
-                                        transition: "width 0.3s ease",
-                                      }}
-                                    />
-                                  </div>
-                                ) : (
-                                  <Download size={16} />
-                                )}
-                              </button>
-                              {user?.role === "admin" && (
-                                <>
-                                  <button
-                                    onClick={() => handleEdit(bill)}
-                                    style={styles.iconButton}
-                                    title="Edit"
-                                  >
-                                    <Pencil size={16} />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDelete(bill._id)}
-                                    style={styles.iconButton}
-                                    title="Delete"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p style={{ color: "#64748b" }}>No service records found</p>
-                )}
-              </div>
-            </>
           ) : (
             <>
-              <div style={styles.tableContainer}>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th style={styles.tableHeader}>Customer</th>
-                      <th style={styles.tableHeader}>Vehicle</th>
-                      <th style={styles.tableHeader}>Reg No.</th>
-                      <th style={styles.tableHeader}>Amount</th>
-                      <th style={styles.tableHeader}>Date</th>
-                      <th style={styles.tableHeader}>Status</th>
-                      <th style={styles.tableHeader}>Created By</th>
-                      <th style={styles.tableHeader}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {serviceBills.map((bill) => (
-                      <tr
-                        key={bill._id}
-                        style={{
-                          ...styles.tableRow,
-                          ...(bill._isPreviousVersion
-                            ? styles.previousRow
-                            : {}),
-                        }}
-                      >
-                        <td style={styles.tableCell}>{bill.customerName}</td>
-                        <td style={styles.tableCell}>
-                          {`${bill.vehicleBrand} ${bill.vehicleModel}`
-                            .split("\n")[0]
-                            .substring(0, 20)}
-                          {`${bill.vehicleBrand} ${bill.vehicleModel}`.length >
-                            20 && "..."}
-                        </td>
-                        <td style={styles.tableCell}>
-                          {bill.registrationNumber}
-                          {bill._isPreviousVersion ? (
-                            <span
-                              style={{
-                                marginLeft: 8,
-                                padding: "2px 6px",
-                                backgroundColor: "#e2e8f0",
-                                color: "#475569",
-                                borderRadius: 6,
-                                fontSize: "0.7rem",
-                                fontWeight: 600,
-                              }}
-                              title="Previous version"
-                            >
-                              Previous
-                            </span>
-                          ) : (
-                            bill.previousVersionId && (
-                              <span
-                                style={{
-                                  marginLeft: 8,
-                                  padding: "2px 6px",
-                                  backgroundColor: "#fde68a",
-                                  color: "#92400e",
-                                  borderRadius: 6,
-                                  fontSize: "0.7rem",
-                                  fontWeight: 600,
-                                }}
-                                title="This is a newer version"
-                              >
-                                Updated
-                              </span>
-                            )
-                          )}
-                        </td>
-                        <td style={styles.tableCell}>
-                          ₹
-                          {new Intl.NumberFormat("en-IN").format(
-                            bill.grandTotal,
-                          )}
-                        </td>
-                        <td style={styles.tableCell}>
-                          {formatDate(bill.createdAt)}
-                        </td>
-
-                        <td style={styles.tableCell}>
-                          <span
-                            style={{
-                              ...styles.statusBadge,
-                              ...(bill.paymentStatus === "paid"
-                                ? styles.statusPaid
-                                : bill.paymentStatus === "partial"
-                                  ? styles.statusPartial
-                                  : styles.statusPending),
-                            }}
-                          >
-                            {bill.paymentStatus}
-                          </span>
-                        </td>
-                        <td style={styles.tableCell}>
-                          {bill.user && bill.user.role === "admin"
-                            ? "admin"
-                            : bill.user && bill.user.name
-                              ? bill.user.name
-                              : ""}
-                        </td>
-                        <td style={styles.tableCell}>
-                          <button
-                            onClick={() => handleViewBill(bill._id)}
-                            style={styles.iconButton}
-                            title="View"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDownload(bill._id)}
-                            style={styles.iconButton}
-                            title="Download"
-                            disabled={downloadProgress[bill._id] !== undefined}
-                          >
-                            {downloadProgress[bill._id] !== undefined ? (
-                              <div
-                                style={{
-                                  width: "60px",
-                                  height: "4px",
-                                  backgroundColor: "#e2e8f0",
-                                  borderRadius: "2px",
-                                  overflow: "hidden",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    width: `${downloadProgress[bill._id]}%`,
-                                    height: "100%",
-                                    backgroundColor: "#088395",
-                                    transition: "width 0.3s ease",
-                                  }}
-                                />
-                              </div>
+              {/* Desktop Table */}
+              {!isMobile && (
+                <div style={styles.tableContainer}>
+                  {filteredServiceBills.length === 0 ? (
+                    <p style={{ color: "#64748b", padding: "24px", textAlign: "center" }}>
+                      {searchTerm ? `No service records found for "${searchTerm}"` : "No service records found"}
+                    </p>
+                  ) : (
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.tableHeader}>Customer</th>
+                        <th style={styles.tableHeader}>Vehicle</th>
+                        <th style={styles.tableHeader}>Reg No.</th>
+                        <th style={styles.tableHeader}>Amount</th>
+                        <th style={styles.tableHeader}>Date</th>
+                        <th style={styles.tableHeader}>Status</th>
+                        <th style={styles.tableHeader}>Created By</th>
+                        <th style={styles.tableHeader}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredServiceBills.map((bill) => (
+                        <tr
+                          key={bill._id}
+                          style={{
+                            ...styles.tableRow,
+                            ...(bill._isPreviousVersion ? styles.previousRow : {}),
+                          }}
+                        >
+                          <td style={styles.tableCell}>{bill.customerName}</td>
+                          <td style={styles.tableCell}>
+                            {`${bill.vehicleBrand} ${bill.vehicleModel}`.split("\n")[0].substring(0, 20)}
+                            {`${bill.vehicleBrand} ${bill.vehicleModel}`.length > 20 && "..."}
+                          </td>
+                          <td style={styles.tableCell}>
+                            {bill.registrationNumber}
+                            {bill._isPreviousVersion ? (
+                              <span style={{ marginLeft: 8, padding: "2px 6px", backgroundColor: "#e2e8f0", color: "#475569", borderRadius: 6, fontSize: "0.7rem", fontWeight: 600 }} title="Previous version">Previous</span>
                             ) : (
-                              <Download size={16} />
+                              bill.previousVersionId && (
+                                <span style={{ marginLeft: 8, padding: "2px 6px", backgroundColor: "#fde68a", color: "#92400e", borderRadius: 6, fontSize: "0.7rem", fontWeight: 600 }} title="This is a newer version">Updated</span>
+                              )
                             )}
-                          </button>
-                          {user?.role === "admin" &&
-                            !bill._isPreviousVersion && (
+                          </td>
+                          <td style={styles.tableCell}>₹{new Intl.NumberFormat("en-IN").format(bill.grandTotal)}</td>
+                          <td style={styles.tableCell}>{formatDate(bill.createdAt)}</td>
+                          <td style={styles.tableCell}>
+                            <span style={{ ...styles.statusBadge, ...(bill.paymentStatus === "paid" ? styles.statusPaid : bill.paymentStatus === "partial" ? styles.statusPartial : styles.statusPending) }}>
+                              {bill.paymentStatus}
+                            </span>
+                          </td>
+                          <td style={styles.tableCell}>{bill.user && bill.user.role === "admin" ? "admin" : bill.user && bill.user.name ? bill.user.name : ""}</td>
+                          <td style={styles.tableCell}>
+                            <button onClick={() => handleViewBill(bill._id)} style={styles.iconButton} title="View"><Eye size={16} /></button>
+                            <button onClick={() => handleDownload(bill._id)} style={styles.iconButton} title="Download" disabled={downloadProgress[bill._id] !== undefined}>
+                              {downloadProgress[bill._id] !== undefined ? (
+                                <div style={{ width: "60px", height: "4px", backgroundColor: "#e2e8f0", borderRadius: "2px", overflow: "hidden" }}>
+                                  <div style={{ width: `${downloadProgress[bill._id]}%`, height: "100%", backgroundColor: "#088395", transition: "width 0.3s ease" }} />
+                                </div>
+                              ) : <Download size={16} />}
+                            </button>
+                            {user?.role === "admin" && !bill._isPreviousVersion && (
                               <>
-                                <button
-                                  onClick={() => handleEdit(bill)}
-                                  style={styles.iconButton}
-                                  title="Edit"
-                                >
-                                  <Pencil size={16} />
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(bill._id)}
-                                  style={styles.iconButton}
-                                  title="Delete"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
+                                <button onClick={() => handleEdit(bill)} style={styles.iconButton} title="Edit"><Pencil size={16} /></button>
+                                <button onClick={() => handleDelete(bill._id)} style={styles.iconButton} title="Delete"><Trash2 size={16} /></button>
                               </>
                             )}
+                            {bill._isPreviousVersion
+                              ? (() => {
+                                  const newer = serviceBills.find((s) => s.previousVersionId === bill._id);
+                                  return newer ? (
+                                    <button onClick={() => handleViewChanges(newer)} style={styles.iconButton} title="View Changes (newer)" disabled={isComputingChanges}><ChevronRight size={16} /></button>
+                                  ) : null;
+                                })()
+                              : bill.previousVersionId && (
+                                  <button onClick={() => handleViewChanges(bill)} style={styles.iconButton} title="View Changes" disabled={isComputingChanges}><ChevronRight size={16} /></button>
+                                )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  )}
+                </div>
+              )}
 
-                          {/* View changes button - for newer versions or to compare newer vs previous */}
-                          {bill._isPreviousVersion
-                            ? (() => {
-                                const newer = serviceBills.find(
-                                  (s) => s.previousVersionId === bill._id,
-                                );
-                                return newer ? (
-                                  <button
-                                    onClick={() => handleViewChanges(newer)}
-                                    style={styles.iconButton}
-                                    title="View Changes (newer)"
-                                    disabled={isComputingChanges}
-                                  >
-                                    <ChevronRight size={16} />
-                                  </button>
-                                ) : null;
-                              })()
-                            : bill.previousVersionId && (
-                                <button
-                                  onClick={() => handleViewChanges(bill)}
-                                  style={styles.iconButton}
-                                  title="View Changes"
-                                  disabled={isComputingChanges}
-                                >
-                                  <ChevronRight size={16} />
-                                </button>
-                              )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {/* Mobile Cards */}
+              {isMobile && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {filteredServiceBills.length === 0 ? (
+                    <p style={{ color: "#64748b", padding: "24px", textAlign: "center" }}>
+                      {searchTerm ? `No service records found for "${searchTerm}"` : "No service records found"}
+                    </p>
+                  ) : filteredServiceBills.map((bill) => (
+                    <div key={bill._id} style={{ backgroundColor: "#fff", borderRadius: "12px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+                      <div style={{ backgroundColor: "#071952", padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ color: "#fff", fontWeight: "700", fontSize: "0.95rem" }}>{bill.registrationNumber || "—"}</span>
+                        <span style={{
+                          backgroundColor: bill.paymentStatus === "paid" ? "rgba(8,131,149,0.8)" : bill.paymentStatus === "partial" ? "rgba(202,138,4,0.8)" : "rgba(185,28,28,0.8)",
+                          color: "#fff", borderRadius: "20px", padding: "3px 10px", fontSize: "0.72rem", fontWeight: "600", textTransform: "capitalize"
+                        }}>{bill.paymentStatus}</span>
+                      </div>
+                      <div style={{ padding: "12px 14px" }}>
+                        <p style={{ margin: "0 0 8px 0", fontSize: "0.82rem", color: "#64748b" }}>{bill.vehicleBrand} {bill.vehicleModel}</p>
+                        {[
+                          ["Customer", bill.customerName],
+                          ["Amount", `₹${new Intl.NumberFormat("en-IN").format(bill.grandTotal)}`],
+                          ["Date", formatDate(bill.createdAt)],
+                          ["Created By", bill.user?.role === "admin" ? "admin" : bill.user?.name || ""],
+                        ].map(([label, value]) => (
+                          <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid #f1f5f9" }}>
+                            <span style={{ fontSize: "0.78rem", color: "#94a3b8", fontWeight: "500" }}>{label}</span>
+                            <span style={{ fontSize: "0.82rem", color: "#1e293b", fontWeight: "600", textAlign: "right", maxWidth: "60%" }}>{value || "—"}</span>
+                          </div>
+                        ))}
+                        <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
+                          <button onClick={() => handleViewBill(bill._id)} style={{ flex: 1, minWidth: "60px", padding: "8px", backgroundColor: "#e0f2fe", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#0284c7", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}><Eye size={14} /> View</button>
+                          <button onClick={() => handleDownload(bill._id)} style={{ flex: 1, minWidth: "60px", padding: "8px", backgroundColor: "#f1f5f9", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#334155", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}><Download size={14} /> PDF</button>
+                          {user?.role === "admin" && !bill._isPreviousVersion && (
+                            <>
+                              <button onClick={() => handleEdit(bill)} style={{ flex: 1, minWidth: "60px", padding: "8px", backgroundColor: "#f1f5f9", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#334155", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}><Pencil size={14} /> Edit</button>
+                              <button onClick={() => handleDelete(bill._id)} style={{ flex: 1, minWidth: "60px", padding: "8px", backgroundColor: "#fee2e2", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#991b1b", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}><Trash2 size={14} /> Delete</button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div style={styles.pagination}>
                 <button
@@ -1520,9 +1218,9 @@ const ServiceHistory = () => {
             style={{
               backgroundColor: "#fff",
               borderRadius: "12px",
-              maxWidth: "900px",
+              maxWidth: "960px",
               width: "100%",
-              maxHeight: "90vh",
+              height: "90vh",
               display: "flex",
               flexDirection: "column",
               boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
@@ -1577,8 +1275,9 @@ const ServiceHistory = () => {
             <div
               style={{
                 flex: 1,
-                overflow: "hidden",
+                overflow: "auto",
                 backgroundColor: "#525659",
+                minHeight: 0,
               }}
             >
               {isMobile ? (
@@ -1590,6 +1289,7 @@ const ServiceHistory = () => {
                   style={{
                     width: "100%",
                     height: "100%",
+                    minHeight: "500px",
                     border: "none",
                     display: "block",
                   }}
@@ -1600,6 +1300,7 @@ const ServiceHistory = () => {
                     style={{
                       width: "100%",
                       height: "100%",
+                      minHeight: "500px",
                       border: "none",
                       display: "block",
                     }}
@@ -1765,16 +1466,28 @@ const styles = {
     top: 0,
     left: 0,
     right: 0,
-    padding: "1rem",
-    background: "#ffffff",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    backgroundColor: "#071952",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
     zIndex: 20,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 1rem",
+  },
+  topBarLogo: {
+    width: "250px",
+    height: "auto",
+    margin: "-40px",
+    padding: 0,
+    display: "block",
   },
   hamburgerMenu: {
     cursor: "pointer",
     padding: "8px",
-    borderRadius: "4px",
-    transition: "background-color 0.2s",
+    position: "absolute",
+    left: "1rem",
+    color: "#ffffff",
   },
   sidebarOverlay: {
     position: "fixed",

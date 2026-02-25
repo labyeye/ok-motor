@@ -12,7 +12,6 @@ import {
   ChevronDown,
   ChevronRight,
   FileText,
-  Image,
   Search,
   Download,
   Edit,
@@ -24,11 +23,14 @@ import {
   RefreshCw,
   Megaphone,
   Eye,
+  Shield,
+  ImageIcon
 } from "lucide-react";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
 import logo from "../images/company.png";
 import logo1 from "../images/okmotorback.png";
+import logoheader from "../images/okmotor.png";
 import PdfPreview from "./PdfPreview";
 
 import AuthContext from "../context/AuthContext";
@@ -998,6 +1000,22 @@ const BuyLetterHistory = () => {
       ],
     },
     {
+      name: "Insurance",
+      icon: Shield,
+      submenu: [
+        { name: "Add Insurance", path: "/insurance/create" },
+        { name: "Insurance List", path: "/insurance/history" },
+      ],
+    },
+    {
+      name: "PUC",
+      icon: FileText,
+      submenu: [
+        { name: "Add PUC", path: "/puc/create" },
+        { name: "PUC List", path: "/puc/history" },
+      ],
+    },
+    {
       name: "Updates",
       icon: RefreshCw,
       submenu: [
@@ -1036,18 +1054,18 @@ const BuyLetterHistory = () => {
     },
     {
       name: "Gallery",
-      icon: Image,
+      icon: ImageIcon,
       path: "/gallery/manage",
-    },
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
     },
     {
       name: "Letter Head",
       icon: FileText,
       path: "/letter-head/create",
+    },
+    {
+      name: "Vehicle History",
+      icon: Bike,
+      path: "/bike-history",
     },
     {
       name: "Settings",
@@ -2037,18 +2055,16 @@ const BuyLetterHistory = () => {
       <div
         style={{
           ...styles.topBar,
-          display: isMobile && !isSidebarOpen ? "block" : "none",
+          display: isMobile && !isSidebarOpen ? "flex" : "none",
         }}
       >
         <div
-          style={{
-            ...styles.hamburgerMenu,
-            display: isMobile && !isSidebarOpen ? "block" : "none",
-          }}
+          style={styles.hamburgerMenu}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
-          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+          {isSidebarOpen ? <X size={35} color="#ffffff" /> : <Menu size={35} color="#ffffff" />}
         </div>
+        <img src={logoheader} alt="logo" style={styles.topBarLogo} />
       </div>
 
       {isSidebarOpen && isMobile && (
@@ -2192,239 +2208,370 @@ const BuyLetterHistory = () => {
             </div>
           ) : (
             <>
-              <div style={styles.tableContainer}>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th style={styles.tableHeader}>Seller Name</th>
-                      <th style={styles.tableHeader}>Vehicle Year</th>
-                      <th style={styles.tableHeader}>Vehicle</th>
-                      <th style={styles.tableHeader}>Vehicle Reg No</th>
-                      <th style={styles.tableHeader}>Buyer Name</th>
-                      <th style={styles.tableHeader}>Sale Amount</th>
-                      <th style={styles.tableHeader}>Date</th>
-                      <th style={styles.tableHeader}>Created By</th>
-                      <th style={styles.tableHeader}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredLetters.map((letter) => {
-                      const changes = getChanges(letter);
-                      return (
-                        <React.Fragment key={letter._id}>
-                          <tr style={styles.tableRow}>
-                            <td style={styles.tableCell}>
-                              {letter.sellerName}
-                              {letter.version > 1 && (
-                                <span
-                                  style={{
-                                    fontSize: "0.75rem",
-                                    color: "#ff9800",
-                                    marginLeft: "6px",
-                                    fontWeight: "600",
-                                  }}
-                                >
-                                  (v{letter.version})
-                                </span>
-                              )}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {letter.vehicleModel}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {`${letter.vehicleName || ""} ${
-                                letter.vehicleModel || ""
-                              }`.trim()}
-                            </td>
-                            <td style={styles.tableCell}>
-                              {letter.registrationNumber}
-                            </td>
-                            <td style={styles.tableCell}>{letter.buyerName}</td>
-                            <td style={styles.tableCell}>
-                              ₹
-                              {new Intl.NumberFormat("en-IN").format(
-                                letter.saleAmount,
-                              )}
-                            </td>
-                            <td style={styles.tableCell}>
-                              <div>
-                                <div>
-                                  Created:{" "}
-                                  {letter.saleDate
-                                    ? formatDate(letter.saleDate)
-                                    : formatDate(letter.createdAt)}
-                                </div>
-                                {letter.editedAt && (
-                                  <div
+              {/* Desktop Table */}
+              {!isMobile && (
+                <div style={styles.tableContainer}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.tableHeader}>Seller Name</th>
+                        <th style={styles.tableHeader}>Vehicle Year</th>
+                        <th style={styles.tableHeader}>Vehicle</th>
+                        <th style={styles.tableHeader}>Vehicle Reg No</th>
+                        <th style={styles.tableHeader}>Buyer Name</th>
+                        <th style={styles.tableHeader}>Sale Amount</th>
+                        <th style={styles.tableHeader}>Date</th>
+                        <th style={styles.tableHeader}>Created By</th>
+                        <th style={styles.tableHeader}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredLetters.map((letter) => {
+                        const changes = getChanges(letter);
+                        return (
+                          <React.Fragment key={letter._id}>
+                            <tr style={styles.tableRow}>
+                              <td style={styles.tableCell}>
+                                {letter.sellerName}
+                                {letter.version > 1 && (
+                                  <span
                                     style={{
-                                      color: "#64748b",
-                                      fontSize: "0.9em",
-                                      marginTop: "4px",
-                                    }}
-                                  >
-                                    Edited: {formatDate(letter.editedAt)}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td style={styles.tableCell}>
-                              {letter.user && letter.user.role === "admin"
-                                ? "admin"
-                                : letter.user && letter.user.name
-                                  ? letter.user.name
-                                  : ""}
-                            </td>
-                            <td style={styles.tableCell}>
-                              <button
-                                onClick={() => {
-                                  setLanguageAction("preview");
-                                  setSelectedLetter(letter);
-                                  setShowLanguageModal(true);
-                                }}
-                                style={styles.iconButton}
-                                title="View"
-                              >
-                                <Eye size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleDownload(letter)}
-                                style={styles.iconButton}
-                                title="Download"
-                              >
-                                <Download size={16} />
-                              </button>
-                              {}
-                              {user?.role !== "staff" && (
-                                <>
-                                  <button
-                                    onClick={() => handleEdit(letter)}
-                                    style={styles.iconButton}
-                                    title="Edit"
-                                  >
-                                    <Edit size={16} />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDelete(letter._id)}
-                                    style={styles.iconButton}
-                                    title="Delete"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </>
-                              )}
-                            </td>
-                          </tr>
-                          {letter.version > 1 && (
-                            <tr
-                              style={{
-                                backgroundColor:
-                                  changes && changes.length > 0
-                                    ? "#fff8e1"
-                                    : "#f5f5f5",
-                              }}
-                            >
-                              <td
-                                colSpan="9"
-                                style={{
-                                  padding: "12px 16px",
-                                  borderBottom: "1px solid #e2e8f0",
-                                }}
-                              >
-                                <div style={{ fontSize: "0.85rem" }}>
-                                  <div
-                                    style={{
+                                      fontSize: "0.75rem",
+                                      color: "#ff9800",
+                                      marginLeft: "6px",
                                       fontWeight: "600",
-                                      color:
-                                        changes && changes.length > 0
-                                          ? "#f57c00"
-                                          : "#757575",
-                                      marginBottom: "8px",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "6px",
                                     }}
                                   >
-                                    <RefreshCw size={14} />
-                                    Changes from previous version:
+                                    (v{letter.version})
+                                  </span>
+                                )}
+                              </td>
+                              <td style={styles.tableCell}>
+                                {letter.vehicleModel}
+                              </td>
+                              <td style={styles.tableCell}>
+                                {`${letter.vehicleName || ""} ${
+                                  letter.vehicleModel || ""
+                                }`.trim()}
+                              </td>
+                              <td style={styles.tableCell}>
+                                {letter.registrationNumber}
+                              </td>
+                              <td style={styles.tableCell}>{letter.buyerName}</td>
+                              <td style={styles.tableCell}>
+                                ₹
+                                {new Intl.NumberFormat("en-IN").format(
+                                  letter.saleAmount,
+                                )}
+                              </td>
+                              <td style={styles.tableCell}>
+                                <div>
+                                  <div>
+                                    Created:{" "}
+                                    {letter.saleDate
+                                      ? formatDate(letter.saleDate)
+                                      : formatDate(letter.createdAt)}
                                   </div>
-                                  {changes && changes.length > 0 ? (
+                                  {letter.editedAt && (
                                     <div
                                       style={{
-                                        display: "grid",
-                                        gridTemplateColumns:
-                                          "repeat(auto-fit, minmax(300px, 1fr))",
-                                        gap: "8px",
+                                        color: "#64748b",
+                                        fontSize: "0.9em",
+                                        marginTop: "4px",
                                       }}
                                     >
-                                      {changes.map((change, idx) => (
-                                        <div
-                                          key={idx}
-                                          style={{
-                                            padding: "6px 10px",
-                                            backgroundColor: "#ffffff",
-                                            borderRadius: "4px",
-                                            border: "1px solid #ffe0b2",
-                                          }}
-                                        >
-                                          <div
-                                            style={{
-                                              fontWeight: "600",
-                                              color: "#424242",
-                                              marginBottom: "3px",
-                                            }}
-                                          >
-                                            {change.field}:
-                                          </div>
-                                          <div
-                                            style={{
-                                              fontSize: "0.8rem",
-                                              color: "#e53935",
-                                            }}
-                                          >
-                                            <span
-                                              style={{
-                                                textDecoration: "line-through",
-                                              }}
-                                            >
-                                              {change.oldValue}
-                                            </span>
-                                          </div>
-                                          <div
-                                            style={{
-                                              fontSize: "0.8rem",
-                                              color: "#43a047",
-                                              fontWeight: "500",
-                                            }}
-                                          >
-                                            → {change.newValue}
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <div
-                                      style={{
-                                        padding: "8px 12px",
-                                        backgroundColor: "#ffffff",
-                                        borderRadius: "4px",
-                                        border: "1px solid #e0e0e0",
-                                        color: "#757575",
-                                        fontStyle: "italic",
-                                      }}
-                                    >
-                                      No changes detected from previous version
+                                      Edited: {formatDate(letter.editedAt)}
                                     </div>
                                   )}
                                 </div>
                               </td>
+                              <td style={styles.tableCell}>
+                                {letter.user && letter.user.role === "admin"
+                                  ? "admin"
+                                  : letter.user && letter.user.name
+                                    ? letter.user.name
+                                    : ""}
+                              </td>
+                              <td style={styles.tableCell}>
+                                <button
+                                  onClick={() => {
+                                    setLanguageAction("preview");
+                                    setSelectedLetter(letter);
+                                    setShowLanguageModal(true);
+                                  }}
+                                  style={styles.iconButton}
+                                  title="View"
+                                >
+                                  <Eye size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleDownload(letter)}
+                                  style={styles.iconButton}
+                                  title="Download"
+                                >
+                                  <Download size={16} />
+                                </button>
+                                {}
+                                {user?.role !== "staff" && (
+                                  <>
+                                    <button
+                                      onClick={() => handleEdit(letter)}
+                                      style={styles.iconButton}
+                                      title="Edit"
+                                    >
+                                      <Edit size={16} />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDelete(letter._id)}
+                                      style={styles.iconButton}
+                                      title="Delete"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </>
+                                )}
+                              </td>
                             </tr>
+                            {letter.version > 1 && (
+                              <tr
+                                style={{
+                                  backgroundColor:
+                                    changes && changes.length > 0
+                                      ? "#fff8e1"
+                                      : "#f5f5f5",
+                                }}
+                              >
+                                <td
+                                  colSpan="9"
+                                  style={{
+                                    padding: "12px 16px",
+                                    borderBottom: "1px solid #e2e8f0",
+                                  }}
+                                >
+                                  <div style={{ fontSize: "0.85rem" }}>
+                                    <div
+                                      style={{
+                                        fontWeight: "600",
+                                        color:
+                                          changes && changes.length > 0
+                                            ? "#f57c00"
+                                            : "#757575",
+                                        marginBottom: "8px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                      }}
+                                    >
+                                      <RefreshCw size={14} />
+                                      Changes from previous version:
+                                    </div>
+                                    {changes && changes.length > 0 ? (
+                                      <div
+                                        style={{
+                                          display: "grid",
+                                          gridTemplateColumns:
+                                            "repeat(auto-fit, minmax(300px, 1fr))",
+                                          gap: "8px",
+                                        }}
+                                      >
+                                        {changes.map((change, idx) => (
+                                          <div
+                                            key={idx}
+                                            style={{
+                                              padding: "6px 10px",
+                                              backgroundColor: "#ffffff",
+                                              borderRadius: "4px",
+                                              border: "1px solid #ffe0b2",
+                                            }}
+                                          >
+                                            <div
+                                              style={{
+                                                fontWeight: "600",
+                                                color: "#424242",
+                                                marginBottom: "3px",
+                                              }}
+                                            >
+                                              {change.field}:
+                                            </div>
+                                            <div
+                                              style={{
+                                                fontSize: "0.8rem",
+                                                color: "#e53935",
+                                              }}
+                                            >
+                                              <span
+                                                style={{
+                                                  textDecoration: "line-through",
+                                                }}
+                                              >
+                                                {change.oldValue}
+                                              </span>
+                                            </div>
+                                            <div
+                                              style={{
+                                                fontSize: "0.8rem",
+                                                color: "#43a047",
+                                                fontWeight: "500",
+                                              }}
+                                            >
+                                              → {change.newValue}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div
+                                        style={{
+                                          padding: "8px 12px",
+                                          backgroundColor: "#ffffff",
+                                          borderRadius: "4px",
+                                          border: "1px solid #e0e0e0",
+                                          color: "#757575",
+                                          fontStyle: "italic",
+                                        }}
+                                      >
+                                        No changes detected from previous version
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Mobile Cards */}
+              {isMobile && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {filteredLetters.map((letter) => {
+                    const changes = getChanges(letter);
+                    return (
+                      <div
+                        key={letter._id}
+                        style={{
+                          backgroundColor: "#ffffff",
+                          borderRadius: "12px",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                          padding: "16px",
+                          border: "1px solid #e2e8f0",
+                        }}
+                      >
+                        {/* Card Header */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                          <div>
+                            <div style={{ fontWeight: "700", fontSize: "1rem", color: "#1e293b" }}>
+                              {letter.registrationNumber}
+                              {letter.version > 1 && (
+                                <span style={{ fontSize: "0.75rem", color: "#ff9800", marginLeft: "6px", fontWeight: "600" }}>
+                                  (v{letter.version})
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "2px" }}>
+                              {letter.saleDate ? formatDate(letter.saleDate) : formatDate(letter.createdAt)}
+                            </div>
+                          </div>
+                          <div style={{
+                            backgroundColor: "rgba(8,131,149,0.1)",
+                            color: "#071952",
+                            borderRadius: "20px",
+                            padding: "4px 10px",
+                            fontSize: "0.75rem",
+                            fontWeight: "600",
+                          }}>
+                            Buy Letter
+                          </div>
+                        </div>
+
+                        {/* Card Details */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Seller</span>
+                            <span style={{ fontSize: "0.8rem", color: "#1e293b", fontWeight: "600", textAlign: "right", maxWidth: "60%" }}>{letter.sellerName}</span>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Buyer</span>
+                            <span style={{ fontSize: "0.8rem", color: "#1e293b", fontWeight: "600", textAlign: "right", maxWidth: "60%" }}>{letter.buyerName}</span>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Vehicle</span>
+                            <span style={{ fontSize: "0.8rem", color: "#1e293b", fontWeight: "600", textAlign: "right", maxWidth: "60%" }}>{`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim()}</span>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Amount</span>
+                            <span style={{ fontSize: "0.85rem", color: "#071952", fontWeight: "700" }}>₹{new Intl.NumberFormat("en-IN").format(letter.saleAmount)}</span>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Created By</span>
+                            <span style={{ fontSize: "0.8rem", color: "#1e293b", fontWeight: "600" }}>
+                              {letter.user && letter.user.role === "admin" ? "admin" : letter.user?.name || ""}
+                            </span>
+                          </div>
+                          {letter.editedAt && (
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Edited</span>
+                              <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{formatDate(letter.editedAt)}</span>
+                            </div>
                           )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                        </div>
+
+                        {/* Version changes */}
+                        {letter.version > 1 && changes && changes.length > 0 && (
+                          <div style={{ backgroundColor: "#fff8e1", borderRadius: "8px", padding: "10px", marginBottom: "10px", border: "1px solid #ffe0b2" }}>
+                            <div style={{ fontWeight: "600", color: "#f57c00", fontSize: "0.78rem", marginBottom: "6px", display: "flex", alignItems: "center", gap: "4px" }}>
+                              <RefreshCw size={12} /> Changes from previous version:
+                            </div>
+                            {changes.map((change, idx) => (
+                              <div key={idx} style={{ fontSize: "0.75rem", marginBottom: "4px" }}>
+                                <span style={{ fontWeight: "600", color: "#424242" }}>{change.field}: </span>
+                                <span style={{ textDecoration: "line-through", color: "#e53935" }}>{change.oldValue}</span>
+                                <span style={{ color: "#43a047", fontWeight: "500" }}> → {change.newValue}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div style={{ display: "flex", gap: "8px", borderTop: "1px solid #e2e8f0", paddingTop: "12px" }}>
+                          <button
+                            onClick={() => { setLanguageAction("preview"); setSelectedLetter(letter); setShowLanguageModal(true); }}
+                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "8px", backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#1e293b", fontWeight: "500" }}
+                          >
+                            <Eye size={14} /> View
+                          </button>
+                          <button
+                            onClick={() => handleDownload(letter)}
+                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "8px", backgroundColor: "#071952", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#ffffff", fontWeight: "500" }}
+                          >
+                            <Download size={14} /> Download
+                          </button>
+                          {user?.role !== "staff" && (
+                            <>
+                              <button
+                                onClick={() => handleEdit(letter)}
+                                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "8px", backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#1e293b", fontWeight: "500" }}
+                              >
+                                <Edit size={14} /> Edit
+                              </button>
+                              <button
+                                onClick={() => handleDelete(letter._id)}
+                                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "8px", backgroundColor: "#fee2e2", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#991b1b", fontWeight: "500" }}
+                              >
+                                <Trash2 size={14} /> Delete
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               <div style={styles.pagination}>
                 <button
@@ -3310,16 +3457,28 @@ const styles = {
     top: 0,
     left: 0,
     right: 0,
-    padding: "1rem",
-    background: "#ffffff",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    backgroundColor: "#071952",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
     zIndex: 20,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 1rem",
+  },
+  topBarLogo: {
+    width: "250px",
+    height: "auto",
+    margin: "-40px",
+    padding: 0,
+    display: "block",
   },
   hamburgerMenu: {
     cursor: "pointer",
     padding: "8px",
-    borderRadius: "4px",
-    transition: "background-color 0.2s",
+    position: "absolute",
+    left: "1rem",
+    color: "#ffffff",
   },
   sidebarOverlay: {
     position: "fixed",

@@ -16,19 +16,23 @@ import {
   Bike,
   Settings,
   RefreshCw,
-  Image,
   Megaphone,
+  Menu,
+  X,
+  Shield,
+  ImageIcon
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";
+import logoheader from "../images/okmotor.png";
 import ConfirmModal from "./ConfirmModal";
 
 const UpdatesList = () => {
   const { user, logout } = useContext(AuthContext);
   const [activeMenu, setActiveMenu] = useState("Updates List");
   const [expandedMenus, setExpandedMenus] = useState({});
-  const [, setIsSidebarOpen] = useState(false);
-  const [, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const [updates, setUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +69,22 @@ const UpdatesList = () => {
         { name: "Create Sell Letter", path: "/sell/create" },
         { name: "Sell Letter History", path: "/sell/history" },
         { name: "Sell Requests", path: "/sell/requests" },
+      ],
+    },
+    {
+      name: "Insurance",
+      icon: Shield,
+      submenu: [
+        { name: "Add Insurance", path: "/insurance/create" },
+        { name: "Insurance List", path: "/insurance/history" },
+      ],
+    },
+    {
+      name: "PUC",
+      icon: FileText,
+      submenu: [
+        { name: "Add PUC", path: "/puc/create" },
+        { name: "PUC List", path: "/puc/history" },
       ],
     },
     {
@@ -106,18 +126,18 @@ const UpdatesList = () => {
     },
     {
       name: "Gallery",
-      icon: Image,
+      icon: ImageIcon,
       path: "/gallery/manage",
-    },
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
     },
     {
       name: "Letter Head",
       icon: FileText,
       path: "/letter-head/create",
+    },
+    {
+      name: "Vehicle History",
+      icon: Bike,
+      path: "/bike-history",
     },
     {
       name: "Settings",
@@ -206,7 +226,7 @@ const UpdatesList = () => {
   if (error) return <div style={{ padding: 20, color: "red" }}>{error}</div>;
 
   return (
-    <div style={styles.container}>
+    <div className="updates-container">
       <ConfirmModal
         isOpen={confirmOpen}
         title="Delete Update"
@@ -219,31 +239,51 @@ const UpdatesList = () => {
           setConfirmTargetId(null);
         }}
       />
-      <div style={styles.sidebar}>
-        <div style={styles.sidebarHeader}>
-          <img
-            src={logo}
-            alt="logo"
-            style={{ width: "10.5rem", height: "10.5rem" }}
-          />
+
+      {/* Mobile Top Bar */}
+      <div className="top-bar">
+        <div
+          className="hamburger-menu"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
+        </div>
+        <img src={logoheader} alt="logo" className="top-bar-logo" />
+      </div>
+
+      {/* Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`sidebar ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+        <div className="sidebar-header">
+          <img src={logo} alt="logo" className="brand-logo" />
           <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
         </div>
-        <nav style={styles.nav}>
+        <nav className="nav">
           {menuItems.map((item) => (
             <div key={item.name}>
               <div
-                style={{
-                  ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                }}
+                className={`menu-item ${activeMenu === item.name ? "active" : ""}`}
                 onClick={() => {
                   if (item.submenu) toggleMenu(item.name);
-                  else handleMenuClick(item.name, item.path);
+                  else
+                    handleMenuClick(
+                      item.name,
+                      typeof item.path === "function"
+                        ? item.path(user?.role)
+                        : item.path,
+                    );
                 }}
               >
-                <div style={styles.menuItemContent}>
-                  <item.icon size={20} style={styles.menuIcon} />
-                  <span style={styles.menuText}>{item.name}</span>
+                <div className="menu-item-content">
+                  <item.icon size={20} className="menu-icon" />
+                  <span className="menu-text">{item.name}</span>
                 </div>
                 {item.submenu &&
                   (expandedMenus[item.name] ? (
@@ -252,12 +292,20 @@ const UpdatesList = () => {
                     <ChevronRight size={16} />
                   ))}
               </div>
-              {item.submenu && expandedMenus[item.name] && (
-                <div style={styles.submenu}>
+              {item.submenu && (
+                <div
+                  className={`submenu${expandedMenus[item.name] ? " submenu-open" : " submenu-closed"}`}
+                  style={{
+                    maxHeight: expandedMenus[item.name] ? `${item.submenu.length * 48}px` : "0px",
+                    opacity: expandedMenus[item.name] ? 1 : 0,
+                    transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
+                    overflow: "hidden",
+                  }}
+                >
                   {item.submenu.map((si) => (
                     <div
                       key={si.name}
-                      style={styles.submenuItem}
+                      className="submenu-item"
                       onClick={() => handleMenuClick(si.name, si.path)}
                     >
                       {si.name}
@@ -267,40 +315,42 @@ const UpdatesList = () => {
               )}
             </div>
           ))}
-
-          <div style={styles.logoutButton} onClick={handleLogout}>
-            <LogOut size={20} style={styles.menuIcon} />
-            <span style={styles.menuText}>Logout</span>
+          <div className="logout-button" onClick={handleLogout}>
+            <LogOut size={20} className="menu-icon" />
+            <span className="menu-text">Logout</span>
           </div>
         </nav>
       </div>
 
-      <div style={styles.mainContent}>
-        <div style={styles.contentPadding}>
-          <div style={styles.header}>
+      {/* Main Content */}
+      <div className="updates-main-content">
+        <div className="content-padding">
+          <div className="updates-header">
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                flexWrap: "wrap",
+                gap: "12px",
               }}
             >
               <div>
-                <h1 style={styles.pageTitle}>Updates</h1>
-                <p style={styles.pageSubtitle}>
+                <h1 className="updates-page-title">Updates</h1>
+                <p className="updates-page-subtitle">
                   Manage site updates, images and visibility
                 </p>
               </div>
               <div style={{ display: "flex", gap: "12px" }}>
                 <button
                   onClick={() => fetchUpdates()}
-                  style={styles.headerButton}
+                  className="updates-btn-secondary"
                 >
                   <RefreshCw size={14} /> Refresh
                 </button>
                 <button
                   onClick={() => navigate("/updates/create")}
-                  style={styles.headerPrimary}
+                  className="updates-btn-primary"
                 >
                   Create Update
                 </button>
@@ -308,207 +358,456 @@ const UpdatesList = () => {
             </div>
           </div>
 
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: "left", padding: 8 }}>Title</th>
-                <th style={{ padding: 8 }}>Poster</th>
-                <th style={{ textAlign: "left", padding: 8 }}>
-                  Short Description
-                </th>
-                <th style={{ padding: 8 }}>Status</th>
-                <th style={{ padding: 8 }}>Created</th>
-                <th style={{ padding: 8 }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {updates.map((u) => (
-                <tr key={u._id} style={{ borderTop: "1px solid #eee" }}>
-                  <td style={{ padding: 8 }}>{u.title}</td>
-                  <td style={{ padding: 8 }}>
-                    {u.images && u.images[0] ? (
-                      <img
-                        src={u.images[0].url}
-                        alt={u.title}
-                        style={{
-                          width: 80,
-                          height: 60,
-                          objectFit: "cover",
-                          borderRadius: 4,
-                        }}
-                      />
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td style={{ padding: 8 }}>{u.shortDescription}</td>
-                  <td style={{ padding: 8 }}>{u.status}</td>
-                  <td style={{ padding: 8 }}>
-                    {new Date(u.createdAt).toLocaleString()}
-                  </td>
-                  <td style={{ padding: 8 }}>
-                    <button onClick={() => setViewItem(u)}>View</button>
-                    <button
-                      onClick={() => navigate(`/updates/edit/${u._id}`)}
-                      style={{ marginLeft: 6 }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => toggleStatus(u._id, u.status)}
-                      style={{ marginLeft: 6 }}
-                    >
-                      {u.status === "Active" ? "Deactivate" : "Activate"}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(u._id)}
-                      style={{ marginLeft: 6, color: "red" }}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {/* Desktop Table */}
+          {!isMobile && (
+            <div className="updates-table-wrapper">
+              <table className="updates-table">
+                <thead>
+                  <tr>
+                    <th className="updates-th">Title</th>
+                    <th className="updates-th">Poster</th>
+                    <th className="updates-th">Short Description</th>
+                    <th className="updates-th">Status</th>
+                    <th className="updates-th">Created</th>
+                    <th className="updates-th">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {updates.map((u) => (
+                    <tr key={u._id} className="updates-tr">
+                      <td className="updates-td">{u.title}</td>
+                      <td className="updates-td">
+                        {u.images && u.images[0] ? (
+                          <img
+                            src={u.images[0].url}
+                            alt={u.title}
+                            style={{
+                              width: 80,
+                              height: 60,
+                              objectFit: "cover",
+                              borderRadius: 4,
+                            }}
+                          />
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                      <td className="updates-td">{u.shortDescription}</td>
+                      <td className="updates-td">
+                        <span
+                          className={`updates-badge ${u.status === "Active" ? "updates-badge-active" : "updates-badge-inactive"}`}
+                        >
+                          {u.status}
+                        </span>
+                      </td>
+                      <td className="updates-td">
+                        {new Date(u.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="updates-td">
+                        <button
+                          onClick={() => setViewItem(u)}
+                          className="updates-action-btn"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => navigate(`/updates/edit/${u._id}`)}
+                          className="updates-action-btn"
+                          style={{ marginLeft: 6 }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => toggleStatus(u._id, u.status)}
+                          className="updates-action-btn"
+                          style={{ marginLeft: 6 }}
+                        >
+                          {u.status === "Active" ? "Deactivate" : "Activate"}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(u._id)}
+                          className="updates-action-btn updates-action-btn-danger"
+                          style={{ marginLeft: 6 }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
+          {/* Mobile Cards */}
+          {isMobile && (
+            <div className="updates-cards">
+              {updates.map((u) => (
+                <div key={u._id} className="updates-card">
+                  {u.images && u.images[0] && (
+                    <img src={u.images[0].url} alt={u.title} className="updates-card-img" />
+                  )}
+                  <div className="updates-card-body">
+                    <div className="updates-card-top">
+                      <div className="updates-card-title">{u.title}</div>
+                      <span className={`updates-badge ${u.status === "Active" ? "updates-badge-active" : "updates-badge-inactive"}`}>
+                        {u.status}
+                      </span>
+                    </div>
+                    {u.shortDescription && (
+                      <p className="updates-card-desc">{u.shortDescription}</p>
+                    )}
+                    <div className="updates-card-date">
+                      {new Date(u.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    </div>
+                    <div className="updates-card-actions">
+                      <button onClick={() => setViewItem(u)} className="updates-card-btn">View</button>
+                      <button onClick={() => navigate(`/updates/edit/${u._id}`)} className="updates-card-btn">Edit</button>
+                      <button
+                        onClick={() => toggleStatus(u._id, u.status)}
+                        className={`updates-card-btn ${u.status === "Active" ? "updates-card-btn-toggle-deactivate" : "updates-card-btn-toggle-activate"}`}
+                      >
+                        {u.status === "Active" ? "Deactivate" : "Activate"}
+                      </button>
+                      <button onClick={() => handleDelete(u._id)} className="updates-card-btn updates-card-btn-delete">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* View Modal */}
           {viewItem && (
-            <div style={styles.modalOverlay} onClick={() => setViewItem(null)}>
-              <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-                <h3>{viewItem.title}</h3>
-                <p>{viewItem.shortDescription}</p>
+            <div className="updates-modal-overlay" onClick={() => setViewItem(null)}>
+              <div className="updates-modal" onClick={(e) => e.stopPropagation()}>
+                <div className="updates-modal-header">
+                  <h3 className="updates-modal-title">{viewItem.title}</h3>
+                  <button className="updates-modal-close" onClick={() => setViewItem(null)}>
+                    <X size={20} />
+                  </button>
+                </div>
+                <p className="updates-modal-desc">{viewItem.shortDescription}</p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {(viewItem.images || []).map((im, idx) => (
                     <img
                       key={idx}
                       src={im.url}
                       alt={viewItem.title}
-                      style={{
-                        width: 160,
-                        height: 120,
-                        objectFit: "cover",
-                        borderRadius: 6,
-                      }}
+                      style={{ width: 160, height: 120, objectFit: "cover", borderRadius: 6 }}
                     />
                   ))}
-                </div>
-                <div style={{ marginTop: 12 }}>
-                  <button onClick={() => setViewItem(null)}>Close</button>
                 </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      <style>{`
+        .updates-container {
+          display: flex;
+          min-height: 100vh;
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          background-color: #EBF4F6;
+        }
+
+        /* ── TOP BAR ── */
+        .top-bar {
+          padding: 0.5rem 1rem;
+          background: #ffffff;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 1rem;
+        }
+        .top-bar-logo {
+          display: none;
+          margin: 0;
+          padding: 0;
+          line-height: 0;
+        }
+        .hamburger-menu {
+          display: none;
+        }
+
+        /* ── SIDEBAR OVERLAY ── */
+        .sidebar-overlay {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.5);
+          z-index: 14;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+          width: 280px;
+          background: #071952;
+          color: #f8fafc;
+          position: sticky;
+          top: 0;
+          height: 100vh;
+          display: flex;
+          flex-direction: column;
+          box-sizing: border-box;
+          border-right: 1px solid rgba(255,255,255,0.1);
+          z-index: 10;
+          transition: transform 0.3s ease;
+          overflow: hidden;
+        }
+        .sidebar-header {
+          padding: 1.5rem;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+          text-align: center;
+          flex: 0 0 auto;
+        }
+        .brand-logo {
+          width: 100%;
+          height: 8rem;
+          object-fit: cover;
+          object-position: center;
+          display: block;
+        }
+        .sidebar-subtitle {
+          font-size: 0.875rem;
+          color: #94a3b8;
+          margin: 0;
+        }
+        .nav {
+          padding: 1rem 0;
+          flex: 1 1 auto;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        .menu-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.75rem 1.5rem;
+          cursor: pointer;
+          color: #e2e8f0;
+          transition: all 0.3s ease;
+        }
+        .menu-item:hover { background: rgba(255,255,255,0.05); }
+        .menu-item.active {
+          background: rgba(8,131,149,0.2);
+          border-right: 3px solid #088395;
+          color: #ffffff;
+        }
+        .menu-item-content { display: flex; align-items: center; }
+        .menu-icon { margin-right: 12px; color: #94a3b8; }
+        .menu-text { font-size: 0.9375rem; font-weight: 500; }
+        .submenu { background: #1a2536; }
+        .submenu-item {
+          padding: 0.625rem 1.5rem 0.625rem 4rem;
+          cursor: pointer;
+          color: #cbd5e1;
+          font-size: 0.875rem;
+        }
+        .submenu-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .logout-button {
+          display: flex;
+          align-items: center;
+          padding: 0.75rem 1.5rem;
+          cursor: pointer;
+          color: #f87171;
+          margin-top: 1rem;
+          border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* ── MAIN CONTENT ── */
+        .updates-main-content { flex: 1; overflow: auto; }
+        .content-padding { padding: 2rem; }
+        .updates-header { margin-bottom: 1.5rem; }
+        .updates-page-title { font-size: 1.875rem; font-weight: bold; color: #1f2937; margin: 0; }
+        .updates-page-subtitle { color: #6b7280; margin-top: 8px; }
+        .updates-btn-secondary {
+          background: #f3f4f6;
+          border: 1px solid #e5e7eb;
+          padding: 8px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .updates-btn-primary {
+          background: #088395;
+          color: #fff;
+          border: none;
+          padding: 8px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+        }
+
+        /* ── TABLE ── */
+        .updates-table-wrapper {
+          overflow-x: auto;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          background: #fff;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .updates-table { width: 100%; border-collapse: collapse; }
+        .updates-th {
+          text-align: left;
+          padding: 10px 12px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #475569;
+          white-space: nowrap;
+          background: #f1f5f9;
+        }
+        .updates-tr { border-top: 1px solid #e2e8f0; }
+        .updates-td { padding: 10px 12px; font-size: 0.875rem; color: #334155; vertical-align: middle; }
+        .updates-badge {
+          padding: 3px 10px;
+          border-radius: 20px;
+          font-size: 0.72rem;
+          font-weight: 600;
+        }
+        .updates-badge-active { background: rgba(8,131,149,0.1); color: #071952; }
+        .updates-badge-inactive { background: #fee2e2; color: #991b1b; }
+        .updates-action-btn {
+          padding: 5px 10px;
+          border-radius: 6px;
+          border: 1px solid #e2e8f0;
+          background: #f8fafc;
+          cursor: pointer;
+          font-size: 0.78rem;
+          color: #334155;
+        }
+        .updates-action-btn-danger { color: #991b1b; border-color: #fca5a5; }
+
+        /* ── MODAL ── */
+        .updates-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 50;
+        }
+        .updates-modal {
+          background: #fff;
+          padding: 20px;
+          max-width: 800px;
+          width: 90%;
+          border-radius: 8px;
+        }
+        .updates-modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+        }
+        .updates-modal-title { margin: 0; color: #1e293b; }
+        .updates-modal-close { background: none; border: none; cursor: pointer; color: #64748b; }
+        .updates-modal-desc { color: #475569; margin-bottom: 12px; }
+
+        /* ── MOBILE CARDS ── */
+        .updates-cards { display: flex; flex-direction: column; gap: 12px; }
+        .updates-card {
+          background: #fff;
+          border-radius: 12px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          border: 1px solid #e2e8f0;
+          overflow: hidden;
+        }
+        .updates-card-img { width: 100%; height: 160px; object-fit: cover; }
+        .updates-card-body { padding: 14px; }
+        .updates-card-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 10px;
+        }
+        .updates-card-title { font-weight: 700; font-size: 1rem; color: #1e293b; flex: 1; padding-right: 8px; }
+        .updates-card-desc { font-size: 0.82rem; color: #475569; margin: 0 0 10px 0; line-height: 1.4; }
+        .updates-card-date { font-size: 0.75rem; color: #94a3b8; margin-bottom: 12px; }
+        .updates-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .updates-card-btn {
+          flex: 1;
+          min-width: 70px;
+          padding: 8px 6px;
+          background: #f1f5f9;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.78rem;
+          color: #1e293b;
+          font-weight: 500;
+        }
+        .updates-card-btn-toggle-deactivate {
+          background: #fff7ed;
+          border-color: #fed7aa;
+          color: #c2410c;
+        }
+        .updates-card-btn-toggle-activate {
+          background: #f0fdf4;
+          border-color: #bbf7d0;
+          color: #15803d;
+        }
+        .updates-card-btn-delete {
+          background: #fee2e2;
+          border: none;
+          color: #991b1b;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1024px) {
+          .sidebar { width: 240px; }
+        }
+
+        @media (max-width: 768px) {
+          .hamburger-menu {
+            display: block;
+            cursor: pointer;
+            color: #ffffff;
+            position: absolute;
+            left: 1rem;
+          }
+          .top-bar {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            background-color: #071952;
+            padding: 0 1rem;
+            position: relative;
+          }
+          .top-bar-logo {
+            display: block;
+            width: 250px;
+            height: auto;
+            margin: -40px;
+            padding: 0;
+          }
+          .sidebar-overlay { display: block; }
+          .updates-container { flex-direction: column; }
+          .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            transform: translateX(-100%);
+            z-index: 15;
+          }
+          .sidebar.sidebar-open { transform: translateX(0); }
+          .sidebar.sidebar-closed { transform: translateX(-100%); }
+          .updates-main-content { padding-top: 60px; }
+          .content-padding { padding: 1rem; }
+        }
+      `}</style>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    display: "flex",
-    height: "100vh",
-    backgroundColor: "#EBF4F6",
-    fontFamily: "Arial, sans-serif",
-  },
-  sidebar: {
-    width: "280px",
-    backgroundColor: "#071952",
-    color: "#f8fafc",
-    position: "sticky",
-    top: 0,
-    height: "100vh",
-    display: "flex",
-    flexDirection: "column",
-    boxSizing: "border-box",
-    overflow: "hidden",
-  },
-  sidebarHeader: {
-    padding: "24px",
-    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-    flex: "0 0 auto",
-  },
-  nav: {
-    padding: "16px 0",
-    flex: "1 1 auto",
-    overflowY: "auto",
-    WebkitOverflowScrolling: "touch",
-  },
-  menuItem: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "12px 24px",
-    cursor: "pointer",
-    color: "#e2e8f0",
-  },
-  menuItemActive: {
-    backgroundColor: "rgba(8, 131, 149, 0.2)",
-    borderRight: "3px solid #088395",
-    color: "#ffffff",
-  },
-  menuItemContent: { display: "flex", alignItems: "center" },
-  menuIcon: { marginRight: "12px", color: "#94a3b8" },
-  menuText: { fontSize: "0.9375rem", fontWeight: "500" },
-  submenu: { backgroundColor: "#1a2536" },
-  submenuItem: {
-    padding: "10px 24px 10px 64px",
-    cursor: "pointer",
-    color: "#cbd5e1",
-    fontSize: "0.875rem",
-  },
-  logoutButton: {
-    display: "flex",
-    alignItems: "center",
-    padding: "12px 24px",
-    cursor: "pointer",
-    color: "#f87171",
-    marginTop: "16px",
-    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-  },
-  mainContent: { flex: 1, overflow: "auto" },
-  contentPadding: { padding: "32px" },
-  header: { marginBottom: "24px" },
-  pageTitle: {
-    fontSize: "1.875rem",
-    fontWeight: "bold",
-    color: "#1f2937",
-    margin: 0,
-  },
-  pageSubtitle: { color: "#6b7280", marginTop: "8px" },
-  headerButton: {
-    backgroundColor: "#f3f4f6",
-    border: "1px solid #e5e7eb",
-    padding: "8px 12px",
-    borderRadius: 6,
-    cursor: "pointer",
-  },
-  headerPrimary: {
-    backgroundColor: "#088395",
-    color: "#fff",
-    border: "none",
-    padding: "8px 12px",
-    borderRadius: 6,
-    cursor: "pointer",
-  },
-  modalOverlay: {
-    position: "fixed",
-    left: 0,
-    top: 0,
-    right: 0,
-    bottom: 0,
-    background: "rgba(0,0,0,0.5)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  modal: {
-    background: "#fff",
-    padding: 20,
-    maxWidth: 800,
-    width: "90%",
-    borderRadius: 8,
-  },
 };
 
 export default UpdatesList;
