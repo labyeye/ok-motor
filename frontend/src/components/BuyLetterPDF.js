@@ -777,6 +777,35 @@ const BuyLetterForm = () => {
     return `${formattedHours}:${formattedMinutes} ${ampm}`;
   };
 
+  // Compress image files on the frontend before upload to stay under Vercel's 4.5MB body limit
+  const compressImageFile = (file, maxWidthPx = 1600, quality = 0.75) => {
+    return new Promise((resolve) => {
+      // PDFs and non-images pass through unchanged
+      if (!file.type.startsWith("image/")) return resolve(file);
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+        if (width > maxWidthPx) {
+          height = Math.round((height * maxWidthPx) / width);
+          width = maxWidthPx;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => resolve(new File([blob], file.name, { type: "image/jpeg", lastModified: Date.now() })),
+          "image/jpeg",
+          quality,
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  };
+
   const saveBuyLetter = async () => {
     try {
       setIsSaving(true);
@@ -844,41 +873,33 @@ const BuyLetterForm = () => {
         form.append("vehicleNOCUploadMode", vehicleNOCUploadMode);
         form.append("vehicleBuyReceiptUploadMode", vehicleBuyReceiptUploadMode);
 
-        if (filesState.vehicleRCFront)
-          form.append("vehicleRCFront", filesState.vehicleRCFront);
-        if (filesState.vehicleRCBack)
-          form.append("vehicleRCBack", filesState.vehicleRCBack);
-        if (filesState.aadhaarFront)
-          form.append("aadhaarFront", filesState.aadhaarFront);
-        if (filesState.aadhaarBack)
-          form.append("aadhaarBack", filesState.aadhaarBack);
-        if (filesState.panPhoto) form.append("panPhoto", filesState.panPhoto);
-        if (filesState.deliveryPhoto)
-          form.append("deliveryPhoto", filesState.deliveryPhoto);
+        // Compress all image files before appending (PDFs pass through unchanged)
+        const [rcFront, rcBack, adhFront, adhBack, pan, delivery] = await Promise.all([
+          filesState.vehicleRCFront ? compressImageFile(filesState.vehicleRCFront) : Promise.resolve(null),
+          filesState.vehicleRCBack ? compressImageFile(filesState.vehicleRCBack) : Promise.resolve(null),
+          filesState.aadhaarFront ? compressImageFile(filesState.aadhaarFront) : Promise.resolve(null),
+          filesState.aadhaarBack ? compressImageFile(filesState.aadhaarBack) : Promise.resolve(null),
+          filesState.panPhoto ? compressImageFile(filesState.panPhoto) : Promise.resolve(null),
+          filesState.deliveryPhoto ? compressImageFile(filesState.deliveryPhoto) : Promise.resolve(null),
+        ]);
+        if (rcFront) form.append("vehicleRCFront", rcFront);
+        if (rcBack) form.append("vehicleRCBack", rcBack);
+        if (adhFront) form.append("aadhaarFront", adhFront);
+        if (adhBack) form.append("aadhaarBack", adhBack);
+        if (pan) form.append("panPhoto", pan);
+        if (delivery) form.append("deliveryPhoto", delivery);
 
-        if (
-          filesState.insuranceCertificate &&
-          filesState.insuranceCertificate.length
-        ) {
-          for (let i = 0; i < filesState.insuranceCertificate.length; i++) {
-            form.append(
-              "insuranceCertificate",
-              filesState.insuranceCertificate[i],
-            );
-          }
+        if (filesState.insuranceCertificate && filesState.insuranceCertificate.length) {
+          const compressed = await Promise.all(filesState.insuranceCertificate.map((f) => compressImageFile(f)));
+          for (const f of compressed) form.append("insuranceCertificate", f);
         }
         if (filesState.vehicleNOC && filesState.vehicleNOC.length) {
-          for (let i = 0; i < filesState.vehicleNOC.length; i++) {
-            form.append("vehicleNOC", filesState.vehicleNOC[i]);
-          }
+          const compressed = await Promise.all(filesState.vehicleNOC.map((f) => compressImageFile(f)));
+          for (const f of compressed) form.append("vehicleNOC", f);
         }
-        if (
-          filesState.vehicleBuyReceipt &&
-          filesState.vehicleBuyReceipt.length
-        ) {
-          for (let i = 0; i < filesState.vehicleBuyReceipt.length; i++) {
-            form.append("vehicleBuyReceipt", filesState.vehicleBuyReceipt[i]);
-          }
+        if (filesState.vehicleBuyReceipt && filesState.vehicleBuyReceipt.length) {
+          const compressed = await Promise.all(filesState.vehicleBuyReceipt.map((f) => compressImageFile(f)));
+          for (const f of compressed) form.append("vehicleBuyReceipt", f);
         }
 
         if (editLetter?._id && editLetter.documents) {
