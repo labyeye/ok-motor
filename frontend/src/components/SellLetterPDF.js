@@ -29,6 +29,8 @@ import {
   Menu,
   X,
   Image,
+  ImageIcon,
+  Shield,
   Settings,
   RefreshCw,
   Megaphone,

@@ -17,8 +17,9 @@ import {
   Menu,
   X,
   RefreshCw,
-  Image,
   Megaphone,
+  ImageIcon,
+  Shield,
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import logo from "../images/company.png";

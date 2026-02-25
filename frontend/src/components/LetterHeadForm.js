@@ -19,7 +19,7 @@ import {
   Settings,
   RefreshCw,
   Megaphone,
-  Image,
+  Shield,
   Bike,
   Menu,
   X,
