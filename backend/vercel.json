@@ -5,14 +5,13 @@
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["assets/**/*"],
-        "maxDuration": 300
+        "includeFiles": ["assets/**/*"]
       }
     }
   ],
   "routes": [{ "src": "/api/(.*)", "dest": "server.js" }],
   "functions": {
-    "api/**/*.js": {
+    "server.js": {
       "maxDuration": 300
     }
   }
