@@ -78,7 +78,7 @@ const ServiceBillForm = () => {
     serviceDate: new Date().toISOString().split("T")[0],
     deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
     serviceType: "regular",
-    serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
+    serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0, gstApplicable: false }],
     discount: 0,
     discountType: "fixed",
     discountPercentage: 0,
@@ -99,14 +99,19 @@ const ServiceBillForm = () => {
       0,
     );
 
-    const totalRateValue = (data.serviceItems || []).reduce(
-      (sum, item) =>
-        sum + (parseFloat(item.rate) || 0) * (parseFloat(item.quantity) || 1),
-      0,
-    );
+    // Tax only on items that have gstApplicable:true
+    const taxableBase = data.taxEnabled
+      ? (data.serviceItems || []).reduce(
+          (sum, item) =>
+            item.gstApplicable
+              ? sum + (parseFloat(item.rate) || 0) * (parseFloat(item.quantity) || 1)
+              : sum,
+          0,
+        )
+      : 0;
 
     const taxAmount = data.taxEnabled
-      ? ((data.taxRate || 0) / 100) * totalRateValue
+      ? parseFloat((((data.taxRate || 0) / 100) * taxableBase).toFixed(2))
       : 0;
 
     let discountAmount = 0;
@@ -185,21 +190,12 @@ const ServiceBillForm = () => {
       const qty = parseFloat(items[index].quantity) || 1;
       const rateNum = parseFloat(cleanedValue) || 0;
 
-      // Calculate amount based on whether tax is enabled
-      // If tax enabled (18%), user wants Amount to be Rate - 18%
-      // So Amount = Rate * (1 - 0.18)
-      const taxRate = formData.taxEnabled
-        ? parseFloat(formData.taxRate) || 18
-        : 0;
-      const multiplier = formData.taxEnabled ? 1 - taxRate / 100 : 1;
-
-      // Calculate individual item amount with multiplier
-      const newAmount = parseFloat((rateNum * qty * multiplier).toFixed(2));
+      // Amount is always rate × qty — tax is added on top via calculateAmounts
+      const newAmount = parseFloat((rateNum * qty).toFixed(2));
 
       items[index] = {
         ...items[index],
         rate: cleanedValue,
-
         amount: newAmount,
       };
 
@@ -254,7 +250,7 @@ const ServiceBillForm = () => {
   const addServiceItem = () => {
     const newItems = [
       ...formData.serviceItems,
-      { description: "", quantity: 1, rate: 0, amount: 0 },
+      { description: "", quantity: 1, rate: 0, amount: 0, gstApplicable: false },
     ];
 
     setFormData({
@@ -576,7 +572,7 @@ const ServiceBillForm = () => {
             .toISOString()
             .split("T")[0],
           serviceType: "regular",
-          serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
+          serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0, gstApplicable: false }],
           discount: 0,
           taxRate: 0,
           paymentMethod: "cash",
@@ -702,7 +698,7 @@ const ServiceBillForm = () => {
               .split("T")[0],
             serviceType: "regular",
             serviceItems: [
-              { description: "", quantity: 1, rate: 0, amount: 0 },
+              { description: "", quantity: 1, rate: 0, amount: 0, gstApplicable: false },
             ],
             discount: 0,
             taxRate: 0,
@@ -1843,6 +1839,33 @@ const ServiceBillForm = () => {
                     </div>
                     <button
                       type="button"
+                      title={item.gstApplicable ? "GST applicable (click to disable)" : "GST not applicable (click to enable)"}
+                      onClick={() => {
+                        const items = [...formData.serviceItems];
+                        items[index] = { ...items[index], gstApplicable: !items[index].gstApplicable };
+                        const newData = { ...formData, serviceItems: items };
+                        setFormData({ ...newData, ...calculateAmounts(newData) });
+                      }}
+                      style={{
+                        padding: "6px 10px",
+                        borderRadius: "6px",
+                        border: "1.5px solid",
+                        borderColor: item.gstApplicable ? "#16a34a" : "#cbd5e1",
+                        backgroundColor: item.gstApplicable ? "#dcfce7" : "#f8fafc",
+                        color: item.gstApplicable ? "#16a34a" : "#94a3b8",
+                        cursor: "pointer",
+                        fontSize: "11px",
+                        fontWeight: "600",
+                        whiteSpace: "nowrap",
+                        transition: "all 0.2s",
+                        ...(isMobile ? { alignSelf: "flex-end", marginTop: 4 } : {}),
+                      }}
+                      tabIndex={-1}
+                    >
+                      GST {item.gstApplicable ? "✓" : "✗"}
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => removeServiceItem(index)}
                       style={
                         isMobile
@@ -1888,29 +1911,11 @@ const ServiceBillForm = () => {
                         checked={formData.taxEnabled}
                         onChange={() => {
                           const enabling = !formData.taxEnabled;
-                          const currentTaxRate = enabling ? 18 : 0;
-
-                          // Recalculate all item amounts based on new tax setting
-                          const updatedItems = formData.serviceItems.map(
-                            (item) => {
-                              const qty = parseFloat(item.quantity) || 1;
-                              const rate = parseFloat(item.rate) || 0;
-                              const multiplier = enabling
-                                ? 1 - currentTaxRate / 100
-                                : 1;
-                              const newAmount = parseFloat(
-                                (rate * qty * multiplier).toFixed(2),
-                              );
-                              return { ...item, amount: newAmount };
-                            },
-                          );
 
                           const newData = {
                             ...formData,
                             taxEnabled: enabling,
-                            taxRate: currentTaxRate,
-                            serviceItems: updatedItems,
-                            // if tax disabled, also disable include-in-pdf flag
+                            taxRate: enabling ? 18 : 0,
                             includeBusinessInPdf: enabling
                               ? formData.includeBusinessInPdf
                               : false,
