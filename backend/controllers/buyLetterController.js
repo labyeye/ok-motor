@@ -243,192 +243,119 @@ exports.createBuyLetter = [
       };
 
       const processPdfFileToPages = async (file, nameHint) => {
-        // Split multi-page PDF into single-page PDF buffers and upload each page separately
+        // Split multi-page PDF into single-page PDF buffers and upload each page in parallel
         const srcPdf = await PDFDocument.load(file.buffer);
-        const pageUrls = [];
-        for (let i = 0; i < srcPdf.getPageCount(); i++) {
-          const newPdf = await PDFDocument.create();
-          const [copied] = await newPdf.copyPages(srcPdf, [i]);
-          newPdf.addPage(copied);
-          const singlePageBytes = await newPdf.save();
-          const filename = `${Date.now()}-${nameHint}-page-${i + 1}.pdf`;
-          const uploaded = await uploadBufferToImageKit(
-            Buffer.from(singlePageBytes),
-            filename,
-            "application/pdf",
-          );
-          pageUrls.push(uploaded.url);
-        }
+        const pageCount = srcPdf.getPageCount();
+        const pageBuffers = await Promise.all(
+          Array.from({ length: pageCount }, async (_, i) => {
+            const newPdf = await PDFDocument.create();
+            const [copied] = await newPdf.copyPages(srcPdf, [i]);
+            newPdf.addPage(copied);
+            const bytes = await newPdf.save();
+            return { buf: Buffer.from(bytes), index: i };
+          }),
+        );
+        const pageUrls = await Promise.all(
+          pageBuffers.map(({ buf, index }) => {
+            const filename = `${Date.now()}-${nameHint}-page-${index + 1}.pdf`;
+            return uploadBufferToImageKit(buf, filename, "application/pdf").then(
+              (u) => u.url,
+            );
+          }),
+        );
         return pageUrls;
       };
 
       try {
-        if (files.vehicleRCFront && files.vehicleRCFront[0]) {
-          uploadedUrls.vehicleRC.front = await processFile(
-            files.vehicleRCFront[0],
-            "vehicle-rc-front",
+        // Helper: process a multi-file group (images or PDFs) in parallel, keeping order
+        const processMultiFileGroup = async (fileList, namePrefix, limit = 200) => {
+          if (!fileList || !fileList.length) return [];
+          const capped = fileList.slice(0, limit);
+          const results = await Promise.all(
+            capped.map((f, i) => {
+              const isPdf =
+                f.mimetype === "application/pdf" ||
+                f.originalname?.toLowerCase().endsWith(".pdf");
+              return isPdf
+                ? processPdfFileToPages(f, `${namePrefix}-${i}`)
+                : processImageFile(f, `${namePrefix}-${i}`).then((u) => [u]);
+            }),
           );
-        } else if (preservedDocs.vehicleRCFront) {
-          uploadedUrls.vehicleRC.front = preservedDocs.vehicleRCFront;
-        }
+          // flatten: processPdfFileToPages returns array, processImageFile returns single url wrapped above
+          return results.flat();
+        };
 
-        if (files.vehicleRCBack && files.vehicleRCBack[0]) {
-          uploadedUrls.vehicleRC.back = await processFile(
-            files.vehicleRCBack[0],
-            "vehicle-rc-back",
-          );
-        } else if (preservedDocs.vehicleRCBack) {
-          uploadedUrls.vehicleRC.back = preservedDocs.vehicleRCBack;
-        }
+        // Run all single-file uploads in parallel
+        const [rcFront, rcBack, aadhaarFront, aadhaarBack, pan, delivery] =
+          await Promise.all([
+            files.vehicleRCFront?.[0]
+              ? processFile(files.vehicleRCFront[0], "vehicle-rc-front")
+              : Promise.resolve(preservedDocs.vehicleRCFront || null),
+            files.vehicleRCBack?.[0]
+              ? processFile(files.vehicleRCBack[0], "vehicle-rc-back")
+              : Promise.resolve(preservedDocs.vehicleRCBack || null),
+            files.aadhaarFront?.[0]
+              ? processFile(files.aadhaarFront[0], "aadhaar-front")
+              : Promise.resolve(preservedDocs.aadhaarFront || null),
+            files.aadhaarBack?.[0]
+              ? processFile(files.aadhaarBack[0], "aadhaar-back")
+              : Promise.resolve(preservedDocs.aadhaarBack || null),
+            files.panPhoto?.[0]
+              ? processFile(files.panPhoto[0], "pan-photo")
+              : Promise.resolve(preservedDocs.panPhoto || null),
+            files.deliveryPhoto?.[0]
+              ? processFile(files.deliveryPhoto[0], "delivery-photo")
+              : Promise.resolve(preservedDocs.deliveryPhoto || null),
+          ]);
 
-        if (files.aadhaarFront && files.aadhaarFront[0]) {
-          uploadedUrls.aadhaar.front = await processFile(
-            files.aadhaarFront[0],
-            "aadhaar-front",
-          );
-        } else if (preservedDocs.aadhaarFront) {
-          uploadedUrls.aadhaar.front = preservedDocs.aadhaarFront;
-        }
+        uploadedUrls.vehicleRC.front = rcFront;
+        uploadedUrls.vehicleRC.back = rcBack;
+        uploadedUrls.aadhaar.front = aadhaarFront;
+        uploadedUrls.aadhaar.back = aadhaarBack;
+        uploadedUrls.pan = pan;
+        uploadedUrls.deliveryPhoto = delivery;
 
-        if (files.aadhaarBack && files.aadhaarBack[0]) {
-          uploadedUrls.aadhaar.back = await processFile(
-            files.aadhaarBack[0],
-            "aadhaar-back",
-          );
-        } else if (preservedDocs.aadhaarBack) {
-          uploadedUrls.aadhaar.back = preservedDocs.aadhaarBack;
-        }
+        // Run all multi-file group uploads in parallel
+        const [vehiclePhotos, insuranceCertPages, nocPages, buyReceiptPages] =
+          await Promise.all([
+            files.vehiclePhotos?.length
+              ? Promise.all(
+                  files.vehiclePhotos.slice(0, 10).map((f, i) =>
+                    processFile(f, `vehicle-photo-${i}`),
+                  ),
+                )
+              : Promise.resolve(
+                  preservedDocs.vehiclePhotos && Array.isArray(preservedDocs.vehiclePhotos)
+                    ? preservedDocs.vehiclePhotos
+                    : [],
+                ),
+            files.insuranceCertificate?.length
+              ? processMultiFileGroup(files.insuranceCertificate, "insurance-certificate", 200)
+              : Promise.resolve(
+                  preservedDocs.insuranceCertificate && Array.isArray(preservedDocs.insuranceCertificate)
+                    ? preservedDocs.insuranceCertificate
+                    : [],
+                ),
+            files.vehicleNOC?.length
+              ? processMultiFileGroup(files.vehicleNOC, "vehicle-noc", 200)
+              : Promise.resolve(
+                  preservedDocs.vehicleNOC && Array.isArray(preservedDocs.vehicleNOC)
+                    ? preservedDocs.vehicleNOC
+                    : [],
+                ),
+            files.vehicleBuyReceipt?.length
+              ? processMultiFileGroup(files.vehicleBuyReceipt, "vehicle-buy-receipt", 200)
+              : Promise.resolve(
+                  preservedDocs.vehicleBuyReceipt && Array.isArray(preservedDocs.vehicleBuyReceipt)
+                    ? preservedDocs.vehicleBuyReceipt
+                    : [],
+                ),
+          ]);
 
-        if (files.panPhoto && files.panPhoto[0]) {
-          uploadedUrls.pan = await processFile(files.panPhoto[0], "pan-photo");
-        } else if (preservedDocs.panPhoto) {
-          uploadedUrls.pan = preservedDocs.panPhoto;
-        }
-
-        if (files.deliveryPhoto && files.deliveryPhoto[0]) {
-          uploadedUrls.deliveryPhoto = await processFile(
-            files.deliveryPhoto[0],
-            "delivery-photo",
-          );
-        } else if (preservedDocs.deliveryPhoto) {
-          uploadedUrls.deliveryPhoto = preservedDocs.deliveryPhoto;
-        }
-
-        if (files.vehiclePhotos && files.vehiclePhotos.length) {
-          for (let i = 0; i < files.vehiclePhotos.length && i < 10; i++) {
-            const url = await processFile(
-              files.vehiclePhotos[i],
-              `vehicle-photo-${i}`,
-            );
-            uploadedUrls.vehiclePhotos.push(url);
-          }
-        } else if (
-          preservedDocs.vehiclePhotos &&
-          Array.isArray(preservedDocs.vehiclePhotos)
-        ) {
-          uploadedUrls.vehiclePhotos = preservedDocs.vehiclePhotos;
-        }
-
-        // Handle multiple insuranceCertificate uploads (images or PDFs)
-        if (files.insuranceCertificate && files.insuranceCertificate.length) {
-          for (
-            let i = 0;
-            i < files.insuranceCertificate.length &&
-            uploadedUrls.insuranceCertificate.pages.length < 200;
-            i++
-          ) {
-            const f = files.insuranceCertificate[i];
-            if (
-              f.mimetype === "application/pdf" ||
-              f.originalname?.toLowerCase().endsWith(".pdf")
-            ) {
-              const pageUrls = await processPdfFileToPages(
-                f,
-                `insurance-certificate-${i}`,
-              );
-              uploadedUrls.insuranceCertificate.pages.push(...pageUrls);
-            } else {
-              const url = await processImageFile(
-                f,
-                `insurance-certificate-${i}`,
-              );
-              uploadedUrls.insuranceCertificate.pages.push(url);
-            }
-          }
-        } else if (
-          preservedDocs.insuranceCertificate &&
-          Array.isArray(preservedDocs.insuranceCertificate)
-        ) {
-          uploadedUrls.insuranceCertificate.pages =
-            uploadedUrls.insuranceCertificate.pages.concat(
-              preservedDocs.insuranceCertificate,
-            );
-        }
-
-        // Handle multiple vehicleNOC uploads
-        if (files.vehicleNOC && files.vehicleNOC.length) {
-          for (
-            let i = 0;
-            i < files.vehicleNOC.length &&
-            uploadedUrls.vehicleNOC.pages.length < 200;
-            i++
-          ) {
-            const f = files.vehicleNOC[i];
-            if (
-              f.mimetype === "application/pdf" ||
-              f.originalname?.toLowerCase().endsWith(".pdf")
-            ) {
-              const pageUrls = await processPdfFileToPages(
-                f,
-                `vehicle-noc-${i}`,
-              );
-              uploadedUrls.vehicleNOC.pages.push(...pageUrls);
-            } else {
-              const url = await processImageFile(f, `vehicle-noc-${i}`);
-              uploadedUrls.vehicleNOC.pages.push(url);
-            }
-          }
-        } else if (
-          preservedDocs.vehicleNOC &&
-          Array.isArray(preservedDocs.vehicleNOC)
-        ) {
-          uploadedUrls.vehicleNOC.pages = uploadedUrls.vehicleNOC.pages.concat(
-            preservedDocs.vehicleNOC,
-          );
-        }
-
-        // Handle multiple vehicleBuyReceipt uploads
-        if (files.vehicleBuyReceipt && files.vehicleBuyReceipt.length) {
-          for (
-            let i = 0;
-            i < files.vehicleBuyReceipt.length &&
-            uploadedUrls.vehicleBuyReceipt.pages.length < 200;
-            i++
-          ) {
-            const f = files.vehicleBuyReceipt[i];
-            if (
-              f.mimetype === "application/pdf" ||
-              f.originalname?.toLowerCase().endsWith(".pdf")
-            ) {
-              const pageUrls = await processPdfFileToPages(
-                f,
-                `vehicle-buy-receipt-${i}`,
-              );
-              uploadedUrls.vehicleBuyReceipt.pages.push(...pageUrls);
-            } else {
-              const url = await processImageFile(f, `vehicle-buy-receipt-${i}`);
-              uploadedUrls.vehicleBuyReceipt.pages.push(url);
-            }
-          }
-        } else if (
-          preservedDocs.vehicleBuyReceipt &&
-          Array.isArray(preservedDocs.vehicleBuyReceipt)
-        ) {
-          uploadedUrls.vehicleBuyReceipt.pages =
-            uploadedUrls.vehicleBuyReceipt.pages.concat(
-              preservedDocs.vehicleBuyReceipt,
-            );
-        }
+        uploadedUrls.vehiclePhotos = vehiclePhotos;
+        uploadedUrls.insuranceCertificate.pages = insuranceCertPages;
+        uploadedUrls.vehicleNOC.pages = nocPages;
+        uploadedUrls.vehicleBuyReceipt.pages = buyReceiptPages;
       } catch (uploadErr) {
         console.error("Image upload failed, aborting create:", uploadErr);
         return res

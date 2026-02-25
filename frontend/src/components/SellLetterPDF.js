@@ -72,8 +72,8 @@ const SellLetterForm = () => {
   const [previewLanguage, setPreviewLanguage] = useState("hindi");
   const [selectedLanguage, setSelectedLanguage] = useState("hindi");
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [downloadProgress, setDownloadProgress] = useState(0);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [, setDownloadProgress] = useState(0);
+  const [, setIsDownloading] = useState(false);
   const [progressStep, setProgressStep] = useState(0); // 0=hidden,1=uploading,2=saving,3=generating,4=done
   const [errors, setErrors] = useState({});
   const [focusedInput, setFocusedInput] = useState(null);
@@ -844,61 +844,6 @@ const SellLetterForm = () => {
     );
   };
 
-  const progressStyles = {
-    progressContainer: {
-      width: "100%", height: "20px", backgroundColor: "#e2e8f0",
-      borderRadius: "10px", overflow: "hidden", marginBottom: "8px",
-    },
-    progressBar: {
-      height: "100%", backgroundColor: "#088395", transition: "width 0.3s ease",
-    },
-    progressText: { fontSize: "0.875rem", color: "#64748b" },
-  };
-
-  const modalStyles = {
-    overlay: {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 1000,
-    },
-    modal: {
-      backgroundColor: "#ffffff",
-      borderRadius: "8px",
-      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-      width: "80%",
-      maxWidth: "800px",
-      maxHeight: "90vh",
-      overflowY: "auto",
-    },
-    header: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "16px 24px",
-      borderBottom: "1px solid #e2e8f0",
-    },
-    title: {
-      fontSize: "1.25rem",
-      fontWeight: "600",
-      margin: 0,
-      color: "#1e293b",
-    },
-    logoContainer: {
-      marginRight: "16px",
-    },
-    logo: {
-      width: "180px",
-      height: "220px",
-      objectFit: "contain",
-    },
-  };
   const simulateProgress = () => {
     return new Promise((resolve) => {
       let progress = 0;

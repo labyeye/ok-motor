@@ -84,8 +84,8 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // Add timeout middleware
 app.use((req, res, next) => {
   // Set timeout for all requests to 120 seconds
-  req.setTimeout(120000);
-  res.setTimeout(120000);
+  req.setTimeout(290000);
+  res.setTimeout(290000);
   next();
 });
 
