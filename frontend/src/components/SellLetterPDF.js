@@ -1220,7 +1220,7 @@ const SellLetterForm = () => {
   const compressImageFile = (file, maxWidthPx = 1600, quality = 0.75) => {
     return new Promise((resolve) => {
       if (!file.type.startsWith("image/")) return resolve(file);
-      const img = new Image();
+      const img = new window.Image();
       const url = URL.createObjectURL(file);
       img.onload = () => {
         URL.revokeObjectURL(url);

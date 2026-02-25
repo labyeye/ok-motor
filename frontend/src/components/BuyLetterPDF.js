@@ -782,7 +782,7 @@ const BuyLetterForm = () => {
     return new Promise((resolve) => {
       // PDFs and non-images pass through unchanged
       if (!file.type.startsWith("image/")) return resolve(file);
-      const img = new Image();
+      const img = new window.Image();
       const url = URL.createObjectURL(file);
       img.onload = () => {
         URL.revokeObjectURL(url);
