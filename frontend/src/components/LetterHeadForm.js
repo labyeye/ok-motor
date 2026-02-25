@@ -27,6 +27,7 @@ import {
   Trash2,
   Eye,
   Check,
+  ImageIcon
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
