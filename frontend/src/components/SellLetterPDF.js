@@ -74,6 +74,7 @@ const SellLetterForm = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [progressStep, setProgressStep] = useState(0); // 0=hidden,1=uploading,2=saving,3=generating,4=done
   const [errors, setErrors] = useState({});
   const [focusedInput, setFocusedInput] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -763,66 +764,95 @@ const SellLetterForm = () => {
       return { ...prev, vehiclePhotos: arr };
     });
   };
-  const DownloadProgressModal = ({ progress, onClose }) => {
+  const ProcessingModal = ({ step }) => {
+    const steps = [
+      { label: "Uploading Documents", icon: "📤" },
+      { label: "Saving Data", icon: "💾" },
+      { label: "Generating PDF", icon: "📄" },
+    ];
     return (
-      <div style={modalStyles.overlay}>
-        <div style={modalStyles.modal}>
-          <div style={modalStyles.header}>
-            <div style={modalStyles.logoContainer}>
-              <img src={logo1} alt="OK Motor Logo" style={modalStyles.logo} />
-            </div>
-            <h2 style={modalStyles.title}>Generating PDF</h2>
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: "rgba(0,0,0,0.55)", display: "flex",
+        alignItems: "center", justifyContent: "center", zIndex: 2000,
+      }}>
+        <div style={{
+          backgroundColor: "#fff", borderRadius: "20px",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+          padding: "36px 32px", width: "320px", maxWidth: "90vw",
+        }}>
+          <h2 style={{
+            fontSize: "1.15rem", fontWeight: "700", color: "#0f172a",
+            marginBottom: "28px", textAlign: "center",
+          }}>Processing Sell Letter</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0px" }}>
+            {steps.map((s, i) => {
+              const idx = i + 1;
+              const done = step > idx;
+              const active = step === idx;
+              return (
+                <div key={idx}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                    <div style={{
+                      width: "40px", height: "40px", borderRadius: "50%",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0, fontSize: "18px",
+                      backgroundColor: done ? "#16a34a" : active ? "#fff" : "#f1f5f9",
+                      border: active ? "2.5px solid #088395" : done ? "none" : "2px solid #cbd5e1",
+                      boxShadow: active ? "0 0 0 4px rgba(8,131,149,0.15)" : "none",
+                      transition: "all 0.4s ease",
+                    }}>
+                      {done ? (
+                        <span style={{ color: "#fff", fontWeight: "bold", fontSize: "18px" }}>✓</span>
+                      ) : active ? (
+                        <span style={{
+                          display: "inline-block", width: "20px", height: "20px",
+                          border: "3px solid #088395", borderTopColor: "transparent",
+                          borderRadius: "50%",
+                          animation: "sellLetterSpin 0.8s linear infinite",
+                        }} />
+                      ) : (
+                        <span style={{ color: "#94a3b8", fontSize: "16px" }}>{s.icon}</span>
+                      )}
+                    </div>
+                    <span style={{
+                      fontSize: "0.95rem", fontWeight: active ? "700" : "500",
+                      color: done ? "#16a34a" : active ? "#088395" : "#94a3b8",
+                      transition: "color 0.3s",
+                    }}>{s.label}</span>
+                  </div>
+                  {i < steps.length - 1 && (
+                    <div style={{
+                      marginLeft: "19px", width: "2px", height: "28px",
+                      backgroundColor: done ? "#16a34a" : "#e2e8f0",
+                      transition: "background-color 0.4s",
+                    }} />
+                  )}
+                </div>
+              );
+            })}
           </div>
-          <div style={{ padding: "24px", textAlign: "center" }}>
-            <div style={progressStyles.progressContainer}>
-              <div
-                style={{
-                  ...progressStyles.progressBar,
-                  width: `${progress}%`,
-                }}
-              ></div>
-            </div>
-            <p style={progressStyles.progressText}>{progress}% Complete</p>
-            {progress === 100 && (
-              <button
-                onClick={onClose}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#088395",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  marginTop: "16px",
-                }}
-              >
-                Close
-              </button>
-            )}
-          </div>
+          {step === 4 && (
+            <p style={{
+              marginTop: "24px", textAlign: "center", color: "#16a34a",
+              fontWeight: "700", fontSize: "1rem",
+            }}>✓ All done! PDF downloaded.</p>
+          )}
         </div>
+        <style>{`@keyframes sellLetterSpin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   };
 
   const progressStyles = {
     progressContainer: {
-      width: "100%",
-      height: "20px",
-      backgroundColor: "#e2e8f0",
-      borderRadius: "10px",
-      overflow: "hidden",
-      marginBottom: "8px",
+      width: "100%", height: "20px", backgroundColor: "#e2e8f0",
+      borderRadius: "10px", overflow: "hidden", marginBottom: "8px",
     },
     progressBar: {
-      height: "100%",
-      backgroundColor: "#088395",
-      transition: "width 0.3s ease",
+      height: "100%", backgroundColor: "#088395", transition: "width 0.3s ease",
     },
-    progressText: {
-      fontSize: "0.875rem",
-      color: "#64748b",
-    },
+    progressText: { fontSize: "0.875rem", color: "#64748b" },
   };
 
   const modalStyles = {
@@ -1470,6 +1500,11 @@ const SellLetterForm = () => {
             {
               headers: { "Content-Type": "multipart/form-data" },
               timeout: 300000, // 5 minutes timeout
+              onUploadProgress: (evt) => {
+                if (evt.total && evt.loaded >= evt.total) {
+                  setProgressStep(2); // upload done → saving
+                }
+              },
             },
           );
         }
@@ -1480,6 +1515,9 @@ const SellLetterForm = () => {
           response = await axios.post(
             "https://ok-motor-51l3.vercel.app/api/sell-letters",
             dataToSave,
+            {
+              timeout: 300000, // 5 minutes timeout
+            },
           );
         }
       }
@@ -1549,12 +1587,26 @@ const SellLetterForm = () => {
         return;
       }
 
+      const hasFiles =
+        filesState.vehicleRCFront || filesState.vehicleRCBack ||
+        filesState.aadhaarFront || filesState.aadhaarBack ||
+        filesState.panPhoto || filesState.deliveryPhoto ||
+        (filesState.vehiclePhotos && filesState.vehiclePhotos.length > 0) ||
+        (filesState.insuranceCertificate && filesState.insuranceCertificate.length > 0) ||
+        (filesState.vehicleNOC && filesState.vehicleNOC.length > 0) ||
+        (filesState.vehicleBuyReceipt && filesState.vehicleBuyReceipt.length > 0);
+
+      setProgressStep(hasFiles ? 1 : 2);
+      setIsDownloading(true);
+
       let savedLetter;
 
       if (saveResultRef.current && !editLetter?._id && !createdId) {
         savedLetter = saveResultRef.current;
+        setProgressStep(2);
       } else if (savePromiseRef.current && !editLetter?._id && !createdId) {
         savedLetter = await savePromiseRef.current;
+        setProgressStep(2);
       } else {
         savePromiseRef.current = saveToDatabase();
         try {
@@ -1565,22 +1617,33 @@ const SellLetterForm = () => {
         } finally {
           savePromiseRef.current = null;
         }
+        setProgressStep(2);
       }
 
       if (!savedLetter) throw new Error("Failed to save sell letter");
 
       const newId = savedLetter._id || savedLetter?.data?._id;
       if (newId && !createdId) setCreatedId(newId);
+
+      setProgressStep(3);
       if (selectedLanguage === "hindi") {
         await fillAndDownloadHindiPdf();
       } else {
         await fillAndDownloadEnglishPdf();
       }
+
+      setProgressStep(4);
+      setTimeout(() => {
+        setProgressStep(0);
+        setIsDownloading(false);
+      }, 1500);
+
       return savedLetter;
     } catch (error) {
       console.error("Error checking/saving sell letter:", error);
+      setProgressStep(0);
+      setIsDownloading(false);
       let errorMessage = "Failed to process sell letter. Please try again.";
-
       if (error.response) {
         errorMessage = error.response.data.message || errorMessage;
         if (error.response.data.error) {
@@ -4161,11 +4224,8 @@ const SellLetterForm = () => {
             </div>
           </form>
         </div>
-        {isDownloading && (
-          <DownloadProgressModal
-            progress={downloadProgress}
-            onClose={() => setIsDownloading(false)}
-          />
+        {progressStep > 0 && (
+          <ProcessingModal step={progressStep} />
         )}
         {showPreviewModal && (
           <div style={styles.modalOverlay}>

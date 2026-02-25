@@ -22,9 +22,9 @@ exports.createBuyLetter = [
     { name: "panPhoto" },
     { name: "deliveryPhoto" },
     // support multiple pages/files for new documents
-    { name: "insuranceCertificate", maxCount: 50 },
-    { name: "vehicleNOC", maxCount: 50 },
-    { name: "vehicleBuyReceipt", maxCount: 50 },
+    { name: "insuranceCertificate", maxCount: 6 },
+    { name: "vehicleNOC", maxCount: 6 },
+    { name: "vehicleBuyReceipt", maxCount: 1 },
     { name: "vehiclePhotos" },
   ]),
   async (req, res) => {
