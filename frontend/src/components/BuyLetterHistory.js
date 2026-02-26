@@ -663,8 +663,8 @@ const BuyLetterHistory = () => {
     const renderTwoColumnPage = async (pageItems, pageTitle = null) => {
       const page = pdfDoc.addPage([595, 842]);
       await drawHeaderFooter(pdfDoc, page);
-      const margin = 40;
-      const colWidth = (595 - 3 * margin) / 2;
+      const margin = 20;
+      const colWidth = (595 - 2 * margin) / 2;
       const colGap = margin;
       const maxHeight = 250;
 
@@ -831,7 +831,7 @@ const BuyLetterHistory = () => {
       const asset = await embedAssetFromUrl(pdfDoc, item.url);
       if (asset) {
         const pageWidth = 595;
-        const margin = 50;
+        const margin = 20;
         const maxWidth = pageWidth - 2 * margin;
         const maxHeight = 660;
 

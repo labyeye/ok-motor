@@ -905,8 +905,8 @@ const SellLetterHistory = () => {
             try {
               await drawHeaderFooter(pdfDoc, page);
             } catch (e) {}
-            const margin = 40;
-            const colWidth = (595 - 3 * margin) / 2;
+            const margin = 20;
+            const colWidth = (595 - 2 * margin) / 2;
             const colGap = margin;
             const maxHeight = 250;
 
@@ -984,7 +984,7 @@ const SellLetterHistory = () => {
             if (asset) {
               const pageWidth = 595;
               const pageHeight = 842;
-              const margin = 50;
+              const margin = 20;
               const maxWidth = pageWidth - 2 * margin;
               const maxHeight = pageHeight - 150;
 

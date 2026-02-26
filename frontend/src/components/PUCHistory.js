@@ -21,6 +21,7 @@ import {
   Trash2,
   FileText,
   Edit,
+  Search,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -38,6 +39,7 @@ const PUCHistory = () => {
   const [activeMenu, setActiveMenu] = useState("PUC");
   const [expandedMenus, setExpandedMenus] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -395,6 +397,14 @@ const PUCHistory = () => {
     },
   };
 
+  const filteredHistory = searchTerm
+    ? history.filter(
+        (item) =>
+          item.regNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.personName?.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+    : history;
+
   return (
     <div
       style={{
@@ -560,11 +570,22 @@ const PUCHistory = () => {
             </div>
           </div>
 
+          <div style={{ marginBottom: "16px", position: "relative" }}>
+            <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#64748b", pointerEvents: "none" }} />
+            <input
+              type="text"
+              placeholder="Search by name or reg number..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ width: "100%", padding: "10px 16px 10px 40px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.875rem", boxSizing: "border-box", outline: "none" }}
+            />
+          </div>
+
           <div style={styles.card}>
             {loading ? (
               <p>Loading...</p>
-            ) : history.length === 0 ? (
-              <p>No PUC records found.</p>
+            ) : filteredHistory.length === 0 ? (
+              <p>{searchTerm ? `No records found for "${searchTerm}"` : "No PUC records found."}</p>
             ) : (
               <>
                 {/* Desktop Table */}
@@ -582,7 +603,7 @@ const PUCHistory = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {history.map((item) => (
+                      {filteredHistory.map((item) => (
                         <tr key={item._id}>
                           <td style={styles.td}>{item.personName}</td>
                           <td style={styles.td}>{item.personPhone}</td>
@@ -612,7 +633,7 @@ const PUCHistory = () => {
                 {/* Mobile Cards */}
                 {isMobile && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {history.map((item) => {
+                    {filteredHistory.map((item) => {
                       const expiry = item.pucExpiry || item.pucExpiryDate;
                       const expiryStr = expiry ? (() => { const p = new Date(expiry); return isNaN(p) ? "—" : p.toLocaleDateString("en-IN"); })() : "—";
                       return (
