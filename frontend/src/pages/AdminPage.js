@@ -771,17 +771,19 @@ const AdminPage = () => {
             </div>
           </div>
         </div>
-        <div className="card purple">
+        
+        <div className="card teal">
           <div className="card-content">
             <div>
-              <p className="card-label">Total Bikes</p>
-              <p className="card-value">{extraStats.totalBikes}</p>
+              <p className="card-label">Total Bought</p>
+              <p className="card-value">{dashboardData.totalBuyLetters || 0}</p>
             </div>
             <div className="card-icon">
-              <Bike />
+              <ShoppingCart />
             </div>
           </div>
         </div>
+
         <div className="card green">
           <div className="card-content">
             <div>
@@ -793,6 +795,7 @@ const AdminPage = () => {
             </div>
           </div>
         </div>
+        
       </div>
 
       {/* 2. Free Service Counts */}
@@ -1181,25 +1184,7 @@ const AdminPage = () => {
       );
     };
 
-    const monthDateCell = (dateStr, idx, usedCount) => {
-      const isUsed = (usedCount || 0) >= idx;
-      return (
-        <span
-          style={{
-            display: "inline-block",
-            padding: "2px 8px",
-            borderRadius: 6,
-            background: isUsed ? "#dcfce7" : "#f1f5f9",
-            color: isUsed ? "#166534" : "#475569",
-            fontSize: "0.75rem",
-            fontWeight: isUsed ? 700 : 400,
-          }}
-        >
-          {dateStr ? formatDate(dateStr) : "—"}
-          {isUsed && " ✓"}
-        </span>
-      );
-    };
+    
 
     return (
       <div style={fsCardStyle}>
@@ -1290,9 +1275,6 @@ const AdminPage = () => {
                     "Reg. Number",
                     "Brand",
                     "Model",
-                    "Month 1",
-                    "Month 2",
-                    "Month 3",
                     "Used",
                     "Reminder",
                   ].map((h) => (
@@ -1380,15 +1362,6 @@ const AdminPage = () => {
                         </td>
                         <td style={fsTdStyle}>{row.vehicleBrand || "—"}</td>
                         <td style={fsTdStyle}>{row.vehicleModel || "—"}</td>
-                        <td style={fsTdStyle}>
-                          {monthDateCell(row.month1, 1, row.usedCount)}
-                        </td>
-                        <td style={fsTdStyle}>
-                          {monthDateCell(row.month2, 2, row.usedCount)}
-                        </td>
-                        <td style={fsTdStyle}>
-                          {monthDateCell(row.month3, 3, row.usedCount)}
-                        </td>
                         <td style={fsTdStyle}>{usedBadge(row.usedCount)}</td>
                         <td style={fsTdStyle}>
                           {reminderBadge(nextPending, row.usedCount)}
@@ -1414,36 +1387,75 @@ const AdminPage = () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-        // fetch standalone PUC
-        const resPUC = await axios.get(
-          "https://ok-motor-51l3.vercel.app/api/puc?limit=2000",
-          {
+
+        const BASE = "https://ok-motor-51l3.vercel.app";
+
+        // Fetch PUC model records AND sell letters in parallel
+        const [resPUC, resSell] = await Promise.all([
+          axios.get(`${BASE}/api/puc?limit=2000`, {
             headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+          }),
+          axios.get(`${BASE}/api/sell-letters?limit=2000`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch(() => ({ data: [] })),
+        ]);
 
-        const additionalPUC = resPUC.data || [];
+        const pucRecords = resPUC.data || [];
+        const sellLetters = Array.isArray(resSell.data)
+          ? resSell.data
+          : resSell.data?.data || [];
 
-        // Format PUC Model items
-        const pucItems = (additionalPUC || [])
-          .filter((p) => p && p.pucExpiry)
+        // Build map: regNo -> sell letter (only those with pucExpiryDate)
+        const sellByReg = new Map();
+        sellLetters.forEach((s) => {
+          if (!s.pucExpiryDate) return;
+          const key = (s.registrationNumber || "").trim().toLowerCase();
+          if (key) sellByReg.set(key, s);
+        });
+
+        // Rows from sell letters that have a PUC expiry date → "Sold Vehicle"
+        const sellRows = [];
+        sellByReg.forEach((s, key) => {
+          sellRows.push({
+            ...s,
+            _id: s._id,
+            type: "sold_vehicle",
+            source: "Sold Vehicle",
+            displayReg: s.registrationNumber,
+            displayName: s.buyerName,
+            displayPhone: s.buyerPhone,
+            displayVehicle: `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
+            displayExpiry: s.pucExpiryDate,
+          });
+        });
+
+        // Build set of reg nos already covered by sell letters
+        const soldRegNos = new Set(sellByReg.keys());
+
+        // PUC model records NOT in sell letters → "PUC Only"
+        const pucOnlyRows = pucRecords
+          .filter((p) => {
+            if (!p || !p.pucExpiry) return false;
+            const key = (p.regNo || "").trim().toLowerCase();
+            return !soldRegNos.has(key);
+          })
           .map((item) => ({
             ...item,
             type: "puc_model",
+            source: "PUC Only",
             displayReg: item.regNo,
             displayName: item.personName,
             displayPhone: item.personPhone,
-            displayVehicle: `${item.brand || ""} ${
-              item.vehicleModel || ""
-            }`.trim(),
+            displayVehicle: `${item.brand || ""} ${item.vehicleModel || ""}`.trim(),
             displayExpiry: item.pucExpiry,
           }));
 
-        setItems(pucItems);
+        const allItems = [...sellRows, ...pucOnlyRows];
+        setItems(allItems);
         console.log("PUC Data Loaded:", {
-          pucModelCount: pucItems.length,
-          total: pucItems.length,
-          sample: pucItems[0],
+          sellLetterRows: sellRows.length,
+          pucOnlyRows: pucOnlyRows.length,
+          total: allItems.length,
         });
       } catch (err) {
         console.error("Error fetching data for PUC reminders:", err);
@@ -1792,18 +1804,18 @@ const AdminPage = () => {
                           </td>
                           <td style={tTdStyle}>{daysBadge(daysUntil)}</td>
                           <td style={tTdStyle}>
-                            {row.type === "sell_letter" ? (
+                            {row.source === "Sold Vehicle" ? (
                               <span
                                 style={{
                                   fontSize: "0.72rem",
                                   padding: "3px 8px",
-                                  background: "#e0f2fe",
-                                  color: "#0284c7",
+                                  background: "#dcfce7",
+                                  color: "#15803d",
                                   borderRadius: 20,
                                   fontWeight: 600,
                                 }}
                               >
-                                Sold Vehicle
+                                🚗 Sold Vehicle
                               </span>
                             ) : (
                               <span
@@ -1870,37 +1882,77 @@ const AdminPage = () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-        // fetch standalone insurance
-        const resInsurance = await axios.get(
-          "https://ok-motor-51l3.vercel.app/api/insurance?limit=2000",
-          {
+
+        const BASE = "https://ok-motor-51l3.vercel.app";
+
+        // Fetch Insurance model records AND sell letters in parallel
+        const [resInsurance, resSell] = await Promise.all([
+          axios.get(`${BASE}/api/insurance?limit=2000`, {
             headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+          }),
+          axios.get(`${BASE}/api/sell-letters?limit=2000`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch(() => ({ data: [] })),
+        ]);
 
-        const additionalInsurance = resInsurance.data || [];
+        const insuranceRecords = resInsurance.data || [];
+        const sellLetters = Array.isArray(resSell.data)
+          ? resSell.data
+          : resSell.data?.data || [];
 
-        // Format Insurance Model items
-        const insuranceItems = (additionalInsurance || [])
-          .filter((s) => s && s.insuranceExpiry)
+        // Build map: regNo -> sell letter (only those with insuranceExpiryDate)
+        const sellByReg = new Map();
+        sellLetters.forEach((s) => {
+          if (!s.insuranceExpiryDate) return;
+          const key = (s.registrationNumber || "").trim().toLowerCase();
+          if (key) sellByReg.set(key, s);
+        });
+
+        // Rows from sell letters that have an insurance expiry date → "Sold Vehicle"
+        const sellRows = [];
+        sellByReg.forEach((s) => {
+          sellRows.push({
+            ...s,
+            _id: s._id,
+            type: "sold_vehicle",
+            source: "Sold Vehicle",
+            displayReg: s.registrationNumber,
+            displayName: s.buyerName,
+            displayPhone: s.buyerPhone,
+            displayVehicle: `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
+            displayExpiry: s.insuranceExpiryDate,
+            displayCompany: s.insuranceCompany,
+          });
+        });
+
+        // Build set of reg nos already covered by sell letters
+        const soldRegNos = new Set(sellByReg.keys());
+
+        // Insurance model records NOT in sell letters → "Insurance Only"
+        const insuranceOnlyRows = insuranceRecords
+          .filter((s) => {
+            if (!s || !s.insuranceExpiry) return false;
+            const key = (s.regNo || "").trim().toLowerCase();
+            return !soldRegNos.has(key);
+          })
           .map((item) => ({
             ...item,
             type: "insurance_model",
+            source: "Insurance Only",
             displayReg: item.regNo,
             displayName: item.personName,
             displayPhone: item.personPhone,
-            displayVehicle: `${item.brand || ""} ${
-              item.vehicleModel || ""
-            }`.trim(),
+            displayVehicle: `${item.brand || ""} ${item.vehicleModel || ""}`.trim(),
             displayExpiry: item.insuranceExpiry,
             displayCompany: item.insuranceCompany,
           }));
 
-        setItems(insuranceItems);
+        const allItems = [...sellRows, ...insuranceOnlyRows];
+        setItems(allItems);
         console.log("Insurance Data Loaded:", {
-          insuranceModelCount: insuranceItems.length,
-          total: insuranceItems.length,
-          sample: insuranceItems[0],
+          sellLetterRows: sellRows.length,
+          insuranceOnlyRows: insuranceOnlyRows.length,
+          total: allItems.length,
         });
       } catch (err) {
         console.error("Error fetching data for Insurance reminders:", err);
@@ -2243,20 +2295,30 @@ const AdminPage = () => {
                               : "—"}
                           </td>
                           <td style={iTdStyle}>{iDaysBadge(daysUntil)}</td>
-                          <td style={iTdStyle}>{row.displayCompany || "—"}</td>
                           <td style={iTdStyle}>
-                            {row.type === "sell_letter" ? (
+                            {row.displayCompany ? (
+                              <span title={row.displayCompany}>
+                                {row.displayCompany.length > 20
+                                  ? `${row.displayCompany.slice(0, 10)}…`
+                                  : row.displayCompany}
+                              </span>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                          <td style={iTdStyle}>
+                            {row.source === "Sold Vehicle" ? (
                               <span
                                 style={{
                                   fontSize: "0.72rem",
                                   padding: "3px 8px",
-                                  background: "#e0f2fe",
-                                  color: "#0284c7",
+                                  background: "#dcfce7",
+                                  color: "#15803d",
                                   borderRadius: 20,
                                   fontWeight: 600,
                                 }}
                               >
-                                Sold Vehicle
+                                🚗 Sold Vehicle
                               </span>
                             ) : (
                               <span

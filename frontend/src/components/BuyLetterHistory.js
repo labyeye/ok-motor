@@ -663,16 +663,15 @@ const BuyLetterHistory = () => {
     const renderTwoColumnPage = async (pageItems, pageTitle = null) => {
       const page = pdfDoc.addPage([595, 842]);
       await drawHeaderFooter(pdfDoc, page);
-      const margin = 20;
-      const colWidth = (595 - 2 * margin) / 2;
+      const margin = 0;
+      const colWidth = (595 - 2 * 10) / 2;
       const colGap = margin;
       const maxHeight = 250;
 
       for (let i = 0; i < pageItems.length; i++) {
         const item = pageItems[i];
-        const xPos = margin + i * (colWidth + colGap);
+        const xPos = 10 + i * (colWidth + colGap);
         const yTop = 700;
-
         const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
         page.drawText(item.title, {
           x: xPos,
