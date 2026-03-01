@@ -35,6 +35,7 @@ import logo from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 import logo1 from "../images/okmotorback.png";
 import logoheader from "../images/okmotor.png";
+import PdfPreview from "./PdfPreview";
 const AdvancePayBillForm = () => {
   const { user, logout } = useContext(AuthContext);
 
@@ -1461,62 +1462,126 @@ const AdvancePayBillForm = () => {
           </form>
         </div>
       </div>
-      {showPreviewModal && (
-        <div style={styles.modalOverlay}>
+      {showPreviewModal && previewPdf && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+          onClick={() => {
+            try { if (previewPdf) URL.revokeObjectURL(previewPdf); } catch (e) {}
+            setPreviewPdf(null);
+            setShowPreviewModal(false);
+          }}
+        >
           <div
             style={{
-              ...styles.modalContent,
-              width: isMobile ? "95vw" : "800px",
-              maxWidth: isMobile ? "95vw" : "90%",
-              height: isMobile ? "80vh" : undefined,
-              overflow: "hidden",
+              backgroundColor: "#fff",
+              borderRadius: "12px",
+              maxWidth: "960px",
+              width: "100%",
+              height: "90vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
             }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={styles.modalTitle}>Advance Payment Invoice Preview</h3>
             <div
               style={{
-                height: isMobile ? "65vh" : "70vh",
-                width: "100%",
-                marginBottom: "20px",
+                padding: "20px 24px",
+                borderBottom: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                backgroundColor: "#f8fafc",
+                borderTopLeftRadius: "12px",
+                borderTopRightRadius: "12px",
+                flexShrink: 0,
               }}
             >
-              {previewPdf ? (
-                <iframe
-                  src={previewPdf}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    border: "1px solid #e2e8f0",
-                  }}
-                  title="PDF Preview"
-                />
+              <h2
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "700",
+                  color: "#0f172a",
+                  margin: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <FileText size={22} color="#088395" />
+                Advance Bill Preview
+              </h2>
+              <button
+                onClick={() => {
+                  try { if (previewPdf) URL.revokeObjectURL(previewPdf); } catch (e) {}
+                  setPreviewPdf(null);
+                  setShowPreviewModal(false);
+                }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", padding: "4px" }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div
+              style={{
+                flex: 1,
+                overflow: "auto",
+                backgroundColor: "#525659",
+                minHeight: 0,
+              }}
+            >
+              {isMobile ? (
+                <PdfPreview pdfUrl={previewPdf} />
               ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100%",
-                    color: "#64748b",
-                  }}
+                <object
+                  data={previewPdf}
+                  type="application/pdf"
+                  style={{ width: "100%", height: "100%", minHeight: "500px", border: "none", display: "block" }}
+                  aria-label="Advance Bill PDF Preview"
                 >
-                  Loading preview...
-                </div>
+                  <iframe
+                    src={`${previewPdf}#toolbar=0&navpanes=0&scrollbar=1`}
+                    style={{ width: "100%", height: "100%", minHeight: "500px", border: "none", display: "block" }}
+                    title="Advance Bill PDF Preview"
+                  />
+                </object>
               )}
             </div>
-
-            <button
-              style={styles.modalCloseButton}
-              onClick={() => {
-                try {
-                  if (previewPdf) URL.revokeObjectURL(previewPdf);
-                } catch (e) {}
-                setPreviewPdf(null);
-                setShowPreviewModal(false);
+            <div
+              style={{
+                padding: "16px 24px",
+                borderTop: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "flex-end",
+                backgroundColor: "#f8fafc",
+                borderBottomLeftRadius: "12px",
+                borderBottomRightRadius: "12px",
+                flexShrink: 0,
               }}
             >
-              Close Preview
-            </button>
+              <button
+                onClick={() => {
+                  try { if (previewPdf) URL.revokeObjectURL(previewPdf); } catch (e) {}
+                  setPreviewPdf(null);
+                  setShowPreviewModal(false);
+                }}
+                style={{ padding: "10px 24px", backgroundColor: "#e2e8f0", color: "#1e293b", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "500", fontSize: "0.875rem" }}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
