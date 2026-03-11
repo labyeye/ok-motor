@@ -204,6 +204,20 @@ exports.createBuyLetter = [
 
       // Parse preserved documents from frontend (URLs that shouldn't be lost)
       let preservedDocs = {};
+
+      // existingDocuments is the full previous documents object sent as ultimate fallback
+      let existingDocuments = null;
+      if (body.existingDocuments) {
+        try {
+          existingDocuments =
+            typeof body.existingDocuments === "string"
+              ? JSON.parse(body.existingDocuments)
+              : body.existingDocuments;
+        } catch (e) {
+          console.error("Failed to parse existingDocuments:", e);
+        }
+      }
+
       if (body.preservedDocuments) {
         try {
           preservedDocs =
@@ -213,6 +227,22 @@ exports.createBuyLetter = [
         } catch (e) {
           console.error("Failed to parse preservedDocuments:", e);
         }
+      }
+
+      // If individual preservedDocs keys are empty but we have existingDocuments,
+      // populate preservedDocs from existingDocuments as a safe fallback
+      if (existingDocuments && Object.keys(preservedDocs).length === 0) {
+        const ed = existingDocuments;
+        if (ed.vehicleRC?.front) preservedDocs.vehicleRCFront = ed.vehicleRC.front;
+        if (ed.vehicleRC?.back)  preservedDocs.vehicleRCBack  = ed.vehicleRC.back;
+        if (ed.aadhaar?.front)   preservedDocs.aadhaarFront   = ed.aadhaar.front;
+        if (ed.aadhaar?.back)    preservedDocs.aadhaarBack    = ed.aadhaar.back;
+        if (ed.pan)              preservedDocs.panPhoto        = ed.pan;
+        if (ed.deliveryPhoto)    preservedDocs.deliveryPhoto   = ed.deliveryPhoto;
+        if (ed.vehiclePhotos?.length)                         preservedDocs.vehiclePhotos          = ed.vehiclePhotos;
+        if (ed.insuranceCertificate?.pages?.length)           preservedDocs.insuranceCertificate   = ed.insuranceCertificate.pages;
+        if (ed.vehicleNOC?.pages?.length)                     preservedDocs.vehicleNOC             = ed.vehicleNOC.pages;
+        if (ed.vehicleBuyReceipt?.pages?.length)              preservedDocs.vehicleBuyReceipt      = ed.vehicleBuyReceipt.pages;
       }
 
       const { PDFDocument } = require("pdf-lib");
@@ -369,21 +399,40 @@ exports.createBuyLetter = [
           .json({ message: "Image upload failed", error: uploadErr.message });
       }
 
+      // Final fallback: if existingDocuments was provided, restore any field that is still null
+      if (existingDocuments) {
+        const ed = existingDocuments;
+        if (!uploadedUrls.vehicleRC.front && ed.vehicleRC?.front)  uploadedUrls.vehicleRC.front = ed.vehicleRC.front;
+        if (!uploadedUrls.vehicleRC.back  && ed.vehicleRC?.back)   uploadedUrls.vehicleRC.back  = ed.vehicleRC.back;
+        if (!uploadedUrls.aadhaar.front   && ed.aadhaar?.front)    uploadedUrls.aadhaar.front   = ed.aadhaar.front;
+        if (!uploadedUrls.aadhaar.back    && ed.aadhaar?.back)     uploadedUrls.aadhaar.back    = ed.aadhaar.back;
+        if (!uploadedUrls.pan             && ed.pan)               uploadedUrls.pan             = ed.pan;
+        if (!uploadedUrls.deliveryPhoto   && ed.deliveryPhoto)     uploadedUrls.deliveryPhoto   = ed.deliveryPhoto;
+        if (!uploadedUrls.vehiclePhotos?.length && ed.vehiclePhotos?.length)
+          uploadedUrls.vehiclePhotos = ed.vehiclePhotos;
+        if (!uploadedUrls.insuranceCertificate.pages?.length && ed.insuranceCertificate?.pages?.length)
+          uploadedUrls.insuranceCertificate.pages = ed.insuranceCertificate.pages;
+        if (!uploadedUrls.vehicleNOC.pages?.length && ed.vehicleNOC?.pages?.length)
+          uploadedUrls.vehicleNOC.pages = ed.vehicleNOC.pages;
+        if (!uploadedUrls.vehicleBuyReceipt.pages?.length && ed.vehicleBuyReceipt?.pages?.length)
+          uploadedUrls.vehicleBuyReceipt.pages = ed.vehicleBuyReceipt.pages;
+      }
+
       buyLetterData.documents = {
         vehicleRC: uploadedUrls.vehicleRC,
-        vehicleRCUploadMode: body.vehicleRCUploadMode || "separate",
+        vehicleRCUploadMode: body.vehicleRCUploadMode || existingDocuments?.vehicleRCUploadMode || "separate",
         aadhaar: uploadedUrls.aadhaar,
-        aadhaarUploadMode: body.aadhaarUploadMode || "separate",
+        aadhaarUploadMode: body.aadhaarUploadMode || existingDocuments?.aadhaarUploadMode || "separate",
         pan: uploadedUrls.pan,
         deliveryPhoto: uploadedUrls.deliveryPhoto,
         insuranceCertificate: uploadedUrls.insuranceCertificate,
         insuranceCertificateUploadMode:
-          body.insuranceCertificateUploadMode || "separate",
+          body.insuranceCertificateUploadMode || existingDocuments?.insuranceCertificateUploadMode || "separate",
         vehicleNOC: uploadedUrls.vehicleNOC,
-        vehicleNOCUploadMode: body.vehicleNOCUploadMode || "separate",
+        vehicleNOCUploadMode: body.vehicleNOCUploadMode || existingDocuments?.vehicleNOCUploadMode || "separate",
         vehicleBuyReceipt: uploadedUrls.vehicleBuyReceipt,
         vehicleBuyReceiptUploadMode:
-          body.vehicleBuyReceiptUploadMode || "separate",
+          body.vehicleBuyReceiptUploadMode || existingDocuments?.vehicleBuyReceiptUploadMode || "separate",
         vehiclePhotos: uploadedUrls.vehiclePhotos,
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };

@@ -2294,117 +2294,353 @@ const BikeHistory = ({ externalSearchTerm }) => {
               )}
             </div>
           ) : (
-            <div style={styles.tableContainer}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={styles.tableHeader}>Date & Time</th>
-                    <th style={styles.tableHeader}>Action</th>
-                    <th style={styles.tableHeader}>KM Reading</th>
-                    <th style={styles.tableHeader}>Amount</th>
-                    <th style={styles.tableHeader}>Details</th>
-                    <th style={styles.tableHeader}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bikeHistory.map((item) => (
-                    <tr
-                      key={`${item.type}-${item._id}`}
-                      style={styles.tableRow}
-                    >
-                      <td style={styles.tableCell}>
-                        {item.type === "buy" || item.type === "sell" ? (
-                          <div>
-                            <div>
-                              Created:{" "}
-                              {item.createdAt
-                                ? new Date(item.createdAt).toLocaleString(
-                                    "en-IN",
-                                    {
-                                      day: "2-digit",
-                                      month: "2-digit",
-                                      year: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    },
-                                  )
-                                : item.saleDate
-                                  ? new Date(item.saleDate).toLocaleString(
+            <>
+              {!isMobile && (
+                <div style={styles.tableContainer}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.tableHeader}>Date & Time</th>
+                        <th style={styles.tableHeader}>Action</th>
+                        <th style={styles.tableHeader}>KM Reading</th>
+                        <th style={styles.tableHeader}>Amount</th>
+                        <th style={styles.tableHeader}>Details</th>
+                        <th style={styles.tableHeader}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bikeHistory.map((item) => (
+                        <tr
+                          key={`${item.type}-${item._id}`}
+                          style={styles.tableRow}
+                        >
+                          <td style={styles.tableCell}>
+                            {item.type === "buy" || item.type === "sell" ? (
+                              <div>
+                                <div>
+                                  Created:{" "}
+                                  {item.createdAt
+                                    ? new Date(item.createdAt).toLocaleString(
+                                        "en-IN",
+                                        {
+                                          day: "2-digit",
+                                          month: "2-digit",
+                                          year: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        },
+                                      )
+                                    : item.saleDate
+                                      ? new Date(item.saleDate).toLocaleString(
+                                          "en-IN",
+                                        )
+                                      : new Date(item.date).toLocaleString("en-IN")}
+                                </div>
+                                {item.editedAt && (
+                                  <div
+                                    style={{ color: "#64748b", fontSize: "0.9em" }}
+                                  >
+                                    Edited:{" "}
+                                    {new Date(item.editedAt).toLocaleString(
                                       "en-IN",
-                                    )
-                                  : new Date(item.date).toLocaleString("en-IN")}
-                            </div>
-                            {item.editedAt && (
-                              <div
-                                style={{ color: "#64748b", fontSize: "0.9em" }}
-                              >
-                                Edited:{" "}
-                                {new Date(item.editedAt).toLocaleString(
-                                  "en-IN",
-                                  {
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  },
+                                      {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      },
+                                    )}
+                                  </div>
                                 )}
                               </div>
+                            ) : (
+                              new Date(item.date).toLocaleString("en-IN", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
                             )}
-                          </div>
-                        ) : (
-                          new Date(item.date).toLocaleString("en-IN", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        )}
-                      </td>
-                      <td style={styles.tableCell}>
+                          </td>
+                          <td style={styles.tableCell}>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              {getActionIcon(item.type)}
+                              {getActionLabel(item.type)}
+                            </div>
+                          </td>
+                          <td style={styles.tableCell}>
+                            {item.type === "buy" && (
+                              <span style={{ fontWeight: 600, color: "#0f766e" }}>
+                                {item.vehiclekm ? formatKm(item.vehiclekm) : "—"}
+                              </span>
+                            )}
+                            {item.type === "sell" && (
+                              <span style={{ fontWeight: 600, color: "#b45309" }}>
+                                {item.vehiclekm ? formatKm(item.vehiclekm) : "—"}
+                              </span>
+                            )}
+                            {item.type === "service" && (
+                              <span style={{ fontWeight: 600, color: "#1d4ed8" }}>
+                                {item.kmReading ? formatKm(item.kmReading) : "—"}
+                              </span>
+                            )}
+                            {item.type !== "buy" &&
+                              item.type !== "sell" &&
+                              item.type !== "service" && (
+                                <span style={{ color: "#94a3b8" }}>—</span>
+                              )}
+                          </td>
+                          <td style={styles.tableCell}>{getAmount(item)}</td>
+                          <td style={styles.tableCell}>{getDetails(item)}</td>
+                          <td style={styles.tableCell}>
+                            <div style={styles.actionButtons}>
+                              <button
+                                onClick={() => fetchPdf(item._id, item.type)}
+                                style={styles.viewButton}
+                                title="View PDF"
+                              >
+                                <Eye size={14} />
+                                View
+                              </button>
+                              <button
+                                onClick={() =>
+                                  downloadPdf(
+                                    item._id,
+                                    item.type,
+                                    getFileName(item),
+                                  )
+                                }
+                                style={styles.downloadButton}
+                                title="Download PDF"
+                              >
+                                <Download size={14} />
+                                Download
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {isMobile && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
+                  {bikeHistory.map((item) => {
+                    const baseDate =
+                      item.createdAt || item.saleDate || item.date;
+                    const dateLabel = baseDate
+                      ? new Date(baseDate).toLocaleString("en-IN", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "";
+
+                    return (
+                      <div
+                        key={`${item.type}-${item._id}`}
+                        style={{
+                          backgroundColor: "#ffffff",
+                          borderRadius: "12px",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                          padding: "16px",
+                          border: "1px solid #e2e8f0",
+                        }}
+                      >
+                        {/* Card Header */}
                         <div
                           style={{
                             display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            marginBottom: "10px",
                           }}
                         >
-                          {getActionIcon(item.type)}
-                          {getActionLabel(item.type)}
+                          <div>
+                            <div
+                              style={{
+                                fontWeight: 700,
+                                fontSize: "0.95rem",
+                                color: "#1e293b",
+                              }}
+                            >
+                              {(searchTerm || "").toUpperCase() || "Vehicle"}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "0.78rem",
+                                color: "#64748b",
+                                marginTop: "2px",
+                              }}
+                            >
+                              {dateLabel}
+                            </div>
+                          </div>
+                          <div
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                              backgroundColor: "rgba(8,131,149,0.06)",
+                              color: "#071952",
+                              borderRadius: "999px",
+                              padding: "4px 10px",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {getActionIcon(item.type)}
+                            <span>{getActionLabel(item.type)}</span>
+                          </div>
                         </div>
-                      </td>
-                      <td style={styles.tableCell}>
-                        {item.type === "buy" && (
-                          <span style={{ fontWeight: 600, color: "#0f766e" }}>
-                            {item.vehiclekm ? formatKm(item.vehiclekm) : "—"}
-                          </span>
-                        )}
-                        {item.type === "sell" && (
-                          <span style={{ fontWeight: 600, color: "#b45309" }}>
-                            {item.vehiclekm ? formatKm(item.vehiclekm) : "—"}
-                          </span>
-                        )}
-                        {item.type === "service" && (
-                          <span style={{ fontWeight: 600, color: "#1d4ed8" }}>
-                            {item.kmReading ? formatKm(item.kmReading) : "—"}
-                          </span>
-                        )}
-                        {item.type !== "buy" && item.type !== "sell" && item.type !== "service" && (
-                          <span style={{ color: "#94a3b8" }}>—</span>
-                        )}
-                      </td>
-                      <td style={styles.tableCell}>{getAmount(item)}</td>
-                      <td style={styles.tableCell}>{getDetails(item)}</td>
-                      <td style={styles.tableCell}>
-                        <div style={styles.actionButtons}>
+
+                        {/* Card Details */}
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "6px",
+                            marginBottom: "12px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#64748b",
+                                fontWeight: 500,
+                              }}
+                            >
+                              KM
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#1e293b",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {item.type === "service"
+                                ? item.kmReading
+                                  ? formatKm(item.kmReading)
+                                  : "—"
+                                : item.vehiclekm
+                                ? formatKm(item.vehiclekm)
+                                : "—"}
+                            </span>
+                          </div>
+
+                          {!!getAmount(item) && (
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#64748b",
+                                  fontWeight: 500,
+                                }}
+                              >
+                                Amount
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "0.85rem",
+                                  color: "#071952",
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {getAmount(item)}
+                              </span>
+                            </div>
+                          )}
+
+                          {!!getDetails(item) && (
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                gap: "8px",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#64748b",
+                                  fontWeight: 500,
+                                }}
+                              >
+                                Details
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#1e293b",
+                                  fontWeight: 500,
+                                  textAlign: "right",
+                                  maxWidth: "65%",
+                                }}
+                              >
+                                {getDetails(item)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Actions */}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "8px",
+                            borderTop: "1px solid #e2e8f0",
+                            paddingTop: "10px",
+                          }}
+                        >
                           <button
                             onClick={() => fetchPdf(item._id, item.type)}
-                            style={styles.viewButton}
-                            title="View PDF"
+                            style={{
+                              flex: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "4px",
+                              padding: "8px",
+                              backgroundColor: "#f1f5f9",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              fontSize: "0.78rem",
+                              color: "#1e293b",
+                              fontWeight: 500,
+                            }}
                           >
-                            <Eye size={14} />
-                            View
+                            <Eye size={14} /> View
                           </button>
                           <button
                             onClick={() =>
@@ -2414,19 +2650,31 @@ const BikeHistory = ({ externalSearchTerm }) => {
                                 getFileName(item),
                               )
                             }
-                            style={styles.downloadButton}
-                            title="Download PDF"
+                            style={{
+                              flex: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "4px",
+                              padding: "8px",
+                              backgroundColor: "#071952",
+                              border: "none",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              fontSize: "0.78rem",
+                              color: "#ffffff",
+                              fontWeight: 500,
+                            }}
                           >
-                            <Download size={14} />
-                            Download
+                            <Download size={14} /> Download
                           </button>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

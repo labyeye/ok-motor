@@ -196,6 +196,19 @@ exports.createSellLetter = [
         vehicleBuyReceipt: { pages: [] },
       };
 
+      // Parse existingDocuments (full previous documents object — ultimate fallback)
+      let existingDocuments = null;
+      if (req.body.existingDocuments) {
+        try {
+          existingDocuments =
+            typeof req.body.existingDocuments === "string"
+              ? JSON.parse(req.body.existingDocuments)
+              : req.body.existingDocuments;
+        } catch (e) {
+          console.error("Error parsing existingDocuments:", e);
+        }
+      }
+
       try {
         if (req.body.preservedDocuments) {
           const p = JSON.parse(req.body.preservedDocuments);
@@ -220,6 +233,19 @@ exports.createSellLetter = [
           if (p.vehicleBuyReceipt && Array.isArray(p.vehicleBuyReceipt)) {
             uploadedUrls.vehicleBuyReceipt.pages = [...p.vehicleBuyReceipt];
           }
+        } else if (existingDocuments) {
+          // No individual preservedDocs sent — populate from full existingDocuments
+          const ed = existingDocuments;
+          if (ed.vehicleRC?.front)  uploadedUrls.vehicleRC.front         = ed.vehicleRC.front;
+          if (ed.vehicleRC?.back)   uploadedUrls.vehicleRC.back          = ed.vehicleRC.back;
+          if (ed.aadhaar?.front)    uploadedUrls.aadhaar.front           = ed.aadhaar.front;
+          if (ed.aadhaar?.back)     uploadedUrls.aadhaar.back            = ed.aadhaar.back;
+          if (ed.pan)               uploadedUrls.pan                     = ed.pan;
+          if (ed.deliveryPhoto)     uploadedUrls.deliveryPhoto           = ed.deliveryPhoto;
+          if (ed.vehiclePhotos?.length)                       uploadedUrls.vehiclePhotos              = [...ed.vehiclePhotos];
+          if (ed.insuranceCertificate?.pages?.length)         uploadedUrls.insuranceCertificate.pages = [...ed.insuranceCertificate.pages];
+          if (ed.vehicleNOC?.pages?.length)                   uploadedUrls.vehicleNOC.pages           = [...ed.vehicleNOC.pages];
+          if (ed.vehicleBuyReceipt?.pages?.length)            uploadedUrls.vehicleBuyReceipt.pages    = [...ed.vehicleBuyReceipt.pages];
         }
       } catch (e) {
         console.error("Error parsing preservedDocuments:", e);
@@ -363,22 +389,41 @@ exports.createSellLetter = [
           .json({ message: "Image upload failed", error: uploadErr.message });
       }
 
+      // Final fallback: if existingDocuments was provided, restore any field still null
+      if (existingDocuments) {
+        const ed = existingDocuments;
+        if (!uploadedUrls.vehicleRC.front && ed.vehicleRC?.front)  uploadedUrls.vehicleRC.front = ed.vehicleRC.front;
+        if (!uploadedUrls.vehicleRC.back  && ed.vehicleRC?.back)   uploadedUrls.vehicleRC.back  = ed.vehicleRC.back;
+        if (!uploadedUrls.aadhaar.front   && ed.aadhaar?.front)    uploadedUrls.aadhaar.front   = ed.aadhaar.front;
+        if (!uploadedUrls.aadhaar.back    && ed.aadhaar?.back)     uploadedUrls.aadhaar.back    = ed.aadhaar.back;
+        if (!uploadedUrls.pan             && ed.pan)               uploadedUrls.pan             = ed.pan;
+        if (!uploadedUrls.deliveryPhoto   && ed.deliveryPhoto)     uploadedUrls.deliveryPhoto   = ed.deliveryPhoto;
+        if (!uploadedUrls.vehiclePhotos?.length && ed.vehiclePhotos?.length)
+          uploadedUrls.vehiclePhotos = [...ed.vehiclePhotos];
+        if (!uploadedUrls.insuranceCertificate.pages?.length && ed.insuranceCertificate?.pages?.length)
+          uploadedUrls.insuranceCertificate.pages = [...ed.insuranceCertificate.pages];
+        if (!uploadedUrls.vehicleNOC.pages?.length && ed.vehicleNOC?.pages?.length)
+          uploadedUrls.vehicleNOC.pages = [...ed.vehicleNOC.pages];
+        if (!uploadedUrls.vehicleBuyReceipt.pages?.length && ed.vehicleBuyReceipt?.pages?.length)
+          uploadedUrls.vehicleBuyReceipt.pages = [...ed.vehicleBuyReceipt.pages];
+      }
+
       sellLetterData.documents = {
         vehicleRC: uploadedUrls.vehicleRC,
-        vehicleRCUploadMode: bodyData.vehicleRCUploadMode || "separate",
+        vehicleRCUploadMode: bodyData.vehicleRCUploadMode || existingDocuments?.vehicleRCUploadMode || "separate",
         aadhaar: uploadedUrls.aadhaar,
-        aadhaarUploadMode: bodyData.aadhaarUploadMode || "separate",
+        aadhaarUploadMode: bodyData.aadhaarUploadMode || existingDocuments?.aadhaarUploadMode || "separate",
         pan: uploadedUrls.pan,
         deliveryPhoto: uploadedUrls.deliveryPhoto,
         vehiclePhotos: uploadedUrls.vehiclePhotos,
         insuranceCertificate: uploadedUrls.insuranceCertificate,
         insuranceCertificateUploadMode:
-          bodyData.insuranceCertificateUploadMode || "separate",
+          bodyData.insuranceCertificateUploadMode || existingDocuments?.insuranceCertificateUploadMode || "separate",
         vehicleNOC: uploadedUrls.vehicleNOC,
-        vehicleNOCUploadMode: bodyData.vehicleNOCUploadMode || "separate",
+        vehicleNOCUploadMode: bodyData.vehicleNOCUploadMode || existingDocuments?.vehicleNOCUploadMode || "separate",
         vehicleBuyReceipt: uploadedUrls.vehicleBuyReceipt,
         vehicleBuyReceiptUploadMode:
-          bodyData.vehicleBuyReceiptUploadMode || "separate",
+          bodyData.vehicleBuyReceiptUploadMode || existingDocuments?.vehicleBuyReceiptUploadMode || "separate",
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };
 

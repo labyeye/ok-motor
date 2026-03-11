@@ -995,18 +995,69 @@ const BuyLetterForm = () => {
           );
         }
       } else {
-        const payload = { ...dataToSave };
+        // Even when no new files are selected, if we're editing we must
+        // preserve existing documents by sending them as preservedDocuments.
+        if (editLetter?._id && editLetter.documents) {
+          const form = new FormData();
 
-        if (isElectron) {
-          response = await apiService.post("/api/buy-letters", payload);
+          Object.entries(dataToSave).forEach(([key, value]) => {
+            if (value === undefined || value === null) return;
+            if (typeof value === "object") {
+              form.append(key, JSON.stringify(value));
+            } else {
+              form.append(key, String(value));
+            }
+          });
+
+          form.append("aadhaarUploadMode", aadhaarUploadMode);
+          form.append("vehicleRCUploadMode", vehicleRCUploadMode);
+          form.append("insuranceCertificateUploadMode", insuranceCertificateUploadMode);
+          form.append("vehicleNOCUploadMode", vehicleNOCUploadMode);
+          form.append("vehicleBuyReceiptUploadMode", vehicleBuyReceiptUploadMode);
+
+          // Build preservedDocs from filePreviews (which hold the existing URLs)
+          const preservedDocs = {};
+          const docMap = [
+            "vehicleRCFront", "vehicleRCBack",
+            "aadhaarFront", "aadhaarBack",
+            "panPhoto", "deliveryPhoto",
+          ];
+          docMap.forEach((key) => {
+            if (filePreviews[key]) preservedDocs[key] = filePreviews[key];
+          });
+          if (filePreviews.vehiclePhotos?.length) preservedDocs.vehiclePhotos = filePreviews.vehiclePhotos;
+          if (filePreviews.insuranceCertificate?.length) preservedDocs.insuranceCertificate = filePreviews.insuranceCertificate;
+          if (filePreviews.vehicleNOC?.length) preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
+          if (filePreviews.vehicleBuyReceipt?.length) preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
+
+          // Also send the full existing documents object as an ultimate fallback
+          form.append("preservedDocuments", JSON.stringify(preservedDocs));
+          form.append("existingDocuments", JSON.stringify(editLetter.documents));
+
+          if (isElectron) {
+            response = await apiService.post("/api/buy-letters", form);
+          } else {
+            response = await axios.post(
+              "https://ok-motor-51l3.vercel.app/api/buy-letters",
+              form,
+              {
+                headers: { "Content-Type": "multipart/form-data" },
+                timeout: 300000,
+              },
+            );
+          }
         } else {
-          response = await axios.post(
-            "https://ok-motor-51l3.vercel.app/api/buy-letters",
-            payload,
-            {
-              timeout: 300000, // 5 minutes timeout
-            },
-          );
+          // New letter with no files — plain JSON is fine
+          const payload = { ...dataToSave };
+          if (isElectron) {
+            response = await apiService.post("/api/buy-letters", payload);
+          } else {
+            response = await axios.post(
+              "https://ok-motor-51l3.vercel.app/api/buy-letters",
+              payload,
+              { timeout: 300000 },
+            );
+          }
         }
       }
 
