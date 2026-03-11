@@ -1,4 +1,35 @@
 const Insurance = require("../models/Insurance");
+const SellLetter = require("../models/SellLetter");
+const BuyLetter = require("../models/BuyLetter");
+
+/**
+ * Propagate Insurance master record changes back to any SellLetter or BuyLetter
+ * that references the same vehicle registration number.
+ */
+const syncInsuranceToLetters = async (insDoc) => {
+  const regNo = insDoc.vehicleRegNo || insDoc.regNo;
+  if (!regNo) return;
+  const regRegex = new RegExp(`^${String(regNo).trim()}$`, "i");
+
+  const insFields = {
+    insuranceCompany: insDoc.insuranceCompany,
+    insurancePolicyNumber: insDoc.insurancePolicyNumber || insDoc.insurancePolicyNo,
+    insuranceExpiryDate: insDoc.insuranceExpiryDate || insDoc.insuranceExpiry,
+    insuranceStatus: insDoc.insuranceStatus,
+    insuranceId: insDoc._id,
+  };
+
+  await Promise.all([
+    SellLetter.updateMany(
+      { registrationNumber: regRegex },
+      { $set: insFields },
+    ),
+    BuyLetter.updateMany(
+      { registrationNumber: regRegex },
+      { $set: insFields },
+    ),
+  ]);
+};
 
 exports.createInsurance = async (req, res) => {
   try {
@@ -9,6 +40,13 @@ exports.createInsurance = async (req, res) => {
 
     const insurance = new Insurance(insuranceData);
     const savedInsurance = await insurance.save();
+
+    // Propagate to SellLetter & BuyLetter for any matching registration number
+    try {
+      await syncInsuranceToLetters(savedInsurance);
+    } catch (syncErr) {
+      console.error("Insurance create sync to letters failed:", syncErr);
+    }
 
     res.status(201).json(savedInsurance);
   } catch (error) {
@@ -80,6 +118,13 @@ exports.updateInsurance = async (req, res) => {
       { new: true, runValidators: true }
     );
 
+    // Propagate changes to SellLetter & BuyLetter (keep stale copies in sync)
+    try {
+      await syncInsuranceToLetters(updatedInsurance);
+    } catch (syncErr) {
+      console.error("Insurance sync to letters failed:", syncErr);
+    }
+
     res.json(updatedInsurance);
   } catch (error) {
     console.error("Error updating insurance:", error);
@@ -132,6 +177,13 @@ exports.upsertInsuranceByVehicle = async (req, res) => {
       data,
       { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
     );
+
+    // Propagate changes to SellLetter & BuyLetter
+    try {
+      await syncInsuranceToLetters(insurance);
+    } catch (syncErr) {
+      console.error("Insurance upsert sync to letters failed:", syncErr);
+    }
 
     res.json(insurance);
   } catch (error) {

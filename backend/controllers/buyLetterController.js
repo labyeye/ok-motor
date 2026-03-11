@@ -523,17 +523,32 @@ exports.getBuyLetters = async (req, res) => {
       .limit(limit)
       .populate("user", "name role")
       .populate("vehicle")
+      .populate("pucId", "pucIssueDate pucExpiryDate pucExpiry pucStatus pucNumber vehicleRegNo regNo")
+      .populate("insuranceId", "insuranceCompany insurancePolicyNumber insurancePolicyNo insuranceExpiryDate insuranceExpiry insuranceStatus vehicleRegNo regNo")
       .populate(
         "previousVersionId",
         "sellerName sellerFatherName sellerCurrentAddress selleraadhar sellerpan selleraadharphone selleraadharphone2 vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition buyerName buyerFatherName buyerCurrentAddress buyernames buyerphone witnessname witnessphone dealername dealeraddress returnpersonname saleDate saleTime saleAmount paymentMethod todayDate todayTime note documents",
       )
       .lean();
 
-    // Rename populated field for frontend convenience
-    const buyLettersWithPrevious = buyLetters.map((letter) => ({
-      ...letter,
-      previousVersion: letter.previousVersionId,
-    }));
+    // Merge live PUC/Insurance data from populated master records over the stale inline fields
+    const buyLettersWithPrevious = buyLetters.map((letter) => {
+      const merged = { ...letter, previousVersion: letter.previousVersionId };
+      if (letter.pucId && typeof letter.pucId === "object") {
+        const p = letter.pucId;
+        merged.pucIssueDate = p.pucIssueDate ?? merged.pucIssueDate;
+        merged.pucExpiryDate = p.pucExpiryDate ?? p.pucExpiry ?? merged.pucExpiryDate;
+        merged.pucStatus = p.pucStatus ?? merged.pucStatus;
+      }
+      if (letter.insuranceId && typeof letter.insuranceId === "object") {
+        const i = letter.insuranceId;
+        merged.insuranceCompany = i.insuranceCompany ?? merged.insuranceCompany;
+        merged.insurancePolicyNumber = i.insurancePolicyNumber ?? i.insurancePolicyNo ?? merged.insurancePolicyNumber;
+        merged.insuranceExpiryDate = i.insuranceExpiryDate ?? i.insuranceExpiry ?? merged.insuranceExpiryDate;
+        merged.insuranceStatus = i.insuranceStatus ?? merged.insuranceStatus;
+      }
+      return merged;
+    });
 
     const total = await BuyLetter.countDocuments(conditions);
 
@@ -582,13 +597,32 @@ exports.getBuyLetterById = async (req, res) => {
 
         ...(req.user.role === "staff" ? [{}] : []),
       ],
-    });
+    })
+      .populate("pucId", "pucIssueDate pucExpiryDate pucExpiry pucStatus pucNumber vehicleRegNo regNo")
+      .populate("insuranceId", "insuranceCompany insurancePolicyNumber insurancePolicyNo insuranceExpiryDate insuranceExpiry insuranceStatus vehicleRegNo regNo")
+      .lean();
 
     if (!buyLetter) {
       return res.status(404).json({ message: "Buy letter not found" });
     }
 
-    res.json(buyLetter);
+    // Overlay live PUC/Insurance master data over stale inline copies
+    const result = { ...buyLetter };
+    if (buyLetter.pucId && typeof buyLetter.pucId === "object") {
+      const p = buyLetter.pucId;
+      result.pucIssueDate = p.pucIssueDate ?? result.pucIssueDate;
+      result.pucExpiryDate = p.pucExpiryDate ?? p.pucExpiry ?? result.pucExpiryDate;
+      result.pucStatus = p.pucStatus ?? result.pucStatus;
+    }
+    if (buyLetter.insuranceId && typeof buyLetter.insuranceId === "object") {
+      const i = buyLetter.insuranceId;
+      result.insuranceCompany = i.insuranceCompany ?? result.insuranceCompany;
+      result.insurancePolicyNumber = i.insurancePolicyNumber ?? i.insurancePolicyNo ?? result.insurancePolicyNumber;
+      result.insuranceExpiryDate = i.insuranceExpiryDate ?? i.insuranceExpiry ?? result.insuranceExpiryDate;
+      result.insuranceStatus = i.insuranceStatus ?? result.insuranceStatus;
+    }
+
+    res.json(result);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });

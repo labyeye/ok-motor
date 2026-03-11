@@ -583,101 +583,80 @@ exports.getPucExpiryReminders = async (req, res) => {
     const sevenDaysFromNow = new Date(now);
     sevenDaysFromNow.setDate(now.getDate() + 7);
 
-    const sellBase = {
-      pucExpiryDate: { $exists: true, $ne: null, $lte: sevenDaysFromNow },
-    };
+    // ── PUC is the SINGLE SOURCE OF TRUTH ──
+    // Query master PUC records only — the SellLetter/BuyLetter stale copies are NOT used.
     const pucBase = {
-      pucExpiry: { $exists: true, $ne: null, $lte: sevenDaysFromNow },
+      $or: [
+        { pucExpiry: { $exists: true, $ne: null, $lte: sevenDaysFromNow } },
+        { pucExpiryDate: { $exists: true, $ne: null, $lte: sevenDaysFromNow } },
+      ],
     };
 
     if (search && String(search).trim() !== "") {
-      const regex = new RegExp(
-        String(search)
-          .trim()
-          .replace(/[-/\\^+?.()|[\]{}]/g, "\\$&"),
-        "i",
-      );
-
-      sellBase.$or = [
-        { registrationNumber: { $regex: regex } },
-        { buyerName: { $regex: regex } },
-        { vehicleName: { $regex: regex } },
-        { vehicleModel: { $regex: regex } },
-      ];
-
-      pucBase.$or = [
-        { regNo: { $regex: regex } },
-        { personName: { $regex: regex } },
-        { brand: { $regex: regex } },
-        { vehicleModel: { $regex: regex } },
+      const escaped = String(search).trim().replace(/[-/\\^+?.()|[\]{}]/g, "\\$&");
+      const regex = new RegExp(escaped, "i");
+      pucBase.$and = [
+        {
+          $or: [
+            { regNo: { $regex: regex } },
+            { vehicleRegNo: { $regex: regex } },
+            { personName: { $regex: regex } },
+            { brand: { $regex: regex } },
+            { vehicleModel: { $regex: regex } },
+          ],
+        },
       ];
     }
 
-    const [sellLetters, pucRecords] = await Promise.all([
-      SellLetter.find(sellBase)
-        .select(
-          "registrationNumber buyerName buyerPhone vehicleName vehicleModel pucExpiryDate",
-        )
-        .sort({ pucExpiryDate: 1 })
-        .limit(numericLimit)
-        .lean(),
-      PUC.find(pucBase)
-        .select("regNo personName personPhone brand vehicleModel pucExpiry")
-        .sort({ pucExpiry: 1 })
-        .limit(numericLimit)
-        .lean(),
-    ]);
+    const pucRecords = await PUC.find(pucBase)
+      .select("regNo vehicleRegNo personName personPhone brand vehicleModel pucExpiry pucExpiryDate")
+      .sort({ pucExpiry: 1, pucExpiryDate: 1 })
+      .limit(numericLimit * 2)
+      .lean();
 
-    // Build a set of reg numbers that appear in sell letters
-    const sellRegNos = new Set(
-      sellLetters.map((s) => (s.registrationNumber || "").trim().toLowerCase()),
-    );
-    // Build a set of reg numbers that appear in puc model
-    const pucRegNos = new Set(
-      pucRecords.map((p) => (p.regNo || "").trim().toLowerCase()),
-    );
+    // For each PUC record, check if there is a matching SellLetter to determine context (sold vs. buy/standalone)
+    const allRegNos = pucRecords.map((p) => (p.vehicleRegNo || p.regNo || "").trim());
+    const uniqueRegNos = [...new Set(allRegNos.filter(Boolean))];
 
-    // Normalize sell letters
-    const normalizedSell = sellLetters.map((s) => {
-      const regKey = (s.registrationNumber || "").trim().toLowerCase();
-      const inPuc = pucRegNos.has(regKey);
+    // Load matching sell letters to classify records as "Sold Vehicle"
+    const sellLetterMap = {};
+    if (uniqueRegNos.length > 0) {
+      const sellMatches = await SellLetter.find({
+        registrationNumber: { $in: uniqueRegNos.map((r) => new RegExp(`^${r}$`, "i")) },
+      })
+        .select("registrationNumber buyerName buyerPhone vehicleName vehicleModel")
+        .lean();
+      for (const s of sellMatches) {
+        const key = (s.registrationNumber || "").trim().toLowerCase();
+        if (!sellLetterMap[key]) sellLetterMap[key] = s;
+      }
+    }
+
+    const finalData = pucRecords.map((p) => {
+      const regNo = (p.vehicleRegNo || p.regNo || "").trim();
+      const regKey = regNo.toLowerCase();
+      const sell = sellLetterMap[regKey];
+      const expiry = p.pucExpiry || p.pucExpiryDate;
       return {
-        _id: s._id,
-        // If this reg no also exists in PUC model → Sold Vehicle, else Sell Letter only
-        source: inPuc ? "Sold Vehicle" : "Sell Letter",
-        type: inPuc ? "sold_vehicle" : "sell_letter",
-        displayReg: s.registrationNumber,
-        displayName: s.buyerName,
-        displayPhone: s.buyerPhone,
-        displayVehicle: `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
-        displayExpiry: s.pucExpiryDate,
+        _id: p._id,
+        source: sell ? "Sold Vehicle" : "PUC Record",
+        type: sell ? "sold_vehicle" : "puc_model",
+        displayReg: regNo || p.regNo,
+        displayName: sell ? sell.buyerName : p.personName,
+        displayPhone: sell ? sell.buyerPhone : p.personPhone,
+        displayVehicle: sell
+          ? `${sell.vehicleName || ""} ${sell.vehicleModel || ""}`.trim()
+          : `${p.brand || ""} ${p.vehicleModel || ""}`.trim(),
+        displayExpiry: expiry,
+        // expose the master PUC id so frontend can deep-link to PUC module
+        pucId: p._id,
       };
     });
 
-    // Normalize PUC records — only include if NOT already covered by a sell letter (avoid duplicates)
-    const normalizedPuc = pucRecords
-      .filter((p) => !sellRegNos.has((p.regNo || "").trim().toLowerCase()))
-      .map((p) => ({
-        _id: p._id,
-        source: "PUC Only",
-        type: "puc_model",
-        displayReg: p.regNo,
-        displayName: p.personName,
-        displayPhone: p.personPhone,
-        displayVehicle: `${p.brand || ""} ${p.vehicleModel || ""}`.trim(),
-        displayExpiry: p.pucExpiry,
-      }));
+    finalData.sort((a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry));
+    const sliced = finalData.slice(0, numericLimit);
 
-    const combined = [...normalizedSell, ...normalizedPuc];
-
-    // Sort combined list by expiry date
-    combined.sort(
-      (a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry),
-    );
-
-    const finalData = combined.slice(0, numericLimit);
-
-    res.status(200).json({ success: true, data: finalData });
+    res.status(200).json({ success: true, data: sliced });
   } catch (err) {
     console.error("Error in getPucExpiryReminders:", err);
     res.status(500).json({ success: false, error: "Server Error" });
@@ -693,104 +672,81 @@ exports.getInsuranceExpiryReminders = async (req, res) => {
     const sevenDaysFromNow = new Date(now);
     sevenDaysFromNow.setDate(now.getDate() + 7);
 
-    const sellBase = {
-      insuranceExpiryDate: { $exists: true, $ne: null, $lte: sevenDaysFromNow },
-    };
+    // ── Insurance is the SINGLE SOURCE OF TRUTH ──
+    // Query master Insurance records only — the SellLetter/BuyLetter stale copies are NOT used.
     const insBase = {
-      insuranceExpiry: { $exists: true, $ne: null, $lte: sevenDaysFromNow },
+      $or: [
+        { insuranceExpiry: { $exists: true, $ne: null, $lte: sevenDaysFromNow } },
+        { insuranceExpiryDate: { $exists: true, $ne: null, $lte: sevenDaysFromNow } },
+      ],
     };
 
     if (search && String(search).trim() !== "") {
-      const regex = new RegExp(
-        String(search)
-          .trim()
-          .replace(/[-/\\^+?.()|[\]{}]/g, "\\$&"),
-        "i",
-      );
-
-      sellBase.$or = [
-        { registrationNumber: { $regex: regex } },
-        { buyerName: { $regex: regex } },
-        { vehicleName: { $regex: regex } },
-        { vehicleModel: { $regex: regex } },
-        { insuranceCompany: { $regex: regex } },
-      ];
-
-      insBase.$or = [
-        { regNo: { $regex: regex } },
-        { personName: { $regex: regex } },
-        { brand: { $regex: regex } },
-        { vehicleModel: { $regex: regex } },
-        { insuranceCompany: { $regex: regex } },
+      const escaped = String(search).trim().replace(/[-/\\^+?.()|[\]{}]/g, "\\$&");
+      const regex = new RegExp(escaped, "i");
+      insBase.$and = [
+        {
+          $or: [
+            { regNo: { $regex: regex } },
+            { vehicleRegNo: { $regex: regex } },
+            { personName: { $regex: regex } },
+            { brand: { $regex: regex } },
+            { vehicleModel: { $regex: regex } },
+            { insuranceCompany: { $regex: regex } },
+          ],
+        },
       ];
     }
 
-    const [sellLetters, insRecords] = await Promise.all([
-      SellLetter.find(sellBase)
-        .select(
-          "registrationNumber buyerName buyerPhone vehicleName vehicleModel insuranceExpiryDate insuranceCompany",
-        )
-        .sort({ insuranceExpiryDate: 1 })
-        .limit(numericLimit)
-        .lean(),
-      Insurance.find(insBase)
-        .select(
-          "regNo personName personPhone brand vehicleModel insuranceExpiry insuranceCompany",
-        )
-        .sort({ insuranceExpiry: 1 })
-        .limit(numericLimit)
-        .lean(),
-    ]);
+    const insRecords = await Insurance.find(insBase)
+      .select("regNo vehicleRegNo personName personPhone brand vehicleModel insuranceExpiry insuranceExpiryDate insuranceCompany")
+      .sort({ insuranceExpiry: 1, insuranceExpiryDate: 1 })
+      .limit(numericLimit * 2)
+      .lean();
 
-    // Build a set of reg numbers that appear in sell letters
-    const sellRegNos = new Set(
-      sellLetters.map((s) => (s.registrationNumber || "").trim().toLowerCase()),
-    );
-    // Build a set of reg numbers that appear in insurance model
-    const insRegNos = new Set(
-      insRecords.map((p) => (p.regNo || "").trim().toLowerCase()),
-    );
+    // For each Insurance record, check if there is a matching SellLetter to determine context
+    const allRegNos = insRecords.map((i) => (i.vehicleRegNo || i.regNo || "").trim());
+    const uniqueRegNos = [...new Set(allRegNos.filter(Boolean))];
 
-    // Normalize sell letters
-    const normalizedSell = sellLetters.map((s) => {
-      const regKey = (s.registrationNumber || "").trim().toLowerCase();
-      const inIns = insRegNos.has(regKey);
+    const sellLetterMap = {};
+    if (uniqueRegNos.length > 0) {
+      const sellMatches = await SellLetter.find({
+        registrationNumber: { $in: uniqueRegNos.map((r) => new RegExp(`^${r}$`, "i")) },
+      })
+        .select("registrationNumber buyerName buyerPhone vehicleName vehicleModel")
+        .lean();
+      for (const s of sellMatches) {
+        const key = (s.registrationNumber || "").trim().toLowerCase();
+        if (!sellLetterMap[key]) sellLetterMap[key] = s;
+      }
+    }
+
+    const finalData = insRecords.map((ins) => {
+      const regNo = (ins.vehicleRegNo || ins.regNo || "").trim();
+      const regKey = regNo.toLowerCase();
+      const sell = sellLetterMap[regKey];
+      const expiry = ins.insuranceExpiry || ins.insuranceExpiryDate;
       return {
-        _id: s._id,
-        // If this reg no also exists in Insurance model → Sold Vehicle, else Sell Letter only
-        source: inIns ? "Sold Vehicle" : "Sell Letter",
-        type: inIns ? "sold_vehicle" : "sell_letter",
-        displayReg: s.registrationNumber,
-        displayName: s.buyerName,
-        displayPhone: s.buyerPhone,
-        displayVehicle: `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
-        displayExpiry: s.insuranceExpiryDate,
-        displayCompany: s.insuranceCompany,
+        _id: ins._id,
+        source: sell ? "Sold Vehicle" : "Insurance Record",
+        type: sell ? "sold_vehicle" : "insurance_model",
+        displayReg: regNo || ins.regNo,
+        displayName: sell ? sell.buyerName : ins.personName,
+        displayPhone: sell ? sell.buyerPhone : ins.personPhone,
+        displayVehicle: sell
+          ? `${sell.vehicleName || ""} ${sell.vehicleModel || ""}`.trim()
+          : `${ins.brand || ""} ${ins.vehicleModel || ""}`.trim(),
+        displayExpiry: expiry,
+        displayCompany: ins.insuranceCompany,
+        // expose master Insurance id so frontend can deep-link to Insurance module
+        insuranceId: ins._id,
       };
     });
 
-    // Normalize Insurance records — only include if NOT already covered by a sell letter (avoid duplicates)
-    const normalizedIns = insRecords
-      .filter((p) => !sellRegNos.has((p.regNo || "").trim().toLowerCase()))
-      .map((p) => ({
-        _id: p._id,
-        source: "Insurance Only",
-        type: "insurance_model",
-        displayReg: p.regNo,
-        displayName: p.personName,
-        displayPhone: p.personPhone,
-        displayVehicle: `${p.brand || ""} ${p.vehicleModel || ""}`.trim(),
-        displayExpiry: p.insuranceExpiry,
-        displayCompany: p.insuranceCompany,
-      }));
+    finalData.sort((a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry));
+    const sliced = finalData.slice(0, numericLimit);
 
-    const combined = [...normalizedSell, ...normalizedIns];
-    combined.sort(
-      (a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry),
-    );
-    const finalData = combined.slice(0, numericLimit);
-
-    res.status(200).json({ success: true, data: finalData });
+    res.status(200).json({ success: true, data: sliced });
   } catch (err) {
     console.error("Error in getInsuranceExpiryReminders:", err);
     res.status(500).json({ success: false, error: "Server Error" });

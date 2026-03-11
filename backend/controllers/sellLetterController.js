@@ -610,17 +610,34 @@ exports.getSellLetters = async (req, res) => {
       .sort({ createdAt: -1 })
       .select("-__v")
       .populate("user", "name role")
+      .populate("pucId", "pucIssueDate pucExpiryDate pucExpiry pucStatus pucNumber vehicleRegNo regNo")
+      .populate("insuranceId", "insuranceCompany insurancePolicyNumber insurancePolicyNo insuranceExpiryDate insuranceExpiry insuranceStatus vehicleRegNo regNo")
       .populate(
         "previousVersionId",
         "vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition pucIssueDate pucExpiryDate pucStatus insuranceStatus insuranceExpiryDate insuranceCompany insurancePolicyNumber buyerName buyerFatherName buyerAddress buyerPhone buyerPhone2 buyerEmail buyerAadhar saleDate saleTime saleAmount paymentMethod todayDate todayTime previousDate previousTime witnessName witnessPhone note documents",
       )
       .lean();
 
-    // Rename populated field for frontend convenience
-    const sellLettersWithPrevious = sellLetters.map((letter) => ({
-      ...letter,
-      previousVersion: letter.previousVersionId,
-    }));
+    // Merge live PUC/Insurance data from populated master records over the stale inline fields
+    const sellLettersWithPrevious = sellLetters.map((letter) => {
+      const merged = { ...letter, previousVersion: letter.previousVersionId };
+      // Overlay live PUC data from master record
+      if (letter.pucId && typeof letter.pucId === "object") {
+        const p = letter.pucId;
+        merged.pucIssueDate = p.pucIssueDate ?? merged.pucIssueDate;
+        merged.pucExpiryDate = p.pucExpiryDate ?? p.pucExpiry ?? merged.pucExpiryDate;
+        merged.pucStatus = p.pucStatus ?? merged.pucStatus;
+      }
+      // Overlay live Insurance data from master record
+      if (letter.insuranceId && typeof letter.insuranceId === "object") {
+        const i = letter.insuranceId;
+        merged.insuranceCompany = i.insuranceCompany ?? merged.insuranceCompany;
+        merged.insurancePolicyNumber = i.insurancePolicyNumber ?? i.insurancePolicyNo ?? merged.insurancePolicyNumber;
+        merged.insuranceExpiryDate = i.insuranceExpiryDate ?? i.insuranceExpiry ?? merged.insuranceExpiryDate;
+        merged.insuranceStatus = i.insuranceStatus ?? merged.insuranceStatus;
+      }
+      return merged;
+    });
 
     res.json(sellLettersWithPrevious);
   } catch (error) {
@@ -667,17 +684,32 @@ exports.getMySellLetters = async (req, res) => {
       .sort({ createdAt: -1 })
       .select("-__v")
       .populate("user", "name role")
+      .populate("pucId", "pucIssueDate pucExpiryDate pucExpiry pucStatus pucNumber vehicleRegNo regNo")
+      .populate("insuranceId", "insuranceCompany insurancePolicyNumber insurancePolicyNo insuranceExpiryDate insuranceExpiry insuranceStatus vehicleRegNo regNo")
       .populate(
         "previousVersionId",
         "vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition pucIssueDate pucExpiryDate pucStatus insuranceStatus insuranceExpiryDate insuranceCompany insurancePolicyNumber buyerName buyerFatherName buyerAddress buyerPhone buyerPhone2 buyerEmail buyerAadhar saleDate saleTime saleAmount paymentMethod todayDate todayTime previousDate previousTime witnessName witnessPhone note documents",
       )
       .lean();
 
-    // Rename populated field for frontend convenience
-    const sellLettersWithPrevious = sellLetters.map((letter) => ({
-      ...letter,
-      previousVersion: letter.previousVersionId,
-    }));
+    // Merge live PUC/Insurance data from populated master records over the stale inline fields
+    const sellLettersWithPrevious = sellLetters.map((letter) => {
+      const merged = { ...letter, previousVersion: letter.previousVersionId };
+      if (letter.pucId && typeof letter.pucId === "object") {
+        const p = letter.pucId;
+        merged.pucIssueDate = p.pucIssueDate ?? merged.pucIssueDate;
+        merged.pucExpiryDate = p.pucExpiryDate ?? p.pucExpiry ?? merged.pucExpiryDate;
+        merged.pucStatus = p.pucStatus ?? merged.pucStatus;
+      }
+      if (letter.insuranceId && typeof letter.insuranceId === "object") {
+        const i = letter.insuranceId;
+        merged.insuranceCompany = i.insuranceCompany ?? merged.insuranceCompany;
+        merged.insurancePolicyNumber = i.insurancePolicyNumber ?? i.insurancePolicyNo ?? merged.insurancePolicyNumber;
+        merged.insuranceExpiryDate = i.insuranceExpiryDate ?? i.insuranceExpiry ?? merged.insuranceExpiryDate;
+        merged.insuranceStatus = i.insuranceStatus ?? merged.insuranceStatus;
+      }
+      return merged;
+    });
 
     res.json(sellLettersWithPrevious);
   } catch (error) {
@@ -696,13 +728,32 @@ exports.getSellLetterById = async (req, res) => {
 
         ...(req.user.role === "staff" ? [{}] : []),
       ],
-    });
+    })
+      .populate("pucId", "pucIssueDate pucExpiryDate pucExpiry pucStatus pucNumber vehicleRegNo regNo")
+      .populate("insuranceId", "insuranceCompany insurancePolicyNumber insurancePolicyNo insuranceExpiryDate insuranceExpiry insuranceStatus vehicleRegNo regNo")
+      .lean();
 
     if (!sellLetter) {
       return res.status(404).json({ message: "Sell letter not found" });
     }
 
-    res.json(sellLetter);
+    // Overlay live PUC/Insurance master data over stale inline copies
+    const result = { ...sellLetter };
+    if (sellLetter.pucId && typeof sellLetter.pucId === "object") {
+      const p = sellLetter.pucId;
+      result.pucIssueDate = p.pucIssueDate ?? result.pucIssueDate;
+      result.pucExpiryDate = p.pucExpiryDate ?? p.pucExpiry ?? result.pucExpiryDate;
+      result.pucStatus = p.pucStatus ?? result.pucStatus;
+    }
+    if (sellLetter.insuranceId && typeof sellLetter.insuranceId === "object") {
+      const i = sellLetter.insuranceId;
+      result.insuranceCompany = i.insuranceCompany ?? result.insuranceCompany;
+      result.insurancePolicyNumber = i.insurancePolicyNumber ?? i.insurancePolicyNo ?? result.insurancePolicyNumber;
+      result.insuranceExpiryDate = i.insuranceExpiryDate ?? i.insuranceExpiry ?? result.insuranceExpiryDate;
+      result.insuranceStatus = i.insuranceStatus ?? result.insuranceStatus;
+    }
+
+    res.json(result);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });

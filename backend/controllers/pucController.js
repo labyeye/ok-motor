@@ -1,4 +1,36 @@
 const PUC = require("../models/PUC");
+const SellLetter = require("../models/SellLetter");
+const BuyLetter = require("../models/BuyLetter");
+
+/**
+ * Propagate PUC master record changes back to any SellLetter or BuyLetter
+ * that references the same vehicle registration number.
+ * This keeps the stale copies in sync so that any existing queries reading
+ * from those documents (e.g. PDF generation) still get current data.
+ */
+const syncPUCToLetters = async (pucDoc) => {
+  const regNo = pucDoc.vehicleRegNo || pucDoc.regNo;
+  if (!regNo) return;
+  const regRegex = new RegExp(`^${String(regNo).trim()}$`, "i");
+
+  const pucFields = {
+    pucIssueDate: pucDoc.pucIssueDate,
+    pucExpiryDate: pucDoc.pucExpiryDate || pucDoc.pucExpiry,
+    pucStatus: pucDoc.pucStatus,
+    pucId: pucDoc._id,
+  };
+
+  await Promise.all([
+    SellLetter.updateMany(
+      { registrationNumber: regRegex },
+      { $set: pucFields },
+    ),
+    BuyLetter.updateMany(
+      { registrationNumber: regRegex },
+      { $set: pucFields },
+    ),
+  ]);
+};
 
 exports.createPUC = async (req, res) => {
   try {
@@ -9,6 +41,13 @@ exports.createPUC = async (req, res) => {
 
     const puc = new PUC(pucData);
     const savedPUC = await puc.save();
+
+    // Propagate to SellLetter & BuyLetter for any matching registration number
+    try {
+      await syncPUCToLetters(savedPUC);
+    } catch (syncErr) {
+      console.error("PUC create sync to letters failed:", syncErr);
+    }
 
     res.status(201).json(savedPUC);
   } catch (error) {
@@ -49,6 +88,13 @@ exports.updatePUC = async (req, res) => {
       new: true,
       runValidators: true,
     });
+
+    // Propagate changes to SellLetter & BuyLetter (keep stale copies in sync)
+    try {
+      await syncPUCToLetters(puc);
+    } catch (syncErr) {
+      console.error("PUC sync to letters failed:", syncErr);
+    }
 
     res.json(puc);
   } catch (error) {
@@ -116,6 +162,13 @@ exports.upsertPUCByVehicle = async (req, res) => {
       data,
       { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
     );
+
+    // Propagate changes to SellLetter & BuyLetter
+    try {
+      await syncPUCToLetters(puc);
+    } catch (syncErr) {
+      console.error("PUC upsert sync to letters failed:", syncErr);
+    }
 
     res.json(puc);
   } catch (error) {
