@@ -1473,6 +1473,32 @@ const SellLetterForm = () => {
           if (Object.keys(preservedDocs).length > 0) {
             form.append("preservedDocuments", JSON.stringify(preservedDocs));
           }
+        } else {
+          // New sell letter — carry over any documents pre-filled from buy letter lookup
+          const preservedDocs = {};
+          if (!filesState.vehicleRCFront && filePreviews.vehicleRCFront)
+            preservedDocs.vehicleRCFront = filePreviews.vehicleRCFront;
+          if (!filesState.vehicleRCBack && filePreviews.vehicleRCBack)
+            preservedDocs.vehicleRCBack = filePreviews.vehicleRCBack;
+          if (!filesState.aadhaarFront && filePreviews.aadhaarFront)
+            preservedDocs.aadhaarFront = filePreviews.aadhaarFront;
+          if (!filesState.aadhaarBack && filePreviews.aadhaarBack)
+            preservedDocs.aadhaarBack = filePreviews.aadhaarBack;
+          if (!filesState.panPhoto && filePreviews.panPhoto)
+            preservedDocs.panPhoto = filePreviews.panPhoto;
+          if (!filesState.deliveryPhoto && filePreviews.deliveryPhoto)
+            preservedDocs.deliveryPhoto = filePreviews.deliveryPhoto;
+          if ((!filesState.vehiclePhotos || filesState.vehiclePhotos.length === 0) && filePreviews.vehiclePhotos?.length)
+            preservedDocs.vehiclePhotos = filePreviews.vehiclePhotos;
+          if ((!filesState.insuranceCertificate || filesState.insuranceCertificate.length === 0) && filePreviews.insuranceCertificate?.length)
+            preservedDocs.insuranceCertificate = filePreviews.insuranceCertificate;
+          if ((!filesState.vehicleNOC || filesState.vehicleNOC.length === 0) && filePreviews.vehicleNOC?.length)
+            preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
+          if ((!filesState.vehicleBuyReceipt || filesState.vehicleBuyReceipt.length === 0) && filePreviews.vehicleBuyReceipt?.length)
+            preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
+          if (Object.keys(preservedDocs).length > 0) {
+            form.append("preservedDocuments", JSON.stringify(preservedDocs));
+          }
         }
 
         if (isElectron) {
@@ -2273,6 +2299,35 @@ const SellLetterForm = () => {
             ...formattedData,
             registrationNumber,
           }));
+
+          // Pre-fill document previews from the existing BuyLetter so
+          // the user doesn't have to re-upload documents on the sell form.
+          if (data.buyLetterDocuments) {
+            const docs = data.buyLetterDocuments;
+            const previews = {};
+
+            if (docs.aadhaarUploadMode) setAadhaarUploadMode(docs.aadhaarUploadMode);
+            if (docs.vehicleRCUploadMode) setVehicleRCUploadMode(docs.vehicleRCUploadMode);
+
+            if (docs.vehicleRC?.front) previews.vehicleRCFront = docs.vehicleRC.front;
+            if (docs.vehicleRC?.back) previews.vehicleRCBack = docs.vehicleRC.back;
+            if (docs.aadhaar?.front) previews.aadhaarFront = docs.aadhaar.front;
+            if (docs.aadhaar?.back) previews.aadhaarBack = docs.aadhaar.back;
+            if (docs.pan) previews.panPhoto = docs.pan;
+            if (docs.deliveryPhoto) previews.deliveryPhoto = docs.deliveryPhoto;
+            if (Array.isArray(docs.vehiclePhotos) && docs.vehiclePhotos.length)
+              previews.vehiclePhotos = docs.vehiclePhotos;
+            if (docs.insuranceCertificate?.pages?.length)
+              previews.insuranceCertificate = docs.insuranceCertificate.pages;
+            if (docs.vehicleNOC?.pages?.length)
+              previews.vehicleNOC = docs.vehicleNOC.pages;
+            if (docs.vehicleBuyReceipt?.pages?.length)
+              previews.vehicleBuyReceipt = docs.vehicleBuyReceipt.pages;
+
+            if (Object.keys(previews).length > 0) {
+              setFilePreviews((prev) => ({ ...prev, ...previews }));
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching vehicle details:", error);

@@ -557,6 +557,12 @@ exports.getVehicleDetails = async (req, res) => {
     if (vehicleRecord.buyerEmail)
       vehicleDetails.personEmail = vehicleRecord.buyerEmail;
 
+    // Attach documents from the most recent BuyLetter so the sell letter form
+    // can pre-fill uploaded documents without requiring re-upload.
+    if (buyLetters[0] && buyLetters[0].documents) {
+      vehicleDetails.buyLetterDocuments = buyLetters[0].documents;
+    }
+
     // Also attempt to load canonical Insurance and PUC master records by vehicleRegNo
     try {
       const regRegex = new RegExp(
