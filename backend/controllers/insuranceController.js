@@ -2,6 +2,29 @@ const Insurance = require("../models/Insurance");
 const SellLetter = require("../models/SellLetter");
 const BuyLetter = require("../models/BuyLetter");
 
+const normalizeInsurancePayload = (payload = {}) => {
+  const normalized = { ...payload };
+
+  if (normalized.insurancePolicyNo && !normalized.insurancePolicyNumber) {
+    normalized.insurancePolicyNumber = normalized.insurancePolicyNo;
+  }
+  if (normalized.insurancePolicyNumber && !normalized.insurancePolicyNo) {
+    normalized.insurancePolicyNo = normalized.insurancePolicyNumber;
+  }
+
+  const expirySource =
+    normalized.insuranceExpiryDate || normalized.insuranceExpiry || null;
+  if (expirySource) {
+    const parsed = new Date(expirySource);
+    if (!isNaN(parsed.getTime())) {
+      normalized.insuranceExpiryDate = parsed;
+      normalized.insuranceExpiry = parsed;
+    }
+  }
+
+  return normalized;
+};
+
 /**
  * Propagate Insurance master record changes back to any SellLetter or BuyLetter
  * that references the same vehicle registration number.
@@ -34,7 +57,7 @@ const syncInsuranceToLetters = async (insDoc) => {
 exports.createInsurance = async (req, res) => {
   try {
     const insuranceData = {
-      ...req.body,
+      ...normalizeInsurancePayload(req.body),
       user: req.user.id,
     };
 
@@ -112,9 +135,11 @@ exports.updateInsurance = async (req, res) => {
       return res.status(404).json({ message: "Insurance record not found" });
     }
 
+    const normalizedPayload = normalizeInsurancePayload(req.body);
+
     const updatedInsurance = await Insurance.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      normalizedPayload,
       { new: true, runValidators: true }
     );
 
@@ -167,7 +192,7 @@ exports.upsertInsuranceByVehicle = async (req, res) => {
     }
 
     const data = {
-      ...req.body,
+      ...normalizeInsurancePayload(req.body),
       vehicleRegNo,
       user: req.user?.id,
     };

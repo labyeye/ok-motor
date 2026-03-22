@@ -68,10 +68,13 @@ const InsuranceForm = () => {
         brand: data.brand || "",
         year: data.year || "",
         regNo: data.regNo || "",
-        insurancePolicyNo: data.insurancePolicyNo || "",
+        insurancePolicyNo:
+          data.insurancePolicyNo || data.insurancePolicyNumber || "",
         insuranceCompany: data.insuranceCompany || "",
-        insuranceExpiry: data.insuranceExpiry
-          ? new Date(data.insuranceExpiry).toISOString().split("T")[0]
+        insuranceExpiry: (data.insuranceExpiryDate || data.insuranceExpiry)
+          ? new Date(data.insuranceExpiryDate || data.insuranceExpiry)
+              .toISOString()
+              .split("T")[0]
           : "",
       });
     }

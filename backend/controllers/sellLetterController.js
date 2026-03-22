@@ -427,6 +427,164 @@ exports.createSellLetter = [
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };
 
+      const hasText = (v) => typeof v === "string" && v.trim().length > 0;
+      const hasArray = (v) => Array.isArray(v) && v.length > 0;
+      const hasDocumentContent = (docs) => {
+        if (!docs) return false;
+        return Boolean(
+          hasText(docs.vehicleRC?.front) ||
+            hasText(docs.vehicleRC?.back) ||
+            hasText(docs.aadhaar?.front) ||
+            hasText(docs.aadhaar?.back) ||
+            hasText(docs.pan) ||
+            hasText(docs.deliveryPhoto) ||
+            hasArray(docs.vehiclePhotos) ||
+            hasArray(docs.insuranceCertificate?.pages) ||
+            hasArray(docs.vehicleNOC?.pages) ||
+            hasArray(docs.vehicleBuyReceipt?.pages),
+        );
+      };
+
+      const mergeMissingDocuments = (target, source) => {
+        if (!target || !source) return target;
+
+        const merged = {
+          ...target,
+          vehicleRC: { ...(target.vehicleRC || {}) },
+          aadhaar: { ...(target.aadhaar || {}) },
+          insuranceCertificate: {
+            ...(target.insuranceCertificate || {}),
+            pages: Array.isArray(target.insuranceCertificate?.pages)
+              ? [...target.insuranceCertificate.pages]
+              : [],
+          },
+          vehicleNOC: {
+            ...(target.vehicleNOC || {}),
+            pages: Array.isArray(target.vehicleNOC?.pages)
+              ? [...target.vehicleNOC.pages]
+              : [],
+          },
+          vehicleBuyReceipt: {
+            ...(target.vehicleBuyReceipt || {}),
+            pages: Array.isArray(target.vehicleBuyReceipt?.pages)
+              ? [...target.vehicleBuyReceipt.pages]
+              : [],
+          },
+        };
+
+        if (!hasText(merged.vehicleRC.front) && hasText(source.vehicleRC?.front)) {
+          merged.vehicleRC.front = source.vehicleRC.front;
+        }
+        if (!hasText(merged.vehicleRC.back) && hasText(source.vehicleRC?.back)) {
+          merged.vehicleRC.back = source.vehicleRC.back;
+        }
+
+        if (!hasText(merged.aadhaar.front) && hasText(source.aadhaar?.front)) {
+          merged.aadhaar.front = source.aadhaar.front;
+        }
+        if (!hasText(merged.aadhaar.back) && hasText(source.aadhaar?.back)) {
+          merged.aadhaar.back = source.aadhaar.back;
+        }
+
+        if (!hasText(merged.pan) && hasText(source.pan)) {
+          merged.pan = source.pan;
+        }
+        if (!hasText(merged.deliveryPhoto) && hasText(source.deliveryPhoto)) {
+          merged.deliveryPhoto = source.deliveryPhoto;
+        }
+
+        if (!hasArray(merged.vehiclePhotos) && hasArray(source.vehiclePhotos)) {
+          merged.vehiclePhotos = [...source.vehiclePhotos];
+        }
+
+        const sourceInsurancePages = Array.isArray(source.insuranceCertificate?.pages)
+          ? source.insuranceCertificate.pages
+          : Array.isArray(source.insuranceCertificate)
+            ? source.insuranceCertificate
+            : [];
+        if (!hasArray(merged.insuranceCertificate.pages) && hasArray(sourceInsurancePages)) {
+          merged.insuranceCertificate.pages = [...sourceInsurancePages];
+        }
+
+        const sourceNocPages = Array.isArray(source.vehicleNOC?.pages)
+          ? source.vehicleNOC.pages
+          : Array.isArray(source.vehicleNOC)
+            ? source.vehicleNOC
+            : [];
+        if (!hasArray(merged.vehicleNOC.pages) && hasArray(sourceNocPages)) {
+          merged.vehicleNOC.pages = [...sourceNocPages];
+        }
+
+        const sourceBuyReceiptPages = Array.isArray(source.vehicleBuyReceipt?.pages)
+          ? source.vehicleBuyReceipt.pages
+          : Array.isArray(source.vehicleBuyReceipt)
+            ? source.vehicleBuyReceipt
+            : [];
+        if (!hasArray(merged.vehicleBuyReceipt.pages) && hasArray(sourceBuyReceiptPages)) {
+          merged.vehicleBuyReceipt.pages = [...sourceBuyReceiptPages];
+        }
+
+        if (!merged.vehicleRCUploadMode && source.vehicleRCUploadMode) {
+          merged.vehicleRCUploadMode = source.vehicleRCUploadMode;
+        }
+        if (!merged.aadhaarUploadMode && source.aadhaarUploadMode) {
+          merged.aadhaarUploadMode = source.aadhaarUploadMode;
+        }
+        if (
+          !merged.insuranceCertificateUploadMode &&
+          source.insuranceCertificateUploadMode
+        ) {
+          merged.insuranceCertificateUploadMode = source.insuranceCertificateUploadMode;
+        }
+        if (!merged.vehicleNOCUploadMode && source.vehicleNOCUploadMode) {
+          merged.vehicleNOCUploadMode = source.vehicleNOCUploadMode;
+        }
+        if (
+          !merged.vehicleBuyReceiptUploadMode &&
+          source.vehicleBuyReceiptUploadMode
+        ) {
+          merged.vehicleBuyReceiptUploadMode = source.vehicleBuyReceiptUploadMode;
+        }
+
+        return merged;
+      };
+
+      try {
+        const hasDocs = hasDocumentContent(sellLetterData.documents);
+        if (!hasDocs || sellLetterData.previousVersionId || regNo) {
+          if (sellLetterData.previousVersionId) {
+            const previousSell = await SellLetter.findById(
+              sellLetterData.previousVersionId,
+            )
+              .select("documents")
+              .lean();
+            if (previousSell?.documents) {
+              sellLetterData.documents = mergeMissingDocuments(
+                sellLetterData.documents,
+                previousSell.documents,
+              );
+            }
+          }
+
+          if (regNo) {
+            const buyLetterForDocs = await BuyLetter.findOne({
+              registrationNumber: new RegExp(`^${String(regNo).trim()}$`, "i"),
+            })
+              .sort({ createdAt: -1 })
+              .select("documents")
+              .lean();
+            if (buyLetterForDocs?.documents) {
+              sellLetterData.documents = mergeMissingDocuments(
+                sellLetterData.documents,
+                buyLetterForDocs.documents,
+              );
+            }
+          }
+        }
+      } catch (docMergeError) {
+        console.error("Failed to merge fallback documents for sell letter:", docMergeError);
+      }
+
       const sellLetter = new SellLetter(sellLetterData);
       const savedSellLetter = await sellLetter.save();
 
@@ -570,7 +728,9 @@ exports.getVehicleDetails = async (req, res) => {
         "i",
       );
       const [insuranceDoc, pucDoc] = await Promise.all([
-        Insurance.findOne({ vehicleRegNo: regRegex }).lean(),
+        Insurance.findOne({
+          $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }],
+        }).lean(),
         PUC.findOne({ vehicleRegNo: regRegex }).lean(),
       ]);
 
@@ -579,9 +739,11 @@ exports.getVehicleDetails = async (req, res) => {
           insuranceDoc.insuranceCompany || vehicleDetails.insuranceCompany;
         vehicleDetails.insurancePolicyNumber =
           insuranceDoc.insurancePolicyNumber ||
+          insuranceDoc.insurancePolicyNo ||
           vehicleDetails.insurancePolicyNumber;
         vehicleDetails.insuranceExpiryDate =
           insuranceDoc.insuranceExpiryDate ||
+          insuranceDoc.insuranceExpiry ||
           vehicleDetails.insuranceExpiryDate;
         vehicleDetails.insuranceStatus =
           insuranceDoc.insuranceStatus || vehicleDetails.insuranceStatus;

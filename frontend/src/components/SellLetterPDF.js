@@ -103,10 +103,14 @@ const SellLetterForm = () => {
     editLetter
       ? {
           ...editLetter,
-          saleDate: getCurrentDate(),
-          saleTime: getCurrentTime(),
-          todayDate: getCurrentDate(),
-          todayTime: getCurrentTime(),
+          saleDate: editLetter.saleDate || getCurrentDate(),
+          saleTime: editLetter.saleTime || getCurrentTime(),
+          todayDate: editLetter.todayDate || getCurrentDate(),
+          todayTime: editLetter.todayTime || getCurrentTime(),
+          previousDate:
+            editLetter.previousDate || editLetter.todayDate || getCurrentDate(),
+          previousTime:
+            editLetter.previousTime || editLetter.todayTime || getCurrentTime(),
           selleraadhar: editLetter.selleraadhar,
           sellerphone: editLetter.sellerphone,
         }
@@ -341,6 +345,37 @@ const SellLetterForm = () => {
               full.documents.deliveryPhoto || full.documents.vehicleKM || null;
           if (Array.isArray(full.documents.vehiclePhotos))
             previews.vehiclePhotos = full.documents.vehiclePhotos;
+
+          const insurancePages = Array.isArray(
+            full.documents.insuranceCertificate?.pages,
+          )
+            ? full.documents.insuranceCertificate.pages
+            : Array.isArray(full.documents.insuranceCertificate)
+              ? full.documents.insuranceCertificate
+              : [];
+          if (insurancePages.length) {
+            previews.insuranceCertificate = insurancePages;
+          }
+
+          const nocPages = Array.isArray(full.documents.vehicleNOC?.pages)
+            ? full.documents.vehicleNOC.pages
+            : Array.isArray(full.documents.vehicleNOC)
+              ? full.documents.vehicleNOC
+              : [];
+          if (nocPages.length) {
+            previews.vehicleNOC = nocPages;
+          }
+
+          const buyReceiptPages = Array.isArray(
+            full.documents.vehicleBuyReceipt?.pages,
+          )
+            ? full.documents.vehicleBuyReceipt.pages
+            : Array.isArray(full.documents.vehicleBuyReceipt)
+              ? full.documents.vehicleBuyReceipt
+              : [];
+          if (buyReceiptPages.length) {
+            previews.vehicleBuyReceipt = buyReceiptPages;
+          }
 
           setFilePreviews((prev) => ({ ...prev, ...previews }));
           setSavedSellLetter(full);
@@ -1263,6 +1298,80 @@ const SellLetterForm = () => {
     });
   };
 
+  const buildPreservedDocsFromPreviews = (currentFilesState) => {
+    const preservedDocs = {};
+
+    if (!currentFilesState.vehicleRCFront && filePreviews.vehicleRCFront)
+      preservedDocs.vehicleRCFront = filePreviews.vehicleRCFront;
+    if (!currentFilesState.vehicleRCBack && filePreviews.vehicleRCBack)
+      preservedDocs.vehicleRCBack = filePreviews.vehicleRCBack;
+    if (!currentFilesState.aadhaarFront && filePreviews.aadhaarFront)
+      preservedDocs.aadhaarFront = filePreviews.aadhaarFront;
+    if (!currentFilesState.aadhaarBack && filePreviews.aadhaarBack)
+      preservedDocs.aadhaarBack = filePreviews.aadhaarBack;
+    if (!currentFilesState.panPhoto && filePreviews.panPhoto)
+      preservedDocs.panPhoto = filePreviews.panPhoto;
+    if (!currentFilesState.deliveryPhoto && filePreviews.deliveryPhoto)
+      preservedDocs.deliveryPhoto = filePreviews.deliveryPhoto;
+
+    if (
+      (!currentFilesState.vehiclePhotos ||
+        currentFilesState.vehiclePhotos.length === 0) &&
+      filePreviews.vehiclePhotos?.length
+    ) {
+      preservedDocs.vehiclePhotos = filePreviews.vehiclePhotos;
+    }
+    if (
+      (!currentFilesState.insuranceCertificate ||
+        currentFilesState.insuranceCertificate.length === 0) &&
+      filePreviews.insuranceCertificate?.length
+    ) {
+      preservedDocs.insuranceCertificate = filePreviews.insuranceCertificate;
+    }
+    if (
+      (!currentFilesState.vehicleNOC || currentFilesState.vehicleNOC.length === 0) &&
+      filePreviews.vehicleNOC?.length
+    ) {
+      preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
+    }
+    if (
+      (!currentFilesState.vehicleBuyReceipt ||
+        currentFilesState.vehicleBuyReceipt.length === 0) &&
+      filePreviews.vehicleBuyReceipt?.length
+    ) {
+      preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
+    }
+
+    return preservedDocs;
+  };
+
+  const isLikelyImagePreviewUrl = (url) => {
+    if (!url || typeof url !== "string") return false;
+    if (url.startsWith("data:image/")) return true;
+    return /\.(png|jpe?g|webp|gif|bmp|svg)(\?|#|$)/i.test(url);
+  };
+
+  const renderPreviewMedia = (url, alt, style, small = false) => {
+    if (!url) return null;
+    if (isLikelyImagePreviewUrl(url)) {
+      return <img src={url} alt={alt} style={style} />;
+    }
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        style={small ? styles.previewDocCardSmall : styles.previewDocCard}
+        title="Open document"
+      >
+        <FileText size={small ? 18 : 22} />
+        <span style={{ fontSize: small ? "11px" : "12px" }}>
+          {small ? "Doc" : "Document"}
+        </span>
+      </a>
+    );
+  };
+
   const saveToDatabase = async () => {
     try {
       setIsSaving(true);
@@ -1404,98 +1513,14 @@ const SellLetterForm = () => {
         }
 
         if (editLetter?._id && editLetter.documents) {
-          const preservedDocs = {};
-
-          if (!filesState.vehicleRCFront && filePreviews.vehicleRCFront) {
-            preservedDocs.vehicleRCFront = filePreviews.vehicleRCFront;
-          }
-          if (!filesState.vehicleRCBack && filePreviews.vehicleRCBack) {
-            preservedDocs.vehicleRCBack = filePreviews.vehicleRCBack;
-          }
-
-          if (!filesState.aadhaarFront && filePreviews.aadhaarFront) {
-            preservedDocs.aadhaarFront = filePreviews.aadhaarFront;
-          }
-          if (!filesState.aadhaarBack && filePreviews.aadhaarBack) {
-            preservedDocs.aadhaarBack = filePreviews.aadhaarBack;
-          }
-
-          if (!filesState.panPhoto && filePreviews.panPhoto) {
-            preservedDocs.panPhoto = filePreviews.panPhoto;
-          }
-          if (!filesState.deliveryPhoto && filePreviews.deliveryPhoto) {
-            preservedDocs.deliveryPhoto = filePreviews.deliveryPhoto;
-          }
-
-          if (
-            (!filesState.vehiclePhotos ||
-              filesState.vehiclePhotos.length === 0) &&
-            filePreviews.vehiclePhotos &&
-            filePreviews.vehiclePhotos.length > 0
-          ) {
-            preservedDocs.vehiclePhotos = filePreviews.vehiclePhotos;
-          }
-
-          if (
-            !filesState.insuranceCertificate ||
-            filesState.insuranceCertificate.length === 0
-          ) {
-            if (
-              filePreviews.insuranceCertificate &&
-              Array.isArray(filePreviews.insuranceCertificate)
-            ) {
-              preservedDocs.insuranceCertificate =
-                filePreviews.insuranceCertificate;
-            }
-          }
-
-          if (!filesState.vehicleNOC || filesState.vehicleNOC.length === 0) {
-            if (
-              filePreviews.vehicleNOC &&
-              Array.isArray(filePreviews.vehicleNOC)
-            ) {
-              preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
-            }
-          }
-
-          if (
-            !filesState.vehicleBuyReceipt ||
-            filesState.vehicleBuyReceipt.length === 0
-          ) {
-            if (
-              filePreviews.vehicleBuyReceipt &&
-              Array.isArray(filePreviews.vehicleBuyReceipt)
-            ) {
-              preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
-            }
-          }
-
+          const preservedDocs = buildPreservedDocsFromPreviews(filesState);
           if (Object.keys(preservedDocs).length > 0) {
             form.append("preservedDocuments", JSON.stringify(preservedDocs));
           }
+          form.append("existingDocuments", JSON.stringify(editLetter.documents));
         } else {
           // New sell letter — carry over any documents pre-filled from buy letter lookup
-          const preservedDocs = {};
-          if (!filesState.vehicleRCFront && filePreviews.vehicleRCFront)
-            preservedDocs.vehicleRCFront = filePreviews.vehicleRCFront;
-          if (!filesState.vehicleRCBack && filePreviews.vehicleRCBack)
-            preservedDocs.vehicleRCBack = filePreviews.vehicleRCBack;
-          if (!filesState.aadhaarFront && filePreviews.aadhaarFront)
-            preservedDocs.aadhaarFront = filePreviews.aadhaarFront;
-          if (!filesState.aadhaarBack && filePreviews.aadhaarBack)
-            preservedDocs.aadhaarBack = filePreviews.aadhaarBack;
-          if (!filesState.panPhoto && filePreviews.panPhoto)
-            preservedDocs.panPhoto = filePreviews.panPhoto;
-          if (!filesState.deliveryPhoto && filePreviews.deliveryPhoto)
-            preservedDocs.deliveryPhoto = filePreviews.deliveryPhoto;
-          if ((!filesState.vehiclePhotos || filesState.vehiclePhotos.length === 0) && filePreviews.vehiclePhotos?.length)
-            preservedDocs.vehiclePhotos = filePreviews.vehiclePhotos;
-          if ((!filesState.insuranceCertificate || filesState.insuranceCertificate.length === 0) && filePreviews.insuranceCertificate?.length)
-            preservedDocs.insuranceCertificate = filePreviews.insuranceCertificate;
-          if ((!filesState.vehicleNOC || filesState.vehicleNOC.length === 0) && filePreviews.vehicleNOC?.length)
-            preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
-          if ((!filesState.vehicleBuyReceipt || filesState.vehicleBuyReceipt.length === 0) && filePreviews.vehicleBuyReceipt?.length)
-            preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
+          const preservedDocs = buildPreservedDocsFromPreviews(filesState);
           if (Object.keys(preservedDocs).length > 0) {
             form.append("preservedDocuments", JSON.stringify(preservedDocs));
           }
@@ -1519,9 +1544,10 @@ const SellLetterForm = () => {
           );
         }
       } else {
-        // Even when no new files are selected, if we're editing we must
-        // preserve existing documents by sending them as preservedDocuments.
-        if (editLetter?._id && editLetter.documents) {
+        const preservedDocs = buildPreservedDocsFromPreviews(filesState);
+
+        // No new uploads, but there are preserved docs to carry forward.
+        if (Object.keys(preservedDocs).length > 0) {
           const form = new FormData();
 
           Object.entries(dataToSave).forEach(([key, value]) => {
@@ -1536,24 +1562,11 @@ const SellLetterForm = () => {
           form.append("aadhaarUploadMode", aadhaarUploadMode);
           form.append("vehicleRCUploadMode", vehicleRCUploadMode);
 
-          // Build preservedDocs from filePreviews (which hold the existing URLs)
-          const preservedDocs = {};
-          const docMap = [
-            "vehicleRCFront", "vehicleRCBack",
-            "aadhaarFront", "aadhaarBack",
-            "panPhoto", "deliveryPhoto",
-          ];
-          docMap.forEach((key) => {
-            if (filePreviews[key]) preservedDocs[key] = filePreviews[key];
-          });
-          if (filePreviews.vehiclePhotos?.length)            preservedDocs.vehiclePhotos           = filePreviews.vehiclePhotos;
-          if (filePreviews.insuranceCertificate?.length)     preservedDocs.insuranceCertificate    = filePreviews.insuranceCertificate;
-          if (filePreviews.vehicleNOC?.length)               preservedDocs.vehicleNOC              = filePreviews.vehicleNOC;
-          if (filePreviews.vehicleBuyReceipt?.length)        preservedDocs.vehicleBuyReceipt       = filePreviews.vehicleBuyReceipt;
-
           // Also send the full existing documents object as an ultimate fallback
           form.append("preservedDocuments", JSON.stringify(preservedDocs));
-          form.append("existingDocuments", JSON.stringify(editLetter.documents));
+          if (editLetter?.documents) {
+            form.append("existingDocuments", JSON.stringify(editLetter.documents));
+          }
 
           if (isElectron) {
             response = await apiService.post("/api/sell-letters", form);
@@ -2317,12 +2330,32 @@ const SellLetterForm = () => {
             if (docs.deliveryPhoto) previews.deliveryPhoto = docs.deliveryPhoto;
             if (Array.isArray(docs.vehiclePhotos) && docs.vehiclePhotos.length)
               previews.vehiclePhotos = docs.vehiclePhotos;
-            if (docs.insuranceCertificate?.pages?.length)
-              previews.insuranceCertificate = docs.insuranceCertificate.pages;
-            if (docs.vehicleNOC?.pages?.length)
-              previews.vehicleNOC = docs.vehicleNOC.pages;
-            if (docs.vehicleBuyReceipt?.pages?.length)
-              previews.vehicleBuyReceipt = docs.vehicleBuyReceipt.pages;
+            const insurancePages = Array.isArray(docs.insuranceCertificate?.pages)
+              ? docs.insuranceCertificate.pages
+              : Array.isArray(docs.insuranceCertificate)
+                ? docs.insuranceCertificate
+                : [];
+            if (insurancePages.length) {
+              previews.insuranceCertificate = insurancePages;
+            }
+
+            const nocPages = Array.isArray(docs.vehicleNOC?.pages)
+              ? docs.vehicleNOC.pages
+              : Array.isArray(docs.vehicleNOC)
+                ? docs.vehicleNOC
+                : [];
+            if (nocPages.length) {
+              previews.vehicleNOC = nocPages;
+            }
+
+            const buyReceiptPages = Array.isArray(docs.vehicleBuyReceipt?.pages)
+              ? docs.vehicleBuyReceipt.pages
+              : Array.isArray(docs.vehicleBuyReceipt)
+                ? docs.vehicleBuyReceipt
+                : [];
+            if (buyReceiptPages.length) {
+              previews.vehicleBuyReceipt = buyReceiptPages;
+            }
 
             if (Object.keys(previews).length > 0) {
               setFilePreviews((prev) => ({ ...prev, ...previews }));
@@ -3602,13 +3635,12 @@ const SellLetterForm = () => {
                         </button>
                       )}
                     </div>
-                    {filePreviews.vehicleRCFront && (
-                      <img
-                        src={filePreviews.vehicleRCFront}
-                        alt="rc-front"
-                        style={styles.previewImg}
-                      />
-                    )}
+                    {filePreviews.vehicleRCFront &&
+                      renderPreviewMedia(
+                        filePreviews.vehicleRCFront,
+                        "rc-front",
+                        styles.previewImg,
+                      )}
                   </div>
                 ) : (
                   <div
@@ -3653,13 +3685,12 @@ const SellLetterForm = () => {
                           </button>
                         )}
                       </div>
-                      {filePreviews.vehicleRCFront && (
-                        <img
-                          src={filePreviews.vehicleRCFront}
-                          alt="rc-front"
-                          style={styles.previewImg}
-                        />
-                      )}
+                      {filePreviews.vehicleRCFront &&
+                        renderPreviewMedia(
+                          filePreviews.vehicleRCFront,
+                          "rc-front",
+                          styles.previewImg,
+                        )}
                     </div>
 
                     <div style={{ ...styles.formField, flex: "1 1 200px" }}>
@@ -3694,13 +3725,12 @@ const SellLetterForm = () => {
                           </button>
                         )}
                       </div>
-                      {filePreviews.vehicleRCBack && (
-                        <img
-                          src={filePreviews.vehicleRCBack}
-                          alt="rc-back"
-                          style={styles.previewImg}
-                        />
-                      )}
+                      {filePreviews.vehicleRCBack &&
+                        renderPreviewMedia(
+                          filePreviews.vehicleRCBack,
+                          "rc-back",
+                          styles.previewImg,
+                        )}
                     </div>
                   </div>
                 )}
@@ -3827,13 +3857,12 @@ const SellLetterForm = () => {
                         </button>
                       )}
                     </div>
-                    {filePreviews.aadhaarFront && (
-                      <img
-                        src={filePreviews.aadhaarFront}
-                        alt="aadhaar"
-                        style={styles.previewImg}
-                      />
-                    )}
+                    {filePreviews.aadhaarFront &&
+                      renderPreviewMedia(
+                        filePreviews.aadhaarFront,
+                        "aadhaar",
+                        styles.previewImg,
+                      )}
                   </div>
                 ) : (
                   <>
@@ -3867,13 +3896,12 @@ const SellLetterForm = () => {
                           </button>
                         )}
                       </div>
-                      {filePreviews.aadhaarFront && (
-                        <img
-                          src={filePreviews.aadhaarFront}
-                          alt="aadhaar-front"
-                          style={styles.previewImg}
-                        />
-                      )}
+                      {filePreviews.aadhaarFront &&
+                        renderPreviewMedia(
+                          filePreviews.aadhaarFront,
+                          "aadhaar-front",
+                          styles.previewImg,
+                        )}
                     </div>
 
                     <div style={styles.formField}>
@@ -3906,13 +3934,12 @@ const SellLetterForm = () => {
                           </button>
                         )}
                       </div>
-                      {filePreviews.aadhaarBack && (
-                        <img
-                          src={filePreviews.aadhaarBack}
-                          alt="aadhaar-back"
-                          style={styles.previewImg}
-                        />
-                      )}
+                      {filePreviews.aadhaarBack &&
+                        renderPreviewMedia(
+                          filePreviews.aadhaarBack,
+                          "aadhaar-back",
+                          styles.previewImg,
+                        )}
                     </div>
                   </>
                 )}
@@ -3946,13 +3973,12 @@ const SellLetterForm = () => {
                       </button>
                     )}
                   </div>
-                  {filePreviews.panPhoto && (
-                    <img
-                      src={filePreviews.panPhoto}
-                      alt="pan"
-                      style={styles.previewImg}
-                    />
-                  )}
+                  {filePreviews.panPhoto &&
+                    renderPreviewMedia(
+                      filePreviews.panPhoto,
+                      "pan",
+                      styles.previewImg,
+                    )}
                 </div>
 
                 <div style={styles.formField}>
@@ -3984,13 +4010,12 @@ const SellLetterForm = () => {
                       </button>
                     )}
                   </div>
-                  {filePreviews.deliveryPhoto && (
-                    <img
-                      src={filePreviews.deliveryPhoto}
-                      alt="delivery"
-                      style={styles.previewImg}
-                    />
-                  )}
+                  {filePreviews.deliveryPhoto &&
+                    renderPreviewMedia(
+                      filePreviews.deliveryPhoto,
+                      "delivery",
+                      styles.previewImg,
+                    )}
                 </div>
 
                 <div style={styles.formField}>
@@ -4095,16 +4120,14 @@ const SellLetterForm = () => {
                         {filePreviews.insuranceCertificate
                           .slice(0, 6)
                           .map((u, idx) => (
-                            <img
-                              key={idx}
-                              src={u}
-                              alt={`insurance-cert-${idx + 1}`}
-                              style={{
-                                width: 100,
-                                height: 80,
-                                objectFit: "cover",
-                              }}
-                            />
+                            <div key={idx}>
+                              {renderPreviewMedia(
+                                u,
+                                `insurance-cert-${idx + 1}`,
+                                styles.previewImgSmall,
+                                true,
+                              )}
+                            </div>
                           ))}
                       </div>
                     )}
@@ -4167,16 +4190,14 @@ const SellLetterForm = () => {
                         }}
                       >
                         {filePreviews.vehicleNOC.slice(0, 6).map((u, idx) => (
-                          <img
-                            key={idx}
-                            src={u}
-                            alt={`vehicle-noc-${idx + 1}`}
-                            style={{
-                              width: 100,
-                              height: 80,
-                              objectFit: "cover",
-                            }}
-                          />
+                          <div key={idx}>
+                            {renderPreviewMedia(
+                              u,
+                              `vehicle-noc-${idx + 1}`,
+                              styles.previewImgSmall,
+                              true,
+                            )}
+                          </div>
                         ))}
                       </div>
                     )}
@@ -4245,16 +4266,14 @@ const SellLetterForm = () => {
                         {filePreviews.vehicleBuyReceipt
                           .slice(0, 6)
                           .map((u, idx) => (
-                            <img
-                              key={idx}
-                              src={u}
-                              alt={`buy-receipt-${idx + 1}`}
-                              style={{
-                                width: 100,
-                                height: 80,
-                                objectFit: "cover",
-                              }}
-                            />
+                            <div key={idx}>
+                              {renderPreviewMedia(
+                                u,
+                                `buy-receipt-${idx + 1}`,
+                                styles.previewImgSmall,
+                                true,
+                              )}
+                            </div>
                           ))}
                       </div>
                     )}
@@ -4695,6 +4714,36 @@ const styles = {
     objectFit: "cover",
     borderRadius: "6px",
     border: "1px solid #e2e8f0",
+  },
+  previewDocCard: {
+    width: "100%",
+    maxWidth: "320px",
+    minHeight: "84px",
+    marginTop: "8px",
+    borderRadius: "6px",
+    border: "1px solid #e2e8f0",
+    backgroundColor: "#f8fafc",
+    color: "#334155",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "column",
+    gap: "6px",
+    textDecoration: "none",
+  },
+  previewDocCardSmall: {
+    width: "80px",
+    height: "60px",
+    borderRadius: "6px",
+    border: "1px solid #e2e8f0",
+    backgroundColor: "#f8fafc",
+    color: "#334155",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "column",
+    gap: "2px",
+    textDecoration: "none",
   },
   removePreviewBtn: {
     position: "absolute",
