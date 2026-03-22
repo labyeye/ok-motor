@@ -55,9 +55,12 @@ const PUCForm = () => {
   useEffect(() => {
     if (location.state?.pucData) {
       const data = location.state.pucData;
+      const expiryValue = data.pucExpiryDate || data.pucExpiry;
       setFormData({
         ...data,
-        pucExpiry: data.pucExpiry ? data.pucExpiry.split("T")[0] : "",
+        pucExpiry: expiryValue
+          ? new Date(expiryValue).toISOString().split("T")[0]
+          : "",
       });
     }
 
@@ -131,10 +134,14 @@ const PUCForm = () => {
           pucData.brand || insData.brand || vehicleData.brand || prev.brand,
         year: pucData.year || insData.year || vehicleData.year || prev.year,
         pucNumber: pucData.pucNumber || vehicleData.pucNumber || prev.pucNumber,
-        pucExpiry: pucData.pucExpiryDate
-          ? new Date(pucData.pucExpiryDate).toISOString().split("T")[0]
-          : vehicleData.pucExpiryDate
-            ? new Date(vehicleData.pucExpiryDate).toISOString().split("T")[0]
+        pucExpiry: (pucData.pucExpiryDate || pucData.pucExpiry)
+          ? new Date(pucData.pucExpiryDate || pucData.pucExpiry)
+              .toISOString()
+              .split("T")[0]
+          : (vehicleData.pucExpiryDate || vehicleData.pucExpiry)
+            ? new Date(vehicleData.pucExpiryDate || vehicleData.pucExpiry)
+                .toISOString()
+                .split("T")[0]
             : prev.pucExpiry,
       }));
     } catch (err) {

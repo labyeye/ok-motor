@@ -128,6 +128,7 @@ exports.createSellLetter = [
           const hasPUCFields =
             bodyData.pucIssueDate ||
             bodyData.pucExpiryDate ||
+            bodyData.pucExpiry ||
             bodyData.pucStatus;
 
           if (hasPUCFields) {
@@ -143,15 +144,23 @@ exports.createSellLetter = [
               pucIssueDate: bodyData.pucIssueDate
                 ? new Date(bodyData.pucIssueDate)
                 : undefined,
-              pucExpiryDate: bodyData.pucExpiryDate
-                ? new Date(bodyData.pucExpiryDate)
+              pucExpiryDate: (bodyData.pucExpiryDate || bodyData.pucExpiry)
+                ? new Date(bodyData.pucExpiryDate || bodyData.pucExpiry)
+                : undefined,
+              pucExpiry: (bodyData.pucExpiryDate || bodyData.pucExpiry)
+                ? new Date(bodyData.pucExpiryDate || bodyData.pucExpiry)
                 : undefined,
               pucStatus: bodyData.pucStatus,
               user: req.user.id,
             };
 
             const pucDoc = await PUC.findOneAndUpdate(
-              { vehicleRegNo: new RegExp(`^${regNo}$`, "i") },
+              {
+                $or: [
+                  { vehicleRegNo: new RegExp(`^${regNo}$`, "i") },
+                  { regNo: new RegExp(`^${regNo}$`, "i") },
+                ],
+              },
               pucData,
               {
                 new: true,
@@ -164,17 +173,22 @@ exports.createSellLetter = [
             if (pucDoc) {
               sellLetterData.pucId = pucDoc._id;
               sellLetterData.pucIssueDate = pucDoc.pucIssueDate;
-              sellLetterData.pucExpiryDate = pucDoc.pucExpiryDate;
+              sellLetterData.pucExpiryDate =
+                pucDoc.pucExpiryDate || pucDoc.pucExpiry;
               sellLetterData.pucStatus = pucDoc.pucStatus;
             }
           } else {
             const existingPUC = await PUC.findOne({
-              vehicleRegNo: new RegExp(`^${regNo}$`, "i"),
+              $or: [
+                { vehicleRegNo: new RegExp(`^${regNo}$`, "i") },
+                { regNo: new RegExp(`^${regNo}$`, "i") },
+              ],
             });
             if (existingPUC) {
               sellLetterData.pucId = existingPUC._id;
               sellLetterData.pucIssueDate = existingPUC.pucIssueDate;
-              sellLetterData.pucExpiryDate = existingPUC.pucExpiryDate;
+              sellLetterData.pucExpiryDate =
+                existingPUC.pucExpiryDate || existingPUC.pucExpiry;
               sellLetterData.pucStatus = existingPUC.pucStatus;
             }
           }
@@ -731,7 +745,9 @@ exports.getVehicleDetails = async (req, res) => {
         Insurance.findOne({
           $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }],
         }).lean(),
-        PUC.findOne({ vehicleRegNo: regRegex }).lean(),
+        PUC.findOne({
+          $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }],
+        }).lean(),
       ]);
 
       if (insuranceDoc) {
@@ -754,7 +770,7 @@ exports.getVehicleDetails = async (req, res) => {
         vehicleDetails.pucIssueDate =
           pucDoc.pucIssueDate || vehicleDetails.pucIssueDate;
         vehicleDetails.pucExpiryDate =
-          pucDoc.pucExpiryDate || vehicleDetails.pucExpiryDate;
+          pucDoc.pucExpiryDate || pucDoc.pucExpiry || vehicleDetails.pucExpiryDate;
         vehicleDetails.pucStatus = pucDoc.pucStatus || vehicleDetails.pucStatus;
         vehicleDetails.pucId = pucDoc._id;
       }
@@ -1001,6 +1017,7 @@ exports.updateSellLetter = async (req, res) => {
         const hasPUCFields =
           updateData.pucIssueDate ||
           updateData.pucExpiryDate ||
+          updateData.pucExpiry ||
           updateData.pucStatus;
         if (hasPUCFields) {
           const pucData = {
@@ -1017,14 +1034,17 @@ exports.updateSellLetter = async (req, res) => {
             pucIssueDate: updateData.pucIssueDate
               ? new Date(updateData.pucIssueDate)
               : undefined,
-            pucExpiryDate: updateData.pucExpiryDate
-              ? new Date(updateData.pucExpiryDate)
+            pucExpiryDate: (updateData.pucExpiryDate || updateData.pucExpiry)
+              ? new Date(updateData.pucExpiryDate || updateData.pucExpiry)
+              : undefined,
+            pucExpiry: (updateData.pucExpiryDate || updateData.pucExpiry)
+              ? new Date(updateData.pucExpiryDate || updateData.pucExpiry)
               : undefined,
             pucStatus: updateData.pucStatus,
             user: req.user.id,
           };
           const pucDoc = await PUC.findOneAndUpdate(
-            { vehicleRegNo: regRegex },
+            { $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }] },
             pucData,
             {
               new: true,

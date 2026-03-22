@@ -2,6 +2,36 @@ const PUC = require("../models/PUC");
 const SellLetter = require("../models/SellLetter");
 const BuyLetter = require("../models/BuyLetter");
 
+const normalizePucPayload = (payload = {}) => {
+  const normalized = { ...payload };
+
+  if (normalized.vehicleRegNo && !normalized.regNo) {
+    normalized.regNo = normalized.vehicleRegNo;
+  }
+  if (normalized.regNo && !normalized.vehicleRegNo) {
+    normalized.vehicleRegNo = normalized.regNo;
+  }
+
+  const expirySource = normalized.pucExpiryDate || normalized.pucExpiry || null;
+  if (expirySource) {
+    const parsed = new Date(expirySource);
+    if (!isNaN(parsed.getTime())) {
+      normalized.pucExpiryDate = parsed;
+      normalized.pucExpiry = parsed;
+    }
+  }
+
+  const issueSource = normalized.pucIssueDate || null;
+  if (issueSource) {
+    const parsed = new Date(issueSource);
+    if (!isNaN(parsed.getTime())) {
+      normalized.pucIssueDate = parsed;
+    }
+  }
+
+  return normalized;
+};
+
 /**
  * Propagate PUC master record changes back to any SellLetter or BuyLetter
  * that references the same vehicle registration number.
@@ -35,7 +65,7 @@ const syncPUCToLetters = async (pucDoc) => {
 exports.createPUC = async (req, res) => {
   try {
     const pucData = {
-      ...req.body,
+      ...normalizePucPayload(req.body),
       user: req.user.id,
     };
 
@@ -84,7 +114,9 @@ exports.updatePUC = async (req, res) => {
       return res.status(404).json({ message: "PUC record not found" });
     }
 
-    puc = await PUC.findByIdAndUpdate(req.params.id, req.body, {
+    const normalizedPayload = normalizePucPayload(req.body);
+
+    puc = await PUC.findByIdAndUpdate(req.params.id, normalizedPayload, {
       new: true,
       runValidators: true,
     });
@@ -151,14 +183,18 @@ exports.upsertPUCByVehicle = async (req, res) => {
       return res.status(400).json({ message: "vehicleRegNo is required" });
     }
 
+    const normalizedBody = normalizePucPayload(req.body);
     const data = {
-      ...req.body,
+      ...normalizedBody,
       vehicleRegNo,
+      regNo: normalizedBody.regNo || vehicleRegNo,
       user: req.user?.id,
     };
 
+    const regRegex = new RegExp(`^${String(vehicleRegNo).trim()}$`, "i");
+
     const puc = await PUC.findOneAndUpdate(
-      { vehicleRegNo },
+      { $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }] },
       data,
       { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
     );

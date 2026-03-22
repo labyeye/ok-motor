@@ -2473,8 +2473,10 @@ const SellLetterForm = () => {
           pdfBytes,
           "sell",
         );
-        if (saveRes && saveRes.success && window.electronAPI) {
-          alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
+        if (saveRes && saveRes.success) {
+          if (window.electronAPI) {
+            alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
+          }
         } else {
           saveAs(blob, filename);
         }
@@ -2583,8 +2585,10 @@ const SellLetterForm = () => {
           pdfBytes,
           "sell",
         );
-        if (saveRes && saveRes.success && window.electronAPI) {
-          alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
+        if (saveRes && saveRes.success) {
+          if (window.electronAPI) {
+            alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
+          }
         } else {
           saveAs(blobEn, filenameEn);
         }
