@@ -1,25 +1,14 @@
 import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import {
-  LayoutDashboard,
   ShoppingCart,
   TrendingUp,
   Wrench,
-  ShipWheel,
-  Users,
-  LogOut,
-  ChevronDown,
-  ChevronRight,
   Search,
   FileText,
   Target,
   RefreshCw,
-  Image as ImageIcon,
   Bike,
-  Menu,
   X,
-  Settings,
-  Megaphone,
-  Shield,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -32,12 +21,11 @@ import {
   Legend,
   ArcElement,
 } from "chart.js";
-import logo from "../images/company.png";
 import logo1 from "../images/dash.png";
 import AuthContext from "../context/AuthContext";
+import AppSidebar from "../components/common/AppSidebar";
 import axios from "axios";
 import BikeHistory from "../components/BikeHistory";
-import logoheader from "../images/okmotor.png";
 // Register ChartJS components
 ChartJS.register(
   CategoryScale,
@@ -51,9 +39,7 @@ ChartJS.register(
 
 const AdminPage = () => {
   const { user, logout } = useContext(AuthContext);
-  const [activeMenu, setActiveMenu] = useState("Dashboard");
-  const [expandedMenus, setExpandedMenus] = useState({});
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeMenu] = useState("Dashboard");
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [historyQuery, setHistoryQuery] = useState("");
   const historyInputRef = useRef(null);
@@ -512,19 +498,6 @@ const AdminPage = () => {
     return new Date(dateString).toLocaleDateString("en-IN", options);
   };
 
-  const toggleMenu = (menuName) => {
-    setExpandedMenus((prev) => ({
-      ...prev,
-      [menuName]: !prev[menuName],
-    }));
-  };
-
-  const handleMenuClick = (menuName, path) => {
-    setActiveMenu(menuName);
-    const actualPath = typeof path === "function" ? path(user?.role) : path;
-    navigate(actualPath);
-  };
-
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -538,112 +511,6 @@ const AdminPage = () => {
   // Chart options removed - not currently used
   // const chartOptions = { ... };
   // const pieOptions = { ... };
-
-  const menuItems = [
-    {
-      name: "Dashboard",
-      icon: LayoutDashboard,
-      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
-    },
-    {
-      name: "Vehicle",
-      icon: ShipWheel,
-      submenu: [
-        { name: "Add Vehicle", path: "/vehicle/create" },
-        { name: "Vehicle List", path: "/vehicle/history" },
-      ],
-    },
-    {
-      name: "Buy",
-      icon: ShoppingCart,
-      submenu: [
-        { name: "Create Buy Letter", path: "/buy/create" },
-        { name: "Buy Letter History", path: "/buy/history" },
-      ],
-    },
-    {
-      name: "Sell",
-      icon: TrendingUp,
-      submenu: [
-        { name: "Create Sell Letter", path: "/sell/create" },
-        { name: "Sell Letter History", path: "/sell/history" },
-        { name: "Sell Requests", path: "/sell/requests" },
-      ],
-    },
-    {
-      name: "Insurance",
-      icon: Shield,
-      submenu: [
-        { name: "Add Insurance", path: "/insurance/create" },
-        { name: "Insurance List", path: "/insurance/history" },
-      ],
-    },
-    {
-      name: "PUC",
-      icon: FileText,
-      submenu: [
-        { name: "Add PUC", path: "/puc/create" },
-        { name: "PUC List", path: "/puc/history" },
-      ],
-    },
-    {
-      name: "Updates",
-      icon: RefreshCw,
-      submenu: [
-        { name: "Create Update", path: "/updates/create" },
-        { name: "Updates List", path: "/updates" },
-      ],
-    },
-    {
-      name: "Announcements",
-      icon: Megaphone,
-      path: "/announcements",
-    },
-    {
-      name: "Service",
-      icon: Wrench,
-      submenu: [
-        { name: "Create Service Bill", path: "/service/create" },
-        { name: "Service History", path: "/service/history" },
-      ],
-    },
-    {
-      name: "Payment",
-      icon: FileText,
-      submenu: [
-        { name: "Create Advance Bill", path: "/advance/create" },
-        { name: "Advance History", path: "/advance/history" },
-      ],
-    },
-    {
-      name: "Staff",
-      icon: Users,
-      submenu: [
-        { name: "Create Staff ID", path: "/staff/create" },
-        { name: "Staff List", path: "/staff/list" },
-      ],
-    },
-    {
-      name: "Gallery",
-      icon: ImageIcon,
-      path: "/gallery/manage",
-    },
-    {
-      name: "Letter Head",
-      icon: FileText,
-      path: "/letter-head/create",
-    },
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
-    },
-    {
-      name: "Settings",
-      icon: Settings,
-      path: "/settings",
-    },
-  ];
 
   const DashboardCards = () => (
     <div className="cards-grid">
@@ -684,7 +551,7 @@ const AdminPage = () => {
         </div>
       ) : (
         <>
-          <div className="card blue">
+          <div className="card">
             <div className="card-content">
               <div>
                 <p className="card-label">Total Services</p>
@@ -696,7 +563,7 @@ const AdminPage = () => {
             </div>
           </div>
 
-          <div className="card green">
+          <div className="card">
             <div className="card-content">
               <div>
                 <p className="card-label">Total Revenue</p>
@@ -710,7 +577,7 @@ const AdminPage = () => {
             </div>
           </div>
 
-          <div className="card purple">
+          <div className="card">
             <div className="card-content">
               <div>
                 <p className="card-label">Total Expenses</p>
@@ -724,7 +591,7 @@ const AdminPage = () => {
             </div>
           </div>
 
-          <div className="card amber">
+          <div className="card">
             <div className="card-content">
               <div>
                 <p className="card-label">Net Profit</p>
@@ -760,7 +627,7 @@ const AdminPage = () => {
         Vehicle Overview
       </h3>
       <div className="cards-grid" style={{ marginBottom: "32px" }}>
-        <div className="card blue">
+        <div className="card">
           <div className="card-content">
             <div>
               <p className="card-label">Total Vehicles</p>
@@ -771,8 +638,8 @@ const AdminPage = () => {
             </div>
           </div>
         </div>
-        
-        <div className="card teal">
+
+        <div className="card">
           <div className="card-content">
             <div>
               <p className="card-label">Total Bought</p>
@@ -784,7 +651,7 @@ const AdminPage = () => {
           </div>
         </div>
 
-        <div className="card green">
+        <div className="card">
           <div className="card-content">
             <div>
               <p className="card-label">Total Sold</p>
@@ -795,7 +662,6 @@ const AdminPage = () => {
             </div>
           </div>
         </div>
-        
       </div>
 
       {/* 2. Free Service Counts */}
@@ -810,7 +676,7 @@ const AdminPage = () => {
         Pending Free Services
       </h3>
       <div className="cards-grid" style={{ marginBottom: "32px" }}>
-        <div className="card amber">
+        <div className="card">
           <div className="card-content">
             <div>
               <p className="card-label">1st Month Pending</p>
@@ -821,7 +687,7 @@ const AdminPage = () => {
             </div>
           </div>
         </div>
-        <div className="card amber">
+        <div className="card">
           <div className="card-content">
             <div>
               <p className="card-label">2nd Month Pending</p>
@@ -832,7 +698,7 @@ const AdminPage = () => {
             </div>
           </div>
         </div>
-        <div className="card amber">
+        <div className="card">
           <div className="card-content">
             <div>
               <p className="card-label">3rd Month Pending</p>
@@ -858,7 +724,7 @@ const AdminPage = () => {
       </h3>
       <div
         className="cards-grid"
-        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))" }}
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}
       >
         <div className="card" style={{ backgroundColor: "#ef4444" }}>
           <div className="card-content">
@@ -1037,8 +903,8 @@ const AdminPage = () => {
     const fsThStyle = {
       padding: "11px 14px",
       textAlign: "left",
-      background: "#071952",
-      color: "#fff",
+      background: "#09121a",
+      color: "#ffffff",
       fontSize: "0.75rem",
       fontWeight: 700,
       letterSpacing: "0.04em",
@@ -1184,8 +1050,6 @@ const AdminPage = () => {
       );
     };
 
-    
-
     return (
       <div style={fsCardStyle}>
         {/* Header */}
@@ -1202,7 +1066,7 @@ const AdminPage = () => {
           <h3 style={fsTitleStyle}>
             <span
               style={{
-                background: "#EBF4F6",
+                background: "#ffffff",
                 borderRadius: 8,
                 padding: "4px 10px",
                 color: "#088395",
@@ -1293,11 +1157,6 @@ const AdminPage = () => {
                   })
                   .map((item, idx) => {
                     const { row, nextPending } = item;
-                    const isOverdue = nextPending && nextPending.daysUntil < 0;
-                    const isDueSoon =
-                      nextPending &&
-                      nextPending.daysUntil >= 0 &&
-                      nextPending.daysUntil <= 7;
                     return (
                       <tr
                         key={`${row.registrationNumber}-${idx}`}
@@ -1309,26 +1168,14 @@ const AdminPage = () => {
                         }}
                         style={{
                           cursor: "pointer",
-                          background: isOverdue
-                            ? "#fff5f5"
-                            : isDueSoon
-                              ? "#fffbeb"
-                              : idx % 2 === 0
-                                ? "#fff"
-                                : "#f8fafc",
+                          background: "#ffffff",
                           transition: "background 0.15s",
                         }}
                         onMouseEnter={(e) =>
-                          (e.currentTarget.style.background = "#EBF4F6")
+                          (e.currentTarget.style.background = "#ffffffff")
                         }
                         onMouseLeave={(e) =>
-                          (e.currentTarget.style.background = isOverdue
-                            ? "#fff5f5"
-                            : isDueSoon
-                              ? "#fffbeb"
-                              : idx % 2 === 0
-                                ? "#fff"
-                                : "#f8fafc")
+                          (e.currentTarget.style.background = "#FFFFFF")
                         }
                       >
                         <td style={fsTdStyle}>
@@ -1395,9 +1242,11 @@ const AdminPage = () => {
           axios.get(`${BASE}/api/puc?limit=2000`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${BASE}/api/sell-letters?limit=2000`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }).catch(() => ({ data: [] })),
+          axios
+            .get(`${BASE}/api/sell-letters?limit=2000`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+            .catch(() => ({ data: [] })),
         ]);
 
         const pucRecords = resPUC.data || [];
@@ -1424,7 +1273,8 @@ const AdminPage = () => {
             displayReg: s.registrationNumber,
             displayName: s.buyerName,
             displayPhone: s.buyerPhone,
-            displayVehicle: `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
+            displayVehicle:
+              `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
             displayExpiry: s.pucExpiryDate,
           });
         });
@@ -1446,7 +1296,8 @@ const AdminPage = () => {
             displayReg: item.regNo,
             displayName: item.personName,
             displayPhone: item.personPhone,
-            displayVehicle: `${item.brand || ""} ${item.vehicleModel || ""}`.trim(),
+            displayVehicle:
+              `${item.brand || ""} ${item.vehicleModel || ""}`.trim(),
             displayExpiry: item.pucExpiry,
           }));
 
@@ -1890,9 +1741,11 @@ const AdminPage = () => {
           axios.get(`${BASE}/api/insurance?limit=2000`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${BASE}/api/sell-letters?limit=2000`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }).catch(() => ({ data: [] })),
+          axios
+            .get(`${BASE}/api/sell-letters?limit=2000`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+            .catch(() => ({ data: [] })),
         ]);
 
         const insuranceRecords = resInsurance.data || [];
@@ -1919,7 +1772,8 @@ const AdminPage = () => {
             displayReg: s.registrationNumber,
             displayName: s.buyerName,
             displayPhone: s.buyerPhone,
-            displayVehicle: `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
+            displayVehicle:
+              `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
             displayExpiry: s.insuranceExpiryDate,
             displayCompany: s.insuranceCompany,
           });
@@ -1942,7 +1796,8 @@ const AdminPage = () => {
             displayReg: item.regNo,
             displayName: item.personName,
             displayPhone: item.personPhone,
-            displayVehicle: `${item.brand || ""} ${item.vehicleModel || ""}`.trim(),
+            displayVehicle:
+              `${item.brand || ""} ${item.vehicleModel || ""}`.trim(),
             displayExpiry: item.insuranceExpiry,
             displayCompany: item.insuranceCompany,
           }));
@@ -2988,101 +2843,7 @@ const AdminPage = () => {
 
   return (
     <div className="admin-container">
-      <div className="top-bar">
-        <div
-          className="hamburger-menu"
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        >
-          {isSidebarOpen ? <X size={35} /> : <Menu size={35} />}
-        </div>
-        <img src={logoheader} alt="logo" className="top-bar-logo" />
-      </div>
-
-      {/* Overlay for Mobile */}
-      {isSidebarOpen && (
-        <div
-          className="sidebar-overlay"
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
-
-      {/* Sidebar */}
-      <div
-        className={`sidebar ${
-          isSidebarOpen ? "sidebar-open" : "sidebar-closed"
-        }`}
-      >
-        <div className="sidebar-header">
-          <img src={logo} alt="logo" className="brand-logo" />
-          <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
-        </div>
-
-        <nav className="nav">
-          {menuItems.map((item) => (
-            <div key={item.name}>
-              <div
-                className={`menu-item ${
-                  activeMenu === item.name ? "active" : ""
-                }`}
-                onClick={() => {
-                  if (item.submenu) {
-                    toggleMenu(item.name);
-                  } else {
-                    handleMenuClick(item.name, item.path);
-                  }
-                }}
-              >
-                <div className="menu-item-content">
-                  <item.icon size={20} className="menu-icon" />
-                  <span className="menu-text">{item.name}</span>
-                </div>
-                {item.submenu &&
-                  (expandedMenus[item.name] ? (
-                    <ChevronDown size={16} />
-                  ) : (
-                    <ChevronRight size={16} />
-                  ))}
-              </div>
-
-              {item.submenu && (
-                <div
-                  className={`submenu${
-                    expandedMenus[item.name]
-                      ? " submenu-open"
-                      : " submenu-closed"
-                  }`}
-                  style={{
-                    maxHeight: expandedMenus[item.name]
-                      ? `${item.submenu.length * 48}px`
-                      : "0px",
-                    opacity: expandedMenus[item.name] ? 1 : 0,
-                    transition:
-                      "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
-                    overflow: "hidden",
-                  }}
-                >
-                  {item.submenu.map((subItem) => (
-                    <div
-                      key={subItem.name}
-                      className="submenu-item"
-                      onClick={() =>
-                        handleMenuClick(subItem.name, subItem.path)
-                      }
-                    >
-                      {subItem.name}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-
-          <div className="logout-button" onClick={handleLogout}>
-            <LogOut size={20} className="menu-icon" />
-            <span className="menu-text">Logout</span>
-          </div>
-        </nav>
-      </div>
+      <AppSidebar user={user} onLogout={handleLogout} />
       <div className="main-content">
         <div className="content-padding">
           <div className="banner">
@@ -3170,7 +2931,7 @@ const AdminPage = () => {
           display: flex;
           min-height: 100vh;
           font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-          background-color: #EBF4F6;
+          background-color: #ffffff;
         }
         .sidebar-overlay {
           display: none;
@@ -3191,8 +2952,8 @@ const AdminPage = () => {
 
         /* Sidebar Styles */
         .sidebar {
-          width: 280px;
-          background: #071952;
+          width: 260px;
+          background: #09121a;
           color: #f8fafc;
           position: sticky;
           top: 0;
@@ -3238,10 +2999,13 @@ const AdminPage = () => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0.75rem 1.5rem;
+          padding: 0.6rem 1.2rem;
           cursor: pointer;
-          color: #e2e8f0;
+          color: #e2e8f066;
           transition: all 0.3s ease;
+          max-width: 75%;
+          margin: 0.25rem auto;
+          border-radius: 8px;
         }
 
         .menu-item:hover {
@@ -3249,9 +3013,9 @@ const AdminPage = () => {
         }
 
         .menu-item.active {
-          background: rgba(8, 131, 149, 0.2);
-          border-right: 3px solid #088395;
+          background: rgba(255, 255, 255, 0.12);
           color: #ffffff;
+          box-shadow: 0 4px 12px rgba(7,25,82,0.06);
         }
 
         .menu-item-content {
@@ -3261,7 +3025,7 @@ const AdminPage = () => {
 
         .menu-icon {
           margin-right: 0.75rem;
-          color: #94a3b8;
+          color: #94a3b866;
         }
 
         .menu-item.active .menu-icon {
@@ -3274,10 +3038,13 @@ const AdminPage = () => {
         }
 
         .submenu {
-          background: rgba(26, 32, 44, 0.7);
+          background: rgba(255, 255, 255, 0.15);
           max-height: 0;
           opacity: 0;
           overflow: hidden;
+          max-width: 90%;
+          border-radius: 8px;
+          margin:auto;
           transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
         }
         .submenu.submenu-open {
@@ -3290,11 +3057,14 @@ const AdminPage = () => {
         }
 
         .submenu-item {
-          padding: 0.625rem 1.5rem 0.625rem 4rem;
+          padding: 0.625rem 0rem 0.625rem 0rem;
+          border-radius: 8px;
           cursor: pointer;
-          color: #cbd5e1;
+          color: #e2e8f066;
           font-size: 0.875rem;
           transition: all 0.2s ease;
+          max-width:100%;
+          text-align:center;
         }
 
         .submenu-item:hover {
@@ -3305,7 +3075,10 @@ const AdminPage = () => {
         .logout-button {
           display: flex;
           align-items: center;
-          padding: 0.75rem 1.5rem;
+          padding: 0.6rem 1.2rem;
+          max-width: 75%;
+          margin: 0.25rem auto;
+          border-radius: 8px;
           cursor: pointer;
           color: #f87171;
           margin-top: 1rem;
@@ -3449,7 +3222,7 @@ const AdminPage = () => {
 
         /* Revenue Card */
         .revenue-card {
-          background: #071952;
+          background: #09121a;
           backdrop-filter: blur(10px);
           border-radius: 0.75rem;
           padding: 1.5rem;
@@ -3485,7 +3258,7 @@ const AdminPage = () => {
 
         .revenue-label {
           font-size: 0.875rem;
-          color: #e2e8f0;
+          color: #e2e8f066;
           margin: 0;
         }
 
@@ -3532,7 +3305,7 @@ const AdminPage = () => {
 
         .summary-label {
           font-size: 0.875rem;
-          color: #e2e8f0;
+          color: #e2e8f066;
           margin-bottom: 0.5rem;
         }
 
@@ -3600,7 +3373,7 @@ const AdminPage = () => {
         }
 
         .chart-card {
-          background: #071952;
+          background: #09121a;
           backdrop-filter: blur(10px);
           border-radius: 0.75rem;
           padding: 1.5rem;
@@ -3975,7 +3748,7 @@ const AdminPage = () => {
             position: fixed;
             top: 0;
             left: 0;
-            width: 280px;
+            width: 260px;
             height: 100vh;
             transform: translateX(-100%);
             z-index: 15;

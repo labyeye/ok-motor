@@ -1,35 +1,21 @@
 import { useState, useEffect, useContext, useCallback } from "react";
 import {
-  LayoutDashboard,
   ShoppingCart,
   TrendingUp,
   Wrench,
   Users,
-  LogOut,
-  Image,
-  ChevronDown,
-  ChevronRight,
   FileText,
   RefreshCw,
-  Bike,
-  Settings,
-  ShipWheel,
-  Megaphone,
-  Menu,
-  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import logo from "../images/company.png";
-import logoheader from "../images/okmotor.png";
 
 import AuthContext from "../context/AuthContext";
+import AppSidebar from "../components/common/AppSidebar";
 
 const StaffPage = () => {
   const { user, logout } = useContext(AuthContext);
 
-  const [activeMenu, setActiveMenu] = useState("Dashboard");
-  const [expandedMenus, setExpandedMenus] = useState({});
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeMenu] = useState("Dashboard");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
@@ -105,109 +91,11 @@ const StaffPage = () => {
     setIsOwnerView(!isOwnerView);
   };
 
-  const toggleMenu = (menuName) => {
-    setExpandedMenus((prev) => ({
-      ...prev,
-      [menuName]: !prev[menuName],
-    }));
-  };
-
-  const handleMenuClick = (menuName, path) => {
-    setActiveMenu(menuName);
-    // Handle both string paths and function paths
-    const actualPath = typeof path === "function" ? path(user?.role) : path;
-    navigate(actualPath);
-  };
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
   // In the menuItems array (around line 250 in BuyLetterPDF.js)
-  const menuItems = [
-    {
-      name: "Dashboard",
-      icon: LayoutDashboard,
-      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
-    },
-    {
-      name: "Vehicle",
-      icon: ShipWheel,
-      submenu: [
-        { name: "Add Vehicle", path: "/vehicle/create" },
-        { name: "Vehicle List", path: "/vehicle/history" },
-      ],
-    },
-    {
-      name: "Buy",
-      icon: ShoppingCart,
-      submenu: [
-        { name: "Create Buy Letter", path: "/buy/create" },
-        { name: "Buy Letter History", path: "/buy/history" },
-      ],
-    },
-    {
-      name: "Sell",
-      icon: TrendingUp,
-      submenu: [
-        { name: "Create Sell Letter", path: "/sell/create" },
-        { name: "Sell Letter History", path: "/sell/history" },
-        { name: "Sell Requests", path: "/sell/requests" },
-      ],
-    },
-    {
-      name: "Announcements",
-      icon: Megaphone,
-      path: "/announcements",
-    },
-    {
-      name: "Service",
-      icon: Wrench,
-      submenu: [
-        { name: "Create Service Bill", path: "/service/create" },
-        { name: "Service History", path: "/service/history" },
-      ],
-    },
-    {
-      name: "Payment",
-      icon: FileText,
-      submenu: [
-        { name: "Create Advance Bill", path: "/advance/create" },
-        { name: "Advance History", path: "/advance/history" },
-      ],
-    },
-    ...(user?.role !== "staff"
-      ? [
-          {
-            name: "Staff",
-            icon: Users,
-            submenu: [
-              { name: "Create Staff ID", path: "/staff/create" },
-              { name: "Staff List", path: "/staff/list" },
-            ],
-          },
-        ]
-      : []),
-    {
-      name: "Gallery",
-      icon: Image,
-      path: "/gallery/manage",
-    },
-    {
-      name: "Letter Head",
-      icon: FileText,
-      path: "/letter-head/create",
-    },
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
-    },
-    {
-      name: "Settings",
-      icon: Settings,
-      path: "/settings",
-    },
-  ];
 
   const DashboardCards = () => (
     <div style={styles.cardsGrid}>
@@ -416,107 +304,8 @@ const StaffPage = () => {
   return (
     <div style={{ ...styles.container, paddingTop: isMobile ? "56px" : "0" }}>
       {/* Mobile Top Bar */}
-      <div
-        style={{
-          ...styles.topBar,
-          display: isMobile && !isSidebarOpen ? "flex" : "none",
-        }}
-      >
-        <div
-          style={styles.hamburgerMenu}
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        >
-          {isSidebarOpen ? <X size={35} color="#ffffff" /> : <Menu size={35} color="#ffffff" />}
-        </div>
-        <img src={logoheader} alt="logo" style={styles.topBarLogo} />
-      </div>
+      <AppSidebar user={user} onLogout={handleLogout} />
 
-      {/* Sidebar Overlay */}
-      {isSidebarOpen && isMobile && (
-        <div
-          style={styles.sidebarOverlay}
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
-
-      {/* Sidebar */}
-      <div
-        style={{
-          ...styles.sidebar,
-          ...(isMobile
-            ? {
-                transform: isSidebarOpen ? "translateX(0)" : "translateX(-100%)",
-                position: "fixed",
-                zIndex: 15,
-                top: 0,
-              }
-            : {}),
-        }}
-      >
-        <div style={styles.sidebarHeader}>
-          <img
-            src={logo}
-            alt="logo"
-            style={{ width: "10.5rem", height: "10.5rem", color: "#7c3aed" }}
-          />
-          <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
-        </div>
-
-        <nav style={styles.nav}>
-          {menuItems.map((item) => (
-            <div key={item.name}>
-              <div
-                style={{
-                  ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                }}
-                onClick={() => {
-                  if (item.submenu) {
-                    toggleMenu(item.name);
-                  } else {
-                    // Pass the path as-is (could be string or function)
-                    handleMenuClick(item.name, item.path);
-                  }
-                }}
-              >
-                <div style={styles.menuItemContent}>
-                  <item.icon size={20} style={styles.menuIcon} />
-                  <span style={styles.menuText}>{item.name}</span>
-                </div>
-                {item.submenu &&
-                  (expandedMenus[item.name] ? (
-                    <ChevronDown size={16} />
-                  ) : (
-                    <ChevronRight size={16} />
-                  ))}
-              </div>
-
-              {item.submenu && expandedMenus[item.name] && (
-                <div style={styles.submenu}>
-                  {item.submenu.map((subItem) => (
-                    <div
-                      key={subItem.name}
-                      style={styles.submenuItem}
-                      onClick={() =>
-                        handleMenuClick(subItem.name, subItem.path)
-                      }
-                    >
-                      {subItem.name}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-
-          <div style={styles.logoutButton} onClick={handleLogout}>
-            <LogOut size={20} style={styles.menuIcon} />
-            <span style={styles.menuText}>Logout</span>
-          </div>
-        </nav>
-      </div>
-
-      {/* Main Content */}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={styles.header}>

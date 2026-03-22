@@ -2,39 +2,20 @@ import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
-  LayoutDashboard,
-  ShoppingCart,
-  TrendingUp,
-  Wrench,
-  Users,
-  LogOut,
-  ChevronDown,
-  ChevronRight,
-  FileText,
   Upload,
   Trash2,
   Eye,
   EyeOff,
-  X,
   Menu,
-  Settings,
-  Bike,
-  ShipWheel,
-  Megaphone,
-  RefreshCw,
-
-  Shield,
-  ImageIcon
 } from "lucide-react";
 import AuthContext from "../context/AuthContext";
+import AppSidebar from "./common/AppSidebar";
 
 const API_BASE = "https://ok-motor-51l3.vercel.app";
 
 const GalleryManagement = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [activeMenu, setActiveMenu] = useState("Gallery Management");
-  const [expandedMenus, setExpandedMenus] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -144,125 +125,6 @@ const GalleryManagement = () => {
     }
   };
 
-  const menuItems = [
-    {
-      name: "Dashboard",
-      icon: LayoutDashboard,
-      path: (userRole) => (userRole === "admin" ? "/admin" : "/staff"),
-    },
-    {
-      name: "Vehicle",
-      icon: ShipWheel,
-      submenu: [
-        { name: "Add Vehicle", path: "/vehicle/create" },
-        { name: "Vehicle List", path: "/vehicle/history" },
-      ],
-    },
-    {
-      name: "Buy",
-      icon: ShoppingCart,
-      submenu: [
-        { name: "Create Buy Letter", path: "/buy/create" },
-        { name: "Buy Letter History", path: "/buy/history" },
-      ],
-    },
-    {
-      name: "Sell",
-      icon: TrendingUp,
-      submenu: [
-        { name: "Create Sell Letter", path: "/sell/create" },
-        { name: "Sell Letter History", path: "/sell/history" },
-        { name: "Sell Requests", path: "/sell/requests" },
-      ],
-    },
-    {
-      name: "Insurance",
-      icon: Shield,
-      submenu: [
-        { name: "Add Insurance", path: "/insurance/create" },
-        { name: "Insurance List", path: "/insurance/history" },
-      ],
-    },
-    {
-      name: "PUC",
-      icon: FileText,
-      submenu: [
-        { name: "Add PUC", path: "/puc/create" },
-        { name: "PUC List", path: "/puc/history" },
-      ],
-    },
-    {
-      name: "Updates",
-      icon: RefreshCw,
-      submenu: [
-        { name: "Create Update", path: "/updates/create" },
-        { name: "Updates List", path: "/updates" },
-      ],
-    },
-    {
-      name: "Announcements",
-      icon: Megaphone,
-      path: "/announcements",
-    },
-    {
-      name: "Service",
-      icon: Wrench,
-      submenu: [
-        { name: "Create Service Bill", path: "/service/create" },
-        { name: "Service History", path: "/service/history" },
-      ],
-    },
-    {
-      name: "Payment",
-      icon: FileText,
-      submenu: [
-        { name: "Create Advance Bill", path: "/advance/create" },
-        { name: "Advance History", path: "/advance/history" },
-      ],
-    },
-    {
-      name: "Staff",
-      icon: Users,
-      submenu: [
-        { name: "Create Staff ID", path: "/staff/create" },
-        { name: "Staff List", path: "/staff/list" },
-      ],
-    },
-    {
-      name: "Gallery",
-      icon: ImageIcon,
-      path: "/gallery/manage",
-    },
-    {
-      name: "Letter Head",
-      icon: FileText,
-      path: "/letter-head/create",
-    },
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
-    },
-    {
-      name: "Settings",
-      icon: Settings,
-      path: "/settings",
-    },
-  ];
-
-  const toggleMenu = (menuName) => {
-    setExpandedMenus((prev) => ({
-      ...prev,
-      [menuName]: !prev[menuName],
-    }));
-  };
-
-  const handleMenuClick = (menuName, path) => {
-    setActiveMenu(menuName);
-    const actualPath = typeof path === "function" ? path(user?.role) : path;
-    navigate(actualPath);
-  };
-
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -270,92 +132,8 @@ const GalleryManagement = () => {
 
   return (
     <div style={styles.container}>
-      {}
-      <div
-        style={{
-          ...styles.sidebar,
-          transform:
-            isMobile && !isSidebarOpen ? "translateX(-100%)" : "translateX(0)",
-        }}
-      >
-        <div style={styles.sidebarHeader}>
-          <h2 style={styles.sidebarTitle}>OK Motors</h2>
-          {isMobile && (
-            <X
-              size={24}
-              style={styles.closeSidebar}
-              onClick={() => setIsSidebarOpen(false)}
-            />
-          )}
-        </div>
+      <AppSidebar user={user} onLogout={handleLogout} />
 
-        <nav style={styles.nav}>
-          {menuItems.map((item) => (
-            <div key={item.name}>
-              {item.submenu ? (
-                <div>
-                  <div
-                    style={styles.menuItem}
-                    onClick={() => toggleMenu(item.name)}
-                  >
-                    <div style={styles.menuItemLeft}>
-                      <item.icon size={20} />
-                      <span style={styles.menuText}>{item.name}</span>
-                    </div>
-                    {expandedMenus[item.name] ? (
-                      <ChevronDown size={16} />
-                    ) : (
-                      <ChevronRight size={16} />
-                    )}
-                  </div>
-                  {expandedMenus[item.name] && (
-                    <div style={styles.submenu}>
-                      {item.submenu.map((subItem) => (
-                        <div
-                          key={subItem.name}
-                          style={{
-                            ...styles.submenuItem,
-                            ...(activeMenu === subItem.name
-                              ? styles.activeMenuItem
-                              : {}),
-                          }}
-                          onClick={() =>
-                            handleMenuClick(subItem.name, subItem.path)
-                          }
-                        >
-                          {subItem.name}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div
-                  style={{
-                    ...styles.menuItem,
-                    ...(activeMenu === item.name ? styles.activeMenuItem : {}),
-                  }}
-                  onClick={() => handleMenuClick(item.name, item.path)}
-                >
-                  <div style={styles.menuItemLeft}>
-                    <item.icon size={20} />
-                    <span style={styles.menuText}>{item.name}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-
-          <div style={styles.menuItem} onClick={handleLogout}>
-            <div style={styles.menuItemLeft}>
-              <LogOut size={20} />
-              <span style={styles.menuText}>Logout</span>
-            </div>
-          </div>
-        </nav>
-      </div>
-
-      {}
       <div style={styles.mainContent}>
         {isMobile && (
           <div style={styles.mobileHeader}>

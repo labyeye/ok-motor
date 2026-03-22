@@ -1,38 +1,16 @@
 // src/pages/SettingsPage.js
 import React, { useState, useEffect, useContext } from "react";
-import {
-  LayoutDashboard,
-  ShoppingCart,
-  TrendingUp,
-  Wrench,
-  ShipWheel,
-  Users,
-  LogOut,
-  Image,
-  ChevronDown,
-  ChevronRight,
-  FileText,
-  Bike,
-  Menu,
-  X,
-  Settings,
-  Megaphone,
-} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
+import AppSidebar from "../components/common/AppSidebar";
 import networkService from "../services/networkService";
 import syncService from "../services/syncService";
-import logo from "../images/company.png";
-import logoheader from "../images/okmotor.png";
 import fileSaveService from "../services/fileSaveService";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 
 const SettingsPage = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [activeMenu, setActiveMenu] = useState("Settings");
-  const [expandedMenus, setExpandedMenus] = useState({});
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const [storagePath, setStoragePath] = useState("");
@@ -44,110 +22,6 @@ const SettingsPage = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [lastSyncTime, setLastSyncTime] = useState(null);
-
-  // Menu items
-  const menuItems = [
-    {
-      name: "Dashboard",
-      icon: LayoutDashboard,
-      path: user?.role === "admin" ? "/admin" : "/staff",
-    },
-    {
-      name: "Vehicle",
-      icon: ShipWheel,
-      submenu: [
-        { name: "Add Vehicle", path: "/vehicle/create" },
-        { name: "Vehicle List", path: "/vehicle/history" },
-      ],
-    },
-    {
-      name: "Buy",
-      icon: ShoppingCart,
-      submenu: [
-        { name: "Create Buy Letter", path: "/buy/create" },
-        { name: "Buy Letter History", path: "/buy/history" },
-      ],
-    },
-    {
-      name: "Sell",
-      icon: TrendingUp,
-      submenu: [
-        { name: "Create Sell Letter", path: "/sell/create" },
-        { name: "Sell Letter History", path: "/sell/history" },
-        { name: "Sell Requests", path: "/sell/requests" },
-      ],
-    },
-    {
-      name: "Announcements",
-      icon: Megaphone,
-      path: "/announcements",
-    },
-    {
-      name: "Service",
-      icon: Wrench,
-      submenu: [
-        { name: "Create Service Bill", path: "/service/create" },
-        { name: "Service History", path: "/service/history" },
-      ],
-    },
-    {
-      name: "Payment",
-      icon: FileText,
-      submenu: [
-        { name: "Create Advance Bill", path: "/advance/create" },
-        { name: "Advance History", path: "/advance/history" },
-      ],
-    },
-    ...(user?.role !== "staff"
-      ? [
-          {
-            name: "Staff",
-            icon: Users,
-            submenu: [
-              { name: "Create Staff ID", path: "/staff/create" },
-              { name: "Staff List", path: "/staff/list" },
-            ],
-          },
-        ]
-      : []),
-    {
-      name: "Gallery",
-      icon: Image,
-      path: "/gallery/manage",
-    },
-    {
-      name: "Vehicle History",
-      icon: Bike,
-      path: "/bike-history",
-    },
-    {
-      name: "Letter Head",
-      icon: FileText,
-      path: "/letter-head/create",
-    },
-    {
-      name: "Settings",
-      icon: Settings,
-      path: "/settings",
-    },
-  ];
-
-  const toggleMenu = (menuName) => {
-    setExpandedMenus((prev) => ({
-      ...prev,
-      [menuName]: !prev[menuName],
-    }));
-  };
-
-  const handleMenuClick = (menuName, path) => {
-    setActiveMenu(menuName);
-    if (path) {
-      navigate(path);
-    }
-    if (window.innerWidth <= 768) {
-      setIsSidebarOpen(false);
-    }
-  };
 
   const handleLogout = () => {
     logout();
@@ -539,124 +413,8 @@ const SettingsPage = () => {
         paddingTop: isMobile ? "80px" : "0",
       }}
     >
-      <div
-        style={{
-          ...styles.topBar,
-          display: isMobile && !isSidebarOpen ? "flex" : "none",
-        }}
-      >
-        <div
-          style={styles.hamburgerMenu}
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        >
-          {isSidebarOpen ? <X size={35} color="#ffffff" /> : <Menu size={35} color="#ffffff" />}
-        </div>
-        <img src={logoheader} alt="logo" style={styles.topBarLogo} />
-      </div>
+      <AppSidebar user={user} onLogout={handleLogout} />
 
-      {isSidebarOpen && isMobile && (
-        <div
-          style={styles.sidebarOverlay}
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
-
-      <div
-        style={{
-          ...styles.sidebar,
-          ...(isMobile
-            ? {
-                transform: isSidebarOpen
-                  ? "translateX(0)"
-                  : "translateX(-100%)",
-                position: "fixed",
-                zIndex: 15,
-              }
-            : {}),
-        }}
-      >
-        <div style={styles.sidebarHeader}>
-          <img
-            src={logo}
-            alt="logo"
-            style={{
-              width: "100%",
-              maxWidth: "25rem",
-              height: "9rem",
-              objectFit: "cover",
-              objectPosition: "center",
-              display: "block",
-              margin: "0 auto 1rem auto",
-            }}
-          />
-          <p className="sidebar-subtitle">Welcome, {user?.name || "User"}</p>
-        </div>
-
-        <nav style={styles.nav}>
-          {menuItems.map((item) => (
-            <div key={item.name}>
-              <div
-                style={{
-                  ...styles.menuItem,
-                  ...(activeMenu === item.name ? styles.menuItemActive : {}),
-                }}
-                onClick={() => {
-                  if (item.submenu) {
-                    toggleMenu(item.name);
-                  } else {
-                    handleMenuClick(item.name, item.path);
-                  }
-                }}
-              >
-                <div style={styles.menuItemContent}>
-                  <item.icon size={20} style={styles.menuIcon} />
-                  <span style={styles.menuText}>{item.name}</span>
-                </div>
-                {item.submenu &&
-                  (expandedMenus[item.name] ? (
-                    <ChevronDown size={16} />
-                  ) : (
-                    <ChevronRight size={16} />
-                  ))}
-              </div>
-
-              {item.submenu && (
-                <div
-                  style={{
-                    ...styles.submenu,
-                    maxHeight: expandedMenus[item.name]
-                      ? `${item.submenu.length * 48}px`
-                      : "0px",
-                    opacity: expandedMenus[item.name] ? 1 : 0,
-                    transition:
-                      "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s",
-                    overflow: "hidden",
-                  }}
-                >
-                  {item.submenu.map((subItem) => (
-                    <div
-                      key={subItem.name}
-                      style={styles.submenuItem}
-                      onClick={() =>
-                        handleMenuClick(subItem.name, subItem.path)
-                      }
-                    >
-                      {subItem.name}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-
-          <div style={styles.logoutButton} onClick={handleLogout}>
-            <LogOut size={20} style={styles.menuIcon} />
-            <span style={styles.menuText}>Logout</span>
-          </div>
-        </nav>
-      </div>
-
-      {/* Main Content */}
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
