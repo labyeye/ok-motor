@@ -21,7 +21,7 @@
     bar.addEventListener("click", function (e) {
       var btn = e.target.closest && e.target.closest(".inventory-btn");
       if (btn) {
-        window.location.href = "inventory.html";
+        window.location.href = "https://www.okmotors.in/inventory.html";
       }
     });
 
