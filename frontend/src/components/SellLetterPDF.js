@@ -25,6 +25,7 @@ import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import ImageCropper from "./ImageCropper";
 import FileUploadModal from "./FileUploadModal";
+import PdfPreview from "./PdfPreview";
 import {
   isPdfFile,
   isImageFile,
@@ -4096,18 +4097,37 @@ const SellLetterForm = () => {
                   height: isMobile ? "65vh" : "70vh",
                   width: "100%",
                   marginBottom: "20px",
+                  overflow: "auto",
+                  backgroundColor: "#525659",
                 }}
               >
                 {previewPdf ? (
-                  <iframe
-                    src={previewPdf}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      border: "1px solid #e2e8f0",
-                    }}
-                    title="PDF Preview"
-                  />
+                  isMobile ? (
+                    <PdfPreview pdfUrl={previewPdf} />
+                  ) : (
+                    <object
+                      data={previewPdf}
+                      type="application/pdf"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        border: "none",
+                        display: "block",
+                      }}
+                      aria-label="Sell Letter PDF Preview"
+                    >
+                      <iframe
+                        src={`${previewPdf}#toolbar=0&navpanes=0&scrollbar=1`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          border: "none",
+                          display: "block",
+                        }}
+                        title="Sell Letter PDF Preview"
+                      />
+                    </object>
+                  )
                 ) : (
                   <div
                     style={{

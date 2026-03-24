@@ -16,6 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
+import PdfPreview from "./PdfPreview";
 import logo1 from "../images/okmotorback.png";
 
 const BikeHistory = ({ externalSearchTerm }) => {
@@ -2438,28 +2439,150 @@ const BikeHistory = ({ externalSearchTerm }) => {
         </div>
       </div>
 
-      {}
-      {showPdfModal && (
-        <div style={styles.pdfModalOverlay}>
-          <div style={styles.pdfModalContainer}>
-            <div style={styles.pdfModalHeader}>
-              <h3>Document Preview</h3>
+      {showPdfModal && pdfUrl && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+          onClick={() => {
+            setShowPdfModal(false);
+            setPdfUrl("");
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: "12px",
+              maxWidth: isMobile ? "95vw" : "1400px",
+              width: "100%",
+              height: isMobile ? "85vh" : "90vh",
+              maxHeight: isMobile ? "85vh" : "90vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                padding: "20px 24px",
+                borderBottom: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                backgroundColor: "#f8fafc",
+                borderTopLeftRadius: "12px",
+                borderTopRightRadius: "12px",
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  color: "#0f172a",
+                  margin: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <FileText size={24} color="#088395" />
+                Document Preview
+              </h2>
               <button
                 onClick={() => {
                   setShowPdfModal(false);
-                  URL.revokeObjectURL(pdfUrl);
+                  setPdfUrl("");
                 }}
-                style={styles.pdfModalCloseButton}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#64748b",
+                  padding: "4px",
+                }}
               >
-                <X size={20} />
+                <X size={24} />
               </button>
             </div>
-            <div style={styles.pdfModalContent}>
-              <iframe
-                src={pdfUrl}
-                style={styles.pdfIframe}
-                title="PDF Preview"
-              />
+
+            <div
+              style={{
+                flex: 1,
+                minHeight: 0,
+                overflow: "auto",
+                WebkitOverflowScrolling: "touch",
+                backgroundColor: "#525659",
+              }}
+            >
+              {isMobile ? (
+                <PdfPreview pdfUrl={pdfUrl} />
+              ) : (
+                <object
+                  data={pdfUrl}
+                  type="application/pdf"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    border: "none",
+                    display: "block",
+                  }}
+                  aria-label="Bike History PDF Preview"
+                >
+                  <iframe
+                    src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      border: "none",
+                      display: "block",
+                    }}
+                    title="Bike History PDF Preview"
+                  />
+                </object>
+              )}
+            </div>
+
+            <div
+              style={{
+                padding: "20px 24px",
+                borderTop: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "12px",
+                backgroundColor: "#f8fafc",
+                borderBottomLeftRadius: "12px",
+                borderBottomRightRadius: "12px",
+              }}
+            >
+              <button
+                onClick={() => {
+                  setShowPdfModal(false);
+                  setPdfUrl("");
+                }}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#fff",
+                  color: "#475569",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
