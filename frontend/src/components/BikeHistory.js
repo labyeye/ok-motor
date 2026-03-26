@@ -27,6 +27,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
   const [pdfUrl, setPdfUrl] = useState("");
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [expandedItems, setExpandedItems] = useState(new Set());
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -1582,7 +1583,122 @@ const BikeHistory = ({ externalSearchTerm }) => {
         })),
       ];
 
-      combinedData.sort((a, b) => new Date(b.date) - new Date(a.date));
+      // Add insurance renewal entries if updatedAt !== createdAt
+      insuranceData.forEach((item) => {
+        const createdTime = item.createdAt ? new Date(item.createdAt).getTime() : 0;
+        const updatedTime = item.updatedAt ? new Date(item.updatedAt).getTime() : 0;
+        if (updatedTime > createdTime + 1000) { // More than 1 sec difference = edited
+          combinedData.push({
+            ...item,
+            type: "insurance-renewed",
+            date: item.updatedAt,
+            _id: `${item._id}-renewed`,
+          });
+        }
+      });
+
+      // Add PUC renewal entries if updatedAt !== createdAt
+      pucData.forEach((item) => {
+        const createdTime = item.createdAt ? new Date(item.createdAt).getTime() : 0;
+        const updatedTime = item.updatedAt ? new Date(item.updatedAt).getTime() : 0;
+        if (updatedTime > createdTime + 1000) { // More than 1 sec difference = edited
+          combinedData.push({
+            ...item,
+            type: "puc-renewed",
+            date: item.updatedAt,
+            _id: `${item._id}-renewed`,
+          });
+        }
+      });
+
+      // Fetch previous versions for items that have been edited
+      const itemsWithPreviousVersionId = combinedData.filter(
+        (item) => item.previousVersionId,
+      );
+
+      if (itemsWithPreviousVersionId.length > 0) {
+        try {
+          const prevVersionPromises = itemsWithPreviousVersionId.map((item) => {
+            if (item.type === "buy" || item.type === "sell") {
+              return axios
+                .get(
+                  `https://ok-motor-51l3.vercel.app/api/${item.type}-letter/${item.previousVersionId}`,
+                )
+                .then((res) => ({ id: item._id, previousVersion: res.data }))
+                .catch(() => ({ id: item._id, previousVersion: null }));
+            }
+            return Promise.resolve({ id: item._id, previousVersion: null });
+          });
+
+          const previousVersions = await Promise.all(prevVersionPromises);
+          const prevVersionMap = new Map(
+            previousVersions.map((pv) => [pv.id, pv.previousVersion]),
+          );
+
+          combinedData.forEach((item) => {
+            if (prevVersionMap.has(item._id)) {
+              item.previousVersion = prevVersionMap.get(item._id);
+            }
+          });
+        } catch (err) {
+          console.warn("Failed to fetch previous versions:", err);
+        }
+      }
+
+      const getSortTimestamp = (historyItem) => {
+        const candidateDates = [
+          historyItem.createdAt,
+          historyItem.saleDate,
+          historyItem.serviceDate,
+          historyItem.pucIssueDate,
+          historyItem.pucExpiryDate,
+          historyItem.insuranceExpiryDate,
+          historyItem.date,
+        ];
+
+        const parseDateValue = (value) => {
+          if (!value) return NaN;
+          if (value instanceof Date) return value.getTime();
+
+          const directParsed = new Date(value).getTime();
+          if (!Number.isNaN(directParsed)) return directParsed;
+
+          if (typeof value === "string") {
+            const trimmedValue = value.trim();
+            const ddmmyyyyMatch = trimmedValue.match(
+              /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:,?\s*(\d{1,2}):(\d{2})\s*(am|pm)?)?$/i,
+            );
+
+            if (ddmmyyyyMatch) {
+              const day = Number(ddmmyyyyMatch[1]);
+              const month = Number(ddmmyyyyMatch[2]) - 1;
+              const year = Number(ddmmyyyyMatch[3]);
+              let hours = Number(ddmmyyyyMatch[4] || 0);
+              const minutes = Number(ddmmyyyyMatch[5] || 0);
+              const meridiem = (ddmmyyyyMatch[6] || "").toLowerCase();
+
+              if (meridiem === "pm" && hours < 12) hours += 12;
+              if (meridiem === "am" && hours === 12) hours = 0;
+
+              return new Date(year, month, day, hours, minutes).getTime();
+            }
+          }
+
+          return NaN;
+        };
+
+        for (const candidate of candidateDates) {
+          const timestamp = parseDateValue(candidate);
+          if (!Number.isNaN(timestamp)) return timestamp;
+        }
+
+        return Number.MAX_SAFE_INTEGER;
+      };
+
+      combinedData.sort((firstItem, secondItem) => {
+        return getSortTimestamp(firstItem) - getSortTimestamp(secondItem);
+      });
+
       setBikeHistory(combinedData);
     } catch (error) {
       console.error("Error fetching bike history:", error);
@@ -1790,10 +1906,10 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return;
       }
       // insurance and puc don't have PDFs; open their history pages instead
-      else if (type === "insurance") {
+      else if (type === "insurance" || type === "insurance-renewed") {
         navigate(`/insurance/history?reg=${encodeURIComponent(searchTerm)}`);
         return;
-      } else if (type === "puc") {
+      } else if (type === "puc" || type === "puc-renewed") {
         navigate(`/puc/history?reg=${encodeURIComponent(searchTerm)}`);
         return;
       }
@@ -1855,10 +1971,10 @@ const BikeHistory = ({ externalSearchTerm }) => {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-      } else if (type === "insurance") {
+      } else if (type === "insurance" || type === "insurance-renewed") {
         navigate(`/insurance/history?reg=${encodeURIComponent(searchTerm)}`);
         return;
-      } else if (type === "puc") {
+      } else if (type === "puc" || type === "puc-renewed") {
         navigate(`/puc/history?reg=${encodeURIComponent(searchTerm)}`);
         return;
       }
@@ -1908,8 +2024,12 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return <FileText size={16} color="#f59e0b" />;
       case "insurance":
         return <Shield size={16} color="#0ea5e9" />;
+      case "insurance-renewed":
+        return <Shield size={16} color="#06b6d4" />;
       case "puc":
         return <FileText size={16} color="#94a3b8" />;
+      case "puc-renewed":
+        return <FileText size={16} color="#8b5cf6" />;
       default:
         return <FileText size={16} />;
     }
@@ -1927,8 +2047,12 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return "Advance Payment";
       case "insurance":
         return "Insurance";
+      case "insurance-renewed":
+        return "Insurance Renewed";
       case "puc":
         return "PUC";
+      case "puc-renewed":
+        return "PUC Renewed";
       default:
         return "Activity";
     }
@@ -1965,8 +2089,12 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return `Advance_Receipt_${registrationNumber}_${date}.pdf`;
       case "insurance":
         return `Insurance_${registrationNumber}_${date}.pdf`;
+      case "insurance-renewed":
+        return `Insurance_Renewed_${registrationNumber}_${date}.pdf`;
       case "puc":
         return `PUC_${registrationNumber}_${date}.pdf`;
+      case "puc-renewed":
+        return `PUC_Renewed_${registrationNumber}_${date}.pdf`;
       default:
         return `Document_${registrationNumber}_${date}.pdf`;
     }
@@ -2002,7 +2130,209 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const exp = item.pucExpiryDate || item.pucExpiry || null;
       return `PUC: ${pucNo}${exp ? ` • Exp: ${new Date(exp).toLocaleDateString("en-IN")}` : ""}`;
     }
+    if (item.type === "insurance-renewed") {
+      const comp = item.insuranceCompany || "-";
+      const exp = item.insuranceExpiryDate || item.insuranceExpiry || null;
+      return `Renewed with ${comp}${exp ? ` • Exp: ${new Date(exp).toLocaleDateString("en-IN")}` : ""}`;
+    }
+    if (item.type === "puc-renewed") {
+      const pucNo = item.pucNumber || item.pucNo || "-";
+      const exp = item.pucExpiryDate || item.pucExpiry || null;
+      return `Renewed • PUC: ${pucNo}${exp ? ` • Exp: ${new Date(exp).toLocaleDateString("en-IN")}` : ""}`;
+    }
     return "";
+  };
+
+  const toggleExpandedItem = (itemKey) => {
+    const newExpanded = new Set(expandedItems);
+
+    if (newExpanded.has(itemKey)) {
+      newExpanded.delete(itemKey);
+    } else {
+      newExpanded.add(itemKey);
+    }
+    setExpandedItems(newExpanded);
+  };
+
+  const getFieldLabel = (fieldName) => {
+    const labels = {
+      vehicleMake: "Vehicle Make",
+      vehicleName: "Vehicle Name",
+      vehicleModel: "Vehicle Model",
+      vehicleColor: "Vehicle Color",
+      registrationNumber: "Registration Number",
+      chassisNumber: "Chassis Number",
+      engineNumber: "Engine Number",
+      vehiclekm: "Vehicle KM",
+      vehicleCondition: "Vehicle Condition",
+      buyerName: "Buyer Name",
+      buyerFatherName: "Buyer Father Name",
+      buyerCurrentAddress: "Buyer Address",
+      buyerPhone: "Buyer Phone",
+      buyerAadhar: "Buyer Aadhar",
+      sellerName: "Seller Name",
+      sellerFatherName: "Seller Father Name",
+      sellerCurrentAddress: "Seller Address",
+      sellerAddress: "Seller Address",
+      sellerPhone: "Seller Phone",
+      selleraadhar: "Seller Aadhar",
+      sellerpan: "Seller PAN",
+      selleraadharphone: "Seller Phone",
+      selleraadharphone2: "Seller Phone 2",
+      saleAmount: "Sale Amount",
+      saleDate: "Sale Date",
+      saleTime: "Sale Time",
+      serviceType: "Service Type",
+      kmReading: "KM Reading",
+      grandTotal: "Total Amount",
+      serviceItems: "Service Items",
+      advancePaid: "Advance Amount",
+      insuranceCompany: "Insurance Company",
+      insurancePolicyNumber: "Policy Number",
+      insuranceExpiryDate: "Insurance Expiry",
+      pucNumber: "PUC Number",
+      pucExpiryDate: "PUC Expiry",
+      note: "Notes",
+      status: "Status",
+      customerName: "Customer Name",
+      paymentMethod: "Payment Method",
+    };
+    return labels[fieldName] || fieldName;
+  };
+
+  const getEditedFields = (item) => {
+    const fieldsToCompare = [
+      "vehicleName",
+      "vehicleModel",
+      "vehicleColor",
+      "registrationNumber",
+      "chassisNumber",
+      "engineNumber",
+      "vehiclekm",
+      "vehicleCondition",
+      "buyerName",
+      "buyerFatherName",
+      "buyerCurrentAddress",
+      "buyerPhone",
+      "buyerAadhar",
+      "sellerName",
+      "sellerFatherName",
+      "sellerCurrentAddress",
+      "sellerAddress",
+      "sellerPhone",
+      "selleraadhar",
+      "sellerpan",
+      "selleraadharphone",
+      "selleraadharphone2",
+      "saleAmount",
+      "saleDate",
+      "saleTime",
+      "serviceType",
+      "kmReading",
+      "grandTotal",
+      "advancePaid",
+      "insuranceCompany",
+      "insurancePolicyNumber",
+      "insuranceExpiryDate",
+      "insuranceStatus",
+      "pucNumber",
+      "pucExpiryDate",
+      "pucIssueDate",
+      "pucStatus",
+      "note",
+      "status",
+      "customerName",
+      "paymentMethod",
+    ];
+
+    const editedFields = [];
+
+    // Normalize function to properly compare values
+    const normalize = (val) => {
+      if (val === null || val === undefined) return "";
+      return String(val).trim();
+    };
+
+    const normalizeDate = (val) => {
+      if (!val) return "";
+      try {
+        let ds = val;
+        if (typeof ds === "string" && ds.includes("T")) ds = ds.split("T")[0];
+        const date = new Date(ds);
+        if (isNaN(date.getTime())) return "";
+        return date.toISOString().split("T")[0];
+      } catch (e) {
+        return "";
+      }
+    };
+
+    // Check if the item has changeHistory field
+    if (
+      item.changeHistory &&
+      Array.isArray(item.changeHistory) &&
+      item.changeHistory.length > 0
+    ) {
+      item.changeHistory.forEach((change) => {
+        if (
+          change.field &&
+          change.oldValue !== undefined &&
+          change.newValue !== undefined
+        ) {
+          editedFields.push({
+            field: getFieldLabel(change.field),
+            oldValue: String(change.oldValue || ""),
+            newValue: String(change.newValue || ""),
+          });
+        }
+      });
+    } else if (item.previousVersion) {
+      // If we have a previous version object, compare fields
+      fieldsToCompare.forEach((field) => {
+        const oldValue = item.previousVersion[field];
+        const newValue = item[field];
+
+        // For date fields, use date normalization
+        if (
+          [
+            "saleDate",
+            "pucIssueDate",
+            "pucExpiryDate",
+            "insuranceExpiryDate",
+          ].includes(field)
+        ) {
+          if (normalizeDate(oldValue) !== normalizeDate(newValue)) {
+            editedFields.push({
+              field: getFieldLabel(field),
+              oldValue: formatDate(oldValue) || "(empty)",
+              newValue: formatDate(newValue) || "(empty)",
+            });
+          }
+        } else {
+          // For regular fields, use text normalization
+          if (normalize(oldValue) !== normalize(newValue)) {
+            editedFields.push({
+              field: getFieldLabel(field),
+              oldValue: normalize(oldValue) || "(empty)",
+              newValue: normalize(newValue) || "(empty)",
+            });
+          }
+        }
+      });
+    } else if (item.editedAt && item.createdAt) {
+      // Fallback: Just show that it was edited
+      const createdDate = new Date(item.createdAt);
+      const editedDate = new Date(item.editedAt);
+
+      if (editedDate.getTime() !== createdDate.getTime()) {
+        editedFields.push({
+          field: "Record Modified",
+          oldValue: new Date(createdDate).toLocaleString("en-IN"),
+          newValue: new Date(editedDate).toLocaleString("en-IN"),
+        });
+      }
+    }
+
+    return editedFields;
   };
 
   const handleLogout = () => {
@@ -2069,125 +2399,319 @@ const BikeHistory = ({ externalSearchTerm }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {bikeHistory.map((item) => (
-                        <tr
-                          key={`${item.type}-${item._id}`}
-                          style={styles.tableRow}
-                        >
-                          <td style={styles.tableCell}>
-                            {item.type === "buy" || item.type === "sell" ? (
-                              <div>
-                                <div>
-                                  Created:{" "}
-                                  {item.createdAt
-                                    ? new Date(item.createdAt).toLocaleString(
-                                        "en-IN",
-                                        {
-                                          day: "2-digit",
-                                          month: "2-digit",
-                                          year: "numeric",
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                        },
-                                      )
-                                    : item.saleDate
-                                      ? new Date(item.saleDate).toLocaleString(
+                      {bikeHistory.map((item) => {
+                        const itemKey = `${item.type}-${item._id}`;
+                        const editedFields = getEditedFields(item);
+                        const hasEdits =
+                          item.editedAt && editedFields.length > 0;
+                        const isExpanded = expandedItems.has(itemKey);
+
+                        return (
+                          <React.Fragment key={itemKey}>
+                            <tr style={styles.tableRow}>
+                              <td style={styles.tableCell}>
+                                {item.type === "buy" || item.type === "sell" ? (
+                                  <div>
+                                    <div>
+                                      Created:{" "}
+                                      {item.createdAt
+                                        ? new Date(
+                                            item.createdAt,
+                                          ).toLocaleString("en-IN", {
+                                            day: "2-digit",
+                                            month: "2-digit",
+                                            year: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                          })
+                                        : item.saleDate
+                                          ? new Date(
+                                              item.saleDate,
+                                            ).toLocaleString("en-IN")
+                                          : new Date(item.date).toLocaleString(
+                                              "en-IN",
+                                            )}
+                                    </div>
+                                    {item.editedAt && (
+                                      <div
+                                        style={{
+                                          color: "#64748b",
+                                          fontSize: "0.9em",
+                                        }}
+                                      >
+                                        Edited:{" "}
+                                        {new Date(item.editedAt).toLocaleString(
                                           "en-IN",
-                                        )
-                                      : new Date(item.date).toLocaleString("en-IN")}
-                                </div>
-                                {item.editedAt && (
-                                  <div
-                                    style={{ color: "#64748b", fontSize: "0.9em" }}
-                                  >
-                                    Edited:{" "}
-                                    {new Date(item.editedAt).toLocaleString(
-                                      "en-IN",
-                                      {
-                                        day: "2-digit",
-                                        month: "2-digit",
-                                        year: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      },
+                                          {
+                                            day: "2-digit",
+                                            month: "2-digit",
+                                            year: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                          },
+                                        )}
+                                      </div>
                                     )}
                                   </div>
+                                ) : (
+                                  new Date(item.date).toLocaleString("en-IN", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
                                 )}
-                              </div>
-                            ) : (
-                              new Date(item.date).toLocaleString("en-IN", {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
-                            )}
-                          </td>
-                          <td style={styles.tableCell}>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                              }}
-                            >
-                              {getActionIcon(item.type)}
-                              {getActionLabel(item.type)}
-                            </div>
-                          </td>
-                          <td style={styles.tableCell}>
-                            {item.type === "buy" && (
-                              <span style={{ fontWeight: 600, color: "#0f766e" }}>
-                                {item.vehiclekm ? formatKm(item.vehiclekm) : "—"}
-                              </span>
-                            )}
-                            {item.type === "sell" && (
-                              <span style={{ fontWeight: 600, color: "#b45309" }}>
-                                {item.vehiclekm ? formatKm(item.vehiclekm) : "—"}
-                              </span>
-                            )}
-                            {item.type === "service" && (
-                              <span style={{ fontWeight: 600, color: "#1d4ed8" }}>
-                                {item.kmReading ? formatKm(item.kmReading) : "—"}
-                              </span>
-                            )}
-                            {item.type !== "buy" &&
-                              item.type !== "sell" &&
-                              item.type !== "service" && (
-                                <span style={{ color: "#94a3b8" }}>—</span>
-                              )}
-                          </td>
-                          <td style={styles.tableCell}>{getAmount(item)}</td>
-                          <td style={styles.tableCell}>{getDetails(item)}</td>
-                          <td style={styles.tableCell}>
-                            <div style={styles.actionButtons}>
-                              <button
-                                onClick={() => fetchPdf(item._id, item.type)}
-                                style={styles.viewButton}
-                                title="View PDF"
+                              </td>
+                              <td style={styles.tableCell}>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                  }}
+                                >
+                                  {getActionIcon(item.type)}
+                                  {getActionLabel(item.type)}
+                                </div>
+                              </td>
+                              <td style={styles.tableCell}>
+                                {item.type === "buy" && (
+                                  <span
+                                    style={{
+                                      fontWeight: 600,
+                                      color: "#0f766e",
+                                    }}
+                                  >
+                                    {item.vehiclekm
+                                      ? formatKm(item.vehiclekm)
+                                      : "—"}
+                                  </span>
+                                )}
+                                {item.type === "sell" && (
+                                  <span
+                                    style={{
+                                      fontWeight: 600,
+                                      color: "#b45309",
+                                    }}
+                                  >
+                                    {item.vehiclekm
+                                      ? formatKm(item.vehiclekm)
+                                      : "—"}
+                                  </span>
+                                )}
+                                {item.type === "service" && (
+                                  <span
+                                    style={{
+                                      fontWeight: 600,
+                                      color: "#1d4ed8",
+                                    }}
+                                  >
+                                    {item.kmReading
+                                      ? formatKm(item.kmReading)
+                                      : "—"}
+                                  </span>
+                                )}
+                                {item.type !== "buy" &&
+                                  item.type !== "sell" &&
+                                  item.type !== "service" && (
+                                    <span style={{ color: "#94a3b8" }}>—</span>
+                                  )}
+                              </td>
+                              <td style={styles.tableCell}>
+                                {getAmount(item)}
+                              </td>
+                              <td style={styles.tableCell}>
+                                {getDetails(item)}
+                              </td>
+                              <td style={styles.tableCell}>
+                                <div style={styles.actionButtons}>
+                                  <button
+                                    onClick={() =>
+                                      fetchPdf(item._id, item.type)
+                                    }
+                                    style={styles.viewButton}
+                                    title="View PDF"
+                                  >
+                                    <Eye size={14} />
+                                    View
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      downloadPdf(
+                                        item._id,
+                                        item.type,
+                                        getFileName(item),
+                                      )
+                                    }
+                                    style={styles.downloadButton}
+                                    title="Download PDF"
+                                  >
+                                    <Download size={14} />
+                                    Download
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+
+                            {hasEdits && (
+                              <tr
+                                style={{
+                                  ...styles.tableRow,
+                                  backgroundColor: "#f0f9fb",
+                                  cursor: "pointer",
+                                }}
+                                onClick={() => toggleExpandedItem(itemKey)}
                               >
-                                <Eye size={14} />
-                                View
-                              </button>
-                              <button
-                                onClick={() =>
-                                  downloadPdf(
-                                    item._id,
-                                    item.type,
-                                    getFileName(item),
-                                  )
-                                }
-                                style={styles.downloadButton}
-                                title="Download PDF"
+                                <td
+                                  colSpan="6"
+                                  style={{
+                                    ...styles.tableCell,
+                                    padding: "0",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      padding: "12px 16px",
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                      backgroundColor: "#e0f2f1",
+                                      borderLeft: "4px solid #088395",
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        fontSize: "0.85rem",
+                                        fontWeight: 600,
+                                        color: "#088395",
+                                      }}
+                                    >
+                                      📝 {isExpanded ? "Hide" : "Show"} Changes
+                                      Made
+                                    </span>
+                                    <span
+                                      style={{
+                                        fontSize: "0.75rem",
+                                        backgroundColor: "#088395",
+                                        color: "white",
+                                        padding: "2px 8px",
+                                        borderRadius: "12px",
+                                        fontWeight: 600,
+                                      }}
+                                    >
+                                      {editedFields.length}
+                                    </span>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+
+                            {hasEdits && isExpanded && (
+                              <tr
+                                style={{
+                                  ...styles.tableRow,
+                                  backgroundColor: "#fff8e1",
+                                }}
                               >
-                                <Download size={14} />
-                                Download
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                                <td
+                                  colSpan="6"
+                                  style={{
+                                    ...styles.tableCell,
+                                    padding: "16px",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: "8px",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        fontSize: "0.85rem",
+                                        fontWeight: 600,
+                                        color: "#ff9800",
+                                        marginBottom: "8px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                      }}
+                                    >
+                                      <span>🔄</span>
+                                      Changes from previous version:
+                                    </div>
+                                    {editedFields.length > 0 ? (
+                                      <div
+                                        style={{
+                                          display: "grid",
+                                          gridTemplateColumns:
+                                            "repeat(auto-fit, minmax(300px, 1fr))",
+                                          gap: "12px",
+                                        }}
+                                      >
+                                        {editedFields.map((change, idx) => (
+                                          <div
+                                            key={idx}
+                                            style={{
+                                              padding: "12px",
+                                              backgroundColor: "#fffbf0",
+                                              borderRadius: "6px",
+                                              border: "1px solid #ffe0b2",
+                                              borderLeft: "4px solid #ff9800",
+                                            }}
+                                          >
+                                            <div
+                                              style={{
+                                                fontWeight: 600,
+                                                color: "#424242",
+                                                marginBottom: "6px",
+                                                fontSize: "0.85rem",
+                                              }}
+                                            >
+                                              {change.field}:
+                                            </div>
+                                            <div
+                                              style={{
+                                                fontSize: "0.8rem",
+                                                color: "#e53935",
+                                                textDecoration: "line-through",
+                                                marginBottom: "3px",
+                                              }}
+                                            >
+                                              {change.oldValue}
+                                            </div>
+                                            <div
+                                              style={{
+                                                fontSize: "0.8rem",
+                                                color: "#43a047",
+                                                fontWeight: "500",
+                                              }}
+                                            >
+                                              → {change.newValue}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div
+                                        style={{
+                                          fontSize: "0.8rem",
+                                          color: "#757575",
+                                          fontStyle: "italic",
+                                        }}
+                                      >
+                                        No specific field changes recorded
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -2308,8 +2832,8 @@ const BikeHistory = ({ externalSearchTerm }) => {
                                   ? formatKm(item.kmReading)
                                   : "—"
                                 : item.vehiclekm
-                                ? formatKm(item.vehiclekm)
-                                : "—"}
+                                  ? formatKm(item.vehiclekm)
+                                  : "—"}
                             </span>
                           </div>
 
@@ -2429,6 +2953,106 @@ const BikeHistory = ({ externalSearchTerm }) => {
                             <Download size={14} /> Download
                           </button>
                         </div>
+
+                        {/* Edit History Section for Mobile */}
+                        {item.editedAt && getEditedFields(item).length > 0 && (
+                          <div
+                            style={{
+                              marginTop: "12px",
+                              borderTop: "1px solid #e2e8f0",
+                              paddingTop: "12px",
+                            }}
+                          >
+                            <button
+                              onClick={() =>
+                                toggleExpandedItem(`${item.type}-${item._id}`)
+                              }
+                              style={{
+                                width: "100%",
+                                padding: "10px",
+                                backgroundColor: "#fff8e1",
+                                border: "1px solid #ffe0b2",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                fontSize: "0.8rem",
+                                fontWeight: 600,
+                                color: "#ff9800",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                borderLeft: "4px solid #ff9800",
+                              }}
+                            >
+                              <span>
+                                🔄{" "}
+                                {expandedItems.has(`${item.type}-${item._id}`)
+                                  ? "Hide"
+                                  : "Show"}{" "}
+                                Changes ({getEditedFields(item).length})
+                              </span>
+                            </button>
+
+                            {expandedItems.has(`${item.type}-${item._id}`) && (
+                              <div
+                                style={{
+                                  marginTop: "10px",
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "10px",
+                                }}
+                              >
+                                {getEditedFields(item).map((change, idx) => (
+                                  <div
+                                    key={idx}
+                                    style={{
+                                      backgroundColor: "#fffbf0",
+                                      padding: "12px",
+                                      borderRadius: "6px",
+                                      fontSize: "0.75rem",
+                                      borderLeft: "4px solid #ff9800",
+                                      border: "1px solid #ffe0b2",
+                                      borderLeftWidth: "4px",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        fontWeight: 600,
+                                        color: "#424242",
+                                        marginBottom: "6px",
+                                      }}
+                                    >
+                                      {change.field}:
+                                    </div>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "3px",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          color: "#e53935",
+                                          textDecoration: "line-through",
+                                        }}
+                                      >
+                                        {change.oldValue}
+                                      </div>
+                                      <div
+                                        style={{
+                                          color: "#43a047",
+                                          fontWeight: 500,
+                                        }}
+                                      >
+                                        → {change.newValue}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
