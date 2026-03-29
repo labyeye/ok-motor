@@ -1695,7 +1695,49 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return Number.MAX_SAFE_INTEGER;
       };
 
+      const isEditedEntry = (historyItem) => {
+        if (!historyItem) return false;
+
+        if (
+          historyItem.previousVersionId ||
+          (Array.isArray(historyItem.changeHistory) &&
+            historyItem.changeHistory.length > 0)
+        ) {
+          return true;
+        }
+
+        if (historyItem.editedAt && historyItem.createdAt) {
+          const editedTime = new Date(historyItem.editedAt).getTime();
+          const createdTime = new Date(historyItem.createdAt).getTime();
+          if (!Number.isNaN(editedTime) && !Number.isNaN(createdTime)) {
+            return editedTime > createdTime + 1000;
+          }
+        }
+
+        return false;
+      };
+
+      const getFlowOrder = (historyItem) => {
+        const type = historyItem?.type;
+        const edited =
+          (type === "buy" || type === "sell") && isEditedEntry(historyItem);
+
+        if (type === "buy" && !edited) return 1;
+        if (type === "insurance") return 2;
+        if (type === "puc") return 3;
+        if (type === "sell" && !edited) return 4;
+        if (type === "insurance-renewed") return 5;
+        if (type === "puc-renewed") return 6;
+        if (edited) return 7;
+        if (type === "service") return 8;
+        if (type === "advance") return 9;
+        return 99;
+      };
+
       combinedData.sort((firstItem, secondItem) => {
+        const flowOrderDiff = getFlowOrder(firstItem) - getFlowOrder(secondItem);
+        if (flowOrderDiff !== 0) return flowOrderDiff;
+
         return getSortTimestamp(firstItem) - getSortTimestamp(secondItem);
       });
 
@@ -2035,12 +2077,35 @@ const BikeHistory = ({ externalSearchTerm }) => {
     }
   };
 
-  const getActionLabel = (type) => {
+  const isEditedActionItem = (item) => {
+    if (!item || (item.type !== "buy" && item.type !== "sell")) return false;
+
+    if (
+      item.previousVersionId ||
+      (Array.isArray(item.changeHistory) && item.changeHistory.length > 0)
+    ) {
+      return true;
+    }
+
+    if (item.editedAt && item.createdAt) {
+      const editedTime = new Date(item.editedAt).getTime();
+      const createdTime = new Date(item.createdAt).getTime();
+      if (!Number.isNaN(editedTime) && !Number.isNaN(createdTime)) {
+        return editedTime > createdTime + 1000;
+      }
+    }
+
+    return false;
+  };
+
+  const getActionLabel = (type, item = null) => {
+    const isEdited = isEditedActionItem(item);
+
     switch (type) {
       case "buy":
-        return "Purchased";
+        return isEdited ? "Edited Purchase" : "Purchase";
       case "sell":
-        return "Sold";
+        return isEdited ? "Edited Sold" : "Sold";
       case "service":
         return "Serviced";
       case "advance":
@@ -2472,7 +2537,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                                   }}
                                 >
                                   {getActionIcon(item.type)}
-                                  {getActionLabel(item.type)}
+                                  {getActionLabel(item.type, item)}
                                 </div>
                               </td>
                               <td style={styles.tableCell}>
@@ -2792,7 +2857,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                             }}
                           >
                             {getActionIcon(item.type)}
-                            <span>{getActionLabel(item.type)}</span>
+                            <span>{getActionLabel(item.type, item)}</span>
                           </div>
                         </div>
 
