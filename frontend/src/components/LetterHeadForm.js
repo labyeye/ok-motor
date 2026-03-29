@@ -29,6 +29,7 @@ const LetterHeadForm = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewData, setPreviewData] = useState(null);
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
+  const [isPreviewFromHistory, setIsPreviewFromHistory] = useState(false);
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
@@ -54,8 +55,12 @@ const LetterHeadForm = () => {
   const API_BASE_URL = "https://ok-motor-51l3.vercel.app/api";
 
   const handleEdit = (letter) => {
+    const safeDate = letter?.date
+      ? new Date(letter.date).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0];
+
     setFormData({
-      date: letter.date.split("T")[0],
+      date: safeDate,
       to: letter.to,
       recipientName: letter.recipientName || "",
       subject: letter.subject,
@@ -120,6 +125,7 @@ const LetterHeadForm = () => {
 
       if (result.success) {
         const pdfUrl = URL.createObjectURL(result.blob);
+        setIsPreviewFromHistory(false);
         setPreviewPdfUrl(pdfUrl);
         setPreviewData(sanitizedData);
         setShowPreviewModal(true);
@@ -265,6 +271,7 @@ const LetterHeadForm = () => {
 
       if (result.success) {
         const pdfUrl = URL.createObjectURL(result.blob);
+        setIsPreviewFromHistory(true);
         setPreviewPdfUrl(pdfUrl);
         setPreviewData(letter);
         setShowPreviewModal(true);
@@ -274,6 +281,15 @@ const LetterHeadForm = () => {
     } catch (error) {
       console.error(error);
       alert("Error generating preview");
+    }
+  };
+
+  const closePreviewModal = () => {
+    setShowPreviewModal(false);
+    setIsPreviewFromHistory(false);
+    if (previewPdfUrl) {
+      URL.revokeObjectURL(previewPdfUrl);
+      setPreviewPdfUrl(null);
     }
   };
 
@@ -324,8 +340,8 @@ const LetterHeadForm = () => {
     },
     topBarLogo: {
       width: "250px",
-    height: "auto",
-    margin: "-40px",
+      height: "auto",
+      margin: "-40px",
       padding: 0,
       display: "block",
     },
@@ -811,21 +827,16 @@ const LetterHeadForm = () => {
             zIndex: 1000,
             padding: "20px",
           }}
-          onClick={() => {
-            setShowPreviewModal(false);
-            if (previewPdfUrl) {
-              URL.revokeObjectURL(previewPdfUrl);
-              setPreviewPdfUrl(null);
-            }
-          }}
+          onClick={closePreviewModal}
         >
           <div
             style={{
               backgroundColor: "#fff",
               borderRadius: "12px",
-              maxWidth: "900px",
+              maxWidth: isMobile ? "95vw" : "1400px",
               width: "100%",
-              maxHeight: "90vh",
+              height: isMobile ? "85vh" : "90vh",
+              maxHeight: isMobile ? "85vh" : "90vh",
               display: "flex",
               flexDirection: "column",
               boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
@@ -860,13 +871,7 @@ const LetterHeadForm = () => {
                 Letter Head Preview
               </h2>
               <button
-                onClick={() => {
-                  setShowPreviewModal(false);
-                  if (previewPdfUrl) {
-                    URL.revokeObjectURL(previewPdfUrl);
-                    setPreviewPdfUrl(null);
-                  }
-                }}
+                onClick={closePreviewModal}
                 style={{
                   background: "none",
                   border: "none",
@@ -883,7 +888,9 @@ const LetterHeadForm = () => {
             <div
               style={{
                 flex: 1,
-                overflow: "hidden",
+                minHeight: 0,
+                overflow: "auto",
+                WebkitOverflowScrolling: "touch",
                 backgroundColor: "#525659",
               }}
             >
@@ -929,13 +936,7 @@ const LetterHeadForm = () => {
               }}
             >
               <button
-                onClick={() => {
-                  setShowPreviewModal(false);
-                  if (previewPdfUrl) {
-                    URL.revokeObjectURL(previewPdfUrl);
-                    setPreviewPdfUrl(null);
-                  }
-                }}
+                onClick={closePreviewModal}
                 style={{
                   padding: "10px 20px",
                   backgroundColor: "#fff",
@@ -954,41 +955,43 @@ const LetterHeadForm = () => {
                   e.target.style.backgroundColor = "#fff";
                 }}
               >
-                Cancel
+                {isPreviewFromHistory ? "Close" : "Cancel"}
               </button>
-              <button
-                onClick={handleConfirmSaveAndPrint}
-                disabled={isSaving}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "10px 20px",
-                  backgroundColor: isSaving ? "#94a3b8" : "#088395",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  cursor: isSaving ? "not-allowed" : "pointer",
-                  transition: "all 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSaving) e.target.style.backgroundColor = "#076d7d";
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSaving) e.target.style.backgroundColor = "#088395";
-                }}
-              >
-                {isSaving ? (
-                  "Processing..."
-                ) : (
-                  <>
-                    <Check size={18} />
-                    Confirm & Save
-                  </>
-                )}
-              </button>
+              {!isPreviewFromHistory && (
+                <button
+                  onClick={handleConfirmSaveAndPrint}
+                  disabled={isSaving}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px 20px",
+                    backgroundColor: isSaving ? "#94a3b8" : "#088395",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: isSaving ? "not-allowed" : "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSaving) e.target.style.backgroundColor = "#076d7d";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSaving) e.target.style.backgroundColor = "#088395";
+                  }}
+                >
+                  {isSaving ? (
+                    "Processing..."
+                  ) : (
+                    <>
+                      <Check size={18} />
+                      Confirm & Save
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
