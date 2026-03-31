@@ -154,18 +154,114 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
     .select(selectFields)
     .lean();
 };
+
+const getIncompleteLetterSummary = (letter, type) => {
+  const missingFields = [];
+  const docPaths = {
+    rcFront: letter.documents?.vehicleRC?.front,
+    rcBack: letter.documents?.vehicleRC?.back,
+    aadhaarFront: letter.documents?.aadhaar?.front,
+    aadhaarBack: letter.documents?.aadhaar?.back,
+    pan: letter.documents?.pan,
+    delivery: letter.documents?.deliveryPhoto,
+    km: letter.documents?.vehicleKM,
+  };
+
+  if (type === "buy") {
+    if (!letter.sellerName) missingFields.push("Seller Name");
+    if (!letter.sellerFatherName) missingFields.push("Seller Father Name");
+    if (!letter.sellerCurrentAddress) missingFields.push("Seller Address");
+    if (!letter.vehicleName) missingFields.push("Vehicle Name");
+    if (!letter.registrationNumber) missingFields.push("Registration Number");
+    if (!letter.buyerName) missingFields.push("Buyer Name");
+    if (!letter.buyerFatherName) missingFields.push("Buyer Father Name");
+    if (!letter.saleAmount) missingFields.push("Sale Amount");
+    if (!letter.saleDate) missingFields.push("Sale Date");
+    if (!letter.witnessname) missingFields.push("Witness Name");
+    if (!letter.witnessphone) missingFields.push("Witness Phone");
+    if (!docPaths.rcFront) missingFields.push("Vehicle RC Front");
+    if (!docPaths.rcBack) missingFields.push("Vehicle RC Back");
+    if (!docPaths.aadhaarFront) missingFields.push("Aadhaar Front");
+    if (!docPaths.aadhaarBack) missingFields.push("Aadhaar Back");
+    if (!docPaths.pan) missingFields.push("PAN Card");
+    if (!docPaths.delivery && !docPaths.km) missingFields.push("Delivery Photo/KM");
+    if (!letter.documents?.insuranceCertificate?.pages?.length) missingFields.push("Insurance");
+  } else {
+    // Sell Letter
+    if (!letter.vehicleName) missingFields.push("Vehicle Name");
+    if (!letter.registrationNumber) missingFields.push("Registration Number");
+    if (!letter.buyerName) missingFields.push("Buyer Name");
+    if (!letter.buyerFatherName) missingFields.push("Buyer Father Name");
+    if (!letter.buyerAddress) missingFields.push("Buyer Address");
+    if (!letter.buyerPhone) missingFields.push("Buyer Phone");
+    if (!letter.buyerAadhar) missingFields.push("Buyer Aadhaar");
+    if (!letter.saleAmount) missingFields.push("Sale Amount");
+    if (!letter.saleDate) missingFields.push("Sale Date");
+    if (!letter.witnessName) missingFields.push("Witness Name");
+    if (!letter.witnessPhone) missingFields.push("Witness Phone");
+    if (!docPaths.rcFront) missingFields.push("Vehicle RC Front");
+    if (!docPaths.rcBack) missingFields.push("Vehicle RC Back");
+    if (!docPaths.aadhaarFront) missingFields.push("Aadhaar Front");
+    if (!docPaths.aadhaarBack) missingFields.push("Aadhaar Back");
+    if (!docPaths.pan) missingFields.push("PAN Card");
+    if (!docPaths.delivery && !docPaths.km) missingFields.push("Delivery Photo/KM");
+    if (!letter.documents?.vehiclePhotos?.length) missingFields.push("Vehicle Photos");
+  }
+
+  return { ...letter, missingFields };
+};
+
+exports.getIncompleteLetters = async (req, res) => {
+  try {
+    const [buyLetters, sellLetters] = await Promise.all([
+      BuyLetter.find({}).sort({ createdAt: -1 }).limit(2000).lean(),
+      SellLetter.find({}).sort({ createdAt: -1 }).limit(2000).lean(),
+    ]);
+
+    const buyLetterMap = new Map(buyLetters.map(l => [l.registrationNumber, l]));
+
+    const incompleteBuy = buyLetters
+      .map(l => getIncompleteLetterSummary(l, "buy"))
+      .filter(l => l.missingFields.length > 0);
+
+    const incompleteSell = sellLetters
+      .map(l => getIncompleteLetterSummary(l, "sell"))
+      .filter(sellLetter => {
+        if (sellLetter.missingFields.length === 0) return false;
+
+        const buyLetter = buyLetterMap.get(sellLetter.registrationNumber);
+        if (!buyLetter) return true; // No corresponding buy letter, so it's incomplete on its own.
+
+        const buySummary = getIncompleteLetterSummary(buyLetter, "buy");
+        if (buySummary.missingFields.length === 0) {
+          // The buy letter was complete. This sell letter is newly created and empty.
+          // Don't show it as incomplete.
+          return false;
+        }
+
+        // If the buy letter was also incomplete, show the sell letter.
+        return true;
+      });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        incompleteBuy,
+        incompleteSell,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching incomplete letters:", error);
+    res.status(500).json({ success: false, error: "Server Error" });
+  }
+};
+
 exports.getOwnerDashboardStats = async (req, res) => {
   try {
     const isPrivileged = req.user.role === "staff" || req.user.role === "admin";
-    const buyMatch = isPrivileged
-      ? {}
-      : { user: mongoose.Types.ObjectId(req.user.id) };
-    const sellMatch = isPrivileged
-      ? {}
-      : { user: mongoose.Types.ObjectId(req.user.id) };
-    const serviceMatch = isPrivileged
-      ? {}
-      : { user: mongoose.Types.ObjectId(req.user.id) };
+    const ownerId = req.user.id;
+
+    const matchCriteria = isPrivileged ? {} : { user: mongoose.Types.ObjectId(ownerId) };
 
     const [
       buyStats,

@@ -319,138 +319,19 @@ const AdminPage = () => {
     try {
       const token = localStorage.getItem("token");
       const API_BASE = "https://ok-motor-51l3.vercel.app";
-
-      // Fetch all buy letters
-      const buyRes = await axios.get(`${API_BASE}/api/buy-letter?limit=2000`, {
+      const res = await axios.get(`${API_BASE}/api/dashboard/incomplete-letters`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const buyLetters = buyRes.data.buyLetters || [];
-
-      // Fetch all sell letters
-      const sellRes = await axios.get(
-        `${API_BASE}/api/sell-letters?limit=2000`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      const sellLetters = Array.isArray(sellRes.data)
-        ? sellRes.data
-        : sellRes.data.data || [];
-
-      // Check for missing fields in Buy Letters
-      const incompleteBuy = buyLetters
-        .map((letter) => {
-          const missingFields = [];
-
-          // Check required text fields
-          if (!letter.sellerName || !letter.sellerName.trim())
-            missingFields.push("Seller Name");
-          if (!letter.sellerFatherName || !letter.sellerFatherName.trim())
-            missingFields.push("Seller Father Name");
-          if (
-            !letter.sellerCurrentAddress ||
-            !letter.sellerCurrentAddress.trim()
-          )
-            missingFields.push("Seller Address");
-          if (!letter.vehicleName || !letter.vehicleName.trim())
-            missingFields.push("Vehicle Name");
-          if (!letter.registrationNumber || !letter.registrationNumber.trim())
-            missingFields.push("Registration Number");
-          if (!letter.buyerName || !letter.buyerName.trim())
-            missingFields.push("Buyer Name");
-          if (!letter.buyerFatherName || !letter.buyerFatherName.trim())
-            missingFields.push("Buyer Father Name");
-          if (!letter.saleAmount) missingFields.push("Sale Amount");
-          if (!letter.saleDate) missingFields.push("Sale Date");
-          if (!letter.witnessname || !letter.witnessname.trim())
-            missingFields.push("Witness Name");
-          if (!letter.witnessphone || !letter.witnessphone.trim())
-            missingFields.push("Witness Phone");
-
-          // Check documents
-          if (!letter.documents?.vehicleRC?.front)
-            missingFields.push("Vehicle RC Front");
-          if (!letter.documents?.vehicleRC?.back)
-            missingFields.push("Vehicle RC Back");
-          if (!letter.documents?.aadhaar?.front)
-            missingFields.push("Aadhaar Front");
-          if (!letter.documents?.aadhaar?.back)
-            missingFields.push("Aadhaar Back");
-          if (!letter.documents?.pan) missingFields.push("PAN Card");
-          if (!letter.documents?.deliveryPhoto && !letter.documents?.vehicleKM)
-            missingFields.push("Delivery Photo");
-          // Previously we flagged missing "Vehicle Photos" here.
-          // The buy-letter model now uses separate documents: Insurance Certificate, Vehicle NOC, Vehicle Buy Receipt.
-          // Flag missing Insurance Certificate if not present.
-          if (
-            !letter.documents?.insuranceCertificate?.pages ||
-            letter.documents.insuranceCertificate.pages.length === 0
-          )
-            missingFields.push("Insurance Certificate");
-
-          return {
-            ...letter,
-            missingFields,
-          };
-        })
-        .filter((letter) => letter.missingFields.length > 0);
-
-      // Check for missing fields in Sell Letters
-      const incompleteSell = sellLetters
-        .map((letter) => {
-          const missingFields = [];
-
-          // Check required text fields
-          if (!letter.vehicleName || !letter.vehicleName.trim())
-            missingFields.push("Vehicle Name");
-          if (!letter.registrationNumber || !letter.registrationNumber.trim())
-            missingFields.push("Registration Number");
-          if (!letter.buyerName || !letter.buyerName.trim())
-            missingFields.push("Buyer Name");
-          if (!letter.buyerFatherName || !letter.buyerFatherName.trim())
-            missingFields.push("Buyer Father Name");
-          if (!letter.buyerAddress || !letter.buyerAddress.trim())
-            missingFields.push("Buyer Address");
-          if (!letter.buyerPhone || !letter.buyerPhone.trim())
-            missingFields.push("Buyer Phone");
-          if (!letter.buyerAadhar || !letter.buyerAadhar.trim())
-            missingFields.push("Buyer Aadhaar");
-          if (!letter.saleAmount) missingFields.push("Sale Amount");
-          if (!letter.saleDate) missingFields.push("Sale Date");
-          if (!letter.witnessName || !letter.witnessName.trim())
-            missingFields.push("Witness Name");
-          if (!letter.witnessPhone || !letter.witnessPhone.trim())
-            missingFields.push("Witness Phone");
-
-          // Check documents
-          if (!letter.documents?.vehicleRC?.front)
-            missingFields.push("Vehicle RC Front");
-          if (!letter.documents?.vehicleRC?.back)
-            missingFields.push("Vehicle RC Back");
-          if (!letter.documents?.aadhaar?.front)
-            missingFields.push("Aadhaar Front");
-          if (!letter.documents?.aadhaar?.back)
-            missingFields.push("Aadhaar Back");
-          if (!letter.documents?.pan) missingFields.push("PAN Card");
-          if (!letter.documents?.deliveryPhoto && !letter.documents?.vehicleKM)
-            missingFields.push("Delivery Photo");
-          if (
-            !letter.documents?.vehiclePhotos ||
-            letter.documents.vehiclePhotos.length === 0
-          )
-            missingFields.push("Vehicle Photos");
-
-          return {
-            ...letter,
-            missingFields,
-          };
-        })
-        .filter((letter) => letter.missingFields.length > 0);
-
-      setIncompleteBuyLetters(incompleteBuy);
-      setIncompleteSellLetters(incompleteSell);
+      
+      if (res.data.success) {
+        setIncompleteBuyLetters(res.data.data.incompleteBuy || []);
+        setIncompleteSellLetters(res.data.data.incompleteSell || []);
+      } else {
+        throw new Error(res.data.error || "Failed to fetch incomplete letters");
+      }
     } catch (error) {
       console.error("Error fetching incomplete letters:", error);
+      // Optionally set an error state to show in the UI
     } finally {
       setIncompleteLoading(false);
     }
