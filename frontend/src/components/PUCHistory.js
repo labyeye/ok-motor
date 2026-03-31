@@ -76,29 +76,6 @@ const PUCHistory = () => {
       backgroundColor: "#EBF4F6",
       fontFamily: "'Inter', sans-serif",
     },
-    sidebar: {
-      width: "280px",
-      backgroundColor: "#071952",
-      color: "#f8fafc",
-      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-      position: "sticky",
-      top: 0,
-      height: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      boxSizing: "border-box",
-      overflow: "hidden",
-      transition: "transform 0.3s ease-in-out",
-    },
-    sidebarOverlay: {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
-      zIndex: 14,
-    },
     topBar: {
       position: "fixed",
       top: 0,
@@ -115,8 +92,8 @@ const PUCHistory = () => {
     },
     topBarLogo: {
       width: "250px",
-    height: "auto",
-    margin: "-40px",
+      height: "auto",
+      margin: "-40px",
       padding: 0,
       display: "block",
     },
@@ -127,132 +104,124 @@ const PUCHistory = () => {
       left: "1rem",
       color: "#ffffff",
     },
-    nav: {
-      padding: "16px 0",
-      flex: "1 1 auto",
-      overflowY: "auto",
-      WebkitOverflowScrolling: "touch",
+    sidebarOverlay: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0, 0, 0, 0.5)",
+      zIndex: 14,
     },
-    menuItem: {
+    sidebar: {
+      width: "280px",
+      backgroundColor: "#071952",
+      color: "#f8fafc",
+      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+      position: "sticky",
+      top: 0,
+      height: "100vh",
       display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "12px 24px",
-      cursor: "pointer",
-      color: "#e2e8f0",
-      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-    },
-    menuItemActive: {
-      backgroundColor: "rgba(8, 131, 149, 0.2)",
-      borderRight: "3px solid #088395",
-      color: "#ffffff",
-    },
-    menuItemContent: {
-      display: "flex",
-      alignItems: "center",
-    },
-    menuIcon: {
-      marginRight: "12px",
-      color: "#94a3b8",
-    },
-    menuText: {
-      fontSize: "0.9375rem",
-      fontWeight: "500",
-    },
-    submenu: {
-      backgroundColor: "#051238",
+      flexDirection: "column",
+      boxSizing: "border-box",
       overflow: "hidden",
-    },
-    submenuItem: {
-      padding: "10px 24px 10px 64px",
-      cursor: "pointer",
-      color: "#cbd5e1",
-      fontSize: "0.875rem",
-      transition: "all 0.2s ease",
-    },
-    submenuItemActive: {
-      color: "#37B7C3",
-      fontWeight: "500",
-    },
-    logoutButton: {
-      display: "flex",
-      alignItems: "center",
-      padding: "12px 24px",
-      cursor: "pointer",
-      color: "#f87171",
-      marginTop: "16px",
-      borderTop: "1px solid #1e293b",
-      transition: "all 0.2s ease",
+      transition: "transform 0.3s ease",
     },
     mainContent: {
       flex: 1,
-      overflowY: "auto",
-      height: "100vh",
-      backgroundColor: "#ffffffff",
+      overflow: "auto",
+      backgroundColor: "#ffffff",
     },
     contentPadding: {
-      padding: isMobile ? "24px 16px" : "32px",
-      maxWidth: "1200px",
-      margin: "0 auto",
+      padding: "32px",
     },
     header: {
+      marginBottom: "32px",
+    },
+    pageTitle: {
+      fontSize: "1.875rem",
+      fontWeight: "700",
+      color: "#1e293b",
+      margin: 0,
+    },
+    pageSubtitle: {
+      fontSize: "1rem",
+      color: "#64748b",
+      margin: "8px 0 0 0",
+    },
+    searchContainer: {
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
       marginBottom: "24px",
-      flexWrap: "wrap",
-      gap: "16px",
     },
-    titleGroup: {
+    searchInputContainer: {
+      position: "relative",
+      width: "300px",
+    },
+    searchIcon: {
+      position: "absolute",
+      left: "12px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      color: "#64748b",
+    },
+    searchInput: {
+      width: "100%",
+      padding: "10px 12px 10px 40px",
+      border: "1px solid #cbd5e1",
+      borderRadius: "8px",
+      fontSize: "0.875rem",
+      transition: "all 0.2s ease",
+      backgroundColor: "#f8fafc",
+    },
+    newLetterButton: {
       display: "flex",
       alignItems: "center",
-      gap: "12px",
+      gap: "8px",
+      padding: "10px 16px",
+      backgroundColor: "#088395",
+      color: "white",
+      border: "none",
+      borderRadius: "8px",
+      fontSize: "0.875rem",
+      fontWeight: "500",
+      cursor: "pointer",
+      transition: "all 0.2s ease",
     },
-    title: {
-      fontSize: "24px",
-      fontWeight: "700",
-      color: "#0f172a",
-      margin: 0,
-    },
-    card: {
-      backgroundColor: "#fff",
-      borderRadius: "12px",
-      boxShadow:
-        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-      padding: "24px",
+    tableContainer: {
       overflowX: "auto",
+      borderRadius: "8px",
+      border: "1px solid #e2e8f0",
+      backgroundColor: "white",
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
     },
     table: {
       width: "100%",
       borderCollapse: "collapse",
-      minWidth: "800px",
     },
-    th: {
+    tableHeader: {
+      padding: "12px 16px",
       textAlign: "left",
-      padding: "12px 16px",
-      borderBottom: "2px solid #e2e8f0",
-      color: "#475569",
-      fontWeight: "600",
+      backgroundColor: "#f1f5f9",
+      color: "#1e293b",
       fontSize: "0.875rem",
-    },
-    td: {
-      padding: "12px 16px",
+      fontWeight: "600",
       borderBottom: "1px solid #e2e8f0",
-      color: "#334155",
-      fontSize: "0.875rem",
     },
-    deleteBtn: {
-      padding: "6px 12px",
-      backgroundColor: "#fee2e2",
-      color: "#991b1b",
+    tableCell: {
+      padding: "12px 16px",
+      fontSize: "0.875rem",
+      color: "#000000ff",
+    },
+    iconButton: {
+      background: "none",
       border: "none",
-      borderRadius: "6px",
+      color: "#64748b",
       cursor: "pointer",
-      fontSize: "0.75rem",
-      fontWeight: "600",
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "4px",
+      padding: "8px",
+      margin: "0 4px",
+      borderRadius: "4px",
     },
   };
 
@@ -284,123 +253,77 @@ const PUCHistory = () => {
 
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
-          {/* Header */}
           <div style={styles.header}>
-            <div style={styles.titleGroup}>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "8px",
-                  backgroundColor: "#e0f2fe",
-                  color: "#0284c7",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <FileText size={24} />
-              </div>
-              <h1 style={styles.title}>PUC History</h1>
+            <h1 style={styles.pageTitle}>PUC History</h1>
+            <p style={styles.pageSubtitle}>
+              View and manage all PUC records.
+            </p>
+          </div>
+
+          <div style={styles.searchContainer}>
+            <div style={styles.searchInputContainer}>
+              <Search size={18} style={styles.searchIcon} />
+              <input
+                type="text"
+                placeholder="Search by name or reg number..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={styles.searchInput}
+              />
             </div>
+            <button
+              style={styles.newLetterButton}
+              onClick={() => navigate("/puc/create")}
+            >
+              <FileText size={16} />
+              New PUC
+            </button>
           </div>
 
-          <div style={{ marginBottom: "16px", position: "relative" }}>
-            <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#64748b", pointerEvents: "none" }} />
-            <input
-              type="text"
-              placeholder="Search by name or reg number..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ width: "100%", padding: "10px 16px 10px 40px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.875rem", boxSizing: "border-box", outline: "none" }}
-            />
-          </div>
-
-          <div style={styles.card}>
+          <div style={styles.tableContainer}>
             {loading ? (
               <p>Loading...</p>
             ) : filteredHistory.length === 0 ? (
               <p>{searchTerm ? `No records found for "${searchTerm}"` : "No PUC records found."}</p>
             ) : (
-              <>
-                {/* Desktop Table */}
-                {!isMobile && (
-                  <table style={styles.table}>
-                    <thead>
-                      <tr>
-                        <th style={styles.th}>Person Name</th>
-                        <th style={styles.th}>Phone</th>
-                        <th style={styles.th}>Vehicle</th>
-                        <th style={styles.th}>Reg No</th>
-                        <th style={styles.th}>PUC Certificate No</th>
-                        <th style={styles.th}>Expiry Date</th>
-                        <th style={styles.th}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredHistory.map((item) => (
-                        <tr key={item._id}>
-                          <td style={styles.td}>{item.personName}</td>
-                          <td style={styles.td}>{item.personPhone}</td>
-                          <td style={styles.td}>{item.brand} {item.vehicleModel} ({item.year})</td>
-                          <td style={styles.td}>{item.regNo}</td>
-                          <td style={styles.td}>{item.pucNumber}</td>
-                          <td style={styles.td}>
-                            {(() => {
-                              const d = item.pucExpiry || item.pucExpiryDate;
-                              if (!d) return "—";
-                              const parsed = new Date(d);
-                              return isNaN(parsed) ? "—" : parsed.toLocaleDateString("en-IN");
-                            })()}
-                          </td>
-                          <td style={styles.td}>
-                            <div style={{ display: "flex", gap: "8px" }}>
-                              <button style={{ ...styles.deleteBtn, backgroundColor: "#e0f2fe", color: "#0284c7" }} onClick={() => handleEdit(item)}><Edit size={16} /> Edit</button>
-                              <button style={styles.deleteBtn} onClick={() => handleDelete(item._id)}><Trash2 size={16} /> Delete</button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-
-                {/* Mobile Cards */}
-                {isMobile && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {filteredHistory.map((item) => {
-                      const expiry = item.pucExpiry || item.pucExpiryDate;
-                      const expiryStr = expiry ? (() => { const p = new Date(expiry); return isNaN(p) ? "—" : p.toLocaleDateString("en-IN"); })() : "—";
-                      return (
-                        <div key={item._id} style={{ backgroundColor: "#fff", borderRadius: "12px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-                          <div style={{ backgroundColor: "#071952", padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ color: "#fff", fontWeight: "700", fontSize: "0.95rem" }}>{item.regNo || "—"}</span>
-                            <span style={{ backgroundColor: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: "20px", padding: "3px 10px", fontSize: "0.72rem", fontWeight: "600" }}>PUC</span>
-                          </div>
-                          <div style={{ padding: "12px 14px" }}>
-                            <p style={{ margin: "0 0 8px 0", fontSize: "0.82rem", color: "#64748b" }}>{item.brand} {item.vehicleModel} {item.year ? `(${item.year})` : ""}</p>
-                            {[
-                              ["Name", item.personName],
-                              ["Phone", item.personPhone],
-                              ["PUC No", item.pucNumber],
-                              ["Expiry", expiryStr],
-                            ].map(([label, value]) => (
-                              <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid #f1f5f9" }}>
-                                <span style={{ fontSize: "0.78rem", color: "#94a3b8", fontWeight: "500" }}>{label}</span>
-                                <span style={{ fontSize: "0.82rem", color: "#1e293b", fontWeight: "600", textAlign: "right", maxWidth: "60%" }}>{value || "—"}</span>
-                              </div>
-                            ))}
-                            <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-                              <button onClick={() => handleEdit(item)} style={{ flex: 1, padding: "8px", backgroundColor: "#e0f2fe", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#0284c7", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}><Edit size={14} /> Edit</button>
-                              <button onClick={() => handleDelete(item._id)} style={{ flex: 1, padding: "8px", backgroundColor: "#fee2e2", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#991b1b", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}><Trash2 size={14} /> Delete</button>
-                            </div>
-                          </div>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.tableHeader}>Person Name</th>
+                    <th style={styles.tableHeader}>Phone</th>
+                    <th style={styles.tableHeader}>Vehicle</th>
+                    <th style={styles.tableHeader}>Reg No</th>
+                    <th style={styles.tableHeader}>PUC Certificate No</th>
+                    <th style={styles.tableHeader}>Expiry Date</th>
+                    <th style={styles.tableHeader}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredHistory.map((item) => (
+                    <tr key={item._id}>
+                      <td style={styles.tableCell}>{item.personName}</td>
+                      <td style={styles.tableCell}>{item.personPhone}</td>
+                      <td style={styles.tableCell}>{item.brand} {item.vehicleModel} ({item.year})</td>
+                      <td style={styles.tableCell}>{item.regNo}</td>
+                      <td style={styles.tableCell}>{item.pucNumber}</td>
+                      <td style={styles.tableCell}>
+                        {(() => {
+                          const d = item.pucExpiry || item.pucExpiryDate;
+                          if (!d) return "—";
+                          const parsed = new Date(d);
+                          return isNaN(parsed) ? "—" : parsed.toLocaleDateString("en-IN");
+                        })()}
+                      </td>
+                      <td style={styles.tableCell}>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button style={styles.iconButton} onClick={() => handleEdit(item)}><Edit size={16} /></button>
+                          <button style={styles.iconButton} onClick={() => handleDelete(item._id)}><Trash2 size={16} /></button>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
         </div>
