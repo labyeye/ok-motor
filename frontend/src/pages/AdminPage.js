@@ -678,16 +678,25 @@ const AdminPage = () => {
             </div>
           </div>
 
-          <div className="card">
+          <div 
+            className="card"
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              const el = document.getElementById("unsold-vehicles-section");
+              if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "start" });
+              }
+            }}
+          >
             <div className="card-content">
               <div>
-                <p className="card-label">Net Profit</p>
-                <p className={`card-value currency`}>
-                  {formatCurrency(dashboardData.profit)}
+                <p className="card-label">Unsold Vehicles</p>
+                <p className={`card-value`}>
+                  {unsoldVehicles ? unsoldVehicles.length : 0}
                 </p>
               </div>
               <div className="card-icon orange">
-                <Target />
+                <Bike />
               </div>
             </div>
           </div>
@@ -3092,6 +3101,7 @@ const AdminPage = () => {
 
     return (
       <div
+        id="unsold-vehicles-section"
         style={{
           background: "#fff",
           borderRadius: 16,
