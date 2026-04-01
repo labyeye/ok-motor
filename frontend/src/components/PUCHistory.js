@@ -9,6 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
+import TableFilter from "./common/TableFilter";
 
 const PUCHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -18,6 +19,7 @@ const PUCHistory = () => {
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({ expiry: null });
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -225,13 +227,45 @@ const PUCHistory = () => {
     },
   };
 
-  const filteredHistory = searchTerm
-    ? history.filter(
-        (item) =>
-          item.regNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.personName?.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
-    : history;
+  const filteredHistory = (history || []).filter((item) => {
+    const q = String(searchTerm || "").toLowerCase();
+    const matchesSearch =
+      !q ||
+      (item.regNo || "").toLowerCase().includes(q) ||
+      (item.personName || "").toLowerCase().includes(q);
+    if (!matchesSearch) return false;
+
+    const eFilter = filters.expiry;
+    if (eFilter && eFilter.op) {
+      const dStr = item.pucExpiry || item.pucExpiryDate;
+      if (!dStr) return false;
+      const d = new Date(dStr);
+      if (isNaN(d.getTime())) return false;
+      const v = new Date(eFilter.value);
+      // require value for non-range ops; for between allow one-sided
+      if (eFilter.op !== "between" && isNaN(v.getTime())) return false;
+      if (eFilter.op === "eq" && d.toDateString() !== v.toDateString()) return false;
+      if (eFilter.op === "before" && !(d < v)) return false;
+      if (eFilter.op === "after" && !(d > v)) return false;
+      if (eFilter.op === "between") {
+        const v2 = new Date(eFilter.value2);
+        const hasV1 = !isNaN(v.getTime());
+        const hasV2 = !isNaN(v2.getTime());
+        if (!hasV1 && !hasV2) return false;
+        if (hasV1 && hasV2) {
+          const min = v < v2 ? v : v2;
+          const max = v > v2 ? v : v2;
+          if (d < min || d > max) return false;
+        } else if (hasV1) {
+          if (d < v) return false;
+        } else if (hasV2) {
+          if (d > v2) return false;
+        }
+      }
+    }
+
+    return true;
+  });
 
   return (
     <div
@@ -294,7 +328,18 @@ const PUCHistory = () => {
                     <th style={styles.tableHeader}>Vehicle</th>
                     <th style={styles.tableHeader}>Reg No</th>
                     <th style={styles.tableHeader}>PUC Certificate No</th>
-                    <th style={styles.tableHeader}>Expiry Date</th>
+                    <th style={styles.tableHeader}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                        <span>Expiry Date</span>
+                        <TableFilter
+                          type="date"
+                          placeholder="yyyy-mm-dd"
+                          rangeOnly={true}
+                          onApply={(f) => setFilters((p) => ({ ...p, expiry: f }))}
+                          onClear={() => setFilters((p) => ({ ...p, expiry: null }))}
+                        />
+                      </div>
+                    </th>
                     <th style={styles.tableHeader}>Actions</th>
                   </tr>
                 </thead>

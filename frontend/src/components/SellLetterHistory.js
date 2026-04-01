@@ -16,6 +16,7 @@ import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
 import logo1 from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
+import TableFilter from "./common/TableFilter";
 import PdfPreview from "./PdfPreview";
 
 const SellLetterHistory = () => {
@@ -40,6 +41,7 @@ const SellLetterHistory = () => {
   const [sellLetters, setSellLetters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({ year: null, amount: null });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -648,14 +650,98 @@ const SellLetterHistory = () => {
     }
   };
 
-  const filteredLetters = sellLetters.filter(
-    (letter) =>
-      letter.vehicleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      letter.registrationNumber
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      letter.buyerName.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredLetters = sellLetters.filter((letter) => {
+    const q = String(searchTerm || "").toLowerCase();
+    const matchesSearch =
+      !q ||
+      (letter.vehicleName || "").toLowerCase().includes(q) ||
+      (letter.registrationNumber || "").toLowerCase().includes(q) ||
+      (letter.buyerName || "").toLowerCase().includes(q);
+    if (!matchesSearch) return false;
+
+    // Year filter -> saleDate or createdAt
+    const yFilter = filters.year;
+    if (yFilter && yFilter.op) {
+      let y = null;
+      if (letter.vehicleModel) {
+        const parsed = Number(letter.vehicleModel);
+        if (!isNaN(parsed) && parsed > 1900 && parsed < 2100) y = parsed;
+      }
+      if (y === null && letter.vehicle) {
+        try {
+          if (typeof letter.vehicle === "object") {
+            const cand =
+              letter.vehicle.manufacturingYear ??
+              letter.vehicle.modelYear ??
+              letter.vehicle.year ??
+              null;
+            if (cand !== null && cand !== undefined && cand !== "") {
+              const ny = Number(cand);
+              if (!isNaN(ny)) y = ny;
+            }
+          }
+        } catch (e) {}
+      }
+      if (y === null) {
+        const d = new Date(letter.saleDate || letter.createdAt || null);
+        if (!isNaN(d.getTime())) y = d.getFullYear();
+      }
+      if (y === null || isNaN(y)) return false;
+      const v = Number(yFilter.value);
+      // require value for non-range ops; for between allow one-sided
+      if (yFilter.op !== "between" && isNaN(v)) return false;
+      if (yFilter.op === "eq" && y !== v) return false;
+      if (yFilter.op === "gt" && y <= v) return false;
+      if (yFilter.op === "lt" && y >= v) return false;
+      if (yFilter.op === "between") {
+        const v2 = Number(yFilter.value2);
+        const hasV1 = !isNaN(v);
+        const hasV2 = !isNaN(v2);
+        if (!hasV1 && !hasV2) return false;
+        if (hasV1 && hasV2) {
+          const min = Math.min(v, v2);
+          const max = Math.max(v, v2);
+          if (y < min || y > max) return false;
+        } else if (hasV1) {
+          if (y < v) return false;
+        } else if (hasV2) {
+          if (y > v2) return false;
+        }
+      }
+    }
+
+    // Amount filter
+    const aFilter = filters.amount;
+    if (aFilter && aFilter.op) {
+      const a = Number(letter.saleAmount || 0);
+      if (isNaN(a)) return false;
+      const v = Number(aFilter.value);
+      // require value for non-range ops; for between allow one-sided
+      if (aFilter.op !== "between" && isNaN(v)) return false;
+      if (aFilter.op === "eq" && a !== v) return false;
+      if (aFilter.op === "gt" && a <= v) return false;
+      if (aFilter.op === "lt" && a >= v) return false;
+      if (aFilter.op === "gte" && a < v) return false;
+      if (aFilter.op === "lte" && a > v) return false;
+      if (aFilter.op === "between") {
+        const v2 = Number(aFilter.value2);
+        const hasV1 = !isNaN(v);
+        const hasV2 = !isNaN(v2);
+        if (!hasV1 && !hasV2) return false;
+        if (hasV1 && hasV2) {
+          const min = Math.min(v, v2);
+          const max = Math.max(v, v2);
+          if (a < min || a > max) return false;
+        } else if (hasV1) {
+          if (a < v) return false;
+        } else if (hasV2) {
+          if (a > v2) return false;
+        }
+      }
+    }
+
+    return true;
+  });
 
   const handleDownload = (letter) => {
     setSelectedLetter(letter);
@@ -3599,10 +3685,32 @@ const SellLetterHistory = () => {
                     <thead>
                       <tr>
                         <th style={styles.tableHeader}>Buyer</th>
-                        <th style={styles.tableHeader}>Year</th>
+                        <th style={styles.tableHeader}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <span>Year</span>
+                            <TableFilter
+                              type="number"
+                              placeholder="YYYY"
+                              rangeOnly={true}
+                              onApply={(f) => setFilters((p) => ({ ...p, year: f }))}
+                              onClear={() => setFilters((p) => ({ ...p, year: null }))}
+                            />
+                          </div>
+                        </th>
                         <th style={styles.tableHeader}>Vehicle</th>
                         <th style={styles.tableHeader}>Veh. Reg No</th>
-                        <th style={styles.tableHeader}>Amount</th>
+                        <th style={styles.tableHeader}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <span>Amount</span>
+                            <TableFilter
+                              type="number"
+                              placeholder="₹"
+                              rangeOnly={true}
+                              onApply={(f) => setFilters((p) => ({ ...p, amount: f }))}
+                              onClear={() => setFilters((p) => ({ ...p, amount: null }))}
+                            />
+                          </div>
+                        </th>
                         <th style={styles.tableHeader}>Date</th>
                         <th style={styles.tableHeader}>Created By</th>
                         <th style={styles.tableHeader}>Actions</th>

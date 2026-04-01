@@ -15,10 +15,11 @@ import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
 import logo1 from "../images/okmotorback.png";
 import PdfPreview from "./PdfPreview";
-
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import ConfirmModal from "./ConfirmModal";
+import AlertModal from "./common/AlertModal";
+import TableFilter from "./common/TableFilter";
 
 const BuyLetterHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -43,6 +44,7 @@ const BuyLetterHistory = () => {
   const [buyLetters, setBuyLetters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({ year: null, amount: null });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -52,6 +54,11 @@ const BuyLetterHistory = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTargetId, setConfirmTargetId] = useState(null);
   const [confirmTargetType, setConfirmTargetType] = useState(null);
+  const [alertInfo, setAlertInfo] = useState({
+    isOpen: false,
+    message: "",
+    type: "success",
+  });
 
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
@@ -948,14 +955,104 @@ const BuyLetterHistory = () => {
     return `${formattedHours}:${formattedMinutes} ${ampm}`;
   };
 
-  const filteredLetters = buyLetters.filter(
-    (letter) =>
-      letter.sellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      letter.buyerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      letter.registrationNumber
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()),
-  );
+  const filteredLetters = buyLetters.filter((letter) => {
+    const q = String(searchTerm || "").toLowerCase();
+    const matchesSearch =
+      !q ||
+      (letter.sellerName || "").toLowerCase().includes(q) ||
+      (letter.buyerName || "").toLowerCase().includes(q) ||
+      (letter.registrationNumber || "").toLowerCase().includes(q);
+    if (!matchesSearch) return false;
+
+    // Year filter - prefer vehicle.manufacturingYear, fallback to saleDate/createdAt
+    const yFilter = filters.year;
+    if (yFilter && yFilter.op) {
+      // determine year to compare (check multiple vehicle year fields)
+      let y = null;
+      if (letter.vehicleModel) {
+        const parsed = Number(letter.vehicleModel);
+        if (!isNaN(parsed) && parsed > 1900 && parsed < 2100) y = parsed;
+      }
+      if (y === null && letter.vehicle) {
+        try {
+          // vehicle may be populated object or just an id/string
+          if (typeof letter.vehicle === "object") {
+            const cand =
+              letter.vehicle.manufacturingYear ??
+              letter.vehicle.modelYear ??
+              letter.vehicle.year ??
+              null;
+            if (cand !== null && cand !== undefined && cand !== "") {
+              const ny = Number(cand);
+              if (!isNaN(ny)) y = ny;
+            }
+          }
+        } catch (e) {
+          // ignore and fallback
+        }
+      }
+      if (y === null) {
+        const d = new Date(letter.saleDate || letter.createdAt || null);
+        if (!isNaN(d.getTime())) {
+          y = d.getFullYear();
+        }
+      }
+      if (y === null || isNaN(y)) return false;
+      const v = Number(yFilter.value);
+      // require value for non-range ops; for between allow one-sided
+      if (yFilter.op !== "between" && isNaN(v)) return false;
+      if (yFilter.op === "eq" && y !== v) return false;
+      if (yFilter.op === "gt" && y <= v) return false;
+      if (yFilter.op === "lt" && y >= v) return false;
+      if (yFilter.op === "between") {
+        const v2 = Number(yFilter.value2);
+        const hasV1 = !isNaN(v);
+        const hasV2 = !isNaN(v2);
+        if (!hasV1 && !hasV2) return false;
+        if (hasV1 && hasV2) {
+          const min = Math.min(v, v2);
+          const max = Math.max(v, v2);
+          if (y < min || y > max) return false;
+        } else if (hasV1) {
+          if (y < v) return false;
+        } else if (hasV2) {
+          if (y > v2) return false;
+        }
+      }
+    }
+
+    // Amount filter
+    const aFilter = filters.amount;
+    if (aFilter && aFilter.op) {
+      const a = Number(letter.saleAmount || letter.saleAmount || 0);
+      if (isNaN(a)) return false;
+      const v = Number(aFilter.value);
+      // require value for non-range ops; for between allow one-sided
+      if (aFilter.op !== "between" && isNaN(v)) return false;
+      if (aFilter.op === "eq" && a !== v) return false;
+      if (aFilter.op === "gt" && a <= v) return false;
+      if (aFilter.op === "lt" && a >= v) return false;
+      if (aFilter.op === "gte" && a < v) return false;
+      if (aFilter.op === "lte" && a > v) return false;
+      if (aFilter.op === "between") {
+        const v2 = Number(aFilter.value2);
+        const hasV1 = !isNaN(v);
+        const hasV2 = !isNaN(v2);
+        if (!hasV1 && !hasV2) return false;
+        if (hasV1 && hasV2) {
+          const min = Math.min(v, v2);
+          const max = Math.max(v, v2);
+          if (a < min || a > max) return false;
+        } else if (hasV1) {
+          if (a < v) return false;
+        } else if (hasV2) {
+          if (a > v2) return false;
+        }
+      }
+    }
+
+    return true;
+  });
 
   const handleLogout = () => {
     logout();
@@ -1232,7 +1329,11 @@ const BuyLetterHistory = () => {
       setIsDownloading(false);
     } catch (error) {
       console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF. Please try again.");
+      setAlertInfo({
+        isOpen: true,
+        message: "Failed to generate PDF. Please try again.",
+        type: "error",
+      });
       setIsDownloading(false);
     }
   };
@@ -1323,7 +1424,11 @@ const BuyLetterHistory = () => {
       setIsDownloading(false);
     } catch (error) {
       console.error("Error generating English PDF:", error);
-      alert("Failed to generate English PDF. Please try again.");
+      setAlertInfo({
+        isOpen: true,
+        message: "Failed to generate English PDF. Please try again.",
+        type: "error",
+      });
       setIsDownloading(false);
     }
   };
@@ -1416,7 +1521,11 @@ const BuyLetterHistory = () => {
       setShowPreviewModal(true);
     } catch (error) {
       console.error("Error generating preview:", error);
-      alert("Failed to generate preview. Please try again.");
+      setAlertInfo({
+        isOpen: true,
+        message: "Failed to generate preview. Please try again.",
+        type: "error",
+      });
       setIsDownloading(false);
     }
   };
@@ -1830,22 +1939,27 @@ const BuyLetterHistory = () => {
 
       if (isOnline) {
         if (!token) {
-          alert("You are not authenticated. Please login again.");
+          setAlertInfo({
+            isOpen: true,
+            message: "You are not authenticated. Please login again.",
+            type: "error",
+          });
           logout();
           navigate("/login");
           return;
         }
 
-        await axios.delete(
-          `https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        await axios.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
         setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
-        alert("Buy letter deleted successfully!");
+        setAlertInfo({
+          isOpen: true,
+          message: "Buy letter deleted successfully!",
+          type: "success",
+        });
       } else {
         const offlineStorage = (await import("../services/offlineStorage"))
           .default;
@@ -1853,9 +1967,12 @@ const BuyLetterHistory = () => {
 
         if (result.success) {
           setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
-          alert(
-            "Buy letter deleted from offline storage. Will sync when online.",
-          );
+          setAlertInfo({
+            isOpen: true,
+            message:
+              "Buy letter deleted from offline storage. Will sync when online.",
+            type: "info",
+          });
         } else {
           throw new Error(
             result.error || "Failed to delete from offline storage",
@@ -1866,17 +1983,27 @@ const BuyLetterHistory = () => {
       console.error("Error deleting buy letter:", error);
 
       if (error.response?.status === 401) {
-        alert("Your session has expired. Please login again.");
+        setAlertInfo({
+          isOpen: true,
+          message: "Your session has expired. Please login again.",
+          type: "error",
+        });
         logout();
         navigate("/login");
       } else if (error.response?.status === 403) {
-        alert("You don't have permission to delete this item.");
+        setAlertInfo({
+          isOpen: true,
+          message: "You don't have permission to delete this item.",
+          type: "error",
+        });
       } else {
-        alert(
-          `Failed to delete: ${
+        setAlertInfo({
+          isOpen: true,
+          message: `Failed to delete: ${
             error.response?.data?.message || error.message || "Unknown error"
           }`,
-        );
+          type: "error",
+        });
       }
     } finally {
       setConfirmOpen(false);
@@ -1914,6 +2041,12 @@ const BuyLetterHistory = () => {
         }}
       />
       <AppSidebar user={user} onLogout={handleLogout} />
+      <AlertModal
+        isOpen={alertInfo.isOpen}
+        onClose={() => setAlertInfo({ ...alertInfo, isOpen: false })}
+        message={alertInfo.message}
+        type={alertInfo.type}
+      />
 
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
@@ -1954,11 +2087,33 @@ const BuyLetterHistory = () => {
                     <thead>
                       <tr>
                         <th style={styles.tableHeader}>Seller Name</th>
-                        <th style={styles.tableHeader}>Year</th>
+                        <th style={styles.tableHeader}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <span>Year</span>
+                            <TableFilter
+                              type="number"
+                              placeholder="YYYY"
+                              rangeOnly={true}
+                              onApply={(f) => setFilters((p) => ({ ...p, year: f }))}
+                              onClear={() => setFilters((p) => ({ ...p, year: null }))}
+                            />
+                          </div>
+                        </th>
                         <th style={styles.tableHeader}>Vehicle</th>
                         <th style={styles.tableHeader}>Veh. Reg No</th>
                         <th style={styles.tableHeader}>Buyer Name</th>
-                        <th style={styles.tableHeader}>Amount</th>
+                        <th style={styles.tableHeader}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <span>Amount</span>
+                            <TableFilter
+                              type="number"
+                              placeholder="₹"
+                              rangeOnly={true}
+                              onApply={(f) => setFilters((p) => ({ ...p, amount: f }))}
+                              onClear={() => setFilters((p) => ({ ...p, amount: null }))}
+                            />
+                          </div>
+                        </th>
                         <th style={styles.tableHeader}>Date</th>
                         <th style={styles.tableHeader}>Create By</th>
                         <th style={styles.tableHeader}>Actions</th>
@@ -1996,7 +2151,9 @@ const BuyLetterHistory = () => {
                               <td style={styles.tableCell}>
                                 {letter.registrationNumber}
                               </td>
-                              <td style={styles.tableCell}>{letter.buyerName}</td>
+                              <td style={styles.tableCell}>
+                                {letter.buyerName}
+                              </td>
                               <td style={styles.tableCell}>
                                 ₹
                                 {new Intl.NumberFormat("en-IN").format(
@@ -2140,7 +2297,8 @@ const BuyLetterHistory = () => {
                                             >
                                               <span
                                                 style={{
-                                                  textDecoration: "line-through",
+                                                  textDecoration:
+                                                    "line-through",
                                                 }}
                                               >
                                                 {change.oldValue}
@@ -2169,7 +2327,8 @@ const BuyLetterHistory = () => {
                                           fontStyle: "italic",
                                         }}
                                       >
-                                        No changes detected from previous version
+                                        No changes detected from previous
+                                        version
                                       </div>
                                     )}
                                   </div>
@@ -2186,7 +2345,13 @@ const BuyLetterHistory = () => {
 
               {/* Mobile Cards */}
               {isMobile && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
                   {filteredLetters.map((letter) => {
                     const changes = getChanges(letter);
                     return (
@@ -2201,91 +2366,347 @@ const BuyLetterHistory = () => {
                         }}
                       >
                         {/* Card Header */}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            marginBottom: "12px",
+                          }}
+                        >
                           <div>
-                            <div style={{ fontWeight: "700", fontSize: "1rem", color: "#1e293b" }}>
+                            <div
+                              style={{
+                                fontWeight: "700",
+                                fontSize: "1rem",
+                                color: "#1e293b",
+                              }}
+                            >
                               {letter.registrationNumber}
                               {letter.version > 1 && (
-                                <span style={{ fontSize: "0.75rem", color: "#ff9800", marginLeft: "6px", fontWeight: "600" }}>
+                                <span
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    color: "#ff9800",
+                                    marginLeft: "6px",
+                                    fontWeight: "600",
+                                  }}
+                                >
                                   (v{letter.version})
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "2px" }}>
-                              {letter.saleDate ? formatDate(letter.saleDate) : formatDate(letter.createdAt)}
+                            <div
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#64748b",
+                                marginTop: "2px",
+                              }}
+                            >
+                              {letter.saleDate
+                                ? formatDate(letter.saleDate)
+                                : formatDate(letter.createdAt)}
                             </div>
                           </div>
-                          <div style={{
-                            backgroundColor: "rgba(8,131,149,0.1)",
-                            color: "#071952",
-                            borderRadius: "20px",
-                            padding: "4px 10px",
-                            fontSize: "0.75rem",
-                            fontWeight: "600",
-                          }}>
+                          <div
+                            style={{
+                              backgroundColor: "rgba(8,131,149,0.1)",
+                              color: "#071952",
+                              borderRadius: "20px",
+                              padding: "4px 10px",
+                              fontSize: "0.75rem",
+                              fontWeight: "600",
+                            }}
+                          >
                             Buy Letter
                           </div>
                         </div>
 
                         {/* Card Details */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Seller</span>
-                            <span style={{ fontSize: "0.8rem", color: "#1e293b", fontWeight: "600", textAlign: "right", maxWidth: "60%" }}>{letter.sellerName}</span>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "6px",
+                            marginBottom: "12px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#64748b",
+                                fontWeight: "500",
+                              }}
+                            >
+                              Seller
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#1e293b",
+                                fontWeight: "600",
+                                textAlign: "right",
+                                maxWidth: "60%",
+                              }}
+                            >
+                              {letter.sellerName}
+                            </span>
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Buyer</span>
-                            <span style={{ fontSize: "0.8rem", color: "#1e293b", fontWeight: "600", textAlign: "right", maxWidth: "60%" }}>{letter.buyerName}</span>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#64748b",
+                                fontWeight: "500",
+                              }}
+                            >
+                              Buyer
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#1e293b",
+                                fontWeight: "600",
+                                textAlign: "right",
+                                maxWidth: "60%",
+                              }}
+                            >
+                              {letter.buyerName}
+                            </span>
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Vehicle</span>
-                            <span style={{ fontSize: "0.8rem", color: "#1e293b", fontWeight: "600", textAlign: "right", maxWidth: "60%" }}>{`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim()}</span>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#64748b",
+                                fontWeight: "500",
+                              }}
+                            >
+                              Vehicle
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#1e293b",
+                                fontWeight: "600",
+                                textAlign: "right",
+                                maxWidth: "60%",
+                              }}
+                            >
+                              {`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim()}
+                            </span>
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Amount</span>
-                            <span style={{ fontSize: "0.85rem", color: "#071952", fontWeight: "700" }}>₹{new Intl.NumberFormat("en-IN").format(letter.saleAmount)}</span>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#64748b",
+                                fontWeight: "500",
+                              }}
+                            >
+                              Amount
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "0.85rem",
+                                color: "#071952",
+                                fontWeight: "700",
+                              }}
+                            >
+                              ₹
+                              {new Intl.NumberFormat("en-IN").format(
+                                letter.saleAmount,
+                              )}
+                            </span>
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Created By</span>
-                            <span style={{ fontSize: "0.8rem", color: "#1e293b", fontWeight: "600" }}>
-                              {letter.user && letter.user.role === "admin" ? "admin" : letter.user?.name || ""}
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#64748b",
+                                fontWeight: "500",
+                              }}
+                            >
+                              Created By
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#1e293b",
+                                fontWeight: "600",
+                              }}
+                            >
+                              {letter.user && letter.user.role === "admin"
+                                ? "admin"
+                                : letter.user?.name || ""}
                             </span>
                           </div>
                           {letter.editedAt && (
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Edited</span>
-                              <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{formatDate(letter.editedAt)}</span>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#64748b",
+                                  fontWeight: "500",
+                                }}
+                              >
+                                Edited
+                              </span>
+                              <span
+                                style={{ fontSize: "0.8rem", color: "#64748b" }}
+                              >
+                                {formatDate(letter.editedAt)}
+                              </span>
                             </div>
                           )}
                         </div>
 
                         {/* Version changes */}
-                        {letter.version > 1 && changes && changes.length > 0 && (
-                          <div style={{ backgroundColor: "#fff8e1", borderRadius: "8px", padding: "10px", marginBottom: "10px", border: "1px solid #ffe0b2" }}>
-                            <div style={{ fontWeight: "600", color: "#f57c00", fontSize: "0.78rem", marginBottom: "6px", display: "flex", alignItems: "center", gap: "4px" }}>
-                              <RefreshCw size={12} /> Changes from previous version:
-                            </div>
-                            {changes.map((change, idx) => (
-                              <div key={idx} style={{ fontSize: "0.75rem", marginBottom: "4px" }}>
-                                <span style={{ fontWeight: "600", color: "#424242" }}>{change.field}: </span>
-                                <span style={{ textDecoration: "line-through", color: "#e53935" }}>{change.oldValue}</span>
-                                <span style={{ color: "#43a047", fontWeight: "500" }}> → {change.newValue}</span>
+                        {letter.version > 1 &&
+                          changes &&
+                          changes.length > 0 && (
+                            <div
+                              style={{
+                                backgroundColor: "#fff8e1",
+                                borderRadius: "8px",
+                                padding: "10px",
+                                marginBottom: "10px",
+                                border: "1px solid #ffe0b2",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontWeight: "600",
+                                  color: "#f57c00",
+                                  fontSize: "0.78rem",
+                                  marginBottom: "6px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                }}
+                              >
+                                <RefreshCw size={12} /> Changes from previous
+                                version:
                               </div>
-                            ))}
-                          </div>
-                        )}
+                              {changes.map((change, idx) => (
+                                <div
+                                  key={idx}
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    marginBottom: "4px",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontWeight: "600",
+                                      color: "#424242",
+                                    }}
+                                  >
+                                    {change.field}:{" "}
+                                  </span>
+                                  <span
+                                    style={{
+                                      textDecoration: "line-through",
+                                      color: "#e53935",
+                                    }}
+                                  >
+                                    {change.oldValue}
+                                  </span>
+                                  <span
+                                    style={{
+                                      color: "#43a047",
+                                      fontWeight: "500",
+                                    }}
+                                  >
+                                    {" "}
+                                    → {change.newValue}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
 
                         {/* Actions */}
-                        <div style={{ display: "flex", gap: "8px", borderTop: "1px solid #e2e8f0", paddingTop: "12px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "8px",
+                            borderTop: "1px solid #e2e8f0",
+                            paddingTop: "12px",
+                          }}
+                        >
                           <button
-                            onClick={() => { setLanguageAction("preview"); setSelectedLetter(letter); setShowLanguageModal(true); }}
-                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "8px", backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#1e293b", fontWeight: "500" }}
+                            onClick={() => {
+                              setLanguageAction("preview");
+                              setSelectedLetter(letter);
+                              setShowLanguageModal(true);
+                            }}
+                            style={{
+                              flex: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "4px",
+                              padding: "8px",
+                              backgroundColor: "#f1f5f9",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              fontSize: "0.78rem",
+                              color: "#1e293b",
+                              fontWeight: "500",
+                            }}
                           >
                             <Eye size={14} /> View
                           </button>
                           <button
                             onClick={() => handleDownload(letter)}
-                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "8px", backgroundColor: "#071952", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#ffffff", fontWeight: "500" }}
+                            style={{
+                              flex: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "4px",
+                              padding: "8px",
+                              backgroundColor: "#071952",
+                              border: "none",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              fontSize: "0.78rem",
+                              color: "#ffffff",
+                              fontWeight: "500",
+                            }}
                           >
                             <Download size={14} /> Download
                           </button>
@@ -2293,13 +2714,41 @@ const BuyLetterHistory = () => {
                             <>
                               <button
                                 onClick={() => handleEdit(letter)}
-                                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "8px", backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#1e293b", fontWeight: "500" }}
+                                style={{
+                                  flex: 1,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "4px",
+                                  padding: "8px",
+                                  backgroundColor: "#f1f5f9",
+                                  border: "1px solid #e2e8f0",
+                                  borderRadius: "8px",
+                                  cursor: "pointer",
+                                  fontSize: "0.78rem",
+                                  color: "#1e293b",
+                                  fontWeight: "500",
+                                }}
                               >
                                 <Edit size={14} /> Edit
                               </button>
                               <button
                                 onClick={() => handleDelete(letter._id)}
-                                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "8px", backgroundColor: "#fee2e2", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#991b1b", fontWeight: "500" }}
+                                style={{
+                                  flex: 1,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "4px",
+                                  padding: "8px",
+                                  backgroundColor: "#fee2e2",
+                                  border: "none",
+                                  borderRadius: "8px",
+                                  cursor: "pointer",
+                                  fontSize: "0.78rem",
+                                  color: "#991b1b",
+                                  fontWeight: "500",
+                                }}
                               >
                                 <Trash2 size={14} /> Delete
                               </button>

@@ -9,49 +9,77 @@ export function getSidebarMenu(userRole) {
       name: "Vehicle",
       icon: "ShipWheel",
       submenu: [
-        { name: "Add Vehicle", path: "/vehicle/create" },
-        { name: "Vehicle List", path: "/vehicle/history" },
+        { name: "Add Vehicle", path: "/vehicle/create", icon: "PlusCircle" },
+        { name: "Vehicle List", path: "/vehicle/history", icon: "List" },
       ],
     },
     {
       name: "Buy",
       icon: "ShoppingCart",
       submenu: [
-        { name: "Create Buy Letter", path: "/buy/create" },
-        { name: "Buy Letter History", path: "/buy/history" },
+        {
+          name: "Create Buy Letter",
+          path: "/buy/create",
+          icon: "FilePlus",
+        },
+        {
+          name: "Buy Letter History",
+          path: "/buy/history",
+          icon: "History",
+        },
       ],
     },
     {
       name: "Sell",
       icon: "TrendingUp",
       submenu: [
-        { name: "Create Sell Letter", path: "/sell/create" },
-        { name: "Sell Letter History", path: "/sell/history" },
-        { name: "Sell Requests", path: "/sell/requests" },
+        {
+          name: "Create Sell Letter",
+          path: "/sell/create",
+          icon: "FilePlus",
+        },
+        {
+          name: "Sell Letter History",
+          path: "/sell/history",
+          icon: "History",
+        },
+        {
+          name: "Sell Requests",
+          path: "/sell/requests",
+          icon: "GitPullRequest",
+        },
       ],
     },
     {
       name: "Insurance",
       icon: "Shield",
       submenu: [
-        { name: "Add Insurance", path: "/insurance/create" },
-        { name: "Insurance List", path: "/insurance/history" },
+        {
+          name: "Add Insurance",
+          path: "/insurance/create",
+          icon: "ShieldPlus",
+        },
+        {
+          name: "Insurance List",
+          path: "/insurance/history",
+          icon: "ShieldCheck",
+        },
       ],
     },
     {
       name: "PUC",
       icon: "FileText",
       submenu: [
-        { name: "Add PUC", path: "/puc/create" },
-        { name: "PUC List", path: "/puc/history" },
+        { name: "Add PUC", path: "/puc/create", icon: "FilePlus" },
+        { name: "PUC List", path: "/puc/history", icon: "History" },
       ],
     },
     {
       name: "Updates",
       icon: "RefreshCw",
       submenu: [
-        { name: "Create Update", path: "/updates/create" },
-        { name: "Updates List", path: "/updates" },
+        { name: "Create Update", path: "/updates/create", icon: "PlusCircle" },
+        { name: "Updates List", path: "/updates", icon: "List" },
       ],
     },
     {
@@ -63,24 +91,40 @@ export function getSidebarMenu(userRole) {
       name: "Service",
       icon: "Wrench",
       submenu: [
-        { name: "Create Service Bill", path: "/service/create" },
-        { name: "Service History", path: "/service/history" },
+        {
+          name: "Create Service Bill",
+          path: "/service/create",
+          icon: "FilePlus",
+        },
+        {
+          name: "Service History",
+          path: "/service/history",
+          icon: "History",
+        },
       ],
     },
     {
       name: "Payment",
       icon: "Wallet",
       submenu: [
-        { name: "Create Advance Bill", path: "/advance/create" },
-        { name: "Advance History", path: "/advance/history" },
+        {
+          name: "Create Advance Bill",
+          path: "/advance/create",
+          icon: "FilePlus",
+        },
+        {
+          name: "Advance History",
+          path: "/advance/history",
+          icon: "History",
+        },
       ],
     },
     {
       name: "Staff",
       icon: "Users",
       submenu: [
-        { name: "Create Staff ID", path: "/staff/create" },
-        { name: "Staff List", path: "/staff/list" },
+        { name: "Create Staff ID", path: "/staff/create", icon: "UserPlus" },
+        { name: "Staff List", path: "/staff/list", icon: "UsersIcon" },
       ],
     },
     {

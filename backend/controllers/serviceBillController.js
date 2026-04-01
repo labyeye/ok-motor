@@ -102,6 +102,40 @@ exports.createServiceBill = async (req, res) => {
       });
     }
 
+    // Check free service expiration logic
+    if (otherData.serviceType === "free" || otherData.serviceType === "custom") {
+      const SellLetter = require("../models/SellLetter");
+      const sellLetter = await SellLetter.findOne({
+        registrationNumber: new RegExp(`^${otherData.registrationNumber}$`, "i")
+      }).sort({ saleDate: -1 });
+
+      if (sellLetter) {
+        const ServiceBillModel = require("../models/ServiceBill");
+        const existingFreeServices = await ServiceBillModel.countDocuments({
+          registrationNumber: new RegExp(`^${otherData.registrationNumber}$`, "i"),
+          serviceType: { $in: ["free", "custom"] },
+          serviceDate: { $gte: sellLetter.saleDate }
+        });
+
+        const fourMonthsFromSale = new Date(sellLetter.saleDate);
+        fourMonthsFromSale.setMonth(fourMonthsFromSale.getMonth() + 4);
+
+        if (existingFreeServices === 0 && new Date(otherData.serviceDate) > fourMonthsFromSale) {
+          return res.status(400).json({
+            success: false,
+            message: "Free service has expired. 1st service was not done within 4 months of the sale date. Only regular service is allowed.",
+          });
+        }
+        
+        if (existingFreeServices >= 3) {
+          return res.status(400).json({
+            success: false,
+            message: "Limit reached: All 3 free services have already been used.",
+          });
+        }
+      }
+    }
+
     const totalAmount = serviceItems.reduce((sum, item) => {
       const qty = parseFloat(item.quantity) || 0;
       const rate = parseFloat(item.rate) || 0;

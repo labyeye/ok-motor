@@ -30,6 +30,7 @@ import {
   extractImagesFromPdf,
   convertPdfToImages,
 } from "../utils/pdfHandler";
+import AlertModal from "./common/AlertModal";
 
 const BuyLetterForm = () => {
   const { user, logout } = useContext(AuthContext);
@@ -85,6 +86,11 @@ const BuyLetterForm = () => {
   const [uploadModalAllowPdf, setUploadModalAllowPdf] = useState(false);
   const [uploadModalAllowMultiple, setUploadModalAllowMultiple] =
     useState(false);
+  const [alertInfo, setAlertInfo] = useState({
+    isOpen: false,
+    message: "",
+    type: "success",
+  });
 
   useEffect(() => {
     return () => {
@@ -408,7 +414,11 @@ const BuyLetterForm = () => {
     if (keys.length > 0) {
       const firstKey = keys[0];
       try {
-        alert(errs[firstKey] || "Please fill required fields");
+        setAlertInfo({
+          isOpen: true,
+          message: errs[firstKey] || "Please fill required fields",
+          type: "error",
+        });
       } catch (err) {}
       try {
         const el = document.querySelector(`[name="${firstKey}"]`);
@@ -1042,9 +1052,17 @@ const BuyLetterForm = () => {
       }
 
       if (editLetter?._id) {
-        alert("Buy letter saved as new version! Original remains unchanged.");
+        setAlertInfo({
+          isOpen: true,
+          message: "Buy letter saved as new version! Original remains unchanged.",
+          type: "success",
+        });
       } else {
-        alert("Buy letter saved successfully!");
+        setAlertInfo({
+          isOpen: true,
+          message: "Buy letter saved successfully!",
+          type: "success",
+        });
       }
 
       const normalizedResponse =
@@ -1062,7 +1080,7 @@ const BuyLetterForm = () => {
       } else if (error.request) {
         errorMessage = "No response from server. Please check your connection.";
       }
-      alert(errorMessage);
+      setAlertInfo({ isOpen: true, message: errorMessage, type: "error" });
       throw error;
     } finally {
       setIsSaving(false);
@@ -1200,11 +1218,19 @@ const BuyLetterForm = () => {
         return;
       }
 
-      alert("Please select a valid image or PDF file");
+      setAlertInfo({
+        isOpen: true,
+        message: "Please select a valid image or PDF file",
+        type: "error",
+      });
       setShowFileUploadModal(false);
     } catch (error) {
       console.error("Error handling file upload:", error);
-      alert("Error processing file. Please try again.");
+      setAlertInfo({
+        isOpen: true,
+        message: "Error processing file. Please try again.",
+        type: "error",
+      });
       setShowFileUploadModal(false);
     }
   };
@@ -1336,7 +1362,7 @@ const BuyLetterForm = () => {
       } else if (error.request) {
         errorMessage = "No response from server. Please check your connection.";
       }
-      alert(errorMessage);
+      setAlertInfo({ isOpen: true, message: errorMessage, type: "error" });
     } finally {
       setIsSaving(false);
     }
@@ -1374,7 +1400,6 @@ const BuyLetterForm = () => {
       if (name === "todayTime") {
         newData.todayTime1 = value;
       }
-
       return newData;
     });
   }, []);
@@ -1426,13 +1451,12 @@ const BuyLetterForm = () => {
     includeDocuments = false,
   ) => {
     try {
+      const isElectron = !!window.electronAPI;
       setIsDownloading(true);
       setDownloadProgress(0);
 
       await simulateProgress();
       setIsSaving(true);
-
-      const isElectron = window.electronAPI !== undefined;
 
       let savedLetterData;
 
@@ -1525,7 +1549,7 @@ const BuyLetterForm = () => {
       const amountInWordsX =
         fieldPositions.saleAmount.x +
         saleAmountWidth +
-        1.4 * (fieldPositions.saleAmount.size / 2);
+        3 * (fieldPositions.saleAmount.size / 2);
 
       firstPage.drawText(formattedData.amountInWords, {
         x: amountInWordsX,
@@ -1564,23 +1588,20 @@ const BuyLetterForm = () => {
             });
         }
 
-        const renderSingleImagePerPage = async (
-          pagesArray,
+        const renderSingleImagePerPageLocal = async (
+          pageItems,
           pageTitlePrefix,
         ) => {
-          if (!pagesArray || !pagesArray.length) return;
-          for (let p = 0; p < pagesArray.length; p++) {
-            const url = pagesArray[p];
+          if (!pageItems || !pageItems.length) return;
+          for (let idx = 0; idx < pageItems.length; idx++) {
+            const url = pageItems[idx];
             const page = pdfDoc.addPage([595, 842]);
-
             try {
-              const fontB = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-              const logoUrl = logo1;
-              const logoBytes = await fetch(logoUrl).then((r) =>
-                r.arrayBuffer(),
+              const headerFont = await pdfDoc.embedFont(
+                StandardFonts.HelveticaBold,
               );
+              const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
               const logoImg = await pdfDoc.embedPng(logoBytes);
-
               page.drawRectangle({
                 x: 0,
                 y: 780,
@@ -1594,70 +1615,20 @@ const BuyLetterForm = () => {
                 width: 150,
                 height: 120,
               });
-              try {
-                page.drawImage(logoImg, {
-                  x: 180,
-                  y: 430,
-                  width: 260,
-                  height: 220,
-                  opacity: 0.3,
-                });
-                page.drawImage(logoImg, {
-                  x: 180,
-                  y: 130,
-                  width: 260,
-                  height: 220,
-                  opacity: 0.3,
-                });
-              } catch (wmErr) {}
-
               page.drawText("UDAYAM-BR-26-0028550", {
                 x: 330,
                 y: 805,
-                size: 18,
+                size: 14,
                 color: rgb(1, 1, 1),
-                font: fontB,
+                font: headerFont,
               });
               page.drawText("GSTIN: 22ABCDE1234F1Z5", {
                 x: 330,
                 y: 785,
-                size: 18,
+                size: 14,
                 color: rgb(1, 1, 1),
-                font: fontB,
+                font: headerFont,
               });
-
-              try {
-                const thank = "Thank you for your business!";
-                const addr =
-                  "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
-                const thankW = fontB.widthOfTextAtSize(thank, 12);
-                const addrFont = await pdfDoc.embedFont(
-                  StandardFonts.Helvetica,
-                );
-                const addrW = addrFont.widthOfTextAtSize(addr, 9);
-                const centerXThank = (595 - thankW) / 2;
-                const centerXAddr = (595 - addrW) / 2;
-                page.drawLine({
-                  start: { x: 20, y: 52 },
-                  end: { x: 575, y: 52 },
-                  thickness: 0.5,
-                  color: rgb(0.8, 0.8, 0.8),
-                });
-                page.drawText(thank, {
-                  x: centerXThank,
-                  y: 40,
-                  size: 12,
-                  color: rgb(0, 0, 0),
-                  font: fontB,
-                });
-                page.drawText(addr, {
-                  x: centerXAddr,
-                  y: 26,
-                  size: 9,
-                  color: rgb(0.45, 0.45, 0.45),
-                  font: addrFont,
-                });
-              } catch (e) {}
               page.drawRectangle({
                 x: 0,
                 y: 750,
@@ -1670,7 +1641,7 @@ const BuyLetterForm = () => {
             const titleFont = await pdfDoc.embedFont(
               StandardFonts.HelveticaBold,
             );
-            page.drawText(`${pageTitlePrefix} - Page ${p + 1}`, {
+            page.drawText(`${pageTitlePrefix} - Page ${idx + 1}`, {
               x: 50,
               y: 700,
               size: 12,
@@ -1683,6 +1654,10 @@ const BuyLetterForm = () => {
                 res.headers.get("content-type") || ""
               ).toLowerCase();
               const bytes = await res.arrayBuffer();
+              const pageWidth = 595;
+              const margin = 50;
+              const maxWidth = pageWidth - 2 * margin;
+              const maxHeight = 660;
 
               if (
                 contentType.includes("pdf") ||
@@ -1698,10 +1673,6 @@ const BuyLetterForm = () => {
                     embeddedPage.width || embeddedPage.getWidth?.() || 595;
                   const embeddedHeight =
                     embeddedPage.height || embeddedPage.getHeight?.() || 842;
-                  const pageWidth = 595;
-                  const margin = 50;
-                  const maxWidth = pageWidth - 2 * margin;
-                  const maxHeight = 660;
                   let drawW = maxWidth;
                   let drawH = (embeddedHeight / embeddedWidth) * drawW;
                   if (drawH > maxHeight) {
@@ -1726,13 +1697,7 @@ const BuyLetterForm = () => {
                         width: drawW,
                         height: drawH,
                       });
-                    } catch (err2) {
-                      console.warn(
-                        "Failed to render embedded pdf page",
-                        url,
-                        err2,
-                      );
-                    }
+                    } catch (e) {}
                   }
                 }
               } else {
@@ -1741,10 +1706,6 @@ const BuyLetterForm = () => {
                   embedded = await pdfDoc.embedPng(bytes);
                 else embedded = await pdfDoc.embedJpg(bytes);
                 const { width, height } = embedded.scale(1);
-                const pageWidth = 595;
-                const margin = 50;
-                const maxWidth = pageWidth - 2 * margin;
-                const maxHeight = 660;
                 let drawW = maxWidth;
                 let drawH = (height / width) * drawW;
                 if (drawH > maxHeight) {
@@ -1761,40 +1722,51 @@ const BuyLetterForm = () => {
                 });
               }
             } catch (err) {
-              console.warn("Failed to render document page", url, err);
+              console.warn("Error rendering multi-page doc", url, err);
             }
           }
         };
 
-        if (
-          documentsObj.insuranceCertificate &&
-          Array.isArray(documentsObj.insuranceCertificate.pages) &&
-          documentsObj.insuranceCertificate.pages.length
-        ) {
-          await renderSingleImagePerPage(
-            documentsObj.insuranceCertificate.pages,
-            "Insurance Certificate",
-          );
+        if (documentsObj.insuranceCertificate) {
+          if (Array.isArray(documentsObj.insuranceCertificate.pages)) {
+            await renderSingleImagePerPageLocal(
+              documentsObj.insuranceCertificate.pages,
+              "Insurance Certificate",
+            );
+          } else if (Array.isArray(documentsObj.insuranceCertificate)) {
+            await renderSingleImagePerPageLocal(
+              documentsObj.insuranceCertificate,
+              "Insurance Certificate",
+            );
+          }
         }
-        if (
-          documentsObj.vehicleNOC &&
-          Array.isArray(documentsObj.vehicleNOC.pages) &&
-          documentsObj.vehicleNOC.pages.length
-        ) {
-          await renderSingleImagePerPage(
-            documentsObj.vehicleNOC.pages,
-            "Vehicle NOC",
-          );
+
+        if (documentsObj.vehicleNOC) {
+          if (Array.isArray(documentsObj.vehicleNOC.pages)) {
+            await renderSingleImagePerPageLocal(
+              documentsObj.vehicleNOC.pages,
+              "Vehicle NOC",
+            );
+          } else if (Array.isArray(documentsObj.vehicleNOC)) {
+            await renderSingleImagePerPageLocal(
+              documentsObj.vehicleNOC,
+              "Vehicle NOC",
+            );
+          }
         }
-        if (
-          documentsObj.vehicleBuyReceipt &&
-          Array.isArray(documentsObj.vehicleBuyReceipt.pages) &&
-          documentsObj.vehicleBuyReceipt.pages.length
-        ) {
-          await renderSingleImagePerPage(
-            documentsObj.vehicleBuyReceipt.pages,
-            "Vehicle Buy Receipt",
-          );
+
+        if (documentsObj.vehicleBuyReceipt) {
+          if (Array.isArray(documentsObj.vehicleBuyReceipt.pages)) {
+            await renderSingleImagePerPageLocal(
+              documentsObj.vehicleBuyReceipt.pages,
+              "Vehicle Buy Receipt",
+            );
+          } else if (Array.isArray(documentsObj.vehicleBuyReceipt)) {
+            await renderSingleImagePerPageLocal(
+              documentsObj.vehicleBuyReceipt,
+              "Vehicle Buy Receipt",
+            );
+          }
         }
 
         if (documentsObj.aadhaar) {
@@ -1873,37 +1845,6 @@ const BuyLetterForm = () => {
               color: rgb(1, 1, 1),
               font,
             });
-
-            try {
-              const thank = "Thank you for your business!";
-              const addr =
-                "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
-              const thankW = font.widthOfTextAtSize(thank, 12);
-              const addrFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-              const addrW = addrFont.widthOfTextAtSize(addr, 9);
-              const centerXThank = (595 - thankW) / 2;
-              const centerXAddr = (595 - addrW) / 2;
-              page.drawLine({
-                start: { x: 20, y: 52 },
-                end: { x: 575, y: 52 },
-                thickness: 0.5,
-                color: rgb(0.8, 0.8, 0.8),
-              });
-              page.drawText(thank, {
-                x: centerXThank,
-                y: 40,
-                size: 12,
-                color: rgb(0, 0, 0),
-                font,
-              });
-              page.drawText(addr, {
-                x: centerXAddr,
-                y: 26,
-                size: 9,
-                color: rgb(0.45, 0.45, 0.45),
-                font: addrFont,
-              });
-            } catch (e) {}
             page.drawRectangle({
               x: 0,
               y: 750,
@@ -1976,7 +1917,11 @@ const BuyLetterForm = () => {
         );
         if (saveRes && saveRes.success) {
           if (window.electronAPI) {
-            alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
+            setAlertInfo({
+              isOpen: true,
+              message: `PDF saved to ${saveRes.path || "default PDF folder"}`,
+              type: "success",
+            });
           }
         } else {
           saveAs(blob, filename);
@@ -2000,7 +1945,7 @@ const BuyLetterForm = () => {
         errorMessage = "No response from server. Please check your connection.";
       }
 
-      alert(errorMessage);
+      setAlertInfo({ isOpen: true, message: errorMessage, type: "error" });
       throw error;
     } finally {
       setIsDownloading(false);
@@ -2100,7 +2045,6 @@ const BuyLetterForm = () => {
           savedLetterData = resp && resp.data ? resp.data : resp;
         }
       }
-
       const existingPdfBytes = await loadPDFTemplate("englishbuyletter.pdf");
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
@@ -2122,6 +2066,14 @@ const BuyLetterForm = () => {
             : "0",
         ),
       };
+      formattedData.witnessname =
+        formattedData.witnessname && String(formattedData.witnessname).trim()
+          ? formattedData.witnessname
+          : "N/A";
+      formattedData.witnessphone =
+        formattedData.witnessphone && String(formattedData.witnessphone).trim()
+          ? formattedData.witnessphone
+          : "0000000000";
 
       for (const [fieldName, position] of Object.entries(
         englishFieldPositions,
@@ -2231,14 +2183,14 @@ const BuyLetterForm = () => {
               page.drawText("UDAYAM-BR-26-0028550", {
                 x: 330,
                 y: 805,
-                size: 18,
+                size: 14,
                 color: rgb(1, 1, 1),
                 font: headerFont,
               });
               page.drawText("GSTIN: 22ABCDE1234F1Z5", {
                 x: 330,
                 y: 785,
-                size: 18,
+                size: 14,
                 color: rgb(1, 1, 1),
                 font: headerFont,
               });
@@ -2521,7 +2473,11 @@ const BuyLetterForm = () => {
         );
         if (saveRes && saveRes.success) {
           if (window.electronAPI) {
-            alert(`PDF saved to ${saveRes.path || "default PDF folder"}`);
+            setAlertInfo({
+              isOpen: true,
+              message: `PDF saved to ${saveRes.path || "default PDF folder"}`,
+              type: "success",
+            });
           }
         } else {
           saveAs(blob, filename);
@@ -2545,7 +2501,7 @@ const BuyLetterForm = () => {
         errorMessage = "No response from server. Please check your connection.";
       }
 
-      alert(errorMessage);
+      setAlertInfo({ isOpen: true, message: errorMessage, type: "error" });
       throw error;
     } finally {
       setIsDownloading(false);
@@ -2589,10 +2545,16 @@ const BuyLetterForm = () => {
             : "0",
         ),
       };
+      formattedData.witnessname =
+        formattedData.witnessname && String(formattedData.witnessname).trim()
+          ? formattedData.witnessname
+          : "N/A";
+      formattedData.witnessphone =
+        formattedData.witnessphone && String(formattedData.witnessphone).trim()
+          ? formattedData.witnessphone
+          : "0000000000";
 
-      const positions =
-        language === "hindi" ? fieldPositions : englishFieldPositions;
-      for (const [fieldName, position] of Object.entries(positions)) {
+      for (const [fieldName, position] of Object.entries(fieldPositions)) {
         if (
           fieldName === "selleraadharphone" &&
           formattedData.selleraadharphone
@@ -2621,22 +2583,20 @@ const BuyLetterForm = () => {
         }
       }
 
-      if (formattedData.saleAmount && formattedData.amountInWords) {
-        const saleAmountText = formattedData.saleAmount || "";
-        const saleAmountWidth =
-          saleAmountText.length * (positions.saleAmount.size / 2);
-        const amountInWordsX =
-          positions.saleAmount.x +
-          saleAmountWidth +
-          3 * (positions.saleAmount.size / 2);
+      const saleAmountText = formattedData.saleAmount || "";
+      const saleAmountWidth =
+        saleAmountText.length * (fieldPositions.saleAmount.size / 2);
+      const amountInWordsX =
+        fieldPositions.saleAmount.x +
+        saleAmountWidth +
+        3 * (fieldPositions.saleAmount.size / 2);
 
-        firstPage.drawText(formattedData.amountInWords, {
-          x: amountInWordsX,
-          y: positions.saleAmount.y,
-          size: positions.saleAmount.size,
-          color: rgb(0, 0, 0),
-        });
-      }
+      firstPage.drawText(formattedData.amountInWords, {
+        x: amountInWordsX,
+        y: fieldPositions.saleAmount.y,
+        size: fieldPositions.saleAmount.size,
+        color: rgb(0, 0, 0),
+      });
 
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc);
@@ -2649,7 +2609,11 @@ const BuyLetterForm = () => {
       setShowPreviewModal(true);
     } catch (error) {
       console.error("Error generating preview:", error);
-      alert(`Failed to generate ${language} preview. Please try again.`);
+      setAlertInfo({
+        isOpen: true,
+        message: `Failed to generate ${language} preview. Please try again.`,
+        type: "error",
+      });
     } finally {
       setShowLoadingOverlay(false);
       setIsGeneratingPreview(false);
@@ -3076,6 +3040,12 @@ const BuyLetterForm = () => {
       }}
     >
       <AppSidebar user={user} onLogout={handleLogout} />
+      <AlertModal
+        isOpen={alertInfo.isOpen}
+        onClose={() => setAlertInfo({ ...alertInfo, isOpen: false })}
+        message={alertInfo.message}
+        type={alertInfo.type}
+      />
 
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
@@ -3721,9 +3691,7 @@ const BuyLetterForm = () => {
                       >
                         <button
                           type="button"
-                          onClick={() =>
-                            handleFileInput("vehicleRCFront", true)
-                          }
+                          onClick={() => handleFileInput("vehicleRCFront", true)}
                           style={styles.uploadBtn}
                         >
                           <Image size={20} />{" "}

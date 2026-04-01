@@ -13,6 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
+import TableFilter from "./common/TableFilter";
 import pdfService from "../services/pdfService";
 
 import config from "../config/environment";
@@ -26,6 +27,7 @@ const ServiceHistory = () => {
   const [, setSellHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({ regNo: null, amount: null, date: null });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -266,15 +268,82 @@ const ServiceHistory = () => {
     setCurrentPage(1);
   };
 
-  const filteredServiceBills = searchTerm
-    ? serviceBills.filter(
-        (b) =>
-          b.registrationNumber
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          b.customerName?.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
-    : serviceBills;
+  const filteredServiceBills = (serviceBills || []).filter((b) => {
+    const q = String(searchTerm || "").toLowerCase();
+    const matchesSearch =
+      !q ||
+      (b.registrationNumber || "").toLowerCase().includes(q) ||
+      (b.customerName || "").toLowerCase().includes(q);
+    if (!matchesSearch) return false;
+
+    const rFilter = filters.regNo;
+    if (rFilter && rFilter.op) {
+      const reg = (b.registrationNumber || "").toLowerCase();
+      const val = String(rFilter.value || "").toLowerCase();
+      if (!val) return false;
+      if (rFilter.op === "contains" && !reg.includes(val)) return false;
+      if (rFilter.op === "eq" && reg !== val) return false;
+      if (rFilter.op === "starts" && !reg.startsWith(val)) return false;
+    }
+
+    const aFilter = filters.amount;
+    if (aFilter && aFilter.op) {
+      const amt = Number(b.grandTotal || b.total || 0);
+      if (isNaN(amt)) return false;
+      const v = Number(aFilter.value);
+      // require value for non-range ops; for between allow one-sided
+      if (aFilter.op !== "between" && isNaN(v)) return false;
+      if (aFilter.op === "eq" && amt !== v) return false;
+      if (aFilter.op === "gt" && amt <= v) return false;
+      if (aFilter.op === "lt" && amt >= v) return false;
+      if (aFilter.op === "between") {
+        const v2 = Number(aFilter.value2);
+        const hasV1 = !isNaN(v);
+        const hasV2 = !isNaN(v2);
+        if (!hasV1 && !hasV2) return false;
+        if (hasV1 && hasV2) {
+          const min = Math.min(v, v2);
+          const max = Math.max(v, v2);
+          if (amt < min || amt > max) return false;
+        } else if (hasV1) {
+          if (amt < v) return false;
+        } else if (hasV2) {
+          if (amt > v2) return false;
+        }
+      }
+    }
+
+    const dFilter = filters.date;
+    if (dFilter && dFilter.op) {
+      const dStr = b.createdAt || b.date || null;
+      if (!dStr) return false;
+      const d = new Date(dStr);
+      if (isNaN(d.getTime())) return false;
+      const v = new Date(dFilter.value);
+      // require value for non-range ops; for between allow one-sided
+      if (dFilter.op !== "between" && isNaN(v.getTime())) return false;
+      if (dFilter.op === "eq" && d.toDateString() !== v.toDateString()) return false;
+      if (dFilter.op === "before" && !(d < v)) return false;
+      if (dFilter.op === "after" && !(d > v)) return false;
+      if (dFilter.op === "between") {
+        const v2 = new Date(dFilter.value2);
+        const hasV1 = !isNaN(v.getTime());
+        const hasV2 = !isNaN(v2.getTime());
+        if (!hasV1 && !hasV2) return false;
+        if (hasV1 && hasV2) {
+          const min = v < v2 ? v : v2;
+          const max = v > v2 ? v : v2;
+          if (d < min || d > max) return false;
+        } else if (hasV1) {
+          if (d < v) return false;
+        } else if (hasV2) {
+          if (d > v2) return false;
+        }
+      }
+    }
+
+    return true;
+  });
 
   const DownloadProgressModal = ({ progress, onClose }) => {
     return (
@@ -765,9 +834,41 @@ const ServiceHistory = () => {
                       <tr>
                         <th style={styles.tableHeader}>Customer</th>
                         <th style={styles.tableHeader}>Vehicle</th>
-                        <th style={styles.tableHeader}>Reg No.</th>
-                        <th style={styles.tableHeader}>Amount</th>
-                        <th style={styles.tableHeader}>Date</th>
+                        <th style={styles.tableHeader}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <span>Reg No.</span>
+                            <TableFilter
+                              type="text"
+                              placeholder="Reg no"
+                              onApply={(f) => setFilters((p) => ({ ...p, regNo: f }))}
+                              onClear={() => setFilters((p) => ({ ...p, regNo: null }))}
+                            />
+                          </div>
+                        </th>
+                        <th style={styles.tableHeader}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <span>Amount</span>
+                            <TableFilter
+                              type="number"
+                              placeholder="₹"
+                              rangeOnly={true}
+                              onApply={(f) => setFilters((p) => ({ ...p, amount: f }))}
+                              onClear={() => setFilters((p) => ({ ...p, amount: null }))}
+                            />
+                          </div>
+                        </th>
+                        <th style={styles.tableHeader}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <span>Date</span>
+                            <TableFilter
+                              type="date"
+                              placeholder="yyyy-mm-dd"
+                              rangeOnly={true}
+                              onApply={(f) => setFilters((p) => ({ ...p, date: f }))}
+                              onClear={() => setFilters((p) => ({ ...p, date: null }))}
+                            />
+                          </div>
+                        </th>
                         <th style={styles.tableHeader}>Status</th>
                         <th style={styles.tableHeader}>Created By</th>
                         <th style={styles.tableHeader}>Actions</th>

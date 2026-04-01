@@ -19,6 +19,8 @@ import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import logo1 from "../images/okmotorback.png";
 import PdfPreview from "./PdfPreview";
+import AlertModal from "./common/AlertModal";
+
 const AdvancePayBillForm = () => {
   const { user, logout } = useContext(AuthContext);
 
@@ -32,6 +34,11 @@ const AdvancePayBillForm = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [errors, setErrors] = useState({});
+  const [alertInfo, setAlertInfo] = useState({
+    isOpen: false,
+    message: "",
+    type: "success",
+  });
   const [formData, setFormData] = useState({
     customerName: "",
     customerPhone: "",
@@ -45,7 +52,9 @@ const AdvancePayBillForm = () => {
     engineNumber: "",
     kmReading: "",
     serviceDate: new Date().toISOString().split("T")[0],
-    deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+    deliveryDate: new Date(Date.now() + 86400000)
+      .toISOString()
+      .split("T")[0],
     totalAmount: "0.00",
     discount: "0",
     advancePaid: "0.00",
@@ -184,7 +193,11 @@ const AdvancePayBillForm = () => {
     if (keys.length > 0) {
       const firstKey = keys[0];
       try {
-        alert(errs[firstKey] || "Please fill required fields");
+        setAlertInfo({
+          isOpen: true,
+          message: errs[firstKey] || "Please fill required fields",
+          type: "error",
+        });
       } catch (err) {}
 
       try {
@@ -218,7 +231,11 @@ const AdvancePayBillForm = () => {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        alert("You are not authenticated. Please login again.");
+        setAlertInfo({
+          isOpen: true,
+          message: "You are not authenticated. Please login again.",
+          type: "error",
+        });
         logout();
         navigate("/login");
         return;
@@ -264,13 +281,19 @@ const AdvancePayBillForm = () => {
         if (result.success) {
           billId = result.data._id;
           if (formData._id) {
-            alert(
-              "Advance bill saved as new version offline! Will sync when online.",
-            );
+            setAlertInfo({
+              isOpen: true,
+              message:
+                "Advance bill saved as new version offline! Will sync when online.",
+              type: "info",
+            });
           } else {
-            alert(
-              "Advance bill saved offline successfully! Will sync when online.",
-            );
+            setAlertInfo({
+              isOpen: true,
+              message:
+                "Advance bill saved offline successfully! Will sync when online.",
+              type: "success",
+            });
           }
         } else {
           throw new Error(result.error || "Failed to save offline");
@@ -294,7 +317,13 @@ const AdvancePayBillForm = () => {
         await progressPromise;
 
         if (pdfResult.saved && window.electronAPI) {
-          alert(`PDF saved to ${pdfResult.savedPath || "default PDF folder"}`);
+          setAlertInfo({
+            isOpen: true,
+            message: `PDF saved to ${
+              pdfResult.savedPath || "default PDF folder"
+            }`,
+            type: "success",
+          });
         } else {
           saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
         }
@@ -358,17 +387,30 @@ const AdvancePayBillForm = () => {
         await progressPromise;
 
         if (pdfResult.saved && window.electronAPI) {
-          alert(`PDF saved to ${pdfResult.savedPath || "default PDF folder"}`);
+          setAlertInfo({
+            isOpen: true,
+            message: `PDF saved to ${
+              pdfResult.savedPath || "default PDF folder"
+            }`,
+            type: "success",
+          });
         } else {
           saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
         }
 
         if (formData._id) {
-          alert(
-            "Advance bill saved as new version! Original remains unchanged.",
-          );
+          setAlertInfo({
+            isOpen: true,
+            message:
+              "Advance bill saved as new version! Original remains unchanged.",
+            type: "info",
+          });
         } else {
-          alert("Advance bill saved and downloaded successfully!");
+          setAlertInfo({
+            isOpen: true,
+            message: "Advance bill saved and downloaded successfully!",
+            type: "success",
+          });
         }
 
         setFormData({
@@ -400,17 +442,27 @@ const AdvancePayBillForm = () => {
       console.error("Error in save and download:", error);
 
       if (error.response?.status === 401) {
-        alert("Your session has expired. Please login again.");
+        setAlertInfo({
+          isOpen: true,
+          message: "Your session has expired. Please login again.",
+          type: "error",
+        });
         logout();
         navigate("/login");
       } else if (error.response?.status === 403) {
-        alert("You don't have permission to create advance bills.");
+        setAlertInfo({
+          isOpen: true,
+          message: "You don't have permission to create advance bills.",
+          type: "error",
+        });
       } else {
-        alert(
-          `Failed to save and download: ${
+        setAlertInfo({
+          isOpen: true,
+          message: `Failed to save and download: ${
             error.response?.data?.message || error.message
           }`,
-        );
+          type: "error",
+        });
       }
     } finally {
       setIsSaving(false);
@@ -558,13 +610,21 @@ const AdvancePayBillForm = () => {
       setShowLoadingOverlay(true);
 
       if (!billData.customerName || !billData.customerPhone) {
-        alert("Please fill in required customer information");
+        setAlertInfo({
+          isOpen: true,
+          message: "Please fill in required customer information",
+          type: "error",
+        });
         return;
       }
 
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("You are not authenticated. Please login again.");
+        setAlertInfo({
+          isOpen: true,
+          message: "You are not authenticated. Please login again.",
+          type: "error",
+        });
         logout();
         navigate("/login");
         return;
@@ -615,9 +675,13 @@ const AdvancePayBillForm = () => {
 
         if (pdfResult.success) {
           if (pdfResult.saved && window.electronAPI) {
-            alert(
-              `PDF saved to ${pdfResult.savedPath || "default PDF folder"}`,
-            );
+            setAlertInfo({
+              isOpen: true,
+              message: `PDF saved to ${
+                pdfResult.savedPath || "default PDF folder"
+              }`,
+              type: "success",
+            });
           } else {
             saveAs(pdfResult.blob, `advance-bill-${billId}.pdf`);
           }
@@ -629,17 +693,27 @@ const AdvancePayBillForm = () => {
       console.error("Error generating PDF:", error);
 
       if (error.response?.status === 401) {
-        alert("Your session has expired. Please login again.");
+        setAlertInfo({
+          isOpen: true,
+          message: "Your session has expired. Please login again.",
+          type: "error",
+        });
         logout();
         navigate("/login");
       } else if (error.response?.status === 403) {
-        alert("You don't have permission to create advance bills.");
+        setAlertInfo({
+          isOpen: true,
+          message: "You don't have permission to create advance bills.",
+          type: "error",
+        });
       } else {
-        alert(
-          `Failed to generate PDF: ${
+        setAlertInfo({
+          isOpen: true,
+          message: `Failed to generate PDF: ${
             error.response?.data?.message || error.message
           }`,
-        );
+          type: "error",
+        });
       }
     } finally {
       setShowLoadingOverlay(false);
@@ -709,6 +783,12 @@ const AdvancePayBillForm = () => {
       }}
     >
       <AppSidebar user={user} onLogout={handleLogout} />
+      <AlertModal
+        isOpen={alertInfo.isOpen}
+        onClose={() => setAlertInfo({ ...alertInfo, isOpen: false })}
+        message={alertInfo.message}
+        type={alertInfo.type}
+      />
 
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>

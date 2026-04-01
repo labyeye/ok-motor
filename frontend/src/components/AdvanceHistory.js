@@ -12,14 +12,17 @@ import {
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
+import TableFilter from "./common/TableFilter";
 import ConfirmModal from "./ConfirmModal";
 import PdfPreview from "./PdfPreview";
+import AlertModal from "./common/AlertModal";
 
 const AdvanceHistory = () => {
   const { user, logout } = useContext(AuthContext);
   const [advanceBills, setAdvanceBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({ total: null, advance: null, balance: null, date: null });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages] = useState(1);
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -31,6 +34,11 @@ const AdvanceHistory = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
   const [previewBill, setPreviewBill] = useState(null);
+  const [alertInfo, setAlertInfo] = useState({
+    isOpen: false,
+    message: "",
+    type: "success",
+  });
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -275,15 +283,126 @@ const AdvanceHistory = () => {
     },
   };
 
-  const filteredBills = searchTerm
-    ? advanceBills.filter(
-        (bill) =>
-          bill.registrationNumber
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          bill.customerName?.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
-    : advanceBills;
+  const filteredBills = (advanceBills || []).filter((bill) => {
+    const q = String(searchTerm || "").toLowerCase();
+    const matchesSearch =
+      !q ||
+      (bill.registrationNumber || "").toLowerCase().includes(q) ||
+      (bill.customerName || "").toLowerCase().includes(q);
+    if (!matchesSearch) return false;
+
+    const toFilter = filters.total;
+    if (toFilter && toFilter.op) {
+      const val = Number(bill.grandTotal || bill.total || 0);
+      if (isNaN(val)) return false;
+      const v = Number(toFilter.value);
+      // require value for non-range ops; for between allow one-sided
+      if (toFilter.op !== "between" && isNaN(v)) return false;
+      if (toFilter.op === "eq" && val !== v) return false;
+      if (toFilter.op === "gt" && val <= v) return false;
+      if (toFilter.op === "lt" && val >= v) return false;
+      if (toFilter.op === "between") {
+        const v2 = Number(toFilter.value2);
+        const hasV1 = !isNaN(v);
+        const hasV2 = !isNaN(v2);
+        if (!hasV1 && !hasV2) return false;
+        if (hasV1 && hasV2) {
+          const min = Math.min(v, v2);
+          const max = Math.max(v, v2);
+          if (val < min || val > max) return false;
+        } else if (hasV1) {
+          if (val < v) return false;
+        } else if (hasV2) {
+          if (val > v2) return false;
+        }
+      }
+    }
+
+    const advFilter = filters.advance;
+    if (advFilter && advFilter.op) {
+      const val = Number(bill.advancePaid || 0);
+      if (isNaN(val)) return false;
+      const v = Number(advFilter.value);
+      // require value for non-range ops; for between allow one-sided
+      if (advFilter.op !== "between" && isNaN(v)) return false;
+      if (advFilter.op === "eq" && val !== v) return false;
+      if (advFilter.op === "gt" && val <= v) return false;
+      if (advFilter.op === "lt" && val >= v) return false;
+      if (advFilter.op === "between") {
+        const v2 = Number(advFilter.value2);
+        const hasV1 = !isNaN(v);
+        const hasV2 = !isNaN(v2);
+        if (!hasV1 && !hasV2) return false;
+        if (hasV1 && hasV2) {
+          const min = Math.min(v, v2);
+          const max = Math.max(v, v2);
+          if (val < min || val > max) return false;
+        } else if (hasV1) {
+          if (val < v) return false;
+        } else if (hasV2) {
+          if (val > v2) return false;
+        }
+      }
+    }
+
+    const balFilter = filters.balance;
+    if (balFilter && balFilter.op) {
+      const val = Number(bill.balanceDue || 0);
+      if (isNaN(val)) return false;
+      const v = Number(balFilter.value);
+      // require value for non-range ops; for between allow one-sided
+      if (balFilter.op !== "between" && isNaN(v)) return false;
+      if (balFilter.op === "eq" && val !== v) return false;
+      if (balFilter.op === "gt" && val <= v) return false;
+      if (balFilter.op === "lt" && val >= v) return false;
+      if (balFilter.op === "between") {
+        const v2 = Number(balFilter.value2);
+        const hasV1 = !isNaN(v);
+        const hasV2 = !isNaN(v2);
+        if (!hasV1 && !hasV2) return false;
+        if (hasV1 && hasV2) {
+          const min = Math.min(v, v2);
+          const max = Math.max(v, v2);
+          if (val < min || val > max) return false;
+        } else if (hasV1) {
+          if (val < v) return false;
+        } else if (hasV2) {
+          if (val > v2) return false;
+        }
+      }
+    }
+
+    const dFilter = filters.date;
+    if (dFilter && dFilter.op) {
+      const dStr = bill.createdAt || bill.date || null;
+      if (!dStr) return false;
+      const d = new Date(dStr);
+      if (isNaN(d.getTime())) return false;
+      const v = new Date(dFilter.value);
+      // require value for non-range ops; for between allow one-sided
+      if (dFilter.op !== "between" && isNaN(v.getTime())) return false;
+      if (dFilter.op === "eq" && d.toDateString() !== v.toDateString()) return false;
+      if (dFilter.op === "before" && !(d < v)) return false;
+      if (dFilter.op === "after" && !(d > v)) return false;
+      if (dFilter.op === "between") {
+        const v2 = new Date(dFilter.value2);
+        const hasV1 = !isNaN(v.getTime());
+        const hasV2 = !isNaN(v2.getTime());
+        if (!hasV1 && !hasV2) return false;
+        if (hasV1 && hasV2) {
+          const min = v < v2 ? v : v2;
+          const max = v > v2 ? v : v2;
+          if (d < min || d > max) return false;
+        } else if (hasV1) {
+          if (d < v) return false;
+        } else if (hasV2) {
+          if (d > v2) return false;
+        }
+      }
+    }
+
+    return true;
+  });
 
   const handleDownload = async (billId) => {
     try {
@@ -291,7 +410,11 @@ const AdvanceHistory = () => {
       setDownloadProgress(0);
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("You are not authenticated. Please login again.");
+        setAlertInfo({
+          isOpen: true,
+          message: "You are not authenticated. Please login again.",
+          type: "error",
+        });
         logout();
         navigate("/login");
         return;
@@ -300,7 +423,11 @@ const AdvanceHistory = () => {
 
       const bill = advanceBills.find((b) => b._id === billId);
       if (!bill) {
-        alert("Advance bill not found. Please refresh.");
+        setAlertInfo({
+          isOpen: true,
+          message: "Advance bill not found. Please refresh.",
+          type: "error",
+        });
         return;
       }
 
@@ -325,40 +452,66 @@ const AdvanceHistory = () => {
     } catch (error) {
       console.error("Error downloading PDF:", error);
       if (error.response?.status === 401) {
-        alert("Your session has expired. Please login again.");
+        setAlertInfo({
+          isOpen: true,
+          message: "Your session has expired. Please login again.",
+          type: "error",
+        });
         logout();
         navigate("/login");
       } else if (error.response?.status === 403) {
-        alert("You don't have permission to download this file.");
+        setAlertInfo({
+          isOpen: true,
+          message: "You don't have permission to download this file.",
+          type: "error",
+        });
       } else if (error.response?.status === 404) {
-        alert(
-          "Advance bill not found or PDF could not be generated. Please try again or contact support.",
-        );
+        setAlertInfo({
+          isOpen: true,
+          message:
+            "Advance bill not found or PDF could not be generated. Please try again or contact support.",
+          type: "error",
+        });
       } else if (error.response?.status === 503) {
-        alert(
-          "Server is temporarily unavailable. Please try again in a few minutes.",
-        );
+        setAlertInfo({
+          isOpen: true,
+          message:
+            "Server is temporarily unavailable. Please try again in a few minutes.",
+          type: "error",
+        });
       } else if (
         error.response?.status === 502 ||
         error.response?.status === 504
       ) {
-        alert("Server is experiencing issues. Please try again later.");
+        setAlertInfo({
+          isOpen: true,
+          message: "Server is experiencing issues. Please try again later.",
+          type: "error",
+        });
       } else if (error.code === "ERR_NETWORK" || error.code === "ERR_FAILED") {
-        alert(
-          "Network error. This might be due to:\n• Server is temporarily down\n• Service worker interference\n• Network connectivity issues\n\nPlease try again in a few minutes.",
-        );
+        setAlertInfo({
+          isOpen: true,
+          message:
+            "Network error. This might be due to:\n• Server is temporarily down\n• Service worker interference\n• Network connectivity issues\n\nPlease try again in a few minutes.",
+          type: "error",
+        });
       } else if (error.code === "ECONNABORTED") {
-        alert(
-          "Connection timeout. Please check your internet connection and try again.",
-        );
+        setAlertInfo({
+          isOpen: true,
+          message:
+            "Connection timeout. Please check your internet connection and try again.",
+          type: "error",
+        });
       } else {
-        alert(
-          `Failed to download PDF: ${
+        setAlertInfo({
+          isOpen: true,
+          message: `Failed to download PDF: ${
             error.response?.data?.message ||
             error.message ||
             "Server temporarily unavailable"
           }`,
-        );
+          type: "error",
+        });
       }
     } finally {
       setIsDownloading(false);
@@ -376,7 +529,11 @@ const AdvanceHistory = () => {
 
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("You are not authenticated. Please login again.");
+        setAlertInfo({
+          isOpen: true,
+          message: "You are not authenticated. Please login again.",
+          type: "error",
+        });
         logout();
         navigate("/login");
         setIsDownloading(false);
@@ -385,7 +542,11 @@ const AdvanceHistory = () => {
 
       const bill = advanceBills.find((b) => b._id === billId);
       if (!bill) {
-        alert("Advance bill not found. Please refresh.");
+        setAlertInfo({
+          isOpen: true,
+          message: "Advance bill not found. Please refresh.",
+          type: "error",
+        });
         clearInterval(progressInterval);
         setIsDownloading(false);
         return;
@@ -409,7 +570,11 @@ const AdvanceHistory = () => {
       }
     } catch (error) {
       console.error("Error generating preview:", error);
-      alert("Failed to generate preview. Please try again.");
+      setAlertInfo({
+        isOpen: true,
+        message: "Failed to generate preview. Please try again.",
+        type: "error",
+      });
       setIsDownloading(false);
     }
   };
@@ -424,7 +589,11 @@ const AdvanceHistory = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("You are not authenticated. Please login again.");
+        setAlertInfo({
+          isOpen: true,
+          message: "You are not authenticated. Please login again.",
+          type: "error",
+        });
         logout();
         navigate("/login");
         return;
@@ -440,17 +609,27 @@ const AdvanceHistory = () => {
     } catch (error) {
       console.error("Error deleting advance bill:", error);
       if (error.response?.status === 401) {
-        alert("Your session has expired. Please login again.");
+        setAlertInfo({
+          isOpen: true,
+          message: "Your session has expired. Please login again.",
+          type: "error",
+        });
         logout();
         navigate("/login");
       } else if (error.response?.status === 403) {
-        alert("You don't have permission to delete this file.");
+        setAlertInfo({
+          isOpen: true,
+          message: "You don't have permission to delete this file.",
+          type: "error",
+        });
       } else {
-        alert(
-          `Failed to delete: ${
+        setAlertInfo({
+          isOpen: true,
+          message: `Failed to delete: ${
             error.response?.data?.message || error.message || "Unknown error"
           }`,
-        );
+          type: "error",
+        });
       }
     } finally {
       setConfirmOpen(false);
@@ -484,6 +663,12 @@ const AdvanceHistory = () => {
         }}
       />
       <AppSidebar user={user} onLogout={handleLogout} />
+      <AlertModal
+        isOpen={alertInfo.isOpen}
+        onClose={() => setAlertInfo({ ...alertInfo, isOpen: false })}
+        message={alertInfo.message}
+        type={alertInfo.type}
+      />
 
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
@@ -522,10 +707,54 @@ const AdvanceHistory = () => {
                         <th style={styles.tableHeader}>Customer</th>
                         <th style={styles.tableHeader}>Vehicle</th>
                         <th style={styles.tableHeader}>Reg No.</th>
-                        <th style={styles.tableHeader}>Total Amount</th>
-                        <th style={styles.tableHeader}>Advance Paid</th>
-                        <th style={styles.tableHeader}>Balance Due</th>
-                        <th style={styles.tableHeader}>Date</th>
+                        <th style={styles.tableHeader}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <span>Total Amount</span>
+                            <TableFilter
+                              type="number"
+                              placeholder="₹"
+                              rangeOnly={true}
+                              onApply={(f) => setFilters((p) => ({ ...p, total: f }))}
+                              onClear={() => setFilters((p) => ({ ...p, total: null }))}
+                            />
+                          </div>
+                        </th>
+                        <th style={styles.tableHeader}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <span>Advance Paid</span>
+                            <TableFilter
+                              type="number"
+                              placeholder="₹"
+                              rangeOnly={true}
+                              onApply={(f) => setFilters((p) => ({ ...p, advance: f }))}
+                              onClear={() => setFilters((p) => ({ ...p, advance: null }))}
+                            />
+                          </div>
+                        </th>
+                        <th style={styles.tableHeader}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <span>Balance Due</span>
+                            <TableFilter
+                              type="number"
+                              placeholder="₹"
+                              rangeOnly={true}
+                              onApply={(f) => setFilters((p) => ({ ...p, balance: f }))}
+                              onClear={() => setFilters((p) => ({ ...p, balance: null }))}
+                            />
+                          </div>
+                        </th>
+                        <th style={styles.tableHeader}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <span>Date</span>
+                            <TableFilter
+                              type="date"
+                              placeholder="yyyy-mm-dd"
+                              rangeOnly={true}
+                              onApply={(f) => setFilters((p) => ({ ...p, date: f }))}
+                              onClear={() => setFilters((p) => ({ ...p, date: null }))}
+                            />
+                          </div>
+                        </th>
                         <th style={styles.tableHeader}>Created By</th>
                         <th style={styles.tableHeader}>Actions</th>
                       </tr>

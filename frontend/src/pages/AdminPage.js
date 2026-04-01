@@ -1,4 +1,11 @@
-import { useState, useEffect, useContext, useCallback, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import {
   ShoppingCart,
   TrendingUp,
@@ -8,8 +15,10 @@ import {
   Target,
   RefreshCw,
   Bike,
+  Shield,
   X,
 } from "lucide-react";
+import logo1 from "../images/dash.png";
 import { useNavigate } from "react-router-dom";
 import {
   Chart as ChartJS,
@@ -21,7 +30,6 @@ import {
   Legend,
   ArcElement,
 } from "chart.js";
-import logo1 from "../images/dash.png";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "../components/common/AppSidebar";
 import axios from "axios";
@@ -79,11 +87,14 @@ const AdminPage = () => {
     month1Pending: 0,
     month2Pending: 0,
     month3Pending: 0,
+    totalValidInsurance: 0,
+    totalValidPuc: 0,
   });
 
   const [incompleteBuyLetters, setIncompleteBuyLetters] = useState([]);
   const [incompleteSellLetters, setIncompleteSellLetters] = useState([]);
   const [incompleteLoading, setIncompleteLoading] = useState(false);
+  const [unsoldVehicles, setUnsoldVehicles] = useState([]);
 
   const fetchVehicleStats = useCallback(async () => {
     try {
@@ -104,19 +115,42 @@ const AdminPage = () => {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-      // Handle array or object response structure
       const sellLetters = Array.isArray(resSellLetters.data)
         ? resSellLetters.data
         : resSellLetters.data.data || [];
 
+      // Fetch buy letters to compare and find available stock
+      const resBuyLetters = await axios.get(
+        `${API_BASE}/api/buy-letter?limit=2000`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const buyLetters = Array.isArray(resBuyLetters.data)
+        ? resBuyLetters.data
+        : resBuyLetters.data.buyLetters || [];
+
       // Logic to count unique sell letters (handling edits/versions)
       const uniqueSaleIds = new Set();
+      const soldRegNos = new Set();
       sellLetters.forEach((letter) => {
-        // use originalDocumentId if available (it points to the first version), else use _id
         const saleId = letter.originalDocumentId || letter._id;
         uniqueSaleIds.add(saleId);
+        if (letter.registrationNumber) {
+          soldRegNos.add(
+            String(letter.registrationNumber).trim().toLowerCase(),
+          );
+        }
       });
       const totalSoldLetters = uniqueSaleIds.size;
+
+      // Calculate unsold stock (Buys without Sells)
+      const unsoldList = buyLetters.filter((b) => {
+        if (!b.registrationNumber) return false;
+        const reg = String(b.registrationNumber).trim().toLowerCase();
+        return !soldRegNos.has(reg);
+      });
+      setUnsoldVehicles(unsoldList);
 
       const totalVehicles = vehicles.length;
       const totalBikes = vehicles.filter((v) => {
@@ -143,15 +177,19 @@ const AdminPage = () => {
 
       let insuranceExpiring = 0;
       let pucExpiring = 0;
+      let totalValidInsurance = 0;
+      let totalValidPuc = 0;
 
       sellLetters.forEach((v) => {
         if (v.insuranceExpiryDate) {
           const d = new Date(v.insuranceExpiryDate);
           if (d >= now && d <= sevenDays) insuranceExpiring++;
+          if (d >= now) totalValidInsurance++;
         }
         if (v.pucExpiryDate) {
           const d = new Date(v.pucExpiryDate);
           if (d >= now && d <= sevenDays) pucExpiring++;
+          if (d >= now) totalValidPuc++;
         }
       });
 
@@ -165,6 +203,7 @@ const AdminPage = () => {
           if (p.pucExpiry) {
             const d = new Date(p.pucExpiry);
             if (d >= now && d <= sevenDays) pucExpiring++;
+            if (d >= now) totalValidPuc++;
           }
         });
       } catch (err) {
@@ -184,6 +223,7 @@ const AdminPage = () => {
           if (ins.insuranceExpiry) {
             const d = new Date(ins.insuranceExpiry);
             if (d >= now && d <= sevenDays) insuranceExpiring++;
+            if (d >= now) totalValidInsurance++;
           }
         });
       } catch (err) {
@@ -197,6 +237,8 @@ const AdminPage = () => {
         totalSold,
         insuranceExpiring,
         pucExpiring,
+        totalValidInsurance,
+        totalValidPuc,
       }));
     } catch (e) {
       console.error("Error fetching vehicle stats", e);
@@ -277,8 +319,7 @@ const AdminPage = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const endpoint =
-        "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
+      const endpoint = "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
       const params = { limit: 2000 };
       if (search && String(search).trim() !== "")
         params.search = String(search).trim();
@@ -319,10 +360,13 @@ const AdminPage = () => {
     try {
       const token = localStorage.getItem("token");
       const API_BASE = "https://ok-motor-51l3.vercel.app";
-      const res = await axios.get(`${API_BASE}/api/dashboard/incomplete-letters`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
+      const res = await axios.get(
+        `${API_BASE}/api/dashboard/incomplete-letters`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
       if (res.data.success) {
         setIncompleteBuyLetters(res.data.data.incompleteBuy || []);
         setIncompleteSellLetters(res.data.data.incompleteSell || []);
@@ -378,6 +422,168 @@ const AdminPage = () => {
     const options = { day: "numeric", month: "short", year: "numeric" };
     return new Date(dateString).toLocaleDateString("en-IN", options);
   };
+
+  // Compute month-to-date revenue & expenses (robust to multiple monthlyData shapes)
+  const monthTotals = useMemo(() => {
+    const now = new Date();
+    const monthIndex = now.getMonth();
+    const year = now.getFullYear();
+
+    const monthly = Array.isArray(dashboardData.monthlyData)
+      ? dashboardData.monthlyData
+      : [];
+
+    const revenueFields = [
+      "revenue",
+      "totalRevenue",
+      "income",
+      "totalBuyValue",
+      "totalSellValue",
+      "totalServiceValue",
+      "sales",
+      "amount",
+      "saleAmount",
+      "total",
+    ];
+    const expenseFields = [
+      "expenses",
+      "totalExpenses",
+      "cost",
+      "expense",
+      "totalCost",
+      "paidAmount",
+      "debit",
+    ];
+
+    const getNumericValue = (obj, fields) => {
+      if (!obj) return 0;
+      for (const f of fields) {
+        if (Object.prototype.hasOwnProperty.call(obj, f)) {
+          const val = obj[f];
+          if (typeof val === "number") return val;
+          if (typeof val === "string") {
+            const n = Number(String(val).replace(/,/g, ""));
+            if (!isNaN(n)) return n;
+          }
+        }
+      }
+      return 0;
+    };
+
+    const parseMonthYearFromItem = (it) => {
+      if (!it) return null;
+      if (
+        typeof it.year === "number" &&
+        (typeof it.month === "number" || typeof it.month === "string")
+      ) {
+        const m = Number(it.month);
+        if (!isNaN(m)) return { year: it.year, monthIndex: m - 1 };
+      }
+      if (typeof it.monthIndex === "number")
+        return { year: it.year || year, monthIndex: it.monthIndex };
+      if (typeof it.monthNumber === "number")
+        return { year: it.year || year, monthIndex: it.monthNumber - 1 };
+      if (it.month) {
+        if (typeof it.month === "string") {
+          const iso = it.month.trim();
+          const m = iso.match(/^(\d{4})-(\d{1,2})/);
+          if (m) return { year: Number(m[1]), monthIndex: Number(m[2]) - 1 };
+          const m2 = iso.match(/^(\d{1,2})-(\d{4})/);
+          if (m2) return { year: Number(m2[2]), monthIndex: Number(m2[1]) - 1 };
+          const d = new Date(iso);
+          if (!isNaN(d.getTime()))
+            return { year: d.getFullYear(), monthIndex: d.getMonth() };
+          const months = [
+            "jan",
+            "feb",
+            "mar",
+            "apr",
+            "may",
+            "jun",
+            "jul",
+            "aug",
+            "sep",
+            "oct",
+            "nov",
+            "dec",
+          ];
+          const lower = iso.toLowerCase();
+          for (let i = 0; i < months.length; i++)
+            if (lower.startsWith(months[i]))
+              return { year: it.year || year, monthIndex: i };
+        }
+        if (typeof it.month === "number")
+          return { year: it.year || year, monthIndex: it.month - 1 };
+      }
+      const dateStr =
+        it.date || it.createdAt || it.saleDate || it.transactionDate || null;
+      if (dateStr) {
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime()))
+          return { year: d.getFullYear(), monthIndex: d.getMonth() };
+      }
+      return null;
+    };
+
+    let found = false;
+    let rev = 0;
+    let exp = 0;
+
+    if (monthly.length > 0) {
+      for (const item of monthly) {
+        const my = parseMonthYearFromItem(item);
+        if (my && my.year === year && my.monthIndex === monthIndex) {
+          found = true;
+          rev += getNumericValue(item, revenueFields);
+          exp += getNumericValue(item, expenseFields);
+        }
+      }
+    }
+
+    if (found) return { revenue: rev, expenses: exp };
+
+    if (monthly.length === 1) {
+      const it = monthly[0];
+      const r = getNumericValue(it, revenueFields);
+      const e = getNumericValue(it, expenseFields);
+      if (r || e) return { revenue: r, expenses: e };
+    }
+
+    if (
+      typeof dashboardData.totalRevenueThisMonth === "number" ||
+      typeof dashboardData.totalExpensesThisMonth === "number"
+    ) {
+      return {
+        revenue: dashboardData.totalRevenueThisMonth || 0,
+        expenses: dashboardData.totalExpensesThisMonth || 0,
+      };
+    }
+
+    const recent = dashboardData.recentTransactions || {};
+    const sumTx = (arr, fields) => {
+      if (!Array.isArray(arr)) return 0;
+      return arr.reduce((acc, tx) => {
+        const dateStr =
+          tx.createdAt || tx.date || tx.saleDate || tx.transactionDate || null;
+        if (!dateStr) return acc;
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return acc;
+        if (d.getFullYear() === year && d.getMonth() === monthIndex) {
+          acc += getNumericValue(tx, fields);
+        }
+        return acc;
+      }, 0);
+    };
+
+    const revenueFromRecent =
+      sumTx(recent.sell || [], revenueFields) +
+      sumTx(recent.service || [], revenueFields) +
+      sumTx(recent.advance || [], revenueFields) +
+      sumTx(recent.buy || [], revenueFields);
+    const expenseFromRecent = sumTx(recent.buy || [], expenseFields);
+
+    return { revenue: revenueFromRecent, expenses: expenseFromRecent };
+  }, [dashboardData]);
 
   const handleLogout = () => {
     logout();
@@ -438,7 +644,7 @@ const AdminPage = () => {
                 <p className="card-label">Total Services</p>
                 <p className="card-value">{dashboardData.totalServices}</p>
               </div>
-              <div className="card-icon">
+              <div className="card-icon blue">
                 <Wrench />
               </div>
             </div>
@@ -448,11 +654,11 @@ const AdminPage = () => {
             <div className="card-content">
               <div>
                 <p className="card-label">Total Revenue</p>
-                <p className="card-value currency positive">
+                <p className="card-value currency">
                   {formatCurrency(dashboardData.totalRevenue)}
                 </p>
               </div>
-              <div className="card-icon">
+              <div className="card-icon orange">
                 <TrendingUp />
               </div>
             </div>
@@ -462,11 +668,11 @@ const AdminPage = () => {
             <div className="card-content">
               <div>
                 <p className="card-label">Total Expenses</p>
-                <p className="card-value currency negative">
+                <p className="card-value currency">
                   {formatCurrency(dashboardData.totalExpenses)}
                 </p>
               </div>
-              <div className="card-icon">
+              <div className="card-icon blue">
                 <ShoppingCart />
               </div>
             </div>
@@ -476,16 +682,39 @@ const AdminPage = () => {
             <div className="card-content">
               <div>
                 <p className="card-label">Net Profit</p>
-                <p
-                  className={`card-value currency ${
-                    dashboardData.profit >= 0 ? "positive" : "negative"
-                  }`}
-                >
+                <p className={`card-value currency`}>
                   {formatCurrency(dashboardData.profit)}
                 </p>
               </div>
-              <div className="card-icon">
+              <div className="card-icon orange">
                 <Target />
+              </div>
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-content">
+              <div>
+                <p className="card-label">Revenue (This Month)</p>
+                <p className="card-value currency">
+                  {formatCurrency(monthTotals.revenue || 0)}
+                </p>
+              </div>
+              <div className="card-icon orange">
+                <TrendingUp />
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-content">
+              <div>
+                <p className="card-label">Expenses (This Month)</p>
+                <p className="card-value currency">
+                  {formatCurrency(monthTotals.expenses || 0)}
+                </p>
+              </div>
+              <div className="card-icon blue">
+                <ShoppingCart />
               </div>
             </div>
           </div>
@@ -514,7 +743,7 @@ const AdminPage = () => {
               <p className="card-label">Total Vehicles</p>
               <p className="card-value">{extraStats.totalVehicles}</p>
             </div>
-            <div className="card-icon">
+            <div className="card-icon blue">
               <Bike />
             </div>
           </div>
@@ -526,7 +755,7 @@ const AdminPage = () => {
               <p className="card-label">Total Bought</p>
               <p className="card-value">{dashboardData.totalBuyLetters || 0}</p>
             </div>
-            <div className="card-icon">
+            <div className="card-icon orange">
               <ShoppingCart />
             </div>
           </div>
@@ -538,8 +767,41 @@ const AdminPage = () => {
               <p className="card-label">Total Sold</p>
               <p className="card-value">{extraStats.totalSold}</p>
             </div>
-            <div className="card-icon">
+            <div className="card-icon blue">
               <TrendingUp />
+            </div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-content">
+            <div>
+              <p className="card-label">Total Services Done</p>
+              <p className="card-value">{dashboardData.totalServices}</p>
+            </div>
+            <div className="card-icon orange">
+              <Wrench />
+            </div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-content">
+            <div>
+              <p className="card-label">Total Valid Insurance</p>
+              <p className="card-value">{extraStats.totalValidInsurance}</p>
+            </div>
+            <div className="card-icon blue">
+              <Shield />
+            </div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-content">
+            <div>
+              <p className="card-label">Total Valid PUC</p>
+              <p className="card-value">{extraStats.totalValidPuc}</p>
+            </div>
+            <div className="card-icon orange">
+              <FileText />
             </div>
           </div>
         </div>
@@ -563,7 +825,7 @@ const AdminPage = () => {
               <p className="card-label">1st Month Pending</p>
               <p className="card-value">{extraStats.month1Pending}</p>
             </div>
-            <div className="card-icon">
+            <div className="card-icon orange">
               <Wrench />
             </div>
           </div>
@@ -574,7 +836,7 @@ const AdminPage = () => {
               <p className="card-label">2nd Month Pending</p>
               <p className="card-value">{extraStats.month2Pending}</p>
             </div>
-            <div className="card-icon">
+            <div className="card-icon blue">
               <Wrench />
             </div>
           </div>
@@ -585,7 +847,7 @@ const AdminPage = () => {
               <p className="card-label">3rd Month Pending</p>
               <p className="card-value">{extraStats.month3Pending}</p>
             </div>
-            <div className="card-icon">
+            <div className="card-icon orange">
               <Wrench />
             </div>
           </div>
@@ -603,11 +865,8 @@ const AdminPage = () => {
       >
         Approaching Expiry (Sold Vehicles - 7 Days)
       </h3>
-      <div
-        className="cards-grid"
-        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}
-      >
-        <div className="card" style={{ backgroundColor: "#ef4444" }}>
+      <div className="cards-grid">
+        <div className="card" style={{ backgroundColor: "#F7931E" }}>
           <div className="card-content">
             <div>
               <p className="card-label" style={{ color: "white" }}>
@@ -622,7 +881,7 @@ const AdminPage = () => {
             </div>
           </div>
         </div>
-        <div className="card" style={{ backgroundColor: "#ef4444" }}>
+        <div className="card" style={{ backgroundColor: "#F7931E" }}>
           <div className="card-content">
             <div>
               <p className="card-label" style={{ color: "white" }}>
@@ -674,6 +933,19 @@ const AdminPage = () => {
 
   const FreeServicesTable = () => {
     const [serviceFilter, setServiceFilter] = useState("all");
+    const [usedFilter, setUsedFilter] = useState("all");
+    const [sortBy, setSortBy] = useState(
+      () => localStorage.getItem("sellDateSortBy") || "reminderScore",
+    ); // 'reminderScore' or 'saleDate'
+    const [sortOrder, setSortOrder] = useState(
+      () => localStorage.getItem("sellDateSortOrder") || "asc",
+    ); // 'asc' or 'desc'
+
+    useEffect(() => {
+      localStorage.setItem("sellDateSortBy", sortBy);
+      localStorage.setItem("sellDateSortOrder", sortOrder);
+    }, [sortBy, sortOrder]);
+
     const normalize = (s = "") =>
       String(s)
         .toLowerCase()
@@ -696,6 +968,10 @@ const AdminPage = () => {
       ];
       const used = row.usedCount || 0;
       const today = new Date();
+
+      const fourMonthsFromSale = new Date(row.saleDate);
+      fourMonthsFromSale.setMonth(fourMonthsFromSale.getMonth() + 4);
+      const isExpired = used === 0 && today > fourMonthsFromSale;
 
       const pending = months
         .map((m, idx) => ({
@@ -722,12 +998,31 @@ const AdminPage = () => {
       const nextPending =
         pendingWithDays.length > 0 ? pendingWithDays[0] : null;
 
-      const reminderScore = nextPending ? nextPending.daysUntil : 999999;
+      const reminderScore = isExpired
+        ? 999999
+        : nextPending
+          ? nextPending.daysUntil
+          : 999999;
 
-      return { row, months, used, pendingWithDays, nextPending, reminderScore };
+      return {
+        row,
+        months,
+        used,
+        pendingWithDays,
+        nextPending,
+        reminderScore,
+        isExpired,
+      };
     });
 
-    processed.sort((a, b) => a.reminderScore - b.reminderScore);
+    processed.sort((a, b) => {
+      if (sortBy === "saleDate") {
+        const dateA = new Date(a.row.saleDate).getTime() || 0;
+        const dateB = new Date(b.row.saleDate).getTime() || 0;
+        return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+      }
+      return a.reminderScore - b.reminderScore;
+    });
 
     const ordinal = (n) => {
       if (n === 1) return "1st";
@@ -784,10 +1079,10 @@ const AdminPage = () => {
     const fsThStyle = {
       padding: "11px 14px",
       textAlign: "left",
-      background: "#09121a",
+      background: "#0E0F3B",
       color: "#ffffff",
-      fontSize: "0.75rem",
-      fontWeight: 700,
+      fontSize: "0.95rem",
+      fontWeight: 500,
       letterSpacing: "0.04em",
       whiteSpace: "nowrap",
       borderBottom: "none",
@@ -801,7 +1096,26 @@ const AdminPage = () => {
       verticalAlign: "middle",
     };
 
-    const reminderBadge = (nextPending, usedCount) => {
+    const reminderBadge = (nextPending, usedCount, isExpired = false) => {
+      if (isExpired) {
+        return (
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              padding: "3px 10px",
+              borderRadius: 20,
+              background: "#fee2e2",
+              color: "#ef4444",
+              fontSize: "0.72rem",
+              fontWeight: 700,
+            }}
+          >
+            ❌ Expired
+          </span>
+        );
+      }
       if ((usedCount || 0) >= 3)
         return (
           <span
@@ -910,7 +1224,24 @@ const AdminPage = () => {
       );
     };
 
-    const usedBadge = (usedCount) => {
+    const usedBadge = (usedCount, isExpired = false) => {
+      if (isExpired) {
+        return (
+          <span
+            style={{
+              display: "inline-block",
+              padding: "2px 10px",
+              borderRadius: 20,
+              background: "#fee2e2",
+              color: "#991b1b",
+              fontSize: "0.78rem",
+              fontWeight: 700,
+            }}
+          >
+            Expired
+          </span>
+        );
+      }
       const used = usedCount || 0;
       const color = used === 0 ? "#64748b" : used === 3 ? "#166534" : "#854d0e";
       const bg = used === 0 ? "#f1f5f9" : used === 3 ? "#dcfce7" : "#fef9c3";
@@ -1013,31 +1344,62 @@ const AdminPage = () => {
             >
               <thead>
                 <tr>
-                  {[
-                    "Sell Date",
-                    "Buyer Name",
-                    "Phone",
-                    "Reg. Number",
-                    "Brand",
-                    "Model",
-                    "Used",
-                    "Reminder",
-                  ].map((h) => (
-                    <th key={h} style={fsThStyle}>
-                      {h}
-                    </th>
-                  ))}
+                  <th
+                    style={{ ...fsThStyle, cursor: "pointer" }}
+                    onClick={() => {
+                      setSortBy("saleDate");
+                      setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
+                    }}
+                  >
+                    Sell Date{" "}
+                    {sortBy === "saleDate"
+                      ? sortOrder === "asc"
+                        ? "↑"
+                        : "↓"
+                      : "↕"}
+                  </th>
+                  <th style={fsThStyle}>Buyer Name</th>
+                  <th style={fsThStyle}>Phone</th>
+                  <th style={fsThStyle}>Reg. Number</th>
+                  <th style={fsThStyle}>Brand</th>
+                  <th style={fsThStyle}>Model</th>
+                  <th style={fsThStyle}>
+                    Used
+                    <select
+                      value={usedFilter}
+                      onChange={(e) => setUsedFilter(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        marginLeft: 6,
+                        padding: "2px 4px",
+                        fontSize: "0.7rem",
+                        color: "#1e293b",
+                        borderRadius: 4,
+                        border: "none",
+                      }}
+                    >
+                      <option value="all">All</option>
+                      <option value="0">0</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                    </select>
+                  </th>
+                  <th style={fsThStyle}>Reminder</th>
                 </tr>
               </thead>
               <tbody>
                 {processed
                   .filter((item) => {
+                    if (usedFilter !== "all") {
+                      if (item.used !== Number(usedFilter)) return false;
+                    }
                     if (serviceFilter === "all") return true;
                     const sel = Number(serviceFilter);
                     return item.nextPending && item.nextPending.idx === sel;
                   })
                   .map((item, idx) => {
-                    const { row, nextPending } = item;
+                    const { row, nextPending, isExpired, } = item;
                     return (
                       <tr
                         key={`${row.registrationNumber}-${idx}`}
@@ -1049,14 +1411,18 @@ const AdminPage = () => {
                         }}
                         style={{
                           cursor: "pointer",
-                          background: "#ffffff",
+                          background: isExpired ? "#fef2f2" : "#ffffff",
                           transition: "background 0.15s",
                         }}
                         onMouseEnter={(e) =>
-                          (e.currentTarget.style.background = "#ffffffff")
+                          (e.currentTarget.style.background = isExpired
+                            ? "#fee2e2"
+                            : "#ffffffff")
                         }
                         onMouseLeave={(e) =>
-                          (e.currentTarget.style.background = "#FFFFFF")
+                          (e.currentTarget.style.background = isExpired
+                            ? "#fef2f2"
+                            : "#FFFFFF")
                         }
                       >
                         <td style={fsTdStyle}>
@@ -1077,11 +1443,11 @@ const AdminPage = () => {
                         <td style={fsTdStyle}>
                           <span
                             style={{
-                              background: "#EBF4F6",
-                              color: "#088395",
-                              padding: "2px 8px",
+                              background: "#0E0F3B",
+                              color: "#ffffff",
+                              padding: "4px 10px",
                               borderRadius: 6,
-                              fontWeight: 700,
+                              fontWeight: 500,
                               fontSize: "0.75rem",
                             }}
                           >
@@ -1090,9 +1456,11 @@ const AdminPage = () => {
                         </td>
                         <td style={fsTdStyle}>{row.vehicleBrand || "—"}</td>
                         <td style={fsTdStyle}>{row.vehicleModel || "—"}</td>
-                        <td style={fsTdStyle}>{usedBadge(row.usedCount)}</td>
                         <td style={fsTdStyle}>
-                          {reminderBadge(nextPending, row.usedCount)}
+                          {usedBadge(row.usedCount, isExpired)}
+                        </td>
+                        <td style={fsTdStyle}>
+                          {reminderBadge(nextPending, row.usedCount, isExpired)}
                         </td>
                       </tr>
                     );
@@ -2719,6 +3087,163 @@ const AdminPage = () => {
     );
   };
 
+  const UnsoldVehiclesTable = () => {
+    if (!unsoldVehicles || unsoldVehicles.length === 0) return null;
+
+    return (
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: 16,
+          boxShadow: "0 4px 24px rgba(7,25,82,0.08)",
+          padding: "28px 28px 20px",
+          marginBottom: 32,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 18,
+          }}
+        >
+          <h3
+            style={{
+              fontSize: "1.15rem",
+              fontWeight: 700,
+              color: "#071952",
+              margin: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <span
+              style={{
+                background: "#ffffff",
+                borderRadius: 8,
+                padding: "4px 10px",
+                color: "#088395",
+                fontSize: "1rem",
+              }}
+            >
+              🚗
+            </span>
+            Available Stock (Bought but Not Sold)
+            <span
+              style={{ fontSize: "0.8rem", fontWeight: 500, color: "#64748b" }}
+            >
+              ({unsoldVehicles.length} vehicles)
+            </span>
+          </h3>
+        </div>
+
+        <div
+          style={{
+            overflowX: "auto",
+            borderRadius: 12,
+            border: "1.5px solid #e2e8f0",
+            boxShadow: "0 1px 4px rgba(7,25,82,0.04)",
+          }}
+        >
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "0.8rem",
+            }}
+          >
+            <thead>
+              <tr>
+                {[
+                  "Reg. Number",
+                  "Vehicle",
+                  "Seller Name",
+                  "Amount",
+                  "Buy Date",
+                  "Created By",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    style={{
+                      padding: "11px 14px",
+                      textAlign: "left",
+                      background: "#0E0F3B",
+                      color: "#ffffff",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      letterSpacing: "0.04em",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {unsoldVehicles.map((letter, idx) => (
+                <tr
+                  key={letter._id || idx}
+                  onClick={() => {
+                    navigate(`/buy-history`);
+                  }}
+                  style={{
+                    cursor: "pointer",
+                    background: "#ffffff",
+                    borderBottom: "1px solid #f1f5f9",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = "#f8fafc")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = "#ffffff")
+                  }
+                >
+                  <td style={{ padding: "10px 14px", fontWeight: 600 }}>
+                    <span
+                      style={{
+                        background: "#EBF4F6",
+                        color: "#0E0F3B",
+                        padding: "2px 8px",
+                        borderRadius: 6,
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {letter.registrationNumber || "—"}
+                    </span>
+                  </td>
+                  <td style={{ padding: "10px 14px" }}>
+                    {`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim()}
+                  </td>
+                  <td style={{ padding: "10px 14px" }}>
+                    {letter.sellerName || "—"}
+                  </td>
+                  <td
+                    style={{
+                      padding: "10px 14px",
+                      color: "#166534",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {letter.saleAmount ? `₹${letter.saleAmount}` : "—"}
+                  </td>
+                  <td style={{ padding: "10px 14px", color: "#64748b" }}>
+                    {formatDate(letter.saleDate || letter.createdAt)}
+                  </td>
+                  <td style={{ padding: "10px 14px", color: "#64748b" }}>
+                    {letter.user?.name || "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   // NOTE: removed automatic refocus when modal closes to avoid reopen loop
   // (closing modal previously focused the search input which re-opened the modal)
 
@@ -2755,6 +3280,7 @@ const AdminPage = () => {
               <FreeServicesTable />
               <PucReminderTable />
               <InsuranceReminderTable />
+              <UnsoldVehiclesTable />
               <IncompleteBuyLettersTable />
               <IncompleteSellLettersTable />
               <ChartsSection />
@@ -3006,15 +3532,20 @@ const AdminPage = () => {
         }
 
         .card {
-          background: rgba(255, 255, 255, 0.9);
-          backdrop-filter: blur(10px);
-          border-radius: 0.75rem;
-          padding: 1.5rem;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-          transition: transform 0.2s, box-shadow 0.2s;
-          position: relative;
-          overflow: hidden;
-        }
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+
+  /* ✨ layered shadow */
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.05),
+    0 8px 20px rgba(0, 0, 0, 0.06);
+
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
 
         .card:hover {
           transform: translateY(-4px);
@@ -3079,27 +3610,13 @@ const AdminPage = () => {
 
         .card-icon {
           padding: 0.75rem;
-          border-radius: 50%;
+          border-radius: 30%;
           display: flex;
           align-items: center;
           justify-content: center;
+          color: white; 
         }
 
-        .card.blue .card-icon {
-          background-color: rgba(8, 131, 149, 0.15);
-        }
-
-        .card.green .card-icon {
-          background-color: rgba(55, 183, 195, 0.15);
-        }
-
-        .card.purple .card-icon {
-          background-color: #ede9fe;
-        }
-
-        .card.amber .card-icon {
-          background-color: #fef3c7;
-        }
 
         /* Revenue Card */
         .revenue-card {
@@ -3658,6 +4175,7 @@ const AdminPage = () => {
         }
 
         @media (max-width: 480px) {
+        
           .cards-grid {
             grid-template-columns: 1fr 1fr;
           }
@@ -3831,6 +4349,11 @@ const AdminPage = () => {
           cursor: pointer;
           padding: 6px;
         }
+
+        .blue {
+          background: #0E0F3B;}
+          .orange {
+            background: #F7931E;}
       `}</style>
     </div>
   );

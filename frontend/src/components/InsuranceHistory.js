@@ -1,14 +1,10 @@
 import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
-import {
-  Shield,
-  Trash2,
-  Edit,
-  Search,
-} from "lucide-react";
+import { Shield, Trash2, Edit, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
+import TableFilter from "./common/TableFilter";
 
 const InsuranceHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -18,6 +14,7 @@ const InsuranceHistory = () => {
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({ company: null, expiry: null });
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -225,13 +222,49 @@ const InsuranceHistory = () => {
     },
   };
 
-  const filteredHistory = searchTerm
-    ? history.filter(
-        (item) =>
-          item.regNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.personName?.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
-    : history;
+  const filteredHistory = (history || []).filter((item) => {
+    const q = String(searchTerm || "").toLowerCase();
+    const matchesSearch =
+      !q ||
+      (item.regNo || "").toLowerCase().includes(q) ||
+      (item.personName || "").toLowerCase().includes(q);
+    if (!matchesSearch) return false;
+
+
+
+    // Expiry date filter
+    const eFilter = filters.expiry;
+    if (eFilter && eFilter.op) {
+      const dStr = item.insuranceExpiry || item.insuranceExpiryDate;
+      if (!dStr) return false;
+      const d = new Date(dStr);
+      if (isNaN(d.getTime())) return false;
+      const v = new Date(eFilter.value);
+      // require value for non-range ops; for between allow one-sided
+      if (eFilter.op !== "between" && isNaN(v.getTime())) return false;
+      if (eFilter.op === "eq" && d.toDateString() !== v.toDateString())
+        return false;
+      if (eFilter.op === "before" && !(d < v)) return false;
+      if (eFilter.op === "after" && !(d > v)) return false;
+      if (eFilter.op === "between") {
+        const v2 = new Date(eFilter.value2);
+        const hasV1 = !isNaN(v.getTime());
+        const hasV2 = !isNaN(v2.getTime());
+        if (!hasV1 && !hasV2) return false;
+        if (hasV1 && hasV2) {
+          const min = v < v2 ? v : v2;
+          const max = v > v2 ? v : v2;
+          if (d < min || d > max) return false;
+        } else if (hasV1) {
+          if (d < v) return false;
+        } else if (hasV2) {
+          if (d > v2) return false;
+        }
+      }
+    }
+
+    return true;
+  });
 
   return (
     <div
@@ -284,7 +317,11 @@ const InsuranceHistory = () => {
             {loading ? (
               <p>Loading...</p>
             ) : filteredHistory.length === 0 ? (
-              <p>{searchTerm ? `No records found for "${searchTerm}"` : "No insurance records found."}</p>
+              <p>
+                {searchTerm
+                  ? `No records found for "${searchTerm}"`
+                  : "No insurance records found."}
+              </p>
             ) : (
               <table style={styles.table}>
                 <thead>
@@ -295,8 +332,42 @@ const InsuranceHistory = () => {
                     <th style={styles.tableHeader}>Vehicle</th>
                     <th style={styles.tableHeader}>Reg No</th>
                     <th style={styles.tableHeader}>Policy No</th>
-                    <th style={styles.tableHeader}>Company</th>
-                    <th style={styles.tableHeader}>Expiry Date</th>
+                    <th style={styles.tableHeader}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 8,
+                        }}
+                      >
+                        <span>Company</span>
+                        
+                      </div>
+                    </th>
+                    <th style={styles.tableHeader}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 8,
+                        }}
+                      >
+                        <span>Expiry Date</span>
+                        <TableFilter
+                          type="date"
+                          placeholder="yyyy-mm-dd"
+                          rangeOnly={true}
+                          onApply={(f) =>
+                            setFilters((p) => ({ ...p, expiry: f }))
+                          }
+                          onClear={() =>
+                            setFilters((p) => ({ ...p, expiry: null }))
+                          }
+                        />
+                      </div>
+                    </th>
                     <th style={styles.tableHeader}>Actions</th>
                   </tr>
                 </thead>
@@ -305,23 +376,40 @@ const InsuranceHistory = () => {
                     <tr key={item._id}>
                       <td style={styles.tableCell}>{item.personName}</td>
                       <td style={styles.tableCell}>{item.personPhone}</td>
-                      <td style={styles.tableCell}>{item.personEmail || item.email || ""}</td>
-                      <td style={styles.tableCell}>{item.brand} {item.vehicleModel} ({item.year})</td>
+                      <td style={styles.tableCell}>
+                        {item.personEmail || item.email || ""}
+                      </td>
+                      <td style={styles.tableCell}>
+                        {item.brand} {item.vehicleModel} ({item.year})
+                      </td>
                       <td style={styles.tableCell}>{item.regNo}</td>
                       <td style={styles.tableCell}>{item.insurancePolicyNo}</td>
                       <td style={styles.tableCell}>{item.insuranceCompany}</td>
                       <td style={styles.tableCell}>
                         {(() => {
-                          const d = item.insuranceExpiry || item.insuranceExpiryDate;
+                          const d =
+                            item.insuranceExpiry || item.insuranceExpiryDate;
                           if (!d) return "—";
                           const parsed = new Date(d);
-                          return isNaN(parsed) ? "—" : parsed.toLocaleDateString("en-IN");
+                          return isNaN(parsed)
+                            ? "—"
+                            : parsed.toLocaleDateString("en-IN");
                         })()}
                       </td>
                       <td style={styles.tableCell}>
                         <div style={{ display: "flex", gap: "8px" }}>
-                          <button style={styles.iconButton} onClick={() => handleEdit(item)}><Edit size={16} /></button>
-                          <button style={styles.iconButton} onClick={() => handleDelete(item._id)}><Trash2 size={16} /></button>
+                          <button
+                            style={styles.iconButton}
+                            onClick={() => handleEdit(item)}
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            style={styles.iconButton}
+                            onClick={() => handleDelete(item._id)}
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>

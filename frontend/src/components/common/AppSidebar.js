@@ -20,6 +20,15 @@ import {
   Wallet,
   Wrench,
   X,
+  PlusCircle,
+  List,
+  FilePlus,
+  History,
+  GitPullRequest,
+  ShieldPlus,
+  ShieldCheck,
+  UserPlus,
+  Users as UsersIcon,
 } from "lucide-react";
 import { getSidebarMenu } from "../../config/sidebarMenu";
 import { sidebarStyles } from "../../styles/sidebarStyles";
@@ -41,6 +50,15 @@ const ICONS = {
   ImageIcon,
   Bike,
   Settings,
+  PlusCircle,
+  List,
+  FilePlus,
+  History,
+  GitPullRequest,
+  ShieldPlus,
+  ShieldCheck,
+  UserPlus,
+  UsersIcon,
 };
 
 const resolvePath = (path, userRole) => {
@@ -79,7 +97,9 @@ const AppSidebar = ({ user, onLogout }) => {
       return isActivePath(pathname, resolvePath(item.path, user?.role));
     }
     if (item.submenu) {
-      return item.submenu.some((subItem) => isActivePath(pathname, subItem.path));
+      return item.submenu.some((subItem) =>
+        isActivePath(pathname, subItem.path),
+      );
     }
     return false;
   };
@@ -88,7 +108,9 @@ const AppSidebar = ({ user, onLogout }) => {
     if (expandedMenus[item.name] !== undefined) {
       return expandedMenus[item.name];
     }
-    return item.submenu?.some((subItem) => isActivePath(pathname, subItem.path));
+    return item.submenu?.some((subItem) =>
+      isActivePath(pathname, subItem.path),
+    );
   };
 
   const toggleMenu = (menuName) => {
@@ -100,20 +122,36 @@ const AppSidebar = ({ user, onLogout }) => {
 
   return (
     <>
-      <div style={{ ...sidebarStyles.mobileTopBar, display: isMobile ? "flex" : "none" }}>
+      <div
+        style={{
+          ...sidebarStyles.mobileTopBar,
+          display: isMobile ? "flex" : "none",
+        }}
+      >
         <button
           type="button"
-          style={{ ...sidebarStyles.hamburgerButton, background: "transparent", border: "none" }}
+          style={{
+            ...sidebarStyles.hamburgerButton,
+            background: "transparent",
+            border: "none",
+          }}
           onClick={() => setIsSidebarOpen((prev) => !prev)}
           aria-label="Toggle sidebar"
         >
-          {isSidebarOpen ? <X size={30} color="#ffffff" /> : <Menu size={30} color="#ffffff" />}
+          {isSidebarOpen ? (
+            <X size={30} color="#ffffff" />
+          ) : (
+            <Menu size={30} color="#ffffff" />
+          )}
         </button>
         <img src={mobileLogo} alt="OK Motor" style={sidebarStyles.mobileLogo} />
       </div>
 
       {isMobile && isSidebarOpen && (
-        <div style={sidebarStyles.overlay} onClick={() => setIsSidebarOpen(false)} />
+        <div
+          style={sidebarStyles.overlay}
+          onClick={() => setIsSidebarOpen(false)}
+        />
       )}
 
       <aside
@@ -124,7 +162,9 @@ const AppSidebar = ({ user, onLogout }) => {
                 position: "fixed",
                 top: 0,
                 left: 0,
-                transform: isSidebarOpen ? "translateX(0)" : "translateX(-100%)",
+                transform: isSidebarOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
               }
             : {
                 transform: "translateX(0)",
@@ -133,7 +173,9 @@ const AppSidebar = ({ user, onLogout }) => {
       >
         <div style={sidebarStyles.header}>
           <img src={sidebarLogo} alt="OK Motor" style={sidebarStyles.logo} />
-          <p style={sidebarStyles.welcomeText}>Welcome, {user?.name || "User"}</p>
+          <p style={sidebarStyles.welcomeText}>
+            Welcome, {user?.name || "User"}
+          </p>
         </div>
 
         <nav style={sidebarStyles.nav}>
@@ -158,11 +200,21 @@ const AppSidebar = ({ user, onLogout }) => {
                   }}
                 >
                   <div style={sidebarStyles.menuItemContent}>
-                    <IconComponent size={19} style={sidebarStyles.menuIcon} />
+                    <IconComponent
+                      size={19}
+                      style={{
+                        ...sidebarStyles.menuIcon,
+                        ...(active ? { color: "#0E0F3B" } : {}),
+                      }}
+                    />
                     <span style={sidebarStyles.menuText}>{item.name}</span>
                   </div>
                   {item.submenu ? (
-                    submenuOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />
+                    submenuOpen ? (
+                      <ChevronDown size={16} />
+                    ) : (
+                      <ChevronRight size={16} />
+                    )
                   ) : null}
                 </div>
 
@@ -170,23 +222,37 @@ const AppSidebar = ({ user, onLogout }) => {
                   <div
                     style={{
                       ...sidebarStyles.submenu,
-                      maxHeight: submenuOpen ? `${item.submenu.length * 46}px` : "0px",
+                      maxHeight: submenuOpen
+                        ? `${item.submenu.length * 46}px`
+                        : "0px",
                       opacity: submenuOpen ? 1 : 0,
                       transition: "max-height 0.35s ease, opacity 0.25s ease",
                     }}
                   >
                     {item.submenu.map((subItem) => {
                       const subActive = isActivePath(pathname, subItem.path);
+                      const SubIcon = ICONS[subItem.icon] || ChevronRight;
                       return (
                         <div
                           key={subItem.name}
                           style={{
                             ...sidebarStyles.submenuItem,
-                            ...(subActive ? sidebarStyles.submenuItemActive : {}),
+                            ...(subActive
+                              ? sidebarStyles.submenuItemActive
+                              : {}),
                           }}
                           onClick={() => handleNavigate(subItem.path)}
                         >
-                          {subItem.name}
+                          <SubIcon
+                            size={16}
+                            style={{
+                              ...sidebarStyles.menuIcon,
+                              ...(subActive ? { color: "#ffffff" } : {}),
+                            }}
+                          />
+                          <span style={sidebarStyles.menuText}>
+                            {subItem.name}
+                          </span>
                         </div>
                       );
                     })}
