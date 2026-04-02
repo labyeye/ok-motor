@@ -80,6 +80,107 @@ const SellLetterHistory = () => {
     note: { x: 60, y: 33, size: 10 },
   };
 
+  // Helper: parse an item's sale datetime (prefer `saleDate`+`saleTime`, fallback to `createdAt`)
+  const parseSaleDateTime = (item) => {
+    try {
+      if (!item) return new Date(0);
+
+      const parseDateString = (ds) => {
+        if (!ds) return null;
+        if (ds instanceof Date) return ds;
+        // Handle dd/mm/yyyy -> convert to yyyy-mm-dd
+        if (typeof ds === "string" && ds.includes("/")) {
+          const parts = ds.split("/").map((s) => s.trim());
+          if (parts.length >= 3) {
+            const [d, m, y] = parts;
+            // guard against already yyyy/mm/dd
+            if (y.length === 4) return new Date(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+          }
+        }
+        // Last resort: let Date try to parse
+        return new Date(ds);
+      };
+
+      const parseTimeString = (ts) => {
+        if (!ts) return "00:00:00";
+        if (typeof ts !== "string") ts = String(ts);
+        ts = ts.trim();
+        // If format like '07:30' -> add seconds
+        if (/^\d{1,2}:\d{2}$/.test(ts)) return `${ts}:00`;
+        // If format like '07:30:45' -> ok
+        if (/^\d{1,2}:\d{2}:\d{2}$/.test(ts)) return ts;
+        // If contains AM/PM e.g. '07:30 AM' or '7:30pm'
+        const ampmMatch = ts.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])$/);
+        if (ampmMatch) {
+          let hh = Number(ampmMatch[1]);
+          const mm = ampmMatch[2];
+          const ss = ampmMatch[3] || "00";
+          const ampm = ampmMatch[4].toLowerCase();
+          if (ampm === "pm" && hh !== 12) hh += 12;
+          if (ampm === "am" && hh === 12) hh = 0;
+          return `${String(hh).padStart(2, "0")}:${mm}:${ss}`;
+        }
+        // Fallback: try to extract hh:mm
+        const basic = ts.match(/(\d{1,2}):(\d{2})/);
+        if (basic) return `${basic[1].padStart(2, "0")}:${basic[2]}:00`;
+        return "00:00:00";
+      };
+
+      if (item.saleDate) {
+        const d = parseDateString(item.saleDate);
+        if (item.saleTime) {
+          const t = parseTimeString(item.saleTime);
+          // If d is valid date
+          if (d && !isNaN(d.getTime())) {
+            // Combine as ISO
+            const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+            return new Date(`${isoDate}T${t}`);
+          }
+          return new Date(`${item.saleDate}T${t}`);
+        }
+        if (d && !isNaN(d.getTime())) return d;
+        return new Date(item.saleDate);
+      }
+
+      if (item.createdAt) return new Date(item.createdAt);
+      return new Date(0);
+    } catch (e) {
+      return new Date(0);
+    }
+  };
+
+  // Format a letter's sale datetime for display (date and optional time)
+  const formatSaleDateTimeDisplay = (letter) => {
+    if (!letter) return "";
+    const dt = parseSaleDateTime(letter);
+    if (!dt || isNaN(dt.getTime())) return "";
+    const day = String(dt.getDate()).padStart(2, "0");
+    const month = String(dt.getMonth() + 1).padStart(2, "0");
+    const year = dt.getFullYear();
+    const datePart = `${day}/${month}/${year}`;
+    // If letter has explicit saleTime, prefer formatting that
+    let timePart = "";
+    if (letter.saleTime) {
+      // reuse formatTime12Hour helper if present
+      try {
+        const t = formatTime12Hour(letter.saleTime);
+        if (t) timePart = t;
+      } catch (e) {
+        // ignore
+      }
+    } else {
+      // if parsed datetime has non-zero time, show 12-hour time
+      if (dt.getHours() !== 0 || dt.getMinutes() !== 0) {
+        const hh = dt.getHours();
+        const mm = dt.getMinutes();
+        const ampm = hh >= 12 ? "PM" : "AM";
+        const hh12 = hh % 12 || 12;
+        timePart = `${String(hh12).padStart(2, "0")}:${String(mm).padStart(2, "0")} ${ampm}`;
+      }
+    }
+    return timePart ? `${datePart}\n${timePart}` : datePart;
+  };
+
   const englishFieldPositions = {
     vehicleName: { x: 284, y: 680, size: 11 },
     vehicleModel: { x: 93, y: 660, size: 11 },
@@ -343,7 +444,13 @@ const SellLetterHistory = () => {
             `https://ok-motor-51l3.vercel.app/api/sell-letters/my-letters?page=${currentPage}`,
             { headers: {} },
           );
-          setSellLetters(response.data);
+          // normalize response to array
+          const items = Array.isArray(response.data)
+            ? response.data
+            : response.data?.data || [];
+          // sort by saleDate/saleTime (most recent first), fallback to createdAt
+          items.sort((a, b) => parseSaleDateTime(b) - parseSaleDateTime(a));
+          setSellLetters(items);
         } else {
           console.log("Offline mode - loading sell letters from local storage");
           const offlineStorage = (await import("../services/offlineStorage"))
@@ -352,7 +459,7 @@ const SellLetterHistory = () => {
 
           if (result.success && result.data) {
             const sortedData = result.data.sort(
-              (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+              (a, b) => parseSaleDateTime(b) - parseSaleDateTime(a),
             );
             setSellLetters(sortedData);
           } else {
@@ -371,8 +478,7 @@ const SellLetterHistory = () => {
 
             if (result.success && result.data) {
               const sortedData = result.data.sort(
-                (a, b) =>
-                  new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+                (a, b) => parseSaleDateTime(b) - parseSaleDateTime(a),
               );
               setSellLetters(sortedData);
             }
@@ -3755,7 +3861,11 @@ const SellLetterHistory = () => {
                                 )}
                               </td>
                               <td style={styles.tableCell}>
-                                {formatDate(letter.createdAt)}
+                                {String(formatSaleDateTimeDisplay(letter) || "")
+                                  .split("\n")
+                                  .map((line, idx) => (
+                                    <div key={idx}>{line}</div>
+                                  ))}
                                 {letter.editedAt && (
                                   <div
                                     style={{

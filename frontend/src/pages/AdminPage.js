@@ -3268,13 +3268,20 @@ const AdminPage = () => {
 
           <div className="history-search-container">
             <div className="history-search-box">
-              <Search size={18} className="history-search-icon" />
+              <Search
+                size={18}
+                className="history-search-icon"
+                onClick={() => setIsHistoryModalOpen(true)}
+                style={{ cursor: "pointer" }}
+              />
               <input
                 type="text"
                 placeholder="Search vehicles (reg. no, model, name)..."
                 value={historyQuery}
                 ref={historyInputRef}
-                onClick={() => setIsHistoryModalOpen(true)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") setIsHistoryModalOpen(true);
+                }}
                 onChange={(e) => {
                   setHistoryQuery(e.target.value);
                 }}
