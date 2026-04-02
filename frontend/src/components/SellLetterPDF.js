@@ -1208,32 +1208,42 @@ const SellLetterForm = () => {
     return preservedDocs;
   };
 
-  const isLikelyImagePreviewUrl = (url) => {
-    if (!url || typeof url !== "string") return false;
-    if (url.startsWith("data:image/")) return true;
-    return /\.(png|jpe?g|webp|gif|bmp|svg)(\?|#|$)/i.test(url);
-  };
-
   const renderPreviewMedia = (url, alt, style, small = false) => {
-    if (!url) return null;
-    if (isLikelyImagePreviewUrl(url)) {
-      return <img src={url} alt={alt} style={style} />;
-    }
-    return (
-      <a
-        href={url}
-        target="_blank"
-        rel="noreferrer"
-        style={small ? styles.previewDocCardSmall : styles.previewDocCard}
-        title="Open document"
-      >
-        <FileText size={small ? 18 : 22} />
-        <span style={{ fontSize: small ? "11px" : "12px" }}>
-          {small ? "Doc" : "Document"}
-        </span>
-      </a>
-    );
-  };
+  if (!url) return null;
+
+  return (
+    <img
+      src={url}
+      alt={alt}
+      style={style}
+      onError={(e) => {
+        // Image failed — swap to a clickable document link
+        const a = document.createElement("a");
+        a.href = url;
+        a.target = "_blank";
+        a.rel = "noreferrer";
+        a.title = "Open document";
+        Object.assign(a.style, {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: "6px",
+          background: "#f8fafc",
+          border: "1px solid #e2e8f0",
+          borderRadius: "6px",
+          color: "#334155",
+          textDecoration: "none",
+          ...(small
+            ? { width: "80px", height: "60px", fontSize: "11px" }
+            : { width: "100%", maxWidth: "320px", minHeight: "84px", marginTop: "8px", fontSize: "12px" }),
+        });
+        a.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Document</span>`;
+        e.target.replaceWith(a);
+      }}
+    />
+  );
+};
 
   const saveToDatabase = async () => {
     try {
