@@ -95,65 +95,68 @@ const AdminPage = () => {
   const [incompleteSellLetters, setIncompleteSellLetters] = useState([]);
   const [incompleteLoading, setIncompleteLoading] = useState(false);
   const [unsoldVehicles, setUnsoldVehicles] = useState([]);
+  const [sellLettersState, setSellLettersState] = useState([]);
 
   const fetchVehicleStats = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const API_BASE = "https://ok-motor-51l3.vercel.app";
-      const res = await axios.get(`${API_BASE}/api/vehicles?limit=2000`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const vehicles = res.data.vehicles || [];
+      const headers = { headers: { Authorization: `Bearer ${token}` } };
 
-      // Fetch incomplete data
-      fetchIncompleteLetters();
+      // Parallelize the independent API calls to reduce overall latency
+      const vehiclesPromise = axios.get(`${API_BASE}/api/vehicles?limit=2000`, headers);
+      const sellLettersPromise = axios.get(`${API_BASE}/api/sell-letters?limit=2000`, headers);
+      const buyLettersPromise = axios.get(`${API_BASE}/api/buy-letter?limit=2000`, headers);
+      const pucPromise = axios.get(`${API_BASE}/api/puc?limit=2000`, headers).catch(() => ({ data: [] }));
+      const insurancePromise = axios
+        .get(`${API_BASE}/api/insurance?limit=2000`, headers)
+        .catch(() => ({ data: [] }));
 
-      // Fetch sell letters for accurate sold count
-      const resSellLetters = await axios.get(
-        `${API_BASE}/api/sell-letters?limit=2000`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      const sellLetters = Array.isArray(resSellLetters.data)
+      const [vehiclesRes, resSellLetters, resBuyLetters, resPUC, resInsurance] = await Promise.all([
+        vehiclesPromise,
+        sellLettersPromise,
+        buyLettersPromise,
+        pucPromise,
+        insurancePromise,
+      ]);
+
+      const vehicles = vehiclesRes?.data?.vehicles || vehiclesRes?.data || [];
+
+      // Normalize different response shapes
+      const sellLetters = Array.isArray(resSellLetters?.data)
         ? resSellLetters.data
-        : resSellLetters.data.data || [];
+        : resSellLetters?.data?.data || [];
 
-      // Fetch buy letters to compare and find available stock
-      const resBuyLetters = await axios.get(
-        `${API_BASE}/api/buy-letter?limit=2000`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      const buyLetters = Array.isArray(resBuyLetters.data)
+      // Cache sell letters for reuse by other dashboard tables to avoid
+      // duplicate heavy requests (PUC / Insurance tables also request this)
+      setSellLettersState(Array.isArray(sellLetters) ? sellLetters : []);
+
+      const buyLetters = Array.isArray(resBuyLetters?.data)
         ? resBuyLetters.data
-        : resBuyLetters.data.buyLetters || [];
+        : resBuyLetters?.data?.buyLetters || [];
 
       // Logic to count unique sell letters (handling edits/versions)
       const uniqueSaleIds = new Set();
       const soldRegNos = new Set();
-      sellLetters.forEach((letter) => {
+      for (const letter of sellLetters) {
         const saleId = letter.originalDocumentId || letter._id;
-        uniqueSaleIds.add(saleId);
+        if (saleId) uniqueSaleIds.add(saleId);
         if (letter.registrationNumber) {
-          soldRegNos.add(
-            String(letter.registrationNumber).trim().toLowerCase(),
-          );
+          soldRegNos.add(String(letter.registrationNumber).trim().toLowerCase());
         }
-      });
+      }
       const totalSoldLetters = uniqueSaleIds.size;
 
       // Calculate unsold stock (Buys without Sells)
-      const unsoldList = buyLetters.filter((b) => {
-        if (!b.registrationNumber) return false;
+      const unsoldList = (Array.isArray(buyLetters) ? buyLetters : []).filter((b) => {
+        if (!b || !b.registrationNumber) return false;
         const reg = String(b.registrationNumber).trim().toLowerCase();
         return !soldRegNos.has(reg);
       });
       setUnsoldVehicles(unsoldList);
 
-      const totalVehicles = vehicles.length;
-      const totalBikes = vehicles.filter((v) => {
+      const totalVehicles = Array.isArray(vehicles) ? vehicles.length : 0;
+      const totalBikes = (Array.isArray(vehicles) ? vehicles : []).filter((v) => {
         const name = (v.vehicleName || "").toLowerCase();
         const type = (v.vehicleType || "").toLowerCase();
         return (
@@ -180,7 +183,7 @@ const AdminPage = () => {
       let totalValidInsurance = 0;
       let totalValidPuc = 0;
 
-      sellLetters.forEach((v) => {
+      for (const v of sellLetters) {
         if (v.insuranceExpiryDate) {
           const d = new Date(v.insuranceExpiryDate);
           if (d >= now && d <= sevenDays) insuranceExpiring++;
@@ -191,43 +194,30 @@ const AdminPage = () => {
           if (d >= now && d <= sevenDays) pucExpiring++;
           if (d >= now) totalValidPuc++;
         }
-      });
-
-      // Fetch standalone PUC records
-      try {
-        const resPUC = await axios.get(`${API_BASE}/api/puc?limit=2000`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const pucList = resPUC.data || [];
-        pucList.forEach((p) => {
-          if (p.pucExpiry) {
-            const d = new Date(p.pucExpiry);
-            if (d >= now && d <= sevenDays) pucExpiring++;
-            if (d >= now) totalValidPuc++;
-          }
-        });
-      } catch (err) {
-        console.error("Error fetching puc stats", err);
       }
 
-      // Fetch standalone Insurance records
-      try {
-        const resInsurance = await axios.get(
-          `${API_BASE}/api/insurance?limit=2000`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
-        const insuranceList = resInsurance.data || [];
-        insuranceList.forEach((ins) => {
-          if (ins.insuranceExpiry) {
-            const d = new Date(ins.insuranceExpiry);
-            if (d >= now && d <= sevenDays) insuranceExpiring++;
-            if (d >= now) totalValidInsurance++;
-          }
-        });
-      } catch (err) {
-        console.error("Error fetching insurance stats", err);
+      // Process standalone PUC records
+      const pucList = resPUC?.data || [];
+      const normalizedPucList = Array.isArray(pucList) ? pucList : pucList?.data || [];
+      for (const p of normalizedPucList) {
+        if (p && p.pucExpiry) {
+          const d = new Date(p.pucExpiry);
+          if (d >= now && d <= sevenDays) pucExpiring++;
+          if (d >= now) totalValidPuc++;
+        }
+      }
+
+      // Process standalone Insurance records
+      const insuranceList = resInsurance?.data || [];
+      const normalizedInsuranceList = Array.isArray(insuranceList)
+        ? insuranceList
+        : insuranceList?.data || [];
+      for (const ins of normalizedInsuranceList) {
+        if (ins && ins.insuranceExpiry) {
+          const d = new Date(ins.insuranceExpiry);
+          if (d >= now && d <= sevenDays) insuranceExpiring++;
+          if (d >= now) totalValidInsurance++;
+        }
       }
 
       setExtraStats((prev) => ({
@@ -245,32 +235,6 @@ const AdminPage = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (user && activeMenu === "Dashboard") {
-      fetchVehicleStats();
-    }
-  }, [user, activeMenu, fetchVehicleStats]);
-
-  useEffect(() => {
-    if (freeServices.length > 0) {
-      let m1 = 0,
-        m2 = 0,
-        m3 = 0;
-      freeServices.forEach((row) => {
-        const used = row.usedCount || 0;
-        if (used === 0) m1++;
-        else if (used === 1) m2++;
-        else if (used === 2) m3++;
-      });
-      setExtraStats((prev) => ({
-        ...prev,
-        month1Pending: m1,
-        month2Pending: m2,
-        month3Pending: m3,
-      }));
-    }
-  }, [freeServices]);
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -305,7 +269,6 @@ const AdminPage = () => {
           "Failed to load dashboard data. Please try again.",
       );
       if (err.response?.status === 401) {
-        // Handle unauthorized error (token expired or invalid)
         logout();
         navigate("/login");
       }
@@ -313,49 +276,13 @@ const AdminPage = () => {
       setLoading(false);
     }
   }, [user, logout, navigate]);
-  const fetchFreeServicesData = useCallback(async (search = "") => {
-    try {
-      setFreeServicesLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) return;
 
-      const endpoint =
-        "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
-      const params = { limit: 2000 };
-      if (search && String(search).trim() !== "")
-        params.search = String(search).trim();
-
-      const response = await axios.get(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
-        params,
-      });
-
-      // ensure dates are normalized on client
-      const items = (response.data.data || []).map((row) => ({
-        ...row,
-        saleDate: row.saleDate || null,
-        month1: row.month1 || null,
-        month2: row.month2 || null,
-        month3: row.month3 || null,
-      }));
-
-      // server already sorts and limits, but ensure consistent ordering
-      // Filter out records before Dec 2025
-      const cutoffDate = new Date("2025-12-01");
-      const filteredItems = items.filter((row) => {
-        if (!row.saleDate) return false;
-        return new Date(row.saleDate) >= cutoffDate;
-      });
-
-      filteredItems.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
-      setFreeServices(filteredItems);
-    } catch (err) {
-      console.error("Error fetching free services data:", err);
-    } finally {
-      setFreeServicesLoading(false);
+  useEffect(() => {
+    if (user && activeMenu === "Dashboard") {
+      fetchVehicleStats();
     }
-  }, []);
-
+  }, [user, activeMenu, fetchVehicleStats]);
+  
   const fetchIncompleteLetters = useCallback(async () => {
     setIncompleteLoading(true);
     try {
@@ -381,6 +308,46 @@ const AdminPage = () => {
       setIncompleteLoading(false);
     }
   }, []);
+
+    const fetchFreeServicesData = useCallback(async (search = "") => {
+      try {
+        setFreeServicesLoading(true);
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const endpoint = "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
+        const params = { limit: 2000 };
+        if (search && String(search).trim() !== "") params.search = String(search).trim();
+
+        const response = await axios.get(endpoint, {
+          headers: { Authorization: `Bearer ${token}` },
+          params,
+        });
+
+        // ensure dates are normalized on client
+        const items = (response.data.data || []).map((row) => ({
+          ...row,
+          saleDate: row.saleDate || null,
+          month1: row.month1 || null,
+          month2: row.month2 || null,
+          month3: row.month3 || null,
+        }));
+
+        // Filter out records before Dec 2025
+        const cutoffDate = new Date("2025-12-01");
+        const filteredItems = items.filter((row) => {
+          if (!row.saleDate) return false;
+          return new Date(row.saleDate) >= cutoffDate;
+        });
+
+        filteredItems.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+        setFreeServices(filteredItems);
+      } catch (err) {
+        console.error("Error fetching free services data:", err);
+      } finally {
+        setFreeServicesLoading(false);
+      }
+    }, []);
 
   useEffect(() => {
     if (user && activeMenu === "Dashboard") {
@@ -1496,22 +1463,33 @@ const AdminPage = () => {
 
         const BASE = "https://ok-motor-51l3.vercel.app";
 
-        // Fetch PUC model records AND sell letters in parallel
-        const [resPUC, resSell] = await Promise.all([
-          axios.get(`${BASE}/api/puc?limit=2000`, {
+        // Use cached sell letters if available to avoid duplicate heavy requests
+        let pucRecords = [];
+        let sellLetters = [];
+        if (sellLettersState && sellLettersState.length > 0) {
+          const resPUC = await axios.get(`${BASE}/api/puc?limit=2000`, {
             headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios
-            .get(`${BASE}/api/sell-letters?limit=2000`, {
+          });
+          pucRecords = resPUC.data || [];
+          sellLetters = sellLettersState;
+        } else {
+          // Fetch PUC model records AND sell letters in parallel
+          const [resPUC, resSell] = await Promise.all([
+            axios.get(`${BASE}/api/puc?limit=2000`, {
               headers: { Authorization: `Bearer ${token}` },
-            })
-            .catch(() => ({ data: [] })),
-        ]);
+            }),
+            axios
+              .get(`${BASE}/api/sell-letters?limit=2000`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              .catch(() => ({ data: [] })),
+          ]);
 
-        const pucRecords = resPUC.data || [];
-        const sellLetters = Array.isArray(resSell.data)
-          ? resSell.data
-          : resSell.data?.data || [];
+          pucRecords = resPUC.data || [];
+          sellLetters = Array.isArray(resSell.data)
+            ? resSell.data
+            : resSell.data?.data || [];
+        }
 
         // Build map: regNo -> sell letter (only those with pucExpiryDate)
         const sellByReg = new Map();
@@ -1572,7 +1550,7 @@ const AdminPage = () => {
       } finally {
         setLoadingItems(false);
       }
-    }, []);
+    }, [sellLettersState]);
 
     useEffect(() => {
       fetchPucData();
@@ -1995,22 +1973,33 @@ const AdminPage = () => {
 
         const BASE = "https://ok-motor-51l3.vercel.app";
 
-        // Fetch Insurance model records AND sell letters in parallel
-        const [resInsurance, resSell] = await Promise.all([
-          axios.get(`${BASE}/api/insurance?limit=2000`, {
+        // Use cached sell letters if available to avoid duplicate heavy requests
+        let insuranceRecords = [];
+        let sellLetters = [];
+        if (sellLettersState && sellLettersState.length > 0) {
+          const resInsurance = await axios.get(`${BASE}/api/insurance?limit=2000`, {
             headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios
-            .get(`${BASE}/api/sell-letters?limit=2000`, {
+          });
+          insuranceRecords = resInsurance.data || [];
+          sellLetters = sellLettersState;
+        } else {
+          // Fetch Insurance model records AND sell letters in parallel
+          const [resInsurance, resSell] = await Promise.all([
+            axios.get(`${BASE}/api/insurance?limit=2000`, {
               headers: { Authorization: `Bearer ${token}` },
-            })
-            .catch(() => ({ data: [] })),
-        ]);
+            }),
+            axios
+              .get(`${BASE}/api/sell-letters?limit=2000`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              .catch(() => ({ data: [] })),
+          ]);
 
-        const insuranceRecords = resInsurance.data || [];
-        const sellLetters = Array.isArray(resSell.data)
-          ? resSell.data
-          : resSell.data?.data || [];
+          insuranceRecords = resInsurance.data || [];
+          sellLetters = Array.isArray(resSell.data)
+            ? resSell.data
+            : resSell.data?.data || [];
+        }
 
         // Build map: regNo -> sell letter (only those with insuranceExpiryDate)
         const sellByReg = new Map();
@@ -2073,7 +2062,7 @@ const AdminPage = () => {
       } finally {
         setLoadingItems(false);
       }
-    }, []);
+    }, [sellLettersState]);
 
     useEffect(() => {
       fetchInsuranceData();
