@@ -1456,7 +1456,7 @@ const AdminPage = () => {
     const [search, setSearch] = useState("");
     const [showAllPuc, setShowAllPuc] = useState(false);
 
-    const fetchPucData = useCallback(async () => {
+    const fetchPucData = useCallback(async (cachedSellLetters = null) => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
@@ -1466,12 +1466,12 @@ const AdminPage = () => {
         // Use cached sell letters if available to avoid duplicate heavy requests
         let pucRecords = [];
         let sellLetters = [];
-        if (sellLettersState && sellLettersState.length > 0) {
+        if (cachedSellLetters && cachedSellLetters.length > 0) {
           const resPUC = await axios.get(`${BASE}/api/puc?limit=2000`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           pucRecords = resPUC.data || [];
-          sellLetters = sellLettersState;
+          sellLetters = cachedSellLetters;
         } else {
           // Fetch PUC model records AND sell letters in parallel
           const [resPUC, resSell] = await Promise.all([
@@ -1550,11 +1550,12 @@ const AdminPage = () => {
       } finally {
         setLoadingItems(false);
       }
-    }, [sellLettersState]);
+    }, []);
 
     useEffect(() => {
-      fetchPucData();
-    }, [fetchPucData]);
+      // Pass current cached sell letters (if any) to the fetcher so it can reuse them.
+      fetchPucData(sellLettersState && sellLettersState.length > 0 ? sellLettersState : null);
+    }, [fetchPucData, sellLettersState]);
 
     const now = new Date();
     const msPerDay = 1000 * 60 * 60 * 24;
@@ -1966,7 +1967,7 @@ const AdminPage = () => {
     const [search, setSearch] = useState("");
     const [showAllInsurance, setShowAllInsurance] = useState(false);
 
-    const fetchInsuranceData = useCallback(async () => {
+    const fetchInsuranceData = useCallback(async (cachedSellLetters = null) => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
@@ -1976,12 +1977,12 @@ const AdminPage = () => {
         // Use cached sell letters if available to avoid duplicate heavy requests
         let insuranceRecords = [];
         let sellLetters = [];
-        if (sellLettersState && sellLettersState.length > 0) {
+        if (cachedSellLetters && cachedSellLetters.length > 0) {
           const resInsurance = await axios.get(`${BASE}/api/insurance?limit=2000`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           insuranceRecords = resInsurance.data || [];
-          sellLetters = sellLettersState;
+          sellLetters = cachedSellLetters;
         } else {
           // Fetch Insurance model records AND sell letters in parallel
           const [resInsurance, resSell] = await Promise.all([
@@ -2062,11 +2063,11 @@ const AdminPage = () => {
       } finally {
         setLoadingItems(false);
       }
-    }, [sellLettersState]);
+    }, []);
 
     useEffect(() => {
-      fetchInsuranceData();
-    }, [fetchInsuranceData]);
+      fetchInsuranceData(sellLettersState && sellLettersState.length > 0 ? sellLettersState : null);
+    }, [fetchInsuranceData, sellLettersState]);
 
     const now = new Date();
     const msPerDay = 1000 * 60 * 60 * 24;
