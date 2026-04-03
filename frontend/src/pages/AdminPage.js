@@ -1555,7 +1555,7 @@ const AdminPage = () => {
     useEffect(() => {
       // Pass current cached sell letters (if any) to the fetcher so it can reuse them.
       fetchPucData(sellLettersState && sellLettersState.length > 0 ? sellLettersState : null);
-    }, [fetchPucData, sellLettersState]);
+    }, [fetchPucData]);
 
     const now = new Date();
     const msPerDay = 1000 * 60 * 60 * 24;
@@ -2067,7 +2067,7 @@ const AdminPage = () => {
 
     useEffect(() => {
       fetchInsuranceData(sellLettersState && sellLettersState.length > 0 ? sellLettersState : null);
-    }, [fetchInsuranceData, sellLettersState]);
+    }, [fetchInsuranceData]);
 
     const now = new Date();
     const msPerDay = 1000 * 60 * 60 * 24;
