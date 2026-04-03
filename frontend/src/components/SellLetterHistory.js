@@ -1019,7 +1019,6 @@ const SellLetterHistory = () => {
           const insuranceCertificateItems = [];
           const vehicleNOCItems = [];
           const vehicleBuyReceiptItems = [];
-          const signedDocSellItems = [];
 
           if (documentsObj.insuranceCertificate) {
             if (Array.isArray(documentsObj.insuranceCertificate.pages)) {
