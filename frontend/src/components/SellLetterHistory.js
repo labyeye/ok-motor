@@ -1755,6 +1755,7 @@ const SellLetterHistory = () => {
         const panItems = [];
         const deliveryPhotoItems = [];
         const rcItems = [];
+        const signedDocSellItems = [];
 
         if (documentsObj.vehicleRC) {
           if (documentsObj.vehicleRC.front)
