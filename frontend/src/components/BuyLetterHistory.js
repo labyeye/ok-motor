@@ -37,6 +37,7 @@ const BuyLetterHistory = () => {
     pan: true,
     vehicleKM: true,
     vehiclePhotos: true,
+    signedDocBuy: true,
     insuranceCertificate: true,
     vehicleNOC: true,
     vehicleBuyReceipt: true,
@@ -271,6 +272,7 @@ const BuyLetterHistory = () => {
       checkDocumentChange("pan", "PAN Card");
       checkDocumentChange("deliveryPhoto", "Delivery Photo") ||
         checkDocumentChange("vehicleKM", "Delivery Photo");
+      checkDocumentChange("signedDocBuy", "Signed Doc (Buy)");
       checkDocumentChange("insuranceCertificate", "Insurance Certificate");
       checkDocumentChange("vehicleNOC", "Vehicle NOC");
       checkDocumentChange("vehicleBuyReceipt", "Vehicle Buy Receipt");
@@ -539,6 +541,7 @@ const BuyLetterHistory = () => {
     const insuranceCertificateItems = [];
     const vehicleNOCItems = [];
     const vehicleBuyReceiptItems = [];
+    const signedDocBuyItems = [];
 
     if (documentsObj.vehicleRC) {
       if (documentsObj.vehicleRC.front && documentsObj.vehicleRC.front !== null)
@@ -634,6 +637,8 @@ const BuyLetterHistory = () => {
     }
     if (documentsObj.pan && documentsObj.pan !== null)
       items.push({ title: "PAN Card", url: documentsObj.pan });
+    if (documentsObj.signedDocBuy && documentsObj.signedDocBuy !== null)
+      signedDocBuyItems.push({ title: "Signed Doc (Buy)", url: documentsObj.signedDocBuy });
 
     const deliveryPhotoUrl =
       (documentsObj.deliveryPhoto &&
@@ -874,6 +879,10 @@ const BuyLetterHistory = () => {
     }
     if (vehicleBuyReceiptItems.length > 0) {
       await renderSingleImagePerPage(vehicleBuyReceiptItems);
+    }
+
+    if (signedDocBuyItems.length > 0) {
+      await renderSingleImagePerPage(signedDocBuyItems);
     }
 
     if (deliveryPhotoUrl) {

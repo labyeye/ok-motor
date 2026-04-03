@@ -34,6 +34,7 @@ const SellLetterHistory = () => {
     pan: true,
     vehicleKM: true,
     vehiclePhotos: true,
+    signedDocSell: true,
     insuranceCertificate: true,
     vehicleNOC: true,
     vehicleBuyReceipt: true,
@@ -415,6 +416,7 @@ const SellLetterHistory = () => {
       checkDocumentChange("pan", "PAN Card");
       checkDocumentChange("deliveryPhoto", "Delivery Photo") ||
         checkDocumentChange("vehicleKM", "Delivery Photo");
+      checkDocumentChange("signedDocSell", "Signed Doc (Sell)");
       checkDocumentChange("insuranceCertificate", "Insurance Certificate");
       checkDocumentChange("vehicleNOC", "Vehicle NOC");
       checkDocumentChange("vehicleBuyReceipt", "Vehicle Buy Receipt");
@@ -1017,6 +1019,7 @@ const SellLetterHistory = () => {
           const insuranceCertificateItems = [];
           const vehicleNOCItems = [];
           const vehicleBuyReceiptItems = [];
+          const signedDocSellItems = [];
 
           if (documentsObj.insuranceCertificate) {
             if (Array.isArray(documentsObj.insuranceCertificate.pages)) {
@@ -1806,6 +1809,12 @@ const SellLetterHistory = () => {
             items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
           );
         }
+          if (documentsObj.signedDocSell) {
+            signedDocSellItems.push({
+              title: "Signed Doc (Sell)",
+              url: documentsObj.signedDocSell,
+            });
+          }
 
         const insuranceCertificateItems = [];
         const vehicleNOCItems = [];
@@ -1864,6 +1873,12 @@ const SellLetterHistory = () => {
             );
           }
         }
+
+          if (signedDocSellItems.length > 0) {
+            for (const item of signedDocSellItems) {
+              items.push(item);
+            }
+          }
 
         if (rcItems.length > 0) {
           const page = pdfDoc.addPage([595, 842]);

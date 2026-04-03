@@ -145,6 +145,7 @@ const SellLetterForm = () => {
     aadhaarBack: null,
     panPhoto: null,
     deliveryPhoto: null,
+    signedDocSell: null,
     vehiclePhotos: [],
 
     insuranceCertificate: [],
@@ -1176,6 +1177,8 @@ const SellLetterForm = () => {
       preservedDocs.panPhoto = filePreviews.panPhoto;
     if (!currentFilesState.deliveryPhoto && filePreviews.deliveryPhoto)
       preservedDocs.deliveryPhoto = filePreviews.deliveryPhoto;
+    if (!currentFilesState.signedDocSell && filePreviews.signedDocSell)
+      preservedDocs.signedDocSell = filePreviews.signedDocSell;
 
     if (
       (!currentFilesState.vehiclePhotos ||
@@ -1326,6 +1329,7 @@ const SellLetterForm = () => {
         filesState.aadhaarBack ||
         filesState.panPhoto ||
         filesState.deliveryPhoto ||
+        filesState.signedDocSell ||
         (filesState.vehiclePhotos && filesState.vehiclePhotos.length > 0) ||
         (filesState.insuranceCertificate &&
           filesState.insuranceCertificate.length > 0) ||
@@ -1349,13 +1353,14 @@ const SellLetterForm = () => {
         form.append("vehicleRCUploadMode", vehicleRCUploadMode);
 
         // Compress all image files before appending (PDFs pass through unchanged)
-        const [rcFront, rcBack, adhFront, adhBack, pan, delivery] = await Promise.all([
+        const [rcFront, rcBack, adhFront, adhBack, pan, delivery, signedDocSell] = await Promise.all([
           filesState.vehicleRCFront ? compressImageFile(filesState.vehicleRCFront) : Promise.resolve(null),
           filesState.vehicleRCBack ? compressImageFile(filesState.vehicleRCBack) : Promise.resolve(null),
           filesState.aadhaarFront ? compressImageFile(filesState.aadhaarFront) : Promise.resolve(null),
           filesState.aadhaarBack ? compressImageFile(filesState.aadhaarBack) : Promise.resolve(null),
           filesState.panPhoto ? compressImageFile(filesState.panPhoto) : Promise.resolve(null),
           filesState.deliveryPhoto ? compressImageFile(filesState.deliveryPhoto) : Promise.resolve(null),
+          filesState.signedDocSell ? compressImageFile(filesState.signedDocSell) : Promise.resolve(null),
         ]);
         if (rcFront) form.append("vehicleRCFront", rcFront);
         if (rcBack) form.append("vehicleRCBack", rcBack);
@@ -1363,6 +1368,7 @@ const SellLetterForm = () => {
         if (adhBack) form.append("aadhaarBack", adhBack);
         if (pan) form.append("panPhoto", pan);
         if (delivery) form.append("deliveryPhoto", delivery);
+        if (signedDocSell) form.append("signedDocSell", signedDocSell);
 
         if (filesState.vehiclePhotos && filesState.vehiclePhotos.length) {
           const compressed = await Promise.all(filesState.vehiclePhotos.slice(0, 4).map((f) => compressImageFile(f)));
@@ -2201,6 +2207,7 @@ const SellLetterForm = () => {
             if (docs.aadhaar?.back) previews.aadhaarBack = docs.aadhaar.back;
             if (docs.pan) previews.panPhoto = docs.pan;
             if (docs.deliveryPhoto) previews.deliveryPhoto = docs.deliveryPhoto;
+            if (docs.signedDocSell) previews.signedDocSell = docs.signedDocSell;
             if (Array.isArray(docs.vehiclePhotos) && docs.vehiclePhotos.length)
               previews.vehiclePhotos = docs.vehiclePhotos;
             const insurancePages = Array.isArray(docs.insuranceCertificate?.pages)
@@ -3769,6 +3776,43 @@ const SellLetterForm = () => {
                     renderPreviewMedia(
                       filePreviews.deliveryPhoto,
                       "delivery",
+                      styles.previewImg,
+                    )}
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>Signed Doc (sell)</label>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleFileInput("signedDocSell", true)}
+                      style={styles.uploadBtn}
+                    >
+                      <Image size={20} /> Choose File
+                    </button>
+                    {filePreviews.signedDocSell && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile("signedDocSell")}
+                        style={{
+                          ...styles.uploadBtn,
+                          backgroundColor: "#ef4444",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {filePreviews.signedDocSell &&
+                    renderPreviewMedia(
+                      filePreviews.signedDocSell,
+                      "signed-doc-sell",
                       styles.previewImg,
                     )}
                 </div>

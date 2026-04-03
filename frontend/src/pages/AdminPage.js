@@ -319,7 +319,8 @@ const AdminPage = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const endpoint = "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
+      const endpoint =
+        "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
       const params = { limit: 2000 };
       if (search && String(search).trim() !== "")
         params.search = String(search).trim();
@@ -678,7 +679,7 @@ const AdminPage = () => {
             </div>
           </div>
 
-          <div 
+          <div
             className="card"
             style={{ cursor: "pointer" }}
             onClick={() => {
@@ -1408,7 +1409,7 @@ const AdminPage = () => {
                     return item.nextPending && item.nextPending.idx === sel;
                   })
                   .map((item, idx) => {
-                    const { row, nextPending, isExpired, } = item;
+                    const { row, nextPending, isExpired } = item;
                     return (
                       <tr
                         key={`${row.registrationNumber}-${idx}`}

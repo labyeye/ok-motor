@@ -94,6 +94,7 @@ const SellLetterSchema = new mongoose.Schema(
       },
       pan: { type: String },
       deliveryPhoto: { type: String },
+      signedDocSell: { type: String },
       vehiclePhotos: [{ type: String }],
       // New documents: insuranceCertificate, vehicleNOC, vehicleBuyReceipt
       insuranceCertificate: {

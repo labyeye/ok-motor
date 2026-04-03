@@ -94,6 +94,7 @@ const BuyLetterSchema = new mongoose.Schema({
     },
     pan: { type: String },
     deliveryPhoto: { type: String },
+    signedDocBuy: { type: String },
     // New documents: insuranceCertificate, vehicleNOC, vehicleBuyReceipt
     insuranceCertificate: {
       // store ordered array of page URLs (each page can be image or single-page PDF)

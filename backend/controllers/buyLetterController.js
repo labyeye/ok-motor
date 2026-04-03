@@ -21,6 +21,7 @@ exports.createBuyLetter = [
     { name: "aadhaarBack" },
     { name: "panPhoto" },
     { name: "deliveryPhoto" },
+    { name: "signedDocBuy" },
     // support multiple pages/files for new documents
     { name: "insuranceCertificate", maxCount: 6 },
     { name: "vehicleNOC", maxCount: 6 },
@@ -205,6 +206,7 @@ exports.createBuyLetter = [
         aadhaar: { front: null, back: null },
         pan: null,
         deliveryPhoto: null,
+        signedDocBuy: null,
         // new multi-page documents
         insuranceCertificate: { pages: [] },
         vehicleNOC: { pages: [] },
@@ -249,6 +251,7 @@ exports.createBuyLetter = [
         if (ed.aadhaar?.back)    preservedDocs.aadhaarBack    = ed.aadhaar.back;
         if (ed.pan)              preservedDocs.panPhoto        = ed.pan;
         if (ed.deliveryPhoto)    preservedDocs.deliveryPhoto   = ed.deliveryPhoto;
+        if (ed.signedDocBuy)     preservedDocs.signedDocBuy    = ed.signedDocBuy;
         if (ed.vehiclePhotos?.length)                         preservedDocs.vehiclePhotos          = ed.vehiclePhotos;
         if (ed.insuranceCertificate?.pages?.length)           preservedDocs.insuranceCertificate   = ed.insuranceCertificate.pages;
         if (ed.vehicleNOC?.pages?.length)                     preservedDocs.vehicleNOC             = ed.vehicleNOC.pages;
@@ -352,6 +355,9 @@ exports.createBuyLetter = [
             files.deliveryPhoto?.[0]
               ? processFile(files.deliveryPhoto[0], "delivery-photo")
               : Promise.resolve(preservedDocs.deliveryPhoto || null),
+            files.signedDocBuy?.[0]
+              ? processFile(files.signedDocBuy[0], "signed-doc-buy")
+              : Promise.resolve(preservedDocs.signedDocBuy || null),
           ]);
 
         uploadedUrls.vehicleRC.front = rcFront;
@@ -360,6 +366,7 @@ exports.createBuyLetter = [
         uploadedUrls.aadhaar.back = aadhaarBack;
         uploadedUrls.pan = pan;
         uploadedUrls.deliveryPhoto = delivery;
+        uploadedUrls.signedDocBuy = signedDocBuy;
 
         // Run all multi-file group uploads in parallel
         const [vehiclePhotos, insuranceCertPages, nocPages, buyReceiptPages] =
@@ -418,6 +425,7 @@ exports.createBuyLetter = [
         if (!uploadedUrls.aadhaar.back    && ed.aadhaar?.back)     uploadedUrls.aadhaar.back    = ed.aadhaar.back;
         if (!uploadedUrls.pan             && ed.pan)               uploadedUrls.pan             = ed.pan;
         if (!uploadedUrls.deliveryPhoto   && ed.deliveryPhoto)     uploadedUrls.deliveryPhoto   = ed.deliveryPhoto;
+        if (!uploadedUrls.signedDocBuy    && ed.signedDocBuy)      uploadedUrls.signedDocBuy    = ed.signedDocBuy;
         if (!uploadedUrls.vehiclePhotos?.length && ed.vehiclePhotos?.length)
           uploadedUrls.vehiclePhotos = ed.vehiclePhotos;
         if (!uploadedUrls.insuranceCertificate.pages?.length && ed.insuranceCertificate?.pages?.length)
@@ -435,6 +443,7 @@ exports.createBuyLetter = [
         aadhaarUploadMode: body.aadhaarUploadMode || existingDocuments?.aadhaarUploadMode || "separate",
         pan: uploadedUrls.pan,
         deliveryPhoto: uploadedUrls.deliveryPhoto,
+        signedDocBuy: uploadedUrls.signedDocBuy,
         insuranceCertificate: uploadedUrls.insuranceCertificate,
         insuranceCertificateUploadMode:
           body.insuranceCertificateUploadMode || existingDocuments?.insuranceCertificateUploadMode || "separate",

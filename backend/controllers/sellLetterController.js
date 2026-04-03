@@ -11,6 +11,12 @@ const {
 
 const upload = multer();
 
+const stripBuyOnlyDocuments = (docs) => {
+  if (!docs) return docs;
+  const { signedDocBuy, ...rest } = docs;
+  return rest;
+};
+
 // New create handler which handles multipart form-data for images.
 exports.createSellLetter = [
   upload.fields([
@@ -20,6 +26,7 @@ exports.createSellLetter = [
     { name: "aadhaarBack" },
     { name: "panPhoto" },
     { name: "deliveryPhoto" },
+    { name: "signedDocSell" },
     { name: "vehiclePhotos" },
     // new multi-page document fields
     { name: "insuranceCertificate", maxCount: 50 },
@@ -204,6 +211,7 @@ exports.createSellLetter = [
         aadhaar: { front: null, back: null },
         pan: null,
         deliveryPhoto: null,
+        signedDocSell: null,
         vehiclePhotos: [],
         insuranceCertificate: { pages: [] },
         vehicleNOC: { pages: [] },
@@ -232,6 +240,7 @@ exports.createSellLetter = [
           if (p.aadhaarBack) uploadedUrls.aadhaar.back = p.aadhaarBack;
           if (p.panPhoto) uploadedUrls.pan = p.panPhoto;
           if (p.deliveryPhoto) uploadedUrls.deliveryPhoto = p.deliveryPhoto;
+          if (p.signedDocSell) uploadedUrls.signedDocSell = p.signedDocSell;
 
           if (p.vehiclePhotos && Array.isArray(p.vehiclePhotos)) {
             uploadedUrls.vehiclePhotos = [...p.vehiclePhotos];
@@ -256,6 +265,7 @@ exports.createSellLetter = [
           if (ed.aadhaar?.back)     uploadedUrls.aadhaar.back            = ed.aadhaar.back;
           if (ed.pan)               uploadedUrls.pan                     = ed.pan;
           if (ed.deliveryPhoto)     uploadedUrls.deliveryPhoto           = ed.deliveryPhoto;
+          if (ed.signedDocSell)     uploadedUrls.signedDocSell           = ed.signedDocSell;
           if (ed.vehiclePhotos?.length)                       uploadedUrls.vehiclePhotos              = [...ed.vehiclePhotos];
           if (ed.insuranceCertificate?.pages?.length)         uploadedUrls.insuranceCertificate.pages = [...ed.insuranceCertificate.pages];
           if (ed.vehicleNOC?.pages?.length)                   uploadedUrls.vehicleNOC.pages           = [...ed.vehicleNOC.pages];
@@ -342,7 +352,7 @@ exports.createSellLetter = [
         };
 
         // Run all single-file uploads in parallel
-        const [rcFront, rcBack, aadhaarFront, aadhaarBack, pan, delivery] =
+        const [rcFront, rcBack, aadhaarFront, aadhaarBack, pan, delivery, signedDocSell] =
           await Promise.all([
             files.vehicleRCFront?.[0]
               ? processFile(files.vehicleRCFront[0], "vehicle-rc-front")
@@ -362,6 +372,9 @@ exports.createSellLetter = [
             files.deliveryPhoto?.[0]
               ? processFile(files.deliveryPhoto[0], "delivery-photo")
               : Promise.resolve(null),
+            files.signedDocSell?.[0]
+              ? processFile(files.signedDocSell[0], "signed-doc-sell")
+              : Promise.resolve(null),
           ]);
 
         if (rcFront !== null) uploadedUrls.vehicleRC.front = rcFront;
@@ -370,6 +383,7 @@ exports.createSellLetter = [
         if (aadhaarBack !== null) uploadedUrls.aadhaar.back = aadhaarBack;
         if (pan !== null) uploadedUrls.pan = pan;
         if (delivery !== null) uploadedUrls.deliveryPhoto = delivery;
+        if (signedDocSell !== null) uploadedUrls.signedDocSell = signedDocSell;
 
         // Run all multi-file group uploads in parallel
         const [vehiclePhotos, insuranceCertPages, nocPages, buyReceiptPages] =
@@ -412,6 +426,7 @@ exports.createSellLetter = [
         if (!uploadedUrls.aadhaar.back    && ed.aadhaar?.back)     uploadedUrls.aadhaar.back    = ed.aadhaar.back;
         if (!uploadedUrls.pan             && ed.pan)               uploadedUrls.pan             = ed.pan;
         if (!uploadedUrls.deliveryPhoto   && ed.deliveryPhoto)     uploadedUrls.deliveryPhoto   = ed.deliveryPhoto;
+        if (!uploadedUrls.signedDocSell   && ed.signedDocSell)     uploadedUrls.signedDocSell   = ed.signedDocSell;
         if (!uploadedUrls.vehiclePhotos?.length && ed.vehiclePhotos?.length)
           uploadedUrls.vehiclePhotos = [...ed.vehiclePhotos];
         if (!uploadedUrls.insuranceCertificate.pages?.length && ed.insuranceCertificate?.pages?.length)
@@ -429,6 +444,7 @@ exports.createSellLetter = [
         aadhaarUploadMode: bodyData.aadhaarUploadMode || existingDocuments?.aadhaarUploadMode || "separate",
         pan: uploadedUrls.pan,
         deliveryPhoto: uploadedUrls.deliveryPhoto,
+        signedDocSell: uploadedUrls.signedDocSell,
         vehiclePhotos: uploadedUrls.vehiclePhotos,
         insuranceCertificate: uploadedUrls.insuranceCertificate,
         insuranceCertificateUploadMode:
@@ -452,6 +468,7 @@ exports.createSellLetter = [
             hasText(docs.aadhaar?.back) ||
             hasText(docs.pan) ||
             hasText(docs.deliveryPhoto) ||
+            hasText(docs.signedDocSell) ||
             hasArray(docs.vehiclePhotos) ||
             hasArray(docs.insuranceCertificate?.pages) ||
             hasArray(docs.vehicleNOC?.pages) ||
@@ -505,6 +522,9 @@ exports.createSellLetter = [
         }
         if (!hasText(merged.deliveryPhoto) && hasText(source.deliveryPhoto)) {
           merged.deliveryPhoto = source.deliveryPhoto;
+        }
+        if (!hasText(merged.signedDocSell) && hasText(source.signedDocSell)) {
+          merged.signedDocSell = source.signedDocSell;
         }
 
         if (!hasArray(merged.vehiclePhotos) && hasArray(source.vehiclePhotos)) {
@@ -590,7 +610,7 @@ exports.createSellLetter = [
             if (buyLetterForDocs?.documents) {
               sellLetterData.documents = mergeMissingDocuments(
                 sellLetterData.documents,
-                buyLetterForDocs.documents,
+                stripBuyOnlyDocuments(buyLetterForDocs.documents),
               );
             }
           }
@@ -732,7 +752,9 @@ exports.getVehicleDetails = async (req, res) => {
     // Attach documents from the most recent BuyLetter so the sell letter form
     // can pre-fill uploaded documents without requiring re-upload.
     if (buyLetters[0] && buyLetters[0].documents) {
-      vehicleDetails.buyLetterDocuments = buyLetters[0].documents;
+      vehicleDetails.buyLetterDocuments = stripBuyOnlyDocuments(
+        buyLetters[0].documents,
+      );
     }
 
     // Also attempt to load canonical Insurance and PUC master records by vehicleRegNo
