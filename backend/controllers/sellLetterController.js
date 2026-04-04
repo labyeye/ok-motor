@@ -985,8 +985,13 @@ exports.updateSellLetter = async (req, res) => {
     }
 
     // Set edited metadata
-    updateData.editedAt = new Date();
+    const editedDate = new Date();
+    updateData.editedAt = editedDate;
     updateData.editedBy = req.user && req.user.id ? req.user.id : undefined;
+    // Store edited time in HH:MM format
+    const hours = String(editedDate.getHours()).padStart(2, "0");
+    const minutes = String(editedDate.getMinutes()).padStart(2, "0");
+    updateData.editedTime = `${hours}:${minutes}`;
 
     // Two-way sync: if insurance or PUC fields are present in the update payload,
     // persist them to the master Insurance / PUC collections using vehicle registration number

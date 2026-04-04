@@ -95,7 +95,10 @@ const SellLetterHistory = () => {
           if (parts.length >= 3) {
             const [d, m, y] = parts;
             // guard against already yyyy/mm/dd
-            if (y.length === 4) return new Date(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+            if (y.length === 4)
+              return new Date(
+                `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`,
+              );
           }
         }
         // Last resort: let Date try to parse
@@ -111,7 +114,9 @@ const SellLetterHistory = () => {
         // If format like '07:30:45' -> ok
         if (/^\d{1,2}:\d{2}:\d{2}$/.test(ts)) return ts;
         // If contains AM/PM e.g. '07:30 AM' or '7:30pm'
-        const ampmMatch = ts.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])$/);
+        const ampmMatch = ts.match(
+          /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])$/,
+        );
         if (ampmMatch) {
           let hh = Number(ampmMatch[1]);
           const mm = ampmMatch[2];
@@ -1809,12 +1814,12 @@ const SellLetterHistory = () => {
             items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
           );
         }
-          if (documentsObj.signedDocSell) {
-            signedDocSellItems.push({
-              title: "Signed Doc (Sell)",
-              url: documentsObj.signedDocSell,
-            });
-          }
+        if (documentsObj.signedDocSell) {
+          signedDocSellItems.push({
+            title: "Signed Doc (Sell)",
+            url: documentsObj.signedDocSell,
+          });
+        }
 
         const insuranceCertificateItems = [];
         const vehicleNOCItems = [];
@@ -1874,11 +1879,11 @@ const SellLetterHistory = () => {
           }
         }
 
-          if (signedDocSellItems.length > 0) {
-            for (const item of signedDocSellItems) {
-              items.push(item);
-            }
+        if (signedDocSellItems.length > 0) {
+          for (const item of signedDocSellItems) {
+            items.push(item);
           }
+        }
 
         if (rcItems.length > 0) {
           const page = pdfDoc.addPage([595, 842]);
@@ -3807,28 +3812,50 @@ const SellLetterHistory = () => {
                       <tr>
                         <th style={styles.tableHeader}>Buyer</th>
                         <th style={styles.tableHeader}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 8,
+                            }}
+                          >
                             <span>Year</span>
                             <TableFilter
                               type="number"
                               placeholder="YYYY"
                               rangeOnly={true}
-                              onApply={(f) => setFilters((p) => ({ ...p, year: f }))}
-                              onClear={() => setFilters((p) => ({ ...p, year: null }))}
+                              onApply={(f) =>
+                                setFilters((p) => ({ ...p, year: f }))
+                              }
+                              onClear={() =>
+                                setFilters((p) => ({ ...p, year: null }))
+                              }
                             />
                           </div>
                         </th>
                         <th style={styles.tableHeader}>Vehicle</th>
                         <th style={styles.tableHeader}>Veh. Reg No</th>
                         <th style={styles.tableHeader}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 8,
+                            }}
+                          >
                             <span>Amount</span>
                             <TableFilter
                               type="number"
                               placeholder="₹"
                               rangeOnly={true}
-                              onApply={(f) => setFilters((p) => ({ ...p, amount: f }))}
-                              onClear={() => setFilters((p) => ({ ...p, amount: null }))}
+                              onApply={(f) =>
+                                setFilters((p) => ({ ...p, amount: f }))
+                              }
+                              onClear={() =>
+                                setFilters((p) => ({ ...p, amount: null }))
+                              }
                             />
                           </div>
                         </th>
@@ -3890,6 +3917,8 @@ const SellLetterHistory = () => {
                                     }}
                                   >
                                     Edited: {formatDate(letter.editedAt)}
+                                    {letter.editedTime &&
+                                      ` at ${formatTime(letter.editedTime)}`}
                                   </div>
                                 )}
                               </td>
@@ -4008,7 +4037,8 @@ const SellLetterHistory = () => {
                                             >
                                               <span
                                                 style={{
-                                                  textDecoration: "line-through",
+                                                  textDecoration:
+                                                    "line-through",
                                                 }}
                                               >
                                                 {change.oldValue}
@@ -4037,7 +4067,8 @@ const SellLetterHistory = () => {
                                           fontStyle: "italic",
                                         }}
                                       >
-                                        No changes detected from previous version
+                                        No changes detected from previous
+                                        version
                                       </div>
                                     )}
                                   </div>
@@ -4054,7 +4085,13 @@ const SellLetterHistory = () => {
 
               {/* Mobile Cards */}
               {isMobile && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
                   {filteredLetters.map((letter) => {
                     const changes = getChanges(letter);
                     return (
@@ -4069,87 +4106,320 @@ const SellLetterHistory = () => {
                         }}
                       >
                         {/* Card Header */}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            marginBottom: "12px",
+                          }}
+                        >
                           <div>
-                            <div style={{ fontWeight: "700", fontSize: "1rem", color: "#1e293b" }}>
+                            <div
+                              style={{
+                                fontWeight: "700",
+                                fontSize: "1rem",
+                                color: "#1e293b",
+                              }}
+                            >
                               {letter.registrationNumber}
                               {letter.version > 1 && (
-                                <span style={{ fontSize: "0.75rem", color: "#ff9800", marginLeft: "6px", fontWeight: "600" }}>
+                                <span
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    color: "#ff9800",
+                                    marginLeft: "6px",
+                                    fontWeight: "600",
+                                  }}
+                                >
                                   (v{letter.version})
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "2px" }}>
+                            <div
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#64748b",
+                                marginTop: "2px",
+                              }}
+                            >
                               {formatDate(letter.createdAt)}
                             </div>
                           </div>
-                          <div style={{
-                            backgroundColor: "rgba(8,131,149,0.1)",
-                            color: "#071952",
-                            borderRadius: "20px",
-                            padding: "4px 10px",
-                            fontSize: "0.75rem",
-                            fontWeight: "600",
-                          }}>
+                          <div
+                            style={{
+                              backgroundColor: "rgba(8,131,149,0.1)",
+                              color: "#071952",
+                              borderRadius: "20px",
+                              padding: "4px 10px",
+                              fontSize: "0.75rem",
+                              fontWeight: "600",
+                            }}
+                          >
                             Sell Letter
                           </div>
                         </div>
 
                         {/* Card Details */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Buyer</span>
-                            <span style={{ fontSize: "0.8rem", color: "#1e293b", fontWeight: "600", textAlign: "right", maxWidth: "60%" }}>{letter.buyerName}</span>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "6px",
+                            marginBottom: "12px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#64748b",
+                                fontWeight: "500",
+                              }}
+                            >
+                              Buyer
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#1e293b",
+                                fontWeight: "600",
+                                textAlign: "right",
+                                maxWidth: "60%",
+                              }}
+                            >
+                              {letter.buyerName}
+                            </span>
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Vehicle</span>
-                            <span style={{ fontSize: "0.8rem", color: "#1e293b", fontWeight: "600", textAlign: "right", maxWidth: "60%" }}>{`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim()}</span>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#64748b",
+                                fontWeight: "500",
+                              }}
+                            >
+                              Vehicle
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#1e293b",
+                                fontWeight: "600",
+                                textAlign: "right",
+                                maxWidth: "60%",
+                              }}
+                            >
+                              {`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim()}
+                            </span>
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Amount</span>
-                            <span style={{ fontSize: "0.85rem", color: "#071952", fontWeight: "700" }}>₹{new Intl.NumberFormat("en-IN").format(letter.saleAmount)}</span>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#64748b",
+                                fontWeight: "500",
+                              }}
+                            >
+                              Amount
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "0.85rem",
+                                color: "#071952",
+                                fontWeight: "700",
+                              }}
+                            >
+                              ₹
+                              {new Intl.NumberFormat("en-IN").format(
+                                letter.saleAmount,
+                              )}
+                            </span>
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Created By</span>
-                            <span style={{ fontSize: "0.8rem", color: "#1e293b", fontWeight: "600" }}>
-                              {letter.user && letter.user.role === "admin" ? "admin" : letter.user?.name || ""}
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#64748b",
+                                fontWeight: "500",
+                              }}
+                            >
+                              Created By
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#1e293b",
+                                fontWeight: "600",
+                              }}
+                            >
+                              {letter.user && letter.user.role === "admin"
+                                ? "admin"
+                                : letter.user?.name || ""}
                             </span>
                           </div>
                           {letter.editedAt && (
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Edited</span>
-                              <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{formatDate(letter.editedAt)}</span>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#64748b",
+                                  fontWeight: "500",
+                                }}
+                              >
+                                Edited
+                              </span>
+                              <span
+                                style={{ fontSize: "0.8rem", color: "#64748b" }}
+                              >
+                                {formatDate(letter.editedAt)}
+                                {letter.editedTime &&
+                                  ` at ${formatTime(letter.editedTime)}`}
+                              </span>
                             </div>
                           )}
                         </div>
 
                         {/* Version changes */}
-                        {letter.version > 1 && changes && changes.length > 0 && (
-                          <div style={{ backgroundColor: "#fff8e1", borderRadius: "8px", padding: "10px", marginBottom: "10px", border: "1px solid #ffe0b2" }}>
-                            <div style={{ fontWeight: "600", color: "#f57c00", fontSize: "0.78rem", marginBottom: "6px", display: "flex", alignItems: "center", gap: "4px" }}>
-                              <RefreshCw size={12} /> Changes from previous version:
-                            </div>
-                            {changes.map((change, idx) => (
-                              <div key={idx} style={{ fontSize: "0.75rem", marginBottom: "4px" }}>
-                                <span style={{ fontWeight: "600", color: "#424242" }}>{change.field}: </span>
-                                <span style={{ textDecoration: "line-through", color: "#e53935" }}>{change.oldValue}</span>
-                                <span style={{ color: "#43a047", fontWeight: "500" }}> → {change.newValue}</span>
+                        {letter.version > 1 &&
+                          changes &&
+                          changes.length > 0 && (
+                            <div
+                              style={{
+                                backgroundColor: "#fff8e1",
+                                borderRadius: "8px",
+                                padding: "10px",
+                                marginBottom: "10px",
+                                border: "1px solid #ffe0b2",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontWeight: "600",
+                                  color: "#f57c00",
+                                  fontSize: "0.78rem",
+                                  marginBottom: "6px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                }}
+                              >
+                                <RefreshCw size={12} /> Changes from previous
+                                version:
                               </div>
-                            ))}
-                          </div>
-                        )}
+                              {changes.map((change, idx) => (
+                                <div
+                                  key={idx}
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    marginBottom: "4px",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontWeight: "600",
+                                      color: "#424242",
+                                    }}
+                                  >
+                                    {change.field}:{" "}
+                                  </span>
+                                  <span
+                                    style={{
+                                      textDecoration: "line-through",
+                                      color: "#e53935",
+                                    }}
+                                  >
+                                    {change.oldValue}
+                                  </span>
+                                  <span
+                                    style={{
+                                      color: "#43a047",
+                                      fontWeight: "500",
+                                    }}
+                                  >
+                                    {" "}
+                                    → {change.newValue}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
 
                         {/* Actions */}
-                        <div style={{ display: "flex", gap: "8px", borderTop: "1px solid #e2e8f0", paddingTop: "12px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "8px",
+                            borderTop: "1px solid #e2e8f0",
+                            paddingTop: "12px",
+                          }}
+                        >
                           <button
-                            onClick={() => { setSelectedLetter(letter); setLanguageAction("preview"); setShowLanguageModal(true); }}
-                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "8px", backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#1e293b", fontWeight: "500" }}
+                            onClick={() => {
+                              setSelectedLetter(letter);
+                              setLanguageAction("preview");
+                              setShowLanguageModal(true);
+                            }}
+                            style={{
+                              flex: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "4px",
+                              padding: "8px",
+                              backgroundColor: "#f1f5f9",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              fontSize: "0.78rem",
+                              color: "#1e293b",
+                              fontWeight: "500",
+                            }}
                           >
                             <Eye size={14} /> View
                           </button>
                           <button
                             onClick={() => handleDownload(letter)}
-                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "8px", backgroundColor: "#071952", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#ffffff", fontWeight: "500" }}
+                            style={{
+                              flex: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "4px",
+                              padding: "8px",
+                              backgroundColor: "#071952",
+                              border: "none",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              fontSize: "0.78rem",
+                              color: "#ffffff",
+                              fontWeight: "500",
+                            }}
                           >
                             <Download size={14} /> Download
                           </button>
@@ -4157,13 +4427,41 @@ const SellLetterHistory = () => {
                             <>
                               <button
                                 onClick={() => handleEdit(letter)}
-                                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "8px", backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#1e293b", fontWeight: "500" }}
+                                style={{
+                                  flex: 1,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "4px",
+                                  padding: "8px",
+                                  backgroundColor: "#f1f5f9",
+                                  border: "1px solid #e2e8f0",
+                                  borderRadius: "8px",
+                                  cursor: "pointer",
+                                  fontSize: "0.78rem",
+                                  color: "#1e293b",
+                                  fontWeight: "500",
+                                }}
                               >
                                 <Edit size={14} /> Edit
                               </button>
                               <button
                                 onClick={() => handleDelete(letter._id)}
-                                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "8px", backgroundColor: "#fee2e2", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#991b1b", fontWeight: "500" }}
+                                style={{
+                                  flex: 1,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "4px",
+                                  padding: "8px",
+                                  backgroundColor: "#fee2e2",
+                                  border: "none",
+                                  borderRadius: "8px",
+                                  cursor: "pointer",
+                                  fontSize: "0.78rem",
+                                  color: "#991b1b",
+                                  fontWeight: "500",
+                                }}
                               >
                                 <Trash2 size={14} /> Delete
                               </button>

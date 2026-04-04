@@ -638,7 +638,10 @@ const BuyLetterHistory = () => {
     if (documentsObj.pan && documentsObj.pan !== null)
       items.push({ title: "PAN Card", url: documentsObj.pan });
     if (documentsObj.signedDocBuy && documentsObj.signedDocBuy !== null)
-      signedDocBuyItems.push({ title: "Signed Doc (Buy)", url: documentsObj.signedDocBuy });
+      signedDocBuyItems.push({
+        title: "Signed Doc (Buy)",
+        url: documentsObj.signedDocBuy,
+      });
 
     const deliveryPhotoUrl =
       (documentsObj.deliveryPhoto &&
@@ -1958,11 +1961,14 @@ const BuyLetterHistory = () => {
           return;
         }
 
-        await axios.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        await axios.delete(
+          `https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
         setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
         setAlertInfo({
           isOpen: true,
@@ -2097,14 +2103,25 @@ const BuyLetterHistory = () => {
                       <tr>
                         <th style={styles.tableHeader}>Seller Name</th>
                         <th style={styles.tableHeader}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 8,
+                            }}
+                          >
                             <span>Year</span>
                             <TableFilter
                               type="number"
                               placeholder="YYYY"
                               rangeOnly={true}
-                              onApply={(f) => setFilters((p) => ({ ...p, year: f }))}
-                              onClear={() => setFilters((p) => ({ ...p, year: null }))}
+                              onApply={(f) =>
+                                setFilters((p) => ({ ...p, year: f }))
+                              }
+                              onClear={() =>
+                                setFilters((p) => ({ ...p, year: null }))
+                              }
                             />
                           </div>
                         </th>
@@ -2112,14 +2129,25 @@ const BuyLetterHistory = () => {
                         <th style={styles.tableHeader}>Veh. Reg No</th>
                         <th style={styles.tableHeader}>Buyer Name</th>
                         <th style={styles.tableHeader}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 8,
+                            }}
+                          >
                             <span>Amount</span>
                             <TableFilter
                               type="number"
                               placeholder="₹"
                               rangeOnly={true}
-                              onApply={(f) => setFilters((p) => ({ ...p, amount: f }))}
-                              onClear={() => setFilters((p) => ({ ...p, amount: null }))}
+                              onApply={(f) =>
+                                setFilters((p) => ({ ...p, amount: f }))
+                              }
+                              onClear={() =>
+                                setFilters((p) => ({ ...p, amount: null }))
+                              }
                             />
                           </div>
                         </th>
@@ -2186,6 +2214,8 @@ const BuyLetterHistory = () => {
                                       }}
                                     >
                                       Edited: {formatDate(letter.editedAt)}
+                                      {letter.editedTime &&
+                                        ` at ${formatTime(letter.editedTime)}`}
                                     </div>
                                   )}
                                 </div>
@@ -2596,6 +2626,8 @@ const BuyLetterHistory = () => {
                                 style={{ fontSize: "0.8rem", color: "#64748b" }}
                               >
                                 {formatDate(letter.editedAt)}
+                                {letter.editedTime &&
+                                  ` at ${formatTime(letter.editedTime)}`}
                               </span>
                             </div>
                           )}

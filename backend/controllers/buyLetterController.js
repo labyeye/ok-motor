@@ -675,8 +675,13 @@ exports.updateBuyLetter = async (req, res) => {
     }
 
     // Set edited metadata
-    updateData.editedAt = new Date();
+    const editedDate = new Date();
+    updateData.editedAt = editedDate;
     updateData.editedBy = req.user.id;
+    // Store edited time in HH:MM format
+    const hours = String(editedDate.getHours()).padStart(2, "0");
+    const minutes = String(editedDate.getMinutes()).padStart(2, "0");
+    updateData.editedTime = `${hours}:${minutes}`;
 
     // Auto-save / upsert Insurance and PUC master records when BuyLetter is updated
     try {

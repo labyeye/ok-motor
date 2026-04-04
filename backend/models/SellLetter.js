@@ -136,6 +136,7 @@ const SellLetterSchema = new mongoose.Schema(
     },
     version: { type: Number, default: 1 },
     editedAt: { type: Date },
+    editedTime: { type: String },
     editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
