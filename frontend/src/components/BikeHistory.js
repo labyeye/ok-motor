@@ -1585,9 +1585,14 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
       // Add insurance renewal entries if updatedAt !== createdAt
       insuranceData.forEach((item) => {
-        const createdTime = item.createdAt ? new Date(item.createdAt).getTime() : 0;
-        const updatedTime = item.updatedAt ? new Date(item.updatedAt).getTime() : 0;
-        if (updatedTime > createdTime + 1000) { // More than 1 sec difference = edited
+        const createdTime = item.createdAt
+          ? new Date(item.createdAt).getTime()
+          : 0;
+        const updatedTime = item.updatedAt
+          ? new Date(item.updatedAt).getTime()
+          : 0;
+        if (updatedTime > createdTime + 1000) {
+          // More than 1 sec difference = edited
           combinedData.push({
             ...item,
             type: "insurance-renewed",
@@ -1599,9 +1604,14 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
       // Add PUC renewal entries if updatedAt !== createdAt
       pucData.forEach((item) => {
-        const createdTime = item.createdAt ? new Date(item.createdAt).getTime() : 0;
-        const updatedTime = item.updatedAt ? new Date(item.updatedAt).getTime() : 0;
-        if (updatedTime > createdTime + 1000) { // More than 1 sec difference = edited
+        const createdTime = item.createdAt
+          ? new Date(item.createdAt).getTime()
+          : 0;
+        const updatedTime = item.updatedAt
+          ? new Date(item.updatedAt).getTime()
+          : 0;
+        if (updatedTime > createdTime + 1000) {
+          // More than 1 sec difference = edited
           combinedData.push({
             ...item,
             type: "puc-renewed",
@@ -1646,14 +1656,25 @@ const BikeHistory = ({ externalSearchTerm }) => {
       }
 
       const getSortTimestamp = (historyItem) => {
+        const type = historyItem?.type;
         const candidateDates = [
-          historyItem.createdAt,
+          // Prefer normalized action date first (set while building combinedData).
+          historyItem.date,
+          // Renewal entries should follow updated time as the action timestamp.
+          type === "puc-renewed" || type === "insurance-renewed"
+            ? historyItem.updatedAt
+            : null,
+          type === "service" ? historyItem.serviceDate : null,
+          type === "sell" ? historyItem.saleDate : null,
+          type === "buy" ? historyItem.saleDate : null,
+          historyItem.editedAt,
+          historyItem.updatedAt,
           historyItem.saleDate,
           historyItem.serviceDate,
           historyItem.pucIssueDate,
           historyItem.pucExpiryDate,
           historyItem.insuranceExpiryDate,
-          historyItem.date,
+          historyItem.createdAt,
         ];
 
         const parseDateValue = (value) => {
@@ -1692,7 +1713,8 @@ const BikeHistory = ({ externalSearchTerm }) => {
           if (!Number.isNaN(timestamp)) return timestamp;
         }
 
-        return Number.MAX_SAFE_INTEGER;
+        // Keep entries with invalid dates at the bottom in latest-first sorting.
+        return 0;
       };
 
       const isEditedEntry = (historyItem) => {
@@ -1717,28 +1739,30 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return false;
       };
 
-      const getFlowOrder = (historyItem) => {
-        const type = historyItem?.type;
-        const edited =
-          (type === "buy" || type === "sell") && isEditedEntry(historyItem);
-
-        if (type === "buy" && !edited) return 1;
-        if (type === "insurance") return 2;
-        if (type === "puc") return 3;
-        if (type === "sell" && !edited) return 4;
-        if (type === "insurance-renewed") return 5;
-        if (type === "puc-renewed") return 6;
-        if (edited) return 7;
-        if (type === "service") return 8;
-        if (type === "advance") return 9;
-        return 99;
-      };
-
       combinedData.sort((firstItem, secondItem) => {
-        const flowOrderDiff = getFlowOrder(firstItem) - getFlowOrder(secondItem);
-        if (flowOrderDiff !== 0) return flowOrderDiff;
+        const secondTimestamp = getSortTimestamp(secondItem);
+        const firstTimestamp = getSortTimestamp(firstItem);
+        const timestampDiff = secondTimestamp - firstTimestamp;
+        if (timestampDiff !== 0) return timestampDiff;
 
-        return getSortTimestamp(firstItem) - getSortTimestamp(secondItem);
+        const getActionPriority = (historyItem) => {
+          const type = historyItem?.type;
+          const edited =
+            (type === "buy" || type === "sell") && isEditedEntry(historyItem);
+
+          if (type === "service") return 1;
+          if (type === "puc-renewed") return 2;
+          if (type === "insurance-renewed") return 3;
+          if (type === "sell" && !edited) return 4;
+          if (type === "buy" && !edited) return 5;
+          if (type === "advance") return 6;
+          if (edited) return 7;
+          if (type === "insurance") return 8;
+          if (type === "puc") return 9;
+          return 99;
+        };
+
+        return getActionPriority(firstItem) - getActionPriority(secondItem);
       });
 
       setBikeHistory(combinedData);
