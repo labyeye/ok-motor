@@ -736,6 +736,26 @@ const SellLetterHistory = () => {
     return `${formattedHours}:${formattedMinutes} ${ampm}`;
   };
 
+  const formatTimeFromDate = (dateObj) => {
+    if (!dateObj) return "";
+    try {
+      const date = new Date(dateObj);
+      if (isNaN(date.getTime())) return "";
+      
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12;
+      
+      const formattedHours = String(hours).padStart(2, "0");
+      const formattedMinutes = String(minutes).padStart(2, "0");
+      
+      return `${formattedHours}:${formattedMinutes} ${ampm}`;
+    } catch (e) {
+      return "";
+    }
+  };
+
   const embedAssetFromUrl = async (pdfDoc, url) => {
     try {
       const res = await fetch(url);
@@ -3917,8 +3937,7 @@ const SellLetterHistory = () => {
                                     }}
                                   >
                                     Edited: {formatDate(letter.editedAt)}
-                                    {letter.editedTime &&
-                                      ` at ${formatTime(letter.editedTime)}`}
+                                    {letter.editedAt && ` at ${formatTimeFromDate(letter.editedAt)}`}
                                   </div>
                                 )}
                               </td>
@@ -4298,8 +4317,8 @@ const SellLetterHistory = () => {
                                 style={{ fontSize: "0.8rem", color: "#64748b" }}
                               >
                                 {formatDate(letter.editedAt)}
-                                {letter.editedTime &&
-                                  ` at ${formatTime(letter.editedTime)}`}
+                                {letter.editedAt &&
+                                  ` at ${formatTimeFromDate(letter.editedAt)}`}
                               </span>
                             </div>
                           )}
