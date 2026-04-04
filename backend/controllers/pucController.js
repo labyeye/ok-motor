@@ -12,7 +12,8 @@ const normalizePucPayload = (payload = {}) => {
     normalized.vehicleRegNo = normalized.regNo;
   }
 
-  const expirySource = normalized.pucExpiryDate || normalized.pucExpiry || null;
+  // Prefer pucExpiry (form field) over pucExpiryDate so edit flows don't keep stale values.
+  const expirySource = normalized.pucExpiry || normalized.pucExpiryDate || null;
   if (expirySource) {
     const parsed = new Date(expirySource);
     if (!isNaN(parsed.getTime())) {
@@ -55,10 +56,7 @@ const syncPUCToLetters = async (pucDoc) => {
       { registrationNumber: regRegex },
       { $set: pucFields },
     ),
-    BuyLetter.updateMany(
-      { registrationNumber: regRegex },
-      { $set: pucFields },
-    ),
+    BuyLetter.updateMany({ registrationNumber: regRegex }, { $set: pucFields }),
   ]);
 };
 
@@ -166,7 +164,9 @@ exports.getPUCByVehicle = async (req, res) => {
 
     const regex = new RegExp(`^${vehicleRegNo}$`, "i");
     console.log("getPUCByVehicle called for:", vehicleRegNo);
-    const puc = await PUC.findOne({ $or: [{ vehicleRegNo: regex }, { regNo: regex }] });
+    const puc = await PUC.findOne({
+      $or: [{ vehicleRegNo: regex }, { regNo: regex }],
+    });
     console.log("getPUCByVehicle result:", !!puc);
     if (!puc) return res.status(404).json({ message: "Not found" });
     res.json(puc);
@@ -196,7 +196,12 @@ exports.upsertPUCByVehicle = async (req, res) => {
     const puc = await PUC.findOneAndUpdate(
       { $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }] },
       data,
-      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true,
+        setDefaultsOnInsert: true,
+      },
     );
 
     // Propagate changes to SellLetter & BuyLetter

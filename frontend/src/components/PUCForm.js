@@ -153,9 +153,25 @@ const PUCForm = () => {
         return;
       }
 
+      const payload = {
+        personName: formData.personName,
+        personPhone: formData.personPhone,
+        personEmail: formData.personEmail,
+        vehicleModel: formData.vehicleModel,
+        brand: formData.brand,
+        year: formData.year,
+        regNo: formData.regNo,
+        pucNumber: formData.pucNumber,
+        // Keep both keys aligned for backward compatibility with existing readers.
+        pucExpiry: formData.pucExpiry,
+        pucExpiryDate: formData.pucExpiry,
+        pucIssueDate: formData.pucIssueDate,
+        pucStatus: formData.pucStatus,
+      };
+
       if (formData._id) {
         // Update existing record
-        await axios.put(`${API_BASE_URL}/puc/${formData._id}`, formData, {
+        await axios.put(`${API_BASE_URL}/puc/${formData._id}`, payload, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -164,7 +180,7 @@ const PUCForm = () => {
         alert("PUC record updated successfully!");
       } else {
         // Create new record
-        await axios.post(`${API_BASE_URL}/puc`, formData, {
+        await axios.post(`${API_BASE_URL}/puc`, payload, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
