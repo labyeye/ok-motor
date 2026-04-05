@@ -4297,7 +4297,7 @@ const BuyLetterForm = () => {
                 </div>
 
                 <div style={styles.formField}>
-                  <label style={styles.formLabel}>Signed Doc (buy)</label>
+                  <label style={styles.formLabel}>Signed Doc (buy) (Optional)</label>
                   <div
                     style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
                   >
@@ -4329,6 +4329,7 @@ const BuyLetterForm = () => {
                       style={styles.previewImg}
                     />
                   )}
+                  
                 </div>
               </div>
             </div>

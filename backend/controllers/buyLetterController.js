@@ -335,7 +335,7 @@ exports.createBuyLetter = [
         };
 
         // Run all single-file uploads in parallel
-        const [rcFront, rcBack, aadhaarFront, aadhaarBack, pan, delivery] =
+        const [rcFront, rcBack, aadhaarFront, aadhaarBack, pan, delivery, signedDocBuy] =
           await Promise.all([
             files.vehicleRCFront?.[0]
               ? processFile(files.vehicleRCFront[0], "vehicle-rc-front")
