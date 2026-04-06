@@ -22,6 +22,10 @@ const normalizeInsurancePayload = (payload = {}) => {
     }
   }
 
+  if (!normalized.sourceType) {
+    normalized.sourceType = "manual";
+  }
+
   return normalized;
 };
 

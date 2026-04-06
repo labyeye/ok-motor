@@ -5,6 +5,11 @@ const PUCSchema = new mongoose.Schema(
     personName: { type: String, required: true },
     personPhone: { type: String }, // Phone number
     personEmail: { type: String },
+    sourceType: {
+      type: String,
+      enum: ["manual", "buy-letter", "sell-letter"],
+      default: "manual",
+    },
     vehicleModel: { type: String },
     brand: { type: String },
     year: { type: String },

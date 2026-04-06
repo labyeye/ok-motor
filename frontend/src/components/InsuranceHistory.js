@@ -14,7 +14,11 @@ const InsuranceHistory = () => {
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState({ company: null, expiry: null });
+  const [filters, setFilters] = useState({
+    company: null,
+    expiry: null,
+    expiryTone: "all",
+  });
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -220,6 +224,64 @@ const InsuranceHistory = () => {
       margin: "0 4px",
       borderRadius: "4px",
     },
+    headerStatusFilter: {
+      border: "1px solid #cbd5e1",
+      borderRadius: "6px",
+      fontSize: "0.75rem",
+      padding: "4px 8px",
+      backgroundColor: "#ffffff",
+      color: "#1e293b",
+      minWidth: "150px",
+    },
+    expiryBadge: {
+      display: "inline-block",
+      padding: "4px 10px",
+      borderRadius: "999px",
+      fontWeight: 600,
+      fontSize: "0.875rem",
+      lineHeight: 1.2,
+      whiteSpace: "nowrap",
+    },
+    expiryBadgeExpired: {
+      backgroundColor: "#fee2e2",
+      color: "#991b1b",
+    },
+    expiryBadgeMissing: {
+      backgroundColor: "#dbeafe",
+      color: "#1e40af",
+    },
+    expiryBadgeSoon: {
+      backgroundColor: "#fef3c7",
+      color: "#92400e",
+    },
+    expiryBadgeHealthy: {
+      backgroundColor: "#dcfce7",
+      color: "#166534",
+    },
+  };
+
+  const getExpiryMeta = (rawDate) => {
+    if (!rawDate) return { text: "—", tone: "missing" };
+
+    const parsed = new Date(rawDate);
+    if (isNaN(parsed.getTime())) return { text: "—", tone: "missing" };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const expiry = new Date(parsed);
+    expiry.setHours(0, 0, 0, 0);
+
+    const diffDays = Math.ceil(
+      (expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    if (diffDays < 0) {
+      return { text: parsed.toLocaleDateString("en-IN"), tone: "expired" };
+    }
+    if (diffDays <= 7) {
+      return { text: parsed.toLocaleDateString("en-IN"), tone: "soon" };
+    }
+    return { text: parsed.toLocaleDateString("en-IN"), tone: "healthy" };
   };
 
   const filteredHistory = (history || []).filter((item) => {
@@ -261,6 +323,14 @@ const InsuranceHistory = () => {
           if (d > v2) return false;
         }
       }
+    }
+
+    const toneFilter = filters.expiryTone || "all";
+    if (toneFilter !== "all") {
+      const tone = getExpiryMeta(
+        item.insuranceExpiry || item.insuranceExpiryDate,
+      ).tone;
+      if (tone !== toneFilter) return false;
     }
 
     return true;
@@ -355,17 +425,36 @@ const InsuranceHistory = () => {
                         }}
                       >
                         <span>Expiry Date</span>
-                        <TableFilter
-                          type="date"
-                          placeholder="yyyy-mm-dd"
-                          rangeOnly={true}
-                          onApply={(f) =>
-                            setFilters((p) => ({ ...p, expiry: f }))
-                          }
-                          onClear={() =>
-                            setFilters((p) => ({ ...p, expiry: null }))
-                          }
-                        />
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <select
+                            value={filters.expiryTone || "all"}
+                            onChange={(e) =>
+                              setFilters((p) => ({
+                                ...p,
+                                expiryTone: e.target.value,
+                              }))
+                            }
+                            style={styles.headerStatusFilter}
+                            title="Filter by expiry color status"
+                          >
+                            <option value="all">All Colors</option>
+                            <option value="expired">🔴 Expired</option>
+                            <option value="missing">🔵 Not Entered</option>
+                            <option value="soon">🟡 0-7 Days</option>
+                            <option value="healthy">🟢 8+ Days</option>
+                          </select>
+                          <TableFilter
+                            type="date"
+                            placeholder="yyyy-mm-dd"
+                            rangeOnly={true}
+                            onApply={(f) =>
+                              setFilters((p) => ({ ...p, expiry: f }))
+                            }
+                            onClear={() =>
+                              setFilters((p) => ({ ...p, expiry: null }))
+                            }
+                          />
+                        </div>
                       </div>
                     </th>
                     <th style={styles.tableHeader}>Actions</th>
@@ -387,13 +476,22 @@ const InsuranceHistory = () => {
                       <td style={styles.tableCell}>{item.insuranceCompany}</td>
                       <td style={styles.tableCell}>
                         {(() => {
-                          const d =
-                            item.insuranceExpiry || item.insuranceExpiryDate;
-                          if (!d) return "—";
-                          const parsed = new Date(d);
-                          return isNaN(parsed)
-                            ? "—"
-                            : parsed.toLocaleDateString("en-IN");
+                          const meta = getExpiryMeta(
+                            item.insuranceExpiry || item.insuranceExpiryDate,
+                          );
+                          const toneStyle =
+                            meta.tone === "expired"
+                              ? styles.expiryBadgeExpired
+                              : meta.tone === "missing"
+                                ? styles.expiryBadgeMissing
+                                : meta.tone === "soon"
+                                  ? styles.expiryBadgeSoon
+                                  : styles.expiryBadgeHealthy;
+                          return (
+                            <span style={{ ...styles.expiryBadge, ...toneStyle }}>
+                              {meta.text}
+                            </span>
+                          );
                         })()}
                       </td>
                       <td style={styles.tableCell}>

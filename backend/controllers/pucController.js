@@ -30,6 +30,10 @@ const normalizePucPayload = (payload = {}) => {
     }
   }
 
+  if (!normalized.sourceType) {
+    normalized.sourceType = "manual";
+  }
+
   return normalized;
 };
 

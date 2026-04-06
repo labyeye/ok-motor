@@ -96,6 +96,7 @@ const AdminPage = () => {
   const [incompleteLoading, setIncompleteLoading] = useState(false);
   const [unsoldVehicles, setUnsoldVehicles] = useState([]);
   const [sellLettersState, setSellLettersState] = useState([]);
+  const [buyLettersState, setBuyLettersState] = useState([]);
 
   const fetchVehicleStats = useCallback(async () => {
     try {
@@ -134,6 +135,8 @@ const AdminPage = () => {
       const buyLetters = Array.isArray(resBuyLetters?.data)
         ? resBuyLetters.data
         : resBuyLetters?.data?.buyLetters || [];
+
+      setBuyLettersState(Array.isArray(buyLetters) ? buyLetters : []);
 
       // Logic to count unique sell letters (handling edits/versions)
       const uniqueSaleIds = new Set();
@@ -1456,7 +1459,7 @@ const AdminPage = () => {
     const [search, setSearch] = useState("");
     const [showAllPuc, setShowAllPuc] = useState(false);
 
-    const fetchPucData = useCallback(async (cachedSellLetters = null) => {
+    const fetchPucData = useCallback(async (cachedSellLetters = null, cachedBuyLetters = null) => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
@@ -1466,20 +1469,37 @@ const AdminPage = () => {
         // Use cached sell letters if available to avoid duplicate heavy requests
         let pucRecords = [];
         let sellLetters = [];
+        let buyLetters = [];
         if (cachedSellLetters && cachedSellLetters.length > 0) {
           const resPUC = await axios.get(`${BASE}/api/puc?limit=2000`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           pucRecords = resPUC.data || [];
           sellLetters = cachedSellLetters;
+          buyLetters = cachedBuyLetters || [];
+          if (!buyLetters.length) {
+            const resBuy = await axios
+              .get(`${BASE}/api/buy-letter?limit=2000`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              .catch(() => ({ data: [] }));
+            buyLetters = Array.isArray(resBuy.data)
+              ? resBuy.data
+              : resBuy.data?.buyLetters || [];
+          }
         } else {
           // Fetch PUC model records AND sell letters in parallel
-          const [resPUC, resSell] = await Promise.all([
+          const [resPUC, resSell, resBuy] = await Promise.all([
             axios.get(`${BASE}/api/puc?limit=2000`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
             axios
               .get(`${BASE}/api/sell-letters?limit=2000`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              .catch(() => ({ data: [] })),
+            axios
+              .get(`${BASE}/api/buy-letter?limit=2000`, {
                 headers: { Authorization: `Bearer ${token}` },
               })
               .catch(() => ({ data: [] })),
@@ -1489,6 +1509,9 @@ const AdminPage = () => {
           sellLetters = Array.isArray(resSell.data)
             ? resSell.data
             : resSell.data?.data || [];
+          buyLetters = Array.isArray(resBuy.data)
+            ? resBuy.data
+            : resBuy.data?.buyLetters || [];
         }
 
         // Build map: regNo -> sell letter (only those with pucExpiryDate)
@@ -1518,13 +1541,20 @@ const AdminPage = () => {
 
         // Build set of reg nos already covered by sell letters
         const soldRegNos = new Set(sellByReg.keys());
+        const buyRegNos = new Set(
+          (buyLetters || [])
+            .map((b) => (b?.registrationNumber || "").trim().toLowerCase())
+            .filter(Boolean),
+        );
 
         // PUC model records NOT in sell letters → "PUC Only"
         const pucOnlyRows = pucRecords
           .filter((p) => {
             if (!p || !p.pucExpiry) return false;
             const key = (p.regNo || "").trim().toLowerCase();
-            return !soldRegNos.has(key);
+            if (soldRegNos.has(key)) return false;
+            if ((p.sourceType || "").toLowerCase() === "manual") return true;
+            return !buyRegNos.has(key);
           })
           .map((item) => ({
             ...item,
@@ -1554,7 +1584,10 @@ const AdminPage = () => {
 
     useEffect(() => {
       // Pass current cached sell letters (if any) to the fetcher so it can reuse them.
-      fetchPucData(sellLettersState && sellLettersState.length > 0 ? sellLettersState : null);
+      fetchPucData(
+        sellLettersState && sellLettersState.length > 0 ? sellLettersState : null,
+        buyLettersState && buyLettersState.length > 0 ? buyLettersState : null,
+      );
     }, [fetchPucData]);
 
     const now = new Date();
@@ -1967,7 +2000,7 @@ const AdminPage = () => {
     const [search, setSearch] = useState("");
     const [showAllInsurance, setShowAllInsurance] = useState(false);
 
-    const fetchInsuranceData = useCallback(async (cachedSellLetters = null) => {
+    const fetchInsuranceData = useCallback(async (cachedSellLetters = null, cachedBuyLetters = null) => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
@@ -1977,20 +2010,37 @@ const AdminPage = () => {
         // Use cached sell letters if available to avoid duplicate heavy requests
         let insuranceRecords = [];
         let sellLetters = [];
+        let buyLetters = [];
         if (cachedSellLetters && cachedSellLetters.length > 0) {
           const resInsurance = await axios.get(`${BASE}/api/insurance?limit=2000`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           insuranceRecords = resInsurance.data || [];
           sellLetters = cachedSellLetters;
+          buyLetters = cachedBuyLetters || [];
+          if (!buyLetters.length) {
+            const resBuy = await axios
+              .get(`${BASE}/api/buy-letter?limit=2000`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              .catch(() => ({ data: [] }));
+            buyLetters = Array.isArray(resBuy.data)
+              ? resBuy.data
+              : resBuy.data?.buyLetters || [];
+          }
         } else {
           // Fetch Insurance model records AND sell letters in parallel
-          const [resInsurance, resSell] = await Promise.all([
+          const [resInsurance, resSell, resBuy] = await Promise.all([
             axios.get(`${BASE}/api/insurance?limit=2000`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
             axios
               .get(`${BASE}/api/sell-letters?limit=2000`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              .catch(() => ({ data: [] })),
+            axios
+              .get(`${BASE}/api/buy-letter?limit=2000`, {
                 headers: { Authorization: `Bearer ${token}` },
               })
               .catch(() => ({ data: [] })),
@@ -2000,6 +2050,9 @@ const AdminPage = () => {
           sellLetters = Array.isArray(resSell.data)
             ? resSell.data
             : resSell.data?.data || [];
+          buyLetters = Array.isArray(resBuy.data)
+            ? resBuy.data
+            : resBuy.data?.buyLetters || [];
         }
 
         // Build map: regNo -> sell letter (only those with insuranceExpiryDate)
@@ -2030,13 +2083,20 @@ const AdminPage = () => {
 
         // Build set of reg nos already covered by sell letters
         const soldRegNos = new Set(sellByReg.keys());
+        const buyRegNos = new Set(
+          (buyLetters || [])
+            .map((b) => (b?.registrationNumber || "").trim().toLowerCase())
+            .filter(Boolean),
+        );
 
         // Insurance model records NOT in sell letters → "Insurance Only"
         const insuranceOnlyRows = insuranceRecords
           .filter((s) => {
             if (!s || !s.insuranceExpiry) return false;
             const key = (s.regNo || "").trim().toLowerCase();
-            return !soldRegNos.has(key);
+            if (soldRegNos.has(key)) return false;
+            if ((s.sourceType || "").toLowerCase() === "manual") return true;
+            return !buyRegNos.has(key);
           })
           .map((item) => ({
             ...item,
@@ -2066,7 +2126,10 @@ const AdminPage = () => {
     }, []);
 
     useEffect(() => {
-      fetchInsuranceData(sellLettersState && sellLettersState.length > 0 ? sellLettersState : null);
+      fetchInsuranceData(
+        sellLettersState && sellLettersState.length > 0 ? sellLettersState : null,
+        buyLettersState && buyLettersState.length > 0 ? buyLettersState : null,
+      );
     }, [fetchInsuranceData]);
 
     const now = new Date();

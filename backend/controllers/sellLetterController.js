@@ -17,6 +17,31 @@ const stripBuyOnlyDocuments = (docs) => {
   return rest;
 };
 
+const syncMasterIdentityFromSellLetter = async ({
+  regRegex,
+  buyerName,
+  buyerPhone,
+  buyerEmail,
+}) => {
+  const identityFields = {
+    personName: buyerName || "Unknown",
+    personPhone: buyerPhone || "",
+    personEmail: buyerEmail || "",
+    sourceType: "sell-letter",
+  };
+
+  await Promise.all([
+    Insurance.updateMany(
+      { $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }] },
+      { $set: identityFields },
+    ),
+    PUC.updateMany(
+      { $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }] },
+      { $set: identityFields },
+    ),
+  ]);
+};
+
 // New create handler which handles multipart form-data for images.
 exports.createSellLetter = [
   upload.fields([
@@ -75,7 +100,8 @@ exports.createSellLetter = [
             const insuranceData = {
               personName: bodyData.buyerName || "Unknown",
               personPhone: bodyData.buyerPhone || "",
-              personEmail: "",
+              personEmail: bodyData.buyerEmail || "",
+              sourceType: "sell-letter",
               vehicleModel: bodyData.vehicleModel || "",
               brand: bodyData.vehicleName || "",
               year: "",
@@ -142,7 +168,8 @@ exports.createSellLetter = [
             const pucData = {
               personName: bodyData.buyerName || "Unknown",
               personPhone: bodyData.buyerPhone || "",
-              personEmail: "",
+              personEmail: bodyData.buyerEmail || "",
+              sourceType: "sell-letter",
               vehicleModel: bodyData.vehicleModel || "",
               brand: bodyData.vehicleName || "",
               year: "",
@@ -201,6 +228,17 @@ exports.createSellLetter = [
           }
         } catch (e) {
           console.error("PUC upsert/fetch failed:", e);
+        }
+
+        try {
+          await syncMasterIdentityFromSellLetter({
+            regRegex,
+            buyerName: bodyData.buyerName,
+            buyerPhone: bodyData.buyerPhone,
+            buyerEmail: bodyData.buyerEmail,
+          });
+        } catch (e) {
+          console.error("Sell identity sync failed:", e);
         }
       }
 
@@ -1011,7 +1049,8 @@ exports.updateSellLetter = async (req, res) => {
             personName:
               updateData.buyerName || sellLetter.buyerName || "Unknown",
             personPhone: updateData.buyerPhone || sellLetter.buyerPhone || "",
-            personEmail: "",
+            personEmail: updateData.buyerEmail || sellLetter.buyerEmail || "",
+            sourceType: "sell-letter",
             vehicleModel:
               updateData.vehicleModel || sellLetter.vehicleModel || "",
             brand: updateData.vehicleName || sellLetter.vehicleName || "",
@@ -1051,7 +1090,8 @@ exports.updateSellLetter = async (req, res) => {
             personName:
               updateData.buyerName || sellLetter.buyerName || "Unknown",
             personPhone: updateData.buyerPhone || sellLetter.buyerPhone || "",
-            personEmail: "",
+            personEmail: updateData.buyerEmail || sellLetter.buyerEmail || "",
+            sourceType: "sell-letter",
             vehicleModel:
               updateData.vehicleModel || sellLetter.vehicleModel || "",
             brand: updateData.vehicleName || sellLetter.vehicleName || "",
@@ -1083,6 +1123,17 @@ exports.updateSellLetter = async (req, res) => {
           if (pucDoc) {
             updateData.pucId = pucDoc._id;
           }
+        }
+
+        try {
+          await syncMasterIdentityFromSellLetter({
+            regRegex,
+            buyerName: updateData.buyerName || sellLetter.buyerName,
+            buyerPhone: updateData.buyerPhone || sellLetter.buyerPhone,
+            buyerEmail: updateData.buyerEmail || sellLetter.buyerEmail,
+          });
+        } catch (e) {
+          console.error("Sell identity resync failed:", e);
         }
       }
     } catch (e) {

@@ -66,6 +66,7 @@ exports.createBuyLetter = [
               personName: body.sellerName || body.buyerName || "Unknown",
               personPhone: body.selleraadharphone || body.buyerPhone || "",
               personEmail: "",
+              sourceType: "buy-letter",
               vehicleModel: body.vehicleModel || "",
               brand: body.vehicleName || "",
               year: "",
@@ -131,6 +132,7 @@ exports.createBuyLetter = [
               personName: body.sellerName || body.buyerName || "Unknown",
               personPhone: body.selleraadharphone || body.buyerPhone || "",
               personEmail: "",
+              sourceType: "buy-letter",
               vehicleModel: body.vehicleModel || "",
               brand: body.vehicleName || "",
               year: "",
@@ -702,6 +704,7 @@ exports.updateBuyLetter = async (req, res) => {
             personPhone:
               updateData.selleraadharphone || buyLetter.selleraadharphone || "",
             personEmail: "",
+            sourceType: "buy-letter",
             vehicleModel:
               updateData.vehicleModel || buyLetter.vehicleModel || "",
             brand: updateData.vehicleName || buyLetter.vehicleName || "",
@@ -745,6 +748,7 @@ exports.updateBuyLetter = async (req, res) => {
             personPhone:
               updateData.selleraadharphone || buyLetter.selleraadharphone || "",
             personEmail: "",
+            sourceType: "buy-letter",
             vehicleModel:
               updateData.vehicleModel || buyLetter.vehicleModel || "",
             brand: updateData.vehicleName || buyLetter.vehicleName || "",
