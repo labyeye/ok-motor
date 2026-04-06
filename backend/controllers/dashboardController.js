@@ -163,49 +163,29 @@ const getIncompleteLetterSummary = (letter, type) => {
     aadhaarFront: letter.documents?.aadhaar?.front,
     aadhaarBack: letter.documents?.aadhaar?.back,
     pan: letter.documents?.pan,
-    delivery: letter.documents?.deliveryPhoto,
-    km: letter.documents?.vehicleKM,
+    signedDocBuy: letter.documents?.signedDocBuy,
+    signedDocSell: letter.documents?.signedDocSell,
+    vehicleBuyReceiptPages: letter.documents?.vehicleBuyReceipt?.pages,
   };
 
   if (type === "buy") {
-    if (!letter.sellerName) missingFields.push("Seller Name");
-    if (!letter.sellerFatherName) missingFields.push("Seller Father Name");
-    if (!letter.sellerCurrentAddress) missingFields.push("Seller Address");
-    if (!letter.vehicleName) missingFields.push("Vehicle Name");
-    if (!letter.registrationNumber) missingFields.push("Registration Number");
-    if (!letter.buyerName) missingFields.push("Buyer Name");
-    if (!letter.buyerFatherName) missingFields.push("Buyer Father Name");
-    if (!letter.saleAmount) missingFields.push("Sale Amount");
-    if (!letter.saleDate) missingFields.push("Sale Date");
-    if (!letter.witnessname) missingFields.push("Witness Name");
-    if (!letter.witnessphone) missingFields.push("Witness Phone");
     if (!docPaths.rcFront) missingFields.push("Vehicle RC Front");
     if (!docPaths.rcBack) missingFields.push("Vehicle RC Back");
-    if (!docPaths.aadhaarFront) missingFields.push("Aadhaar Front");
-    if (!docPaths.aadhaarBack) missingFields.push("Aadhaar Back");
+    if (!docPaths.signedDocBuy) missingFields.push("Signed Doc");
+    if (!docPaths.aadhaarFront) missingFields.push("Aadhar Front");
+    if (!docPaths.aadhaarBack) missingFields.push("Aadhar Back");
     if (!docPaths.pan) missingFields.push("PAN Card");
-    if (!docPaths.delivery && !docPaths.km) missingFields.push("Delivery Photo/KM");
-    if (!letter.documents?.insuranceCertificate?.pages?.length) missingFields.push("Insurance");
+    if (!docPaths.vehicleBuyReceiptPages?.length)
+      missingFields.push("Vehicle Buy Receipt");
   } else {
-    // Sell Letter
-    if (!letter.vehicleName) missingFields.push("Vehicle Name");
-    if (!letter.registrationNumber) missingFields.push("Registration Number");
-    if (!letter.buyerName) missingFields.push("Buyer Name");
-    if (!letter.buyerFatherName) missingFields.push("Buyer Father Name");
-    if (!letter.buyerAddress) missingFields.push("Buyer Address");
-    if (!letter.buyerPhone) missingFields.push("Buyer Phone");
-    if (!letter.buyerAadhar) missingFields.push("Buyer Aadhaar");
-    if (!letter.saleAmount) missingFields.push("Sale Amount");
-    if (!letter.saleDate) missingFields.push("Sale Date");
-    if (!letter.witnessName) missingFields.push("Witness Name");
-    if (!letter.witnessPhone) missingFields.push("Witness Phone");
     if (!docPaths.rcFront) missingFields.push("Vehicle RC Front");
     if (!docPaths.rcBack) missingFields.push("Vehicle RC Back");
-    if (!docPaths.aadhaarFront) missingFields.push("Aadhaar Front");
-    if (!docPaths.aadhaarBack) missingFields.push("Aadhaar Back");
+    if (!docPaths.signedDocSell) missingFields.push("Signed Doc");
+    if (!docPaths.aadhaarFront) missingFields.push("Aadhar Front");
+    if (!docPaths.aadhaarBack) missingFields.push("Aadhar Back");
     if (!docPaths.pan) missingFields.push("PAN Card");
-    if (!docPaths.delivery && !docPaths.km) missingFields.push("Delivery Photo/KM");
-    if (!letter.documents?.vehiclePhotos?.length) missingFields.push("Vehicle Photos");
+    if (!docPaths.vehicleBuyReceiptPages?.length)
+      missingFields.push("Vehicle Buy Receipt");
   }
 
   return { ...letter, missingFields };

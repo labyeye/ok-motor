@@ -571,6 +571,18 @@ const SellLetterForm = () => {
         ];
         if (multiFields.includes(uploadModalFieldName)) {
           const filesArr = file;
+
+          if (filesArr.length === 1 && isImageFile(filesArr[0])) {
+            const singleImage = filesArr[0];
+            const url = URL.createObjectURL(singleImage);
+            setCropImageSrc(url);
+            setCropFieldName(uploadModalFieldName);
+            setCropFileName(singleImage.name);
+            setShowFileUploadModal(false);
+            setShowCropper(true);
+            return;
+          }
+
           setFilesState((prev) => ({
             ...prev,
             [uploadModalFieldName]: filesArr,

@@ -105,21 +105,33 @@ const AdminPage = () => {
       const headers = { headers: { Authorization: `Bearer ${token}` } };
 
       // Parallelize the independent API calls to reduce overall latency
-      const vehiclesPromise = axios.get(`${API_BASE}/api/vehicles?limit=2000`, headers);
-      const sellLettersPromise = axios.get(`${API_BASE}/api/sell-letters?limit=2000`, headers);
-      const buyLettersPromise = axios.get(`${API_BASE}/api/buy-letter?limit=2000`, headers);
-      const pucPromise = axios.get(`${API_BASE}/api/puc?limit=2000`, headers).catch(() => ({ data: [] }));
+      const vehiclesPromise = axios.get(
+        `${API_BASE}/api/vehicles?limit=2000`,
+        headers,
+      );
+      const sellLettersPromise = axios.get(
+        `${API_BASE}/api/sell-letters?limit=2000`,
+        headers,
+      );
+      const buyLettersPromise = axios.get(
+        `${API_BASE}/api/buy-letter?limit=2000`,
+        headers,
+      );
+      const pucPromise = axios
+        .get(`${API_BASE}/api/puc?limit=2000`, headers)
+        .catch(() => ({ data: [] }));
       const insurancePromise = axios
         .get(`${API_BASE}/api/insurance?limit=2000`, headers)
         .catch(() => ({ data: [] }));
 
-      const [vehiclesRes, resSellLetters, resBuyLetters, resPUC, resInsurance] = await Promise.all([
-        vehiclesPromise,
-        sellLettersPromise,
-        buyLettersPromise,
-        pucPromise,
-        insurancePromise,
-      ]);
+      const [vehiclesRes, resSellLetters, resBuyLetters, resPUC, resInsurance] =
+        await Promise.all([
+          vehiclesPromise,
+          sellLettersPromise,
+          buyLettersPromise,
+          pucPromise,
+          insurancePromise,
+        ]);
 
       const vehicles = vehiclesRes?.data?.vehicles || vehiclesRes?.data || [];
 
@@ -145,35 +157,41 @@ const AdminPage = () => {
         const saleId = letter.originalDocumentId || letter._id;
         if (saleId) uniqueSaleIds.add(saleId);
         if (letter.registrationNumber) {
-          soldRegNos.add(String(letter.registrationNumber).trim().toLowerCase());
+          soldRegNos.add(
+            String(letter.registrationNumber).trim().toLowerCase(),
+          );
         }
       }
       const totalSoldLetters = uniqueSaleIds.size;
 
       // Calculate unsold stock (Buys without Sells)
-      const unsoldList = (Array.isArray(buyLetters) ? buyLetters : []).filter((b) => {
-        if (!b || !b.registrationNumber) return false;
-        const reg = String(b.registrationNumber).trim().toLowerCase();
-        return !soldRegNos.has(reg);
-      });
+      const unsoldList = (Array.isArray(buyLetters) ? buyLetters : []).filter(
+        (b) => {
+          if (!b || !b.registrationNumber) return false;
+          const reg = String(b.registrationNumber).trim().toLowerCase();
+          return !soldRegNos.has(reg);
+        },
+      );
       setUnsoldVehicles(unsoldList);
 
       const totalVehicles = Array.isArray(vehicles) ? vehicles.length : 0;
-      const totalBikes = (Array.isArray(vehicles) ? vehicles : []).filter((v) => {
-        const name = (v.vehicleName || "").toLowerCase();
-        const type = (v.vehicleType || "").toLowerCase();
-        return (
-          type.includes("bike") ||
-          type.includes("scooter") ||
-          type.includes("motorcycle") ||
-          name.includes("bike") ||
-          name.includes("scooter") ||
-          name.includes("activa") ||
-          name.includes("access") ||
-          name.includes("honda") ||
-          name.includes("hero")
-        );
-      }).length;
+      const totalBikes = (Array.isArray(vehicles) ? vehicles : []).filter(
+        (v) => {
+          const name = (v.vehicleName || "").toLowerCase();
+          const type = (v.vehicleType || "").toLowerCase();
+          return (
+            type.includes("bike") ||
+            type.includes("scooter") ||
+            type.includes("motorcycle") ||
+            name.includes("bike") ||
+            name.includes("scooter") ||
+            name.includes("activa") ||
+            name.includes("access") ||
+            name.includes("honda") ||
+            name.includes("hero")
+          );
+        },
+      ).length;
 
       // Use the sell letters count for "Total Sold" instead of vehicle status
       const totalSold = totalSoldLetters;
@@ -201,7 +219,9 @@ const AdminPage = () => {
 
       // Process standalone PUC records
       const pucList = resPUC?.data || [];
-      const normalizedPucList = Array.isArray(pucList) ? pucList : pucList?.data || [];
+      const normalizedPucList = Array.isArray(pucList)
+        ? pucList
+        : pucList?.data || [];
       for (const p of normalizedPucList) {
         if (p && p.pucExpiry) {
           const d = new Date(p.pucExpiry);
@@ -285,7 +305,7 @@ const AdminPage = () => {
       fetchVehicleStats();
     }
   }, [user, activeMenu, fetchVehicleStats]);
-  
+
   const fetchIncompleteLetters = useCallback(async () => {
     setIncompleteLoading(true);
     try {
@@ -312,45 +332,46 @@ const AdminPage = () => {
     }
   }, []);
 
-    const fetchFreeServicesData = useCallback(async (search = "") => {
-      try {
-        setFreeServicesLoading(true);
-        const token = localStorage.getItem("token");
-        if (!token) return;
+  const fetchFreeServicesData = useCallback(async (search = "") => {
+    try {
+      setFreeServicesLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-        const endpoint = "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
-        const params = { limit: 2000 };
-        if (search && String(search).trim() !== "") params.search = String(search).trim();
+      const endpoint = "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
+      const params = { limit: 2000 };
+      if (search && String(search).trim() !== "")
+        params.search = String(search).trim();
 
-        const response = await axios.get(endpoint, {
-          headers: { Authorization: `Bearer ${token}` },
-          params,
-        });
+      const response = await axios.get(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
+        params,
+      });
 
-        // ensure dates are normalized on client
-        const items = (response.data.data || []).map((row) => ({
-          ...row,
-          saleDate: row.saleDate || null,
-          month1: row.month1 || null,
-          month2: row.month2 || null,
-          month3: row.month3 || null,
-        }));
+      // ensure dates are normalized on client
+      const items = (response.data.data || []).map((row) => ({
+        ...row,
+        saleDate: row.saleDate || null,
+        month1: row.month1 || null,
+        month2: row.month2 || null,
+        month3: row.month3 || null,
+      }));
 
-        // Filter out records before Dec 2025
-        const cutoffDate = new Date("2025-12-01");
-        const filteredItems = items.filter((row) => {
-          if (!row.saleDate) return false;
-          return new Date(row.saleDate) >= cutoffDate;
-        });
+      // Filter out records before Dec 2025
+      const cutoffDate = new Date("2025-12-01");
+      const filteredItems = items.filter((row) => {
+        if (!row.saleDate) return false;
+        return new Date(row.saleDate) >= cutoffDate;
+      });
 
-        filteredItems.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
-        setFreeServices(filteredItems);
-      } catch (err) {
-        console.error("Error fetching free services data:", err);
-      } finally {
-        setFreeServicesLoading(false);
-      }
-    }, []);
+      filteredItems.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+      setFreeServices(filteredItems);
+    } catch (err) {
+      console.error("Error fetching free services data:", err);
+    } finally {
+      setFreeServicesLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (user && activeMenu === "Dashboard") {
@@ -1459,133 +1480,138 @@ const AdminPage = () => {
     const [search, setSearch] = useState("");
     const [showAllPuc, setShowAllPuc] = useState(false);
 
-    const fetchPucData = useCallback(async (cachedSellLetters = null, cachedBuyLetters = null) => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
+    const fetchPucData = useCallback(
+      async (cachedSellLetters = null, cachedBuyLetters = null) => {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) return;
 
-        const BASE = "https://ok-motor-51l3.vercel.app";
+          const BASE = "https://ok-motor-51l3.vercel.app";
 
-        // Use cached sell letters if available to avoid duplicate heavy requests
-        let pucRecords = [];
-        let sellLetters = [];
-        let buyLetters = [];
-        if (cachedSellLetters && cachedSellLetters.length > 0) {
-          const resPUC = await axios.get(`${BASE}/api/puc?limit=2000`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          pucRecords = resPUC.data || [];
-          sellLetters = cachedSellLetters;
-          buyLetters = cachedBuyLetters || [];
-          if (!buyLetters.length) {
-            const resBuy = await axios
-              .get(`${BASE}/api/buy-letter?limit=2000`, {
+          // Use cached sell letters if available to avoid duplicate heavy requests
+          let pucRecords = [];
+          let sellLetters = [];
+          let buyLetters = [];
+          if (cachedSellLetters && cachedSellLetters.length > 0) {
+            const resPUC = await axios.get(`${BASE}/api/puc?limit=2000`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            pucRecords = resPUC.data || [];
+            sellLetters = cachedSellLetters;
+            buyLetters = cachedBuyLetters || [];
+            if (!buyLetters.length) {
+              const resBuy = await axios
+                .get(`${BASE}/api/buy-letter?limit=2000`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                })
+                .catch(() => ({ data: [] }));
+              buyLetters = Array.isArray(resBuy.data)
+                ? resBuy.data
+                : resBuy.data?.buyLetters || [];
+            }
+          } else {
+            // Fetch PUC model records AND sell letters in parallel
+            const [resPUC, resSell, resBuy] = await Promise.all([
+              axios.get(`${BASE}/api/puc?limit=2000`, {
                 headers: { Authorization: `Bearer ${token}` },
-              })
-              .catch(() => ({ data: [] }));
+              }),
+              axios
+                .get(`${BASE}/api/sell-letters?limit=2000`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                })
+                .catch(() => ({ data: [] })),
+              axios
+                .get(`${BASE}/api/buy-letter?limit=2000`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                })
+                .catch(() => ({ data: [] })),
+            ]);
+
+            pucRecords = resPUC.data || [];
+            sellLetters = Array.isArray(resSell.data)
+              ? resSell.data
+              : resSell.data?.data || [];
             buyLetters = Array.isArray(resBuy.data)
               ? resBuy.data
               : resBuy.data?.buyLetters || [];
           }
-        } else {
-          // Fetch PUC model records AND sell letters in parallel
-          const [resPUC, resSell, resBuy] = await Promise.all([
-            axios.get(`${BASE}/api/puc?limit=2000`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-            axios
-              .get(`${BASE}/api/sell-letters?limit=2000`, {
-                headers: { Authorization: `Bearer ${token}` },
-              })
-              .catch(() => ({ data: [] })),
-            axios
-              .get(`${BASE}/api/buy-letter?limit=2000`, {
-                headers: { Authorization: `Bearer ${token}` },
-              })
-              .catch(() => ({ data: [] })),
-          ]);
 
-          pucRecords = resPUC.data || [];
-          sellLetters = Array.isArray(resSell.data)
-            ? resSell.data
-            : resSell.data?.data || [];
-          buyLetters = Array.isArray(resBuy.data)
-            ? resBuy.data
-            : resBuy.data?.buyLetters || [];
-        }
-
-        // Build map: regNo -> sell letter (only those with pucExpiryDate)
-        const sellByReg = new Map();
-        sellLetters.forEach((s) => {
-          if (!s.pucExpiryDate) return;
-          const key = (s.registrationNumber || "").trim().toLowerCase();
-          if (key) sellByReg.set(key, s);
-        });
-
-        // Rows from sell letters that have a PUC expiry date → "Sold Vehicle"
-        const sellRows = [];
-        sellByReg.forEach((s, key) => {
-          sellRows.push({
-            ...s,
-            _id: s._id,
-            type: "sold_vehicle",
-            source: "Sold Vehicle",
-            displayReg: s.registrationNumber,
-            displayName: s.buyerName,
-            displayPhone: s.buyerPhone,
-            displayVehicle:
-              `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
-            displayExpiry: s.pucExpiryDate,
+          // Build map: regNo -> sell letter (only those with pucExpiryDate)
+          const sellByReg = new Map();
+          sellLetters.forEach((s) => {
+            if (!s.pucExpiryDate) return;
+            const key = (s.registrationNumber || "").trim().toLowerCase();
+            if (key) sellByReg.set(key, s);
           });
-        });
 
-        // Build set of reg nos already covered by sell letters
-        const soldRegNos = new Set(sellByReg.keys());
-        const buyRegNos = new Set(
-          (buyLetters || [])
-            .map((b) => (b?.registrationNumber || "").trim().toLowerCase())
-            .filter(Boolean),
-        );
+          // Rows from sell letters that have a PUC expiry date → "Sold Vehicle"
+          const sellRows = [];
+          sellByReg.forEach((s, key) => {
+            sellRows.push({
+              ...s,
+              _id: s._id,
+              type: "sold_vehicle",
+              source: "Sold Vehicle",
+              displayReg: s.registrationNumber,
+              displayName: s.buyerName,
+              displayPhone: s.buyerPhone,
+              displayVehicle:
+                `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
+              displayExpiry: s.pucExpiryDate,
+            });
+          });
 
-        // PUC model records NOT in sell letters → "PUC Only"
-        const pucOnlyRows = pucRecords
-          .filter((p) => {
-            if (!p || !p.pucExpiry) return false;
-            const key = (p.regNo || "").trim().toLowerCase();
-            if (soldRegNos.has(key)) return false;
-            if ((p.sourceType || "").toLowerCase() === "manual") return true;
-            return !buyRegNos.has(key);
-          })
-          .map((item) => ({
-            ...item,
-            type: "puc_model",
-            source: "PUC Only",
-            displayReg: item.regNo,
-            displayName: item.personName,
-            displayPhone: item.personPhone,
-            displayVehicle:
-              `${item.brand || ""} ${item.vehicleModel || ""}`.trim(),
-            displayExpiry: item.pucExpiry,
-          }));
+          // Build set of reg nos already covered by sell letters
+          const soldRegNos = new Set(sellByReg.keys());
+          const buyRegNos = new Set(
+            (buyLetters || [])
+              .map((b) => (b?.registrationNumber || "").trim().toLowerCase())
+              .filter(Boolean),
+          );
 
-        const allItems = [...sellRows, ...pucOnlyRows];
-        setItems(allItems);
-        console.log("PUC Data Loaded:", {
-          sellLetterRows: sellRows.length,
-          pucOnlyRows: pucOnlyRows.length,
-          total: allItems.length,
-        });
-      } catch (err) {
-        console.error("Error fetching data for PUC reminders:", err);
-      } finally {
-        setLoadingItems(false);
-      }
-    }, []);
+          // PUC model records NOT in sell letters → "PUC Only"
+          const pucOnlyRows = pucRecords
+            .filter((p) => {
+              if (!p || !p.pucExpiry) return false;
+              const key = (p.regNo || "").trim().toLowerCase();
+              if (soldRegNos.has(key)) return false;
+              if ((p.sourceType || "").toLowerCase() === "manual") return true;
+              return !buyRegNos.has(key);
+            })
+            .map((item) => ({
+              ...item,
+              type: "puc_model",
+              source: "PUC Only",
+              displayReg: item.regNo,
+              displayName: item.personName,
+              displayPhone: item.personPhone,
+              displayVehicle:
+                `${item.brand || ""} ${item.vehicleModel || ""}`.trim(),
+              displayExpiry: item.pucExpiry,
+            }));
+
+          const allItems = [...sellRows, ...pucOnlyRows];
+          setItems(allItems);
+          console.log("PUC Data Loaded:", {
+            sellLetterRows: sellRows.length,
+            pucOnlyRows: pucOnlyRows.length,
+            total: allItems.length,
+          });
+        } catch (err) {
+          console.error("Error fetching data for PUC reminders:", err);
+        } finally {
+          setLoadingItems(false);
+        }
+      },
+      [],
+    );
 
     useEffect(() => {
-      // Pass current cached sell letters (if any) to the fetcher so it can reuse them.
+      // Pass  cached sell letters (if any) to the fetcher so it can reuse them.
       fetchPucData(
-        sellLettersState && sellLettersState.length > 0 ? sellLettersState : null,
+        sellLettersState && sellLettersState.length > 0
+          ? sellLettersState
+          : null,
         buyLettersState && buyLettersState.length > 0 ? buyLettersState : null,
       );
     }, [fetchPucData]);
@@ -1700,6 +1726,36 @@ const AdminPage = () => {
           ✓ {daysUntil}d left
         </span>
       );
+    };
+
+    const handlePucRowEdit = (row) => {
+      if (!row) return;
+
+      const isSoldVehicle = row.type === "sold_vehicle";
+      const pucData = isSoldVehicle
+        ? {
+            _id: row.pucId || row._id,
+            regNo: row.registrationNumber || row.displayReg || "",
+            personName: row.buyerName || row.displayName || "",
+            personPhone: row.buyerPhone || row.displayPhone || "",
+            personEmail: row.buyerEmail || "",
+            vehicleModel: row.vehicleModel || "",
+            brand: row.vehicleName || "",
+            pucIssueDate: row.pucIssueDate || "",
+            pucExpiryDate: row.pucExpiryDate || row.displayExpiry || "",
+            pucExpiry: row.pucExpiryDate || row.displayExpiry || "",
+            pucStatus: row.pucStatus || "",
+          }
+        : {
+            ...row,
+            regNo: row.regNo || row.vehicleRegNo || row.displayReg || "",
+            pucExpiryDate:
+              row.pucExpiryDate || row.pucExpiry || row.displayExpiry || "",
+            pucExpiry:
+              row.pucExpiry || row.pucExpiryDate || row.displayExpiry || "",
+          };
+
+      navigate("/puc/create", { state: { pucData } });
     };
 
     const tThStyle = {
@@ -1865,10 +1921,7 @@ const AdminPage = () => {
                         <tr
                           key={`${row._id}-${idx}`}
                           onClick={() => {
-                            if (row.displayReg) {
-                              setHistoryQuery(row.displayReg);
-                              setIsHistoryModalOpen(true);
-                            }
+                            handlePucRowEdit(row);
                           }}
                           style={{
                             cursor: "pointer",
@@ -2000,134 +2053,142 @@ const AdminPage = () => {
     const [search, setSearch] = useState("");
     const [showAllInsurance, setShowAllInsurance] = useState(false);
 
-    const fetchInsuranceData = useCallback(async (cachedSellLetters = null, cachedBuyLetters = null) => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
+    const fetchInsuranceData = useCallback(
+      async (cachedSellLetters = null, cachedBuyLetters = null) => {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) return;
 
-        const BASE = "https://ok-motor-51l3.vercel.app";
+          const BASE = "https://ok-motor-51l3.vercel.app";
 
-        // Use cached sell letters if available to avoid duplicate heavy requests
-        let insuranceRecords = [];
-        let sellLetters = [];
-        let buyLetters = [];
-        if (cachedSellLetters && cachedSellLetters.length > 0) {
-          const resInsurance = await axios.get(`${BASE}/api/insurance?limit=2000`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          insuranceRecords = resInsurance.data || [];
-          sellLetters = cachedSellLetters;
-          buyLetters = cachedBuyLetters || [];
-          if (!buyLetters.length) {
-            const resBuy = await axios
-              .get(`${BASE}/api/buy-letter?limit=2000`, {
+          // Use cached sell letters if available to avoid duplicate heavy requests
+          let insuranceRecords = [];
+          let sellLetters = [];
+          let buyLetters = [];
+          if (cachedSellLetters && cachedSellLetters.length > 0) {
+            const resInsurance = await axios.get(
+              `${BASE}/api/insurance?limit=2000`,
+              {
                 headers: { Authorization: `Bearer ${token}` },
-              })
-              .catch(() => ({ data: [] }));
+              },
+            );
+            insuranceRecords = resInsurance.data || [];
+            sellLetters = cachedSellLetters;
+            buyLetters = cachedBuyLetters || [];
+            if (!buyLetters.length) {
+              const resBuy = await axios
+                .get(`${BASE}/api/buy-letter?limit=2000`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                })
+                .catch(() => ({ data: [] }));
+              buyLetters = Array.isArray(resBuy.data)
+                ? resBuy.data
+                : resBuy.data?.buyLetters || [];
+            }
+          } else {
+            // Fetch Insurance model records AND sell letters in parallel
+            const [resInsurance, resSell, resBuy] = await Promise.all([
+              axios.get(`${BASE}/api/insurance?limit=2000`, {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+              axios
+                .get(`${BASE}/api/sell-letters?limit=2000`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                })
+                .catch(() => ({ data: [] })),
+              axios
+                .get(`${BASE}/api/buy-letter?limit=2000`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                })
+                .catch(() => ({ data: [] })),
+            ]);
+
+            insuranceRecords = resInsurance.data || [];
+            sellLetters = Array.isArray(resSell.data)
+              ? resSell.data
+              : resSell.data?.data || [];
             buyLetters = Array.isArray(resBuy.data)
               ? resBuy.data
               : resBuy.data?.buyLetters || [];
           }
-        } else {
-          // Fetch Insurance model records AND sell letters in parallel
-          const [resInsurance, resSell, resBuy] = await Promise.all([
-            axios.get(`${BASE}/api/insurance?limit=2000`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-            axios
-              .get(`${BASE}/api/sell-letters?limit=2000`, {
-                headers: { Authorization: `Bearer ${token}` },
-              })
-              .catch(() => ({ data: [] })),
-            axios
-              .get(`${BASE}/api/buy-letter?limit=2000`, {
-                headers: { Authorization: `Bearer ${token}` },
-              })
-              .catch(() => ({ data: [] })),
-          ]);
 
-          insuranceRecords = resInsurance.data || [];
-          sellLetters = Array.isArray(resSell.data)
-            ? resSell.data
-            : resSell.data?.data || [];
-          buyLetters = Array.isArray(resBuy.data)
-            ? resBuy.data
-            : resBuy.data?.buyLetters || [];
-        }
-
-        // Build map: regNo -> sell letter (only those with insuranceExpiryDate)
-        const sellByReg = new Map();
-        sellLetters.forEach((s) => {
-          if (!s.insuranceExpiryDate) return;
-          const key = (s.registrationNumber || "").trim().toLowerCase();
-          if (key) sellByReg.set(key, s);
-        });
-
-        // Rows from sell letters that have an insurance expiry date → "Sold Vehicle"
-        const sellRows = [];
-        sellByReg.forEach((s) => {
-          sellRows.push({
-            ...s,
-            _id: s._id,
-            type: "sold_vehicle",
-            source: "Sold Vehicle",
-            displayReg: s.registrationNumber,
-            displayName: s.buyerName,
-            displayPhone: s.buyerPhone,
-            displayVehicle:
-              `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
-            displayExpiry: s.insuranceExpiryDate,
-            displayCompany: s.insuranceCompany,
+          // Build map: regNo -> sell letter (only those with insuranceExpiryDate)
+          const sellByReg = new Map();
+          sellLetters.forEach((s) => {
+            if (!s.insuranceExpiryDate) return;
+            const key = (s.registrationNumber || "").trim().toLowerCase();
+            if (key) sellByReg.set(key, s);
           });
-        });
 
-        // Build set of reg nos already covered by sell letters
-        const soldRegNos = new Set(sellByReg.keys());
-        const buyRegNos = new Set(
-          (buyLetters || [])
-            .map((b) => (b?.registrationNumber || "").trim().toLowerCase())
-            .filter(Boolean),
-        );
+          // Rows from sell letters that have an insurance expiry date → "Sold Vehicle"
+          const sellRows = [];
+          sellByReg.forEach((s) => {
+            sellRows.push({
+              ...s,
+              _id: s._id,
+              type: "sold_vehicle",
+              source: "Sold Vehicle",
+              displayReg: s.registrationNumber,
+              displayName: s.buyerName,
+              displayPhone: s.buyerPhone,
+              displayVehicle:
+                `${s.vehicleName || ""} ${s.vehicleModel || ""}`.trim(),
+              displayExpiry: s.insuranceExpiryDate,
+              displayCompany: s.insuranceCompany,
+            });
+          });
 
-        // Insurance model records NOT in sell letters → "Insurance Only"
-        const insuranceOnlyRows = insuranceRecords
-          .filter((s) => {
-            if (!s || !s.insuranceExpiry) return false;
-            const key = (s.regNo || "").trim().toLowerCase();
-            if (soldRegNos.has(key)) return false;
-            if ((s.sourceType || "").toLowerCase() === "manual") return true;
-            return !buyRegNos.has(key);
-          })
-          .map((item) => ({
-            ...item,
-            type: "insurance_model",
-            source: "Insurance Only",
-            displayReg: item.regNo,
-            displayName: item.personName,
-            displayPhone: item.personPhone,
-            displayVehicle:
-              `${item.brand || ""} ${item.vehicleModel || ""}`.trim(),
-            displayExpiry: item.insuranceExpiry,
-            displayCompany: item.insuranceCompany,
-          }));
+          // Build set of reg nos already covered by sell letters
+          const soldRegNos = new Set(sellByReg.keys());
+          const buyRegNos = new Set(
+            (buyLetters || [])
+              .map((b) => (b?.registrationNumber || "").trim().toLowerCase())
+              .filter(Boolean),
+          );
 
-        const allItems = [...sellRows, ...insuranceOnlyRows];
-        setItems(allItems);
-        console.log("Insurance Data Loaded:", {
-          sellLetterRows: sellRows.length,
-          insuranceOnlyRows: insuranceOnlyRows.length,
-          total: allItems.length,
-        });
-      } catch (err) {
-        console.error("Error fetching data for Insurance reminders:", err);
-      } finally {
-        setLoadingItems(false);
-      }
-    }, []);
+          // Insurance model records NOT in sell letters → "Insurance Only"
+          const insuranceOnlyRows = insuranceRecords
+            .filter((s) => {
+              if (!s || !s.insuranceExpiry) return false;
+              const key = (s.regNo || "").trim().toLowerCase();
+              if (soldRegNos.has(key)) return false;
+              if ((s.sourceType || "").toLowerCase() === "manual") return true;
+              return !buyRegNos.has(key);
+            })
+            .map((item) => ({
+              ...item,
+              type: "insurance_model",
+              source: "Insurance Only",
+              displayReg: item.regNo,
+              displayName: item.personName,
+              displayPhone: item.personPhone,
+              displayVehicle:
+                `${item.brand || ""} ${item.vehicleModel || ""}`.trim(),
+              displayExpiry: item.insuranceExpiry,
+              displayCompany: item.insuranceCompany,
+            }));
+
+          const allItems = [...sellRows, ...insuranceOnlyRows];
+          setItems(allItems);
+          console.log("Insurance Data Loaded:", {
+            sellLetterRows: sellRows.length,
+            insuranceOnlyRows: insuranceOnlyRows.length,
+            total: allItems.length,
+          });
+        } catch (err) {
+          console.error("Error fetching data for Insurance reminders:", err);
+        } finally {
+          setLoadingItems(false);
+        }
+      },
+      [],
+    );
 
     useEffect(() => {
       fetchInsuranceData(
-        sellLettersState && sellLettersState.length > 0 ? sellLettersState : null,
+        sellLettersState && sellLettersState.length > 0
+          ? sellLettersState
+          : null,
         buyLettersState && buyLettersState.length > 0 ? buyLettersState : null,
       );
     }, [fetchInsuranceData]);
@@ -2259,6 +2320,51 @@ const AdminPage = () => {
           ✓ {daysUntil}d left
         </span>
       );
+    };
+
+    const handleInsuranceRowEdit = (row) => {
+      if (!row) return;
+
+      const isSoldVehicle = row.type === "sold_vehicle";
+      const insuranceData = isSoldVehicle
+        ? {
+            _id: row.insuranceId || row._id,
+            regNo: row.registrationNumber || row.displayReg || "",
+            personName: row.buyerName || row.displayName || "",
+            personPhone: row.buyerPhone || row.displayPhone || "",
+            personEmail: row.buyerEmail || "na@gmail.com",
+            vehicleModel: row.vehicleModel || "",
+            brand: row.vehicleName || "",
+            insuranceCompany: row.insuranceCompany || row.displayCompany || "",
+            insurancePolicyNo:
+              row.insurancePolicyNo || row.insurancePolicyNumber || "",
+            insurancePolicyNumber:
+              row.insurancePolicyNumber || row.insurancePolicyNo || "",
+            insuranceExpiryDate:
+              row.insuranceExpiryDate || row.displayExpiry || "",
+            insuranceExpiry: row.insuranceExpiryDate || row.displayExpiry || "",
+            insuranceStatus: row.insuranceStatus || "",
+          }
+        : {
+            ...row,
+            regNo: row.regNo || row.vehicleRegNo || row.displayReg || "",
+            insurancePolicyNo:
+              row.insurancePolicyNo || row.insurancePolicyNumber || "",
+            insurancePolicyNumber:
+              row.insurancePolicyNumber || row.insurancePolicyNo || "",
+            insuranceExpiryDate:
+              row.insuranceExpiryDate ||
+              row.insuranceExpiry ||
+              row.displayExpiry ||
+              "",
+            insuranceExpiry:
+              row.insuranceExpiry ||
+              row.insuranceExpiryDate ||
+              row.displayExpiry ||
+              "",
+          };
+
+      navigate("/insurance/create", { state: { insuranceData } });
     };
 
     return (
@@ -2405,8 +2511,9 @@ const AdminPage = () => {
                       return (
                         <tr
                           key={`${row._id}-${idx}`}
+                          onClick={() => handleInsuranceRowEdit(row)}
                           style={{
-                            cursor: "default",
+                            cursor: "pointer",
                             background: isOverdue
                               ? "#fff5f5"
                               : isDueSoon
@@ -2717,7 +2824,7 @@ const AdminPage = () => {
                       "Buyer Name",
                       "Vehicle",
                       "Created At",
-                      "Missing Fields",
+                      "Missing Docs",
                     ].map((h) => (
                       <th key={h} style={bThStyle}>
                         {h}
@@ -3015,7 +3122,7 @@ const AdminPage = () => {
                       "Vehicle",
                       "Sale Amount",
                       "Created At",
-                      "Missing Fields",
+                      "Missing Docs",
                     ].map((h) => (
                       <th key={h} style={sThStyle}>
                         {h}
