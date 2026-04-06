@@ -42,6 +42,80 @@ const syncMasterIdentityFromSellLetter = async ({
   ]);
 };
 
+const hasText = (value) => typeof value === "string" && value.trim().length > 0;
+const hasArray = (value) => Array.isArray(value) && value.length > 0;
+
+const mergeMissingSellDocumentsIntoBuy = (target, source) => {
+  if (!target || !source) return target;
+
+  const merged = {
+    ...target,
+    vehicleRC: { ...(target.vehicleRC || {}) },
+    insuranceCertificate: {
+      ...(target.insuranceCertificate || {}),
+      pages: Array.isArray(target.insuranceCertificate?.pages)
+        ? [...target.insuranceCertificate.pages]
+        : [],
+    },
+    vehicleNOC: {
+      ...(target.vehicleNOC || {}),
+      pages: Array.isArray(target.vehicleNOC?.pages)
+        ? [...target.vehicleNOC.pages]
+        : [],
+    },
+  };
+
+  if (!hasText(merged.vehicleRC.front) && hasText(source.vehicleRC?.front)) {
+    merged.vehicleRC.front = source.vehicleRC.front;
+  }
+  if (!hasText(merged.vehicleRC.back) && hasText(source.vehicleRC?.back)) {
+    merged.vehicleRC.back = source.vehicleRC.back;
+  }
+
+  const sourceInsurancePages = Array.isArray(source.insuranceCertificate?.pages)
+    ? source.insuranceCertificate.pages
+    : Array.isArray(source.insuranceCertificate)
+      ? source.insuranceCertificate
+      : [];
+  if (!hasArray(merged.insuranceCertificate.pages) && hasArray(sourceInsurancePages)) {
+    merged.insuranceCertificate.pages = [...sourceInsurancePages];
+  }
+
+  const sourceNocPages = Array.isArray(source.vehicleNOC?.pages)
+    ? source.vehicleNOC.pages
+    : Array.isArray(source.vehicleNOC)
+      ? source.vehicleNOC
+      : [];
+  if (!hasArray(merged.vehicleNOC.pages) && hasArray(sourceNocPages)) {
+    merged.vehicleNOC.pages = [...sourceNocPages];
+  }
+
+  return merged;
+};
+
+const syncMissingBuyDocsFromSell = async ({ regRegex, sellDocuments }) => {
+  if (!regRegex || !sellDocuments) return;
+
+  const buyLetter = await BuyLetter.findOne({
+    registrationNumber: regRegex,
+  })
+    .sort({ createdAt: -1 })
+    .select("documents")
+    .lean();
+
+  if (!buyLetter?.documents) return;
+
+  const mergedDocuments = mergeMissingSellDocumentsIntoBuy(
+    buyLetter.documents,
+    sellDocuments,
+  );
+
+  await BuyLetter.updateOne(
+    { registrationNumber: regRegex },
+    { $set: { documents: mergedDocuments } },
+  );
+};
+
 // New create handler which handles multipart form-data for images.
 exports.createSellLetter = [
   upload.fields([
@@ -660,6 +734,17 @@ exports.createSellLetter = [
       const sellLetter = new SellLetter(sellLetterData);
       const savedSellLetter = await sellLetter.save();
 
+      if (regNo) {
+        try {
+          await syncMissingBuyDocsFromSell({
+            regRegex: new RegExp(`^${String(regNo).trim()}$`, "i"),
+            sellDocuments: savedSellLetter.documents,
+          });
+        } catch (docSyncError) {
+          console.error("Failed to sync buy docs from sell letter:", docSyncError);
+        }
+      }
+
       res.status(201).json(savedSellLetter);
     } catch (error) {
       console.error("Detailed error creating sell letter:", error);
@@ -1145,6 +1230,17 @@ exports.updateSellLetter = async (req, res) => {
       { $set: updateData },
       { new: true, runValidators: true },
     );
+
+    if (updated?.registrationNumber) {
+      try {
+        await syncMissingBuyDocsFromSell({
+          regRegex: new RegExp(`^${String(updated.registrationNumber).trim()}$`, "i"),
+          sellDocuments: updated.documents,
+        });
+      } catch (docSyncError) {
+        console.error("Failed to sync buy docs from updated sell letter:", docSyncError);
+      }
+    }
 
     res.json(updated);
   } catch (error) {

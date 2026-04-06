@@ -741,15 +741,15 @@ const SellLetterHistory = () => {
     try {
       const date = new Date(dateObj);
       if (isNaN(date.getTime())) return "";
-      
+
       let hours = date.getHours();
       const minutes = date.getMinutes();
       const ampm = hours >= 12 ? "PM" : "AM";
       hours = hours % 12 || 12;
-      
+
       const formattedHours = String(hours).padStart(2, "0");
       const formattedMinutes = String(minutes).padStart(2, "0");
-      
+
       return `${formattedHours}:${formattedMinutes} ${ampm}`;
     } catch (e) {
       return "";
@@ -1041,6 +1041,7 @@ const SellLetterHistory = () => {
             );
           }
 
+          const signedDocSellItems = [];
           const insuranceCertificateItems = [];
           const vehicleNOCItems = [];
           const vehicleBuyReceiptItems = [];
@@ -1097,6 +1098,13 @@ const SellLetterHistory = () => {
                 }),
               );
             }
+          }
+
+          if (documentsObj.signedDocSell) {
+            signedDocSellItems.push({
+              title: "Signed Doc (Sell)",
+              url: documentsObj.signedDocSell,
+            });
           }
 
           if (rcItems.length > 0) {
@@ -1526,6 +1534,65 @@ const SellLetterHistory = () => {
 
           // Render Vehicle Buy Receipt items (1 per page)
           for (const item of vehicleBuyReceiptItems) {
+            const page = pdfDoc.addPage([595, 842]);
+            try {
+              await drawHeaderFooter(pdfDoc, page);
+            } catch (e) {}
+            const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+            const asset = await embedAssetFromUrl(pdfDoc, item.url);
+            if (asset) {
+              const pageWidth = 595;
+              const pageHeight = 842;
+              const margin = 50;
+              const maxWidth = pageWidth - 2 * margin;
+              const maxHeight = pageHeight - 150;
+
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = asset.embedded.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                const p = asset.embeddedPage;
+                width = p.width || p.getWidth?.() || 595;
+                height = p.height || p.getHeight?.() || 842;
+              }
+
+              let drawW = maxWidth;
+              let drawH = (height / width) * drawW;
+
+              if (drawH > maxHeight) {
+                drawH = maxHeight;
+                drawW = (width / height) * drawH;
+              }
+
+              const xPos = (pageWidth - drawW) / 2;
+              const yPos = 750 - drawH;
+
+              if (asset.kind === "image") {
+                page.drawImage(asset.embedded, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } else {
+                try {
+                  page.drawPage(asset.embeddedPage, {
+                    x: xPos,
+                    y: yPos,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
+              }
+            }
+          }
+
+          // Render Signed Doc items (1 per page)
+          for (const item of signedDocSellItems) {
             const page = pdfDoc.addPage([595, 842]);
             try {
               await drawHeaderFooter(pdfDoc, page);
@@ -3717,14 +3784,11 @@ const SellLetterHistory = () => {
             return;
           }
 
-          await axios.delete(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+          await axios.delete(`https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
             },
-          );
+          });
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
           alert("Sell letter deleted successfully!");
         } else {
@@ -3937,7 +4001,8 @@ const SellLetterHistory = () => {
                                     }}
                                   >
                                     Edited: {formatDate(letter.editedAt)}
-                                    {letter.editedAt && ` at ${formatTimeFromDate(letter.editedAt)}`}
+                                    {letter.editedAt &&
+                                      ` at ${formatTimeFromDate(letter.editedAt)}`}
                                   </div>
                                 )}
                               </td>
@@ -4974,6 +5039,47 @@ const SellLetterHistory = () => {
                         display: "flex",
                         alignItems: "center",
                         padding: "10px 12px",
+                        backgroundColor: docSelections.signedDocSell
+                          ? "#f0f9ff"
+                          : "transparent",
+                        border: `2px solid ${docSelections.signedDocSell ? "#0284c7" : "#e2e8f0"}`,
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={!!docSelections.signedDocSell}
+                        onChange={(e) =>
+                          setDocSelections((s) => ({
+                            ...s,
+                            signedDocSell: e.target.checked,
+                          }))
+                        }
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          marginRight: "12px",
+                          accentColor: "#0284c7",
+                          cursor: "pointer",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          color: "#1e293b",
+                        }}
+                      >
+                        Signed Doc (Sell)
+                      </span>
+                    </label>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "10px 12px",
                         backgroundColor: docSelections.insuranceCertificate
                           ? "#f0f9ff"
                           : "transparent",
@@ -5155,6 +5261,8 @@ const SellLetterHistory = () => {
                           docs.deliveryPhoto || docs.vehicleKM;
                       if (sel.vehiclePhotos && docs.vehiclePhotos)
                         out.vehiclePhotos = docs.vehiclePhotos;
+                      if (sel.signedDocSell && docs.signedDocSell)
+                        out.signedDocSell = docs.signedDocSell;
                       if (sel.insuranceCertificate && docs.insuranceCertificate)
                         out.insuranceCertificate = docs.insuranceCertificate;
                       if (sel.vehicleNOC && docs.vehicleNOC)

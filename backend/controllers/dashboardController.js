@@ -175,8 +175,7 @@ const getIncompleteLetterSummary = (letter, type) => {
     if (!docPaths.aadhaarFront) missingFields.push("Aadhar Front");
     if (!docPaths.aadhaarBack) missingFields.push("Aadhar Back");
     if (!docPaths.pan) missingFields.push("PAN Card");
-    if (!docPaths.vehicleBuyReceiptPages?.length)
-      missingFields.push("Vehicle Buy Receipt");
+
   } else {
     if (!docPaths.rcFront) missingFields.push("Vehicle RC Front");
     if (!docPaths.rcBack) missingFields.push("Vehicle RC Back");
@@ -184,8 +183,6 @@ const getIncompleteLetterSummary = (letter, type) => {
     if (!docPaths.aadhaarFront) missingFields.push("Aadhar Front");
     if (!docPaths.aadhaarBack) missingFields.push("Aadhar Back");
     if (!docPaths.pan) missingFields.push("PAN Card");
-    if (!docPaths.vehicleBuyReceiptPages?.length)
-      missingFields.push("Vehicle Buy Receipt");
   }
 
   return { ...letter, missingFields };

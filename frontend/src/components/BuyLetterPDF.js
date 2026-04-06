@@ -16,6 +16,7 @@ import {
   CheckCircle,
   AlertCircle,
   Image,
+  Eye,
 } from "lucide-react";
 import logo1 from "../images/okmotorback.png";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -81,6 +82,10 @@ const BuyLetterForm = () => {
   const [cropImageSrc, setCropImageSrc] = useState(null);
   const [cropFieldName, setCropFieldName] = useState(null);
   const [cropFileName, setCropFileName] = useState(null);
+
+  const [showImagePreviewModal, setShowImagePreviewModal] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState(null);
+  const [previewImageTitle, setPreviewImageTitle] = useState("");
 
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [uploadModalFieldName, setUploadModalFieldName] = useState(null);
@@ -792,12 +797,21 @@ const BuyLetterForm = () => {
         canvas.height = height;
         canvas.getContext("2d").drawImage(img, 0, 0, width, height);
         canvas.toBlob(
-          (blob) => resolve(new File([blob], file.name, { type: "image/jpeg", lastModified: Date.now() })),
+          (blob) =>
+            resolve(
+              new File([blob], file.name, {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              }),
+            ),
           "image/jpeg",
           quality,
         );
       };
-      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(file);
+      };
       img.src = url;
     });
   };
@@ -871,14 +885,36 @@ const BuyLetterForm = () => {
         form.append("vehicleBuyReceiptUploadMode", vehicleBuyReceiptUploadMode);
 
         // Compress all image files before appending (PDFs pass through unchanged)
-        const [rcFront, rcBack, adhFront, adhBack, pan, delivery, signedDocBuy] = await Promise.all([
-          filesState.vehicleRCFront ? compressImageFile(filesState.vehicleRCFront) : Promise.resolve(null),
-          filesState.vehicleRCBack ? compressImageFile(filesState.vehicleRCBack) : Promise.resolve(null),
-          filesState.aadhaarFront ? compressImageFile(filesState.aadhaarFront) : Promise.resolve(null),
-          filesState.aadhaarBack ? compressImageFile(filesState.aadhaarBack) : Promise.resolve(null),
-          filesState.panPhoto ? compressImageFile(filesState.panPhoto) : Promise.resolve(null),
-          filesState.deliveryPhoto ? compressImageFile(filesState.deliveryPhoto) : Promise.resolve(null),
-          filesState.signedDocBuy ? compressImageFile(filesState.signedDocBuy) : Promise.resolve(null),
+        const [
+          rcFront,
+          rcBack,
+          adhFront,
+          adhBack,
+          pan,
+          delivery,
+          signedDocBuy,
+        ] = await Promise.all([
+          filesState.vehicleRCFront
+            ? compressImageFile(filesState.vehicleRCFront)
+            : Promise.resolve(null),
+          filesState.vehicleRCBack
+            ? compressImageFile(filesState.vehicleRCBack)
+            : Promise.resolve(null),
+          filesState.aadhaarFront
+            ? compressImageFile(filesState.aadhaarFront)
+            : Promise.resolve(null),
+          filesState.aadhaarBack
+            ? compressImageFile(filesState.aadhaarBack)
+            : Promise.resolve(null),
+          filesState.panPhoto
+            ? compressImageFile(filesState.panPhoto)
+            : Promise.resolve(null),
+          filesState.deliveryPhoto
+            ? compressImageFile(filesState.deliveryPhoto)
+            : Promise.resolve(null),
+          filesState.signedDocBuy
+            ? compressImageFile(filesState.signedDocBuy)
+            : Promise.resolve(null),
         ]);
         if (rcFront) form.append("vehicleRCFront", rcFront);
         if (rcBack) form.append("vehicleRCBack", rcBack);
@@ -888,16 +924,28 @@ const BuyLetterForm = () => {
         if (delivery) form.append("deliveryPhoto", delivery);
         if (signedDocBuy) form.append("signedDocBuy", signedDocBuy);
 
-        if (filesState.insuranceCertificate && filesState.insuranceCertificate.length) {
-          const compressed = await Promise.all(filesState.insuranceCertificate.map((f) => compressImageFile(f)));
+        if (
+          filesState.insuranceCertificate &&
+          filesState.insuranceCertificate.length
+        ) {
+          const compressed = await Promise.all(
+            filesState.insuranceCertificate.map((f) => compressImageFile(f)),
+          );
           for (const f of compressed) form.append("insuranceCertificate", f);
         }
         if (filesState.vehicleNOC && filesState.vehicleNOC.length) {
-          const compressed = await Promise.all(filesState.vehicleNOC.map((f) => compressImageFile(f)));
+          const compressed = await Promise.all(
+            filesState.vehicleNOC.map((f) => compressImageFile(f)),
+          );
           for (const f of compressed) form.append("vehicleNOC", f);
         }
-        if (filesState.vehicleBuyReceipt && filesState.vehicleBuyReceipt.length) {
-          const compressed = await Promise.all(filesState.vehicleBuyReceipt.map((f) => compressImageFile(f)));
+        if (
+          filesState.vehicleBuyReceipt &&
+          filesState.vehicleBuyReceipt.length
+        ) {
+          const compressed = await Promise.all(
+            filesState.vehicleBuyReceipt.map((f) => compressImageFile(f)),
+          );
           for (const f of compressed) form.append("vehicleBuyReceipt", f);
         }
 
@@ -1010,29 +1058,46 @@ const BuyLetterForm = () => {
 
           form.append("aadhaarUploadMode", aadhaarUploadMode);
           form.append("vehicleRCUploadMode", vehicleRCUploadMode);
-          form.append("insuranceCertificateUploadMode", insuranceCertificateUploadMode);
+          form.append(
+            "insuranceCertificateUploadMode",
+            insuranceCertificateUploadMode,
+          );
           form.append("vehicleNOCUploadMode", vehicleNOCUploadMode);
-          form.append("vehicleBuyReceiptUploadMode", vehicleBuyReceiptUploadMode);
+          form.append(
+            "vehicleBuyReceiptUploadMode",
+            vehicleBuyReceiptUploadMode,
+          );
 
           // Build preservedDocs from filePreviews (which hold the existing URLs)
           const preservedDocs = {};
           const docMap = [
-            "vehicleRCFront", "vehicleRCBack",
-            "aadhaarFront", "aadhaarBack",
-            "panPhoto", "deliveryPhoto",
+            "vehicleRCFront",
+            "vehicleRCBack",
+            "aadhaarFront",
+            "aadhaarBack",
+            "panPhoto",
+            "deliveryPhoto",
             "signedDocBuy",
           ];
           docMap.forEach((key) => {
             if (filePreviews[key]) preservedDocs[key] = filePreviews[key];
           });
-          if (filePreviews.vehiclePhotos?.length) preservedDocs.vehiclePhotos = filePreviews.vehiclePhotos;
-          if (filePreviews.insuranceCertificate?.length) preservedDocs.insuranceCertificate = filePreviews.insuranceCertificate;
-          if (filePreviews.vehicleNOC?.length) preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
-          if (filePreviews.vehicleBuyReceipt?.length) preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
+          if (filePreviews.vehiclePhotos?.length)
+            preservedDocs.vehiclePhotos = filePreviews.vehiclePhotos;
+          if (filePreviews.insuranceCertificate?.length)
+            preservedDocs.insuranceCertificate =
+              filePreviews.insuranceCertificate;
+          if (filePreviews.vehicleNOC?.length)
+            preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
+          if (filePreviews.vehicleBuyReceipt?.length)
+            preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
 
           // Also send the full existing documents object as an ultimate fallback
           form.append("preservedDocuments", JSON.stringify(preservedDocs));
-          form.append("existingDocuments", JSON.stringify(editLetter.documents));
+          form.append(
+            "existingDocuments",
+            JSON.stringify(editLetter.documents),
+          );
 
           if (isElectron) {
             response = await apiService.post("/api/buy-letters", form);
@@ -1064,7 +1129,8 @@ const BuyLetterForm = () => {
       if (editLetter?._id) {
         setAlertInfo({
           isOpen: true,
-          message: "Buy letter saved as new version! Original remains unchanged.",
+          message:
+            "Buy letter saved as new version! Original remains unchanged.",
           type: "success",
         });
       } else {
@@ -1118,6 +1184,59 @@ const BuyLetterForm = () => {
       ...prev,
       [fieldName]: null,
     }));
+  };
+
+  const openImagePreview = (url, title) => {
+    if (!url) return;
+    setPreviewImageUrl(url);
+    setPreviewImageTitle(title || "Document Preview");
+    setShowImagePreviewModal(true);
+  };
+
+  const closeImagePreview = () => {
+    setShowImagePreviewModal(false);
+    setPreviewImageUrl(null);
+    setPreviewImageTitle("");
+  };
+
+  const renderPreviewWithEye = (url, alt, style, title, small = false) => {
+    if (!url) return null;
+
+    return (
+      <div
+        style={{
+          position: "relative",
+          display: "inline-block",
+          maxWidth: small ? 110 : "100%",
+        }}
+      >
+        <img src={url} alt={alt} style={style} />
+        <button
+          type="button"
+          onClick={() => openImagePreview(url, title || alt)}
+          aria-label={`Preview ${title || alt}`}
+          title="Preview"
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            border: "none",
+            background: "rgba(15, 23, 42, 0.78)",
+            color: "#fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+          }}
+        >
+          <Eye size={17} />
+        </button>
+      </div>
+    );
   };
 
   const handleFileUploadSelect = async (file, uploadType) => {
@@ -3684,13 +3803,13 @@ const BuyLetterForm = () => {
                         </button>
                       )}
                     </div>
-                    {filePreviews.vehicleRCFront && (
-                      <img
-                        src={filePreviews.vehicleRCFront}
-                        alt="rc-front"
-                        style={styles.previewImg}
-                      />
-                    )}
+                    {filePreviews.vehicleRCFront &&
+                      renderPreviewWithEye(
+                        filePreviews.vehicleRCFront,
+                        "rc-front",
+                        styles.previewImg,
+                        "Vehicle RC Front",
+                      )}
                   </div>
                 ) : (
                   <div
@@ -3712,7 +3831,9 @@ const BuyLetterForm = () => {
                       >
                         <button
                           type="button"
-                          onClick={() => handleFileInput("vehicleRCFront", true)}
+                          onClick={() =>
+                            handleFileInput("vehicleRCFront", true)
+                          }
                           style={styles.uploadBtn}
                         >
                           <Image size={20} />{" "}
@@ -3733,13 +3854,13 @@ const BuyLetterForm = () => {
                           </button>
                         )}
                       </div>
-                      {filePreviews.vehicleRCFront && (
-                        <img
-                          src={filePreviews.vehicleRCFront}
-                          alt="rc-front"
-                          style={styles.previewImg}
-                        />
-                      )}
+                      {filePreviews.vehicleRCFront &&
+                        renderPreviewWithEye(
+                          filePreviews.vehicleRCFront,
+                          "rc-front",
+                          styles.previewImg,
+                          "Vehicle RC Front",
+                        )}
                     </div>
 
                     <div style={{ ...styles.formField, flex: "1 1 200px" }}>
@@ -3774,13 +3895,13 @@ const BuyLetterForm = () => {
                           </button>
                         )}
                       </div>
-                      {filePreviews.vehicleRCBack && (
-                        <img
-                          src={filePreviews.vehicleRCBack}
-                          alt="rc-back"
-                          style={styles.previewImg}
-                        />
-                      )}
+                      {filePreviews.vehicleRCBack &&
+                        renderPreviewWithEye(
+                          filePreviews.vehicleRCBack,
+                          "rc-back",
+                          styles.previewImg,
+                          "Vehicle RC Back",
+                        )}
                     </div>
                   </div>
                 )}
@@ -3851,16 +3972,19 @@ const BuyLetterForm = () => {
                         {filePreviews.insuranceCertificate
                           .slice(0, 6)
                           .map((u, idx) => (
-                            <img
-                              key={idx}
-                              src={u}
-                              alt={`insurance-cert-${idx + 1}`}
-                              style={{
-                                width: 100,
-                                height: 80,
-                                objectFit: "cover",
-                              }}
-                            />
+                            <div key={idx} style={{ position: "relative" }}>
+                              {renderPreviewWithEye(
+                                u,
+                                `insurance-cert-${idx + 1}`,
+                                {
+                                  width: 100,
+                                  height: 80,
+                                  objectFit: "cover",
+                                },
+                                `Insurance Certificate Page ${idx + 1}`,
+                                true,
+                              )}
+                            </div>
                           ))}
                       </div>
                     )}
@@ -3924,16 +4048,19 @@ const BuyLetterForm = () => {
                         }}
                       >
                         {filePreviews.vehicleNOC.slice(0, 6).map((u, idx) => (
-                          <img
-                            key={idx}
-                            src={u}
-                            alt={`vehicle-noc-${idx + 1}`}
-                            style={{
-                              width: 100,
-                              height: 80,
-                              objectFit: "cover",
-                            }}
-                          />
+                          <div key={idx} style={{ position: "relative" }}>
+                            {renderPreviewWithEye(
+                              u,
+                              `vehicle-noc-${idx + 1}`,
+                              {
+                                width: 100,
+                                height: 80,
+                                objectFit: "cover",
+                              },
+                              `Vehicle NOC Page ${idx + 1}`,
+                              true,
+                            )}
+                          </div>
                         ))}
                       </div>
                     )}
@@ -4003,22 +4130,24 @@ const BuyLetterForm = () => {
                         {filePreviews.vehicleBuyReceipt
                           .slice(0, 6)
                           .map((u, idx) => (
-                            <img
-                              key={idx}
-                              src={u}
-                              alt={`vehicle-buy-receipt-${idx + 1}`}
-                              style={{
-                                width: 100,
-                                height: 80,
-                                objectFit: "cover",
-                              }}
-                            />
+                            <div key={idx} style={{ position: "relative" }}>
+                              {renderPreviewWithEye(
+                                u,
+                                `vehicle-buy-receipt-${idx + 1}`,
+                                {
+                                  width: 100,
+                                  height: 80,
+                                  objectFit: "cover",
+                                },
+                                `Vehicle Buy Receipt Page ${idx + 1}`,
+                                true,
+                              )}
+                            </div>
                           ))}
                       </div>
                     )}
                 </div>
 
-                
                 <div style={{ ...styles.formField, width: "100%" }}>
                   <label style={{ ...styles.formLabel, marginBottom: "12px" }}>
                     Aadhaar Upload Mode
@@ -4140,13 +4269,13 @@ const BuyLetterForm = () => {
                         </button>
                       )}
                     </div>
-                    {filePreviews.aadhaarFront && (
-                      <img
-                        src={filePreviews.aadhaarFront}
-                        alt="aadhaar"
-                        style={styles.previewImg}
-                      />
-                    )}
+                    {filePreviews.aadhaarFront &&
+                      renderPreviewWithEye(
+                        filePreviews.aadhaarFront,
+                        "aadhaar",
+                        styles.previewImg,
+                        "Aadhaar Front and Back",
+                      )}
                   </div>
                 ) : (
                   <div
@@ -4187,13 +4316,13 @@ const BuyLetterForm = () => {
                           </button>
                         )}
                       </div>
-                      {filePreviews.aadhaarFront && (
-                        <img
-                          src={filePreviews.aadhaarFront}
-                          alt="aadhaar-front"
-                          style={styles.previewImg}
-                        />
-                      )}
+                      {filePreviews.aadhaarFront &&
+                        renderPreviewWithEye(
+                          filePreviews.aadhaarFront,
+                          "aadhaar-front",
+                          styles.previewImg,
+                          "Aadhaar Front",
+                        )}
                     </div>
 
                     <div style={{ ...styles.formField, flex: "1 1 200px" }}>
@@ -4226,13 +4355,13 @@ const BuyLetterForm = () => {
                           </button>
                         )}
                       </div>
-                      {filePreviews.aadhaarBack && (
-                        <img
-                          src={filePreviews.aadhaarBack}
-                          alt="aadhaar-back"
-                          style={styles.previewImg}
-                        />
-                      )}
+                      {filePreviews.aadhaarBack &&
+                        renderPreviewWithEye(
+                          filePreviews.aadhaarBack,
+                          "aadhaar-back",
+                          styles.previewImg,
+                          "Aadhaar Back",
+                        )}
                     </div>
                   </div>
                 )}
@@ -4263,13 +4392,13 @@ const BuyLetterForm = () => {
                       </button>
                     )}
                   </div>
-                  {filePreviews.panPhoto && (
-                    <img
-                      src={filePreviews.panPhoto}
-                      alt="pan"
-                      style={styles.previewImg}
-                    />
-                  )}
+                  {filePreviews.panPhoto &&
+                    renderPreviewWithEye(
+                      filePreviews.panPhoto,
+                      "pan",
+                      styles.previewImg,
+                      "PAN Card",
+                    )}
                 </div>
 
                 <div style={styles.formField}>
@@ -4298,17 +4427,19 @@ const BuyLetterForm = () => {
                       </button>
                     )}
                   </div>
-                  {filePreviews.deliveryPhoto && (
-                    <img
-                      src={filePreviews.deliveryPhoto}
-                      alt="delivery"
-                      style={styles.previewImg}
-                    />
-                  )}
+                  {filePreviews.deliveryPhoto &&
+                    renderPreviewWithEye(
+                      filePreviews.deliveryPhoto,
+                      "delivery",
+                      styles.previewImg,
+                      "Delivery Photo",
+                    )}
                 </div>
 
                 <div style={styles.formField}>
-                  <label style={styles.formLabel}>Signed Doc (buy) (Optional)</label>
+                  <label style={styles.formLabel}>
+                    Signed Doc (buy) (Optional)
+                  </label>
                   <div
                     style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
                   >
@@ -4333,14 +4464,13 @@ const BuyLetterForm = () => {
                       </button>
                     )}
                   </div>
-                  {filePreviews.signedDocBuy && (
-                    <img
-                      src={filePreviews.signedDocBuy}
-                      alt="signed-doc-buy"
-                      style={styles.previewImg}
-                    />
-                  )}
-                  
+                  {filePreviews.signedDocBuy &&
+                    renderPreviewWithEye(
+                      filePreviews.signedDocBuy,
+                      "signed-doc-buy",
+                      styles.previewImg,
+                      "Signed Doc (Buy)",
+                    )}
                 </div>
               </div>
             </div>
@@ -4942,6 +5072,53 @@ const BuyLetterForm = () => {
                   setPreviewPdf(null);
                   setShowPreviewModal(false);
                 }}
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        )}
+        {showImagePreviewModal && previewImageUrl && (
+          <div style={styles.modalOverlay}>
+            <div
+              style={{
+                ...styles.modalContent,
+                width: isMobile ? "95vw" : "1100px",
+                maxWidth: isMobile ? "95vw" : "92%",
+                height: isMobile ? "80vh" : "85vh",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <h3 style={styles.modalTitle}>{previewImageTitle}</h3>
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "auto",
+                  background: "#0f172a",
+                  borderRadius: "10px",
+                  padding: "12px",
+                }}
+              >
+                <img
+                  src={previewImageUrl}
+                  alt={previewImageTitle}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    objectFit: "contain",
+                    borderRadius: "8px",
+                    background: "#fff",
+                  }}
+                />
+              </div>
+              <button
+                style={styles.modalCloseButton}
+                onClick={closeImagePreview}
               >
                 Close Preview
               </button>

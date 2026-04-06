@@ -1,4 +1,5 @@
 const BuyLetter = require("../models/BuyLetter");
+const SellLetter = require("../models/SellLetter");
 const Vehicle = require("../models/Vehicle");
 const Insurance = require("../models/Insurance");
 const PUC = require("../models/PUC");
@@ -11,6 +12,80 @@ const {
 } = require("../utils/imageHelper");
 
 const upload = multer();
+
+const hasText = (value) => typeof value === "string" && value.trim().length > 0;
+const hasArray = (value) => Array.isArray(value) && value.length > 0;
+
+const mergeMissingBuyDocumentsFromSell = (target, source) => {
+  if (!target || !source) return target;
+
+  const merged = {
+    ...target,
+    vehicleRC: { ...(target.vehicleRC || {}) },
+    insuranceCertificate: {
+      ...(target.insuranceCertificate || {}),
+      pages: Array.isArray(target.insuranceCertificate?.pages)
+        ? [...target.insuranceCertificate.pages]
+        : [],
+    },
+    vehicleNOC: {
+      ...(target.vehicleNOC || {}),
+      pages: Array.isArray(target.vehicleNOC?.pages)
+        ? [...target.vehicleNOC.pages]
+        : [],
+    },
+  };
+
+  if (!hasText(merged.vehicleRC.front) && hasText(source.vehicleRC?.front)) {
+    merged.vehicleRC.front = source.vehicleRC.front;
+  }
+  if (!hasText(merged.vehicleRC.back) && hasText(source.vehicleRC?.back)) {
+    merged.vehicleRC.back = source.vehicleRC.back;
+  }
+
+  const sourceInsurancePages = Array.isArray(source.insuranceCertificate?.pages)
+    ? source.insuranceCertificate.pages
+    : Array.isArray(source.insuranceCertificate)
+      ? source.insuranceCertificate
+      : [];
+  if (!hasArray(merged.insuranceCertificate.pages) && hasArray(sourceInsurancePages)) {
+    merged.insuranceCertificate.pages = [...sourceInsurancePages];
+  }
+
+  const sourceNocPages = Array.isArray(source.vehicleNOC?.pages)
+    ? source.vehicleNOC.pages
+    : Array.isArray(source.vehicleNOC)
+      ? source.vehicleNOC
+      : [];
+  if (!hasArray(merged.vehicleNOC.pages) && hasArray(sourceNocPages)) {
+    merged.vehicleNOC.pages = [...sourceNocPages];
+  }
+
+  return merged;
+};
+
+const syncMissingBuyDocsFromSellLetter = async ({ regRegex, sellDocuments }) => {
+  if (!regRegex || !sellDocuments) return;
+
+  const buyLetter = await BuyLetter.findOne({
+    registrationNumber: regRegex,
+  })
+    .sort({ createdAt: -1 })
+    .select("documents")
+    .lean();
+
+  if (!buyLetter?.documents) return;
+
+  const mergedDocuments = mergeMissingBuyDocumentsFromSell(
+    buyLetter.documents,
+    sellDocuments,
+  );
+
+  await BuyLetter.updateOne(
+    { registrationNumber: regRegex },
+    { $set: { documents: mergedDocuments } },
+  );
+};
 
 // Support multipart form-data uploads for buy letters (documents/images)
 exports.createBuyLetter = [
@@ -457,6 +532,26 @@ exports.createBuyLetter = [
         vehiclePhotos: uploadedUrls.vehiclePhotos,
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };
+
+      if (regNo) {
+        try {
+          const sellLetterForDocs = await SellLetter.findOne({
+            registrationNumber: new RegExp(`^${String(regNo).trim()}$`, "i"),
+          })
+            .sort({ createdAt: -1 })
+            .select("documents")
+            .lean();
+
+          if (sellLetterForDocs?.documents) {
+            buyLetterData.documents = mergeMissingBuyDocumentsFromSell(
+              buyLetterData.documents,
+              sellLetterForDocs.documents,
+            );
+          }
+        } catch (docBackfillError) {
+          console.error("Failed to backfill buy docs from sell letter:", docBackfillError);
+        }
+      }
 
       // If registrationNumber is provided, check for existing document to avoid duplicate-key errors
       const escapeRegExp = (string) =>

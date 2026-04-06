@@ -17,6 +17,7 @@ import {
   AlertCircle,
   FileText,
   Image,
+  Eye,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo1 from "../images/okmotorback.png";
@@ -159,6 +160,10 @@ const SellLetterForm = () => {
   const [cropFieldName, setCropFieldName] = useState(null);
   const [cropFileName, setCropFileName] = useState(null);
 
+  const [showImagePreviewModal, setShowImagePreviewModal] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState(null);
+  const [previewImageTitle, setPreviewImageTitle] = useState("");
+
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [uploadModalFieldName, setUploadModalFieldName] = useState(null);
   const [uploadModalAllowPdf, setUploadModalAllowPdf] = useState(false);
@@ -192,8 +197,7 @@ const SellLetterForm = () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE =
-        process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+      const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
@@ -802,20 +806,41 @@ const SellLetterForm = () => {
       { label: "Generating PDF", icon: "📄" },
     ];
     return (
-      <div style={{
-        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: "rgba(0,0,0,0.55)", display: "flex",
-        alignItems: "center", justifyContent: "center", zIndex: 2000,
-      }}>
-        <div style={{
-          backgroundColor: "#fff", borderRadius: "20px",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
-          padding: "36px 32px", width: "320px", maxWidth: "90vw",
-        }}>
-          <h2 style={{
-            fontSize: "1.15rem", fontWeight: "700", color: "#0f172a",
-            marginBottom: "28px", textAlign: "center",
-          }}>Processing Sell Letter</h2>
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.55)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 2000,
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "#fff",
+            borderRadius: "20px",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+            padding: "36px 32px",
+            width: "320px",
+            maxWidth: "90vw",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "1.15rem",
+              fontWeight: "700",
+              color: "#0f172a",
+              marginBottom: "28px",
+              textAlign: "center",
+            }}
+          >
+            Processing Sell Letter
+          </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "0px" }}>
             {steps.map((s, i) => {
               const idx = i + 1;
@@ -823,51 +848,109 @@ const SellLetterForm = () => {
               const active = step === idx;
               return (
                 <div key={idx}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                    <div style={{
-                      width: "40px", height: "40px", borderRadius: "50%",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0, fontSize: "18px",
-                      backgroundColor: done ? "#16a34a" : active ? "#fff" : "#f1f5f9",
-                      border: active ? "2.5px solid #088395" : done ? "none" : "2px solid #cbd5e1",
-                      boxShadow: active ? "0 0 0 4px rgba(8,131,149,0.15)" : "none",
-                      transition: "all 0.4s ease",
-                    }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "16px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        fontSize: "18px",
+                        backgroundColor: done
+                          ? "#16a34a"
+                          : active
+                            ? "#fff"
+                            : "#f1f5f9",
+                        border: active
+                          ? "2.5px solid #088395"
+                          : done
+                            ? "none"
+                            : "2px solid #cbd5e1",
+                        boxShadow: active
+                          ? "0 0 0 4px rgba(8,131,149,0.15)"
+                          : "none",
+                        transition: "all 0.4s ease",
+                      }}
+                    >
                       {done ? (
-                        <span style={{ color: "#fff", fontWeight: "bold", fontSize: "18px" }}>✓</span>
+                        <span
+                          style={{
+                            color: "#fff",
+                            fontWeight: "bold",
+                            fontSize: "18px",
+                          }}
+                        >
+                          ✓
+                        </span>
                       ) : active ? (
-                        <span style={{
-                          display: "inline-block", width: "20px", height: "20px",
-                          border: "3px solid #088395", borderTopColor: "transparent",
-                          borderRadius: "50%",
-                          animation: "sellLetterSpin 0.8s linear infinite",
-                        }} />
+                        <span
+                          style={{
+                            display: "inline-block",
+                            width: "20px",
+                            height: "20px",
+                            border: "3px solid #088395",
+                            borderTopColor: "transparent",
+                            borderRadius: "50%",
+                            animation: "sellLetterSpin 0.8s linear infinite",
+                          }}
+                        />
                       ) : (
-                        <span style={{ color: "#94a3b8", fontSize: "16px" }}>{s.icon}</span>
+                        <span style={{ color: "#94a3b8", fontSize: "16px" }}>
+                          {s.icon}
+                        </span>
                       )}
                     </div>
-                    <span style={{
-                      fontSize: "0.95rem", fontWeight: active ? "700" : "500",
-                      color: done ? "#16a34a" : active ? "#088395" : "#94a3b8",
-                      transition: "color 0.3s",
-                    }}>{s.label}</span>
+                    <span
+                      style={{
+                        fontSize: "0.95rem",
+                        fontWeight: active ? "700" : "500",
+                        color: done
+                          ? "#16a34a"
+                          : active
+                            ? "#088395"
+                            : "#94a3b8",
+                        transition: "color 0.3s",
+                      }}
+                    >
+                      {s.label}
+                    </span>
                   </div>
                   {i < steps.length - 1 && (
-                    <div style={{
-                      marginLeft: "19px", width: "2px", height: "28px",
-                      backgroundColor: done ? "#16a34a" : "#e2e8f0",
-                      transition: "background-color 0.4s",
-                    }} />
+                    <div
+                      style={{
+                        marginLeft: "19px",
+                        width: "2px",
+                        height: "28px",
+                        backgroundColor: done ? "#16a34a" : "#e2e8f0",
+                        transition: "background-color 0.4s",
+                      }}
+                    />
                   )}
                 </div>
               );
             })}
           </div>
           {step === 4 && (
-            <p style={{
-              marginTop: "24px", textAlign: "center", color: "#16a34a",
-              fontWeight: "700", fontSize: "1rem",
-            }}>✓ All done! PDF downloaded.</p>
+            <p
+              style={{
+                marginTop: "24px",
+                textAlign: "center",
+                color: "#16a34a",
+                fontWeight: "700",
+                fontSize: "1rem",
+              }}
+            >
+              ✓ All done! PDF downloaded.
+            </p>
           )}
         </div>
         <style>{`@keyframes sellLetterSpin { to { transform: rotate(360deg); } }`}</style>
@@ -1164,12 +1247,21 @@ const SellLetterForm = () => {
         canvas.height = height;
         canvas.getContext("2d").drawImage(img, 0, 0, width, height);
         canvas.toBlob(
-          (blob) => resolve(new File([blob], file.name, { type: "image/jpeg", lastModified: Date.now() })),
+          (blob) =>
+            resolve(
+              new File([blob], file.name, {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              }),
+            ),
           "image/jpeg",
           quality,
         );
       };
-      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(file);
+      };
       img.src = url;
     });
   };
@@ -1207,7 +1299,8 @@ const SellLetterForm = () => {
       preservedDocs.insuranceCertificate = filePreviews.insuranceCertificate;
     }
     if (
-      (!currentFilesState.vehicleNOC || currentFilesState.vehicleNOC.length === 0) &&
+      (!currentFilesState.vehicleNOC ||
+        currentFilesState.vehicleNOC.length === 0) &&
       filePreviews.vehicleNOC?.length
     ) {
       preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
@@ -1224,41 +1317,84 @@ const SellLetterForm = () => {
   };
 
   const renderPreviewMedia = (url, alt, style, small = false) => {
-  if (!url) return null;
+    if (!url) return null;
 
-  return (
-    <img
-      src={url}
-      alt={alt}
-      style={style}
-      onError={(e) => {
-        // Image failed — swap to a clickable document link
-        const a = document.createElement("a");
-        a.href = url;
-        a.target = "_blank";
-        a.rel = "noreferrer";
-        a.title = "Open document";
-        Object.assign(a.style, {
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          gap: "6px",
-          background: "#f8fafc",
-          border: "1px solid #e2e8f0",
-          borderRadius: "6px",
-          color: "#334155",
-          textDecoration: "none",
-          ...(small
-            ? { width: "80px", height: "60px", fontSize: "11px" }
-            : { width: "100%", maxWidth: "320px", minHeight: "84px", marginTop: "8px", fontSize: "12px" }),
-        });
-        a.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Document</span>`;
-        e.target.replaceWith(a);
-      }}
-    />
-  );
-};
+    const openImagePreview = () => {
+      setPreviewImageUrl(url);
+      setPreviewImageTitle(alt || "Document Preview");
+      setShowImagePreviewModal(true);
+    };
+
+    return (
+      <div
+        style={{
+          position: "relative",
+          display: "inline-block",
+          maxWidth: small ? 110 : "100%",
+        }}
+      >
+        <img
+          src={url}
+          alt={alt}
+          style={style}
+          onError={(e) => {
+            const a = document.createElement("a");
+            a.href = url;
+            a.target = "_blank";
+            a.rel = "noreferrer";
+            a.title = "Open document";
+            Object.assign(a.style, {
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "column",
+              gap: "6px",
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: "6px",
+              color: "#334155",
+              textDecoration: "none",
+              ...(small
+                ? { width: "80px", height: "60px", fontSize: "11px" }
+                : {
+                    width: "100%",
+                    maxWidth: "320px",
+                    minHeight: "84px",
+                    marginTop: "8px",
+                    fontSize: "12px",
+                  }),
+            });
+            a.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Document</span>`;
+            e.target.replaceWith(a);
+          }}
+        />
+        <button
+          type="button"
+          onClick={openImagePreview}
+          aria-label={`Preview ${alt}`}
+          title="Preview"
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            border: "none",
+            background: "rgba(15, 23, 42, 0.78)",
+            color: "#fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+          }}
+        >
+          <Eye size={17} />
+        </button>
+      </div>
+    );
+  };
 
   const saveToDatabase = async () => {
     try {
@@ -1365,14 +1501,36 @@ const SellLetterForm = () => {
         form.append("vehicleRCUploadMode", vehicleRCUploadMode);
 
         // Compress all image files before appending (PDFs pass through unchanged)
-        const [rcFront, rcBack, adhFront, adhBack, pan, delivery, signedDocSell] = await Promise.all([
-          filesState.vehicleRCFront ? compressImageFile(filesState.vehicleRCFront) : Promise.resolve(null),
-          filesState.vehicleRCBack ? compressImageFile(filesState.vehicleRCBack) : Promise.resolve(null),
-          filesState.aadhaarFront ? compressImageFile(filesState.aadhaarFront) : Promise.resolve(null),
-          filesState.aadhaarBack ? compressImageFile(filesState.aadhaarBack) : Promise.resolve(null),
-          filesState.panPhoto ? compressImageFile(filesState.panPhoto) : Promise.resolve(null),
-          filesState.deliveryPhoto ? compressImageFile(filesState.deliveryPhoto) : Promise.resolve(null),
-          filesState.signedDocSell ? compressImageFile(filesState.signedDocSell) : Promise.resolve(null),
+        const [
+          rcFront,
+          rcBack,
+          adhFront,
+          adhBack,
+          pan,
+          delivery,
+          signedDocSell,
+        ] = await Promise.all([
+          filesState.vehicleRCFront
+            ? compressImageFile(filesState.vehicleRCFront)
+            : Promise.resolve(null),
+          filesState.vehicleRCBack
+            ? compressImageFile(filesState.vehicleRCBack)
+            : Promise.resolve(null),
+          filesState.aadhaarFront
+            ? compressImageFile(filesState.aadhaarFront)
+            : Promise.resolve(null),
+          filesState.aadhaarBack
+            ? compressImageFile(filesState.aadhaarBack)
+            : Promise.resolve(null),
+          filesState.panPhoto
+            ? compressImageFile(filesState.panPhoto)
+            : Promise.resolve(null),
+          filesState.deliveryPhoto
+            ? compressImageFile(filesState.deliveryPhoto)
+            : Promise.resolve(null),
+          filesState.signedDocSell
+            ? compressImageFile(filesState.signedDocSell)
+            : Promise.resolve(null),
         ]);
         if (rcFront) form.append("vehicleRCFront", rcFront);
         if (rcBack) form.append("vehicleRCBack", rcBack);
@@ -1383,22 +1541,38 @@ const SellLetterForm = () => {
         if (signedDocSell) form.append("signedDocSell", signedDocSell);
 
         if (filesState.vehiclePhotos && filesState.vehiclePhotos.length) {
-          const compressed = await Promise.all(filesState.vehiclePhotos.slice(0, 4).map((f) => compressImageFile(f)));
+          const compressed = await Promise.all(
+            filesState.vehiclePhotos
+              .slice(0, 4)
+              .map((f) => compressImageFile(f)),
+          );
           for (const f of compressed) form.append("vehiclePhotos", f);
         }
 
-        if (filesState.insuranceCertificate && filesState.insuranceCertificate.length) {
-          const compressed = await Promise.all(filesState.insuranceCertificate.map((f) => compressImageFile(f)));
+        if (
+          filesState.insuranceCertificate &&
+          filesState.insuranceCertificate.length
+        ) {
+          const compressed = await Promise.all(
+            filesState.insuranceCertificate.map((f) => compressImageFile(f)),
+          );
           for (const f of compressed) form.append("insuranceCertificate", f);
           form.append("insuranceCertificateUploadMode", "separate");
         }
         if (filesState.vehicleNOC && filesState.vehicleNOC.length) {
-          const compressed = await Promise.all(filesState.vehicleNOC.map((f) => compressImageFile(f)));
+          const compressed = await Promise.all(
+            filesState.vehicleNOC.map((f) => compressImageFile(f)),
+          );
           for (const f of compressed) form.append("vehicleNOC", f);
           form.append("vehicleNOCUploadMode", "separate");
         }
-        if (filesState.vehicleBuyReceipt && filesState.vehicleBuyReceipt.length) {
-          const compressed = await Promise.all(filesState.vehicleBuyReceipt.map((f) => compressImageFile(f)));
+        if (
+          filesState.vehicleBuyReceipt &&
+          filesState.vehicleBuyReceipt.length
+        ) {
+          const compressed = await Promise.all(
+            filesState.vehicleBuyReceipt.map((f) => compressImageFile(f)),
+          );
           for (const f of compressed) form.append("vehicleBuyReceipt", f);
           form.append("vehicleBuyReceiptUploadMode", "separate");
         }
@@ -1408,7 +1582,10 @@ const SellLetterForm = () => {
           if (Object.keys(preservedDocs).length > 0) {
             form.append("preservedDocuments", JSON.stringify(preservedDocs));
           }
-          form.append("existingDocuments", JSON.stringify(editLetter.documents));
+          form.append(
+            "existingDocuments",
+            JSON.stringify(editLetter.documents),
+          );
         } else {
           // New sell letter — carry over any documents pre-filled from buy letter lookup
           const preservedDocs = buildPreservedDocsFromPreviews(filesState);
@@ -1456,7 +1633,10 @@ const SellLetterForm = () => {
           // Also send the full existing documents object as an ultimate fallback
           form.append("preservedDocuments", JSON.stringify(preservedDocs));
           if (editLetter?.documents) {
-            form.append("existingDocuments", JSON.stringify(editLetter.documents));
+            form.append(
+              "existingDocuments",
+              JSON.stringify(editLetter.documents),
+            );
           }
 
           if (isElectron) {
@@ -1551,13 +1731,18 @@ const SellLetterForm = () => {
       }
 
       const hasFiles =
-        filesState.vehicleRCFront || filesState.vehicleRCBack ||
-        filesState.aadhaarFront || filesState.aadhaarBack ||
-        filesState.panPhoto || filesState.deliveryPhoto ||
+        filesState.vehicleRCFront ||
+        filesState.vehicleRCBack ||
+        filesState.aadhaarFront ||
+        filesState.aadhaarBack ||
+        filesState.panPhoto ||
+        filesState.deliveryPhoto ||
         (filesState.vehiclePhotos && filesState.vehiclePhotos.length > 0) ||
-        (filesState.insuranceCertificate && filesState.insuranceCertificate.length > 0) ||
+        (filesState.insuranceCertificate &&
+          filesState.insuranceCertificate.length > 0) ||
         (filesState.vehicleNOC && filesState.vehicleNOC.length > 0) ||
-        (filesState.vehicleBuyReceipt && filesState.vehicleBuyReceipt.length > 0);
+        (filesState.vehicleBuyReceipt &&
+          filesState.vehicleBuyReceipt.length > 0);
 
       setProgressStep(hasFiles ? 1 : 2);
       setIsDownloading(true);
@@ -2210,11 +2395,15 @@ const SellLetterForm = () => {
             const docs = data.buyLetterDocuments;
             const previews = {};
 
-            if (docs.aadhaarUploadMode) setAadhaarUploadMode(docs.aadhaarUploadMode);
-            if (docs.vehicleRCUploadMode) setVehicleRCUploadMode(docs.vehicleRCUploadMode);
+            if (docs.aadhaarUploadMode)
+              setAadhaarUploadMode(docs.aadhaarUploadMode);
+            if (docs.vehicleRCUploadMode)
+              setVehicleRCUploadMode(docs.vehicleRCUploadMode);
 
-            if (docs.vehicleRC?.front) previews.vehicleRCFront = docs.vehicleRC.front;
-            if (docs.vehicleRC?.back) previews.vehicleRCBack = docs.vehicleRC.back;
+            if (docs.vehicleRC?.front)
+              previews.vehicleRCFront = docs.vehicleRC.front;
+            if (docs.vehicleRC?.back)
+              previews.vehicleRCBack = docs.vehicleRC.back;
             if (docs.aadhaar?.front) previews.aadhaarFront = docs.aadhaar.front;
             if (docs.aadhaar?.back) previews.aadhaarBack = docs.aadhaar.back;
             if (docs.pan) previews.panPhoto = docs.pan;
@@ -2222,7 +2411,9 @@ const SellLetterForm = () => {
             if (docs.signedDocSell) previews.signedDocSell = docs.signedDocSell;
             if (Array.isArray(docs.vehiclePhotos) && docs.vehiclePhotos.length)
               previews.vehiclePhotos = docs.vehiclePhotos;
-            const insurancePages = Array.isArray(docs.insuranceCertificate?.pages)
+            const insurancePages = Array.isArray(
+              docs.insuranceCertificate?.pages,
+            )
               ? docs.insuranceCertificate.pages
               : Array.isArray(docs.insuranceCertificate)
                 ? docs.insuranceCertificate
@@ -3509,7 +3700,6 @@ const SellLetterForm = () => {
                   </div>
                 )}
 
-                
                 <div style={{ ...styles.formField, width: "100%" }}>
                   <label style={{ ...styles.formLabel, marginBottom: "12px" }}>
                     Aadhaar Upload Mode
@@ -4140,9 +4330,7 @@ const SellLetterForm = () => {
             </div>
           </form>
         </div>
-        {progressStep > 0 && (
-          <ProcessingModal step={progressStep} />
-        )}
+        {progressStep > 0 && <ProcessingModal step={progressStep} />}
         {showPreviewModal && (
           <div style={styles.modalOverlay}>
             <div
@@ -4217,6 +4405,57 @@ const SellLetterForm = () => {
                   } catch (e) {}
                   setPreviewPdf(null);
                   setShowPreviewModal(false);
+                }}
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        )}
+        {showImagePreviewModal && previewImageUrl && (
+          <div style={styles.modalOverlay}>
+            <div
+              style={{
+                ...styles.modalContent,
+                width: isMobile ? "95vw" : "1100px",
+                maxWidth: isMobile ? "95vw" : "92%",
+                height: isMobile ? "80vh" : "85vh",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <h3 style={styles.modalTitle}>{previewImageTitle}</h3>
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "auto",
+                  background: "#0f172a",
+                  borderRadius: "10px",
+                  padding: "12px",
+                }}
+              >
+                <img
+                  src={previewImageUrl}
+                  alt={previewImageTitle}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    objectFit: "contain",
+                    borderRadius: "8px",
+                    background: "#fff",
+                  }}
+                />
+              </div>
+              <button
+                style={styles.modalCloseButton}
+                onClick={() => {
+                  setShowImagePreviewModal(false);
+                  setPreviewImageUrl(null);
+                  setPreviewImageTitle("");
                 }}
               >
                 Close Preview

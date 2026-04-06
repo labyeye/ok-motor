@@ -972,15 +972,15 @@ const BuyLetterHistory = () => {
     try {
       const date = new Date(dateObj);
       if (isNaN(date.getTime())) return "";
-      
+
       let hours = date.getHours();
       const minutes = date.getMinutes();
       const ampm = hours >= 12 ? "PM" : "AM";
       hours = hours % 12 || 12;
-      
+
       const formattedHours = String(hours).padStart(2, "0");
       const formattedMinutes = String(minutes).padStart(2, "0");
-      
+
       return `${formattedHours}:${formattedMinutes} ${ampm}`;
     } catch (e) {
       return "";
@@ -1981,14 +1981,11 @@ const BuyLetterHistory = () => {
           return;
         }
 
-        await axios.delete(
-          `https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        await axios.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
         setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
         setAlertInfo({
           isOpen: true,
@@ -2234,7 +2231,8 @@ const BuyLetterHistory = () => {
                                       }}
                                     >
                                       Edited: {formatDate(letter.editedAt)}
-                                      {letter.editedAt && ` at ${formatTimeFromDate(letter.editedAt)}`}
+                                      {letter.editedAt &&
+                                        ` at ${formatTimeFromDate(letter.editedAt)}`}
                                     </div>
                                   )}
                                 </div>
@@ -3323,6 +3321,47 @@ const BuyLetterHistory = () => {
                       display: "flex",
                       alignItems: "center",
                       padding: "10px 12px",
+                      backgroundColor: docSelections.signedDocBuy
+                        ? "#f0f9ff"
+                        : "transparent",
+                      border: `2px solid ${docSelections.signedDocBuy ? "#0284c7" : "#e2e8f0"}`,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!docSelections.signedDocBuy}
+                      onChange={(e) =>
+                        setDocSelections((s) => ({
+                          ...s,
+                          signedDocBuy: e.target.checked,
+                        }))
+                      }
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "12px",
+                        accentColor: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#1e293b",
+                      }}
+                    >
+                      Signed Doc (Buy)
+                    </span>
+                  </label>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
                       backgroundColor: docSelections.insuranceCertificate
                         ? "#f0f9ff"
                         : "transparent",
@@ -3500,6 +3539,8 @@ const BuyLetterHistory = () => {
                       out.deliveryPhoto = docs.deliveryPhoto || docs.vehicleKM;
                     if (sel.vehiclePhotos && docs.vehiclePhotos)
                       out.vehiclePhotos = docs.vehiclePhotos;
+                    if (sel.signedDocBuy && docs.signedDocBuy)
+                      out.signedDocBuy = docs.signedDocBuy;
                     if (sel.insuranceCertificate && docs.insuranceCertificate)
                       out.insuranceCertificate = docs.insuranceCertificate;
                     if (sel.vehicleNOC && docs.vehicleNOC)
