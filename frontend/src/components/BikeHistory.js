@@ -189,6 +189,84 @@ const BikeHistory = ({ externalSearchTerm }) => {
           ?.join("-") || ""
       : "";
 
+  const addHeaderFooterToPage = async (page, pdfDoc) => {
+    try {
+      const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const logoUrl = logo1;
+      const logoImageBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
+      const logoImage = await pdfDoc.embedPng(logoImageBytes);
+
+      // Draw header background
+      page.drawRectangle({
+        x: 0,
+        y: 780,
+        width: 595,
+        height: 62,
+        color: rgb(0.047, 0.098, 0.196),
+      });
+
+      // Draw logo
+      page.drawImage(logoImage, {
+        x: 50,
+        y: 740,
+        width: 160,
+        height: 130,
+      });
+
+      // Draw company info
+      page.drawText("UDAYAM-BR-26-0028550", {
+        x: 330,
+        y: 815,
+        size: 14,
+        color: rgb(1, 1, 1),
+        font: headerFont,
+      });
+
+      page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+        x: 330,
+        y: 795,
+        size: 14,
+        color: rgb(1, 1, 1),
+        font: headerFont,
+      });
+
+      // Draw footer
+      page.drawLine({
+        start: { x: 20, y: 52 },
+        end: { x: 575, y: 52 },
+        thickness: 0.5,
+        color: rgb(0.8, 0.8, 0.8),
+      });
+
+      const thankText = "Thank you for your business!";
+      const addrText =
+        "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+      const thankWidth = headerFont.widthOfTextAtSize(thankText, 12);
+      const addrWidth = regularFont.widthOfTextAtSize(addrText, 8);
+      const thankX = (595 - thankWidth) / 2;
+      const addrX = (595 - addrWidth) / 2;
+
+      page.drawText(thankText, {
+        x: thankX,
+        y: 40,
+        size: 12,
+        color: rgb(0, 0, 0),
+        font: headerFont,
+      });
+
+      page.drawText(addrText, {
+        x: addrX,
+        y: 26,
+        size: 8,
+        color: rgb(0.4, 0.4, 0.4),
+        font: regularFont,
+      });
+    } catch (err) {
+      console.warn("Failed to add header/footer:", err);
+    }
+  };
+
   const buyLetterFieldPositions = {
     sellerName: { x: 34, y: 632, size: 11 },
     sellerFatherName: { x: 322, y: 632, size: 11 },
@@ -296,7 +374,6 @@ const BikeHistory = ({ externalSearchTerm }) => {
           const headerFont = await pdfDoc.embedFont(
             StandardFonts.HelveticaBold,
           );
-          const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
           const logoUrl = logo1;
           const logoImageBytes = await fetch(logoUrl).then((r) =>
             r.arrayBuffer(),
@@ -343,33 +420,6 @@ const BikeHistory = ({ externalSearchTerm }) => {
                 color: rgb(1, 1, 1),
                 font: headerFont,
               });
-              const thank = "Thank you for your business!";
-              const addr =
-                "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
-              const thankW = headerFont.widthOfTextAtSize(thank, 12);
-              const addrW = regularFont.widthOfTextAtSize(addr, 8);
-              const cxThank = (595 - thankW) / 2;
-              const cxAddr = (595 - addrW) / 2;
-              p.drawLine({
-                start: { x: 20, y: 52 },
-                end: { x: 575, y: 52 },
-                thickness: 0.5,
-                color: rgb(0.8, 0.8, 0.8),
-              });
-              p.drawText(thank, {
-                x: cxThank,
-                y: 40,
-                size: 12,
-                color: rgb(0, 0, 0),
-                font: headerFont,
-              });
-              p.drawText(addr, {
-                x: cxAddr,
-                y: 26,
-                size: 8,
-                color: rgb(0.4, 0.4, 0.4),
-                font: regularFont,
-              });
             } catch (e) {}
           }
         }
@@ -410,6 +460,95 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
+
+      // Add document pages
+      try {
+        const docs = letter.documents || {};
+        const docUrls = [];
+
+        // Collect all document URLs
+        if (docs.vehicleRC?.front)
+          docUrls.push({
+            label: "Vehicle RC (Front)",
+            url: docs.vehicleRC.front,
+          });
+        if (docs.vehicleRC?.back)
+          docUrls.push({
+            label: "Vehicle RC (Back)",
+            url: docs.vehicleRC.back,
+          });
+        if (docs.aadhaar?.front)
+          docUrls.push({ label: "Aadhaar (Front)", url: docs.aadhaar.front });
+        if (docs.aadhaar?.back)
+          docUrls.push({ label: "Aadhaar (Back)", url: docs.aadhaar.back });
+        if (docs.pan) docUrls.push({ label: "PAN", url: docs.pan });
+        if (docs.deliveryPhoto)
+          docUrls.push({ label: "Delivery Photo", url: docs.deliveryPhoto });
+        if (docs.signedDocBuy)
+          docUrls.push({ label: "Signed Document", url: docs.signedDocBuy });
+        if (Array.isArray(docs.insuranceCertificate)) {
+          docs.insuranceCertificate.forEach((url, idx) => {
+            docUrls.push({ label: `Insurance Certificate (${idx + 1})`, url });
+          });
+        }
+        if (Array.isArray(docs.vehicleNOC)) {
+          docs.vehicleNOC.forEach((url, idx) => {
+            docUrls.push({ label: `Vehicle NOC (${idx + 1})`, url });
+          });
+        }
+        if (Array.isArray(docs.vehicleBuyReceipt)) {
+          docs.vehicleBuyReceipt.forEach((url, idx) => {
+            docUrls.push({ label: `Buy Receipt (${idx + 1})`, url });
+          });
+        }
+
+        // Add each document as a page
+        for (const doc of docUrls) {
+          try {
+            const response = await fetch(doc.url);
+            const imageData = await response.arrayBuffer();
+            let documentImage;
+
+            if (doc.url.toLowerCase().endsWith(".pdf")) {
+              // Skip PDF files for now, can be enhanced later
+              continue;
+            } else {
+              documentImage = await pdfDoc
+                .embedPng(imageData)
+                .catch(() => pdfDoc.embedJpg(imageData));
+            }
+
+            const docPage = pdfDoc.addPage([595, 842]);
+
+            // Add header and footer first
+            await addHeaderFooterToPage(docPage, pdfDoc);
+
+            const { width, height } = documentImage.scaleToFit(500, 650);
+            docPage.drawImage(documentImage, {
+              x: 47.5,
+              y: 660 - height,
+              width,
+              height,
+            });
+
+            // Add document label
+            const labelFont = await pdfDoc.embedFont(
+              StandardFonts.HelveticaBold,
+            );
+            docPage.drawText(doc.label, {
+              x: 22.5,
+              y: 690,
+              size: 12,
+              color: rgb(0, 0, 0),
+              font: labelFont,
+            });
+          } catch (docErr) {
+            console.warn(`Failed to add document ${doc.label}:`, docErr);
+          }
+        }
+      } catch (docsErr) {
+        console.warn("Failed to add documents:", docsErr);
+      }
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -495,6 +634,95 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoiceForSell(invoicePage, pdfDoc, letter);
 
+      // Add document pages
+      try {
+        const docs = letter.documents || {};
+        const docUrls = [];
+
+        // Collect all document URLs
+        if (docs.vehicleRC?.front)
+          docUrls.push({
+            label: "Vehicle RC (Front)",
+            url: docs.vehicleRC.front,
+          });
+        if (docs.vehicleRC?.back)
+          docUrls.push({
+            label: "Vehicle RC (Back)",
+            url: docs.vehicleRC.back,
+          });
+        if (docs.aadhaar?.front)
+          docUrls.push({ label: "Aadhaar (Front)", url: docs.aadhaar.front });
+        if (docs.aadhaar?.back)
+          docUrls.push({ label: "Aadhaar (Back)", url: docs.aadhaar.back });
+        if (docs.pan) docUrls.push({ label: "PAN", url: docs.pan });
+        if (docs.deliveryPhoto)
+          docUrls.push({ label: "Delivery Photo", url: docs.deliveryPhoto });
+        if (docs.signedDocSell)
+          docUrls.push({ label: "Signed Document", url: docs.signedDocSell });
+        if (Array.isArray(docs.insuranceCertificate)) {
+          docs.insuranceCertificate.forEach((url, idx) => {
+            docUrls.push({ label: `Insurance Certificate (${idx + 1})`, url });
+          });
+        }
+        if (Array.isArray(docs.vehiclePhotos)) {
+          docs.vehiclePhotos.forEach((url, idx) => {
+            docUrls.push({ label: `Vehicle Photo (${idx + 1})`, url });
+          });
+        }
+        if (Array.isArray(docs.vehicleNOC)) {
+          docs.vehicleNOC.forEach((url, idx) => {
+            docUrls.push({ label: `Vehicle NOC (${idx + 1})`, url });
+          });
+        }
+
+        // Add each document as a page
+        for (const doc of docUrls) {
+          try {
+            const response = await fetch(doc.url);
+            const imageData = await response.arrayBuffer();
+            let documentImage;
+
+            if (doc.url.toLowerCase().endsWith(".pdf")) {
+              // Skip PDF files for now
+              continue;
+            } else {
+              documentImage = await pdfDoc
+                .embedPng(imageData)
+                .catch(() => pdfDoc.embedJpg(imageData));
+            }
+
+            const docPage = pdfDoc.addPage([595, 842]);
+            
+            // Add header and footer first
+            await addHeaderFooterToPage(docPage, pdfDoc);
+            
+            const { width, height } = documentImage.scaleToFit(500, 650);
+            docPage.drawImage(documentImage, {
+              x: 47.5,
+              y: 660 - height,
+              width,
+              height,
+            });
+
+            // Add document label
+            const labelFont = await pdfDoc.embedFont(
+              StandardFonts.HelveticaBold,
+            );
+            docPage.drawText(doc.label, {
+              x: 22.5,
+              y: 690,
+              size: 12,
+              color: rgb(0, 0, 0),
+              font: labelFont,
+            });
+          } catch (docErr) {
+            console.warn(`Failed to add document ${doc.label}:`, docErr);
+          }
+        }
+      } catch (docsErr) {
+        console.warn("Failed to add documents:", docsErr);
+      }
+
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -570,12 +798,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const addrW = font.widthOfTextAtSize(addr, 8);
       const cxThank = (595 - thankW) / 2;
       const cxAddr = (595 - addrW) / 2;
-      page.drawLine({
-        start: { x: 20, y: 52 },
-        end: { x: 575, y: 52 },
-        thickness: 0.5,
-        color: rgb(0.8, 0.8, 0.8),
-      });
+
       page.drawText(thank, {
         x: cxThank,
         y: 40,
@@ -951,25 +1174,6 @@ const BikeHistory = ({ externalSearchTerm }) => {
       thickness: 0.5,
       color: rgb(0.8, 0.8, 0.8),
     });
-
-    page.drawText("Thank you for your business!", {
-      x: 220,
-      y: 50,
-      size: 12,
-      color: rgb(0.047, 0.098, 0.196),
-      font: boldFont,
-    });
-
-    page.drawText(
-      "OK MOTORS | Pillar num.53, Bailey Rd,  Raja Bazar,  Patna, Bihar 800014",
-      {
-        x: 130,
-        y: 30,
-        size: 8,
-        color: rgb(0.5, 0.5, 0.5),
-        font: font,
-      },
-    );
   };
 
   const drawVehicleInvoiceForSell = async (page, pdfDoc, letter) => {
@@ -1428,25 +1632,6 @@ const BikeHistory = ({ externalSearchTerm }) => {
       thickness: 0.5,
       color: rgb(0.8, 0.8, 0.8),
     });
-
-    page.drawText("Thank you for your business!", {
-      x: 220,
-      y: 30,
-      size: 12,
-      color: rgb(0.047, 0.098, 0.196),
-      font: boldFont,
-    });
-
-    page.drawText(
-      "OK MOTORS | Pillar num.53, Bailey Rd,  Raja Bazar,  Patna, Bihar 800014",
-      {
-        x: 130,
-        y: 15,
-        size: 8,
-        color: rgb(0.5, 0.5, 0.5),
-        font: font,
-      },
-    );
   };
 
   const fetchBikeHistory = useCallback(async () => {
@@ -1738,7 +1923,8 @@ const BikeHistory = ({ externalSearchTerm }) => {
       combinedData.sort((firstItem, secondItem) => {
         const secondTimestamp = getSortTimestamp(secondItem);
         const firstTimestamp = getSortTimestamp(firstItem);
-        const timestampDiff = secondTimestamp - firstTimestamp;
+        // Sort in ascending order: oldest at bottom, newest at top
+        const timestampDiff = firstTimestamp - secondTimestamp;
         if (timestampDiff !== 0) return timestampDiff;
 
         const getActionPriority = (historyItem) => {
@@ -1836,6 +2022,94 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
+      // Add document pages
+      try {
+        const docs = letter.documents || {};
+        const docUrls = [];
+
+        // Collect all document URLs
+        if (docs.vehicleRC?.front)
+          docUrls.push({
+            label: "Vehicle RC (Front)",
+            url: docs.vehicleRC.front,
+          });
+        if (docs.vehicleRC?.back)
+          docUrls.push({
+            label: "Vehicle RC (Back)",
+            url: docs.vehicleRC.back,
+          });
+        if (docs.aadhaar?.front)
+          docUrls.push({ label: "Aadhaar (Front)", url: docs.aadhaar.front });
+        if (docs.aadhaar?.back)
+          docUrls.push({ label: "Aadhaar (Back)", url: docs.aadhaar.back });
+        if (docs.pan) docUrls.push({ label: "PAN", url: docs.pan });
+        if (docs.deliveryPhoto)
+          docUrls.push({ label: "Delivery Photo", url: docs.deliveryPhoto });
+        if (docs.signedDocBuy)
+          docUrls.push({ label: "Signed Document", url: docs.signedDocBuy });
+        if (Array.isArray(docs.insuranceCertificate)) {
+          docs.insuranceCertificate.forEach((url, idx) => {
+            docUrls.push({ label: `Insurance Certificate (${idx + 1})`, url });
+          });
+        }
+        if (Array.isArray(docs.vehicleNOC)) {
+          docs.vehicleNOC.forEach((url, idx) => {
+            docUrls.push({ label: `Vehicle NOC (${idx + 1})`, url });
+          });
+        }
+        if (Array.isArray(docs.vehicleBuyReceipt)) {
+          docs.vehicleBuyReceipt.forEach((url, idx) => {
+            docUrls.push({ label: `Buy Receipt (${idx + 1})`, url });
+          });
+        }
+
+        // Add each document as a page
+        for (const doc of docUrls) {
+          try {
+            const response = await fetch(doc.url);
+            const imageData = await response.arrayBuffer();
+            let documentImage;
+
+            if (doc.url.toLowerCase().endsWith(".pdf")) {
+              continue;
+            } else {
+              documentImage = await pdfDoc
+                .embedPng(imageData)
+                .catch(() => pdfDoc.embedJpg(imageData));
+            }
+
+            const docPage = pdfDoc.addPage([595, 842]);
+            
+            // Add header and footer first
+            await addHeaderFooterToPage(docPage, pdfDoc);
+            
+            const { width, height } = documentImage.scaleToFit(500, 650);
+            docPage.drawImage(documentImage, {
+              x: 47.5,
+              y: 660 - height,
+              width,
+              height,
+            });
+
+            // Add document label
+            const labelFont = await pdfDoc.embedFont(
+              StandardFonts.HelveticaBold,
+            );
+            docPage.drawText(doc.label, {
+              x: 22.5,
+              y: 690,
+              size: 12,
+              color: rgb(0, 0, 0),
+              font: labelFont,
+            });
+          } catch (docErr) {
+            console.warn(`Failed to add document ${doc.label}:`, docErr);
+          }
+        }
+      } catch (docsErr) {
+        console.warn("Failed to add documents:", docsErr);
+      }
+
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -1912,6 +2186,94 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoiceForSell(invoicePage, pdfDoc, letter);
+
+      // Add document pages
+      try {
+        const docs = letter.documents || {};
+        const docUrls = [];
+
+        // Collect all document URLs
+        if (docs.vehicleRC?.front)
+          docUrls.push({
+            label: "Vehicle RC (Front)",
+            url: docs.vehicleRC.front,
+          });
+        if (docs.vehicleRC?.back)
+          docUrls.push({
+            label: "Vehicle RC (Back)",
+            url: docs.vehicleRC.back,
+          });
+        if (docs.aadhaar?.front)
+          docUrls.push({ label: "Aadhaar (Front)", url: docs.aadhaar.front });
+        if (docs.aadhaar?.back)
+          docUrls.push({ label: "Aadhaar (Back)", url: docs.aadhaar.back });
+        if (docs.pan) docUrls.push({ label: "PAN", url: docs.pan });
+        if (docs.deliveryPhoto)
+          docUrls.push({ label: "Delivery Photo", url: docs.deliveryPhoto });
+        if (docs.signedDocSell)
+          docUrls.push({ label: "Signed Document", url: docs.signedDocSell });
+        if (Array.isArray(docs.insuranceCertificate)) {
+          docs.insuranceCertificate.forEach((url, idx) => {
+            docUrls.push({ label: `Insurance Certificate (${idx + 1})`, url });
+          });
+        }
+        if (Array.isArray(docs.vehiclePhotos)) {
+          docs.vehiclePhotos.forEach((url, idx) => {
+            docUrls.push({ label: `Vehicle Photo (${idx + 1})`, url });
+          });
+        }
+        if (Array.isArray(docs.vehicleNOC)) {
+          docs.vehicleNOC.forEach((url, idx) => {
+            docUrls.push({ label: `Vehicle NOC (${idx + 1})`, url });
+          });
+        }
+
+        // Add each document as a page
+        for (const doc of docUrls) {
+          try {
+            const response = await fetch(doc.url);
+            const imageData = await response.arrayBuffer();
+            let documentImage;
+
+            if (doc.url.toLowerCase().endsWith(".pdf")) {
+              continue;
+            } else {
+              documentImage = await pdfDoc
+                .embedPng(imageData)
+                .catch(() => pdfDoc.embedJpg(imageData));
+            }
+
+            const docPage = pdfDoc.addPage([595, 842]);
+            
+            // Add header and footer first
+            await addHeaderFooterToPage(docPage, pdfDoc);
+            
+            const { width, height } = documentImage.scaleToFit(500, 650);
+            docPage.drawImage(documentImage, {
+              x: 47.5,
+              y: 660 - height,
+              width,
+              height,
+            });
+
+            // Add document label
+            const labelFont = await pdfDoc.embedFont(
+              StandardFonts.HelveticaBold,
+            );
+            docPage.drawText(doc.label, {
+              x: 22.5,
+              y: 690,
+              size: 12,
+              color: rgb(0, 0, 0),
+              font: labelFont,
+            });
+          } catch (docErr) {
+            console.warn(`Failed to add document ${doc.label}:`, docErr);
+          }
+        }
+      } catch (docsErr) {
+        console.warn("Failed to add documents:", docsErr);
+      }
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -2123,9 +2485,9 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
     switch (type) {
       case "buy":
-        return isEdited ? "Edited Purchase" : "Purchase";
+        return isEdited ? "Edited Buy Letter" : "Created Buy Letter";
       case "sell":
-        return isEdited ? "Edited Sold" : "Sold";
+        return isEdited ? "Edited Sell Letter" : "Created Sell Letter";
       case "service":
         return "Serviced";
       case "advance":
