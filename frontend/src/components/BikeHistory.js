@@ -692,10 +692,10 @@ const BikeHistory = ({ externalSearchTerm }) => {
             }
 
             const docPage = pdfDoc.addPage([595, 842]);
-            
+
             // Add header and footer first
             await addHeaderFooterToPage(docPage, pdfDoc);
-            
+
             const { width, height } = documentImage.scaleToFit(500, 650);
             docPage.drawImage(documentImage, {
               x: 47.5,
@@ -1724,17 +1724,108 @@ const BikeHistory = ({ externalSearchTerm }) => {
             : [pucResp.data]
           : [];
 
+      // --- START OF NEW FLAWLESS LOGIC ---
+      
+      // Helper function to merge UTC saleDate with local saleTime (e.g., "19:59")
+      const parseSaleDateTime = (dateStr, timeStr) => {
+        if (!dateStr) return 0;
+        const dateObj = new Date(dateStr);
+        if (isNaN(dateObj.getTime())) return 0;
+
+        // Extract the pure calendar day (ignoring timezone offsets)
+        const year = dateObj.getUTCFullYear();
+        const month = dateObj.getUTCMonth();
+        const day = dateObj.getUTCDate();
+
+        let hours = 0;
+        let minutes = 0;
+
+        if (timeStr && typeof timeStr === 'string' && timeStr.includes(':')) {
+          let [hStr, mStr] = timeStr.split(':');
+          let h = parseInt(hStr, 10);
+          let m = parseInt(mStr, 10);
+
+          if (timeStr.toLowerCase().includes('pm') && h < 12) h += 12;
+          if (timeStr.toLowerCase().includes('am') && h === 12) h = 0;
+
+          hours = h;
+          minutes = m;
+        }
+
+        // Return a precise local timestamp combining the Date and Time
+        return new Date(year, month, day, hours, minutes).getTime();
+      };
+
+      const processLetterData = (data, type) => {
+        if (!data || data.length === 0) return [];
+
+        // 1. Group records by registration number and date part
+        const groups = {};
+        data.forEach(item => {
+          const dateKey = item.saleDate ? item.saleDate.split('T')[0] : 'nodate';
+          const groupKey = `${item.registrationNumber}-${dateKey}`;
+          if (!groups[groupKey]) groups[groupKey] = [];
+          groups[groupKey].push(item);
+        });
+
+        const processed = [];
+
+        Object.values(groups).forEach(group => {
+          // Sort chronologically (oldest version first)
+          group.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+          const baseItem = group[0];
+          
+          // Get the properly merged Sale Date and Sale Time
+const actualSaleTimestamp = new Date(`${baseItem.saleDate.split('T')[0]}T${baseItem.saleTime}:00`).getTime();          const fallbackTimestamp = baseItem.createdAt ? new Date(baseItem.createdAt).getTime() : 0;
+          const creationTimestamp = actualSaleTimestamp || fallbackTimestamp;
+
+          // A) ALWAYS CREATE EXACTLY ONE "CREATED" ROW WITH PROPER TIME
+          processed.push({
+            ...baseItem,
+            type: type,
+            date: creationTimestamp,
+            createdAt: creationTimestamp, // Bypass your `isEditedActionItem` check
+            saleDate: creationTimestamp,
+            changeHistory: [],
+            previousVersionId: null,
+            editedAt: null,
+            _id: `${baseItem._id}-created-base`
+          });
+
+          // B) RENDER EVERY SINGLE EDIT ROW INDEPENDENTLY
+          group.forEach((doc, index) => {
+            // Check if this specific document has edit flags or is a subsequent version
+            const isEdit = doc.previousVersionId ||
+                           (Array.isArray(doc.changeHistory) && doc.changeHistory.length > 0) ||
+                           doc.editedAt ||
+                           index > 0; // If index > 0, it's definitely an edit of the base
+
+            if (isEdit) {
+              const editTimestamp = doc.editedAt ? new Date(doc.editedAt).getTime() :
+                                    (doc.updatedAt ? new Date(doc.updatedAt).getTime() : new Date(doc.createdAt).getTime());
+              
+              processed.push({
+                ...doc,
+                type: type,
+                date: editTimestamp,
+                editedAt: editTimestamp, // Forces UI to show as "Edited"
+                _id: `${doc._id}-edit-version-${index}`
+              });
+            }
+          });
+        });
+
+        return processed;
+      };
+
+      const processedBuyData = processLetterData(buyData, "buy");
+      const processedSellData = processLetterData(sellData, "sell");
+      // --- END OF NEW FLAWLESS LOGIC ---
+
       const combinedData = [
-        ...buyData.map((item) => ({
-          ...item,
-          type: "buy",
-          date: item.saleDate || item.createdAt,
-        })),
-        ...sellData.map((item) => ({
-          ...item,
-          type: "sell",
-          date: item.saleDate || item.createdAt,
-        })),
+        ...processedBuyData,
+        ...processedSellData,
         ...serviceData.map((item) => ({
           ...item,
           type: "service",
@@ -1757,6 +1848,12 @@ const BikeHistory = ({ externalSearchTerm }) => {
           date: item.pucIssueDate || item.pucExpiry || item.createdAt,
         })),
       ];
+
+      // If no data at all, show empty state
+      if (combinedData.length === 0) {
+        setBikeHistory([]);
+        return;
+      }
 
       // If no data at all, show empty state
       if (combinedData.length === 0) {
@@ -2079,10 +2176,10 @@ const BikeHistory = ({ externalSearchTerm }) => {
             }
 
             const docPage = pdfDoc.addPage([595, 842]);
-            
+
             // Add header and footer first
             await addHeaderFooterToPage(docPage, pdfDoc);
-            
+
             const { width, height } = documentImage.scaleToFit(500, 650);
             docPage.drawImage(documentImage, {
               x: 47.5,
@@ -2244,10 +2341,10 @@ const BikeHistory = ({ externalSearchTerm }) => {
             }
 
             const docPage = pdfDoc.addPage([595, 842]);
-            
+
             // Add header and footer first
             await addHeaderFooterToPage(docPage, pdfDoc);
-            
+
             const { width, height } = documentImage.scaleToFit(500, 650);
             docPage.drawImage(documentImage, {
               x: 47.5,
@@ -2439,7 +2536,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
   const getActionIcon = (type) => {
     switch (type) {
       case "buy":
-        return <ArrowDownLeft size={16} color="#088395" />;
+        return <ArrowDownLeft size={16} color="#089532ff" />;
       case "sell":
         return <ArrowUpRight size={16} color="#ef4444" />;
       case "service":
@@ -2462,6 +2559,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
   const isEditedActionItem = (item) => {
     if (!item || (item.type !== "buy" && item.type !== "sell")) return false;
 
+    // Check if there's a previousVersionId or changeHistory
     if (
       item.previousVersionId ||
       (Array.isArray(item.changeHistory) && item.changeHistory.length > 0)
@@ -2469,6 +2567,18 @@ const BikeHistory = ({ externalSearchTerm }) => {
       return true;
     }
 
+    // For buy/sell letters, check if saleDate differs from createdAt
+    // If they differ significantly, it means the letter was edited
+    if (item.saleDate && item.createdAt) {
+      const saleTime = new Date(item.saleDate).getTime();
+      const createdTime = new Date(item.createdAt).getTime();
+      if (!Number.isNaN(saleTime) && !Number.isNaN(createdTime)) {
+        // If saleDate is different from createdAt, it was edited
+        return Math.abs(saleTime - createdTime) > 1000;
+      }
+    }
+
+    // Original check for editedAt vs createdAt
     if (item.editedAt && item.createdAt) {
       const editedTime = new Date(item.editedAt).getTime();
       const createdTime = new Date(item.createdAt).getTime();
@@ -3008,162 +3118,6 @@ const BikeHistory = ({ externalSearchTerm }) => {
                                 </div>
                               </td>
                             </tr>
-
-                            {hasEdits && (
-                              <tr
-                                style={{
-                                  ...styles.tableRow,
-                                  backgroundColor: "#f0f9fb",
-                                  cursor: "pointer",
-                                }}
-                                onClick={() => toggleExpandedItem(itemKey)}
-                              >
-                                <td
-                                  colSpan="6"
-                                  style={{
-                                    ...styles.tableCell,
-                                    padding: "0",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      padding: "12px 16px",
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      alignItems: "center",
-                                      backgroundColor: "#e0f2f1",
-                                      borderLeft: "4px solid #088395",
-                                    }}
-                                  >
-                                    <span
-                                      style={{
-                                        fontSize: "0.85rem",
-                                        fontWeight: 600,
-                                        color: "#088395",
-                                      }}
-                                    >
-                                      📝 {isExpanded ? "Hide" : "Show"} Changes
-                                      Made
-                                    </span>
-                                    <span
-                                      style={{
-                                        fontSize: "0.75rem",
-                                        backgroundColor: "#088395",
-                                        color: "white",
-                                        padding: "2px 8px",
-                                        borderRadius: "12px",
-                                        fontWeight: 600,
-                                      }}
-                                    >
-                                      {editedFields.length}
-                                    </span>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-
-                            {hasEdits && isExpanded && (
-                              <tr
-                                style={{
-                                  ...styles.tableRow,
-                                  backgroundColor: "#fff8e1",
-                                }}
-                              >
-                                <td
-                                  colSpan="6"
-                                  style={{
-                                    ...styles.tableCell,
-                                    padding: "16px",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      gap: "8px",
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        fontSize: "0.85rem",
-                                        fontWeight: 600,
-                                        color: "#ff9800",
-                                        marginBottom: "8px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "6px",
-                                      }}
-                                    >
-                                      <span>🔄</span>
-                                      Changes from previous version:
-                                    </div>
-                                    {editedFields.length > 0 ? (
-                                      <div
-                                        style={{
-                                          display: "grid",
-                                          gridTemplateColumns:
-                                            "repeat(auto-fit, minmax(300px, 1fr))",
-                                          gap: "12px",
-                                        }}
-                                      >
-                                        {editedFields.map((change, idx) => (
-                                          <div
-                                            key={idx}
-                                            style={{
-                                              padding: "12px",
-                                              backgroundColor: "#fffbf0",
-                                              borderRadius: "6px",
-                                              border: "1px solid #ffe0b2",
-                                              borderLeft: "4px solid #ff9800",
-                                            }}
-                                          >
-                                            <div
-                                              style={{
-                                                fontWeight: 600,
-                                                color: "#424242",
-                                                marginBottom: "6px",
-                                                fontSize: "0.85rem",
-                                              }}
-                                            >
-                                              {change.field}:
-                                            </div>
-                                            <div
-                                              style={{
-                                                fontSize: "0.8rem",
-                                                color: "#e53935",
-                                                textDecoration: "line-through",
-                                                marginBottom: "3px",
-                                              }}
-                                            >
-                                              {change.oldValue}
-                                            </div>
-                                            <div
-                                              style={{
-                                                fontSize: "0.8rem",
-                                                color: "#43a047",
-                                                fontWeight: "500",
-                                              }}
-                                            >
-                                              → {change.newValue}
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <div
-                                        style={{
-                                          fontSize: "0.8rem",
-                                          color: "#757575",
-                                          fontStyle: "italic",
-                                        }}
-                                      >
-                                        No specific field changes recorded
-                                      </div>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
                           </React.Fragment>
                         );
                       })}
