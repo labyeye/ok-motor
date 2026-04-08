@@ -2823,7 +2823,7 @@ const AdminPage = () => {
                       "Seller Name",
                       "Buyer Name",
                       "Vehicle",
-                      "Created At",
+                      "Updated At",
                       "Missing Docs",
                     ].map((h) => (
                       <th key={h} style={bThStyle}>
@@ -2879,7 +2879,7 @@ const AdminPage = () => {
                           "—"}
                       </td>
                       <td style={{ ...bTdStyle, color: "#475569" }}>
-                        {formatDate(letter.createdAt)}
+                        {formatDate(letter.updatedAt || letter.createdAt)}
                       </td>
                       <td style={bTdStyle}>
                         <div
@@ -3121,7 +3121,7 @@ const AdminPage = () => {
                       "Buyer Name",
                       "Vehicle",
                       "Sale Amount",
-                      "Created At",
+                      "Updated At",
                       "Missing Docs",
                     ].map((h) => (
                       <th key={h} style={sThStyle}>
@@ -3188,7 +3188,7 @@ const AdminPage = () => {
                         )}
                       </td>
                       <td style={{ ...sTdStyle, color: "#475569" }}>
-                        {formatDate(letter.createdAt)}
+                        {formatDate(letter.updatedAt || letter.createdAt)}
                       </td>
                       <td style={sTdStyle}>
                         <div

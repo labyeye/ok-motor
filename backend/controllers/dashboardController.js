@@ -190,18 +190,38 @@ const getIncompleteLetterSummary = (letter, type) => {
 
 exports.getIncompleteLetters = async (req, res) => {
   try {
-    const [buyLetters, sellLetters] = await Promise.all([
-      BuyLetter.find({}).sort({ createdAt: -1 }).limit(2000).lean(),
-      SellLetter.find({}).sort({ createdAt: -1 }).limit(2000).lean(),
+    // Fetch all buy and sell letters, sorted by updatedAt (latest first)
+    const [allBuyLetters, allSellLetters] = await Promise.all([
+      BuyLetter.find({}).sort({ updatedAt: -1, createdAt: -1 }).limit(2000).lean(),
+      SellLetter.find({}).sort({ updatedAt: -1, createdAt: -1 }).limit(2000).lean(),
     ]);
 
-    const buyLetterMap = new Map(buyLetters.map(l => [l.registrationNumber, l]));
+    // Create a map to store only the latest version of each registration number
+    const buyLetterMap = new Map();
+    allBuyLetters.forEach(letter => {
+      const regNo = letter.registrationNumber;
+      if (!buyLetterMap.has(regNo)) {
+        buyLetterMap.set(regNo, letter);
+      }
+    });
 
-    const incompleteBuy = buyLetters
+    const sellLetterMap = new Map();
+    allSellLetters.forEach(letter => {
+      const regNo = letter.registrationNumber;
+      if (!sellLetterMap.has(regNo)) {
+        sellLetterMap.set(regNo, letter);
+      }
+    });
+
+    // Get latest buy letters and filter for incomplete ones
+    const latestBuyLetters = Array.from(buyLetterMap.values());
+    const incompleteBuy = latestBuyLetters
       .map(l => getIncompleteLetterSummary(l, "buy"))
       .filter(l => l.missingFields.length > 0);
 
-    const incompleteSell = sellLetters
+    // Get latest sell letters and filter for incomplete ones
+    const latestSellLetters = Array.from(sellLetterMap.values());
+    const incompleteSell = latestSellLetters
       .map(l => getIncompleteLetterSummary(l, "sell"))
       .filter(sellLetter => {
         if (sellLetter.missingFields.length === 0) return false;
