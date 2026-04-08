@@ -1724,45 +1724,15 @@ const BikeHistory = ({ externalSearchTerm }) => {
             : [pucResp.data]
           : [];
 
-      // --- START OF NEW FLAWLESS LOGIC ---
-      
-      // Helper function to merge UTC saleDate with local saleTime (e.g., "19:59")
-      const parseSaleDateTime = (dateStr, timeStr) => {
-        if (!dateStr) return 0;
-        const dateObj = new Date(dateStr);
-        if (isNaN(dateObj.getTime())) return 0;
-
-        // Extract the pure calendar day (ignoring timezone offsets)
-        const year = dateObj.getUTCFullYear();
-        const month = dateObj.getUTCMonth();
-        const day = dateObj.getUTCDate();
-
-        let hours = 0;
-        let minutes = 0;
-
-        if (timeStr && typeof timeStr === 'string' && timeStr.includes(':')) {
-          let [hStr, mStr] = timeStr.split(':');
-          let h = parseInt(hStr, 10);
-          let m = parseInt(mStr, 10);
-
-          if (timeStr.toLowerCase().includes('pm') && h < 12) h += 12;
-          if (timeStr.toLowerCase().includes('am') && h === 12) h = 0;
-
-          hours = h;
-          minutes = m;
-        }
-
-        // Return a precise local timestamp combining the Date and Time
-        return new Date(year, month, day, hours, minutes).getTime();
-      };
-
       const processLetterData = (data, type) => {
         if (!data || data.length === 0) return [];
 
         // 1. Group records by registration number and date part
         const groups = {};
-        data.forEach(item => {
-          const dateKey = item.saleDate ? item.saleDate.split('T')[0] : 'nodate';
+        data.forEach((item) => {
+          const dateKey = item.saleDate
+            ? item.saleDate.split("T")[0]
+            : "nodate";
           const groupKey = `${item.registrationNumber}-${dateKey}`;
           if (!groups[groupKey]) groups[groupKey] = [];
           groups[groupKey].push(item);
@@ -1770,14 +1740,22 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
         const processed = [];
 
-        Object.values(groups).forEach(group => {
+        Object.values(groups).forEach((group) => {
           // Sort chronologically (oldest version first)
-          group.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          group.sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          );
 
           const baseItem = group[0];
-          
+
           // Get the properly merged Sale Date and Sale Time
-const actualSaleTimestamp = new Date(`${baseItem.saleDate.split('T')[0]}T${baseItem.saleTime}:00`).getTime();          const fallbackTimestamp = baseItem.createdAt ? new Date(baseItem.createdAt).getTime() : 0;
+          const actualSaleTimestamp = new Date(
+            `${baseItem.saleDate.split("T")[0]}T${baseItem.saleTime}:00`,
+          ).getTime();
+          const fallbackTimestamp = baseItem.createdAt
+            ? new Date(baseItem.createdAt).getTime()
+            : 0;
           const creationTimestamp = actualSaleTimestamp || fallbackTimestamp;
 
           // A) ALWAYS CREATE EXACTLY ONE "CREATED" ROW WITH PROPER TIME
@@ -1790,27 +1768,32 @@ const actualSaleTimestamp = new Date(`${baseItem.saleDate.split('T')[0]}T${baseI
             changeHistory: [],
             previousVersionId: null,
             editedAt: null,
-            _id: `${baseItem._id}-created-base`
+            _id: `${baseItem._id}-created-base`,
           });
 
           // B) RENDER EVERY SINGLE EDIT ROW INDEPENDENTLY
           group.forEach((doc, index) => {
             // Check if this specific document has edit flags or is a subsequent version
-            const isEdit = doc.previousVersionId ||
-                           (Array.isArray(doc.changeHistory) && doc.changeHistory.length > 0) ||
-                           doc.editedAt ||
-                           index > 0; // If index > 0, it's definitely an edit of the base
+            const isEdit =
+              doc.previousVersionId ||
+              (Array.isArray(doc.changeHistory) &&
+                doc.changeHistory.length > 0) ||
+              doc.editedAt ||
+              index > 0; // If index > 0, it's definitely an edit of the base
 
             if (isEdit) {
-              const editTimestamp = doc.editedAt ? new Date(doc.editedAt).getTime() :
-                                    (doc.updatedAt ? new Date(doc.updatedAt).getTime() : new Date(doc.createdAt).getTime());
-              
+              const editTimestamp = doc.editedAt
+                ? new Date(doc.editedAt).getTime()
+                : doc.updatedAt
+                  ? new Date(doc.updatedAt).getTime()
+                  : new Date(doc.createdAt).getTime();
+
               processed.push({
                 ...doc,
                 type: type,
                 date: editTimestamp,
                 editedAt: editTimestamp, // Forces UI to show as "Edited"
-                _id: `${doc._id}-edit-version-${index}`
+                _id: `${doc._id}-edit-version-${index}`,
               });
             }
           });
@@ -2958,11 +2941,6 @@ const actualSaleTimestamp = new Date(`${baseItem.saleDate.split('T')[0]}T${baseI
                     <tbody>
                       {bikeHistory.map((item) => {
                         const itemKey = `${item.type}-${item._id}`;
-                        const editedFields = getEditedFields(item);
-                        const hasEdits =
-                          item.editedAt && editedFields.length > 0;
-                        const isExpanded = expandedItems.has(itemKey);
-
                         return (
                           <React.Fragment key={itemKey}>
                             <tr style={styles.tableRow}>
