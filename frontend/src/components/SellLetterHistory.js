@@ -271,6 +271,78 @@ const SellLetterHistory = () => {
     return labels[fieldName] || fieldName;
   };
 
+  const groupChangesByCategory = (changes) => {
+    const grouped = {
+      "Vehicle Details": [],
+      "Document Changes": [],
+      "Buyer Information": [],
+      "Transaction Details": [],
+      "PUC & Insurance": [],
+      Other: [],
+    };
+
+    const categoryMap = {
+      vehicleName: "Vehicle Details",
+      vehicleModel: "Vehicle Details",
+      vehicleColor: "Vehicle Details",
+      registrationNumber: "Vehicle Details",
+      chassisNumber: "Vehicle Details",
+      engineNumber: "Vehicle Details",
+      vehiclekm: "Vehicle Details",
+      vehicleCondition: "Vehicle Details",
+      buyerName: "Buyer Information",
+      buyerFatherName: "Buyer Information",
+      buyerAddress: "Buyer Information",
+      buyerPhone: "Buyer Information",
+      buyerPhone2: "Buyer Information",
+      buyerEmail: "Buyer Information",
+      buyerAadhar: "Buyer Information",
+      saleDate: "Transaction Details",
+      saleTime: "Transaction Details",
+      saleAmount: "Transaction Details",
+      paymentMethod: "Transaction Details",
+      todayDate: "Transaction Details",
+      todayTime: "Transaction Details",
+      previousDate: "Transaction Details",
+      previousTime: "Transaction Details",
+      pucStatus: "PUC & Insurance",
+      pucIssueDate: "PUC & Insurance",
+      pucExpiryDate: "PUC & Insurance",
+      insuranceStatus: "PUC & Insurance",
+      insuranceExpiryDate: "PUC & Insurance",
+      insuranceCompany: "PUC & Insurance",
+      insurancePolicyNumber: "PUC & Insurance",
+      witnessName: "Other",
+      witnessPhone: "Other",
+      note: "Other",
+    };
+
+    changes?.forEach((change) => {
+      let fieldStr = String(change.field).toLowerCase();
+      let category = "Other";
+
+      for (const [key, cat] of Object.entries(categoryMap)) {
+        if (fieldStr.includes(key.toLowerCase())) {
+          category = cat;
+          break;
+        }
+      }
+
+      if (
+        category === "Document Changes" ||
+        change.field?.includes("uploaded") ||
+        change.newValue === "Uploaded"
+      ) {
+        category = "Document Changes";
+      }
+
+      if (!grouped[category]) grouped[category] = [];
+      grouped[category].push(change);
+    });
+
+    return Object.entries(grouped).filter(([_, items]) => items.length > 0);
+  };
+
   const getChanges = (letter) => {
     if (!letter.previousVersionId || letter.version === 1) return null;
 
@@ -3784,11 +3856,14 @@ const SellLetterHistory = () => {
             return;
           }
 
-          await axios.delete(`https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
+          await axios.delete(
+            `https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             },
-          });
+          );
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
           alert("Sell letter deleted successfully!");
         } else {
@@ -3946,6 +4021,7 @@ const SellLetterHistory = () => {
                         <th style={styles.tableHeader}>Date</th>
                         <th style={styles.tableHeader}>Created By</th>
                         <th style={styles.tableHeader}>Actions</th>
+                        <th style={styles.tableHeader}>Changes Done</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -4051,14 +4127,13 @@ const SellLetterHistory = () => {
                                   </>
                                 )}
                               </td>
-                            </tr>
-                            {letter.version > 1 && (
+                              {letter.version > 1 && (
                               <tr
                                 style={{
                                   backgroundColor:
                                     changes && changes.length > 0
-                                      ? "#fff8e1"
-                                      : "#f5f5f5",
+                                      ? "#ffffff"
+                                      : "#ffffff",
                                 }}
                               >
                                 <td
@@ -4076,7 +4151,7 @@ const SellLetterHistory = () => {
                                           changes && changes.length > 0
                                             ? "#f57c00"
                                             : "#757575",
-                                        marginBottom: "8px",
+                                        marginBottom: "12px",
                                         display: "flex",
                                         alignItems: "center",
                                         gap: "6px",
@@ -4088,57 +4163,98 @@ const SellLetterHistory = () => {
                                     {changes && changes.length > 0 ? (
                                       <div
                                         style={{
-                                          display: "grid",
-                                          gridTemplateColumns:
-                                            "repeat(auto-fit, minmax(300px, 1fr))",
-                                          gap: "8px",
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "12px",
                                         }}
                                       >
-                                        {changes.map((change, idx) => (
-                                          <div
-                                            key={idx}
-                                            style={{
-                                              padding: "6px 10px",
-                                              backgroundColor: "#ffffff",
-                                              borderRadius: "4px",
-                                              border: "1px solid #ffe0b2",
-                                            }}
-                                          >
+                                        {groupChangesByCategory(changes).map(
+                                          ([category, categoryChanges]) => (
                                             <div
+                                              key={category}
                                               style={{
-                                                fontWeight: "600",
-                                                color: "#424242",
-                                                marginBottom: "3px",
+                                                backgroundColor: "#fafafa",
+                                                borderLeft: "3px solid #f57c00",
+                                                borderRadius: "4px",
+                                                padding: "10px 12px",
                                               }}
                                             >
-                                              {change.field}:
-                                            </div>
-                                            <div
-                                              style={{
-                                                fontSize: "0.8rem",
-                                                color: "#e53935",
-                                              }}
-                                            >
-                                              <span
+                                              <div
                                                 style={{
-                                                  textDecoration:
-                                                    "line-through",
+                                                  fontWeight: "700",
+                                                  color: "#f57c00",
+                                                  fontSize: "0.9rem",
+                                                  marginBottom: "8px",
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  gap: "4px",
                                                 }}
                                               >
-                                                {change.oldValue}
-                                              </span>
+                                                📋 {category}
+                                              </div>
+                                              <div
+                                                style={{
+                                                  display: "grid",
+                                                  gridTemplateColumns:
+                                                    "repeat(auto-fit, minmax(280px, 1fr))",
+                                                  gap: "8px",
+                                                }}
+                                              >
+                                                {categoryChanges.map(
+                                                  (change, idx) => (
+                                                    <div
+                                                      key={idx}
+                                                      style={{
+                                                        padding: "8px 10px",
+                                                        backgroundColor:
+                                                          "#ffffff",
+                                                        borderRadius: "4px",
+                                                        border:
+                                                          "1px solid #ffe0b2",
+                                                      }}
+                                                    >
+                                                      <div
+                                                        style={{
+                                                          fontWeight: "600",
+                                                          color: "#424242",
+                                                          marginBottom: "4px",
+                                                          fontSize: "0.85rem",
+                                                        }}
+                                                      >
+                                                        {change.field}:
+                                                      </div>
+                                                      <div
+                                                        style={{
+                                                          fontSize: "0.75rem",
+                                                          color: "#e53935",
+                                                          marginBottom: "2px",
+                                                        }}
+                                                      >
+                                                        <span
+                                                          style={{
+                                                            textDecoration:
+                                                              "line-through",
+                                                          }}
+                                                        >
+                                                          {change.oldValue}
+                                                        </span>
+                                                      </div>
+                                                      <div
+                                                        style={{
+                                                          fontSize: "0.75rem",
+                                                          color: "#43a047",
+                                                          fontWeight: "500",
+                                                        }}
+                                                      >
+                                                        ✓ {change.newValue}
+                                                      </div>
+                                                    </div>
+                                                  ),
+                                                )}
+                                              </div>
                                             </div>
-                                            <div
-                                              style={{
-                                                fontSize: "0.8rem",
-                                                color: "#43a047",
-                                                fontWeight: "500",
-                                              }}
-                                            >
-                                              → {change.newValue}
-                                            </div>
-                                          </div>
-                                        ))}
+                                          ),
+                                        )}
                                       </div>
                                     ) : (
                                       <div
@@ -4159,6 +4275,8 @@ const SellLetterHistory = () => {
                                 </td>
                               </tr>
                             )}
+                            </tr>
+                            
                           </React.Fragment>
                         );
                       })}

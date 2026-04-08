@@ -13,8 +13,12 @@ const upload = multer();
 
 const stripBuyOnlyDocuments = (docs) => {
   if (!docs) return docs;
-  const { signedDocBuy, ...rest } = docs;
-  return rest;
+  return {
+    vehicleRC: docs.vehicleRC || undefined,
+    vehicleRCUploadMode: docs.vehicleRCUploadMode || undefined,
+    insuranceCertificate: docs.insuranceCertificate || undefined,
+    vehicleNOC: docs.vehicleNOC || undefined,
+  };
 };
 
 const syncMasterIdentityFromSellLetter = async ({
@@ -77,7 +81,10 @@ const mergeMissingSellDocumentsIntoBuy = (target, source) => {
     : Array.isArray(source.insuranceCertificate)
       ? source.insuranceCertificate
       : [];
-  if (!hasArray(merged.insuranceCertificate.pages) && hasArray(sourceInsurancePages)) {
+  if (
+    !hasArray(merged.insuranceCertificate.pages) &&
+    hasArray(sourceInsurancePages)
+  ) {
     merged.insuranceCertificate.pages = [...sourceInsurancePages];
   }
 
@@ -252,12 +259,14 @@ exports.createSellLetter = [
               pucIssueDate: bodyData.pucIssueDate
                 ? new Date(bodyData.pucIssueDate)
                 : undefined,
-              pucExpiryDate: (bodyData.pucExpiryDate || bodyData.pucExpiry)
-                ? new Date(bodyData.pucExpiryDate || bodyData.pucExpiry)
-                : undefined,
-              pucExpiry: (bodyData.pucExpiryDate || bodyData.pucExpiry)
-                ? new Date(bodyData.pucExpiryDate || bodyData.pucExpiry)
-                : undefined,
+              pucExpiryDate:
+                bodyData.pucExpiryDate || bodyData.pucExpiry
+                  ? new Date(bodyData.pucExpiryDate || bodyData.pucExpiry)
+                  : undefined,
+              pucExpiry:
+                bodyData.pucExpiryDate || bodyData.pucExpiry
+                  ? new Date(bodyData.pucExpiryDate || bodyData.pucExpiry)
+                  : undefined,
               pucStatus: bodyData.pucStatus,
               user: req.user.id,
             };
@@ -371,17 +380,27 @@ exports.createSellLetter = [
         } else if (existingDocuments) {
           // No individual preservedDocs sent — populate from full existingDocuments
           const ed = existingDocuments;
-          if (ed.vehicleRC?.front)  uploadedUrls.vehicleRC.front         = ed.vehicleRC.front;
-          if (ed.vehicleRC?.back)   uploadedUrls.vehicleRC.back          = ed.vehicleRC.back;
-          if (ed.aadhaar?.front)    uploadedUrls.aadhaar.front           = ed.aadhaar.front;
-          if (ed.aadhaar?.back)     uploadedUrls.aadhaar.back            = ed.aadhaar.back;
-          if (ed.pan)               uploadedUrls.pan                     = ed.pan;
-          if (ed.deliveryPhoto)     uploadedUrls.deliveryPhoto           = ed.deliveryPhoto;
-          if (ed.signedDocSell)     uploadedUrls.signedDocSell           = ed.signedDocSell;
-          if (ed.vehiclePhotos?.length)                       uploadedUrls.vehiclePhotos              = [...ed.vehiclePhotos];
-          if (ed.insuranceCertificate?.pages?.length)         uploadedUrls.insuranceCertificate.pages = [...ed.insuranceCertificate.pages];
-          if (ed.vehicleNOC?.pages?.length)                   uploadedUrls.vehicleNOC.pages           = [...ed.vehicleNOC.pages];
-          if (ed.vehicleBuyReceipt?.pages?.length)            uploadedUrls.vehicleBuyReceipt.pages    = [...ed.vehicleBuyReceipt.pages];
+          if (ed.vehicleRC?.front)
+            uploadedUrls.vehicleRC.front = ed.vehicleRC.front;
+          if (ed.vehicleRC?.back)
+            uploadedUrls.vehicleRC.back = ed.vehicleRC.back;
+          if (ed.aadhaar?.front) uploadedUrls.aadhaar.front = ed.aadhaar.front;
+          if (ed.aadhaar?.back) uploadedUrls.aadhaar.back = ed.aadhaar.back;
+          if (ed.pan) uploadedUrls.pan = ed.pan;
+          if (ed.deliveryPhoto) uploadedUrls.deliveryPhoto = ed.deliveryPhoto;
+          if (ed.signedDocSell) uploadedUrls.signedDocSell = ed.signedDocSell;
+          if (ed.vehiclePhotos?.length)
+            uploadedUrls.vehiclePhotos = [...ed.vehiclePhotos];
+          if (ed.insuranceCertificate?.pages?.length)
+            uploadedUrls.insuranceCertificate.pages = [
+              ...ed.insuranceCertificate.pages,
+            ];
+          if (ed.vehicleNOC?.pages?.length)
+            uploadedUrls.vehicleNOC.pages = [...ed.vehicleNOC.pages];
+          if (ed.vehicleBuyReceipt?.pages?.length)
+            uploadedUrls.vehicleBuyReceipt.pages = [
+              ...ed.vehicleBuyReceipt.pages,
+            ];
         }
       } catch (e) {
         console.error("Error parsing preservedDocuments:", e);
@@ -437,9 +456,11 @@ exports.createSellLetter = [
         const pageUrls = await Promise.all(
           pageBuffers.map(({ buf, index }) => {
             const filename = `${Date.now()}-${nameHint}-page-${index + 1}.pdf`;
-            return uploadBufferToImageKit(buf, filename, "application/pdf").then(
-              (u) => u.url,
-            );
+            return uploadBufferToImageKit(
+              buf,
+              filename,
+              "application/pdf",
+            ).then((u) => u.url);
           }),
         );
         return pageUrls;
@@ -447,7 +468,11 @@ exports.createSellLetter = [
 
       try {
         // Helper: process a multi-file group (images or PDFs) in parallel, keeping order
-        const processMultiFileGroup = async (fileList, namePrefix, limit = 200) => {
+        const processMultiFileGroup = async (
+          fileList,
+          namePrefix,
+          limit = 200,
+        ) => {
           if (!fileList || !fileList.length) return [];
           const capped = fileList.slice(0, limit);
           const results = await Promise.all(
@@ -464,30 +489,37 @@ exports.createSellLetter = [
         };
 
         // Run all single-file uploads in parallel
-        const [rcFront, rcBack, aadhaarFront, aadhaarBack, pan, delivery, signedDocSell] =
-          await Promise.all([
-            files.vehicleRCFront?.[0]
-              ? processFile(files.vehicleRCFront[0], "vehicle-rc-front")
-              : Promise.resolve(null),
-            files.vehicleRCBack?.[0]
-              ? processFile(files.vehicleRCBack[0], "vehicle-rc-back")
-              : Promise.resolve(null),
-            files.aadhaarFront?.[0]
-              ? processFile(files.aadhaarFront[0], "aadhaar-front")
-              : Promise.resolve(null),
-            files.aadhaarBack?.[0]
-              ? processFile(files.aadhaarBack[0], "aadhaar-back")
-              : Promise.resolve(null),
-            files.panPhoto?.[0]
-              ? processFile(files.panPhoto[0], "pan-photo")
-              : Promise.resolve(null),
-            files.deliveryPhoto?.[0]
-              ? processFile(files.deliveryPhoto[0], "delivery-photo")
-              : Promise.resolve(null),
-            files.signedDocSell?.[0]
-              ? processFile(files.signedDocSell[0], "signed-doc-sell")
-              : Promise.resolve(null),
-          ]);
+        const [
+          rcFront,
+          rcBack,
+          aadhaarFront,
+          aadhaarBack,
+          pan,
+          delivery,
+          signedDocSell,
+        ] = await Promise.all([
+          files.vehicleRCFront?.[0]
+            ? processFile(files.vehicleRCFront[0], "vehicle-rc-front")
+            : Promise.resolve(null),
+          files.vehicleRCBack?.[0]
+            ? processFile(files.vehicleRCBack[0], "vehicle-rc-back")
+            : Promise.resolve(null),
+          files.aadhaarFront?.[0]
+            ? processFile(files.aadhaarFront[0], "aadhaar-front")
+            : Promise.resolve(null),
+          files.aadhaarBack?.[0]
+            ? processFile(files.aadhaarBack[0], "aadhaar-back")
+            : Promise.resolve(null),
+          files.panPhoto?.[0]
+            ? processFile(files.panPhoto[0], "pan-photo")
+            : Promise.resolve(null),
+          files.deliveryPhoto?.[0]
+            ? processFile(files.deliveryPhoto[0], "delivery-photo")
+            : Promise.resolve(null),
+          files.signedDocSell?.[0]
+            ? processFile(files.signedDocSell[0], "signed-doc-sell")
+            : Promise.resolve(null),
+        ]);
 
         if (rcFront !== null) uploadedUrls.vehicleRC.front = rcFront;
         if (rcBack !== null) uploadedUrls.vehicleRC.back = rcBack;
@@ -502,26 +534,36 @@ exports.createSellLetter = [
           await Promise.all([
             files.vehiclePhotos?.length
               ? Promise.all(
-                  files.vehiclePhotos.slice(0, 10).map((f, i) =>
-                    processFile(f, `vehicle-photo-${i}`),
-                  ),
+                  files.vehiclePhotos
+                    .slice(0, 10)
+                    .map((f, i) => processFile(f, `vehicle-photo-${i}`)),
                 )
               : Promise.resolve(null),
             files.insuranceCertificate?.length
-              ? processMultiFileGroup(files.insuranceCertificate, "insurance-certificate", 200)
+              ? processMultiFileGroup(
+                  files.insuranceCertificate,
+                  "insurance-certificate",
+                  200,
+                )
               : Promise.resolve(null),
             files.vehicleNOC?.length
               ? processMultiFileGroup(files.vehicleNOC, "vehicle-noc", 200)
               : Promise.resolve(null),
             files.vehicleBuyReceipt?.length
-              ? processMultiFileGroup(files.vehicleBuyReceipt, "vehicle-buy-receipt", 200)
+              ? processMultiFileGroup(
+                  files.vehicleBuyReceipt,
+                  "vehicle-buy-receipt",
+                  200,
+                )
               : Promise.resolve(null),
           ]);
 
         if (vehiclePhotos !== null) uploadedUrls.vehiclePhotos = vehiclePhotos;
-        if (insuranceCertPages !== null) uploadedUrls.insuranceCertificate.pages.push(...insuranceCertPages);
+        if (insuranceCertPages !== null)
+          uploadedUrls.insuranceCertificate.pages.push(...insuranceCertPages);
         if (nocPages !== null) uploadedUrls.vehicleNOC.pages.push(...nocPages);
-        if (buyReceiptPages !== null) uploadedUrls.vehicleBuyReceipt.pages.push(...buyReceiptPages);
+        if (buyReceiptPages !== null)
+          uploadedUrls.vehicleBuyReceipt.pages.push(...buyReceiptPages);
       } catch (uploadErr) {
         console.error("Image upload failed, aborting create:", uploadErr);
         return res
@@ -532,40 +574,72 @@ exports.createSellLetter = [
       // Final fallback: if existingDocuments was provided, restore any field still null
       if (existingDocuments) {
         const ed = existingDocuments;
-        if (!uploadedUrls.vehicleRC.front && ed.vehicleRC?.front)  uploadedUrls.vehicleRC.front = ed.vehicleRC.front;
-        if (!uploadedUrls.vehicleRC.back  && ed.vehicleRC?.back)   uploadedUrls.vehicleRC.back  = ed.vehicleRC.back;
-        if (!uploadedUrls.aadhaar.front   && ed.aadhaar?.front)    uploadedUrls.aadhaar.front   = ed.aadhaar.front;
-        if (!uploadedUrls.aadhaar.back    && ed.aadhaar?.back)     uploadedUrls.aadhaar.back    = ed.aadhaar.back;
-        if (!uploadedUrls.pan             && ed.pan)               uploadedUrls.pan             = ed.pan;
-        if (!uploadedUrls.deliveryPhoto   && ed.deliveryPhoto)     uploadedUrls.deliveryPhoto   = ed.deliveryPhoto;
-        if (!uploadedUrls.signedDocSell   && ed.signedDocSell)     uploadedUrls.signedDocSell   = ed.signedDocSell;
+        if (!uploadedUrls.vehicleRC.front && ed.vehicleRC?.front)
+          uploadedUrls.vehicleRC.front = ed.vehicleRC.front;
+        if (!uploadedUrls.vehicleRC.back && ed.vehicleRC?.back)
+          uploadedUrls.vehicleRC.back = ed.vehicleRC.back;
+        if (!uploadedUrls.aadhaar.front && ed.aadhaar?.front)
+          uploadedUrls.aadhaar.front = ed.aadhaar.front;
+        if (!uploadedUrls.aadhaar.back && ed.aadhaar?.back)
+          uploadedUrls.aadhaar.back = ed.aadhaar.back;
+        if (!uploadedUrls.pan && ed.pan) uploadedUrls.pan = ed.pan;
+        if (!uploadedUrls.deliveryPhoto && ed.deliveryPhoto)
+          uploadedUrls.deliveryPhoto = ed.deliveryPhoto;
+        if (!uploadedUrls.signedDocSell && ed.signedDocSell)
+          uploadedUrls.signedDocSell = ed.signedDocSell;
         if (!uploadedUrls.vehiclePhotos?.length && ed.vehiclePhotos?.length)
           uploadedUrls.vehiclePhotos = [...ed.vehiclePhotos];
-        if (!uploadedUrls.insuranceCertificate.pages?.length && ed.insuranceCertificate?.pages?.length)
-          uploadedUrls.insuranceCertificate.pages = [...ed.insuranceCertificate.pages];
-        if (!uploadedUrls.vehicleNOC.pages?.length && ed.vehicleNOC?.pages?.length)
+        if (
+          !uploadedUrls.insuranceCertificate.pages?.length &&
+          ed.insuranceCertificate?.pages?.length
+        )
+          uploadedUrls.insuranceCertificate.pages = [
+            ...ed.insuranceCertificate.pages,
+          ];
+        if (
+          !uploadedUrls.vehicleNOC.pages?.length &&
+          ed.vehicleNOC?.pages?.length
+        )
           uploadedUrls.vehicleNOC.pages = [...ed.vehicleNOC.pages];
-        if (!uploadedUrls.vehicleBuyReceipt.pages?.length && ed.vehicleBuyReceipt?.pages?.length)
-          uploadedUrls.vehicleBuyReceipt.pages = [...ed.vehicleBuyReceipt.pages];
+        if (
+          !uploadedUrls.vehicleBuyReceipt.pages?.length &&
+          ed.vehicleBuyReceipt?.pages?.length
+        )
+          uploadedUrls.vehicleBuyReceipt.pages = [
+            ...ed.vehicleBuyReceipt.pages,
+          ];
       }
 
       sellLetterData.documents = {
         vehicleRC: uploadedUrls.vehicleRC,
-        vehicleRCUploadMode: bodyData.vehicleRCUploadMode || existingDocuments?.vehicleRCUploadMode || "separate",
+        vehicleRCUploadMode:
+          bodyData.vehicleRCUploadMode ||
+          existingDocuments?.vehicleRCUploadMode ||
+          "separate",
         aadhaar: uploadedUrls.aadhaar,
-        aadhaarUploadMode: bodyData.aadhaarUploadMode || existingDocuments?.aadhaarUploadMode || "separate",
+        aadhaarUploadMode:
+          bodyData.aadhaarUploadMode ||
+          existingDocuments?.aadhaarUploadMode ||
+          "separate",
         pan: uploadedUrls.pan,
         deliveryPhoto: uploadedUrls.deliveryPhoto,
         signedDocSell: uploadedUrls.signedDocSell,
         vehiclePhotos: uploadedUrls.vehiclePhotos,
         insuranceCertificate: uploadedUrls.insuranceCertificate,
         insuranceCertificateUploadMode:
-          bodyData.insuranceCertificateUploadMode || existingDocuments?.insuranceCertificateUploadMode || "separate",
+          bodyData.insuranceCertificateUploadMode ||
+          existingDocuments?.insuranceCertificateUploadMode ||
+          "separate",
         vehicleNOC: uploadedUrls.vehicleNOC,
-        vehicleNOCUploadMode: bodyData.vehicleNOCUploadMode || existingDocuments?.vehicleNOCUploadMode || "separate",
+        vehicleNOCUploadMode:
+          bodyData.vehicleNOCUploadMode ||
+          existingDocuments?.vehicleNOCUploadMode ||
+          "separate",
         vehicleBuyReceipt: uploadedUrls.vehicleBuyReceipt,
         vehicleBuyReceiptUploadMode:
-          bodyData.vehicleBuyReceiptUploadMode || existingDocuments?.vehicleBuyReceiptUploadMode || "separate",
+          bodyData.vehicleBuyReceiptUploadMode ||
+          existingDocuments?.vehicleBuyReceiptUploadMode ||
+          "separate",
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };
 
@@ -575,16 +649,16 @@ exports.createSellLetter = [
         if (!docs) return false;
         return Boolean(
           hasText(docs.vehicleRC?.front) ||
-            hasText(docs.vehicleRC?.back) ||
-            hasText(docs.aadhaar?.front) ||
-            hasText(docs.aadhaar?.back) ||
-            hasText(docs.pan) ||
-            hasText(docs.deliveryPhoto) ||
-            hasText(docs.signedDocSell) ||
-            hasArray(docs.vehiclePhotos) ||
-            hasArray(docs.insuranceCertificate?.pages) ||
-            hasArray(docs.vehicleNOC?.pages) ||
-            hasArray(docs.vehicleBuyReceipt?.pages),
+          hasText(docs.vehicleRC?.back) ||
+          hasText(docs.aadhaar?.front) ||
+          hasText(docs.aadhaar?.back) ||
+          hasText(docs.pan) ||
+          hasText(docs.deliveryPhoto) ||
+          hasText(docs.signedDocSell) ||
+          hasArray(docs.vehiclePhotos) ||
+          hasArray(docs.insuranceCertificate?.pages) ||
+          hasArray(docs.vehicleNOC?.pages) ||
+          hasArray(docs.vehicleBuyReceipt?.pages),
         );
       };
 
@@ -615,10 +689,16 @@ exports.createSellLetter = [
           },
         };
 
-        if (!hasText(merged.vehicleRC.front) && hasText(source.vehicleRC?.front)) {
+        if (
+          !hasText(merged.vehicleRC.front) &&
+          hasText(source.vehicleRC?.front)
+        ) {
           merged.vehicleRC.front = source.vehicleRC.front;
         }
-        if (!hasText(merged.vehicleRC.back) && hasText(source.vehicleRC?.back)) {
+        if (
+          !hasText(merged.vehicleRC.back) &&
+          hasText(source.vehicleRC?.back)
+        ) {
           merged.vehicleRC.back = source.vehicleRC.back;
         }
 
@@ -643,12 +723,17 @@ exports.createSellLetter = [
           merged.vehiclePhotos = [...source.vehiclePhotos];
         }
 
-        const sourceInsurancePages = Array.isArray(source.insuranceCertificate?.pages)
+        const sourceInsurancePages = Array.isArray(
+          source.insuranceCertificate?.pages,
+        )
           ? source.insuranceCertificate.pages
           : Array.isArray(source.insuranceCertificate)
             ? source.insuranceCertificate
             : [];
-        if (!hasArray(merged.insuranceCertificate.pages) && hasArray(sourceInsurancePages)) {
+        if (
+          !hasArray(merged.insuranceCertificate.pages) &&
+          hasArray(sourceInsurancePages)
+        ) {
           merged.insuranceCertificate.pages = [...sourceInsurancePages];
         }
 
@@ -661,12 +746,17 @@ exports.createSellLetter = [
           merged.vehicleNOC.pages = [...sourceNocPages];
         }
 
-        const sourceBuyReceiptPages = Array.isArray(source.vehicleBuyReceipt?.pages)
+        const sourceBuyReceiptPages = Array.isArray(
+          source.vehicleBuyReceipt?.pages,
+        )
           ? source.vehicleBuyReceipt.pages
           : Array.isArray(source.vehicleBuyReceipt)
             ? source.vehicleBuyReceipt
             : [];
-        if (!hasArray(merged.vehicleBuyReceipt.pages) && hasArray(sourceBuyReceiptPages)) {
+        if (
+          !hasArray(merged.vehicleBuyReceipt.pages) &&
+          hasArray(sourceBuyReceiptPages)
+        ) {
           merged.vehicleBuyReceipt.pages = [...sourceBuyReceiptPages];
         }
 
@@ -680,7 +770,8 @@ exports.createSellLetter = [
           !merged.insuranceCertificateUploadMode &&
           source.insuranceCertificateUploadMode
         ) {
-          merged.insuranceCertificateUploadMode = source.insuranceCertificateUploadMode;
+          merged.insuranceCertificateUploadMode =
+            source.insuranceCertificateUploadMode;
         }
         if (!merged.vehicleNOCUploadMode && source.vehicleNOCUploadMode) {
           merged.vehicleNOCUploadMode = source.vehicleNOCUploadMode;
@@ -689,7 +780,8 @@ exports.createSellLetter = [
           !merged.vehicleBuyReceiptUploadMode &&
           source.vehicleBuyReceiptUploadMode
         ) {
-          merged.vehicleBuyReceiptUploadMode = source.vehicleBuyReceiptUploadMode;
+          merged.vehicleBuyReceiptUploadMode =
+            source.vehicleBuyReceiptUploadMode;
         }
 
         return merged;
@@ -728,7 +820,10 @@ exports.createSellLetter = [
           }
         }
       } catch (docMergeError) {
-        console.error("Failed to merge fallback documents for sell letter:", docMergeError);
+        console.error(
+          "Failed to merge fallback documents for sell letter:",
+          docMergeError,
+        );
       }
 
       const sellLetter = new SellLetter(sellLetterData);
@@ -741,7 +836,10 @@ exports.createSellLetter = [
             sellDocuments: savedSellLetter.documents,
           });
         } catch (docSyncError) {
-          console.error("Failed to sync buy docs from sell letter:", docSyncError);
+          console.error(
+            "Failed to sync buy docs from sell letter:",
+            docSyncError,
+          );
         }
       }
 
@@ -915,7 +1013,9 @@ exports.getVehicleDetails = async (req, res) => {
         vehicleDetails.pucIssueDate =
           pucDoc.pucIssueDate || vehicleDetails.pucIssueDate;
         vehicleDetails.pucExpiryDate =
-          pucDoc.pucExpiryDate || pucDoc.pucExpiry || vehicleDetails.pucExpiryDate;
+          pucDoc.pucExpiryDate ||
+          pucDoc.pucExpiry ||
+          vehicleDetails.pucExpiryDate;
         vehicleDetails.pucStatus = pucDoc.pucStatus || vehicleDetails.pucStatus;
         vehicleDetails.pucId = pucDoc._id;
       }
@@ -939,8 +1039,14 @@ exports.getSellLetters = async (req, res) => {
       .sort({ createdAt: -1 })
       .select("-__v")
       .populate("user", "name role")
-      .populate("pucId", "pucIssueDate pucExpiryDate pucExpiry pucStatus pucNumber vehicleRegNo regNo")
-      .populate("insuranceId", "insuranceCompany insurancePolicyNumber insurancePolicyNo insuranceExpiryDate insuranceExpiry insuranceStatus vehicleRegNo regNo")
+      .populate(
+        "pucId",
+        "pucIssueDate pucExpiryDate pucExpiry pucStatus pucNumber vehicleRegNo regNo",
+      )
+      .populate(
+        "insuranceId",
+        "insuranceCompany insurancePolicyNumber insurancePolicyNo insuranceExpiryDate insuranceExpiry insuranceStatus vehicleRegNo regNo",
+      )
       .populate(
         "previousVersionId",
         "vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition pucIssueDate pucExpiryDate pucStatus insuranceStatus insuranceExpiryDate insuranceCompany insurancePolicyNumber buyerName buyerFatherName buyerAddress buyerPhone buyerPhone2 buyerEmail buyerAadhar saleDate saleTime saleAmount paymentMethod todayDate todayTime previousDate previousTime witnessName witnessPhone note documents",
@@ -954,15 +1060,22 @@ exports.getSellLetters = async (req, res) => {
       if (letter.pucId && typeof letter.pucId === "object") {
         const p = letter.pucId;
         merged.pucIssueDate = p.pucIssueDate ?? merged.pucIssueDate;
-        merged.pucExpiryDate = p.pucExpiryDate ?? p.pucExpiry ?? merged.pucExpiryDate;
+        merged.pucExpiryDate =
+          p.pucExpiryDate ?? p.pucExpiry ?? merged.pucExpiryDate;
         merged.pucStatus = p.pucStatus ?? merged.pucStatus;
       }
       // Overlay live Insurance data from master record
       if (letter.insuranceId && typeof letter.insuranceId === "object") {
         const i = letter.insuranceId;
         merged.insuranceCompany = i.insuranceCompany ?? merged.insuranceCompany;
-        merged.insurancePolicyNumber = i.insurancePolicyNumber ?? i.insurancePolicyNo ?? merged.insurancePolicyNumber;
-        merged.insuranceExpiryDate = i.insuranceExpiryDate ?? i.insuranceExpiry ?? merged.insuranceExpiryDate;
+        merged.insurancePolicyNumber =
+          i.insurancePolicyNumber ??
+          i.insurancePolicyNo ??
+          merged.insurancePolicyNumber;
+        merged.insuranceExpiryDate =
+          i.insuranceExpiryDate ??
+          i.insuranceExpiry ??
+          merged.insuranceExpiryDate;
         merged.insuranceStatus = i.insuranceStatus ?? merged.insuranceStatus;
       }
       return merged;
@@ -1013,8 +1126,14 @@ exports.getMySellLetters = async (req, res) => {
       .sort({ createdAt: -1 })
       .select("-__v")
       .populate("user", "name role")
-      .populate("pucId", "pucIssueDate pucExpiryDate pucExpiry pucStatus pucNumber vehicleRegNo regNo")
-      .populate("insuranceId", "insuranceCompany insurancePolicyNumber insurancePolicyNo insuranceExpiryDate insuranceExpiry insuranceStatus vehicleRegNo regNo")
+      .populate(
+        "pucId",
+        "pucIssueDate pucExpiryDate pucExpiry pucStatus pucNumber vehicleRegNo regNo",
+      )
+      .populate(
+        "insuranceId",
+        "insuranceCompany insurancePolicyNumber insurancePolicyNo insuranceExpiryDate insuranceExpiry insuranceStatus vehicleRegNo regNo",
+      )
       .populate(
         "previousVersionId",
         "vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition pucIssueDate pucExpiryDate pucStatus insuranceStatus insuranceExpiryDate insuranceCompany insurancePolicyNumber buyerName buyerFatherName buyerAddress buyerPhone buyerPhone2 buyerEmail buyerAadhar saleDate saleTime saleAmount paymentMethod todayDate todayTime previousDate previousTime witnessName witnessPhone note documents",
@@ -1027,14 +1146,21 @@ exports.getMySellLetters = async (req, res) => {
       if (letter.pucId && typeof letter.pucId === "object") {
         const p = letter.pucId;
         merged.pucIssueDate = p.pucIssueDate ?? merged.pucIssueDate;
-        merged.pucExpiryDate = p.pucExpiryDate ?? p.pucExpiry ?? merged.pucExpiryDate;
+        merged.pucExpiryDate =
+          p.pucExpiryDate ?? p.pucExpiry ?? merged.pucExpiryDate;
         merged.pucStatus = p.pucStatus ?? merged.pucStatus;
       }
       if (letter.insuranceId && typeof letter.insuranceId === "object") {
         const i = letter.insuranceId;
         merged.insuranceCompany = i.insuranceCompany ?? merged.insuranceCompany;
-        merged.insurancePolicyNumber = i.insurancePolicyNumber ?? i.insurancePolicyNo ?? merged.insurancePolicyNumber;
-        merged.insuranceExpiryDate = i.insuranceExpiryDate ?? i.insuranceExpiry ?? merged.insuranceExpiryDate;
+        merged.insurancePolicyNumber =
+          i.insurancePolicyNumber ??
+          i.insurancePolicyNo ??
+          merged.insurancePolicyNumber;
+        merged.insuranceExpiryDate =
+          i.insuranceExpiryDate ??
+          i.insuranceExpiry ??
+          merged.insuranceExpiryDate;
         merged.insuranceStatus = i.insuranceStatus ?? merged.insuranceStatus;
       }
       return merged;
@@ -1058,8 +1184,14 @@ exports.getSellLetterById = async (req, res) => {
         ...(req.user.role === "staff" ? [{}] : []),
       ],
     })
-      .populate("pucId", "pucIssueDate pucExpiryDate pucExpiry pucStatus pucNumber vehicleRegNo regNo")
-      .populate("insuranceId", "insuranceCompany insurancePolicyNumber insurancePolicyNo insuranceExpiryDate insuranceExpiry insuranceStatus vehicleRegNo regNo")
+      .populate(
+        "pucId",
+        "pucIssueDate pucExpiryDate pucExpiry pucStatus pucNumber vehicleRegNo regNo",
+      )
+      .populate(
+        "insuranceId",
+        "insuranceCompany insurancePolicyNumber insurancePolicyNo insuranceExpiryDate insuranceExpiry insuranceStatus vehicleRegNo regNo",
+      )
       .lean();
 
     if (!sellLetter) {
@@ -1071,14 +1203,21 @@ exports.getSellLetterById = async (req, res) => {
     if (sellLetter.pucId && typeof sellLetter.pucId === "object") {
       const p = sellLetter.pucId;
       result.pucIssueDate = p.pucIssueDate ?? result.pucIssueDate;
-      result.pucExpiryDate = p.pucExpiryDate ?? p.pucExpiry ?? result.pucExpiryDate;
+      result.pucExpiryDate =
+        p.pucExpiryDate ?? p.pucExpiry ?? result.pucExpiryDate;
       result.pucStatus = p.pucStatus ?? result.pucStatus;
     }
     if (sellLetter.insuranceId && typeof sellLetter.insuranceId === "object") {
       const i = sellLetter.insuranceId;
       result.insuranceCompany = i.insuranceCompany ?? result.insuranceCompany;
-      result.insurancePolicyNumber = i.insurancePolicyNumber ?? i.insurancePolicyNo ?? result.insurancePolicyNumber;
-      result.insuranceExpiryDate = i.insuranceExpiryDate ?? i.insuranceExpiry ?? result.insuranceExpiryDate;
+      result.insurancePolicyNumber =
+        i.insurancePolicyNumber ??
+        i.insurancePolicyNo ??
+        result.insurancePolicyNumber;
+      result.insuranceExpiryDate =
+        i.insuranceExpiryDate ??
+        i.insuranceExpiry ??
+        result.insuranceExpiryDate;
       result.insuranceStatus = i.insuranceStatus ?? result.insuranceStatus;
     }
 
@@ -1186,12 +1325,14 @@ exports.updateSellLetter = async (req, res) => {
             pucIssueDate: updateData.pucIssueDate
               ? new Date(updateData.pucIssueDate)
               : undefined,
-            pucExpiryDate: (updateData.pucExpiryDate || updateData.pucExpiry)
-              ? new Date(updateData.pucExpiryDate || updateData.pucExpiry)
-              : undefined,
-            pucExpiry: (updateData.pucExpiryDate || updateData.pucExpiry)
-              ? new Date(updateData.pucExpiryDate || updateData.pucExpiry)
-              : undefined,
+            pucExpiryDate:
+              updateData.pucExpiryDate || updateData.pucExpiry
+                ? new Date(updateData.pucExpiryDate || updateData.pucExpiry)
+                : undefined,
+            pucExpiry:
+              updateData.pucExpiryDate || updateData.pucExpiry
+                ? new Date(updateData.pucExpiryDate || updateData.pucExpiry)
+                : undefined,
             pucStatus: updateData.pucStatus,
             user: req.user.id,
           };
@@ -1234,11 +1375,17 @@ exports.updateSellLetter = async (req, res) => {
     if (updated?.registrationNumber) {
       try {
         await syncMissingBuyDocsFromSell({
-          regRegex: new RegExp(`^${String(updated.registrationNumber).trim()}$`, "i"),
+          regRegex: new RegExp(
+            `^${String(updated.registrationNumber).trim()}$`,
+            "i",
+          ),
           sellDocuments: updated.documents,
         });
       } catch (docSyncError) {
-        console.error("Failed to sync buy docs from updated sell letter:", docSyncError);
+        console.error(
+          "Failed to sync buy docs from updated sell letter:",
+          docSyncError,
+        );
       }
     }
 
