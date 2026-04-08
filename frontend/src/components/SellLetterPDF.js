@@ -151,9 +151,13 @@ const SellLetterForm = () => {
 
     insuranceCertificate: [],
     vehicleNOC: [],
-    vehicleBuyReceipt: [],
   });
   const [filePreviews, setFilePreviews] = useState({});
+  const [deletedDocuments, setDeletedDocuments] = useState(new Set());
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmField, setDeleteConfirmField] = useState(null);
+  const [deleteConfirmLabel, setDeleteConfirmLabel] = useState("");
 
   const [showCropper, setShowCropper] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState(null);
@@ -328,6 +332,8 @@ const SellLetterForm = () => {
           if (full.documents.deliveryPhoto || full.documents.vehicleKM)
             previews.deliveryPhoto =
               full.documents.deliveryPhoto || full.documents.vehicleKM || null;
+          if (full.documents.signedDocSell)
+            previews.signedDocSell = full.documents.signedDocSell || null;
           if (Array.isArray(full.documents.vehiclePhotos))
             previews.vehiclePhotos = full.documents.vehiclePhotos;
 
@@ -351,19 +357,9 @@ const SellLetterForm = () => {
             previews.vehicleNOC = nocPages;
           }
 
-          const buyReceiptPages = Array.isArray(
-            full.documents.vehicleBuyReceipt?.pages,
-          )
-            ? full.documents.vehicleBuyReceipt.pages
-            : Array.isArray(full.documents.vehicleBuyReceipt)
-              ? full.documents.vehicleBuyReceipt
-              : [];
-          if (buyReceiptPages.length) {
-            previews.vehicleBuyReceipt = buyReceiptPages;
-          }
-
           setFilePreviews((prev) => ({ ...prev, ...previews }));
           setSavedSellLetter(full);
+          setDeletedDocuments(new Set()); // Clear deleted documents when loading new edit
         }
       } catch (err) {
         console.error("Failed to load full sell letter for edit:", err);
@@ -544,20 +540,32 @@ const SellLetterForm = () => {
     setUploadModalAllowMultiple(
       fieldName === "insuranceCertificate" ||
         fieldName === "vehicleNOC" ||
-        fieldName === "vehicleBuyReceipt",
+        fieldName === "vehicleNOC",
     );
     setShowFileUploadModal(true);
   };
 
-  const handleRemoveFile = (fieldName) => {
-    setFilesState((prev) => ({
-      ...prev,
-      [fieldName]: null,
-    }));
-    setFilePreviews((prev) => ({
-      ...prev,
-      [fieldName]: null,
-    }));
+  const handleRemoveFile = (fieldName, label = "") => {
+    setDeleteConfirmField(fieldName);
+    setDeleteConfirmLabel(label || fieldName);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmRemoveFile = () => {
+    if (deleteConfirmField) {
+      setFilesState((prev) => ({
+        ...prev,
+        [deleteConfirmField]: null,
+      }));
+      setFilePreviews((prev) => ({
+        ...prev,
+        [deleteConfirmField]: null,
+      }));
+      setDeletedDocuments((prev) => new Set([...prev, deleteConfirmField]));
+    }
+    setShowDeleteConfirm(false);
+    setDeleteConfirmField(null);
+    setDeleteConfirmLabel("");
   };
 
   const handleFileUploadSelect = async (file, uploadType) => {
@@ -568,11 +576,7 @@ const SellLetterForm = () => {
 
     try {
       if (Array.isArray(file)) {
-        const multiFields = [
-          "insuranceCertificate",
-          "vehicleNOC",
-          "vehicleBuyReceipt",
-        ];
+        const multiFields = ["insuranceCertificate", "vehicleNOC"];
         if (multiFields.includes(uploadModalFieldName)) {
           const filesArr = file;
 
@@ -762,8 +766,7 @@ const SellLetterForm = () => {
       }));
     } else if (
       cropFieldName === "insuranceCertificate" ||
-      cropFieldName === "vehicleNOC" ||
-      cropFieldName === "vehicleBuyReceipt"
+      cropFieldName === "vehicleNOC"
     ) {
       // Handle multi-page documents - store as array
       setFilesState((prev) => ({
@@ -1269,48 +1272,72 @@ const SellLetterForm = () => {
   const buildPreservedDocsFromPreviews = (currentFilesState) => {
     const preservedDocs = {};
 
-    if (!currentFilesState.vehicleRCFront && filePreviews.vehicleRCFront)
+    if (
+      !currentFilesState.vehicleRCFront &&
+      filePreviews.vehicleRCFront &&
+      !deletedDocuments.has("vehicleRCFront")
+    )
       preservedDocs.vehicleRCFront = filePreviews.vehicleRCFront;
-    if (!currentFilesState.vehicleRCBack && filePreviews.vehicleRCBack)
+    if (
+      !currentFilesState.vehicleRCBack &&
+      filePreviews.vehicleRCBack &&
+      !deletedDocuments.has("vehicleRCBack")
+    )
       preservedDocs.vehicleRCBack = filePreviews.vehicleRCBack;
-    if (!currentFilesState.aadhaarFront && filePreviews.aadhaarFront)
+    if (
+      !currentFilesState.aadhaarFront &&
+      filePreviews.aadhaarFront &&
+      !deletedDocuments.has("aadhaarFront")
+    )
       preservedDocs.aadhaarFront = filePreviews.aadhaarFront;
-    if (!currentFilesState.aadhaarBack && filePreviews.aadhaarBack)
+    if (
+      !currentFilesState.aadhaarBack &&
+      filePreviews.aadhaarBack &&
+      !deletedDocuments.has("aadhaarBack")
+    )
       preservedDocs.aadhaarBack = filePreviews.aadhaarBack;
-    if (!currentFilesState.panPhoto && filePreviews.panPhoto)
+    if (
+      !currentFilesState.panPhoto &&
+      filePreviews.panPhoto &&
+      !deletedDocuments.has("panPhoto")
+    )
       preservedDocs.panPhoto = filePreviews.panPhoto;
-    if (!currentFilesState.deliveryPhoto && filePreviews.deliveryPhoto)
+    if (
+      !currentFilesState.deliveryPhoto &&
+      filePreviews.deliveryPhoto &&
+      !deletedDocuments.has("deliveryPhoto")
+    )
       preservedDocs.deliveryPhoto = filePreviews.deliveryPhoto;
-    if (!currentFilesState.signedDocSell && filePreviews.signedDocSell)
+    if (
+      !currentFilesState.signedDocSell &&
+      filePreviews.signedDocSell &&
+      !deletedDocuments.has("signedDocSell")
+    )
       preservedDocs.signedDocSell = filePreviews.signedDocSell;
 
     if (
       (!currentFilesState.vehiclePhotos ||
         currentFilesState.vehiclePhotos.length === 0) &&
-      filePreviews.vehiclePhotos?.length
+      filePreviews.vehiclePhotos?.length &&
+      !deletedDocuments.has("vehiclePhotos")
     ) {
       preservedDocs.vehiclePhotos = filePreviews.vehiclePhotos;
     }
     if (
       (!currentFilesState.insuranceCertificate ||
         currentFilesState.insuranceCertificate.length === 0) &&
-      filePreviews.insuranceCertificate?.length
+      filePreviews.insuranceCertificate?.length &&
+      !deletedDocuments.has("insuranceCertificate")
     ) {
       preservedDocs.insuranceCertificate = filePreviews.insuranceCertificate;
     }
     if (
       (!currentFilesState.vehicleNOC ||
         currentFilesState.vehicleNOC.length === 0) &&
-      filePreviews.vehicleNOC?.length
+      filePreviews.vehicleNOC?.length &&
+      !deletedDocuments.has("vehicleNOC")
     ) {
       preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
-    }
-    if (
-      (!currentFilesState.vehicleBuyReceipt ||
-        currentFilesState.vehicleBuyReceipt.length === 0) &&
-      filePreviews.vehicleBuyReceipt?.length
-    ) {
-      preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
     }
 
     return preservedDocs;
@@ -1481,9 +1508,7 @@ const SellLetterForm = () => {
         (filesState.vehiclePhotos && filesState.vehiclePhotos.length > 0) ||
         (filesState.insuranceCertificate &&
           filesState.insuranceCertificate.length > 0) ||
-        (filesState.vehicleNOC && filesState.vehicleNOC.length > 0) ||
-        (filesState.vehicleBuyReceipt &&
-          filesState.vehicleBuyReceipt.length > 0);
+        (filesState.vehicleNOC && filesState.vehicleNOC.length > 0);
 
       if (hasFiles) {
         const form = new FormData();
@@ -1566,22 +1591,11 @@ const SellLetterForm = () => {
           for (const f of compressed) form.append("vehicleNOC", f);
           form.append("vehicleNOCUploadMode", "separate");
         }
-        if (
-          filesState.vehicleBuyReceipt &&
-          filesState.vehicleBuyReceipt.length
-        ) {
-          const compressed = await Promise.all(
-            filesState.vehicleBuyReceipt.map((f) => compressImageFile(f)),
-          );
-          for (const f of compressed) form.append("vehicleBuyReceipt", f);
-          form.append("vehicleBuyReceiptUploadMode", "separate");
-        }
 
         if (editLetter?._id && editLetter.documents) {
           const preservedDocs = buildPreservedDocsFromPreviews(filesState);
-          if (Object.keys(preservedDocs).length > 0) {
-            form.append("preservedDocuments", JSON.stringify(preservedDocs));
-          }
+          // Always send preservedDocuments in edit mode (even if empty) to override fallback
+          form.append("preservedDocuments", JSON.stringify(preservedDocs));
           form.append(
             "existingDocuments",
             JSON.stringify(editLetter.documents),
@@ -1740,9 +1754,7 @@ const SellLetterForm = () => {
         (filesState.vehiclePhotos && filesState.vehiclePhotos.length > 0) ||
         (filesState.insuranceCertificate &&
           filesState.insuranceCertificate.length > 0) ||
-        (filesState.vehicleNOC && filesState.vehicleNOC.length > 0) ||
-        (filesState.vehicleBuyReceipt &&
-          filesState.vehicleBuyReceipt.length > 0);
+        (filesState.vehicleNOC && filesState.vehicleNOC.length > 0);
 
       setProgressStep(hasFiles ? 1 : 2);
       setIsDownloading(true);
@@ -2429,15 +2441,6 @@ const SellLetterForm = () => {
                 : [];
             if (nocPages.length) {
               previews.vehicleNOC = nocPages;
-            }
-
-            const buyReceiptPages = Array.isArray(docs.vehicleBuyReceipt?.pages)
-              ? docs.vehicleBuyReceipt.pages
-              : Array.isArray(docs.vehicleBuyReceipt)
-                ? docs.vehicleBuyReceipt
-                : [];
-            if (buyReceiptPages.length) {
-              previews.vehicleBuyReceipt = buyReceiptPages;
             }
 
             if (Object.keys(previews).length > 0) {
@@ -3640,7 +3643,12 @@ const SellLetterForm = () => {
                         {filePreviews.vehicleRCFront && (
                           <button
                             type="button"
-                            onClick={() => handleRemoveFile("vehicleRCFront")}
+                            onClick={() =>
+                              handleRemoveFile(
+                                "vehicleRCFront",
+                                "Vehicle RC - Front",
+                              )
+                            }
                             style={{
                               ...styles.uploadBtn,
                               backgroundColor: "#ef4444",
@@ -3680,7 +3688,12 @@ const SellLetterForm = () => {
                         {filePreviews.vehicleRCBack && (
                           <button
                             type="button"
-                            onClick={() => handleRemoveFile("vehicleRCBack")}
+                            onClick={() =>
+                              handleRemoveFile(
+                                "vehicleRCBack",
+                                "Vehicle RC - Back",
+                              )
+                            }
                             style={{
                               ...styles.uploadBtn,
                               backgroundColor: "#ef4444",
@@ -3850,7 +3863,12 @@ const SellLetterForm = () => {
                         {filePreviews.aadhaarFront && (
                           <button
                             type="button"
-                            onClick={() => handleRemoveFile("aadhaarFront")}
+                            onClick={() =>
+                              handleRemoveFile(
+                                "aadhaarFront",
+                                "Aadhaar - Front",
+                              )
+                            }
                             style={{
                               ...styles.uploadBtn,
                               backgroundColor: "#ef4444",
@@ -3888,7 +3906,9 @@ const SellLetterForm = () => {
                         {filePreviews.aadhaarBack && (
                           <button
                             type="button"
-                            onClick={() => handleRemoveFile("aadhaarBack")}
+                            onClick={() =>
+                              handleRemoveFile("aadhaarBack", "Aadhaar - Back")
+                            }
                             style={{
                               ...styles.uploadBtn,
                               backgroundColor: "#ef4444",
@@ -3927,7 +3947,7 @@ const SellLetterForm = () => {
                     {filePreviews.panPhoto && (
                       <button
                         type="button"
-                        onClick={() => handleRemoveFile("panPhoto")}
+                        onClick={() => handleRemoveFile("panPhoto", "PAN Card")}
                         style={{
                           ...styles.uploadBtn,
                           backgroundColor: "#ef4444",
@@ -3964,7 +3984,9 @@ const SellLetterForm = () => {
                     {filePreviews.deliveryPhoto && (
                       <button
                         type="button"
-                        onClick={() => handleRemoveFile("deliveryPhoto")}
+                        onClick={() =>
+                          handleRemoveFile("deliveryPhoto", "Delivery Photo")
+                        }
                         style={{
                           ...styles.uploadBtn,
                           backgroundColor: "#ef4444",
@@ -4001,7 +4023,9 @@ const SellLetterForm = () => {
                     {filePreviews.signedDocSell && (
                       <button
                         type="button"
-                        onClick={() => handleRemoveFile("signedDocSell")}
+                        onClick={() =>
+                          handleRemoveFile("signedDocSell", "Signed Doc (Sell)")
+                        }
                         style={{
                           ...styles.uploadBtn,
                           backgroundColor: "#ef4444",
@@ -4203,82 +4227,6 @@ const SellLetterForm = () => {
                       </div>
                     )}
                 </div>
-
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    Vehicle Buy Receipt Pages
-                  </label>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "8px",
-                      alignItems: "center",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleFileInput("vehicleBuyReceipt", true)}
-                      style={styles.uploadBtn}
-                    >
-                      <Image size={20} />{" "}
-                      {filePreviews.vehicleBuyReceipt
-                        ? "Change"
-                        : "Upload Pages"}
-                    </button>
-                    {filePreviews.vehicleBuyReceipt && (
-                      <div style={{ fontSize: "14px", color: "#333" }}>
-                        {Array.isArray(filePreviews.vehicleBuyReceipt)
-                          ? `${filePreviews.vehicleBuyReceipt.length} page(s)`
-                          : "1 page"}
-                      </div>
-                    )}
-                    {filePreviews.vehicleBuyReceipt && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFilesState((prev) => ({
-                            ...prev,
-                            vehicleBuyReceipt: [],
-                          }));
-                          setFilePreviews((prev) => ({
-                            ...prev,
-                            vehicleBuyReceipt: null,
-                          }));
-                        }}
-                        style={{
-                          ...styles.uploadBtn,
-                          backgroundColor: "#ef4444",
-                        }}
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                  {filePreviews.vehicleBuyReceipt &&
-                    Array.isArray(filePreviews.vehicleBuyReceipt) && (
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "8px",
-                          marginTop: "8px",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        {filePreviews.vehicleBuyReceipt
-                          .slice(0, 6)
-                          .map((u, idx) => (
-                            <div key={idx}>
-                              {renderPreviewMedia(
-                                u,
-                                `buy-receipt-${idx + 1}`,
-                                styles.previewImgSmall,
-                                true,
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    )}
-                </div>
               </div>
             </div>
 
@@ -4477,6 +4425,101 @@ const SellLetterForm = () => {
             allowPdf={uploadModalAllowPdf}
             allowMultiple={uploadModalAllowMultiple}
           />
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000,
+            }}
+            onClick={() => setShowDeleteConfirm(false)}
+          >
+            <div
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                padding: "24px",
+                maxWidth: "400px",
+                boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  marginBottom: "16px",
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  color: "#1f2937",
+                }}
+              >
+                Remove Document?
+              </div>
+              <div
+                style={{
+                  marginBottom: "24px",
+                  fontSize: "14px",
+                  color: "#6b7280",
+                  lineHeight: "1.5",
+                }}
+              >
+                Are you sure you want to remove{" "}
+                <strong style={{ color: "#374151" }}>
+                  {deleteConfirmLabel}
+                </strong>
+                ? This action will be saved when you click "Save".
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: "#e5e7eb",
+                    color: "#1f2937",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmRemoveFile}
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: "#ef4444",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

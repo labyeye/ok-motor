@@ -137,7 +137,6 @@ exports.createSellLetter = [
     // new multi-page document fields
     { name: "insuranceCertificate", maxCount: 50 },
     { name: "vehicleNOC", maxCount: 50 },
-    { name: "vehicleBuyReceipt", maxCount: 50 },
   ]),
   async (req, res) => {
     try {
@@ -336,7 +335,6 @@ exports.createSellLetter = [
         vehiclePhotos: [],
         insuranceCertificate: { pages: [] },
         vehicleNOC: { pages: [] },
-        vehicleBuyReceipt: { pages: [] },
       };
 
       // Parse existingDocuments (full previous documents object — ultimate fallback)
@@ -374,10 +372,12 @@ exports.createSellLetter = [
           if (p.vehicleNOC && Array.isArray(p.vehicleNOC)) {
             uploadedUrls.vehicleNOC.pages = [...p.vehicleNOC];
           }
-          if (p.vehicleBuyReceipt && Array.isArray(p.vehicleBuyReceipt)) {
-            uploadedUrls.vehicleBuyReceipt.pages = [...p.vehicleBuyReceipt];
-          }
-        } else if (existingDocuments) {
+        } else if (existingDocuments && !req.body.existingDocuments) {
+          // No preservedDocs AND no existingDocuments in request = skip fallback
+          // (preservedDocuments was explicitly sent as empty, so use only new uploads)
+          // Do nothing - only use newly uploaded files
+        } else if (existingDocuments && req.body.existingDocuments && !req.body.preservedDocuments) {
+          // Backward compatibility: only use fallback if NO preservedDocuments was sent at all
           // No individual preservedDocs sent — populate from full existingDocuments
           const ed = existingDocuments;
           if (ed.vehicleRC?.front)
@@ -397,10 +397,6 @@ exports.createSellLetter = [
             ];
           if (ed.vehicleNOC?.pages?.length)
             uploadedUrls.vehicleNOC.pages = [...ed.vehicleNOC.pages];
-          if (ed.vehicleBuyReceipt?.pages?.length)
-            uploadedUrls.vehicleBuyReceipt.pages = [
-              ...ed.vehicleBuyReceipt.pages,
-            ];
         }
       } catch (e) {
         console.error("Error parsing preservedDocuments:", e);
@@ -549,21 +545,12 @@ exports.createSellLetter = [
             files.vehicleNOC?.length
               ? processMultiFileGroup(files.vehicleNOC, "vehicle-noc", 200)
               : Promise.resolve(null),
-            files.vehicleBuyReceipt?.length
-              ? processMultiFileGroup(
-                  files.vehicleBuyReceipt,
-                  "vehicle-buy-receipt",
-                  200,
-                )
-              : Promise.resolve(null),
           ]);
 
         if (vehiclePhotos !== null) uploadedUrls.vehiclePhotos = vehiclePhotos;
         if (insuranceCertPages !== null)
           uploadedUrls.insuranceCertificate.pages.push(...insuranceCertPages);
         if (nocPages !== null) uploadedUrls.vehicleNOC.pages.push(...nocPages);
-        if (buyReceiptPages !== null)
-          uploadedUrls.vehicleBuyReceipt.pages.push(...buyReceiptPages);
       } catch (uploadErr) {
         console.error("Image upload failed, aborting create:", uploadErr);
         return res
@@ -571,8 +558,9 @@ exports.createSellLetter = [
           .json({ message: "Image upload failed", error: uploadErr.message });
       }
 
-      // Final fallback: if existingDocuments was provided, restore any field still null
-      if (existingDocuments) {
+      // Final fallback: if existingDocuments was provided AND no preservedDocuments, restore any field still null
+      // If preservedDocuments was sent (even if empty), DON'T use fallback — respect user's deletions
+      if (existingDocuments && !req.body.preservedDocuments) {
         const ed = existingDocuments;
         if (!uploadedUrls.vehicleRC.front && ed.vehicleRC?.front)
           uploadedUrls.vehicleRC.front = ed.vehicleRC.front;
@@ -601,13 +589,6 @@ exports.createSellLetter = [
           ed.vehicleNOC?.pages?.length
         )
           uploadedUrls.vehicleNOC.pages = [...ed.vehicleNOC.pages];
-        if (
-          !uploadedUrls.vehicleBuyReceipt.pages?.length &&
-          ed.vehicleBuyReceipt?.pages?.length
-        )
-          uploadedUrls.vehicleBuyReceipt.pages = [
-            ...ed.vehicleBuyReceipt.pages,
-          ];
       }
 
       sellLetterData.documents = {
@@ -635,11 +616,6 @@ exports.createSellLetter = [
           bodyData.vehicleNOCUploadMode ||
           existingDocuments?.vehicleNOCUploadMode ||
           "separate",
-        vehicleBuyReceipt: uploadedUrls.vehicleBuyReceipt,
-        vehicleBuyReceiptUploadMode:
-          bodyData.vehicleBuyReceiptUploadMode ||
-          existingDocuments?.vehicleBuyReceiptUploadMode ||
-          "separate",
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };
 
@@ -657,8 +633,7 @@ exports.createSellLetter = [
           hasText(docs.signedDocSell) ||
           hasArray(docs.vehiclePhotos) ||
           hasArray(docs.insuranceCertificate?.pages) ||
-          hasArray(docs.vehicleNOC?.pages) ||
-          hasArray(docs.vehicleBuyReceipt?.pages),
+          hasArray(docs.vehicleNOC?.pages),
         );
       };
 
@@ -679,12 +654,6 @@ exports.createSellLetter = [
             ...(target.vehicleNOC || {}),
             pages: Array.isArray(target.vehicleNOC?.pages)
               ? [...target.vehicleNOC.pages]
-              : [],
-          },
-          vehicleBuyReceipt: {
-            ...(target.vehicleBuyReceipt || {}),
-            pages: Array.isArray(target.vehicleBuyReceipt?.pages)
-              ? [...target.vehicleBuyReceipt.pages]
               : [],
           },
         };
@@ -746,20 +715,6 @@ exports.createSellLetter = [
           merged.vehicleNOC.pages = [...sourceNocPages];
         }
 
-        const sourceBuyReceiptPages = Array.isArray(
-          source.vehicleBuyReceipt?.pages,
-        )
-          ? source.vehicleBuyReceipt.pages
-          : Array.isArray(source.vehicleBuyReceipt)
-            ? source.vehicleBuyReceipt
-            : [];
-        if (
-          !hasArray(merged.vehicleBuyReceipt.pages) &&
-          hasArray(sourceBuyReceiptPages)
-        ) {
-          merged.vehicleBuyReceipt.pages = [...sourceBuyReceiptPages];
-        }
-
         if (!merged.vehicleRCUploadMode && source.vehicleRCUploadMode) {
           merged.vehicleRCUploadMode = source.vehicleRCUploadMode;
         }
@@ -776,20 +731,17 @@ exports.createSellLetter = [
         if (!merged.vehicleNOCUploadMode && source.vehicleNOCUploadMode) {
           merged.vehicleNOCUploadMode = source.vehicleNOCUploadMode;
         }
-        if (
-          !merged.vehicleBuyReceiptUploadMode &&
-          source.vehicleBuyReceiptUploadMode
-        ) {
-          merged.vehicleBuyReceiptUploadMode =
-            source.vehicleBuyReceiptUploadMode;
-        }
 
         return merged;
       };
 
       try {
         const hasDocs = hasDocumentContent(sellLetterData.documents);
-        if (!hasDocs || sellLetterData.previousVersionId || regNo) {
+        // Only merge from previous version if NO preservedDocuments was sent
+        // If preservedDocuments was sent, it means user explicitly chose which docs to keep
+        const shouldMergePreviousDocs = !req.body.preservedDocuments;
+        
+        if ((!hasDocs || sellLetterData.previousVersionId || regNo) && shouldMergePreviousDocs) {
           if (sellLetterData.previousVersionId) {
             const previousSell = await SellLetter.findById(
               sellLetterData.previousVersionId,

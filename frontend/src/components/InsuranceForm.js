@@ -46,11 +46,12 @@ const InsuranceForm = () => {
         insurancePolicyNo:
           data.insurancePolicyNo || data.insurancePolicyNumber || "",
         insuranceCompany: data.insuranceCompany || "",
-        insuranceExpiry: (data.insuranceExpiryDate || data.insuranceExpiry)
-          ? new Date(data.insuranceExpiryDate || data.insuranceExpiry)
-              .toISOString()
-              .split("T")[0]
-          : "",
+        insuranceExpiry:
+          data.insuranceExpiryDate || data.insuranceExpiry
+            ? new Date(data.insuranceExpiryDate || data.insuranceExpiry)
+                .toISOString()
+                .split("T")[0]
+            : "",
       });
     }
 
@@ -75,7 +76,7 @@ const InsuranceForm = () => {
 
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-      const [vehicleRes, insuranceRes] = await Promise.all([
+      const [vehicleRes, insuranceRes, pucRes] = await Promise.all([
         axios
           .get(
             `${API_BASE_URL}/sell-letters/vehicle-details?registrationNumber=${encodeURIComponent(
@@ -98,20 +99,35 @@ const InsuranceForm = () => {
 
       const vehicleData = vehicleRes?.data || {};
       const insData = insuranceRes?.data || {};
+      const pucData = pucRes?.data || {};
 
       setFormData((prev) => ({
         ...prev,
 
         personName:
-          insData.personName || vehicleData.personName || prev.personName,
+          insData.personName ||
+          pucData.personName ||
+          vehicleData.personName ||
+          prev.personName,
         personPhone:
-          insData.personPhone || vehicleData.personPhone || prev.personPhone,
-          personEmail:
-          insData.personEmail || vehicleData.personEmail || prev.personEmail || "na@gmail.com",
+          insData.personPhone ||
+          pucData.personPhone ||
+          vehicleData.personPhone ||
+          prev.personPhone,
+        personEmail:
+          insData.personEmail ||
+          pucData.personEmail ||
+          vehicleData.personEmail ||
+          prev.personEmail ||
+          "na@gmail.com",
         vehicleModel:
-          insData.vehicleModel || vehicleData.vehicleModel || prev.vehicleModel,
-        brand: insData.brand || vehicleData.brand || prev.brand,
-        year: insData.year || vehicleData.year || prev.year,
+          insData.vehicleModel ||
+          pucData.vehicleModel ||
+          vehicleData.vehicleModel ||
+          prev.vehicleModel,
+        brand:
+          insData.brand || pucData.brand || vehicleData.brand || prev.brand,
+        year: insData.year || pucData.year || vehicleData.year || prev.year,
 
         insuranceCompany:
           insData.insuranceCompany ||
@@ -250,8 +266,8 @@ const InsuranceForm = () => {
     },
     topBarLogo: {
       width: "250px",
-    height: "auto",
-    margin: "-40px",
+      height: "auto",
+      margin: "-40px",
       padding: 0,
       display: "block",
     },

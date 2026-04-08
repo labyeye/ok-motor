@@ -1514,16 +1514,6 @@ const BikeHistory = ({ externalSearchTerm }) => {
             : []
           : [];
 
-      if (
-        buyData.length === 0 &&
-        sellData.length === 0 &&
-        serviceData.length === 0 &&
-        advanceData.length === 0
-      ) {
-        setBikeHistory([]);
-        return;
-      }
-
       console.log(
         "insuranceResp:",
         insuranceResp && insuranceResp.status,
@@ -1582,6 +1572,12 @@ const BikeHistory = ({ externalSearchTerm }) => {
           date: item.pucIssueDate || item.pucExpiry || item.createdAt,
         })),
       ];
+
+      // If no data at all, show empty state
+      if (combinedData.length === 0) {
+        setBikeHistory([]);
+        return;
+      }
 
       // Add insurance renewal entries if updatedAt !== createdAt
       insuranceData.forEach((item) => {
@@ -2615,16 +2611,24 @@ const BikeHistory = ({ externalSearchTerm }) => {
                               </td>
                               <td style={styles.tableCell}>
                                 <div style={styles.actionButtons}>
-                                  <button
-                                    onClick={() =>
-                                      fetchPdf(item._id, item.type)
-                                    }
-                                    style={styles.viewButton}
-                                    title="View PDF"
-                                  >
-                                    <Eye size={14} />
-                                    View
-                                  </button>
+                                  {/* Hide View button for PUC and Insurance (they show history, not PDF) */}
+                                  {!(
+                                    item.type === "insurance" ||
+                                    item.type === "insurance-renewed" ||
+                                    item.type === "puc" ||
+                                    item.type === "puc-renewed"
+                                  ) && (
+                                    <button
+                                      onClick={() =>
+                                        fetchPdf(item._id, item.type)
+                                      }
+                                      style={styles.viewButton}
+                                      title="View PDF"
+                                    >
+                                      <Eye size={14} />
+                                      View
+                                    </button>
+                                  )}
                                   <button
                                     onClick={() =>
                                       downloadPdf(
@@ -2995,26 +2999,68 @@ const BikeHistory = ({ externalSearchTerm }) => {
                             paddingTop: "10px",
                           }}
                         >
-                          <button
-                            onClick={() => fetchPdf(item._id, item.type)}
-                            style={{
-                              flex: 1,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "4px",
-                              padding: "8px",
-                              backgroundColor: "#f1f5f9",
-                              border: "1px solid #e2e8f0",
-                              borderRadius: "8px",
-                              cursor: "pointer",
-                              fontSize: "0.78rem",
-                              color: "#1e293b",
-                              fontWeight: 500,
-                            }}
-                          >
-                            <Eye size={14} /> View
-                          </button>
+                          {/* Hide View button for PUC and Insurance */}
+                          {!(
+                            item.type === "insurance" ||
+                            item.type === "insurance-renewed" ||
+                            item.type === "puc" ||
+                            item.type === "puc-renewed"
+                          ) && (
+                            <button
+                              onClick={() => fetchPdf(item._id, item.type)}
+                              style={{
+                                flex: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px",
+                                padding: "8px",
+                                backgroundColor: "#f1f5f9",
+                                border: "1px solid #e2e8f0",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                fontSize: "0.78rem",
+                                color: "#1e293b",
+                                fontWeight: 500,
+                              }}
+                            >
+                              <Eye size={14} /> View
+                            </button>
+                          )}
+                          {/* Only show Renew button for renewed entries */}
+                          {(item.type === "puc-renewed" ||
+                            item.type === "insurance-renewed") && (
+                            <button
+                              onClick={() => {
+                                if (item.type === "puc-renewed") {
+                                  navigate("/puc-form", {
+                                    state: { pucData: item },
+                                  });
+                                } else if (item.type === "insurance-renewed") {
+                                  navigate("/insurance-form", {
+                                    state: { insuranceData: item },
+                                  });
+                                }
+                              }}
+                              style={{
+                                flex: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px",
+                                padding: "8px",
+                                backgroundColor: "#10b981",
+                                border: "none",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                fontSize: "0.78rem",
+                                color: "#ffffff",
+                                fontWeight: 500,
+                              }}
+                            >
+                              <ArrowUpRight size={14} /> Renew
+                            </button>
+                          )}
                           <button
                             onClick={() =>
                               downloadPdf(

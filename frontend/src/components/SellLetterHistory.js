@@ -37,7 +37,6 @@ const SellLetterHistory = () => {
     signedDocSell: true,
     insuranceCertificate: true,
     vehicleNOC: true,
-    vehicleBuyReceipt: true,
   });
   const [sellLetters, setSellLetters] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -496,7 +495,6 @@ const SellLetterHistory = () => {
       checkDocumentChange("signedDocSell", "Signed Doc (Sell)");
       checkDocumentChange("insuranceCertificate", "Insurance Certificate");
       checkDocumentChange("vehicleNOC", "Vehicle NOC");
-      checkDocumentChange("vehicleBuyReceipt", "Vehicle Buy Receipt");
 
       const oldPhotosCount =
         letter.previousVersion.documents?.vehiclePhotos?.length || 0;
@@ -1116,7 +1114,6 @@ const SellLetterHistory = () => {
           const signedDocSellItems = [];
           const insuranceCertificateItems = [];
           const vehicleNOCItems = [];
-          const vehicleBuyReceiptItems = [];
 
           if (documentsObj.insuranceCertificate) {
             if (Array.isArray(documentsObj.insuranceCertificate.pages)) {
@@ -1148,24 +1145,6 @@ const SellLetterHistory = () => {
               documentsObj.vehicleNOC.forEach((p, idx) =>
                 vehicleNOCItems.push({
                   title: `Vehicle NOC ${idx + 1}`,
-                  url: p,
-                }),
-              );
-            }
-          }
-
-          if (documentsObj.vehicleBuyReceipt) {
-            if (Array.isArray(documentsObj.vehicleBuyReceipt.pages)) {
-              documentsObj.vehicleBuyReceipt.pages.forEach((p, idx) =>
-                vehicleBuyReceiptItems.push({
-                  title: `Vehicle Buy Receipt ${idx + 1}`,
-                  url: p,
-                }),
-              );
-            } else if (Array.isArray(documentsObj.vehicleBuyReceipt)) {
-              documentsObj.vehicleBuyReceipt.forEach((p, idx) =>
-                vehicleBuyReceiptItems.push({
-                  title: `Vehicle Buy Receipt ${idx + 1}`,
                   url: p,
                 }),
               );
@@ -1604,65 +1583,6 @@ const SellLetterHistory = () => {
             }
           }
 
-          // Render Vehicle Buy Receipt items (1 per page)
-          for (const item of vehicleBuyReceiptItems) {
-            const page = pdfDoc.addPage([595, 842]);
-            try {
-              await drawHeaderFooter(pdfDoc, page);
-            } catch (e) {}
-            const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-            page.drawText(item.title, { x: 50, y: 753, size: 14, font });
-
-            const asset = await embedAssetFromUrl(pdfDoc, item.url);
-            if (asset) {
-              const pageWidth = 595;
-              const pageHeight = 842;
-              const margin = 50;
-              const maxWidth = pageWidth - 2 * margin;
-              const maxHeight = pageHeight - 150;
-
-              let width, height;
-              if (asset.kind === "image") {
-                const dims = asset.embedded.scale(1);
-                width = dims.width;
-                height = dims.height;
-              } else {
-                const p = asset.embeddedPage;
-                width = p.width || p.getWidth?.() || 595;
-                height = p.height || p.getHeight?.() || 842;
-              }
-
-              let drawW = maxWidth;
-              let drawH = (height / width) * drawW;
-
-              if (drawH > maxHeight) {
-                drawH = maxHeight;
-                drawW = (width / height) * drawH;
-              }
-
-              const xPos = (pageWidth - drawW) / 2;
-              const yPos = 750 - drawH;
-
-              if (asset.kind === "image") {
-                page.drawImage(asset.embedded, {
-                  x: xPos,
-                  y: yPos,
-                  width: drawW,
-                  height: drawH,
-                });
-              } else {
-                try {
-                  page.drawPage(asset.embeddedPage, {
-                    x: xPos,
-                    y: yPos,
-                    width: drawW,
-                    height: drawH,
-                  });
-                } catch (e) {}
-              }
-            }
-          }
-
           // Render Signed Doc items (1 per page)
           for (const item of signedDocSellItems) {
             const page = pdfDoc.addPage([595, 842]);
@@ -1982,7 +1902,6 @@ const SellLetterHistory = () => {
 
         const insuranceCertificateItems = [];
         const vehicleNOCItems = [];
-        const vehicleBuyReceiptItems = [];
 
         if (documentsObj.insuranceCertificate) {
           if (Array.isArray(documentsObj.insuranceCertificate.pages)) {
@@ -2014,24 +1933,6 @@ const SellLetterHistory = () => {
             documentsObj.vehicleNOC.forEach((p, idx) =>
               vehicleNOCItems.push({
                 title: `Vehicle NOC ${idx + 1}`,
-                url: p,
-              }),
-            );
-          }
-        }
-
-        if (documentsObj.vehicleBuyReceipt) {
-          if (Array.isArray(documentsObj.vehicleBuyReceipt.pages)) {
-            documentsObj.vehicleBuyReceipt.pages.forEach((p, idx) =>
-              vehicleBuyReceiptItems.push({
-                title: `Vehicle Buy Receipt ${idx + 1}`,
-                url: p,
-              }),
-            );
-          } else if (Array.isArray(documentsObj.vehicleBuyReceipt)) {
-            documentsObj.vehicleBuyReceipt.forEach((p, idx) =>
-              vehicleBuyReceiptItems.push({
-                title: `Vehicle Buy Receipt ${idx + 1}`,
                 url: p,
               }),
             );
@@ -2520,65 +2421,6 @@ const SellLetterHistory = () => {
             }
           }
         }
-
-        // Render Vehicle Buy Receipt items (1 per page)
-        for (const item of vehicleBuyReceiptItems) {
-          const page = pdfDoc.addPage([595, 842]);
-          try {
-            await drawHeaderFooter(pdfDoc, page);
-          } catch (e) {}
-          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
-
-          const asset = await embedAssetFromUrl(pdfDoc, item.url);
-          if (asset) {
-            const pageWidth = 595;
-            const pageHeight = 842;
-            const margin = 50;
-            const maxWidth = pageWidth - 2 * margin;
-            const maxHeight = pageHeight - 150;
-
-            let width, height;
-            if (asset.kind === "image") {
-              const dims = asset.embedded.scale(1);
-              width = dims.width;
-              height = dims.height;
-            } else {
-              const p = asset.embeddedPage;
-              width = p.width || p.getWidth?.() || 595;
-              height = p.height || p.getHeight?.() || 842;
-            }
-
-            let drawW = maxWidth;
-            let drawH = (height / width) * drawW;
-
-            if (drawH > maxHeight) {
-              drawH = maxHeight;
-              drawW = (width / height) * drawH;
-            }
-
-            const xPos = (pageWidth - drawW) / 2;
-            const yPos = 750 - drawH;
-
-            if (asset.kind === "image") {
-              page.drawImage(asset.embedded, {
-                x: xPos,
-                y: yPos,
-                width: drawW,
-                height: drawH,
-              });
-            } else {
-              try {
-                page.drawPage(asset.embeddedPage, {
-                  x: xPos,
-                  y: yPos,
-                  width: drawW,
-                  height: drawH,
-                });
-              } catch (e) {}
-            }
-          }
-        }
       };
 
       if (documentsToInclude?.invoice === true) {
@@ -2786,7 +2628,6 @@ const SellLetterHistory = () => {
 
         const insuranceCertificateItems = [];
         const vehicleNOCItems = [];
-        const vehicleBuyReceiptItems = [];
 
         if (documentsObj.insuranceCertificate) {
           if (Array.isArray(documentsObj.insuranceCertificate.pages)) {
@@ -2818,24 +2659,6 @@ const SellLetterHistory = () => {
             documentsObj.vehicleNOC.forEach((p, idx) =>
               vehicleNOCItems.push({
                 title: `Vehicle NOC ${idx + 1}`,
-                url: p,
-              }),
-            );
-          }
-        }
-
-        if (documentsObj.vehicleBuyReceipt) {
-          if (Array.isArray(documentsObj.vehicleBuyReceipt.pages)) {
-            documentsObj.vehicleBuyReceipt.pages.forEach((p, idx) =>
-              vehicleBuyReceiptItems.push({
-                title: `Vehicle Buy Receipt ${idx + 1}`,
-                url: p,
-              }),
-            );
-          } else if (Array.isArray(documentsObj.vehicleBuyReceipt)) {
-            documentsObj.vehicleBuyReceipt.forEach((p, idx) =>
-              vehicleBuyReceiptItems.push({
-                title: `Vehicle Buy Receipt ${idx + 1}`,
                 url: p,
               }),
             );
@@ -3238,65 +3061,6 @@ const SellLetterHistory = () => {
 
         // Render Vehicle NOC items (1 per page)
         for (const item of vehicleNOCItems) {
-          const page = pdfDoc.addPage([595, 842]);
-          try {
-            await drawHeaderFooter(pdfDoc, page);
-          } catch (e) {}
-          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
-
-          const asset = await embedAssetFromUrl(pdfDoc, item.url);
-          if (asset) {
-            const pageWidth = 595;
-            const pageHeight = 842;
-            const margin = 50;
-            const maxWidth = pageWidth - 2 * margin;
-            const maxHeight = pageHeight - 150;
-
-            let width, height;
-            if (asset.kind === "image") {
-              const dims = asset.embedded.scale(1);
-              width = dims.width;
-              height = dims.height;
-            } else {
-              const p = asset.embeddedPage;
-              width = p.width || p.getWidth?.() || 595;
-              height = p.height || p.getHeight?.() || 842;
-            }
-
-            let drawW = maxWidth;
-            let drawH = (height / width) * drawW;
-
-            if (drawH > maxHeight) {
-              drawH = maxHeight;
-              drawW = (width / height) * drawH;
-            }
-
-            const xPos = (pageWidth - drawW) / 2;
-            const yPos = 750 - drawH;
-
-            if (asset.kind === "image") {
-              page.drawImage(asset.embedded, {
-                x: xPos,
-                y: yPos,
-                width: drawW,
-                height: drawH,
-              });
-            } else {
-              try {
-                page.drawPage(asset.embeddedPage, {
-                  x: xPos,
-                  y: yPos,
-                  width: drawW,
-                  height: drawH,
-                });
-              } catch (e) {}
-            }
-          }
-        }
-
-        // Render Vehicle Buy Receipt items (1 per page)
-        for (const item of vehicleBuyReceiptItems) {
           const page = pdfDoc.addPage([595, 842]);
           try {
             await drawHeaderFooter(pdfDoc, page);
@@ -3856,14 +3620,11 @@ const SellLetterHistory = () => {
             return;
           }
 
-          await axios.delete(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+          await axios.delete(`https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
             },
-          );
+          });
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
           alert("Sell letter deleted successfully!");
         } else {
@@ -4128,155 +3889,155 @@ const SellLetterHistory = () => {
                                 )}
                               </td>
                               {letter.version > 1 && (
-                              <tr
-                                style={{
-                                  backgroundColor:
-                                    changes && changes.length > 0
-                                      ? "#ffffff"
-                                      : "#ffffff",
-                                }}
-                              >
-                                <td
-                                  colSpan="8"
+                                <tr
                                   style={{
-                                    padding: "12px 16px",
-                                    borderBottom: "1px solid #e2e8f0",
+                                    backgroundColor:
+                                      changes && changes.length > 0
+                                        ? "#ffffff"
+                                        : "#ffffff",
                                   }}
                                 >
-                                  <div style={{ fontSize: "0.85rem" }}>
-                                    <div
-                                      style={{
-                                        fontWeight: "600",
-                                        color:
-                                          changes && changes.length > 0
-                                            ? "#f57c00"
-                                            : "#757575",
-                                        marginBottom: "12px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "6px",
-                                      }}
-                                    >
-                                      <RefreshCw size={14} />
-                                      Changes from previous version:
-                                    </div>
-                                    {changes && changes.length > 0 ? (
+                                  <td
+                                    colSpan="8"
+                                    style={{
+                                      padding: "12px 16px",
+                                      borderBottom: "1px solid #e2e8f0",
+                                    }}
+                                  >
+                                    <div style={{ fontSize: "0.85rem" }}>
                                       <div
                                         style={{
+                                          fontWeight: "600",
+                                          color:
+                                            changes && changes.length > 0
+                                              ? "#f57c00"
+                                              : "#757575",
+                                          marginBottom: "12px",
                                           display: "flex",
-                                          flexDirection: "column",
-                                          gap: "12px",
+                                          alignItems: "center",
+                                          gap: "6px",
                                         }}
                                       >
-                                        {groupChangesByCategory(changes).map(
-                                          ([category, categoryChanges]) => (
-                                            <div
-                                              key={category}
-                                              style={{
-                                                backgroundColor: "#fafafa",
-                                                borderLeft: "3px solid #f57c00",
-                                                borderRadius: "4px",
-                                                padding: "10px 12px",
-                                              }}
-                                            >
+                                        <RefreshCw size={14} />
+                                        Changes from previous version:
+                                      </div>
+                                      {changes && changes.length > 0 ? (
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: "12px",
+                                          }}
+                                        >
+                                          {groupChangesByCategory(changes).map(
+                                            ([category, categoryChanges]) => (
                                               <div
+                                                key={category}
                                                 style={{
-                                                  fontWeight: "700",
-                                                  color: "#f57c00",
-                                                  fontSize: "0.9rem",
-                                                  marginBottom: "8px",
-                                                  display: "flex",
-                                                  alignItems: "center",
-                                                  gap: "4px",
+                                                  backgroundColor: "#fafafa",
+                                                  borderLeft:
+                                                    "3px solid #f57c00",
+                                                  borderRadius: "4px",
+                                                  padding: "10px 12px",
                                                 }}
                                               >
-                                                📋 {category}
-                                              </div>
-                                              <div
-                                                style={{
-                                                  display: "grid",
-                                                  gridTemplateColumns:
-                                                    "repeat(auto-fit, minmax(280px, 1fr))",
-                                                  gap: "8px",
-                                                }}
-                                              >
-                                                {categoryChanges.map(
-                                                  (change, idx) => (
-                                                    <div
-                                                      key={idx}
-                                                      style={{
-                                                        padding: "8px 10px",
-                                                        backgroundColor:
-                                                          "#ffffff",
-                                                        borderRadius: "4px",
-                                                        border:
-                                                          "1px solid #ffe0b2",
-                                                      }}
-                                                    >
+                                                <div
+                                                  style={{
+                                                    fontWeight: "700",
+                                                    color: "#f57c00",
+                                                    fontSize: "0.9rem",
+                                                    marginBottom: "8px",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "4px",
+                                                  }}
+                                                >
+                                                  📋 {category}
+                                                </div>
+                                                <div
+                                                  style={{
+                                                    display: "grid",
+                                                    gridTemplateColumns:
+                                                      "repeat(auto-fit, minmax(280px, 1fr))",
+                                                    gap: "8px",
+                                                  }}
+                                                >
+                                                  {categoryChanges.map(
+                                                    (change, idx) => (
                                                       <div
+                                                        key={idx}
                                                         style={{
-                                                          fontWeight: "600",
-                                                          color: "#424242",
-                                                          marginBottom: "4px",
-                                                          fontSize: "0.85rem",
+                                                          padding: "8px 10px",
+                                                          backgroundColor:
+                                                            "#ffffff",
+                                                          borderRadius: "4px",
+                                                          border:
+                                                            "1px solid #ffe0b2",
                                                         }}
                                                       >
-                                                        {change.field}:
-                                                      </div>
-                                                      <div
-                                                        style={{
-                                                          fontSize: "0.75rem",
-                                                          color: "#e53935",
-                                                          marginBottom: "2px",
-                                                        }}
-                                                      >
-                                                        <span
+                                                        <div
                                                           style={{
-                                                            textDecoration:
-                                                              "line-through",
+                                                            fontWeight: "600",
+                                                            color: "#424242",
+                                                            marginBottom: "4px",
+                                                            fontSize: "0.85rem",
                                                           }}
                                                         >
-                                                          {change.oldValue}
-                                                        </span>
+                                                          {change.field}:
+                                                        </div>
+                                                        <div
+                                                          style={{
+                                                            fontSize: "0.75rem",
+                                                            color: "#e53935",
+                                                            marginBottom: "2px",
+                                                          }}
+                                                        >
+                                                          <span
+                                                            style={{
+                                                              textDecoration:
+                                                                "line-through",
+                                                            }}
+                                                          >
+                                                            {change.oldValue}
+                                                          </span>
+                                                        </div>
+                                                        <div
+                                                          style={{
+                                                            fontSize: "0.75rem",
+                                                            color: "#43a047",
+                                                            fontWeight: "500",
+                                                          }}
+                                                        >
+                                                          ✓ {change.newValue}
+                                                        </div>
                                                       </div>
-                                                      <div
-                                                        style={{
-                                                          fontSize: "0.75rem",
-                                                          color: "#43a047",
-                                                          fontWeight: "500",
-                                                        }}
-                                                      >
-                                                        ✓ {change.newValue}
-                                                      </div>
-                                                    </div>
-                                                  ),
-                                                )}
+                                                    ),
+                                                  )}
+                                                </div>
                                               </div>
-                                            </div>
-                                          ),
-                                        )}
-                                      </div>
-                                    ) : (
-                                      <div
-                                        style={{
-                                          padding: "8px 12px",
-                                          backgroundColor: "#ffffff",
-                                          borderRadius: "4px",
-                                          border: "1px solid #e0e0e0",
-                                          color: "#757575",
-                                          fontStyle: "italic",
-                                        }}
-                                      >
-                                        No changes detected from previous
-                                        version
-                                      </div>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
+                                            ),
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <div
+                                          style={{
+                                            padding: "8px 12px",
+                                            backgroundColor: "#ffffff",
+                                            borderRadius: "4px",
+                                            border: "1px solid #e0e0e0",
+                                            color: "#757575",
+                                            fontStyle: "italic",
+                                          }}
+                                        >
+                                          No changes detected from previous
+                                          version
+                                        </div>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
                             </tr>
-                            
                           </React.Fragment>
                         );
                       })}
@@ -5275,47 +5036,6 @@ const SellLetterHistory = () => {
                         Vehicle NOC
                       </span>
                     </label>
-                    <label
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        padding: "10px 12px",
-                        backgroundColor: docSelections.vehicleBuyReceipt
-                          ? "#f0f9ff"
-                          : "transparent",
-                        border: `2px solid ${docSelections.vehicleBuyReceipt ? "#0284c7" : "#e2e8f0"}`,
-                        borderRadius: "8px",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease",
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={!!docSelections.vehicleBuyReceipt}
-                        onChange={(e) =>
-                          setDocSelections((s) => ({
-                            ...s,
-                            vehicleBuyReceipt: e.target.checked,
-                          }))
-                        }
-                        style={{
-                          width: "18px",
-                          height: "18px",
-                          marginRight: "12px",
-                          accentColor: "#0284c7",
-                          cursor: "pointer",
-                        }}
-                      />
-                      <span
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "500",
-                          color: "#1e293b",
-                        }}
-                      >
-                        Vehicle Buy Receipt
-                      </span>
-                    </label>
                   </div>
                 </div>
               </div>
@@ -5385,8 +5105,6 @@ const SellLetterHistory = () => {
                         out.insuranceCertificate = docs.insuranceCertificate;
                       if (sel.vehicleNOC && docs.vehicleNOC)
                         out.vehicleNOC = docs.vehicleNOC;
-                      if (sel.vehicleBuyReceipt && docs.vehicleBuyReceipt)
-                        out.vehicleBuyReceipt = docs.vehicleBuyReceipt;
                       return out;
                     };
 
