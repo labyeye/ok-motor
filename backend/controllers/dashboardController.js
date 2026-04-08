@@ -157,11 +157,16 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
 
 const getIncompleteLetterSummary = (letter, type) => {
   const missingFields = [];
+  
+  // Helper function to check if any part of a document exists (front, back, or combined)
+  const hasDocumentPart = (docObj) => {
+    if (!docObj) return false;
+    return !!(docObj.front || docObj.back || docObj.combined);
+  };
+
   const docPaths = {
-    rcFront: letter.documents?.vehicleRC?.front,
-    rcBack: letter.documents?.vehicleRC?.back,
-    aadhaarFront: letter.documents?.aadhaar?.front,
-    aadhaarBack: letter.documents?.aadhaar?.back,
+    rc: letter.documents?.vehicleRC,
+    aadhaar: letter.documents?.aadhaar,
     pan: letter.documents?.pan,
     signedDocBuy: letter.documents?.signedDocBuy,
     signedDocSell: letter.documents?.signedDocSell,
@@ -169,19 +174,23 @@ const getIncompleteLetterSummary = (letter, type) => {
   };
 
   if (type === "buy") {
-    if (!docPaths.rcFront) missingFields.push("Vehicle RC Front");
-    if (!docPaths.rcBack) missingFields.push("Vehicle RC Back");
+    // Check Vehicle RC - if either front, back, or combined exists, it's not missing
+    if (!hasDocumentPart(docPaths.rc)) missingFields.push("Vehicle RC");
+    
+    // Check Aadhaar - if either front, back, or combined exists, it's not missing
+    if (!hasDocumentPart(docPaths.aadhaar)) missingFields.push("Aadhar");
+    
     if (!docPaths.signedDocBuy) missingFields.push("Signed Doc");
-    if (!docPaths.aadhaarFront) missingFields.push("Aadhar Front");
-    if (!docPaths.aadhaarBack) missingFields.push("Aadhar Back");
     if (!docPaths.pan) missingFields.push("PAN Card");
 
   } else {
-    if (!docPaths.rcFront) missingFields.push("Vehicle RC Front");
-    if (!docPaths.rcBack) missingFields.push("Vehicle RC Back");
+    // Check Vehicle RC - if either front, back, or combined exists, it's not missing
+    if (!hasDocumentPart(docPaths.rc)) missingFields.push("Vehicle RC");
+    
+    // Check Aadhaar - if either front, back, or combined exists, it's not missing
+    if (!hasDocumentPart(docPaths.aadhaar)) missingFields.push("Aadhar");
+    
     if (!docPaths.signedDocSell) missingFields.push("Signed Doc");
-    if (!docPaths.aadhaarFront) missingFields.push("Aadhar Front");
-    if (!docPaths.aadhaarBack) missingFields.push("Aadhar Back");
     if (!docPaths.pan) missingFields.push("PAN Card");
   }
 

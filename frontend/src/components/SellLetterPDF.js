@@ -2919,7 +2919,7 @@ const SellLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={18}
+                    maxLength={20}
                   />
                 </div>
                 <div style={styles.formField}>
@@ -2941,7 +2941,7 @@ const SellLetterForm = () => {
                         : {}),
                     }}
                     required
-                    maxLength={15}
+                    maxLength={20}
                   />
                 </div>
                 <div style={styles.formField}>
