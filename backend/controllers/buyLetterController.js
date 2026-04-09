@@ -621,10 +621,9 @@ exports.createBuyLetter = [
 
 exports.getBuyLetters = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
+    const page = parseInt(req.query.page) || null;
     const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
+    
     const conditions = {
       $or: [
         { user: req.user.id },
@@ -633,10 +632,8 @@ exports.getBuyLetters = async (req, res) => {
       ],
     };
 
-    const buyLetters = await BuyLetter.find(conditions)
+    let query = BuyLetter.find(conditions)
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
       .populate("user", "name role")
       .populate("vehicle")
       .populate("pucId", "pucIssueDate pucExpiryDate pucExpiry pucStatus pucNumber vehicleRegNo regNo")
@@ -646,6 +643,14 @@ exports.getBuyLetters = async (req, res) => {
         "sellerName sellerFatherName sellerCurrentAddress selleraadhar sellerpan selleraadharphone selleraadharphone2 vehicleName vehicleModel vehicleColor registrationNumber chassisNumber engineNumber vehiclekm vehicleCondition buyerName buyerFatherName buyerCurrentAddress buyernames buyerphone witnessname witnessphone dealername dealeraddress returnpersonname saleDate saleTime saleAmount paymentMethod todayDate todayTime note documents",
       )
       .lean();
+
+    // If page is specified, apply pagination
+    if (page) {
+      const skip = (page - 1) * limit;
+      query = query.skip(skip).limit(limit);
+    }
+
+    const buyLetters = await query;
 
     // Merge live PUC/Insurance data from populated master records over the stale inline fields
     const buyLettersWithPrevious = buyLetters.map((letter) => {
@@ -668,12 +673,20 @@ exports.getBuyLetters = async (req, res) => {
 
     const total = await BuyLetter.countDocuments(conditions);
 
-    res.json({
-      buyLetters: buyLettersWithPrevious,
-      total,
-      page,
-      pages: Math.ceil(total / limit),
-    });
+    // Return paginated response if page was specified, otherwise return all
+    if (page) {
+      res.json({
+        buyLetters: buyLettersWithPrevious,
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      });
+    } else {
+      res.json({
+        buyLetters: buyLettersWithPrevious,
+        total,
+      });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });

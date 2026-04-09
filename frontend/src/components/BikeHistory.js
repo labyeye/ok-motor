@@ -1822,13 +1822,12 @@ const BikeHistory = ({ externalSearchTerm }) => {
         ...insuranceData.map((item) => ({
           ...item,
           type: "insurance",
-          date:
-            item.insuranceExpiryDate || item.insuranceExpiry || item.createdAt,
+          date: item.createdAt,
         })),
         ...pucData.map((item) => ({
           ...item,
           type: "puc",
-          date: item.pucIssueDate || item.pucExpiry || item.createdAt,
+          date: item.createdAt,
         })),
       ];
 
@@ -1844,39 +1843,27 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return;
       }
 
-      // Add insurance renewal entries if updatedAt !== createdAt
+      // Add insurance renewal entries only if a previous version exists (meaning it's been edited)
       insuranceData.forEach((item) => {
-        const createdTime = item.createdAt
-          ? new Date(item.createdAt).getTime()
-          : 0;
-        const updatedTime = item.updatedAt
-          ? new Date(item.updatedAt).getTime()
-          : 0;
-        if (updatedTime > createdTime + 1000) {
-          // More than 1 sec difference = edited
+        if (item.previousVersionId) {
+          // Only add renewal entry if there's an actual previous version
           combinedData.push({
             ...item,
             type: "insurance-renewed",
-            date: item.updatedAt,
+            date: item.editedAt || item.updatedAt,
             _id: `${item._id}-renewed`,
           });
         }
       });
 
-      // Add PUC renewal entries if updatedAt !== createdAt
+      // Add PUC renewal entries only if a previous version exists (meaning it's been edited)
       pucData.forEach((item) => {
-        const createdTime = item.createdAt
-          ? new Date(item.createdAt).getTime()
-          : 0;
-        const updatedTime = item.updatedAt
-          ? new Date(item.updatedAt).getTime()
-          : 0;
-        if (updatedTime > createdTime + 1000) {
-          // More than 1 sec difference = edited
+        if (item.previousVersionId) {
+          // Only add renewal entry if there's an actual previous version
           combinedData.push({
             ...item,
             type: "puc-renewed",
-            date: item.updatedAt,
+            date: item.editedAt || item.updatedAt,
             _id: `${item._id}-renewed`,
           });
         }
@@ -2003,8 +1990,8 @@ const BikeHistory = ({ externalSearchTerm }) => {
       combinedData.sort((firstItem, secondItem) => {
         const secondTimestamp = getSortTimestamp(secondItem);
         const firstTimestamp = getSortTimestamp(firstItem);
-        // Sort in ascending order: oldest at bottom, newest at top
-        const timestampDiff = firstTimestamp - secondTimestamp;
+        // Sort in descending order: newest at top, oldest at bottom
+        const timestampDiff = secondTimestamp - firstTimestamp;
         if (timestampDiff !== 0) return timestampDiff;
 
         const getActionPriority = (historyItem) => {

@@ -21,7 +21,8 @@ router.use(protect);
 // Removed backend PDF route to keep backend responsibilities limited to image upload and data storage.
 
 router.route('/by-registration').get(getSellLettersByRegistration); 
-router.route('/my-letters').get(getMySellLetters); 
+router.route('/my-letters').get(getMySellLetters);
+router.route('/all').get(getMySellLetters);
 
 router.route('/')
   .post(createSellLetter)

@@ -113,6 +113,15 @@ const SellLetterSchema = new mongoose.Schema(
         enum: ["single", "separate"],
         default: "separate",
       },
+      transferReceipt: {
+        pages: [{ type: String }],
+        agentName: { type: String },
+      },
+      transferReceiptUploadMode: {
+        type: String,
+        enum: ["single", "separate"],
+        default: "separate",
+      },
       vehicleBuyReceipt: {
         pages: [{ type: String }],
       },

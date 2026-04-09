@@ -4,6 +4,7 @@ const InsuranceSchema = new mongoose.Schema(
   {
     personName: { type: String, required: true },
     personPhone: { type: String }, // Phone number
+    personAlternateNo: { type: String }, // Alternate phone number
     personEmail: { type: String }, // Email address
     sourceType: {
       type: String,
@@ -23,6 +24,20 @@ const InsuranceSchema = new mongoose.Schema(
     insuranceExpiry: { type: Date },
     insuranceExpiryDate: { type: Date },
     insuranceStatus: { type: String },
+
+    originalDocumentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Insurance",
+      default: null,
+    },
+    previousVersionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Insurance",
+      default: null,
+    },
+    version: { type: Number, default: 1 },
+    editedAt: { type: Date },
+    editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },

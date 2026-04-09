@@ -118,6 +118,13 @@ exports.updatePUC = async (req, res) => {
 
     const normalizedPayload = normalizePucPayload(req.body);
 
+    // Add version tracking metadata
+    const editedDate = new Date();
+    normalizedPayload.editedAt = editedDate;
+    normalizedPayload.editedBy = req.user?.id || null;
+    normalizedPayload.version = (puc.version || 1) + 1;
+    normalizedPayload.previousVersionId = puc._id;
+
     puc = await PUC.findByIdAndUpdate(req.params.id, normalizedPayload, {
       new: true,
       runValidators: true,

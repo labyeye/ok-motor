@@ -42,11 +42,8 @@ const SellLetterHistory = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ year: null, amount: null });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
-
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
   const [previewLetter, setPreviewLetter] = useState(null);
@@ -518,13 +515,13 @@ const SellLetterHistory = () => {
 
         if (isOnline) {
           const response = await axios.get(
-            `https://ok-motor-51l3.vercel.app/api/sell-letters/my-letters?page=${currentPage}`,
+            `https://ok-motor-51l3.vercel.app/api/sell-letters/all`,
             { headers: {} },
           );
           // normalize response to array
           const items = Array.isArray(response.data)
             ? response.data
-            : response.data?.data || [];
+            : response.data?.sellLetters || response.data?.data || [];
           // sort by saleDate/saleTime (most recent first), fallback to createdAt
           items.sort((a, b) => parseSaleDateTime(b) - parseSaleDateTime(a));
           setSellLetters(items);
@@ -567,11 +564,10 @@ const SellLetterHistory = () => {
           setSellLetters([]);
         }
       }
-      setTotalPages(1);
       setLoading(false);
     };
     fetchSellLetters();
-  }, [currentPage]);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -3620,11 +3616,14 @@ const SellLetterHistory = () => {
             return;
           }
 
-          await axios.delete(`https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
+          await axios.delete(
+            `https://ok-motor-51l3.vercel.app/api/sell-letters/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             },
-          });
+          );
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
           alert("Sell letter deleted successfully!");
         } else {
@@ -4436,30 +4435,6 @@ const SellLetterHistory = () => {
                   })}
                 </div>
               )}
-
-              <div style={styles.pagination}>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  style={styles.paginationButton}
-                >
-                  Previous
-                </button>
-                <span style={styles.pageInfo}>
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                  style={styles.paginationButton}
-                >
-                  Next
-                </button>
-              </div>
             </>
           )}
         </div>

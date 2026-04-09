@@ -46,9 +46,6 @@ const BuyLetterHistory = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ year: null, amount: null });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -300,14 +297,13 @@ const BuyLetterHistory = () => {
 
         if (isOnline) {
           const response = await axios.get(
-            `https://ok-motor-51l3.vercel.app/api/buy-letter?page=${currentPage}`,
+            `https://ok-motor-51l3.vercel.app/api/buy-letter/all`,
             {
               headers: {},
             },
           );
           console.log("API Response:", response.data);
-          setBuyLetters(response.data.buyLetters);
-          setTotalPages(response.data.pages);
+          setBuyLetters(response.data.buyLetters || response.data);
         } else {
           console.log("Offline mode - loading from local storage");
           const offlineStorage = (await import("../services/offlineStorage"))
@@ -319,10 +315,8 @@ const BuyLetterHistory = () => {
               (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
             );
             setBuyLetters(sortedData);
-            setTotalPages(1);
           } else {
             setBuyLetters([]);
-            setTotalPages(1);
           }
         }
       } catch (error) {
@@ -341,7 +335,6 @@ const BuyLetterHistory = () => {
                   new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
               );
               setBuyLetters(sortedData);
-              setTotalPages(1);
             }
           } catch (offlineError) {
             console.error("Offline fallback also failed:", offlineError);
@@ -353,7 +346,7 @@ const BuyLetterHistory = () => {
     };
 
     fetchBuyLetters();
-  }, [currentPage]);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -2818,30 +2811,6 @@ const BuyLetterHistory = () => {
                   })}
                 </div>
               )}
-
-              <div style={styles.pagination}>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  style={styles.paginationButton}
-                >
-                  Previous
-                </button>
-                <span style={styles.pageInfo}>
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                  style={styles.paginationButton}
-                >
-                  Next
-                </button>
-              </div>
             </>
           )}
         </div>

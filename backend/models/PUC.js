@@ -4,6 +4,7 @@ const PUCSchema = new mongoose.Schema(
   {
     personName: { type: String, required: true },
     personPhone: { type: String }, // Phone number
+    personAlternateNo: { type: String }, // Alternate phone number
     personEmail: { type: String },
     sourceType: {
       type: String,
@@ -20,6 +21,20 @@ const PUCSchema = new mongoose.Schema(
     pucExpiry: { type: Date },
     pucExpiryDate: { type: Date },
     pucStatus: { type: String },
+
+    originalDocumentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PUC",
+      default: null,
+    },
+    previousVersionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PUC",
+      default: null,
+    },
+    version: { type: Number, default: 1 },
+    editedAt: { type: Date },
+    editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },

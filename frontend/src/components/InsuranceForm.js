@@ -18,6 +18,7 @@ const InsuranceForm = () => {
   const [formData, setFormData] = useState({
     personName: "",
     personPhone: "",
+    personAlternateNo: "",
     personEmail: "na@gmail.com",
     vehicleModel: "",
     brand: "",
@@ -38,6 +39,7 @@ const InsuranceForm = () => {
       setFormData({
         personName: data.personName || "",
         personPhone: data.personPhone || "",
+        personAlternateNo: data.personAlternateNo || "",
         personEmail: data.personEmail || data.email || "na@gmail.com",
         vehicleModel: data.vehicleModel || "",
         brand: data.brand || "",
@@ -197,6 +199,7 @@ const InsuranceForm = () => {
         setFormData({
           personName: "",
           personPhone: "",
+          personAlternateNo: "",
           personEmail: "na@gmail.com",
           vehicleModel: "",
           brand: "",
@@ -500,6 +503,17 @@ const InsuranceForm = () => {
                   type="text"
                   name="personPhone"
                   value={formData.personPhone}
+                  onChange={handleChange}
+                  style={styles.input}
+                  placeholder="9876543210"
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Alternate Phone</label>
+                <input
+                  type="text"
+                  name="personAlternateNo"
+                  value={formData.personAlternateNo}
                   onChange={handleChange}
                   style={styles.input}
                   placeholder="9876543210"

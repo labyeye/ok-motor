@@ -23,6 +23,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import ImageCropper from "./ImageCropper";
+import MultiImageCropModal from "./MultiImageCropModal";
 import FileUploadModal from "./FileUploadModal";
 import PdfPreview from "./PdfPreview";
 import {
@@ -87,6 +88,10 @@ const BuyLetterForm = () => {
   const [cropImageSrc, setCropImageSrc] = useState(null);
   const [cropFieldName, setCropFieldName] = useState(null);
   const [cropFileName, setCropFileName] = useState(null);
+
+  const [showMultiImageCropModal, setShowMultiImageCropModal] = useState(false);
+  const [multiImageCropFiles, setMultiImageCropFiles] = useState([]);
+  const [multiImageCropFieldName, setMultiImageCropFieldName] = useState(null);
 
   const [showImagePreviewModal, setShowImagePreviewModal] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState(null);
@@ -1320,6 +1325,7 @@ const BuyLetterForm = () => {
           uploadModalFieldName === "vehicleNOC" ||
           uploadModalFieldName === "vehicleBuyReceipt"
         ) {
+          // If single image, crop it alone
           if (filesArr.length === 1 && isImageFile(filesArr[0])) {
             const singleImage = filesArr[0];
             const url = URL.createObjectURL(singleImage);
@@ -1329,6 +1335,18 @@ const BuyLetterForm = () => {
             setShowFileUploadModal(false);
             setShowCropper(true);
             return;
+          }
+
+          // If multiple images, open multi-image crop modal
+          if (filesArr.length > 1) {
+            const imageFiles = filesArr.filter((f) => isImageFile(f));
+            if (imageFiles.length > 0) {
+              setMultiImageCropFiles(imageFiles);
+              setMultiImageCropFieldName(uploadModalFieldName);
+              setShowFileUploadModal(false);
+              setShowMultiImageCropModal(true);
+              return;
+            }
           }
 
           setFilesState((prev) => ({
@@ -1513,6 +1531,39 @@ const BuyLetterForm = () => {
     setCropImageSrc(null);
     setCropFieldName(null);
     setCropFileName(null);
+  };
+
+  const handleMultiImageCropSave = async (croppedFiles, fieldName) => {
+    if (!fieldName || !croppedFiles || croppedFiles.length === 0) {
+      return;
+    }
+
+    // Convert blob/File objects to File objects if needed
+    const finalFiles = croppedFiles.map((f, idx) => {
+      if (f instanceof File) {
+        return f;
+      }
+      // If it's a Blob, convert to File
+      return new File([f], `${fieldName}-${idx}.jpg`, { type: "image/jpeg" });
+    });
+
+    // Update filesState with array of files
+    setFilesState((prev) => ({
+      ...prev,
+      [fieldName]: finalFiles,
+    }));
+
+    // Create preview URLs
+    const previews = finalFiles.map((f) => URL.createObjectURL(f));
+
+    setFilePreviews((prev) => ({
+      ...prev,
+      [fieldName]: previews,
+    }));
+
+    setShowMultiImageCropModal(false);
+    setMultiImageCropFiles([]);
+    setMultiImageCropFieldName(null);
   };
 
   const handleSaveAndDownload = async () => {
@@ -5226,6 +5277,19 @@ const BuyLetterForm = () => {
             imageSrc={cropImageSrc}
             onCancel={onCropCancel}
             onCropComplete={onCropComplete}
+          />
+        )}
+        {showMultiImageCropModal && (
+          <MultiImageCropModal
+            isOpen={showMultiImageCropModal}
+            files={multiImageCropFiles}
+            fieldName={multiImageCropFieldName}
+            onSave={handleMultiImageCropSave}
+            onClose={() => {
+              setShowMultiImageCropModal(false);
+              setMultiImageCropFiles([]);
+              setMultiImageCropFieldName(null);
+            }}
           />
         )}
         {showFileUploadModal && (

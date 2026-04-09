@@ -711,7 +711,7 @@ exports.getPucExpiryReminders = async (req, res) => {
     }
 
     const pucRecords = await PUC.find(pucBase)
-      .select("regNo vehicleRegNo personName personPhone brand vehicleModel pucExpiry pucExpiryDate")
+      .select("regNo vehicleRegNo personName personPhone personAlternateNo brand vehicleModel pucExpiry pucExpiryDate")
       .sort({ pucExpiry: 1, pucExpiryDate: 1 })
       .limit(numericLimit * 2)
       .lean();
@@ -734,26 +734,28 @@ exports.getPucExpiryReminders = async (req, res) => {
       }
     }
 
-    const finalData = pucRecords.map((p) => {
-      const regNo = (p.vehicleRegNo || p.regNo || "").trim();
-      const regKey = regNo.toLowerCase();
-      const sell = sellLetterMap[regKey];
-      const expiry = p.pucExpiry || p.pucExpiryDate;
-      return {
-        _id: p._id,
-        source: sell ? "Sold Vehicle" : "PUC Record",
-        type: sell ? "sold_vehicle" : "puc_model",
-        displayReg: regNo || p.regNo,
-        displayName: sell ? sell.buyerName : p.personName,
-        displayPhone: sell ? sell.buyerPhone : p.personPhone,
-        displayVehicle: sell
-          ? `${sell.vehicleName || ""} ${sell.vehicleModel || ""}`.trim()
-          : `${p.brand || ""} ${p.vehicleModel || ""}`.trim(),
-        displayExpiry: expiry,
-        // expose the master PUC id so frontend can deep-link to PUC module
-        pucId: p._id,
-      };
-    });
+    const finalData = pucRecords
+      .map((p) => {
+        const regNo = (p.vehicleRegNo || p.regNo || "").trim();
+        const regKey = regNo.toLowerCase();
+        const sell = sellLetterMap[regKey];
+        const expiry = p.pucExpiry || p.pucExpiryDate;
+        return {
+          _id: p._id,
+          source: sell ? "Sold Vehicle" : "PUC Record",
+          type: sell ? "sold_vehicle" : "puc_model",
+          displayReg: regNo || p.regNo,
+          displayName: sell ? sell.buyerName : p.personName,
+          displayPhone: sell ? sell.buyerPhone : p.personPhone,
+          displayVehicle: sell
+            ? `${sell.vehicleName || ""} ${sell.vehicleModel || ""}`.trim()
+            : `${p.brand || ""} ${p.vehicleModel || ""}`.trim(),
+          displayExpiry: expiry,
+          // expose the master PUC id so frontend can deep-link to PUC module
+          pucId: p._id,
+        };
+      })
+      .filter((item) => item.type === "sold_vehicle"); // Only show sold vehicles
 
     finalData.sort((a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry));
     const sliced = finalData.slice(0, numericLimit);
@@ -801,7 +803,7 @@ exports.getInsuranceExpiryReminders = async (req, res) => {
     }
 
     const insRecords = await Insurance.find(insBase)
-      .select("regNo vehicleRegNo personName personPhone brand vehicleModel insuranceExpiry insuranceExpiryDate insuranceCompany")
+      .select("regNo vehicleRegNo personName personPhone personAlternateNo brand vehicleModel insuranceExpiry insuranceExpiryDate insuranceCompany")
       .sort({ insuranceExpiry: 1, insuranceExpiryDate: 1 })
       .limit(numericLimit * 2)
       .lean();
@@ -823,27 +825,29 @@ exports.getInsuranceExpiryReminders = async (req, res) => {
       }
     }
 
-    const finalData = insRecords.map((ins) => {
-      const regNo = (ins.vehicleRegNo || ins.regNo || "").trim();
-      const regKey = regNo.toLowerCase();
-      const sell = sellLetterMap[regKey];
-      const expiry = ins.insuranceExpiry || ins.insuranceExpiryDate;
-      return {
-        _id: ins._id,
-        source: sell ? "Sold Vehicle" : "Insurance Record",
-        type: sell ? "sold_vehicle" : "insurance_model",
-        displayReg: regNo || ins.regNo,
-        displayName: sell ? sell.buyerName : ins.personName,
-        displayPhone: sell ? sell.buyerPhone : ins.personPhone,
-        displayVehicle: sell
-          ? `${sell.vehicleName || ""} ${sell.vehicleModel || ""}`.trim()
-          : `${ins.brand || ""} ${ins.vehicleModel || ""}`.trim(),
-        displayExpiry: expiry,
-        displayCompany: ins.insuranceCompany,
-        // expose master Insurance id so frontend can deep-link to Insurance module
-        insuranceId: ins._id,
-      };
-    });
+    const finalData = insRecords
+      .map((ins) => {
+        const regNo = (ins.vehicleRegNo || ins.regNo || "").trim();
+        const regKey = regNo.toLowerCase();
+        const sell = sellLetterMap[regKey];
+        const expiry = ins.insuranceExpiry || ins.insuranceExpiryDate;
+        return {
+          _id: ins._id,
+          source: sell ? "Sold Vehicle" : "Insurance Record",
+          type: sell ? "sold_vehicle" : "insurance_model",
+          displayReg: regNo || ins.regNo,
+          displayName: sell ? sell.buyerName : ins.personName,
+          displayPhone: sell ? sell.buyerPhone : ins.personPhone,
+          displayVehicle: sell
+            ? `${sell.vehicleName || ""} ${sell.vehicleModel || ""}`.trim()
+            : `${ins.brand || ""} ${ins.vehicleModel || ""}`.trim(),
+          displayExpiry: expiry,
+          displayCompany: ins.insuranceCompany,
+          // expose master Insurance id so frontend can deep-link to Insurance module
+          insuranceId: ins._id,
+        };
+      })
+      .filter((item) => item.type === "sold_vehicle"); // Only show sold vehicles
 
     finalData.sort((a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry));
     const sliced = finalData.slice(0, numericLimit);

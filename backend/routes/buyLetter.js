@@ -44,6 +44,7 @@ router.post("/generate-pdf", protect, async (req, res) => {
 });
 
 router.route("/").post(createBuyLetter).get(getBuyLetters);
+router.route("/all").get(getBuyLetters);
 router.route("/by-registration").get(getBuyLettersByRegistration);
 
 router

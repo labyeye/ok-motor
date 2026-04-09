@@ -1585,6 +1585,7 @@ const AdminPage = () => {
               displayReg: item.regNo,
               displayName: item.personName,
               displayPhone: item.personPhone,
+              displayPersonAlternateNo: item.personAlternateNo,
               displayVehicle:
                 `${item.brand || ""} ${item.vehicleModel || ""}`.trim(),
               displayExpiry: item.pucExpiry,
@@ -1900,6 +1901,7 @@ const AdminPage = () => {
                       "Registration",
                       "Name",
                       "Phone",
+                      "Alternate Phone",
                       "Vehicle",
                       "PUC Expiry",
                       "Days Left",
@@ -1972,6 +1974,9 @@ const AdminPage = () => {
                           </td>
                           <td style={{ ...tTdStyle, color: "#475569" }}>
                             {row.displayPhone || "—"}
+                          </td>
+                          <td style={{ ...tTdStyle, color: "#64748b" }}>
+                            {row.displayPersonAlternateNo || "—"}
                           </td>
                           <td style={tTdStyle}>{row.displayVehicle || "—"}</td>
                           <td style={tTdStyle}>
@@ -2162,6 +2167,7 @@ const AdminPage = () => {
               displayReg: item.regNo,
               displayName: item.personName,
               displayPhone: item.personPhone,
+              displayPersonAlternateNo: item.personAlternateNo,
               displayVehicle:
                 `${item.brand || ""} ${item.vehicleModel || ""}`.trim(),
               displayExpiry: item.insuranceExpiry,
@@ -2490,6 +2496,7 @@ const AdminPage = () => {
                       "Registration",
                       "Name",
                       "Phone",
+                      "Alternate Phone",
                       "Vehicle",
                       "Insurance Expiry",
                       "Days Left",
@@ -2561,6 +2568,9 @@ const AdminPage = () => {
                           </td>
                           <td style={{ ...iTdStyle, color: "#475569" }}>
                             {row.displayPhone || "—"}
+                          </td>
+                          <td style={{ ...iTdStyle, color: "#64748b" }}>
+                            {row.displayPersonAlternateNo || "—"}
                           </td>
                           <td style={iTdStyle}>{row.displayVehicle || "—"}</td>
                           <td style={iTdStyle}>

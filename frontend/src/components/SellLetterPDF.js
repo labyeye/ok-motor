@@ -25,6 +25,7 @@ import logo1 from "../images/okmotorback.png";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import ImageCropper from "./ImageCropper";
+import MultiImageCropModal from "./MultiImageCropModal";
 import FileUploadModal from "./FileUploadModal";
 import PdfPreview from "./PdfPreview";
 import {
@@ -133,6 +134,7 @@ const SellLetterForm = () => {
           witnessName: "",
           witnessPhone: "",
           documentsVerified: true,
+          transferReceiptAgent: "",
           note: "",
         },
   );
@@ -151,6 +153,7 @@ const SellLetterForm = () => {
 
     insuranceCertificate: [],
     vehicleNOC: [],
+    transferReceipt: [],
   });
   const [filePreviews, setFilePreviews] = useState({});
   const [deletedDocuments, setDeletedDocuments] = useState(new Set());
@@ -163,6 +166,10 @@ const SellLetterForm = () => {
   const [cropImageSrc, setCropImageSrc] = useState(null);
   const [cropFieldName, setCropFieldName] = useState(null);
   const [cropFileName, setCropFileName] = useState(null);
+
+  const [showMultiImageCropModal, setShowMultiImageCropModal] = useState(false);
+  const [multiImageCropFiles, setMultiImageCropFiles] = useState([]);
+  const [multiImageCropFieldName, setMultiImageCropFieldName] = useState(null);
 
   const [showImagePreviewModal, setShowImagePreviewModal] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState(null);
@@ -289,6 +296,8 @@ const SellLetterForm = () => {
           saleTime: full.saleTime || getCurrentTime(),
           todayTime: full.todayTime || getCurrentTime(),
           previousTime: full.previousTime || getCurrentTime(),
+          transferReceiptAgent:
+            full?.documents?.transferReceipt?.agentName || "",
         };
 
         setFormData((prev) => ({ ...prev, ...normalized }));
@@ -355,6 +364,17 @@ const SellLetterForm = () => {
               : [];
           if (nocPages.length) {
             previews.vehicleNOC = nocPages;
+          }
+
+          const transferReceiptPages = Array.isArray(
+            full.documents.transferReceipt?.pages,
+          )
+            ? full.documents.transferReceipt.pages
+            : Array.isArray(full.documents.transferReceipt)
+              ? full.documents.transferReceipt
+              : [];
+          if (transferReceiptPages.length) {
+            previews.transferReceipt = transferReceiptPages;
           }
 
           setFilePreviews((prev) => ({ ...prev, ...previews }));
@@ -540,7 +560,7 @@ const SellLetterForm = () => {
     setUploadModalAllowMultiple(
       fieldName === "insuranceCertificate" ||
         fieldName === "vehicleNOC" ||
-        fieldName === "vehicleNOC",
+        fieldName === "transferReceipt",
     );
     setShowFileUploadModal(true);
   };
@@ -580,6 +600,7 @@ const SellLetterForm = () => {
         if (multiFields.includes(uploadModalFieldName)) {
           const filesArr = file;
 
+          // If single image, crop it alone
           if (filesArr.length === 1 && isImageFile(filesArr[0])) {
             const singleImage = filesArr[0];
             const url = URL.createObjectURL(singleImage);
@@ -589,6 +610,18 @@ const SellLetterForm = () => {
             setShowFileUploadModal(false);
             setShowCropper(true);
             return;
+          }
+
+          // If multiple images, open multi-image crop modal
+          if (filesArr.length > 1) {
+            const imageFiles = filesArr.filter((f) => isImageFile(f));
+            if (imageFiles.length > 0) {
+              setMultiImageCropFiles(imageFiles);
+              setMultiImageCropFieldName(uploadModalFieldName);
+              setShowFileUploadModal(false);
+              setShowMultiImageCropModal(true);
+              return;
+            }
           }
 
           setFilesState((prev) => ({
@@ -766,7 +799,8 @@ const SellLetterForm = () => {
       }));
     } else if (
       cropFieldName === "insuranceCertificate" ||
-      cropFieldName === "vehicleNOC"
+      cropFieldName === "vehicleNOC" ||
+      cropFieldName === "transferReceipt"
     ) {
       // Handle multi-page documents - store as array
       setFilesState((prev) => ({
@@ -788,6 +822,39 @@ const SellLetterForm = () => {
     setCropImageSrc(null);
     setCropFieldName(null);
     setCropFileName(null);
+  };
+
+  const handleMultiImageCropSave = async (croppedFiles, fieldName) => {
+    if (!fieldName || !croppedFiles || croppedFiles.length === 0) {
+      return;
+    }
+
+    // Convert blob/File objects to File objects if needed
+    const finalFiles = croppedFiles.map((f, idx) => {
+      if (f instanceof File) {
+        return f;
+      }
+      // If it's a Blob, convert to File
+      return new File([f], `${fieldName}-${idx}.jpg`, { type: "image/jpeg" });
+    });
+
+    // Update filesState with array of files
+    setFilesState((prev) => ({
+      ...prev,
+      [fieldName]: finalFiles,
+    }));
+
+    // Create preview URLs
+    const previews = finalFiles.map((f) => URL.createObjectURL(f));
+
+    setFilePreviews((prev) => ({
+      ...prev,
+      [fieldName]: previews,
+    }));
+
+    setShowMultiImageCropModal(false);
+    setMultiImageCropFiles([]);
+    setMultiImageCropFieldName(null);
   };
 
   const removeVehiclePhoto = (index) => {
@@ -1339,6 +1406,14 @@ const SellLetterForm = () => {
     ) {
       preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
     }
+    if (
+      (!currentFilesState.transferReceipt ||
+        currentFilesState.transferReceipt.length === 0) &&
+      filePreviews.transferReceipt?.length &&
+      !deletedDocuments.has("transferReceipt")
+    ) {
+      preservedDocs.transferReceipt = filePreviews.transferReceipt;
+    }
 
     return preservedDocs;
   };
@@ -1508,7 +1583,8 @@ const SellLetterForm = () => {
         (filesState.vehiclePhotos && filesState.vehiclePhotos.length > 0) ||
         (filesState.insuranceCertificate &&
           filesState.insuranceCertificate.length > 0) ||
-        (filesState.vehicleNOC && filesState.vehicleNOC.length > 0);
+        (filesState.vehicleNOC && filesState.vehicleNOC.length > 0) ||
+        (filesState.transferReceipt && filesState.transferReceipt.length > 0);
 
       if (hasFiles) {
         const form = new FormData();
@@ -1590,6 +1666,13 @@ const SellLetterForm = () => {
           );
           for (const f of compressed) form.append("vehicleNOC", f);
           form.append("vehicleNOCUploadMode", "separate");
+        }
+        if (filesState.transferReceipt && filesState.transferReceipt.length) {
+          const compressed = await Promise.all(
+            filesState.transferReceipt.map((f) => compressImageFile(f)),
+          );
+          for (const f of compressed) form.append("transferReceipt", f);
+          form.append("transferReceiptUploadMode", "separate");
         }
 
         if (editLetter?._id && editLetter.documents) {
@@ -3090,7 +3173,6 @@ const SellLetterForm = () => {
                 </div>
               </div>
             </div>
-
             {}
             <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
@@ -4227,6 +4309,91 @@ const SellLetterForm = () => {
                       </div>
                     )}
                 </div>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>Transfer Receipt Pages</label>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleFileInput("transferReceipt", true)}
+                      style={styles.uploadBtn}
+                    >
+                      <Image size={20} />{" "}
+                      {filePreviews.transferReceipt ? "Change" : "Upload Pages"}
+                    </button>
+                    {filePreviews.transferReceipt && (
+                      <div style={{ fontSize: "14px", color: "#333" }}>
+                        {Array.isArray(filePreviews.transferReceipt)
+                          ? `${filePreviews.transferReceipt.length} page(s)`
+                          : "1 page"}
+                      </div>
+                    )}
+                    {filePreviews.transferReceipt && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilesState((prev) => ({
+                            ...prev,
+                            transferReceipt: [],
+                          }));
+                          setFilePreviews((prev) => ({
+                            ...prev,
+                            transferReceipt: null,
+                          }));
+                        }}
+                        style={{
+                          ...styles.uploadBtn,
+                          backgroundColor: "#ef4444",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {filePreviews.transferReceipt &&
+                    Array.isArray(filePreviews.transferReceipt) && (
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          marginTop: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {filePreviews.transferReceipt
+                          .slice(0, 6)
+                          .map((u, idx) => (
+                            <div key={idx}>
+                              {renderPreviewMedia(
+                                u,
+                                `transfer-receipt-${idx + 1}`,
+                                styles.previewImgSmall,
+                                true,
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    )}
+
+                  <div style={{ marginTop: 10 }}>
+                    <label style={styles.formLabel}>
+                      Transfer Agent Name || ट्रांसफर एजेंट का नाम
+                    </label>
+                    <input
+                      type="text"
+                      name="transferReceiptAgent"
+                      value={formData.transferReceiptAgent || ""}
+                      onChange={handleChange}
+                      style={styles.formInput}
+                      placeholder="Agent name (optional)"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -4416,6 +4583,19 @@ const SellLetterForm = () => {
             imageSrc={cropImageSrc}
             onCancel={onCropCancel}
             onCropComplete={onCropComplete}
+          />
+        )}
+        {showMultiImageCropModal && (
+          <MultiImageCropModal
+            isOpen={showMultiImageCropModal}
+            files={multiImageCropFiles}
+            fieldName={multiImageCropFieldName}
+            onSave={handleMultiImageCropSave}
+            onClose={() => {
+              setShowMultiImageCropModal(false);
+              setMultiImageCropFiles([]);
+              setMultiImageCropFieldName(null);
+            }}
           />
         )}
         {showFileUploadModal && (

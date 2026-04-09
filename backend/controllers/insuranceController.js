@@ -40,7 +40,8 @@ const syncInsuranceToLetters = async (insDoc) => {
 
   const insFields = {
     insuranceCompany: insDoc.insuranceCompany,
-    insurancePolicyNumber: insDoc.insurancePolicyNumber || insDoc.insurancePolicyNo,
+    insurancePolicyNumber:
+      insDoc.insurancePolicyNumber || insDoc.insurancePolicyNo,
     insuranceExpiryDate: insDoc.insuranceExpiryDate || insDoc.insuranceExpiry,
     insuranceStatus: insDoc.insuranceStatus,
     insuranceId: insDoc._id,
@@ -51,10 +52,7 @@ const syncInsuranceToLetters = async (insDoc) => {
       { registrationNumber: regRegex },
       { $set: insFields },
     ),
-    BuyLetter.updateMany(
-      { registrationNumber: regRegex },
-      { $set: insFields },
-    ),
+    BuyLetter.updateMany({ registrationNumber: regRegex }, { $set: insFields }),
   ]);
 };
 
@@ -141,10 +139,17 @@ exports.updateInsurance = async (req, res) => {
 
     const normalizedPayload = normalizeInsurancePayload(req.body);
 
+    // Add version tracking metadata
+    const editedDate = new Date();
+    normalizedPayload.editedAt = editedDate;
+    normalizedPayload.editedBy = req.user?.id || null;
+    normalizedPayload.version = (insurance.version || 1) + 1;
+    normalizedPayload.previousVersionId = insurance._id;
+
     const updatedInsurance = await Insurance.findByIdAndUpdate(
       req.params.id,
       normalizedPayload,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     // Propagate changes to SellLetter & BuyLetter (keep stale copies in sync)
@@ -201,11 +206,12 @@ exports.upsertInsuranceByVehicle = async (req, res) => {
       user: req.user?.id,
     };
 
-    const insurance = await Insurance.findOneAndUpdate(
-      { vehicleRegNo },
-      data,
-      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
-    );
+    const insurance = await Insurance.findOneAndUpdate({ vehicleRegNo }, data, {
+      new: true,
+      upsert: true,
+      runValidators: true,
+      setDefaultsOnInsert: true,
+    });
 
     // Propagate changes to SellLetter & BuyLetter
     try {

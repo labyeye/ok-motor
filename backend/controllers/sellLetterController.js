@@ -18,6 +18,7 @@ const stripBuyOnlyDocuments = (docs) => {
     vehicleRCUploadMode: docs.vehicleRCUploadMode || undefined,
     insuranceCertificate: docs.insuranceCertificate || undefined,
     vehicleNOC: docs.vehicleNOC || undefined,
+    transferReceipt: docs.transferReceipt || undefined,
   };
 };
 
@@ -67,6 +68,12 @@ const mergeMissingSellDocumentsIntoBuy = (target, source) => {
         ? [...target.vehicleNOC.pages]
         : [],
     },
+    transferReceipt: {
+      ...(target.transferReceipt || {}),
+      pages: Array.isArray(target.transferReceipt?.pages)
+        ? [...target.transferReceipt.pages]
+        : [],
+    },
   };
 
   if (!hasText(merged.vehicleRC.front) && hasText(source.vehicleRC?.front)) {
@@ -95,6 +102,18 @@ const mergeMissingSellDocumentsIntoBuy = (target, source) => {
       : [];
   if (!hasArray(merged.vehicleNOC.pages) && hasArray(sourceNocPages)) {
     merged.vehicleNOC.pages = [...sourceNocPages];
+  }
+
+  const sourceTransferPages = Array.isArray(source.transferReceipt?.pages)
+    ? source.transferReceipt.pages
+    : Array.isArray(source.transferReceipt)
+      ? source.transferReceipt
+      : [];
+  if (
+    !hasArray(merged.transferReceipt.pages) &&
+    hasArray(sourceTransferPages)
+  ) {
+    merged.transferReceipt.pages = [...sourceTransferPages];
   }
 
   return merged;
@@ -137,6 +156,7 @@ exports.createSellLetter = [
     // new multi-page document fields
     { name: "insuranceCertificate", maxCount: 50 },
     { name: "vehicleNOC", maxCount: 50 },
+    { name: "transferReceipt", maxCount: 50 },
   ]),
   async (req, res) => {
     try {
@@ -335,6 +355,7 @@ exports.createSellLetter = [
         vehiclePhotos: [],
         insuranceCertificate: { pages: [] },
         vehicleNOC: { pages: [] },
+        transferReceipt: { pages: [] },
       };
 
       // Parse existingDocuments (full previous documents object — ultimate fallback)
@@ -372,11 +393,24 @@ exports.createSellLetter = [
           if (p.vehicleNOC && Array.isArray(p.vehicleNOC)) {
             uploadedUrls.vehicleNOC.pages = [...p.vehicleNOC];
           }
+          if (p.transferReceipt && Array.isArray(p.transferReceipt)) {
+            uploadedUrls.transferReceipt.pages = [...p.transferReceipt];
+          }
+          if (p.transferReceiptAgent) {
+            uploadedUrls.transferReceipt.agentName = p.transferReceiptAgent;
+          }
+          if (p.transferReceipt && Array.isArray(p.transferReceipt)) {
+            uploadedUrls.transferReceipt.pages = [...p.transferReceipt];
+          }
         } else if (existingDocuments && !req.body.existingDocuments) {
           // No preservedDocs AND no existingDocuments in request = skip fallback
           // (preservedDocuments was explicitly sent as empty, so use only new uploads)
           // Do nothing - only use newly uploaded files
-        } else if (existingDocuments && req.body.existingDocuments && !req.body.preservedDocuments) {
+        } else if (
+          existingDocuments &&
+          req.body.existingDocuments &&
+          !req.body.preservedDocuments
+        ) {
           // Backward compatibility: only use fallback if NO preservedDocuments was sent at all
           // No individual preservedDocs sent — populate from full existingDocuments
           const ed = existingDocuments;
@@ -397,6 +431,13 @@ exports.createSellLetter = [
             ];
           if (ed.vehicleNOC?.pages?.length)
             uploadedUrls.vehicleNOC.pages = [...ed.vehicleNOC.pages];
+          if (ed.transferReceipt?.pages?.length)
+            uploadedUrls.transferReceipt.pages = [...ed.transferReceipt.pages];
+          if (ed.transferReceipt?.agentName)
+            uploadedUrls.transferReceipt.agentName =
+              ed.transferReceipt.agentName;
+          if (ed.transferReceipt?.pages?.length)
+            uploadedUrls.transferReceipt.pages = [...ed.transferReceipt.pages];
         }
       } catch (e) {
         console.error("Error parsing preservedDocuments:", e);
@@ -526,31 +567,44 @@ exports.createSellLetter = [
         if (signedDocSell !== null) uploadedUrls.signedDocSell = signedDocSell;
 
         // Run all multi-file group uploads in parallel
-        const [vehiclePhotos, insuranceCertPages, nocPages, buyReceiptPages] =
-          await Promise.all([
-            files.vehiclePhotos?.length
-              ? Promise.all(
-                  files.vehiclePhotos
-                    .slice(0, 10)
-                    .map((f, i) => processFile(f, `vehicle-photo-${i}`)),
-                )
-              : Promise.resolve(null),
-            files.insuranceCertificate?.length
-              ? processMultiFileGroup(
-                  files.insuranceCertificate,
-                  "insurance-certificate",
-                  200,
-                )
-              : Promise.resolve(null),
-            files.vehicleNOC?.length
-              ? processMultiFileGroup(files.vehicleNOC, "vehicle-noc", 200)
-              : Promise.resolve(null),
-          ]);
+        const [
+          vehiclePhotos,
+          insuranceCertPages,
+          nocPages,
+          transferReceiptPages,
+        ] = await Promise.all([
+          files.vehiclePhotos?.length
+            ? Promise.all(
+                files.vehiclePhotos
+                  .slice(0, 10)
+                  .map((f, i) => processFile(f, `vehicle-photo-${i}`)),
+              )
+            : Promise.resolve(null),
+          files.insuranceCertificate?.length
+            ? processMultiFileGroup(
+                files.insuranceCertificate,
+                "insurance-certificate",
+                200,
+              )
+            : Promise.resolve(null),
+          files.vehicleNOC?.length
+            ? processMultiFileGroup(files.vehicleNOC, "vehicle-noc", 200)
+            : Promise.resolve(null),
+          files.transferReceipt?.length
+            ? processMultiFileGroup(
+                files.transferReceipt,
+                "transfer-receipt",
+                200,
+              )
+            : Promise.resolve(null),
+        ]);
 
         if (vehiclePhotos !== null) uploadedUrls.vehiclePhotos = vehiclePhotos;
         if (insuranceCertPages !== null)
           uploadedUrls.insuranceCertificate.pages.push(...insuranceCertPages);
         if (nocPages !== null) uploadedUrls.vehicleNOC.pages.push(...nocPages);
+        if (transferReceiptPages !== null)
+          uploadedUrls.transferReceipt.pages.push(...transferReceiptPages);
       } catch (uploadErr) {
         console.error("Image upload failed, aborting create:", uploadErr);
         return res
@@ -589,6 +643,16 @@ exports.createSellLetter = [
           ed.vehicleNOC?.pages?.length
         )
           uploadedUrls.vehicleNOC.pages = [...ed.vehicleNOC.pages];
+        if (
+          !uploadedUrls.transferReceipt.pages?.length &&
+          ed.transferReceipt?.pages?.length
+        )
+          uploadedUrls.transferReceipt.pages = [...ed.transferReceipt.pages];
+        if (
+          !uploadedUrls.transferReceipt.agentName &&
+          ed.transferReceipt?.agentName
+        )
+          uploadedUrls.transferReceipt.agentName = ed.transferReceipt.agentName;
       }
 
       sellLetterData.documents = {
@@ -616,8 +680,24 @@ exports.createSellLetter = [
           bodyData.vehicleNOCUploadMode ||
           existingDocuments?.vehicleNOCUploadMode ||
           "separate",
+        transferReceipt: uploadedUrls.transferReceipt,
+        transferReceiptUploadMode:
+          bodyData.transferReceiptUploadMode ||
+          existingDocuments?.transferReceiptUploadMode ||
+          "separate",
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };
+
+      // prefer explicit agent name from request body to override preserved/existing
+      try {
+        sellLetterData.documents.transferReceipt = sellLetterData.documents
+          .transferReceipt || { pages: [] };
+        sellLetterData.documents.transferReceipt.agentName =
+          bodyData.transferReceiptAgent ||
+          sellLetterData.documents.transferReceipt.agentName ||
+          existingDocuments?.transferReceipt?.agentName ||
+          null;
+      } catch (e) {}
 
       const hasText = (v) => typeof v === "string" && v.trim().length > 0;
       const hasArray = (v) => Array.isArray(v) && v.length > 0;
@@ -740,8 +820,11 @@ exports.createSellLetter = [
         // Only merge from previous version if NO preservedDocuments was sent
         // If preservedDocuments was sent, it means user explicitly chose which docs to keep
         const shouldMergePreviousDocs = !req.body.preservedDocuments;
-        
-        if ((!hasDocs || sellLetterData.previousVersionId || regNo) && shouldMergePreviousDocs) {
+
+        if (
+          (!hasDocs || sellLetterData.previousVersionId || regNo) &&
+          shouldMergePreviousDocs
+        ) {
           if (sellLetterData.previousVersionId) {
             const previousSell = await SellLetter.findById(
               sellLetterData.previousVersionId,

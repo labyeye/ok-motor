@@ -20,6 +20,7 @@ const PUCForm = () => {
   const [formData, setFormData] = useState({
     personName: "",
     personPhone: "",
+    personAlternateNo: "",
     personEmail: "",
     vehicleModel: "",
     brand: "",
@@ -99,6 +100,11 @@ const PUCForm = () => {
           insData.personPhone ||
           vehicleData.personPhone ||
           prev.personPhone,
+        personAlternateNo:
+          pucData.personAlternateNo ||
+          insData.personAlternateNo ||
+          vehicleData.personAlternateNo ||
+          prev.personAlternateNo,
         personEmail:
           pucData.personEmail ||
           insData.personEmail ||
@@ -156,6 +162,7 @@ const PUCForm = () => {
       const payload = {
         personName: formData.personName,
         personPhone: formData.personPhone,
+        personAlternateNo: formData.personAlternateNo,
         personEmail: formData.personEmail,
         vehicleModel: formData.vehicleModel,
         brand: formData.brand,
@@ -192,6 +199,7 @@ const PUCForm = () => {
       setFormData({
         personName: "",
         personPhone: "",
+        personAlternateNo: "",
         vehicleModel: "",
         brand: "",
         year: "",
@@ -501,6 +509,17 @@ const PUCForm = () => {
                   type="text"
                   name="personPhone"
                   value={formData.personPhone}
+                  onChange={handleChange}
+                  style={styles.input}
+                  placeholder="9876543210"
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Alternate Phone</label>
+                <input
+                  type="text"
+                  name="personAlternateNo"
+                  value={formData.personAlternateNo}
                   onChange={handleChange}
                   style={styles.input}
                   placeholder="9876543210"
