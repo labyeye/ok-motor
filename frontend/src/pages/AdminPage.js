@@ -1536,6 +1536,13 @@ const AdminPage = () => {
               : resBuy.data?.buyLetters || [];
           }
 
+          // Build map: regNo -> master PUC record to find the real ID
+          const masterPucMap = new Map();
+          pucRecords.forEach((p) => {
+            const key = (p.regNo || p.vehicleRegNo || "").trim().toLowerCase();
+            if (key) masterPucMap.set(key, p);
+          });
+
           // Build map: regNo -> sell letter (only those with pucExpiryDate)
           const sellByReg = new Map();
           sellLetters.forEach((s) => {
@@ -1547,8 +1554,10 @@ const AdminPage = () => {
           // Rows from sell letters that have a PUC expiry date → "Sold Vehicle"
           const sellRows = [];
           sellByReg.forEach((s, key) => {
+            const masterPuc = masterPucMap.get(key);
             sellRows.push({
               ...s,
+              pucId: masterPuc ? masterPuc._id : s.pucId,
               _id: s._id,
               type: "sold_vehicle",
               source: "Sold Vehicle",
@@ -2117,6 +2126,13 @@ const AdminPage = () => {
               : resBuy.data?.buyLetters || [];
           }
 
+          // Build map: regNo -> master Insurance record to find the real ID
+          const masterInsuranceMap = new Map();
+          insuranceRecords.forEach((p) => {
+            const key = (p.regNo || p.vehicleRegNo || "").trim().toLowerCase();
+            if (key) masterInsuranceMap.set(key, p);
+          });
+
           // Build map: regNo -> sell letter (only those with insuranceExpiryDate)
           const sellByReg = new Map();
           sellLetters.forEach((s) => {
@@ -2127,9 +2143,11 @@ const AdminPage = () => {
 
           // Rows from sell letters that have an insurance expiry date → "Sold Vehicle"
           const sellRows = [];
-          sellByReg.forEach((s) => {
+          sellByReg.forEach((s, key) => {
+            const masterIns = masterInsuranceMap.get(key);
             sellRows.push({
               ...s,
+              insuranceId: masterIns ? masterIns._id : s.insuranceId,
               _id: s._id,
               type: "sold_vehicle",
               source: "Sold Vehicle",
