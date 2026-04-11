@@ -7,6 +7,7 @@ import {
   Edit,
   Trash2,
   X,
+  Check,
   RefreshCw,
   Eye,
 } from "lucide-react";
@@ -4174,156 +4175,252 @@ const SellLetterHistory = () => {
                                   </>
                                 )}
                               </td>
-                              {letter.version > 1 && (
-                                <tr
+                            </tr>
+                            <tr style={{ backgroundColor: "#f8fafc" }}>
+                              <td
+                                colSpan="8"
+                                style={{
+                                  padding: "10px 16px",
+                                  borderBottom: "1px solid #e2e8f0",
+                                }}
+                              >
+                                <div
                                   style={{
-                                    backgroundColor:
-                                      changes && changes.length > 0
-                                        ? "#ffffff"
-                                        : "#ffffff",
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    gap: "12px",
+                                    alignItems: "center",
                                   }}
                                 >
-                                  <td
-                                    colSpan="8"
+                                  <span
                                     style={{
-                                      padding: "12px 16px",
-                                      borderBottom: "1px solid #e2e8f0",
+                                      fontWeight: "600",
+                                      fontSize: "0.85rem",
+                                      color: "#475569",
+                                      marginRight: "4px",
                                     }}
                                   >
-                                    <div style={{ fontSize: "0.85rem" }}>
+                                    Document Status:
+                                  </span>
+                                  {[
+                                    {
+                                      label: "RC",
+                                      exists:
+                                        letter.documents?.vehicleRC?.front ||
+                                        letter.documents?.vehicleRC?.back,
+                                    },
+                                    {
+                                      label: "Aadhaar",
+                                      exists:
+                                        letter.documents?.aadhaar?.front ||
+                                        letter.documents?.aadhaar?.back,
+                                    },
+                                    {
+                                      label: "PAN",
+                                      exists: letter.documents?.pan,
+                                    },
+                                    {
+                                      label: "Photo",
+                                      exists:
+                                        letter.documents?.deliveryPhoto ||
+                                        letter.documents?.vehicleKM ||
+                                        letter.documents?.vehiclePhotos
+                                          ?.length > 0,
+                                    },
+                                    {
+                                      label: "Signed Doc",
+                                      exists: letter.documents?.signedDocSell,
+                                    },
+                                    {
+                                      label: "Insurance",
+                                      exists:
+                                        letter.documents?.insuranceCertificate,
+                                    },
+                                    {
+                                      label: "NOC",
+                                      exists: letter.documents?.vehicleNOC,
+                                    },
+                                    {
+                                      label: "Transfer",
+                                      exists: letter.documents?.transferReceipt,
+                                    },
+                                  ].map((doc, idx) => (
+                                    <div
+                                      key={idx}
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "4px",
+                                        padding: "4px 8px",
+                                        backgroundColor: "#fff",
+                                        borderRadius: "6px",
+                                        border: "1px solid #e2e8f0",
+                                        fontSize: "0.8rem",
+                                        color: doc.exists
+                                          ? "#16a34a"
+                                          : "#dc2626",
+                                        fontWeight: "500",
+                                      }}
+                                    >
+                                      {doc.exists ? (
+                                        <Check size={14} strokeWidth={3} />
+                                      ) : (
+                                        <X size={14} strokeWidth={3} />
+                                      )}
+                                      {doc.label}
+                                    </div>
+                                  ))}
+                                </div>
+                              </td>
+                            </tr>
+                            {letter.version > 1 && (
+                              <tr
+                                style={{
+                                  backgroundColor:
+                                    changes && changes.length > 0
+                                      ? "#ffffff"
+                                      : "#ffffff",
+                                }}
+                              >
+                                <td
+                                  colSpan="8"
+                                  style={{
+                                    padding: "12px 16px",
+                                    borderBottom: "1px solid #e2e8f0",
+                                  }}
+                                >
+                                  <div style={{ fontSize: "0.85rem" }}>
+                                    <div
+                                      style={{
+                                        fontWeight: "600",
+                                        color:
+                                          changes && changes.length > 0
+                                            ? "#f57c00"
+                                            : "#757575",
+                                        marginBottom: "12px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                      }}
+                                    >
+                                      <RefreshCw size={14} />
+                                      Changes from previous version:
+                                    </div>
+                                    {changes && changes.length > 0 ? (
                                       <div
                                         style={{
-                                          fontWeight: "600",
-                                          color:
-                                            changes && changes.length > 0
-                                              ? "#f57c00"
-                                              : "#757575",
-                                          marginBottom: "12px",
                                           display: "flex",
-                                          alignItems: "center",
-                                          gap: "6px",
+                                          flexDirection: "column",
+                                          gap: "12px",
                                         }}
                                       >
-                                        <RefreshCw size={14} />
-                                        Changes from previous version:
-                                      </div>
-                                      {changes && changes.length > 0 ? (
-                                        <div
-                                          style={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            gap: "12px",
-                                          }}
-                                        >
-                                          {groupChangesByCategory(changes).map(
-                                            ([category, categoryChanges]) => (
+                                        {groupChangesByCategory(changes).map(
+                                          ([category, categoryChanges]) => (
+                                            <div
+                                              key={category}
+                                              style={{
+                                                backgroundColor: "#fafafa",
+                                                borderLeft: "3px solid #f57c00",
+                                                borderRadius: "4px",
+                                                padding: "10px 12px",
+                                              }}
+                                            >
                                               <div
-                                                key={category}
                                                 style={{
-                                                  backgroundColor: "#fafafa",
-                                                  borderLeft:
-                                                    "3px solid #f57c00",
-                                                  borderRadius: "4px",
-                                                  padding: "10px 12px",
+                                                  fontWeight: "700",
+                                                  color: "#f57c00",
+                                                  fontSize: "0.9rem",
+                                                  marginBottom: "8px",
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  gap: "4px",
                                                 }}
                                               >
-                                                <div
-                                                  style={{
-                                                    fontWeight: "700",
-                                                    color: "#f57c00",
-                                                    fontSize: "0.9rem",
-                                                    marginBottom: "8px",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "4px",
-                                                  }}
-                                                >
-                                                  📋 {category}
-                                                </div>
-                                                <div
-                                                  style={{
-                                                    display: "grid",
-                                                    gridTemplateColumns:
-                                                      "repeat(auto-fit, minmax(280px, 1fr))",
-                                                    gap: "8px",
-                                                  }}
-                                                >
-                                                  {categoryChanges.map(
-                                                    (change, idx) => (
+                                                📋 {category}
+                                              </div>
+                                              <div
+                                                style={{
+                                                  display: "grid",
+                                                  gridTemplateColumns:
+                                                    "repeat(auto-fit, minmax(280px, 1fr))",
+                                                  gap: "8px",
+                                                }}
+                                              >
+                                                {categoryChanges.map(
+                                                  (change, idx) => (
+                                                    <div
+                                                      key={idx}
+                                                      style={{
+                                                        padding: "8px 10px",
+                                                        backgroundColor:
+                                                          "#ffffff",
+                                                        borderRadius: "4px",
+                                                        border:
+                                                          "1px solid #ffe0b2",
+                                                      }}
+                                                    >
                                                       <div
-                                                        key={idx}
                                                         style={{
-                                                          padding: "8px 10px",
-                                                          backgroundColor:
-                                                            "#ffffff",
-                                                          borderRadius: "4px",
-                                                          border:
-                                                            "1px solid #ffe0b2",
+                                                          fontWeight: "600",
+                                                          color: "#424242",
+                                                          marginBottom: "4px",
+                                                          fontSize: "0.85rem",
                                                         }}
                                                       >
-                                                        <div
-                                                          style={{
-                                                            fontWeight: "600",
-                                                            color: "#424242",
-                                                            marginBottom: "4px",
-                                                            fontSize: "0.85rem",
-                                                          }}
-                                                        >
-                                                          {change.field}:
-                                                        </div>
-                                                        <div
-                                                          style={{
-                                                            fontSize: "0.75rem",
-                                                            color: "#e53935",
-                                                            marginBottom: "2px",
-                                                          }}
-                                                        >
-                                                          <span
-                                                            style={{
-                                                              textDecoration:
-                                                                "line-through",
-                                                            }}
-                                                          >
-                                                            {change.oldValue}
-                                                          </span>
-                                                        </div>
-                                                        <div
-                                                          style={{
-                                                            fontSize: "0.75rem",
-                                                            color: "#43a047",
-                                                            fontWeight: "500",
-                                                          }}
-                                                        >
-                                                          ✓ {change.newValue}
-                                                        </div>
+                                                        {change.field}:
                                                       </div>
-                                                    ),
-                                                  )}
-                                                </div>
+                                                      <div
+                                                        style={{
+                                                          fontSize: "0.75rem",
+                                                          color: "#e53935",
+                                                          marginBottom: "2px",
+                                                        }}
+                                                      >
+                                                        <span
+                                                          style={{
+                                                            textDecoration:
+                                                              "line-through",
+                                                          }}
+                                                        >
+                                                          {change.oldValue}
+                                                        </span>
+                                                      </div>
+                                                      <div
+                                                        style={{
+                                                          fontSize: "0.75rem",
+                                                          color: "#43a047",
+                                                          fontWeight: "500",
+                                                        }}
+                                                      >
+                                                        ✓ {change.newValue}
+                                                      </div>
+                                                    </div>
+                                                  ),
+                                                )}
                                               </div>
-                                            ),
-                                          )}
-                                        </div>
-                                      ) : (
-                                        <div
-                                          style={{
-                                            padding: "8px 12px",
-                                            backgroundColor: "#ffffff",
-                                            borderRadius: "4px",
-                                            border: "1px solid #e0e0e0",
-                                            color: "#757575",
-                                            fontStyle: "italic",
-                                          }}
-                                        >
-                                          No changes detected from previous
-                                          version
-                                        </div>
-                                      )}
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-                            </tr>
+                                            </div>
+                                          ),
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <div
+                                        style={{
+                                          padding: "8px 12px",
+                                          backgroundColor: "#ffffff",
+                                          borderRadius: "4px",
+                                          border: "1px solid #e0e0e0",
+                                          color: "#757575",
+                                          fontStyle: "italic",
+                                        }}
+                                      >
+                                        No changes detected from previous
+                                        version
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
                           </React.Fragment>
                         );
                       })}

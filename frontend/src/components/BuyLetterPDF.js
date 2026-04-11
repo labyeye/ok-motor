@@ -2877,8 +2877,13 @@ const BuyLetterForm = () => {
     }
   };
   const handleInput = (e) => {
+    const start = e.target.selectionStart;
+    const end = e.target.selectionEnd;
     const { value } = e.target;
     e.target.value = value.toUpperCase();
+    if (start !== null && end !== null) {
+      e.target.setSelectionRange(start, end);
+    }
     handleChange(e);
   };
   const drawVehicleInvoice = async (page, pdfDoc) => {
@@ -3600,6 +3605,29 @@ const BuyLetterForm = () => {
               <h2 style={styles.sectionTitle}>
                 <Car style={styles.sectionIcon} /> Vehicle Information
               </h2>
+              <div style={styles.formField}>
+                <label style={styles.formLabel}>
+                  <Car style={styles.formIcon} />
+                  Registration Number || रजिस्ट्रेशन नंबर
+                </label>
+                <input
+                  type="text"
+                  name="registrationNumber"
+                  value={formData.registrationNumber}
+                  onChange={handleChange}
+                  onInput={handleInput}
+                  onFocus={() => setFocusedInput("registrationNumber")}
+                  onBlur={() => setFocusedInput(null)}
+                  style={{
+                    ...styles.formInput,
+                    ...(focusedInput === "registrationNumber"
+                      ? styles.inputFocused
+                      : {}),
+                  }}
+                  required
+                  maxLength={selectedLanguage === "hindi" ? 11 : 14}
+                />
+              </div>
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
@@ -3670,29 +3698,7 @@ const BuyLetterForm = () => {
                     maxLength={selectedLanguage === "hindi" ? 9 : 8}
                   />
                 </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Car style={styles.formIcon} />
-                    Registration Number || रजिस्ट्रेशन नंबर
-                  </label>
-                  <input
-                    type="text"
-                    name="registrationNumber"
-                    value={formData.registrationNumber}
-                    onChange={handleChange}
-                    onInput={handleInput}
-                    onFocus={() => setFocusedInput("registrationNumber")}
-                    onBlur={() => setFocusedInput(null)}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "registrationNumber"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                    required
-                    maxLength={selectedLanguage === "hindi" ? 11 : 14}
-                  />
-                </div>
+
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />

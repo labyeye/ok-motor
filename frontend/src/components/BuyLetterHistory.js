@@ -8,6 +8,7 @@ import {
   Edit,
   Trash2,
   X,
+  Check,
   RefreshCw,
   Eye,
 } from "lucide-react";
@@ -2278,6 +2279,104 @@ const BuyLetterHistory = () => {
                                     </button>
                                   </>
                                 )}
+                              </td>
+                            </tr>
+                            <tr style={{ backgroundColor: "#f8fafc" }}>
+                              <td
+                                colSpan="9"
+                                style={{
+                                  padding: "10px 16px",
+                                  borderBottom: "1px solid #e2e8f0",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    gap: "12px",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontWeight: "600",
+                                      fontSize: "0.85rem",
+                                      color: "#475569",
+                                      marginRight: "4px",
+                                    }}
+                                  >
+                                    Document Status:
+                                  </span>
+                                  {[
+                                    {
+                                      label: "RC",
+                                      exists:
+                                        letter.documents?.vehicleRC?.front ||
+                                        letter.documents?.vehicleRC?.back,
+                                    },
+                                    {
+                                      label: "Aadhaar",
+                                      exists:
+                                        letter.documents?.aadhaar?.front ||
+                                        letter.documents?.aadhaar?.back,
+                                    },
+                                    {
+                                      label: "PAN",
+                                      exists: letter.documents?.pan,
+                                    },
+                                    {
+                                      label: "Photo",
+                                      exists:
+                                        letter.documents?.deliveryPhoto ||
+                                        letter.documents?.vehicleKM ||
+                                        letter.documents?.vehiclePhotos
+                                          ?.length > 0,
+                                    },
+                                    {
+                                      label: "Signed Doc",
+                                      exists: letter.documents?.signedDocBuy,
+                                    },
+                                    {
+                                      label: "Insurance",
+                                      exists:
+                                        letter.documents?.insuranceCertificate,
+                                    },
+                                    {
+                                      label: "NOC",
+                                      exists: letter.documents?.vehicleNOC,
+                                    },
+                                    {
+                                      label: "Receipt",
+                                      exists:
+                                        letter.documents?.vehicleBuyReceipt,
+                                    },
+                                  ].map((doc, idx) => (
+                                    <div
+                                      key={idx}
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "4px",
+                                        padding: "4px 8px",
+                                        backgroundColor: "#fff",
+                                        borderRadius: "6px",
+                                        border: "1px solid #e2e8f0",
+                                        fontSize: "0.8rem",
+                                        color: doc.exists
+                                          ? "#16a34a"
+                                          : "#dc2626",
+                                        fontWeight: "500",
+                                      }}
+                                    >
+                                      {doc.exists ? (
+                                        <Check size={14} strokeWidth={3} />
+                                      ) : (
+                                        <X size={14} strokeWidth={3} />
+                                      )}
+                                      {doc.label}
+                                    </div>
+                                  ))}
+                                </div>
                               </td>
                             </tr>
                             {letter.version > 1 && (
