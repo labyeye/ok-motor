@@ -1,12 +1,7 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import {
-  User,
-  Mail,
-  Lock,
-  Users,
-} from "lucide-react";
+import { User, Mail, Lock, Users } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 

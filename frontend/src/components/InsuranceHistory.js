@@ -292,8 +292,6 @@ const InsuranceHistory = () => {
       (item.personName || "").toLowerCase().includes(q);
     if (!matchesSearch) return false;
 
-
-
     // Expiry date filter
     const eFilter = filters.expiry;
     if (eFilter && eFilter.op) {
@@ -412,7 +410,6 @@ const InsuranceHistory = () => {
                         }}
                       >
                         <span>Company</span>
-                        
                       </div>
                     </th>
                     <th style={styles.tableHeader}>
@@ -425,7 +422,13 @@ const InsuranceHistory = () => {
                         }}
                       >
                         <span>Expiry Date</span>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
                           <select
                             value={filters.expiryTone || "all"}
                             onChange={(e) =>
@@ -488,7 +491,9 @@ const InsuranceHistory = () => {
                                   ? styles.expiryBadgeSoon
                                   : styles.expiryBadgeHealthy;
                           return (
-                            <span style={{ ...styles.expiryBadge, ...toneStyle }}>
+                            <span
+                              style={{ ...styles.expiryBadge, ...toneStyle }}
+                            >
                               {meta.text}
                             </span>
                           );

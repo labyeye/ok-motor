@@ -37,6 +37,7 @@ const SellLetterHistory = () => {
     signedDocSell: true,
     insuranceCertificate: true,
     vehicleNOC: true,
+    transferReceipt: true,
   });
   const [sellLetters, setSellLetters] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -311,6 +312,14 @@ const SellLetterHistory = () => {
       witnessName: "Other",
       witnessPhone: "Other",
       note: "Other",
+      transferReceipt: "Document Changes",
+      signedDocSell: "Document Changes",
+      vehicleRC: "Document Changes",
+      aadhaar: "Document Changes",
+      pan: "Document Changes",
+      deliveryPhoto: "Document Changes",
+      insuranceCertificate: "Document Changes",
+      vehicleNOC: "Document Changes",
     };
 
     changes?.forEach((change) => {
@@ -492,6 +501,7 @@ const SellLetterHistory = () => {
       checkDocumentChange("signedDocSell", "Signed Doc (Sell)");
       checkDocumentChange("insuranceCertificate", "Insurance Certificate");
       checkDocumentChange("vehicleNOC", "Vehicle NOC");
+      checkDocumentChange("transferReceipt", "Transfer Receipt");
 
       const oldPhotosCount =
         letter.previousVersion.documents?.vehiclePhotos?.length || 0;
@@ -832,7 +842,7 @@ const SellLetterHistory = () => {
         const embeddedPages = await pdfDoc.embedPdf(bytes);
 
         if (Array.isArray(embeddedPages) && embeddedPages.length > 0)
-          return { kind: "pdf", embeddedPage: embeddedPages[0] };
+          return { kind: "pdf", embeddedPages: embeddedPages };
         return null;
       }
 
@@ -1154,6 +1164,23 @@ const SellLetterHistory = () => {
             });
           }
 
+          const transferReceiptItems = [];
+          if (documentsObj.transferReceipt) {
+            const trPages =
+              documentsObj.transferReceipt.pages ||
+              (Array.isArray(documentsObj.transferReceipt)
+                ? documentsObj.transferReceipt
+                : typeof documentsObj.transferReceipt === "string"
+                  ? [documentsObj.transferReceipt]
+                  : []);
+            trPages.forEach((p, idx) =>
+              transferReceiptItems.push({
+                title: `Transfer Receipt ${idx + 1}`,
+                url: p,
+              }),
+            );
+          }
+
           if (rcItems.length > 0) {
             const page = pdfDoc.addPage([595, 842]);
             try {
@@ -1187,7 +1214,7 @@ const SellLetterHistory = () => {
                   width = dims.width;
                   height = dims.height;
                 } else {
-                  const p = asset.embeddedPage;
+                  const p = asset.embeddedPages[0];
                   width = p.width || p.getWidth?.() || 595;
                   height = p.height || p.getHeight?.() || 842;
                 }
@@ -1212,7 +1239,7 @@ const SellLetterHistory = () => {
                   });
                 } else {
                   try {
-                    page.drawPage(asset.embeddedPage, {
+                    page.drawPage(asset.embeddedPages[0], {
                       x: centeredX,
                       y: drawY,
                       width: drawW,
@@ -1248,7 +1275,7 @@ const SellLetterHistory = () => {
                 width = dims.width;
                 height = dims.height;
               } else {
-                const p = asset.embeddedPage;
+                const p = asset.embeddedPages[0];
                 width = p.width || p.getWidth?.() || 595;
                 height = p.height || p.getHeight?.() || 842;
               }
@@ -1273,7 +1300,7 @@ const SellLetterHistory = () => {
                 });
               } else {
                 try {
-                  page.drawPage(asset.embeddedPage, {
+                  page.drawPage(asset.embeddedPages[0], {
                     x: xPos,
                     y: yPos,
                     width: drawW,
@@ -1307,7 +1334,7 @@ const SellLetterHistory = () => {
                 width = dims.width;
                 height = dims.height;
               } else {
-                const p = asset.embeddedPage;
+                const p = asset.embeddedPages[0];
                 width = p.width || p.getWidth?.() || 595;
                 height = p.height || p.getHeight?.() || 842;
               }
@@ -1332,7 +1359,7 @@ const SellLetterHistory = () => {
                 });
               } else {
                 try {
-                  page.drawPage(asset.embeddedPage, {
+                  page.drawPage(asset.embeddedPages[0], {
                     x: xPos,
                     y: yPos,
                     width: drawW,
@@ -1366,7 +1393,7 @@ const SellLetterHistory = () => {
                 width = dims.width;
                 height = dims.height;
               } else {
-                const p = asset.embeddedPage;
+                const p = asset.embeddedPages[0];
                 width = p.width || p.getWidth?.() || 595;
                 height = p.height || p.getHeight?.() || 842;
               }
@@ -1391,7 +1418,7 @@ const SellLetterHistory = () => {
                 });
               } else {
                 try {
-                  page.drawPage(asset.embeddedPage, {
+                  page.drawPage(asset.embeddedPages[0], {
                     x: xPos,
                     y: yPos,
                     width: drawW,
@@ -1427,7 +1454,7 @@ const SellLetterHistory = () => {
                   width = dims.width;
                   height = dims.height;
                 } else {
-                  const p = asset.embeddedPage;
+                  const p = asset.embeddedPages[0];
                   width = p.width || p.getWidth?.() || 595;
                   height = p.height || p.getHeight?.() || 842;
                 }
@@ -1449,7 +1476,7 @@ const SellLetterHistory = () => {
                   });
                 } else {
                   try {
-                    page.drawPage(asset.embeddedPage, {
+                    page.drawPage(asset.embeddedPages[0], {
                       x,
                       y: drawY,
                       width: drawW,
@@ -1478,44 +1505,64 @@ const SellLetterHistory = () => {
               const maxWidth = pageWidth - 2 * margin;
               const maxHeight = pageHeight - 150;
 
-              let width, height;
-              if (asset.kind === "image") {
-                const dims = asset.embedded.scale(1);
-                width = dims.width;
-                height = dims.height;
-              } else {
-                const p = asset.embeddedPage;
-                width = p.width || p.getWidth?.() || 595;
-                height = p.height || p.getHeight?.() || 842;
-              }
+              const pagesToRender =
+                asset.kind === "image"
+                  ? [asset.embedded]
+                  : asset.embeddedPages[0];
 
-              let drawW = maxWidth;
-              let drawH = (height / width) * drawW;
+              for (let idx = 0; idx < pagesToRender.length; idx++) {
+                const subAsset = pagesToRender[idx];
+                let currentPage = idx === 0 ? page : pdfDoc.addPage([595, 842]);
+                if (idx > 0) {
+                  try {
+                    await drawHeaderFooter(pdfDoc, currentPage);
+                  } catch (e) {}
+                  currentPage.drawText(item.title + " (continued)", {
+                    x: 50,
+                    y: 753,
+                    size: 14,
+                    font,
+                  });
+                }
 
-              if (drawH > maxHeight) {
-                drawH = maxHeight;
-                drawW = (width / height) * drawH;
-              }
+                let width, height;
+                if (asset.kind === "image") {
+                  const dims = subAsset.scale(1);
+                  width = dims.width;
+                  height = dims.height;
+                } else {
+                  width = subAsset.width || subAsset.getWidth?.() || 595;
+                  height = subAsset.height || subAsset.getHeight?.() || 842;
+                }
 
-              const xPos = (pageWidth - drawW) / 2;
-              const yPos = 750 - drawH;
+                let drawW = maxWidth;
+                let drawH = (height / width) * drawW;
 
-              if (asset.kind === "image") {
-                page.drawImage(asset.embedded, {
-                  x: xPos,
-                  y: yPos,
-                  width: drawW,
-                  height: drawH,
-                });
-              } else {
-                try {
-                  page.drawPage(asset.embeddedPage, {
+                if (drawH > maxHeight) {
+                  drawH = maxHeight;
+                  drawW = (width / height) * drawH;
+                }
+
+                const xPos = (pageWidth - drawW) / 2;
+                const yPos = 750 - drawH;
+
+                if (asset.kind === "image") {
+                  currentPage.drawImage(subAsset, {
                     x: xPos,
                     y: yPos,
                     width: drawW,
                     height: drawH,
                   });
-                } catch (e) {}
+                } else {
+                  try {
+                    currentPage.drawPage(subAsset, {
+                      x: xPos,
+                      y: yPos,
+                      width: drawW,
+                      height: drawH,
+                    });
+                  } catch (e) {}
+                }
               }
             }
           }
@@ -1531,50 +1578,121 @@ const SellLetterHistory = () => {
 
             const asset = await embedAssetFromUrl(pdfDoc, item.url);
             if (asset) {
-              const pageWidth = 595;
-              const pageHeight = 842;
-              const margin = 50;
-              const maxWidth = pageWidth - 2 * margin;
-              const maxHeight = pageHeight - 150;
-
-              let width, height;
-              if (asset.kind === "image") {
-                const dims = asset.embedded.scale(1);
-                width = dims.width;
-                height = dims.height;
-              } else {
-                const p = asset.embeddedPage;
-                width = p.width || p.getWidth?.() || 595;
-                height = p.height || p.getHeight?.() || 842;
-              }
-
-              let drawW = maxWidth;
-              let drawH = (height / width) * drawW;
-
-              if (drawH > maxHeight) {
-                drawH = maxHeight;
-                drawW = (width / height) * drawH;
-              }
-
-              const xPos = (pageWidth - drawW) / 2;
-              const yPos = 750 - drawH;
-
-              if (asset.kind === "image") {
-                page.drawImage(asset.embedded, {
-                  x: xPos,
-                  y: yPos,
-                  width: drawW,
-                  height: drawH,
-                });
-              } else {
-                try {
-                  page.drawPage(asset.embeddedPage, {
+              const pagesToRender =
+                asset.kind === "image" ? [asset.embedded] : asset.embeddedPages;
+              for (let idx = 0; idx < pagesToRender.length; idx++) {
+                let currentPage = idx === 0 ? page : pdfDoc.addPage([595, 842]);
+                if (idx > 0) {
+                  try {
+                    await drawHeaderFooter(pdfDoc, currentPage);
+                  } catch (e) {}
+                  currentPage.drawText(item.title + " (continued)", {
+                    x: 50,
+                    y: 753,
+                    size: 14,
+                    font,
+                  });
+                }
+                const subAsset = pagesToRender[idx];
+                let width, height;
+                if (asset.kind === "image") {
+                  const dims = subAsset.scale(1);
+                  width = dims.width;
+                  height = dims.height;
+                } else {
+                  width = subAsset.width || subAsset.getWidth?.() || 595;
+                  height = subAsset.height || subAsset.getHeight?.() || 842;
+                }
+                let drawW = 495;
+                let drawH = (height / width) * drawW;
+                if (drawH > 692) {
+                  drawH = 692;
+                  drawW = (width / height) * drawH;
+                }
+                const xPos = (595 - drawW) / 2;
+                const yPos = 750 - drawH;
+                if (asset.kind === "image") {
+                  currentPage.drawImage(subAsset, {
                     x: xPos,
                     y: yPos,
                     width: drawW,
                     height: drawH,
                   });
-                } catch (e) {}
+                } else {
+                  try {
+                    currentPage.drawPage(subAsset, {
+                      x: xPos,
+                      y: yPos,
+                      width: drawW,
+                      height: drawH,
+                    });
+                  } catch (e) {}
+                }
+              }
+            }
+          }
+
+          // Render Transfer Receipt items
+          for (const item of transferReceiptItems) {
+            const page = pdfDoc.addPage([595, 842]);
+            try {
+              await drawHeaderFooter(pdfDoc, page);
+            } catch (e) {}
+            const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+            const asset = await embedAssetFromUrl(pdfDoc, item.url);
+            if (asset) {
+              const pagesToRender =
+                asset.kind === "image" ? [asset.embedded] : asset.embeddedPages;
+              for (let idx = 0; idx < pagesToRender.length; idx++) {
+                let currentPage = idx === 0 ? page : pdfDoc.addPage([595, 842]);
+                if (idx > 0) {
+                  try {
+                    await drawHeaderFooter(pdfDoc, currentPage);
+                  } catch (e) {}
+                  currentPage.drawText(item.title + " (continued)", {
+                    x: 50,
+                    y: 753,
+                    size: 14,
+                    font,
+                  });
+                }
+                const subAsset = pagesToRender[idx];
+                let width, height;
+                if (asset.kind === "image") {
+                  const dims = subAsset.scale(1);
+                  width = dims.width;
+                  height = dims.height;
+                } else {
+                  width = subAsset.width || subAsset.getWidth?.() || 595;
+                  height = subAsset.height || subAsset.getHeight?.() || 842;
+                }
+                let drawW = 495;
+                let drawH = (height / width) * drawW;
+                if (drawH > 692) {
+                  drawH = 692;
+                  drawW = (width / height) * drawH;
+                }
+                const xPos = (595 - drawW) / 2;
+                const yPos = 750 - drawH;
+                if (asset.kind === "image") {
+                  currentPage.drawImage(subAsset, {
+                    x: xPos,
+                    y: yPos,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } else {
+                  try {
+                    currentPage.drawPage(subAsset, {
+                      x: xPos,
+                      y: yPos,
+                      width: drawW,
+                      height: drawH,
+                    });
+                  } catch (e) {}
+                }
               }
             }
           }
@@ -1602,7 +1720,7 @@ const SellLetterHistory = () => {
                 width = dims.width;
                 height = dims.height;
               } else {
-                const p = asset.embeddedPage;
+                const p = asset.embeddedPages[0];
                 width = p.width || p.getWidth?.() || 595;
                 height = p.height || p.getHeight?.() || 842;
               }
@@ -1627,7 +1745,7 @@ const SellLetterHistory = () => {
                 });
               } else {
                 try {
-                  page.drawPage(asset.embeddedPage, {
+                  page.drawPage(asset.embeddedPages[0], {
                     x: xPos,
                     y: yPos,
                     width: drawW,
@@ -1812,7 +1930,7 @@ const SellLetterHistory = () => {
           ) {
             const embeddedPages = await pdfDoc.embedPdf(bytes);
             if (Array.isArray(embeddedPages) && embeddedPages.length > 0)
-              return { kind: "pdf", embeddedPage: embeddedPages[0] };
+              return { kind: "pdf", embeddedPages: embeddedPages };
             return null;
           }
 
@@ -1896,6 +2014,23 @@ const SellLetterHistory = () => {
           });
         }
 
+        const transferReceiptItems = [];
+        if (documentsObj.transferReceipt) {
+          const trPages =
+            documentsObj.transferReceipt.pages ||
+            (Array.isArray(documentsObj.transferReceipt)
+              ? documentsObj.transferReceipt
+              : typeof documentsObj.transferReceipt === "string"
+                ? [documentsObj.transferReceipt]
+                : []);
+          trPages.forEach((p, idx) =>
+            transferReceiptItems.push({
+              title: `Transfer Receipt ${idx + 1}`,
+              url: p,
+            }),
+          );
+        }
+
         const insuranceCertificateItems = [];
         const vehicleNOCItems = [];
 
@@ -1943,6 +2078,9 @@ const SellLetterHistory = () => {
 
         if (rcItems.length > 0) {
           const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
           const margin = 40;
           const colWidth = (595 - 3 * margin) / 2;
           const colGap = margin;
@@ -1971,7 +2109,7 @@ const SellLetterHistory = () => {
                 width = dims.width;
                 height = dims.height;
               } else {
-                const p = asset.embeddedPage;
+                const p = asset.embeddedPages[0];
                 width = p.width || p.getWidth?.() || 595;
                 height = p.height || p.getHeight?.() || 842;
               }
@@ -1996,7 +2134,7 @@ const SellLetterHistory = () => {
                 });
               } else {
                 try {
-                  page.drawPage(asset.embeddedPage, {
+                  page.drawPage(asset.embeddedPages[0], {
                     x: centeredX,
                     y: drawY,
                     width: drawW,
@@ -2010,59 +2148,11 @@ const SellLetterHistory = () => {
 
         if (singleAadhaarItem.length > 0) {
           const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
           const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
           const item = singleAadhaarItem[0];
-
-          try {
-            const logoUrl = logo1;
-            const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
-            const logoImg = await pdfDoc.embedPng(logoBytes);
-
-            page.drawRectangle({
-              x: 0,
-              y: 780,
-              width: 595,
-              height: 80,
-              color: rgb(0.047, 0.098, 0.196),
-            });
-            page.drawImage(logoImg, { x: 50, y: 743, width: 150, height: 120 });
-            try {
-              page.drawImage(logoImg, {
-                x: 180,
-                y: 400,
-                width: 260,
-                height: 220,
-                opacity: 0.3,
-              });
-            } catch (wmErr) {}
-            page.drawText("UDAYAM-BR-26-0028550", {
-              x: 330,
-              y: 805,
-              size: 18,
-              color: rgb(1, 1, 1),
-              font,
-            });
-            page.drawText("GSTIN: 22ABCDE1234F1Z5", {
-              x: 330,
-              y: 785,
-              size: 18,
-              color: rgb(1, 1, 1),
-              font,
-            });
-            try {
-              page.drawText(
-                "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
-                { x: 50, y: 28, size: 8, color: rgb(1, 1, 1), font },
-              );
-            } catch (e) {}
-            page.drawRectangle({
-              x: 0,
-              y: 750,
-              width: 595,
-              height: 30,
-              color: rgb(0.9, 0.9, 0.9),
-            });
-          } catch (err) {}
 
           page.drawText(item.title, { x: 50, y: 720, size: 14, font });
 
@@ -2079,7 +2169,7 @@ const SellLetterHistory = () => {
               width = dims.width;
               height = dims.height;
             } else {
-              const p = asset.embeddedPage;
+              const p = asset.embeddedPages[0];
               width = p.width || p.getWidth?.() || 595;
               height = p.height || p.getHeight?.() || 842;
             }
@@ -2104,7 +2194,7 @@ const SellLetterHistory = () => {
               });
             } else {
               try {
-                page.drawPage(asset.embeddedPage, {
+                page.drawPage(asset.embeddedPages[0], {
                   x: xPos,
                   y: yPos,
                   width: drawW,
@@ -2138,7 +2228,7 @@ const SellLetterHistory = () => {
               width = dims.width;
               height = dims.height;
             } else {
-              const p = asset.embeddedPage;
+              const p = asset.embeddedPages[0];
               width = p.width || p.getWidth?.() || 595;
               height = p.height || p.getHeight?.() || 842;
             }
@@ -2163,7 +2253,7 @@ const SellLetterHistory = () => {
               });
             } else {
               try {
-                page.drawPage(asset.embeddedPage, {
+                page.drawPage(asset.embeddedPages[0], {
                   x: xPos,
                   y: yPos,
                   width: drawW,
@@ -2197,7 +2287,7 @@ const SellLetterHistory = () => {
               width = dims.width;
               height = dims.height;
             } else {
-              const p = asset.embeddedPage;
+              const p = asset.embeddedPages[0];
               width = p.width || p.getWidth?.() || 595;
               height = p.height || p.getHeight?.() || 842;
             }
@@ -2222,7 +2312,7 @@ const SellLetterHistory = () => {
               });
             } else {
               try {
-                page.drawPage(asset.embeddedPage, {
+                page.drawPage(asset.embeddedPages[0], {
                   x: xPos,
                   y: yPos,
                   width: drawW,
@@ -2267,7 +2357,7 @@ const SellLetterHistory = () => {
                 width = dims.width;
                 height = dims.height;
               } else {
-                const p = asset.embeddedPage;
+                const p = asset.embeddedPages[0];
                 width = p.width || p.getWidth?.() || 595;
                 height = p.height || p.getHeight?.() || 842;
               }
@@ -2288,7 +2378,7 @@ const SellLetterHistory = () => {
                 });
               } else {
                 try {
-                  page.drawPage(asset.embeddedPage, {
+                  page.drawPage(asset.embeddedPages[0], {
                     x,
                     y: drawY,
                     width: drawW,
@@ -2323,7 +2413,7 @@ const SellLetterHistory = () => {
               width = dims.width;
               height = dims.height;
             } else {
-              const p = asset.embeddedPage;
+              const p = asset.embeddedPages[0];
               width = p.width || p.getWidth?.() || 595;
               height = p.height || p.getHeight?.() || 842;
             }
@@ -2348,13 +2438,78 @@ const SellLetterHistory = () => {
               });
             } else {
               try {
-                page.drawPage(asset.embeddedPage, {
+                page.drawPage(asset.embeddedPages[0], {
                   x: xPos,
                   y: yPos,
                   width: drawW,
                   height: drawH,
                 });
               } catch (e) {}
+            }
+          }
+        }
+
+        // Render Transfer Receipt items
+        for (const item of transferReceiptItems) {
+          const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            const pagesToRender =
+              asset.kind === "image" ? [asset.embedded] : asset.embeddedPages;
+            for (let idx = 0; idx < pagesToRender.length; idx++) {
+              let currentPage = idx === 0 ? page : pdfDoc.addPage([595, 842]);
+              if (idx > 0) {
+                try {
+                  await drawHeaderFooter(pdfDoc, currentPage);
+                } catch (e) {}
+                currentPage.drawText(item.title + " (continued)", {
+                  x: 50,
+                  y: 753,
+                  size: 14,
+                  font,
+                });
+              }
+              const subAsset = pagesToRender[idx];
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = subAsset.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                width = subAsset.width || subAsset.getWidth?.() || 595;
+                height = subAsset.height || subAsset.getHeight?.() || 842;
+              }
+              let drawW = 495;
+              let drawH = (height / width) * drawW;
+              if (drawH > 692) {
+                drawH = 692;
+                drawW = (width / height) * drawH;
+              }
+              const xPos = (595 - drawW) / 2;
+              const yPos = 750 - drawH;
+              if (asset.kind === "image") {
+                currentPage.drawImage(subAsset, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } else {
+                try {
+                  currentPage.drawPage(subAsset, {
+                    x: xPos,
+                    y: yPos,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
+              }
             }
           }
         }
@@ -2382,7 +2537,7 @@ const SellLetterHistory = () => {
               width = dims.width;
               height = dims.height;
             } else {
-              const p = asset.embeddedPage;
+              const p = asset.embeddedPages[0];
               width = p.width || p.getWidth?.() || 595;
               height = p.height || p.getHeight?.() || 842;
             }
@@ -2407,7 +2562,7 @@ const SellLetterHistory = () => {
               });
             } else {
               try {
-                page.drawPage(asset.embeddedPage, {
+                page.drawPage(asset.embeddedPages[0], {
                   x: xPos,
                   y: yPos,
                   width: drawW,
@@ -2546,7 +2701,7 @@ const SellLetterHistory = () => {
           ) {
             const embeddedPages = await pdfDoc.embedPdf(bytes);
             if (Array.isArray(embeddedPages) && embeddedPages.length > 0)
-              return { kind: "pdf", embeddedPage: embeddedPages[0] };
+              return { kind: "pdf", embeddedPages: embeddedPages };
             return null;
           }
 
@@ -2661,6 +2816,30 @@ const SellLetterHistory = () => {
           }
         }
 
+        if (documentsObj.signedDocSell) {
+          items.push({
+            title: "Signed Doc (Sell)",
+            url: documentsObj.signedDocSell,
+          });
+        }
+
+        const transferReceiptItems = [];
+        if (documentsObj.transferReceipt) {
+          const trPages =
+            documentsObj.transferReceipt.pages ||
+            (Array.isArray(documentsObj.transferReceipt)
+              ? documentsObj.transferReceipt
+              : typeof documentsObj.transferReceipt === "string"
+                ? [documentsObj.transferReceipt]
+                : []);
+          trPages.forEach((p, idx) =>
+            transferReceiptItems.push({
+              title: `Transfer Receipt ${idx + 1}`,
+              url: p,
+            }),
+          );
+        }
+
         if (rcItems.length > 0) {
           const page = pdfDoc.addPage([595, 842]);
           try {
@@ -2694,7 +2873,7 @@ const SellLetterHistory = () => {
                 width = dims.width;
                 height = dims.height;
               } else {
-                const p = asset.embeddedPage;
+                const p = asset.embeddedPages[0];
                 width = p.width || p.getWidth?.() || 595;
                 height = p.height || p.getHeight?.() || 842;
               }
@@ -2719,7 +2898,7 @@ const SellLetterHistory = () => {
                 });
               } else {
                 try {
-                  page.drawPage(asset.embeddedPage, {
+                  page.drawPage(asset.embeddedPages[0], {
                     x: centeredX,
                     y: drawY,
                     width: drawW,
@@ -2733,33 +2912,11 @@ const SellLetterHistory = () => {
 
         if (singleAadhaarItem.length > 0) {
           const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
           const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
           const item = singleAadhaarItem[0];
-
-          try {
-            const logoBytes = await fetch(logo1).then((r) => r.arrayBuffer());
-            const logoImg = await pdfDoc.embedPng(logoBytes);
-            page.drawRectangle({
-              x: 0,
-              y: 780,
-              width: 595,
-              height: 80,
-              color: rgb(0.047, 0.098, 0.196),
-            });
-            page.drawImage(logoImg, {
-              x: 50,
-              y: 792 - 60,
-              width: 120,
-              height: 60,
-            });
-            page.drawText("OK Motors", {
-              x: 190,
-              y: 815,
-              size: 14,
-              font,
-              color: rgb(255, 255, 255),
-            });
-          } catch (err) {}
 
           page.drawText(item.title, { x: 50, y: 720, size: 14, font });
 
@@ -2776,7 +2933,7 @@ const SellLetterHistory = () => {
               width = dims.width;
               height = dims.height;
             } else {
-              const p = asset.embeddedPage;
+              const p = asset.embeddedPages[0];
               width = p.width || p.getWidth?.() || 595;
               height = p.height || p.getHeight?.() || 842;
             }
@@ -2801,7 +2958,7 @@ const SellLetterHistory = () => {
               });
             } else {
               try {
-                page.drawPage(asset.embeddedPage, {
+                page.drawPage(asset.embeddedPages[0], {
                   x: xPos,
                   y: yPos,
                   width: drawW,
@@ -2835,7 +2992,7 @@ const SellLetterHistory = () => {
               width = dims.width;
               height = dims.height;
             } else {
-              const p = asset.embeddedPage;
+              const p = asset.embeddedPages[0];
               width = p.width || p.getWidth?.() || 595;
               height = p.height || p.getHeight?.() || 842;
             }
@@ -2860,7 +3017,7 @@ const SellLetterHistory = () => {
               });
             } else {
               try {
-                page.drawPage(asset.embeddedPage, {
+                page.drawPage(asset.embeddedPages[0], {
                   x: xPos,
                   y: yPos,
                   width: drawW,
@@ -2894,7 +3051,7 @@ const SellLetterHistory = () => {
               width = dims.width;
               height = dims.height;
             } else {
-              const p = asset.embeddedPage;
+              const p = asset.embeddedPages[0];
               width = p.width || p.getWidth?.() || 595;
               height = p.height || p.getHeight?.() || 842;
             }
@@ -2919,7 +3076,7 @@ const SellLetterHistory = () => {
               });
             } else {
               try {
-                page.drawPage(asset.embeddedPage, {
+                page.drawPage(asset.embeddedPages[0], {
                   x: xPos,
                   y: yPos,
                   width: drawW,
@@ -2964,7 +3121,7 @@ const SellLetterHistory = () => {
                 width = dims.width;
                 height = dims.height;
               } else {
-                const p = asset.embeddedPage;
+                const p = asset.embeddedPages[0];
                 width = p.width || p.getWidth?.() || 595;
                 height = p.height || p.getHeight?.() || 842;
               }
@@ -2984,7 +3141,7 @@ const SellLetterHistory = () => {
                 });
               } else {
                 try {
-                  page.drawPage(asset.embeddedPage, {
+                  page.drawPage(asset.embeddedPages[0], {
                     x,
                     y: drawY,
                     width: drawW,
@@ -3019,7 +3176,7 @@ const SellLetterHistory = () => {
               width = dims.width;
               height = dims.height;
             } else {
-              const p = asset.embeddedPage;
+              const p = asset.embeddedPages[0];
               width = p.width || p.getWidth?.() || 595;
               height = p.height || p.getHeight?.() || 842;
             }
@@ -3044,13 +3201,143 @@ const SellLetterHistory = () => {
               });
             } else {
               try {
-                page.drawPage(asset.embeddedPage, {
+                page.drawPage(asset.embeddedPages[0], {
                   x: xPos,
                   y: yPos,
                   width: drawW,
                   height: drawH,
                 });
               } catch (e) {}
+            }
+          }
+        }
+
+        // Render Transfer Receipt items
+        for (const item of transferReceiptItems) {
+          const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            const pagesToRender =
+              asset.kind === "image" ? [asset.embedded] : asset.embeddedPages;
+            for (let idx = 0; idx < pagesToRender.length; idx++) {
+              let currentPage = idx === 0 ? page : pdfDoc.addPage([595, 842]);
+              if (idx > 0) {
+                try {
+                  await drawHeaderFooter(pdfDoc, currentPage);
+                } catch (e) {}
+                currentPage.drawText(item.title + " (continued)", {
+                  x: 50,
+                  y: 753,
+                  size: 14,
+                  font,
+                });
+              }
+              const subAsset = pagesToRender[idx];
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = subAsset.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                width = subAsset.width || subAsset.getWidth?.() || 595;
+                height = subAsset.height || subAsset.getHeight?.() || 842;
+              }
+              let drawW = 495;
+              let drawH = (height / width) * drawW;
+              if (drawH > 692) {
+                drawH = 692;
+                drawW = (width / height) * drawH;
+              }
+              const xPos = (595 - drawW) / 2;
+              const yPos = 750 - drawH;
+              if (asset.kind === "image") {
+                currentPage.drawImage(subAsset, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } else {
+                try {
+                  currentPage.drawPage(subAsset, {
+                    x: xPos,
+                    y: yPos,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
+              }
+            }
+          }
+        }
+
+        // Render Transfer Receipt items
+        for (const item of transferReceiptItems) {
+          const page = pdfDoc.addPage([595, 842]);
+          try {
+            await drawHeaderFooter(pdfDoc, page);
+          } catch (e) {}
+          const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          page.drawText(item.title, { x: 50, y: 753, size: 14, font });
+
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            const pagesToRender =
+              asset.kind === "image" ? [asset.embedded] : asset.embeddedPages;
+            for (let idx = 0; idx < pagesToRender.length; idx++) {
+              let currentPage = idx === 0 ? page : pdfDoc.addPage([595, 842]);
+              if (idx > 0) {
+                try {
+                  await drawHeaderFooter(pdfDoc, currentPage);
+                } catch (e) {}
+                currentPage.drawText(item.title + " (continued)", {
+                  x: 50,
+                  y: 753,
+                  size: 14,
+                  font,
+                });
+              }
+              const subAsset = pagesToRender[idx];
+              let width, height;
+              if (asset.kind === "image") {
+                const dims = subAsset.scale(1);
+                width = dims.width;
+                height = dims.height;
+              } else {
+                width = subAsset.width || subAsset.getWidth?.() || 595;
+                height = subAsset.height || subAsset.getHeight?.() || 842;
+              }
+              let drawW = 495;
+              let drawH = (height / width) * drawW;
+              if (drawH > 692) {
+                drawH = 692;
+                drawW = (width / height) * drawH;
+              }
+              const xPos = (595 - drawW) / 2;
+              const yPos = 750 - drawH;
+              if (asset.kind === "image") {
+                currentPage.drawImage(subAsset, {
+                  x: xPos,
+                  y: yPos,
+                  width: drawW,
+                  height: drawH,
+                });
+              } else {
+                try {
+                  currentPage.drawPage(subAsset, {
+                    x: xPos,
+                    y: yPos,
+                    width: drawW,
+                    height: drawH,
+                  });
+                } catch (e) {}
+              }
             }
           }
         }
@@ -3078,7 +3365,7 @@ const SellLetterHistory = () => {
               width = dims.width;
               height = dims.height;
             } else {
-              const p = asset.embeddedPage;
+              const p = asset.embeddedPages[0];
               width = p.width || p.getWidth?.() || 595;
               height = p.height || p.getHeight?.() || 842;
             }
@@ -3103,7 +3390,7 @@ const SellLetterHistory = () => {
               });
             } else {
               try {
-                page.drawPage(asset.embeddedPage, {
+                page.drawPage(asset.embeddedPages[0], {
                   x: xPos,
                   y: yPos,
                   width: drawW,
@@ -4464,6 +4751,13 @@ const SellLetterHistory = () => {
                           selectedLetter.documents?.vehiclePhotos &&
                           selectedLetter.documents.vehiclePhotos.length
                         ),
+                        signedDocSell:
+                          !!selectedLetter.documents?.signedDocSell,
+                        transferReceipt:
+                          !!selectedLetter.documents?.transferReceipt,
+                        insuranceCertificate:
+                          !!selectedLetter.documents?.insuranceCertificate,
+                        vehicleNOC: !!selectedLetter.documents?.vehicleNOC,
                         letter: true,
                         invoice: true,
                       });
@@ -4494,6 +4788,13 @@ const SellLetterHistory = () => {
                           selectedLetter.documents?.vehiclePhotos &&
                           selectedLetter.documents.vehiclePhotos.length
                         ),
+                        signedDocSell:
+                          !!selectedLetter.documents?.signedDocSell,
+                        transferReceipt:
+                          !!selectedLetter.documents?.transferReceipt,
+                        insuranceCertificate:
+                          !!selectedLetter.documents?.insuranceCertificate,
+                        vehicleNOC: !!selectedLetter.documents?.vehicleNOC,
                         letter: true,
                         invoice: true,
                       });
@@ -5011,6 +5312,47 @@ const SellLetterHistory = () => {
                         Vehicle NOC
                       </span>
                     </label>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "10px 12px",
+                        backgroundColor: docSelections.transferReceipt
+                          ? "#f0f9ff"
+                          : "transparent",
+                        border: `2px solid ${docSelections.transferReceipt ? "#0284c7" : "#e2e8f0"}`,
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={!!docSelections.transferReceipt}
+                        onChange={(e) =>
+                          setDocSelections((s) => ({
+                            ...s,
+                            transferReceipt: e.target.checked,
+                          }))
+                        }
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          marginRight: "12px",
+                          accentColor: "#0284c7",
+                          cursor: "pointer",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          color: "#1e293b",
+                        }}
+                      >
+                        Transfer Receipt
+                      </span>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -5080,6 +5422,8 @@ const SellLetterHistory = () => {
                         out.insuranceCertificate = docs.insuranceCertificate;
                       if (sel.vehicleNOC && docs.vehicleNOC)
                         out.vehicleNOC = docs.vehicleNOC;
+                      if (sel.transferReceipt && docs.transferReceipt)
+                        out.transferReceipt = docs.transferReceipt;
                       return out;
                     };
 

@@ -539,8 +539,8 @@ const VehicleCreate = () => {
     },
     topBarLogo: {
       width: "250px",
-    height: "auto",
-    margin: "-40px",
+      height: "auto",
+      margin: "-40px",
       padding: 0,
       display: "block",
     },

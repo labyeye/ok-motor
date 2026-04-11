@@ -1,13 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import {
-  Upload,
-  Trash2,
-  Eye,
-  EyeOff,
-  Menu,
-} from "lucide-react";
+import { Upload, Trash2, Eye, EyeOff, Menu } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 

@@ -509,7 +509,7 @@ const BuyLetterHistory = () => {
         const embeddedPages = await pdfDoc.embedPdf(bytes);
 
         if (Array.isArray(embeddedPages) && embeddedPages.length > 0)
-          return { kind: "pdf", embeddedPage: embeddedPages[0] };
+          return { kind: "pdf", embeddedPages: embeddedPages };
         return null;
       }
 
@@ -721,7 +721,7 @@ const BuyLetterHistory = () => {
         await drawHeaderFooter(pdfDoc, page);
 
         const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-        const titleY = 700;
+        const titleY = 730;
         page.drawText(item.title, {
           x: 50,
           y: titleY,
@@ -735,7 +735,7 @@ const BuyLetterHistory = () => {
         const pageWidth = 595;
         const margin = 50;
         const maxWidth = pageWidth - 2 * margin;
-        const maxHeight = 660;
+        const maxHeight = 630;
 
         if (asset.kind === "image") {
           const embedded = asset.embedded;
@@ -818,10 +818,10 @@ const BuyLetterHistory = () => {
 
       const asset = await embedAssetFromUrl(pdfDoc, item.url);
       if (asset) {
-        const pageWidth = 595;
-        const margin = 20;
-        const maxWidth = pageWidth - 2 * margin;
-        const maxHeight = 660;
+        const pageWidth = 620;
+        const margin = 0;
+        const maxWidth = pageWidth - 1 * margin;
+        const maxHeight = 780;
 
         let width, height;
         if (asset.kind === "image") {
@@ -843,7 +843,7 @@ const BuyLetterHistory = () => {
         }
 
         const xPos = (pageWidth - drawW) / 2;
-        const yPos = 690 - drawH;
+        const yPos = 800 - drawH;
 
         if (asset.kind === "image") {
           page.drawImage(asset.embedded, {
@@ -1974,11 +1974,14 @@ const BuyLetterHistory = () => {
           return;
         }
 
-        await axios.delete(`https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        await axios.delete(
+          `https://ok-motor-51l3.vercel.app/api/buy-letter/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
         setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
         setAlertInfo({
           isOpen: true,

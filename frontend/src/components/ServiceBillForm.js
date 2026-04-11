@@ -62,7 +62,15 @@ const ServiceBillForm = () => {
     serviceDate: new Date().toISOString().split("T")[0],
     deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
     serviceType: "regular",
-    serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0, gstApplicable: false }],
+    serviceItems: [
+      {
+        description: "",
+        quantity: 1,
+        rate: 0,
+        amount: 0,
+        gstApplicable: false,
+      },
+    ],
     discount: 0,
     discountType: "fixed",
     discountPercentage: 0,
@@ -88,7 +96,8 @@ const ServiceBillForm = () => {
       ? (data.serviceItems || []).reduce(
           (sum, item) =>
             item.gstApplicable
-              ? sum + (parseFloat(item.rate) || 0) * (parseFloat(item.quantity) || 1)
+              ? sum +
+                (parseFloat(item.rate) || 0) * (parseFloat(item.quantity) || 1)
               : sum,
           0,
         )
@@ -234,7 +243,13 @@ const ServiceBillForm = () => {
   const addServiceItem = () => {
     const newItems = [
       ...formData.serviceItems,
-      { description: "", quantity: 1, rate: 0, amount: 0, gstApplicable: false },
+      {
+        description: "",
+        quantity: 1,
+        rate: 0,
+        amount: 0,
+        gstApplicable: false,
+      },
     ];
 
     setFormData({
@@ -556,7 +571,15 @@ const ServiceBillForm = () => {
             .toISOString()
             .split("T")[0],
           serviceType: "regular",
-          serviceItems: [{ description: "", quantity: 1, rate: 0, amount: 0, gstApplicable: false }],
+          serviceItems: [
+            {
+              description: "",
+              quantity: 1,
+              rate: 0,
+              amount: 0,
+              gstApplicable: false,
+            },
+          ],
           discount: 0,
           taxRate: 0,
           paymentMethod: "cash",
@@ -682,7 +705,13 @@ const ServiceBillForm = () => {
               .split("T")[0],
             serviceType: "regular",
             serviceItems: [
-              { description: "", quantity: 1, rate: 0, amount: 0, gstApplicable: false },
+              {
+                description: "",
+                quantity: 1,
+                rate: 0,
+                amount: 0,
+                gstApplicable: false,
+              },
             ],
             discount: 0,
             taxRate: 0,
@@ -1596,26 +1625,40 @@ const ServiceBillForm = () => {
                     </div>
                     <button
                       type="button"
-                      title={item.gstApplicable ? "GST applicable (click to disable)" : "GST not applicable (click to enable)"}
+                      title={
+                        item.gstApplicable
+                          ? "GST applicable (click to disable)"
+                          : "GST not applicable (click to enable)"
+                      }
                       onClick={() => {
                         const items = [...formData.serviceItems];
-                        items[index] = { ...items[index], gstApplicable: !items[index].gstApplicable };
+                        items[index] = {
+                          ...items[index],
+                          gstApplicable: !items[index].gstApplicable,
+                        };
                         const newData = { ...formData, serviceItems: items };
-                        setFormData({ ...newData, ...calculateAmounts(newData) });
+                        setFormData({
+                          ...newData,
+                          ...calculateAmounts(newData),
+                        });
                       }}
                       style={{
                         padding: "6px 10px",
                         borderRadius: "6px",
                         border: "1.5px solid",
                         borderColor: item.gstApplicable ? "#16a34a" : "#cbd5e1",
-                        backgroundColor: item.gstApplicable ? "#dcfce7" : "#f8fafc",
+                        backgroundColor: item.gstApplicable
+                          ? "#dcfce7"
+                          : "#f8fafc",
                         color: item.gstApplicable ? "#16a34a" : "#94a3b8",
                         cursor: "pointer",
                         fontSize: "11px",
                         fontWeight: "600",
                         whiteSpace: "nowrap",
                         transition: "all 0.2s",
-                        ...(isMobile ? { alignSelf: "flex-end", marginTop: 4 } : {}),
+                        ...(isMobile
+                          ? { alignSelf: "flex-end", marginTop: 4 }
+                          : {}),
                       }}
                       tabIndex={-1}
                     >

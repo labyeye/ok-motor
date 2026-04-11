@@ -1,14 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import pdfService from "../services/pdfService";
-import {
-  FileText,
-  Search,
-  Download,
-  Trash2,
-  X,
-  Eye,
-} from "lucide-react";
+import { FileText, Search, Download, Trash2, X, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
@@ -22,7 +15,12 @@ const AdvanceHistory = () => {
   const [advanceBills, setAdvanceBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState({ total: null, advance: null, balance: null, date: null });
+  const [filters, setFilters] = useState({
+    total: null,
+    advance: null,
+    balance: null,
+    date: null,
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages] = useState(1);
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -381,7 +379,8 @@ const AdvanceHistory = () => {
       const v = new Date(dFilter.value);
       // require value for non-range ops; for between allow one-sided
       if (dFilter.op !== "between" && isNaN(v.getTime())) return false;
-      if (dFilter.op === "eq" && d.toDateString() !== v.toDateString()) return false;
+      if (dFilter.op === "eq" && d.toDateString() !== v.toDateString())
+        return false;
       if (dFilter.op === "before" && !(d < v)) return false;
       if (dFilter.op === "after" && !(d > v)) return false;
       if (dFilter.op === "between") {
@@ -642,7 +641,6 @@ const AdvanceHistory = () => {
     navigate("/login");
   };
 
-
   return (
     <div
       style={{
@@ -708,50 +706,94 @@ const AdvanceHistory = () => {
                         <th style={styles.tableHeader}>Vehicle</th>
                         <th style={styles.tableHeader}>Reg No.</th>
                         <th style={styles.tableHeader}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 8,
+                            }}
+                          >
                             <span>Total Amount</span>
                             <TableFilter
                               type="number"
                               placeholder="₹"
                               rangeOnly={true}
-                              onApply={(f) => setFilters((p) => ({ ...p, total: f }))}
-                              onClear={() => setFilters((p) => ({ ...p, total: null }))}
+                              onApply={(f) =>
+                                setFilters((p) => ({ ...p, total: f }))
+                              }
+                              onClear={() =>
+                                setFilters((p) => ({ ...p, total: null }))
+                              }
                             />
                           </div>
                         </th>
                         <th style={styles.tableHeader}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 8,
+                            }}
+                          >
                             <span>Advance Paid</span>
                             <TableFilter
                               type="number"
                               placeholder="₹"
                               rangeOnly={true}
-                              onApply={(f) => setFilters((p) => ({ ...p, advance: f }))}
-                              onClear={() => setFilters((p) => ({ ...p, advance: null }))}
+                              onApply={(f) =>
+                                setFilters((p) => ({ ...p, advance: f }))
+                              }
+                              onClear={() =>
+                                setFilters((p) => ({ ...p, advance: null }))
+                              }
                             />
                           </div>
                         </th>
                         <th style={styles.tableHeader}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 8,
+                            }}
+                          >
                             <span>Balance Due</span>
                             <TableFilter
                               type="number"
                               placeholder="₹"
                               rangeOnly={true}
-                              onApply={(f) => setFilters((p) => ({ ...p, balance: f }))}
-                              onClear={() => setFilters((p) => ({ ...p, balance: null }))}
+                              onApply={(f) =>
+                                setFilters((p) => ({ ...p, balance: f }))
+                              }
+                              onClear={() =>
+                                setFilters((p) => ({ ...p, balance: null }))
+                              }
                             />
                           </div>
                         </th>
                         <th style={styles.tableHeader}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 8,
+                            }}
+                          >
                             <span>Date</span>
                             <TableFilter
                               type="date"
                               placeholder="yyyy-mm-dd"
                               rangeOnly={true}
-                              onApply={(f) => setFilters((p) => ({ ...p, date: f }))}
-                              onClear={() => setFilters((p) => ({ ...p, date: null }))}
+                              onApply={(f) =>
+                                setFilters((p) => ({ ...p, date: f }))
+                              }
+                              onClear={() =>
+                                setFilters((p) => ({ ...p, date: null }))
+                              }
                             />
                           </div>
                         </th>

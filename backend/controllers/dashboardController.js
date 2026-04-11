@@ -171,6 +171,7 @@ const getIncompleteLetterSummary = (letter, type) => {
     signedDocBuy: letter.documents?.signedDocBuy,
     signedDocSell: letter.documents?.signedDocSell,
     vehicleBuyReceiptPages: letter.documents?.vehicleBuyReceipt?.pages,
+    transferReceiptPages: letter.documents?.transferReceipt?.pages,
   };
 
   if (type === "buy") {
@@ -182,6 +183,9 @@ const getIncompleteLetterSummary = (letter, type) => {
     
     if (!docPaths.signedDocBuy) missingFields.push("Signed Doc");
     if (!docPaths.pan) missingFields.push("PAN Card");
+    if (!docPaths.vehicleBuyReceiptPages || docPaths.vehicleBuyReceiptPages.length === 0) {
+      missingFields.push("Buy Receipt");
+    }
 
   } else {
     // Check Vehicle RC - if either front, back, or combined exists, it's not missing
@@ -192,6 +196,11 @@ const getIncompleteLetterSummary = (letter, type) => {
     
     if (!docPaths.signedDocSell) missingFields.push("Signed Doc");
     if (!docPaths.pan) missingFields.push("PAN Card");
+    
+    // Check Transfer Receipt
+    if (!docPaths.transferReceiptPages || docPaths.transferReceiptPages.length === 0) {
+      missingFields.push("Transfer Receipt");
+    }
   }
 
   return { ...letter, missingFields };
@@ -240,8 +249,14 @@ exports.getIncompleteLetters = async (req, res) => {
 
         const buySummary = getIncompleteLetterSummary(buyLetter, "buy");
         if (buySummary.missingFields.length === 0) {
-          // The buy letter was complete. This sell letter is newly created and empty.
-          // Don't show it as incomplete.
+          // The buy letter was complete. 
+          // Check if the sell letter is missing sell-specific fields
+          const isMissingSellSpecific = sellLetter.missingFields.some(f => 
+            ["Signed Doc", "Transfer Receipt"].includes(f)
+          );
+          if (isMissingSellSpecific) return true;
+
+          // Otherwise, don't show it as incomplete if it's just newly created.
           return false;
         }
 

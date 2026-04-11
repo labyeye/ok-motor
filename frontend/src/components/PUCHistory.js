@@ -1,11 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
-import {
-  Trash2,
-  FileText,
-  Edit,
-  Search,
-} from "lucide-react";
+import { Trash2, FileText, Edit, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
@@ -305,7 +300,8 @@ const PUCHistory = () => {
       const v = new Date(eFilter.value);
       // require value for non-range ops; for between allow one-sided
       if (eFilter.op !== "between" && isNaN(v.getTime())) return false;
-      if (eFilter.op === "eq" && d.toDateString() !== v.toDateString()) return false;
+      if (eFilter.op === "eq" && d.toDateString() !== v.toDateString())
+        return false;
       if (eFilter.op === "before" && !(d < v)) return false;
       if (eFilter.op === "after" && !(d > v)) return false;
       if (eFilter.op === "between") {
@@ -356,9 +352,7 @@ const PUCHistory = () => {
         <div style={styles.contentPadding}>
           <div style={styles.header}>
             <h1 style={styles.pageTitle}>PUC History</h1>
-            <p style={styles.pageSubtitle}>
-              View and manage all PUC records.
-            </p>
+            <p style={styles.pageSubtitle}>View and manage all PUC records.</p>
           </div>
 
           <div style={styles.searchContainer}>
@@ -385,7 +379,11 @@ const PUCHistory = () => {
             {loading ? (
               <p>Loading...</p>
             ) : filteredHistory.length === 0 ? (
-              <p>{searchTerm ? `No records found for "${searchTerm}"` : "No PUC records found."}</p>
+              <p>
+                {searchTerm
+                  ? `No records found for "${searchTerm}"`
+                  : "No PUC records found."}
+              </p>
             ) : (
               <table style={styles.table}>
                 <thead>
@@ -396,9 +394,22 @@ const PUCHistory = () => {
                     <th style={styles.tableHeader}>Reg No</th>
                     <th style={styles.tableHeader}>PUC Certificate No</th>
                     <th style={styles.tableHeader}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 8,
+                        }}
+                      >
                         <span>Expiry Date</span>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
                           <select
                             value={filters.expiryTone || "all"}
                             onChange={(e) =>
@@ -420,8 +431,12 @@ const PUCHistory = () => {
                             type="date"
                             placeholder="yyyy-mm-dd"
                             rangeOnly={true}
-                            onApply={(f) => setFilters((p) => ({ ...p, expiry: f }))}
-                            onClear={() => setFilters((p) => ({ ...p, expiry: null }))}
+                            onApply={(f) =>
+                              setFilters((p) => ({ ...p, expiry: f }))
+                            }
+                            onClear={() =>
+                              setFilters((p) => ({ ...p, expiry: null }))
+                            }
                           />
                         </div>
                       </div>
@@ -434,7 +449,9 @@ const PUCHistory = () => {
                     <tr key={item._id}>
                       <td style={styles.tableCell}>{item.personName}</td>
                       <td style={styles.tableCell}>{item.personPhone}</td>
-                      <td style={styles.tableCell}>{item.brand} {item.vehicleModel} ({item.year})</td>
+                      <td style={styles.tableCell}>
+                        {item.brand} {item.vehicleModel} ({item.year})
+                      </td>
                       <td style={styles.tableCell}>{item.regNo}</td>
                       <td style={styles.tableCell}>{item.pucNumber}</td>
                       <td style={styles.tableCell}>
@@ -451,7 +468,9 @@ const PUCHistory = () => {
                                   ? styles.expiryBadgeSoon
                                   : styles.expiryBadgeHealthy;
                           return (
-                            <span style={{ ...styles.expiryBadge, ...toneStyle }}>
+                            <span
+                              style={{ ...styles.expiryBadge, ...toneStyle }}
+                            >
                               {meta.text}
                             </span>
                           );
@@ -459,8 +478,18 @@ const PUCHistory = () => {
                       </td>
                       <td style={styles.tableCell}>
                         <div style={{ display: "flex", gap: "8px" }}>
-                          <button style={styles.iconButton} onClick={() => handleEdit(item)}><Edit size={16} /></button>
-                          <button style={styles.iconButton} onClick={() => handleDelete(item._id)}><Trash2 size={16} /></button>
+                          <button
+                            style={styles.iconButton}
+                            onClick={() => handleEdit(item)}
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            style={styles.iconButton}
+                            onClick={() => handleDelete(item._id)}
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>

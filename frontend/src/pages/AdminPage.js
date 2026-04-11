@@ -338,7 +338,8 @@ const AdminPage = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const endpoint = "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
+      const endpoint =
+        "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
       const params = { limit: 2000 };
       if (search && String(search).trim() !== "")
         params.search = String(search).trim();

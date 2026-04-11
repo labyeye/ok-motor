@@ -66,7 +66,6 @@ const SellRequests = () => {
       setUpdating(false);
     }
   };
-  
 
   const handleLogout = () => {
     logout();

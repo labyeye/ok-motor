@@ -27,7 +27,11 @@ const ServiceHistory = () => {
   const [, setSellHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState({ regNo: null, amount: null, date: null });
+  const [filters, setFilters] = useState({
+    regNo: null,
+    amount: null,
+    date: null,
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -145,7 +149,8 @@ const ServiceHistory = () => {
           const purchaseResponse = await axios.get(
             `${config.API_BASE_URL}/buy-letter`,
           );
-          const purchaseRaw = purchaseResponse.data.data || purchaseResponse.data;
+          const purchaseRaw =
+            purchaseResponse.data.data || purchaseResponse.data;
           setPurchaseHistory(Array.isArray(purchaseRaw) ? purchaseRaw : []);
 
           const sellResponse = await axios.get(
@@ -322,7 +327,8 @@ const ServiceHistory = () => {
       const v = new Date(dFilter.value);
       // require value for non-range ops; for between allow one-sided
       if (dFilter.op !== "between" && isNaN(v.getTime())) return false;
-      if (dFilter.op === "eq" && d.toDateString() !== v.toDateString()) return false;
+      if (dFilter.op === "eq" && d.toDateString() !== v.toDateString())
+        return false;
       if (dFilter.op === "before" && !(d < v)) return false;
       if (dFilter.op === "after" && !(d > v)) return false;
       if (dFilter.op === "between") {
@@ -825,163 +831,503 @@ const ServiceHistory = () => {
               {!isMobile && (
                 <div style={styles.tableContainer}>
                   {filteredServiceBills.length === 0 ? (
-                    <p style={{ color: "#64748b", padding: "24px", textAlign: "center" }}>
-                      {searchTerm ? `No service records found for "${searchTerm}"` : "No service records found"}
+                    <p
+                      style={{
+                        color: "#64748b",
+                        padding: "24px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {searchTerm
+                        ? `No service records found for "${searchTerm}"`
+                        : "No service records found"}
                     </p>
                   ) : (
-                  <table style={styles.table}>
-                    <thead>
-                      <tr>
-                        <th style={styles.tableHeader}>Customer</th>
-                        <th style={styles.tableHeader}>Vehicle</th>
-                        <th style={styles.tableHeader}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                            <span>Reg No.</span>
-                            <TableFilter
-                              type="text"
-                              placeholder="Reg no"
-                              onApply={(f) => setFilters((p) => ({ ...p, regNo: f }))}
-                              onClear={() => setFilters((p) => ({ ...p, regNo: null }))}
-                            />
-                          </div>
-                        </th>
-                        <th style={styles.tableHeader}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                            <span>Amount</span>
-                            <TableFilter
-                              type="number"
-                              placeholder="₹"
-                              rangeOnly={true}
-                              onApply={(f) => setFilters((p) => ({ ...p, amount: f }))}
-                              onClear={() => setFilters((p) => ({ ...p, amount: null }))}
-                            />
-                          </div>
-                        </th>
-                        <th style={styles.tableHeader}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                            <span>Date</span>
-                            <TableFilter
-                              type="date"
-                              placeholder="yyyy-mm-dd"
-                              rangeOnly={true}
-                              onApply={(f) => setFilters((p) => ({ ...p, date: f }))}
-                              onClear={() => setFilters((p) => ({ ...p, date: null }))}
-                            />
-                          </div>
-                        </th>
-                        <th style={styles.tableHeader}>Status</th>
-                        <th style={styles.tableHeader}>Created By</th>
-                        <th style={styles.tableHeader}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredServiceBills.map((bill) => (
-                        <tr
-                          key={bill._id}
-                          style={{
-                            ...styles.tableRow,
-                            ...(bill._isPreviousVersion ? styles.previousRow : {}),
-                          }}
-                        >
-                          <td style={styles.tableCell}>{bill.customerName}</td>
-                          <td style={styles.tableCell}>
-                            {`${bill.vehicleBrand} ${bill.vehicleModel}`.split("\n")[0].substring(0, 20)}
-                            {`${bill.vehicleBrand} ${bill.vehicleModel}`.length > 20 && "..."}
-                          </td>
-                          <td style={styles.tableCell}>
-                            {bill.registrationNumber}
-                            {bill._isPreviousVersion ? (
-                              <span style={{ marginLeft: 8, padding: "2px 6px", backgroundColor: "#e2e8f0", color: "#475569", borderRadius: 6, fontSize: "0.7rem", fontWeight: 600 }} title="Previous version">Previous</span>
-                            ) : (
-                              bill.previousVersionId && (
-                                <span style={{ marginLeft: 8, padding: "2px 6px", backgroundColor: "#fde68a", color: "#92400e", borderRadius: 6, fontSize: "0.7rem", fontWeight: 600 }} title="This is a newer version">Updated</span>
-                              )
-                            )}
-                          </td>
-                          <td style={styles.tableCell}>₹{new Intl.NumberFormat("en-IN").format(bill.grandTotal)}</td>
-                          <td style={styles.tableCell}>{formatDate(bill.createdAt)}</td>
-                          <td style={styles.tableCell}>
-                            <span style={{ ...styles.statusBadge, ...(bill.paymentStatus === "paid" ? styles.statusPaid : bill.paymentStatus === "partial" ? styles.statusPartial : styles.statusPending) }}>
-                              {bill.paymentStatus}
-                            </span>
-                          </td>
-                          <td style={styles.tableCell}>{bill.user && bill.user.role === "admin" ? "admin" : bill.user && bill.user.name ? bill.user.name : ""}</td>
-                          <td style={styles.tableCell}>
-                            <button onClick={() => handleViewBill(bill._id)} style={styles.iconButton} title="View"><Eye size={16} /></button>
-                            <button onClick={() => handleDownload(bill._id)} style={styles.iconButton} title="Download" disabled={downloadProgress[bill._id] !== undefined}>
-                              {downloadProgress[bill._id] !== undefined ? (
-                                <div style={{ width: "60px", height: "4px", backgroundColor: "#e2e8f0", borderRadius: "2px", overflow: "hidden" }}>
-                                  <div style={{ width: `${downloadProgress[bill._id]}%`, height: "100%", backgroundColor: "#088395", transition: "width 0.3s ease" }} />
-                                </div>
-                              ) : <Download size={16} />}
-                            </button>
-                            {user?.role === "admin" && !bill._isPreviousVersion && (
-                              <>
-                                <button onClick={() => handleEdit(bill)} style={styles.iconButton} title="Edit"><Pencil size={16} /></button>
-                                <button onClick={() => handleDelete(bill._id)} style={styles.iconButton} title="Delete"><Trash2 size={16} /></button>
-                              </>
-                            )}
-                            {bill._isPreviousVersion
-                              ? (() => {
-                                  const newer = serviceBills.find((s) => s.previousVersionId === bill._id);
-                                  return newer ? (
-                                    <button onClick={() => handleViewChanges(newer)} style={styles.iconButton} title="View Changes (newer)" disabled={isComputingChanges}><ChevronRight size={16} /></button>
-                                  ) : null;
-                                })()
-                              : bill.previousVersionId && (
-                                  <button onClick={() => handleViewChanges(bill)} style={styles.iconButton} title="View Changes" disabled={isComputingChanges}><ChevronRight size={16} /></button>
-                                )}
-                          </td>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr>
+                          <th style={styles.tableHeader}>Customer</th>
+                          <th style={styles.tableHeader}>Vehicle</th>
+                          <th style={styles.tableHeader}>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 8,
+                              }}
+                            >
+                              <span>Reg No.</span>
+                              <TableFilter
+                                type="text"
+                                placeholder="Reg no"
+                                onApply={(f) =>
+                                  setFilters((p) => ({ ...p, regNo: f }))
+                                }
+                                onClear={() =>
+                                  setFilters((p) => ({ ...p, regNo: null }))
+                                }
+                              />
+                            </div>
+                          </th>
+                          <th style={styles.tableHeader}>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 8,
+                              }}
+                            >
+                              <span>Amount</span>
+                              <TableFilter
+                                type="number"
+                                placeholder="₹"
+                                rangeOnly={true}
+                                onApply={(f) =>
+                                  setFilters((p) => ({ ...p, amount: f }))
+                                }
+                                onClear={() =>
+                                  setFilters((p) => ({ ...p, amount: null }))
+                                }
+                              />
+                            </div>
+                          </th>
+                          <th style={styles.tableHeader}>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 8,
+                              }}
+                            >
+                              <span>Date</span>
+                              <TableFilter
+                                type="date"
+                                placeholder="yyyy-mm-dd"
+                                rangeOnly={true}
+                                onApply={(f) =>
+                                  setFilters((p) => ({ ...p, date: f }))
+                                }
+                                onClear={() =>
+                                  setFilters((p) => ({ ...p, date: null }))
+                                }
+                              />
+                            </div>
+                          </th>
+                          <th style={styles.tableHeader}>Status</th>
+                          <th style={styles.tableHeader}>Created By</th>
+                          <th style={styles.tableHeader}>Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {filteredServiceBills.map((bill) => (
+                          <tr
+                            key={bill._id}
+                            style={{
+                              ...styles.tableRow,
+                              ...(bill._isPreviousVersion
+                                ? styles.previousRow
+                                : {}),
+                            }}
+                          >
+                            <td style={styles.tableCell}>
+                              {bill.customerName}
+                            </td>
+                            <td style={styles.tableCell}>
+                              {`${bill.vehicleBrand} ${bill.vehicleModel}`
+                                .split("\n")[0]
+                                .substring(0, 20)}
+                              {`${bill.vehicleBrand} ${bill.vehicleModel}`
+                                .length > 20 && "..."}
+                            </td>
+                            <td style={styles.tableCell}>
+                              {bill.registrationNumber}
+                              {bill._isPreviousVersion ? (
+                                <span
+                                  style={{
+                                    marginLeft: 8,
+                                    padding: "2px 6px",
+                                    backgroundColor: "#e2e8f0",
+                                    color: "#475569",
+                                    borderRadius: 6,
+                                    fontSize: "0.7rem",
+                                    fontWeight: 600,
+                                  }}
+                                  title="Previous version"
+                                >
+                                  Previous
+                                </span>
+                              ) : (
+                                bill.previousVersionId && (
+                                  <span
+                                    style={{
+                                      marginLeft: 8,
+                                      padding: "2px 6px",
+                                      backgroundColor: "#fde68a",
+                                      color: "#92400e",
+                                      borderRadius: 6,
+                                      fontSize: "0.7rem",
+                                      fontWeight: 600,
+                                    }}
+                                    title="This is a newer version"
+                                  >
+                                    Updated
+                                  </span>
+                                )
+                              )}
+                            </td>
+                            <td style={styles.tableCell}>
+                              ₹
+                              {new Intl.NumberFormat("en-IN").format(
+                                bill.grandTotal,
+                              )}
+                            </td>
+                            <td style={styles.tableCell}>
+                              {formatDate(bill.createdAt)}
+                            </td>
+                            <td style={styles.tableCell}>
+                              <span
+                                style={{
+                                  ...styles.statusBadge,
+                                  ...(bill.paymentStatus === "paid"
+                                    ? styles.statusPaid
+                                    : bill.paymentStatus === "partial"
+                                      ? styles.statusPartial
+                                      : styles.statusPending),
+                                }}
+                              >
+                                {bill.paymentStatus}
+                              </span>
+                            </td>
+                            <td style={styles.tableCell}>
+                              {bill.user && bill.user.role === "admin"
+                                ? "admin"
+                                : bill.user && bill.user.name
+                                  ? bill.user.name
+                                  : ""}
+                            </td>
+                            <td style={styles.tableCell}>
+                              <button
+                                onClick={() => handleViewBill(bill._id)}
+                                style={styles.iconButton}
+                                title="View"
+                              >
+                                <Eye size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDownload(bill._id)}
+                                style={styles.iconButton}
+                                title="Download"
+                                disabled={
+                                  downloadProgress[bill._id] !== undefined
+                                }
+                              >
+                                {downloadProgress[bill._id] !== undefined ? (
+                                  <div
+                                    style={{
+                                      width: "60px",
+                                      height: "4px",
+                                      backgroundColor: "#e2e8f0",
+                                      borderRadius: "2px",
+                                      overflow: "hidden",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        width: `${downloadProgress[bill._id]}%`,
+                                        height: "100%",
+                                        backgroundColor: "#088395",
+                                        transition: "width 0.3s ease",
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <Download size={16} />
+                                )}
+                              </button>
+                              {user?.role === "admin" &&
+                                !bill._isPreviousVersion && (
+                                  <>
+                                    <button
+                                      onClick={() => handleEdit(bill)}
+                                      style={styles.iconButton}
+                                      title="Edit"
+                                    >
+                                      <Pencil size={16} />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDelete(bill._id)}
+                                      style={styles.iconButton}
+                                      title="Delete"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </>
+                                )}
+                              {bill._isPreviousVersion
+                                ? (() => {
+                                    const newer = serviceBills.find(
+                                      (s) => s.previousVersionId === bill._id,
+                                    );
+                                    return newer ? (
+                                      <button
+                                        onClick={() => handleViewChanges(newer)}
+                                        style={styles.iconButton}
+                                        title="View Changes (newer)"
+                                        disabled={isComputingChanges}
+                                      >
+                                        <ChevronRight size={16} />
+                                      </button>
+                                    ) : null;
+                                  })()
+                                : bill.previousVersionId && (
+                                    <button
+                                      onClick={() => handleViewChanges(bill)}
+                                      style={styles.iconButton}
+                                      title="View Changes"
+                                      disabled={isComputingChanges}
+                                    >
+                                      <ChevronRight size={16} />
+                                    </button>
+                                  )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   )}
                 </div>
               )}
 
               {/* Mobile Cards */}
               {isMobile && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
                   {filteredServiceBills.length === 0 ? (
-                    <p style={{ color: "#64748b", padding: "24px", textAlign: "center" }}>
-                      {searchTerm ? `No service records found for "${searchTerm}"` : "No service records found"}
+                    <p
+                      style={{
+                        color: "#64748b",
+                        padding: "24px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {searchTerm
+                        ? `No service records found for "${searchTerm}"`
+                        : "No service records found"}
                     </p>
-                  ) : filteredServiceBills.map((bill) => (
-                    <div key={bill._id} style={{ backgroundColor: "#fff", borderRadius: "12px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-                      <div style={{ backgroundColor: "#071952", padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ color: "#fff", fontWeight: "700", fontSize: "0.95rem" }}>{bill.registrationNumber || "—"}</span>
-                        <span style={{
-                          backgroundColor: bill.paymentStatus === "paid" ? "rgba(8,131,149,0.8)" : bill.paymentStatus === "partial" ? "rgba(202,138,4,0.8)" : "rgba(185,28,28,0.8)",
-                          color: "#fff", borderRadius: "20px", padding: "3px 10px", fontSize: "0.72rem", fontWeight: "600", textTransform: "capitalize"
-                        }}>{bill.paymentStatus}</span>
-                      </div>
-                      <div style={{ padding: "12px 14px" }}>
-                        <p style={{ margin: "0 0 8px 0", fontSize: "0.82rem", color: "#64748b" }}>{bill.vehicleBrand} {bill.vehicleModel}</p>
-                        {[
-                          ["Customer", bill.customerName],
-                          ["Amount", `₹${new Intl.NumberFormat("en-IN").format(bill.grandTotal)}`],
-                          ["Date", formatDate(bill.createdAt)],
-                          ["Created By", bill.user?.role === "admin" ? "admin" : bill.user?.name || ""],
-                        ].map(([label, value]) => (
-                          <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid #f1f5f9" }}>
-                            <span style={{ fontSize: "0.78rem", color: "#94a3b8", fontWeight: "500" }}>{label}</span>
-                            <span style={{ fontSize: "0.82rem", color: "#1e293b", fontWeight: "600", textAlign: "right", maxWidth: "60%" }}>{value || "—"}</span>
+                  ) : (
+                    filteredServiceBills.map((bill) => (
+                      <div
+                        key={bill._id}
+                        style={{
+                          backgroundColor: "#fff",
+                          borderRadius: "12px",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                          border: "1px solid #e2e8f0",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            backgroundColor: "#071952",
+                            padding: "12px 14px",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: "#fff",
+                              fontWeight: "700",
+                              fontSize: "0.95rem",
+                            }}
+                          >
+                            {bill.registrationNumber || "—"}
+                          </span>
+                          <span
+                            style={{
+                              backgroundColor:
+                                bill.paymentStatus === "paid"
+                                  ? "rgba(8,131,149,0.8)"
+                                  : bill.paymentStatus === "partial"
+                                    ? "rgba(202,138,4,0.8)"
+                                    : "rgba(185,28,28,0.8)",
+                              color: "#fff",
+                              borderRadius: "20px",
+                              padding: "3px 10px",
+                              fontSize: "0.72rem",
+                              fontWeight: "600",
+                              textTransform: "capitalize",
+                            }}
+                          >
+                            {bill.paymentStatus}
+                          </span>
+                        </div>
+                        <div style={{ padding: "12px 14px" }}>
+                          <p
+                            style={{
+                              margin: "0 0 8px 0",
+                              fontSize: "0.82rem",
+                              color: "#64748b",
+                            }}
+                          >
+                            {bill.vehicleBrand} {bill.vehicleModel}
+                          </p>
+                          {[
+                            ["Customer", bill.customerName],
+                            [
+                              "Amount",
+                              `₹${new Intl.NumberFormat("en-IN").format(bill.grandTotal)}`,
+                            ],
+                            ["Date", formatDate(bill.createdAt)],
+                            [
+                              "Created By",
+                              bill.user?.role === "admin"
+                                ? "admin"
+                                : bill.user?.name || "",
+                            ],
+                          ].map(([label, value]) => (
+                            <div
+                              key={label}
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                padding: "4px 0",
+                                borderBottom: "1px solid #f1f5f9",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "0.78rem",
+                                  color: "#94a3b8",
+                                  fontWeight: "500",
+                                }}
+                              >
+                                {label}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "0.82rem",
+                                  color: "#1e293b",
+                                  fontWeight: "600",
+                                  textAlign: "right",
+                                  maxWidth: "60%",
+                                }}
+                              >
+                                {value || "—"}
+                              </span>
+                            </div>
+                          ))}
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "8px",
+                              marginTop: "12px",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <button
+                              onClick={() => handleViewBill(bill._id)}
+                              style={{
+                                flex: 1,
+                                minWidth: "60px",
+                                padding: "8px",
+                                backgroundColor: "#e0f2fe",
+                                border: "none",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                fontSize: "0.78rem",
+                                color: "#0284c7",
+                                fontWeight: "500",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px",
+                              }}
+                            >
+                              <Eye size={14} /> View
+                            </button>
+                            <button
+                              onClick={() => handleDownload(bill._id)}
+                              style={{
+                                flex: 1,
+                                minWidth: "60px",
+                                padding: "8px",
+                                backgroundColor: "#f1f5f9",
+                                border: "none",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                fontSize: "0.78rem",
+                                color: "#334155",
+                                fontWeight: "500",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px",
+                              }}
+                            >
+                              <Download size={14} /> PDF
+                            </button>
+                            {user?.role === "admin" &&
+                              !bill._isPreviousVersion && (
+                                <>
+                                  <button
+                                    onClick={() => handleEdit(bill)}
+                                    style={{
+                                      flex: 1,
+                                      minWidth: "60px",
+                                      padding: "8px",
+                                      backgroundColor: "#f1f5f9",
+                                      border: "none",
+                                      borderRadius: "8px",
+                                      cursor: "pointer",
+                                      fontSize: "0.78rem",
+                                      color: "#334155",
+                                      fontWeight: "500",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      gap: "4px",
+                                    }}
+                                  >
+                                    <Pencil size={14} /> Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(bill._id)}
+                                    style={{
+                                      flex: 1,
+                                      minWidth: "60px",
+                                      padding: "8px",
+                                      backgroundColor: "#fee2e2",
+                                      border: "none",
+                                      borderRadius: "8px",
+                                      cursor: "pointer",
+                                      fontSize: "0.78rem",
+                                      color: "#991b1b",
+                                      fontWeight: "500",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      gap: "4px",
+                                    }}
+                                  >
+                                    <Trash2 size={14} /> Delete
+                                  </button>
+                                </>
+                              )}
                           </div>
-                        ))}
-                        <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
-                          <button onClick={() => handleViewBill(bill._id)} style={{ flex: 1, minWidth: "60px", padding: "8px", backgroundColor: "#e0f2fe", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#0284c7", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}><Eye size={14} /> View</button>
-                          <button onClick={() => handleDownload(bill._id)} style={{ flex: 1, minWidth: "60px", padding: "8px", backgroundColor: "#f1f5f9", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#334155", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}><Download size={14} /> PDF</button>
-                          {user?.role === "admin" && !bill._isPreviousVersion && (
-                            <>
-                              <button onClick={() => handleEdit(bill)} style={{ flex: 1, minWidth: "60px", padding: "8px", backgroundColor: "#f1f5f9", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#334155", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}><Pencil size={14} /> Edit</button>
-                              <button onClick={() => handleDelete(bill._id)} style={{ flex: 1, minWidth: "60px", padding: "8px", backgroundColor: "#fee2e2", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "0.78rem", color: "#991b1b", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}><Trash2 size={14} /> Delete</button>
-                            </>
-                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               )}
 

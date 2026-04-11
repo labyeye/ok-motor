@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  useRef,
+} from "react";
 import axios from "axios";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
@@ -28,7 +34,12 @@ const BikeHistory = ({ externalSearchTerm }) => {
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [expandedItems, setExpandedItems] = useState(new Set());
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [selectedLetter, setSelectedLetter] = useState(null);
+  const [languageAction, setLanguageAction] = useState(null);
   const navigate = useNavigate();
+
+  const lastExternalSearch = useRef(null);
 
   useEffect(() => {
     if (
@@ -36,14 +47,12 @@ const BikeHistory = ({ externalSearchTerm }) => {
       externalSearchTerm !== null
     ) {
       const term = String(externalSearchTerm || "").trim();
-      if (term && term !== searchTerm) {
+      if (term !== lastExternalSearch.current) {
+        lastExternalSearch.current = term;
         setSearchTerm(term);
       }
-      if (!term) {
-        setSearchTerm("");
-      }
     }
-  }, [externalSearchTerm, searchTerm]);
+  }, [externalSearchTerm]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -266,6 +275,241 @@ const BikeHistory = ({ externalSearchTerm }) => {
       console.warn("Failed to add header/footer:", err);
     }
   };
+  const embedAssetFromUrl = async (pdfDoc, url) => {
+    try {
+      const response = await fetch(url);
+      const data = await response.arrayBuffer();
+      if (url.toLowerCase().endsWith(".pdf")) {
+        const pages = await pdfDoc.embedPdf(data);
+        return { kind: "pdf", embeddedPages: pages };
+      } else {
+        const img = await pdfDoc
+          .embedPng(data)
+          .catch(() => pdfDoc.embedJpg(data));
+        return { kind: "image", embedded: img };
+      }
+    } catch (e) {
+      console.warn("Failed to embed asset:", url, e);
+      return null;
+    }
+  };
+  const addDocumentPages = async (pdfDoc, documentsObj) => {
+    if (!documentsObj) return;
+
+    const rcItems = [];
+    if (documentsObj.vehicleRC) {
+      if (documentsObj.vehicleRC.front)
+        rcItems.push({
+          title: "Vehicle RC - Front",
+          url: documentsObj.vehicleRC.front,
+        });
+      if (
+        documentsObj.vehicleRC.back &&
+        documentsObj.vehicleRC.back !== documentsObj.vehicleRC.front
+      )
+        rcItems.push({
+          title: "Vehicle RC - Back",
+          url: documentsObj.vehicleRC.back,
+        });
+
+      if (rcItems.length === 1) {
+        rcItems[0].title = "Vehicle RC (Front and Back)";
+      }
+    }
+
+    const aadhaarItems = [];
+    if (documentsObj.aadhaar) {
+      const uploadMode = documentsObj.aadhaarUploadMode || "separate";
+      if (uploadMode === "single") {
+        if (documentsObj.aadhaar.front) {
+          aadhaarItems.push({
+            title: "Aadhaar (Front and Back)",
+            url: documentsObj.aadhaar.front,
+          });
+        }
+      } else {
+        if (documentsObj.aadhaar.front)
+          aadhaarItems.push({
+            title: "Aadhaar - Front",
+            url: documentsObj.aadhaar.front,
+          });
+        if (
+          documentsObj.aadhaar.back &&
+          documentsObj.aadhaar.back !== documentsObj.aadhaar.front
+        )
+          aadhaarItems.push({
+            title: "Aadhaar - Back",
+            url: documentsObj.aadhaar.back,
+          });
+
+        if (aadhaarItems.length === 1) {
+          aadhaarItems[0].title = "Aadhaar (Front and Back)";
+        }
+      }
+    }
+
+    const panItems = [];
+    if (documentsObj.pan)
+      panItems.push({ title: "PAN Card", url: documentsObj.pan });
+
+    const deliveryPhotoItems = [];
+    if (documentsObj.deliveryPhoto || documentsObj.vehicleKM)
+      deliveryPhotoItems.push({
+        title: "Delivery Photo",
+        url: documentsObj.deliveryPhoto || documentsObj.vehicleKM,
+      });
+
+    const otherItems = [];
+    if (documentsObj.signedDocSell)
+      otherItems.push({
+        title: "Signed Document (Sell)",
+        url: documentsObj.signedDocSell,
+      });
+    if (documentsObj.signedDocBuy)
+      otherItems.push({
+        title: "Signed Document (Buy)",
+        url: documentsObj.signedDocBuy,
+      });
+
+    const processArray = (arr, label) => {
+      if (!arr) return;
+      const pages = Array.isArray(arr) ? arr : arr.pages;
+      if (Array.isArray(pages)) {
+        pages.forEach((url, i) =>
+          otherItems.push({ title: `${label} ${i + 1}`, url }),
+        );
+      }
+    };
+
+    processArray(documentsObj.insuranceCertificate, "Insurance Certificate");
+    processArray(documentsObj.vehicleNOC, "Vehicle NOC");
+    processArray(documentsObj.transferReceipt, "Transfer Receipt");
+    processArray(documentsObj.vehicleBuyReceipt, "Buy Receipt");
+    processArray(documentsObj.vehiclePhotos, "Vehicle Photo");
+
+    const renderGroup = async (items, groupLabel) => {
+      if (items.length === 0) return;
+      const page = pdfDoc.addPage([595, 842]);
+      await addHeaderFooterToPage(page, pdfDoc);
+      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      const margin = 40;
+      const pageWidth = 595;
+      const topStart = 700;
+
+      if (items.length === 2) {
+        // Two columns
+        const colWidth = (pageWidth - 3 * margin) / 2;
+        for (let i = 0; i < 2; i++) {
+          const item = items[i];
+          const xPos = margin + i * (colWidth + margin);
+          page.drawText(item.title, { x: xPos, y: topStart, size: 10, font });
+          const asset = await embedAssetFromUrl(pdfDoc, item.url);
+          if (asset) {
+            let img;
+            if (asset.kind === "image") img = asset.embedded;
+            else img = asset.embeddedPages[0];
+
+            let { width, height } = img.scale(1);
+            if (!width) {
+              width = img.getWidth?.() || 500;
+              height = img.getHeight?.() || 500;
+            }
+            const drawW = colWidth;
+            const drawH = (height / width) * drawW;
+            const finalH = drawH > 250 ? 250 : drawH;
+            const finalW = drawH > 250 ? (width / height) * 250 : drawW;
+
+            if (asset.kind === "image") {
+              page.drawImage(asset.embedded, {
+                x: xPos + (colWidth - finalW) / 2,
+                y: topStart - 20 - finalH,
+                width: finalW,
+                height: finalH,
+              });
+            } else {
+              page.drawPage(asset.embeddedPages[0], {
+                x: xPos + (colWidth - finalW) / 2,
+                y: topStart - 20 - finalH,
+                width: finalW,
+                height: finalH,
+              });
+            }
+          }
+        }
+      } else {
+        // Single item
+        const item = items[0];
+        page.drawText(item.title, { x: margin, y: topStart, size: 12, font });
+        const asset = await embedAssetFromUrl(pdfDoc, item.url);
+        if (asset) {
+          if (asset.kind === "image") {
+            const { width, height } = asset.embedded.scaleToFit(500, 600);
+            page.drawImage(asset.embedded, {
+              x: (pageWidth - width) / 2,
+              y: topStart - 20 - height,
+              width,
+              height,
+            });
+          } else {
+            for (let i = 0; i < asset.embeddedPages.length; i++) {
+              let p = page;
+              if (i > 0) {
+                p = pdfDoc.addPage([595, 842]);
+                await addHeaderFooterToPage(p, pdfDoc);
+              }
+              const embeddedPage = asset.embeddedPages[i];
+              const { width, height } = embeddedPage.scaleToFit(500, 600);
+              p.drawPage(embeddedPage, {
+                x: (pageWidth - width) / 2,
+                y: topStart - 20 - height,
+                width,
+                height,
+              });
+            }
+          }
+        }
+      }
+    };
+
+    if (rcItems.length > 0) await renderGroup(rcItems, "RC");
+    if (aadhaarItems.length > 0) await renderGroup(aadhaarItems, "Aadhaar");
+    for (const item of panItems) await renderGroup([item], "PAN");
+    for (const item of deliveryPhotoItems)
+      await renderGroup([item], "Delivery Photo");
+    for (const item of otherItems) {
+      const page = pdfDoc.addPage([595, 842]);
+      await addHeaderFooterToPage(page, pdfDoc);
+      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      page.drawText(item.title, { x: 40, y: 700, size: 12, font });
+
+      const asset = await embedAssetFromUrl(pdfDoc, item.url);
+      if (asset) {
+        if (asset.kind === "image") {
+          const { width, height } = asset.embedded.scaleToFit(500, 600);
+          page.drawImage(asset.embedded, {
+            x: (595 - width) / 2,
+            y: 680 - height,
+            width,
+            height,
+          });
+        } else {
+          for (let i = 0; i < asset.embeddedPages.length; i++) {
+            let p = i === 0 ? page : pdfDoc.addPage([595, 842]);
+            if (i > 0) await addHeaderFooterToPage(p, pdfDoc);
+            const embeddedPage = asset.embeddedPages[i];
+            const { width, height } = embeddedPage.scaleToFit(500, 600);
+            p.drawPage(embeddedPage, {
+              x: (595 - width) / 2,
+              y: 680 - height,
+              width,
+              height,
+            });
+          }
+        }
+      }
+    }
+  };
 
   const buyLetterFieldPositions = {
     sellerName: { x: 34, y: 632, size: 11 },
@@ -331,10 +575,80 @@ const BikeHistory = ({ externalSearchTerm }) => {
     witnessPhone: { x: 70, y: 105, size: 11 },
     note: { x: 60, y: 33, size: 10 },
   };
+  const buyLetterEnglishFieldPositions = {
+    sellerName: { x: 185 - 16, y: 700, size: 11 },
+    sellerFatherName: { x: 445 - 16, y: 700, size: 11 },
+    sellerCurrentAddress: { x: 123 - 16, y: 680, size: 11 },
+    vehicleName: { x: 284, y: 660, size: 11 },
+    vehicleModel: { x: 93, y: 640, size: 11 },
+    vehicleColor: { x: 447, y: 660, size: 11 },
+    registrationNumber: { x: 392, y: 640, size: 11 },
+    chassisNumber: { x: 54, y: 620, size: 11 },
+    engineNumber: { x: 263, y: 620, size: 11 },
+    vehiclekm: { x: 455, y: 620, size: 11 },
+    buyerName: { x: 185 - 16, y: 599, size: 11 },
+    buyerFatherName: { x: 445 - 16, y: 599, size: 11 },
+    buyerCurrentAddress: { x: 123 - 16, y: 579, size: 11 },
+    saleDate: { x: 70 - 16, y: 558, size: 11 },
+    saleTime: { x: 181 - 16, y: 558, size: 11 },
+    saleAmount: { x: 285 - 16, y: 558, size: 11 },
+    todayDate: { x: 156 - 16, y: 537, size: 11 },
+    todayTime: { x: 291 - 16, y: 537, size: 11 },
+    sellerName1: { x: 120 - 16, y: 482, size: 11 },
+    sellerFatherName1: { x: 286 - 16, y: 482, size: 11 },
+    buyerName1: { x: 120 - 16, y: 445, size: 11 },
+    buyerFatherName1: { x: 286 - 16, y: 445, size: 11 },
+    todayDate1: { x: 240 - 16, y: 518, size: 11 },
+    todayTime1: { x: 340 - 16, y: 518, size: 11 },
+    dealername: { x: 200, y: 395, size: 11 },
+    dealeraddress: { x: 80, y: 375, size: 11 },
+    selleraadhar: { x: 137, y: 263, size: 11 },
+    sellerpan: { x: 137, y: 244, size: 11 },
+    selleraadharphone: { x: 137, y: 225, size: 11 },
+    selleraadharphone2: { x: 197, y: 225, size: 11 },
+    witnessname: { x: 105, y: 135, size: 11 },
+    witnessphone: { x: 105, y: 116, size: 11 },
+    returnpersonname: { x: 420, y: 340, size: 11 },
+    note: { x: 60, y: 30, size: 10 },
+  };
+  const sellLetterEnglishFieldPositions = {
+    amountInWords: { x: 60, y: 578, size: 10 },
+    vehicleName: { x: 284, y: 680, size: 11 },
+    vehicleModel: { x: 93, y: 660, size: 11 },
+    vehicleColor: { x: 447, y: 680, size: 11 },
+    registrationNumber: { x: 392, y: 660, size: 11 },
+    chassisNumber: { x: 54, y: 640, size: 11 },
+    engineNumber: { x: 263, y: 640, size: 11 },
+    vehiclekm: { x: 455, y: 640, size: 11 },
+    buyerName: { x: 185 - 16, y: 619, size: 11 },
+    buyerFatherName: { x: 445 - 16, y: 619, size: 11 },
+    buyerAddress: { x: 123 - 16, y: 599, size: 11 },
+    buyerName1: { x: 120 - 16, y: 517, size: 11 },
+    buyerName2: { x: 286 - 16, y: 482, size: 11 },
+    saleDate: { x: 120, y: 578, size: 11 }, // Updated
+    saleTime: { x: 181 - 16, y: 578, size: 11 },
+    saleAmount: { x: 285 - 16, y: 578, size: 11 },
+    todayDate: { x: 156 - 16, y: 557, size: 11 },
+    todayTime: { x: 291 - 16, y: 557, size: 11 },
+    previousDate: { x: 240 - 16, y: 538, size: 11 },
+    previousTime: { x: 340 - 16, y: 538, size: 11 },
+    buyerPhone: { x: 109, y: 282, size: 11 },
+    buyerPhone2: { x: 180, y: 282, size: 11 },
+    buyerAadhar: { x: 137, y: 263, size: 11 },
+    witnessName: { x: 105, y: 135, size: 11 },
+    witnessPhone: { x: 105, y: 116, size: 11 },
+    note: { x: 60, y: 35, size: 10 },
+  };
 
-  const downloadBuyLetterPDF = async (letter) => {
+  const downloadBuyLetterPDF = async (letter, language = "hindi") => {
     try {
-      const existingPdfBytes = await loadPDFTemplate("buyletter.pdf");
+      const template =
+        language === "english" ? "englishbuyletter.pdf" : "buyletter.pdf";
+      const fieldPos =
+        language === "english"
+          ? buyLetterEnglishFieldPositions
+          : buyLetterFieldPositions;
+      const existingPdfBytes = await loadPDFTemplate(template);
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const formattedData = {
@@ -430,9 +744,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         );
       }
 
-      for (const [fieldName, position] of Object.entries(
-        buyLetterFieldPositions,
-      )) {
+      for (const [fieldName, position] of Object.entries(fieldPos)) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
@@ -445,16 +757,16 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
       const saleAmountText = formattedData.saleAmount || "";
       const saleAmountWidth =
-        saleAmountText.length * (buyLetterFieldPositions.saleAmount.size / 2);
+        saleAmountText.length * (fieldPos.saleAmount.size / 2);
       const amountInWordsX =
-        buyLetterFieldPositions.saleAmount.x +
+        fieldPos.saleAmount.x +
         saleAmountWidth +
-        1.4 * (buyLetterFieldPositions.saleAmount.size / 2);
+        1.4 * (fieldPos.saleAmount.size / 2);
 
       pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
         x: amountInWordsX,
-        y: buyLetterFieldPositions.saleAmount.y,
-        size: buyLetterFieldPositions.saleAmount.size,
+        y: fieldPos.saleAmount.y,
+        size: fieldPos.saleAmount.size,
         color: rgb(0, 0, 0),
       });
 
@@ -462,93 +774,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
       // Add document pages
-      try {
-        const docs = letter.documents || {};
-        const docUrls = [];
-
-        // Collect all document URLs
-        if (docs.vehicleRC?.front)
-          docUrls.push({
-            label: "Vehicle RC (Front)",
-            url: docs.vehicleRC.front,
-          });
-        if (docs.vehicleRC?.back)
-          docUrls.push({
-            label: "Vehicle RC (Back)",
-            url: docs.vehicleRC.back,
-          });
-        if (docs.aadhaar?.front)
-          docUrls.push({ label: "Aadhaar (Front)", url: docs.aadhaar.front });
-        if (docs.aadhaar?.back)
-          docUrls.push({ label: "Aadhaar (Back)", url: docs.aadhaar.back });
-        if (docs.pan) docUrls.push({ label: "PAN", url: docs.pan });
-        if (docs.deliveryPhoto)
-          docUrls.push({ label: "Delivery Photo", url: docs.deliveryPhoto });
-        if (docs.signedDocBuy)
-          docUrls.push({ label: "Signed Document", url: docs.signedDocBuy });
-        if (Array.isArray(docs.insuranceCertificate)) {
-          docs.insuranceCertificate.forEach((url, idx) => {
-            docUrls.push({ label: `Insurance Certificate (${idx + 1})`, url });
-          });
-        }
-        if (Array.isArray(docs.vehicleNOC)) {
-          docs.vehicleNOC.forEach((url, idx) => {
-            docUrls.push({ label: `Vehicle NOC (${idx + 1})`, url });
-          });
-        }
-        if (Array.isArray(docs.vehicleBuyReceipt)) {
-          docs.vehicleBuyReceipt.forEach((url, idx) => {
-            docUrls.push({ label: `Buy Receipt (${idx + 1})`, url });
-          });
-        }
-
-        // Add each document as a page
-        for (const doc of docUrls) {
-          try {
-            const response = await fetch(doc.url);
-            const imageData = await response.arrayBuffer();
-            let documentImage;
-
-            if (doc.url.toLowerCase().endsWith(".pdf")) {
-              // Skip PDF files for now, can be enhanced later
-              continue;
-            } else {
-              documentImage = await pdfDoc
-                .embedPng(imageData)
-                .catch(() => pdfDoc.embedJpg(imageData));
-            }
-
-            const docPage = pdfDoc.addPage([595, 842]);
-
-            // Add header and footer first
-            await addHeaderFooterToPage(docPage, pdfDoc);
-
-            const { width, height } = documentImage.scaleToFit(500, 650);
-            docPage.drawImage(documentImage, {
-              x: 47.5,
-              y: 660 - height,
-              width,
-              height,
-            });
-
-            // Add document label
-            const labelFont = await pdfDoc.embedFont(
-              StandardFonts.HelveticaBold,
-            );
-            docPage.drawText(doc.label, {
-              x: 22.5,
-              y: 690,
-              size: 12,
-              color: rgb(0, 0, 0),
-              font: labelFont,
-            });
-          } catch (docErr) {
-            console.warn(`Failed to add document ${doc.label}:`, docErr);
-          }
-        }
-      } catch (docsErr) {
-        console.warn("Failed to add documents:", docsErr);
-      }
+      await addDocumentPages(pdfDoc, letter.documents);
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -569,9 +795,15 @@ const BikeHistory = ({ externalSearchTerm }) => {
     }
   };
 
-  const downloadSellLetterPDF = async (letter) => {
+  const downloadSellLetterPDF = async (letter, language = "hindi") => {
     try {
-      const existingPdfBytes = await loadPDFTemplate("sellletter.pdf");
+      const template =
+        language === "english" ? "englishsell.pdf" : "sellletter.pdf";
+      const fieldPos =
+        language === "english"
+          ? sellLetterEnglishFieldPositions
+          : sellLetterFieldPositions;
+      const existingPdfBytes = await loadPDFTemplate(template);
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const formattedData = {
@@ -600,9 +832,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         note: letter.note || "",
       };
 
-      for (const [fieldName, position] of Object.entries(
-        sellLetterFieldPositions,
-      )) {
+      for (const [fieldName, position] of Object.entries(fieldPos)) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
@@ -618,12 +848,12 @@ const BikeHistory = ({ externalSearchTerm }) => {
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
         const saleText = `${formattedData.saleAmount}`;
-        const xBase = sellLetterFieldPositions.saleAmount.x;
-        const yBase = sellLetterFieldPositions.saleAmount.y;
+        const xBase = fieldPos.saleAmount.x;
+        const yBase = fieldPos.saleAmount.y;
 
         const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
         page.drawText(formattedData.amountInWords, {
-          x: xBase + saleTextWidth + 8,
+          x: xBase + saleTextWidth + (language === "english" ? 8 : 10),
           y: yBase,
           size: 10,
           color: rgb(0, 0, 0),
@@ -635,93 +865,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       await drawVehicleInvoiceForSell(invoicePage, pdfDoc, letter);
 
       // Add document pages
-      try {
-        const docs = letter.documents || {};
-        const docUrls = [];
-
-        // Collect all document URLs
-        if (docs.vehicleRC?.front)
-          docUrls.push({
-            label: "Vehicle RC (Front)",
-            url: docs.vehicleRC.front,
-          });
-        if (docs.vehicleRC?.back)
-          docUrls.push({
-            label: "Vehicle RC (Back)",
-            url: docs.vehicleRC.back,
-          });
-        if (docs.aadhaar?.front)
-          docUrls.push({ label: "Aadhaar (Front)", url: docs.aadhaar.front });
-        if (docs.aadhaar?.back)
-          docUrls.push({ label: "Aadhaar (Back)", url: docs.aadhaar.back });
-        if (docs.pan) docUrls.push({ label: "PAN", url: docs.pan });
-        if (docs.deliveryPhoto)
-          docUrls.push({ label: "Delivery Photo", url: docs.deliveryPhoto });
-        if (docs.signedDocSell)
-          docUrls.push({ label: "Signed Document", url: docs.signedDocSell });
-        if (Array.isArray(docs.insuranceCertificate)) {
-          docs.insuranceCertificate.forEach((url, idx) => {
-            docUrls.push({ label: `Insurance Certificate (${idx + 1})`, url });
-          });
-        }
-        if (Array.isArray(docs.vehiclePhotos)) {
-          docs.vehiclePhotos.forEach((url, idx) => {
-            docUrls.push({ label: `Vehicle Photo (${idx + 1})`, url });
-          });
-        }
-        if (Array.isArray(docs.vehicleNOC)) {
-          docs.vehicleNOC.forEach((url, idx) => {
-            docUrls.push({ label: `Vehicle NOC (${idx + 1})`, url });
-          });
-        }
-
-        // Add each document as a page
-        for (const doc of docUrls) {
-          try {
-            const response = await fetch(doc.url);
-            const imageData = await response.arrayBuffer();
-            let documentImage;
-
-            if (doc.url.toLowerCase().endsWith(".pdf")) {
-              // Skip PDF files for now
-              continue;
-            } else {
-              documentImage = await pdfDoc
-                .embedPng(imageData)
-                .catch(() => pdfDoc.embedJpg(imageData));
-            }
-
-            const docPage = pdfDoc.addPage([595, 842]);
-
-            // Add header and footer first
-            await addHeaderFooterToPage(docPage, pdfDoc);
-
-            const { width, height } = documentImage.scaleToFit(500, 650);
-            docPage.drawImage(documentImage, {
-              x: 47.5,
-              y: 660 - height,
-              width,
-              height,
-            });
-
-            // Add document label
-            const labelFont = await pdfDoc.embedFont(
-              StandardFonts.HelveticaBold,
-            );
-            docPage.drawText(doc.label, {
-              x: 22.5,
-              y: 690,
-              size: 12,
-              color: rgb(0, 0, 0),
-              font: labelFont,
-            });
-          } catch (docErr) {
-            console.warn(`Failed to add document ${doc.label}:`, docErr);
-          }
-        }
-      } catch (docsErr) {
-        console.warn("Failed to add documents:", docsErr);
-      }
+      await addDocumentPages(pdfDoc, letter.documents);
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -1099,44 +1243,6 @@ const BikeHistory = ({ externalSearchTerm }) => {
         font: font,
       });
     });
-
-    if (letter.note) {
-      page.drawText("ADDITIONAL NOTES", {
-        x: 40,
-        y: 170,
-        size: 12,
-        color: rgb(0.047, 0.098, 0.196),
-        font: boldFont,
-      });
-
-      const noteText = letter.note;
-      const maxNoteWidth = 500;
-      const noteLines = [];
-      let currentNoteLine = "";
-
-      for (const word of noteText.split(" ")) {
-        const testLine = currentNoteLine ? `${currentNoteLine} ${word}` : word;
-        const testWidth = font.widthOfTextAtSize(testLine, 10);
-
-        if (testWidth <= maxNoteWidth) {
-          currentNoteLine = testLine;
-        } else {
-          if (currentNoteLine) noteLines.push(currentNoteLine);
-          currentNoteLine = word;
-        }
-      }
-      if (currentNoteLine) noteLines.push(currentNoteLine);
-
-      noteLines.forEach((line, index) => {
-        page.drawText(line, {
-          x: 60,
-          y: 145 - index * 12,
-          size: 10,
-          color: rgb(0.2, 0.2, 0.2),
-          font: font,
-        });
-      });
-    }
 
     page.drawText("Seller Signature", {
       x: 110,
@@ -1557,44 +1663,6 @@ const BikeHistory = ({ externalSearchTerm }) => {
         font: font,
       });
     });
-
-    if (letter.note) {
-      page.drawText("ADDITIONAL NOTES", {
-        x: 40,
-        y: 100,
-        size: 12,
-        color: rgb(0.047, 0.098, 0.196),
-        font: boldFont,
-      });
-
-      const noteText = letter.note;
-      const maxNoteWidth = 500;
-      const noteLines = [];
-      let currentNoteLine = "";
-
-      for (const word of noteText.split(" ")) {
-        const testLine = currentNoteLine ? `${currentNoteLine} ${word}` : word;
-        const testWidth = font.widthOfTextAtSize(testLine, 10);
-
-        if (testWidth <= maxNoteWidth) {
-          currentNoteLine = testLine;
-        } else {
-          if (currentNoteLine) noteLines.push(currentNoteLine);
-          currentNoteLine = word;
-        }
-      }
-      if (currentNoteLine) noteLines.push(currentNoteLine);
-
-      noteLines.forEach((line, index) => {
-        page.drawText(line, {
-          x: 60,
-          y: 75 - index * 12,
-          size: 10,
-          color: rgb(0.2, 0.2, 0.2),
-          font: font,
-        });
-      });
-    }
 
     page.drawText("Buyer Signature", {
       x: 120,
@@ -2023,9 +2091,15 @@ const BikeHistory = ({ externalSearchTerm }) => {
     }
   }, [searchTerm]);
 
-  const previewBuyLetterPDF = async (letter) => {
+  const previewBuyLetterPDF = async (letter, language = "hindi") => {
     try {
-      const existingPdfBytes = await loadPDFTemplate("buyletter.pdf");
+      const template =
+        language === "english" ? "englishbuyletter.pdf" : "buyletter.pdf";
+      const fieldPos =
+        language === "english"
+          ? buyLetterEnglishFieldPositions
+          : buyLetterFieldPositions;
+      const existingPdfBytes = await loadPDFTemplate(template);
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const formattedData = {
@@ -2058,9 +2132,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         note: letter.note || "",
       };
 
-      for (const [fieldName, position] of Object.entries(
-        buyLetterFieldPositions,
-      )) {
+      for (const [fieldName, position] of Object.entries(fieldPos)) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
@@ -2073,16 +2145,16 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
       const saleAmountText = formattedData.saleAmount || "";
       const saleAmountWidth =
-        saleAmountText.length * (buyLetterFieldPositions.saleAmount.size / 2);
+        saleAmountText.length * (fieldPos.saleAmount.size / 2);
       const amountInWordsX =
-        buyLetterFieldPositions.saleAmount.x +
+        fieldPos.saleAmount.x +
         saleAmountWidth +
-        1.4 * (buyLetterFieldPositions.saleAmount.size / 2);
+        1.4 * (fieldPos.saleAmount.size / 2);
 
       pdfDoc.getPages()[0].drawText(formattedData.amountInWords, {
         x: amountInWordsX,
-        y: buyLetterFieldPositions.saleAmount.y,
-        size: buyLetterFieldPositions.saleAmount.size,
+        y: fieldPos.saleAmount.y,
+        size: fieldPos.saleAmount.size,
         color: rgb(0, 0, 0),
       });
 
@@ -2090,92 +2162,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
       // Add document pages
-      try {
-        const docs = letter.documents || {};
-        const docUrls = [];
-
-        // Collect all document URLs
-        if (docs.vehicleRC?.front)
-          docUrls.push({
-            label: "Vehicle RC (Front)",
-            url: docs.vehicleRC.front,
-          });
-        if (docs.vehicleRC?.back)
-          docUrls.push({
-            label: "Vehicle RC (Back)",
-            url: docs.vehicleRC.back,
-          });
-        if (docs.aadhaar?.front)
-          docUrls.push({ label: "Aadhaar (Front)", url: docs.aadhaar.front });
-        if (docs.aadhaar?.back)
-          docUrls.push({ label: "Aadhaar (Back)", url: docs.aadhaar.back });
-        if (docs.pan) docUrls.push({ label: "PAN", url: docs.pan });
-        if (docs.deliveryPhoto)
-          docUrls.push({ label: "Delivery Photo", url: docs.deliveryPhoto });
-        if (docs.signedDocBuy)
-          docUrls.push({ label: "Signed Document", url: docs.signedDocBuy });
-        if (Array.isArray(docs.insuranceCertificate)) {
-          docs.insuranceCertificate.forEach((url, idx) => {
-            docUrls.push({ label: `Insurance Certificate (${idx + 1})`, url });
-          });
-        }
-        if (Array.isArray(docs.vehicleNOC)) {
-          docs.vehicleNOC.forEach((url, idx) => {
-            docUrls.push({ label: `Vehicle NOC (${idx + 1})`, url });
-          });
-        }
-        if (Array.isArray(docs.vehicleBuyReceipt)) {
-          docs.vehicleBuyReceipt.forEach((url, idx) => {
-            docUrls.push({ label: `Buy Receipt (${idx + 1})`, url });
-          });
-        }
-
-        // Add each document as a page
-        for (const doc of docUrls) {
-          try {
-            const response = await fetch(doc.url);
-            const imageData = await response.arrayBuffer();
-            let documentImage;
-
-            if (doc.url.toLowerCase().endsWith(".pdf")) {
-              continue;
-            } else {
-              documentImage = await pdfDoc
-                .embedPng(imageData)
-                .catch(() => pdfDoc.embedJpg(imageData));
-            }
-
-            const docPage = pdfDoc.addPage([595, 842]);
-
-            // Add header and footer first
-            await addHeaderFooterToPage(docPage, pdfDoc);
-
-            const { width, height } = documentImage.scaleToFit(500, 650);
-            docPage.drawImage(documentImage, {
-              x: 47.5,
-              y: 660 - height,
-              width,
-              height,
-            });
-
-            // Add document label
-            const labelFont = await pdfDoc.embedFont(
-              StandardFonts.HelveticaBold,
-            );
-            docPage.drawText(doc.label, {
-              x: 22.5,
-              y: 690,
-              size: 12,
-              color: rgb(0, 0, 0),
-              font: labelFont,
-            });
-          } catch (docErr) {
-            console.warn(`Failed to add document ${doc.label}:`, docErr);
-          }
-        }
-      } catch (docsErr) {
-        console.warn("Failed to add documents:", docsErr);
-      }
+      await addDocumentPages(pdfDoc, letter.documents);
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -2189,9 +2176,15 @@ const BikeHistory = ({ externalSearchTerm }) => {
     }
   };
 
-  const previewSellLetterPDF = async (letter) => {
+  const previewSellLetterPDF = async (letter, language = "hindi") => {
     try {
-      const existingPdfBytes = await loadPDFTemplate("sellletter.pdf");
+      const template =
+        language === "english" ? "englishsell.pdf" : "sellletter.pdf";
+      const fieldPos =
+        language === "english"
+          ? sellLetterEnglishFieldPositions
+          : sellLetterFieldPositions;
+      const existingPdfBytes = await loadPDFTemplate(template);
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
       const formattedData = {
@@ -2220,9 +2213,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         note: letter.note || "",
       };
 
-      for (const [fieldName, position] of Object.entries(
-        sellLetterFieldPositions,
-      )) {
+      for (const [fieldName, position] of Object.entries(fieldPos)) {
         if (formattedData[fieldName]) {
           pdfDoc.getPages()[0].drawText(String(formattedData[fieldName]), {
             x: position.x,
@@ -2238,12 +2229,12 @@ const BikeHistory = ({ externalSearchTerm }) => {
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
         const saleText = `${formattedData.saleAmount}`;
-        const xBase = sellLetterFieldPositions.saleAmount.x;
-        const yBase = sellLetterFieldPositions.saleAmount.y;
+        const xBase = fieldPos.saleAmount.x;
+        const yBase = fieldPos.saleAmount.y;
 
         const saleTextWidth = font.widthOfTextAtSize(saleText, 11);
         page.drawText(formattedData.amountInWords, {
-          x: xBase + saleTextWidth + 8,
+          x: xBase + saleTextWidth + (language === "english" ? 8 : 10),
           y: yBase,
           size: 10,
           color: rgb(0, 0, 0),
@@ -2255,92 +2246,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       await drawVehicleInvoiceForSell(invoicePage, pdfDoc, letter);
 
       // Add document pages
-      try {
-        const docs = letter.documents || {};
-        const docUrls = [];
-
-        // Collect all document URLs
-        if (docs.vehicleRC?.front)
-          docUrls.push({
-            label: "Vehicle RC (Front)",
-            url: docs.vehicleRC.front,
-          });
-        if (docs.vehicleRC?.back)
-          docUrls.push({
-            label: "Vehicle RC (Back)",
-            url: docs.vehicleRC.back,
-          });
-        if (docs.aadhaar?.front)
-          docUrls.push({ label: "Aadhaar (Front)", url: docs.aadhaar.front });
-        if (docs.aadhaar?.back)
-          docUrls.push({ label: "Aadhaar (Back)", url: docs.aadhaar.back });
-        if (docs.pan) docUrls.push({ label: "PAN", url: docs.pan });
-        if (docs.deliveryPhoto)
-          docUrls.push({ label: "Delivery Photo", url: docs.deliveryPhoto });
-        if (docs.signedDocSell)
-          docUrls.push({ label: "Signed Document", url: docs.signedDocSell });
-        if (Array.isArray(docs.insuranceCertificate)) {
-          docs.insuranceCertificate.forEach((url, idx) => {
-            docUrls.push({ label: `Insurance Certificate (${idx + 1})`, url });
-          });
-        }
-        if (Array.isArray(docs.vehiclePhotos)) {
-          docs.vehiclePhotos.forEach((url, idx) => {
-            docUrls.push({ label: `Vehicle Photo (${idx + 1})`, url });
-          });
-        }
-        if (Array.isArray(docs.vehicleNOC)) {
-          docs.vehicleNOC.forEach((url, idx) => {
-            docUrls.push({ label: `Vehicle NOC (${idx + 1})`, url });
-          });
-        }
-
-        // Add each document as a page
-        for (const doc of docUrls) {
-          try {
-            const response = await fetch(doc.url);
-            const imageData = await response.arrayBuffer();
-            let documentImage;
-
-            if (doc.url.toLowerCase().endsWith(".pdf")) {
-              continue;
-            } else {
-              documentImage = await pdfDoc
-                .embedPng(imageData)
-                .catch(() => pdfDoc.embedJpg(imageData));
-            }
-
-            const docPage = pdfDoc.addPage([595, 842]);
-
-            // Add header and footer first
-            await addHeaderFooterToPage(docPage, pdfDoc);
-
-            const { width, height } = documentImage.scaleToFit(500, 650);
-            docPage.drawImage(documentImage, {
-              x: 47.5,
-              y: 660 - height,
-              width,
-              height,
-            });
-
-            // Add document label
-            const labelFont = await pdfDoc.embedFont(
-              StandardFonts.HelveticaBold,
-            );
-            docPage.drawText(doc.label, {
-              x: 22.5,
-              y: 690,
-              size: 12,
-              color: rgb(0, 0, 0),
-              font: labelFont,
-            });
-          } catch (docErr) {
-            console.warn(`Failed to add document ${doc.label}:`, docErr);
-          }
-        }
-      } catch (docsErr) {
-        console.warn("Failed to add documents:", docsErr);
-      }
+      await addDocumentPages(pdfDoc, letter.documents);
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -2356,24 +2262,18 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
   const fetchPdf = async (id, type) => {
     try {
-      if (type === "buy") {
+      if (type === "buy" || type === "sell") {
         const letter = bikeHistory.find(
-          (item) => item._id === id && item.type === "buy",
+          (item) => item._id === id && item.type === type,
         );
         if (letter) {
-          await previewBuyLetterPDF(letter);
+          setSelectedLetter(letter);
+          setLanguageAction("preview");
+          setShowLanguageModal(true);
         } else {
-          alert("Buy letter data not found");
-        }
-        return;
-      } else if (type === "sell") {
-        const letter = bikeHistory.find(
-          (item) => item._id === id && item.type === "sell",
-        );
-        if (letter) {
-          await previewSellLetterPDF(letter);
-        } else {
-          alert("Sell letter data not found");
+          alert(
+            `${type.charAt(0).toUpperCase() + type.slice(1)} letter data not found`,
+          );
         }
         return;
       } else if (type === "service") {
@@ -2412,24 +2312,18 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
   const downloadPdf = async (id, type, fileName) => {
     try {
-      if (type === "buy") {
+      if (type === "buy" || type === "sell") {
         const letter = bikeHistory.find(
-          (item) => item._id === id && item.type === "buy",
+          (item) => item._id === id && item.type === type,
         );
         if (letter) {
-          await downloadBuyLetterPDF(letter);
+          setSelectedLetter(letter);
+          setLanguageAction("download");
+          setShowLanguageModal(true);
         } else {
-          alert("Buy letter data not found");
-        }
-        return;
-      } else if (type === "sell") {
-        const letter = bikeHistory.find(
-          (item) => item._id === id && item.type === "sell",
-        );
-        if (letter) {
-          await downloadSellLetterPDF(letter);
-        } else {
-          alert("Sell letter data not found");
+          alert(
+            `${type.charAt(0).toUpperCase() + type.slice(1)} letter data not found`,
+          );
         }
         return;
       } else if (type === "service") {
@@ -3627,6 +3521,74 @@ const BikeHistory = ({ externalSearchTerm }) => {
           </div>
         </div>
       )}
+      {showLanguageModal && selectedLetter && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <h3 style={styles.modalTitle}>Select PDF Language</h3>
+            <p style={styles.modalText}>
+              Choose the language for your {selectedLetter.type} letter:
+            </p>
+            <div style={styles.modalButtons}>
+              <button
+                style={styles.englishButton}
+                onClick={() => {
+                  setShowLanguageModal(false);
+                  if (languageAction === "preview") {
+                    if (selectedLetter.type === "buy") {
+                      previewBuyLetterPDF(selectedLetter, "english");
+                    } else {
+                      previewSellLetterPDF(selectedLetter, "english");
+                    }
+                    setLanguageAction(null);
+                  } else if (languageAction === "download") {
+                    if (selectedLetter.type === "buy") {
+                      downloadBuyLetterPDF(selectedLetter, "english");
+                    } else {
+                      downloadSellLetterPDF(selectedLetter, "english");
+                    }
+                    setLanguageAction(null);
+                  }
+                }}
+              >
+                English PDF
+              </button>
+              <button
+                style={styles.hindiButton}
+                onClick={() => {
+                  setShowLanguageModal(false);
+                  if (languageAction === "preview") {
+                    if (selectedLetter.type === "buy") {
+                      previewBuyLetterPDF(selectedLetter, "hindi");
+                    } else {
+                      previewSellLetterPDF(selectedLetter, "hindi");
+                    }
+                    setLanguageAction(null);
+                  } else if (languageAction === "download") {
+                    if (selectedLetter.type === "buy") {
+                      downloadBuyLetterPDF(selectedLetter, "hindi");
+                    } else {
+                      downloadSellLetterPDF(selectedLetter, "hindi");
+                    }
+                    setLanguageAction(null);
+                  }
+                }}
+              >
+                Hindi PDF
+              </button>
+              <button
+                style={styles.cancelButton}
+                onClick={() => {
+                  setShowLanguageModal(false);
+                  setSelectedLetter(null);
+                  setLanguageAction(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -3987,6 +3949,67 @@ const styles = {
     width: "100%",
     height: "100%",
     border: "none",
+  },
+  modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2000,
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: "24px",
+    borderRadius: "12px",
+    width: "400px",
+    maxWidth: "90%",
+  },
+  modalTitle: {
+    fontSize: "1.25rem",
+    fontWeight: "700",
+    marginBottom: "8px",
+  },
+  modalText: {
+    fontSize: "1rem",
+    color: "#475569",
+    marginBottom: "20px",
+  },
+  modalButtons: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+  englishButton: {
+    padding: "12px",
+    backgroundColor: "#071952",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    fontWeight: "600",
+    cursor: "pointer",
+  },
+  hindiButton: {
+    padding: "12px",
+    backgroundColor: "#088395",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    fontWeight: "600",
+    cursor: "pointer",
+  },
+  cancelButton: {
+    padding: "12px",
+    backgroundColor: "#f1f5f9",
+    color: "#475569",
+    border: "1px solid #e2e8f0",
+    borderRadius: "8px",
+    fontWeight: "600",
+    cursor: "pointer",
   },
 };
 

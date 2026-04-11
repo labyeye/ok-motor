@@ -1,9 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
-import {
-  FileText,
-  Save,
-} from "lucide-react";
+import { FileText, Save } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
@@ -119,15 +116,16 @@ const PUCForm = () => {
           pucData.brand || insData.brand || vehicleData.brand || prev.brand,
         year: pucData.year || insData.year || vehicleData.year || prev.year,
         pucNumber: pucData.pucNumber || vehicleData.pucNumber || prev.pucNumber,
-        pucExpiry: (pucData.pucExpiryDate || pucData.pucExpiry)
-          ? new Date(pucData.pucExpiryDate || pucData.pucExpiry)
-              .toISOString()
-              .split("T")[0]
-          : (vehicleData.pucExpiryDate || vehicleData.pucExpiry)
-            ? new Date(vehicleData.pucExpiryDate || vehicleData.pucExpiry)
+        pucExpiry:
+          pucData.pucExpiryDate || pucData.pucExpiry
+            ? new Date(pucData.pucExpiryDate || pucData.pucExpiry)
                 .toISOString()
                 .split("T")[0]
-            : prev.pucExpiry,
+            : vehicleData.pucExpiryDate || vehicleData.pucExpiry
+              ? new Date(vehicleData.pucExpiryDate || vehicleData.pucExpiry)
+                  .toISOString()
+                  .split("T")[0]
+              : prev.pucExpiry,
       }));
     } catch (err) {
       console.error("Failed to fetch vehicle/puc details:", err);
@@ -270,8 +268,8 @@ const PUCForm = () => {
     },
     topBarLogo: {
       width: "250px",
-    height: "auto",
-    margin: "-40px",
+      height: "auto",
+      margin: "-40px",
       padding: 0,
       display: "block",
     },

@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import {
-  User,
-  Edit,
-  Trash2,
-  UserPlus,
-} from "lucide-react";
+import { User, Edit, Trash2, UserPlus } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 

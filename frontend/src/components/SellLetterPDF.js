@@ -208,7 +208,8 @@ const SellLetterForm = () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE = process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+      const API_BASE =
+        process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {

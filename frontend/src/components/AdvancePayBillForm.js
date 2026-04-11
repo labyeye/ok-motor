@@ -52,9 +52,7 @@ const AdvancePayBillForm = () => {
     engineNumber: "",
     kmReading: "",
     serviceDate: new Date().toISOString().split("T")[0],
-    deliveryDate: new Date(Date.now() + 86400000)
-      .toISOString()
-      .split("T")[0],
+    deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
     totalAmount: "0.00",
     discount: "0",
     advancePaid: "0.00",
@@ -748,7 +746,7 @@ const AdvancePayBillForm = () => {
     logout();
     navigate("/login");
   };
-  
+
   if (previewMode) {
     return (
       <div style={styles.formPreviewContainer}>
@@ -1301,7 +1299,9 @@ const AdvancePayBillForm = () => {
             padding: "20px",
           }}
           onClick={() => {
-            try { if (previewPdf) URL.revokeObjectURL(previewPdf); } catch (e) {}
+            try {
+              if (previewPdf) URL.revokeObjectURL(previewPdf);
+            } catch (e) {}
             setPreviewPdf(null);
             setShowPreviewModal(false);
           }}
@@ -1348,11 +1348,19 @@ const AdvancePayBillForm = () => {
               </h2>
               <button
                 onClick={() => {
-                  try { if (previewPdf) URL.revokeObjectURL(previewPdf); } catch (e) {}
+                  try {
+                    if (previewPdf) URL.revokeObjectURL(previewPdf);
+                  } catch (e) {}
                   setPreviewPdf(null);
                   setShowPreviewModal(false);
                 }}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", padding: "4px" }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#64748b",
+                  padding: "4px",
+                }}
               >
                 <X size={24} />
               </button>
@@ -1371,12 +1379,24 @@ const AdvancePayBillForm = () => {
                 <object
                   data={previewPdf}
                   type="application/pdf"
-                  style={{ width: "100%", height: "100%", minHeight: "500px", border: "none", display: "block" }}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    minHeight: "500px",
+                    border: "none",
+                    display: "block",
+                  }}
                   aria-label="Advance Bill PDF Preview"
                 >
                   <iframe
                     src={`${previewPdf}#toolbar=0&navpanes=0&scrollbar=1`}
-                    style={{ width: "100%", height: "100%", minHeight: "500px", border: "none", display: "block" }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      minHeight: "500px",
+                      border: "none",
+                      display: "block",
+                    }}
                     title="Advance Bill PDF Preview"
                   />
                 </object>
@@ -1396,11 +1416,22 @@ const AdvancePayBillForm = () => {
             >
               <button
                 onClick={() => {
-                  try { if (previewPdf) URL.revokeObjectURL(previewPdf); } catch (e) {}
+                  try {
+                    if (previewPdf) URL.revokeObjectURL(previewPdf);
+                  } catch (e) {}
                   setPreviewPdf(null);
                   setShowPreviewModal(false);
                 }}
-                style={{ padding: "10px 24px", backgroundColor: "#e2e8f0", color: "#1e293b", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "500", fontSize: "0.875rem" }}
+                style={{
+                  padding: "10px 24px",
+                  backgroundColor: "#e2e8f0",
+                  color: "#1e293b",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontWeight: "500",
+                  fontSize: "0.875rem",
+                }}
               >
                 Close
               </button>
