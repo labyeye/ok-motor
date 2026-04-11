@@ -87,6 +87,29 @@ const syncMissingBuyDocsFromSellLetter = async ({ regRegex, sellDocuments }) => 
   );
 };
 
+const syncBuyDocsToSellLetters = async ({ regRegex, buyDocuments }) => {
+  if (!regRegex || !buyDocuments) return;
+
+  const rcData = buyDocuments.vehicleRC;
+  if (!rcData || (!rcData.front && !rcData.back)) return;
+
+  // We sync the vehicleRC field to matching SellLetters
+  const updateFields = {
+    "documents.vehicleRC": rcData,
+    "documents.vehicleRCUploadMode":
+      buyDocuments.vehicleRCUploadMode || "separate",
+  };
+
+  try {
+    await SellLetter.updateMany(
+      { registrationNumber: regRegex },
+      { $set: updateFields },
+    );
+  } catch (err) {
+    console.error("Failed to sync RC from Buy to Sell Letters:", err);
+  }
+};
+
 // Support multipart form-data uploads for buy letters (documents/images)
 exports.createBuyLetter = [
   upload.fields([
@@ -596,6 +619,15 @@ exports.createBuyLetter = [
       const buyLetter = new BuyLetter(buyLetterData);
       const savedBuyLetter = await buyLetter.save();
 
+      // Push RC documents to matching SellLetters if any
+      if (regNo) {
+        const regRegex = new RegExp(`^${String(regNo).trim()}$`, "i");
+        await syncBuyDocsToSellLetters({
+          regRegex,
+          buyDocuments: savedBuyLetter.documents,
+        });
+      }
+
       res.status(201).json(savedBuyLetter);
     } catch (error) {
       console.error("Error creating buy letter:", error);
@@ -901,6 +933,16 @@ exports.updateBuyLetter = async (req, res) => {
       { $set: updateData },
       { new: true, runValidators: true },
     );
+
+    // Push RC documents to matching SellLetters if any
+    const regNo = updateData.registrationNumber || buyLetter.registrationNumber;
+    if (regNo && buyLetter.documents) {
+      const regRegex = new RegExp(`^${String(regNo).trim()}$`, "i");
+      await syncBuyDocsToSellLetters({
+        regRegex,
+        buyDocuments: buyLetter.documents,
+      });
+    }
 
     res.json(buyLetter);
   } catch (error) {
