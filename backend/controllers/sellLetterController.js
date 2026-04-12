@@ -997,13 +997,24 @@ exports.getVehicleDetails = async (req, res) => {
       vehicleDetails.insurancePolicyNumber =
         vehicleRecord.insurancePolicyNumber;
 
-    // Buyer contact details from SellLetter
-    if (vehicleRecord.buyerName)
+    // Contact details from either record type
+    if (vehicleRecord.buyerName) {
       vehicleDetails.personName = vehicleRecord.buyerName;
-    if (vehicleRecord.buyerPhone)
+      vehicleDetails.personFatherName = vehicleRecord.buyerFatherName;
+      vehicleDetails.personAddress = vehicleRecord.buyerAddress;
       vehicleDetails.personPhone = vehicleRecord.buyerPhone;
-    if (vehicleRecord.buyerEmail)
+      vehicleDetails.personPhone2 = vehicleRecord.buyerPhone2;
+      vehicleDetails.personAadhar = vehicleRecord.buyerAadhar;
       vehicleDetails.personEmail = vehicleRecord.buyerEmail;
+    } else if (vehicleRecord.sellerName) {
+      vehicleDetails.personName = vehicleRecord.sellerName;
+      vehicleDetails.personFatherName = vehicleRecord.sellerFatherName;
+      vehicleDetails.personAddress = vehicleRecord.sellerCurrentAddress;
+      vehicleDetails.personPhone = vehicleRecord.selleraadharphone;
+      vehicleDetails.personPhone2 = vehicleRecord.selleraadharphone2;
+      vehicleDetails.personAadhar = vehicleRecord.selleraadhar;
+      vehicleDetails.personEmail = vehicleRecord.sellerEmail;
+    }
 
     // Attach documents from the most recent BuyLetter so the sell letter form
     // can pre-fill uploaded documents without requiring re-upload.

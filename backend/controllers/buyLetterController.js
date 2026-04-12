@@ -733,25 +733,16 @@ exports.getBuyLettersByRegistration = async (req, res) => {
         .json({ message: "Registration number is required" });
     }
 
-    const regRegex = new RegExp(`^${registrationNumber}$`, "i");
-    const conditions = {
-      registrationNumber: regRegex,
+    const buyLetters = await BuyLetter.find({
+      registrationNumber: new RegExp(registrationNumber, "i"),
       $or: [
         { user: req.user.id },
         { visibility: "staff" },
         ...(req.user.role === "staff" || req.user.role === "admin" ? [{}] : []),
       ],
-    };
+    }).sort({ createdAt: -1 });
 
-    const buyLetters = await BuyLetter.find(conditions).sort({ createdAt: -1 });
-    const sellLetters = await SellLetter.find(conditions).sort({ createdAt: -1 });
-
-    const combined = [
-      ...buyLetters.map((l) => ({ ...l.toObject(), sourceType: "buy" })),
-      ...sellLetters.map((l) => ({ ...l.toObject(), sourceType: "sell" })),
-    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    res.json(combined);
+    res.json(buyLetters);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
