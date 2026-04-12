@@ -6,6 +6,7 @@ import apiService from "../services/apiService";
 import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
 import fileSaveService from "../services/fileSaveService";
 import {
+  Wrench,
   FileText,
   User,
   Car,
@@ -17,6 +18,8 @@ import {
   AlertCircle,
   Image,
   Eye,
+  Search,
+  RefreshCw,
 } from "lucide-react";
 import logo1 from "../images/okmotorback.png";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -62,6 +65,7 @@ const BuyLetterForm = () => {
   const [vehicleNOCUploadMode, setVehicleNOCUploadMode] = useState("separate");
   const [vehicleBuyReceiptUploadMode, setVehicleBuyReceiptUploadMode] =
     useState("separate");
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false);
 
   const [filesState, setFilesState] = useState({
     vehicleRCFront: null,
@@ -491,6 +495,96 @@ const BuyLetterForm = () => {
           vehicleCondition: vehicle.vehicleCondition || "running",
         }));
       }
+    }
+  };
+
+  const handleFetchDetails = async () => {
+    if (!formData.registrationNumber) {
+      setAlertInfo({
+        isOpen: true,
+        message: "Please enter a registration number",
+        type: "error",
+      });
+      return;
+    }
+
+    try {
+      setIsFetchingDetails(true);
+      const response = await apiService.get(
+        `/api/buy-letters/by-registration?registrationNumber=${formData.registrationNumber}`,
+      );
+
+      const items = response.data || [];
+
+      if (items.length > 0) {
+        const data = items[0];
+
+        const toInputDate = (v) => {
+          if (!v) return "";
+          const dt = new Date(v);
+          if (isNaN(dt.getTime())) return String(v);
+          return dt.toISOString().split("T")[0];
+        };
+
+        if (data.sourceType === "sell") {
+          // Mapping from Sell Letter to a potential Buy Letter
+          setFormData((prev) => ({
+            ...prev,
+            vehicleName: data.vehicleName || "",
+            vehicleModel: data.vehicleModel || "",
+            vehicleColor: data.vehicleColor || "",
+            chassisNumber: data.chassisNumber || "",
+            engineNumber: data.engineNumber || "",
+            vehiclekm: data.vehiclekm || "",
+            vehicleCondition: data.vehicleCondition || "running",
+            sellerName: data.buyerName || "",
+            sellerFatherName: data.buyerFatherName || "",
+            sellerCurrentAddress: data.buyerAddress || "",
+            selleraadhar: data.buyerAadhar || "",
+            selleraadharphone: data.buyerPhone || "",
+            selleraadharphone2: data.buyerPhone2 || "",
+            sellerName1: data.buyerName || "",
+            sellerFatherName1: data.buyerFatherName || "",
+            sellerCurrentAddress1: data.buyerAddress || "",
+          }));
+        } else {
+          // Existing Buy Letter details
+          setFormData((prev) => ({
+            ...prev,
+            ...data,
+            pucIssueDate: toInputDate(data.pucIssueDate),
+            pucExpiryDate: toInputDate(data.pucExpiryDate),
+            insuranceExpiryDate: toInputDate(data.insuranceExpiryDate),
+            saleDate:
+              toInputDate(data.saleDate) ||
+              new Date().toISOString().split("T")[0],
+            todayDate:
+              toInputDate(data.todayDate) ||
+              new Date().toISOString().split("T")[0],
+          }));
+        }
+
+        setAlertInfo({
+          isOpen: true,
+          message: `Details fetched from ${data.sourceType === "sell" ? "Previous Sold Record" : "Existing Buy Record"}`,
+          type: "success",
+        });
+      } else {
+        setAlertInfo({
+          isOpen: true,
+          message: "No details found for this registration number",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching details:", error);
+      setAlertInfo({
+        isOpen: true,
+        message: "Failed to fetch details",
+        type: "error",
+      });
+    } finally {
+      setIsFetchingDetails(false);
     }
   };
 
@@ -3610,23 +3704,46 @@ const BuyLetterForm = () => {
                   <Car style={styles.formIcon} />
                   Registration Number || रजिस्ट्रेशन नंबर
                 </label>
-                <input
-                  type="text"
-                  name="registrationNumber"
-                  value={formData.registrationNumber}
-                  onChange={handleChange}
-                  onInput={handleInput}
-                  onFocus={() => setFocusedInput("registrationNumber")}
-                  onBlur={() => setFocusedInput(null)}
-                  style={{
-                    ...styles.formInput,
-                    ...(focusedInput === "registrationNumber"
-                      ? styles.inputFocused
-                      : {}),
-                  }}
-                  required
-                  maxLength={selectedLanguage === "hindi" ? 11 : 14}
-                />
+                <div style={{ display: "flex", gap: "10px", width: "100%" }}>
+                  <input
+                    type="text"
+                    name="registrationNumber"
+                    value={formData.registrationNumber}
+                    onChange={handleChange}
+                    onInput={handleInput}
+                    onFocus={() => setFocusedInput("registrationNumber")}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{
+                      ...styles.formInput,
+                      textTransform: "uppercase",
+                      flex: 1,
+                      ...(focusedInput === "registrationNumber"
+                        ? styles.inputFocused
+                        : {}),
+                    }}
+                    placeholder="Enter Registration Number"
+                    required
+                    maxLength={selectedLanguage === "hindi" ? 11 : 14}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleFetchDetails}
+                    disabled={isFetchingDetails}
+                    style={{
+                      ...styles.fetchButton,
+                      opacity: isFetchingDetails ? 0.7 : 1,
+                    }}
+                  >
+                    {isFetchingDetails ? (
+                      <RefreshCw className="animate-spin" size={16} />
+                    ) : (
+                      <Search size={16} />
+                    )}
+                    <span style={{ fontSize: "14px", fontWeight: "600" }}>
+                      {isFetchingDetails ? "Fetching..." : "Fetch Info"}
+                    </span>
+                  </button>
+                </div>
               </div>
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
@@ -5883,6 +6000,21 @@ const styles = {
   buttonIcon: {
     width: "16px",
     height: "16px",
+  },
+  fetchButton: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "0 20px",
+    backgroundColor: "#071952",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    height: "45px",
+    whiteSpace: "nowrap",
   },
   formPreviewContainer: {
     backgroundColor: "#ffffff",
