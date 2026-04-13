@@ -2930,7 +2930,6 @@ const BuyLetterForm = () => {
     [
       setFormData,
       setFilePreviews,
-      setAadhaarUploadMode,
       setVehicleRCUploadMode,
     ],
   );
