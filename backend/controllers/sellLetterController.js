@@ -16,9 +16,6 @@ const stripBuyOnlyDocuments = (docs) => {
   return {
     vehicleRC: docs.vehicleRC || undefined,
     vehicleRCUploadMode: docs.vehicleRCUploadMode || undefined,
-    insuranceCertificate: docs.insuranceCertificate || undefined,
-    vehicleNOC: docs.vehicleNOC || undefined,
-    transferReceipt: docs.transferReceipt || undefined,
   };
 };
 
@@ -998,23 +995,7 @@ exports.getVehicleDetails = async (req, res) => {
         vehicleRecord.insurancePolicyNumber;
 
     // Contact details from either record type
-    if (vehicleRecord.buyerName) {
-      vehicleDetails.personName = vehicleRecord.buyerName;
-      vehicleDetails.personFatherName = vehicleRecord.buyerFatherName;
-      vehicleDetails.personAddress = vehicleRecord.buyerAddress;
-      vehicleDetails.personPhone = vehicleRecord.buyerPhone;
-      vehicleDetails.personPhone2 = vehicleRecord.buyerPhone2;
-      vehicleDetails.personAadhar = vehicleRecord.buyerAadhar;
-      vehicleDetails.personEmail = vehicleRecord.buyerEmail;
-    } else if (vehicleRecord.sellerName) {
-      vehicleDetails.personName = vehicleRecord.sellerName;
-      vehicleDetails.personFatherName = vehicleRecord.sellerFatherName;
-      vehicleDetails.personAddress = vehicleRecord.sellerCurrentAddress;
-      vehicleDetails.personPhone = vehicleRecord.selleraadharphone;
-      vehicleDetails.personPhone2 = vehicleRecord.selleraadharphone2;
-      vehicleDetails.personAadhar = vehicleRecord.selleraadhar;
-      vehicleDetails.personEmail = vehicleRecord.sellerEmail;
-    }
+    // Person details excluded as per requirement
 
     // Attach documents from the most recent BuyLetter so the sell letter form
     // can pre-fill uploaded documents without requiring re-upload.

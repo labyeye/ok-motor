@@ -2897,15 +2897,6 @@ const BuyLetterForm = () => {
             insuranceExpiryDate: data.insuranceExpiryDate
               ? formatDateForInput(data.insuranceExpiryDate)
               : "",
-            sellerName: data.personName || data.sellerName || "",
-            sellerFatherName:
-              data.personFatherName || data.sellerFatherName || "",
-            sellerCurrentAddress:
-              data.personAddress || data.sellerCurrentAddress || "",
-            selleraadhar: data.personAadhar || data.selleraadhar || "",
-            selleraadharphone: data.personPhone || data.selleraadharphone || "",
-            selleraadharphone2:
-              data.personPhone2 || data.selleraadharphone2 || "",
           };
 
           setFormData((prev) => ({
@@ -2914,13 +2905,11 @@ const BuyLetterForm = () => {
             registrationNumber,
           }));
 
-          // Pre-fill document previews from the existing letters
+          // Pre-fill document previews from the existing letters (Only RC as per requirement)
           if (data.buyLetterDocuments) {
             const docs = data.buyLetterDocuments;
             const previews = {};
 
-            if (docs.aadhaarUploadMode)
-              setAadhaarUploadMode(docs.aadhaarUploadMode);
             if (docs.vehicleRCUploadMode)
               setVehicleRCUploadMode(docs.vehicleRCUploadMode);
 
@@ -2928,30 +2917,6 @@ const BuyLetterForm = () => {
               previews.vehicleRCFront = docs.vehicleRC.front;
             if (docs.vehicleRC?.back)
               previews.vehicleRCBack = docs.vehicleRC.back;
-            if (docs.aadhaar?.front) previews.aadhaarFront = docs.aadhaar.front;
-            if (docs.aadhaar?.back) previews.aadhaarBack = docs.aadhaar.back;
-            if (docs.pan) previews.panPhoto = docs.pan;
-            if (docs.deliveryPhoto) previews.deliveryPhoto = docs.deliveryPhoto;
-            if (docs.signedDocBuy) previews.signedDocBuy = docs.signedDocBuy;
-            if (Array.isArray(docs.vehiclePhotos) && docs.vehiclePhotos.length)
-              previews.vehiclePhotos = docs.vehiclePhotos;
-
-            const insurancePages = Array.isArray(
-              docs.insuranceCertificate?.pages,
-            )
-              ? docs.insuranceCertificate.pages
-              : Array.isArray(docs.insuranceCertificate)
-                ? docs.insuranceCertificate
-                : [];
-            if (insurancePages.length)
-              previews.insuranceCertificate = insurancePages;
-
-            const nocPages = Array.isArray(docs.vehicleNOC?.pages)
-              ? docs.vehicleNOC.pages
-              : Array.isArray(docs.vehicleNOC)
-                ? docs.vehicleNOC
-                : [];
-            if (nocPages.length) previews.vehicleNOC = nocPages;
 
             if (Object.keys(previews).length > 0) {
               setFilePreviews((prev) => ({ ...prev, ...previews }));
@@ -4722,48 +4687,6 @@ const BuyLetterForm = () => {
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
-                    <Calendar style={styles.formIcon} />
-                    PUC Issue Date || PUC जारी तिथि
-                  </label>
-                  <input
-                    type="date"
-                    name="pucIssueDate"
-                    value={formData.pucIssueDate || ""}
-                    onChange={handleChange}
-                    onFocus={() => setFocusedInput("pucIssueDate")}
-                    onBlur={() => setFocusedInput(null)}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "pucIssueDate"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                  />
-                </div>
-
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Calendar style={styles.formIcon} />
-                    PUC Expiry Date || PUC समाप्ति तिथि
-                  </label>
-                  <input
-                    type="date"
-                    name="pucExpiryDate"
-                    value={formData.pucExpiryDate || ""}
-                    onChange={handleChange}
-                    onFocus={() => setFocusedInput("pucExpiryDate")}
-                    onBlur={() => setFocusedInput(null)}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "pucExpiryDate"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                  />
-                </div>
-
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
                     <AlertCircle style={styles.formIcon} />
                     PUC Status || PUC स्थिति
                   </label>
@@ -4782,26 +4705,51 @@ const BuyLetterForm = () => {
                   </select>
                 </div>
 
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Calendar style={styles.formIcon} />
-                    Insurance Expiry Date || बीमा समाप्ति तिथि
-                  </label>
-                  <input
-                    type="date"
-                    name="insuranceExpiryDate"
-                    value={formData.insuranceExpiryDate || ""}
-                    onChange={handleChange}
-                    onFocus={() => setFocusedInput("insuranceExpiryDate")}
-                    onBlur={() => setFocusedInput(null)}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "insuranceExpiryDate"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                  />
-                </div>
+                {formData.pucStatus === "Valid" && (
+                  <>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>
+                        <Calendar style={styles.formIcon} />
+                        PUC Issue Date || PUC जारी तिथि
+                      </label>
+                      <input
+                        type="date"
+                        name="pucIssueDate"
+                        value={formData.pucIssueDate || ""}
+                        onChange={handleChange}
+                        onFocus={() => setFocusedInput("pucIssueDate")}
+                        onBlur={() => setFocusedInput(null)}
+                        style={{
+                          ...styles.formInput,
+                          ...(focusedInput === "pucIssueDate"
+                            ? styles.inputFocused
+                            : {}),
+                        }}
+                      />
+                    </div>
+
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>
+                        <Calendar style={styles.formIcon} />
+                        PUC Expiry Date || PUC समाप्ति तिथि
+                      </label>
+                      <input
+                        type="date"
+                        name="pucExpiryDate"
+                        value={formData.pucExpiryDate || ""}
+                        onChange={handleChange}
+                        onFocus={() => setFocusedInput("pucExpiryDate")}
+                        onBlur={() => setFocusedInput(null)}
+                        style={{
+                          ...styles.formInput,
+                          ...(focusedInput === "pucExpiryDate"
+                            ? styles.inputFocused
+                            : {}),
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
@@ -4823,49 +4771,76 @@ const BuyLetterForm = () => {
                   </select>
                 </div>
 
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <User style={styles.formIcon} />
-                    Insurance Company || बीमा कंपनी
-                  </label>
-                  <input
-                    type="text"
-                    name="insuranceCompany"
-                    value={formData.insuranceCompany || ""}
-                    onChange={handleChange}
-                    onFocus={() => setFocusedInput("insuranceCompany")}
-                    onBlur={() => setFocusedInput(null)}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "insuranceCompany"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                  />
-                </div>
+                {formData.insuranceStatus === "Valid" && (
+                  <>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>
+                        <Calendar style={styles.formIcon} />
+                        Insurance Expiry Date || बीमा समाप्ति तिथि
+                      </label>
+                      <input
+                        type="date"
+                        name="insuranceExpiryDate"
+                        value={formData.insuranceExpiryDate || ""}
+                        onChange={handleChange}
+                        onFocus={() => setFocusedInput("insuranceExpiryDate")}
+                        onBlur={() => setFocusedInput(null)}
+                        style={{
+                          ...styles.formInput,
+                          ...(focusedInput === "insuranceExpiryDate"
+                            ? styles.inputFocused
+                            : {}),
+                        }}
+                      />
+                    </div>
 
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <User style={styles.formIcon} />
-                    Insurance Policy Number || पॉलिसी संख्या
-                  </label>
-                  <input
-                    type="text"
-                    name="insurancePolicyNumber"
-                    value={formData.insurancePolicyNumber || ""}
-                    onChange={handleChange}
-                    onFocus={() => setFocusedInput("insurancePolicyNumber")}
-                    onBlur={() => setFocusedInput(null)}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "insurancePolicyNumber"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                  />
-                </div>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>
+                        <User style={styles.formIcon} />
+                        Insurance Company || बीमा कंपनी
+                      </label>
+                      <input
+                        type="text"
+                        name="insuranceCompany"
+                        value={formData.insuranceCompany || ""}
+                        onChange={handleChange}
+                        onFocus={() => setFocusedInput("insuranceCompany")}
+                        onBlur={() => setFocusedInput(null)}
+                        style={{
+                          ...styles.formInput,
+                          ...(focusedInput === "insuranceCompany"
+                            ? styles.inputFocused
+                            : {}),
+                        }}
+                      />
+                    </div>
+
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>
+                        <User style={styles.formIcon} />
+                        Insurance Policy Number || पॉलिसी संख्या
+                      </label>
+                      <input
+                        type="text"
+                        name="insurancePolicyNumber"
+                        value={formData.insurancePolicyNumber || ""}
+                        onChange={handleChange}
+                        onFocus={() => setFocusedInput("insurancePolicyNumber")}
+                        onBlur={() => setFocusedInput(null)}
+                        style={{
+                          ...styles.formInput,
+                          ...(focusedInput === "insurancePolicyNumber"
+                            ? styles.inputFocused
+                            : {}),
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
+            </div>
 
+            <div style={styles.formSection}>
               <h2 style={styles.sectionTitle}>
                 <User style={styles.sectionIcon} /> Buyer Information
               </h2>

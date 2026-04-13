@@ -2339,16 +2339,48 @@ const BuyLetterHistory = () => {
                                     {
                                       label: "Insurance",
                                       exists:
-                                        letter.documents?.insuranceCertificate,
+                                        letter.documents?.insuranceCertificate
+                                          ?.pages?.length > 0 ||
+                                        (Array.isArray(
+                                          letter.documents
+                                            ?.insuranceCertificate,
+                                        ) &&
+                                          letter.documents.insuranceCertificate
+                                            .length > 0) ||
+                                        (typeof letter.documents
+                                          ?.insuranceCertificate === "string" &&
+                                          letter.documents.insuranceCertificate
+                                            .length > 0),
                                     },
                                     {
                                       label: "NOC",
-                                      exists: letter.documents?.vehicleNOC,
+                                      exists:
+                                        letter.documents?.vehicleNOC?.pages
+                                          ?.length > 0 ||
+                                        (Array.isArray(
+                                          letter.documents?.vehicleNOC,
+                                        ) &&
+                                          letter.documents.vehicleNOC.length >
+                                            0) ||
+                                        (typeof letter.documents?.vehicleNOC ===
+                                          "string" &&
+                                          letter.documents.vehicleNOC.length >
+                                            0),
                                     },
                                     {
                                       label: "Receipt",
                                       exists:
-                                        letter.documents?.vehicleBuyReceipt,
+                                        letter.documents?.vehicleBuyReceipt
+                                          ?.pages?.length > 0 ||
+                                        (Array.isArray(
+                                          letter.documents?.vehicleBuyReceipt,
+                                        ) &&
+                                          letter.documents.vehicleBuyReceipt
+                                            .length > 0) ||
+                                        (typeof letter.documents
+                                          ?.vehicleBuyReceipt === "string" &&
+                                          letter.documents.vehicleBuyReceipt
+                                            .length > 0),
                                     },
                                   ].map((doc, idx) => (
                                     <div
@@ -2809,6 +2841,134 @@ const BuyLetterHistory = () => {
                               ))}
                             </div>
                           )}
+
+                        {/* Document Status */}
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "8px",
+                            marginBottom: "12px",
+                            padding: "10px",
+                            backgroundColor: "#f8fafc",
+                            borderRadius: "8px",
+                            border: "1px solid #e2e8f0",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontWeight: "600",
+                              fontSize: "0.8rem",
+                              color: "#475569",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            Document Status:
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              gap: "8px",
+                            }}
+                          >
+                            {[
+                              {
+                                label: "RC",
+                                exists:
+                                  letter.documents?.vehicleRC?.front ||
+                                  letter.documents?.vehicleRC?.back,
+                              },
+                              {
+                                label: "Aadhaar",
+                                exists:
+                                  letter.documents?.aadhaar?.front ||
+                                  letter.documents?.aadhaar?.back,
+                              },
+                              {
+                                label: "PAN",
+                                exists: letter.documents?.pan,
+                              },
+                              {
+                                label: "Photo",
+                                exists:
+                                  letter.documents?.deliveryPhoto ||
+                                  letter.documents?.vehicleKM ||
+                                  letter.documents?.vehiclePhotos?.length > 0,
+                              },
+                              {
+                                label: "Signed Doc",
+                                exists: letter.documents?.signedDocBuy,
+                              },
+                              {
+                                label: "Insurance",
+                                exists:
+                                  letter.documents?.insuranceCertificate?.pages
+                                    ?.length > 0 ||
+                                  (Array.isArray(
+                                    letter.documents?.insuranceCertificate,
+                                  ) &&
+                                    letter.documents.insuranceCertificate
+                                      .length > 0) ||
+                                  (typeof letter.documents
+                                    ?.insuranceCertificate === "string" &&
+                                    letter.documents.insuranceCertificate
+                                      .length > 0),
+                              },
+                              {
+                                label: "NOC",
+                                exists:
+                                  letter.documents?.vehicleNOC?.pages?.length >
+                                    0 ||
+                                  (Array.isArray(
+                                    letter.documents?.vehicleNOC,
+                                  ) &&
+                                    letter.documents.vehicleNOC.length > 0) ||
+                                  (typeof letter.documents?.vehicleNOC ===
+                                    "string" &&
+                                    letter.documents.vehicleNOC.length > 0),
+                              },
+                              {
+                                label: "Receipt",
+                                exists:
+                                  letter.documents?.vehicleBuyReceipt?.pages
+                                    ?.length > 0 ||
+                                  (Array.isArray(
+                                    letter.documents?.vehicleBuyReceipt,
+                                  ) &&
+                                    letter.documents.vehicleBuyReceipt.length >
+                                      0) ||
+                                  (typeof letter.documents
+                                    ?.vehicleBuyReceipt === "string" &&
+                                    letter.documents.vehicleBuyReceipt.length >
+                                      0),
+                              },
+                            ].map((doc, idx) => (
+                              <div
+                                key={idx}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  padding: "4px 8px",
+                                  backgroundColor: "#fff",
+                                  borderRadius: "6px",
+                                  border: "1px solid #e2e8f0",
+                                  fontSize: "0.75rem",
+                                  color: doc.exists ? "#16a34a" : "#dc2626",
+                                  fontWeight: "500",
+                                }}
+                              >
+                                {doc.exists ? (
+                                  <Check size={12} strokeWidth={3} />
+                                ) : (
+                                  <X size={12} strokeWidth={3} />
+                                )}
+                                {doc.label}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
 
                         {/* Actions */}
                         <div

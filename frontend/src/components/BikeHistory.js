@@ -18,6 +18,8 @@ import {
   Download,
   Eye,
   Shield,
+  Check,
+  User,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -373,12 +375,21 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
     const processArray = (arr, label) => {
       if (!arr) return;
-      const pages = Array.isArray(arr) ? arr : arr.pages;
-      if (Array.isArray(pages)) {
-        pages.forEach((url, i) =>
-          otherItems.push({ title: `${label} ${i + 1}`, url }),
-        );
+      let pages = [];
+      if (Array.isArray(arr)) {
+        pages = arr;
+      } else if (arr.pages && Array.isArray(arr.pages)) {
+        pages = arr.pages;
+      } else if (typeof arr === "string") {
+        pages = [arr];
       }
+
+      pages.forEach((url, i) =>
+        otherItems.push({
+          title: pages.length > 1 ? `${label} ${i + 1}` : label,
+          url,
+        }),
+      );
     };
 
     processArray(documentsObj.insuranceCertificate, "Insurance Certificate");
@@ -2826,6 +2837,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                         <th style={styles.tableHeader}>Action</th>
                         <th style={styles.tableHeader}>KM Reading</th>
                         <th style={styles.tableHeader}>Amount</th>
+                        <th style={styles.tableHeader}>Documents</th>
                         <th style={styles.tableHeader}>Details</th>
                         <th style={styles.tableHeader}>Actions</th>
                       </tr>
@@ -2947,6 +2959,105 @@ const BikeHistory = ({ externalSearchTerm }) => {
                               </td>
                               <td style={styles.tableCell}>
                                 {getAmount(item)}
+                              </td>
+                              <td style={styles.tableCell}>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    gap: "4px",
+                                    flexWrap: "wrap",
+                                    maxWidth: "150px",
+                                  }}
+                                >
+                                  {(item.type === "buy" ||
+                                    item.type === "sell") && (
+                                    <>
+                                      {/* RC */}
+                                      <div
+                                        title="RC"
+                                        style={{
+                                          color:
+                                            item.documents?.vehicleRC?.front ||
+                                            item.documents?.vehicleRC?.back
+                                              ? "#10b981"
+                                              : "#ef4444",
+                                          display: "flex",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <FileText size={14} />
+                                        {item.documents?.vehicleRC?.front ||
+                                        item.documents?.vehicleRC?.back ? (
+                                          <Check size={10} strokeWidth={3} />
+                                        ) : (
+                                          <X size={10} strokeWidth={3} />
+                                        )}
+                                      </div>
+                                      {/* Aadhaar */}
+                                      <div
+                                        title="Aadhaar"
+                                        style={{
+                                          color: item.documents?.aadhaar?.front
+                                            ? "#10b981"
+                                            : "#ef4444",
+                                          display: "flex",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <User size={14} />
+                                        {item.documents?.aadhaar?.front ? (
+                                          <Check size={10} strokeWidth={3} />
+                                        ) : (
+                                          <X size={10} strokeWidth={3} />
+                                        )}
+                                      </div>
+                                      {/* Insurance */}
+                                      <div
+                                        title="Insurance"
+                                        style={{
+                                          color:
+                                            item.pucStatus === "Valid" ||
+                                            item.insuranceStatus === "Valid" ||
+                                            item.documents?.insuranceCertificate
+                                              ? "#10b981"
+                                              : "#ef4444",
+                                          display: "flex",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <Shield size={14} />
+                                        {item.pucStatus === "Valid" ||
+                                        item.insuranceStatus === "Valid" ||
+                                        item.documents?.insuranceCertificate ? (
+                                          <Check size={10} strokeWidth={3} />
+                                        ) : (
+                                          <X size={10} strokeWidth={3} />
+                                        )}
+                                      </div>
+                                      {/* Transfer Receipt / Buy Receipt */}
+                                      <div
+                                        title="Receipts"
+                                        style={{
+                                          color:
+                                            item.documents?.transferReceipt ||
+                                            item.documents?.vehicleBuyReceipt
+                                              ? "#10b981"
+                                              : "#ef4444",
+                                          display: "flex",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <ArrowUpRight size={14} />
+                                        {item.documents?.transferReceipt ||
+                                        item.documents?.vehicleBuyReceipt ? (
+                                          <Check size={10} strokeWidth={3} />
+                                        ) : (
+                                          <X size={10} strokeWidth={3} />
+                                        )}
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
                               </td>
                               <td style={styles.tableCell}>
                                 {getDetails(item)}

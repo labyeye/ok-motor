@@ -22,18 +22,6 @@ const mergeMissingBuyDocumentsFromSell = (target, source) => {
   const merged = {
     ...target,
     vehicleRC: { ...(target.vehicleRC || {}) },
-    insuranceCertificate: {
-      ...(target.insuranceCertificate || {}),
-      pages: Array.isArray(target.insuranceCertificate?.pages)
-        ? [...target.insuranceCertificate.pages]
-        : [],
-    },
-    vehicleNOC: {
-      ...(target.vehicleNOC || {}),
-      pages: Array.isArray(target.vehicleNOC?.pages)
-        ? [...target.vehicleNOC.pages]
-        : [],
-    },
   };
 
   if (!hasText(merged.vehicleRC.front) && hasText(source.vehicleRC?.front)) {
@@ -41,24 +29,6 @@ const mergeMissingBuyDocumentsFromSell = (target, source) => {
   }
   if (!hasText(merged.vehicleRC.back) && hasText(source.vehicleRC?.back)) {
     merged.vehicleRC.back = source.vehicleRC.back;
-  }
-
-  const sourceInsurancePages = Array.isArray(source.insuranceCertificate?.pages)
-    ? source.insuranceCertificate.pages
-    : Array.isArray(source.insuranceCertificate)
-      ? source.insuranceCertificate
-      : [];
-  if (!hasArray(merged.insuranceCertificate.pages) && hasArray(sourceInsurancePages)) {
-    merged.insuranceCertificate.pages = [...sourceInsurancePages];
-  }
-
-  const sourceNocPages = Array.isArray(source.vehicleNOC?.pages)
-    ? source.vehicleNOC.pages
-    : Array.isArray(source.vehicleNOC)
-      ? source.vehicleNOC
-      : [];
-  if (!hasArray(merged.vehicleNOC.pages) && hasArray(sourceNocPages)) {
-    merged.vehicleNOC.pages = [...sourceNocPages];
   }
 
   return merged;

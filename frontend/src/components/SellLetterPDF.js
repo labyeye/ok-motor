@@ -347,38 +347,110 @@ const SellLetterForm = () => {
           if (Array.isArray(full.documents.vehiclePhotos))
             previews.vehiclePhotos = full.documents.vehiclePhotos;
 
-          const insurancePages = Array.isArray(
-            full.documents.insuranceCertificate?.pages,
-          )
-            ? full.documents.insuranceCertificate.pages
-            : Array.isArray(full.documents.insuranceCertificate)
-              ? full.documents.insuranceCertificate
-              : [];
+          const insurancePages = [];
+          if (full.documents.insuranceCertificate) {
+            if (Array.isArray(full.documents.insuranceCertificate.pages)) {
+              insurancePages.push(...full.documents.insuranceCertificate.pages);
+            } else if (Array.isArray(full.documents.insuranceCertificate)) {
+              insurancePages.push(...full.documents.insuranceCertificate);
+            } else if (
+              typeof full.documents.insuranceCertificate === "string"
+            ) {
+              insurancePages.push(full.documents.insuranceCertificate);
+            } else if (full.documents.insuranceCertificate.url) {
+              insurancePages.push(full.documents.insuranceCertificate.url);
+            }
+          }
           if (insurancePages.length) {
             previews.insuranceCertificate = insurancePages;
           }
 
-          const nocPages = Array.isArray(full.documents.vehicleNOC?.pages)
-            ? full.documents.vehicleNOC.pages
-            : Array.isArray(full.documents.vehicleNOC)
-              ? full.documents.vehicleNOC
-              : [];
+          const nocPages = [];
+          if (full.documents.vehicleNOC) {
+            if (Array.isArray(full.documents.vehicleNOC.pages)) {
+              nocPages.push(...full.documents.vehicleNOC.pages);
+            } else if (Array.isArray(full.documents.vehicleNOC)) {
+              nocPages.push(...full.documents.vehicleNOC);
+            } else if (typeof full.documents.vehicleNOC === "string") {
+              nocPages.push(full.documents.vehicleNOC);
+            } else if (full.documents.vehicleNOC.url) {
+              nocPages.push(full.documents.vehicleNOC.url);
+            }
+          }
           if (nocPages.length) {
             previews.vehicleNOC = nocPages;
           }
 
-          const transferReceiptPages = Array.isArray(
-            full.documents.transferReceipt?.pages,
-          )
-            ? full.documents.transferReceipt.pages
-            : Array.isArray(full.documents.transferReceipt)
-              ? full.documents.transferReceipt
-              : [];
+          const transferReceiptPages = [];
+          if (full.documents.transferReceipt) {
+            if (Array.isArray(full.documents.transferReceipt.pages)) {
+              transferReceiptPages.push(
+                ...full.documents.transferReceipt.pages,
+              );
+            } else if (Array.isArray(full.documents.transferReceipt)) {
+              transferReceiptPages.push(...full.documents.transferReceipt);
+            } else if (typeof full.documents.transferReceipt === "string") {
+              transferReceiptPages.push(full.documents.transferReceipt);
+            } else if (full.documents.transferReceipt.url) {
+              transferReceiptPages.push(full.documents.transferReceipt.url);
+            }
+          }
           if (transferReceiptPages.length) {
             previews.transferReceipt = transferReceiptPages;
           }
 
           setFilePreviews((prev) => ({ ...prev, ...previews }));
+
+          // Helper to convert PDF URLs to images for existing records
+          const convertPdfUrls = async (fieldName, urls) => {
+            if (!urls || !Array.isArray(urls)) return;
+            const newPreviews = [...urls];
+            let changed = false;
+
+            for (let i = 0; i < urls.length; i++) {
+              const url = urls[i];
+              if (
+                typeof url === "string" &&
+                url.toLowerCase().endsWith(".pdf")
+              ) {
+                try {
+                  const response = await fetch(url);
+                  const blob = await response.blob();
+                  const images = await convertPdfToImages(blob);
+                  if (Array.isArray(images) && images.length) {
+                    // Replace the PDF URL with the images of its pages
+                    // Currently replacing with first page to keep array length manageable or as requested
+                    newPreviews[i] = images[0].data;
+                    changed = true;
+                  }
+                } catch (err) {
+                  console.warn(
+                    `Failed to convert PDF URL to image: ${url}`,
+                    err,
+                  );
+                }
+              }
+            }
+
+            if (changed) {
+              setFilePreviews((prev) => ({
+                ...prev,
+                [fieldName]: newPreviews,
+              }));
+            }
+          };
+
+          // Convert PDF previews for multi-page docs asynchronously
+          if (previews.insuranceCertificate)
+            convertPdfUrls(
+              "insuranceCertificate",
+              previews.insuranceCertificate,
+            );
+          if (previews.vehicleNOC)
+            convertPdfUrls("vehicleNOC", previews.vehicleNOC);
+          if (previews.transferReceipt)
+            convertPdfUrls("transferReceipt", previews.transferReceipt);
+
           setSavedSellLetter(full);
           setDeletedDocuments(new Set()); // Clear deleted documents when loading new edit
         }
@@ -597,7 +669,11 @@ const SellLetterForm = () => {
 
     try {
       if (Array.isArray(file)) {
-        const multiFields = ["insuranceCertificate", "vehicleNOC"];
+        const multiFields = [
+          "insuranceCertificate",
+          "vehicleNOC",
+          "transferReceipt",
+        ];
         if (multiFields.includes(uploadModalFieldName)) {
           const filesArr = file;
 
@@ -625,24 +701,44 @@ const SellLetterForm = () => {
             }
           }
 
-          setFilesState((prev) => ({
-            ...prev,
-            [uploadModalFieldName]: filesArr,
-          }));
+          const finalFiles = [];
           const previews = [];
+
           for (const f of filesArr) {
-            if (isImageFile(f)) previews.push(URL.createObjectURL(f));
-            else if (isPdfFile(f)) {
+            if (isImageFile(f)) {
+              finalFiles.push(f);
+              previews.push(URL.createObjectURL(f));
+            } else if (isPdfFile(f)) {
               try {
                 const pdfImages = await convertPdfToImages(f);
                 if (Array.isArray(pdfImages) && pdfImages.length) {
-                  pdfImages.forEach((p) => previews.push(p.data));
-                } else previews.push(URL.createObjectURL(f));
+                  pdfImages.forEach((p, idx) => {
+                    previews.push(p.data);
+                    const fileObj = dataUrlToFile(
+                      p.data,
+                      `${f.name.replace(/\.[^/.]+$/, "")}-p${idx + 1}.png`,
+                    );
+                    finalFiles.push(fileObj);
+                  });
+                } else {
+                  finalFiles.push(f);
+                  previews.push(URL.createObjectURL(f));
+                }
               } catch (err) {
+                console.warn("PDF conversion failed for multi-file field", err);
+                finalFiles.push(f);
                 previews.push(URL.createObjectURL(f));
               }
-            } else previews.push(URL.createObjectURL(f));
+            } else {
+              finalFiles.push(f);
+              previews.push(URL.createObjectURL(f));
+            }
           }
+
+          setFilesState((prev) => ({
+            ...prev,
+            [uploadModalFieldName]: finalFiles,
+          }));
           setFilePreviews((prev) => ({
             ...prev,
             [uploadModalFieldName]: previews,
@@ -2884,6 +2980,38 @@ const SellLetterForm = () => {
               <h2 style={styles.sectionTitle}>
                 <Car style={styles.sectionIcon} /> Vehicle Information
               </h2>
+              <div style={styles.formField}>
+                <label style={styles.formLabel}>
+                  <Car style={styles.formIcon} />
+                  Registration Number || रजिस्ट्रेशन नंबर
+                </label>
+                <input
+                  type="text"
+                  name="registrationNumber"
+                  value={formData.registrationNumber}
+                  onChange={handleChange}
+                  onInput={handleInput}
+                  onBlur={(e) => {
+                    if (e.target.value.trim() !== "") {
+                      fetchVehicleDetails(e.target.value.trim());
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && e.target.value.trim() !== "") {
+                      fetchVehicleDetails(e.target.value.trim());
+                    }
+                  }}
+                  onFocus={() => setFocusedInput("registrationNumber")}
+                  style={{
+                    ...styles.formInput,
+                    ...(focusedInput === "registrationNumber"
+                      ? styles.inputFocused
+                      : {}),
+                  }}
+                  required
+                  maxLength={11}
+                />
+              </div>
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
@@ -2951,38 +3079,7 @@ const SellLetterForm = () => {
                     maxLength={7}
                   />
                 </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Car style={styles.formIcon} />
-                    Registration Number || रजिस्ट्रेशन नंबर
-                  </label>
-                  <input
-                    type="text"
-                    name="registrationNumber"
-                    value={formData.registrationNumber}
-                    onChange={handleChange}
-                    onInput={handleInput}
-                    onBlur={(e) => {
-                      if (e.target.value.trim() !== "") {
-                        fetchVehicleDetails(e.target.value.trim());
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && e.target.value.trim() !== "") {
-                        fetchVehicleDetails(e.target.value.trim());
-                      }
-                    }}
-                    onFocus={() => setFocusedInput("registrationNumber")}
-                    style={{
-                      ...styles.formInput,
-                      ...(focusedInput === "registrationNumber"
-                        ? styles.inputFocused
-                        : {}),
-                    }}
-                    required
-                    maxLength={11}
-                  />
-                </div>
+
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <Car style={styles.formIcon} />
@@ -3073,32 +3170,6 @@ const SellLetterForm = () => {
                 </div>
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
-                    <Calendar style={styles.formIcon} />
-                    PUC Issue Date || PUC जारी तिथि
-                  </label>
-                  <input
-                    type="date"
-                    name="pucIssueDate"
-                    value={formData.pucIssueDate || ""}
-                    onChange={handleChange}
-                    style={styles.formInput}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Calendar style={styles.formIcon} />
-                    PUC Expiry Date || PUC समाप्ति तिथि
-                  </label>
-                  <input
-                    type="date"
-                    name="pucExpiryDate"
-                    value={formData.pucExpiryDate || ""}
-                    onChange={handleChange}
-                    style={styles.formInput}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
                     <AlertCircle style={styles.formIcon} />
                     PUC Status || PUC स्थिति
                   </label>
@@ -3114,6 +3185,38 @@ const SellLetterForm = () => {
                     <option value="Not Available">Not Available</option>
                   </select>
                 </div>
+
+                {formData.pucStatus === "Valid" && (
+                  <>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>
+                        <Calendar style={styles.formIcon} />
+                        PUC Issue Date || PUC जारी तिथि
+                      </label>
+                      <input
+                        type="date"
+                        name="pucIssueDate"
+                        value={formData.pucIssueDate || ""}
+                        onChange={handleChange}
+                        style={styles.formInput}
+                      />
+                    </div>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>
+                        <Calendar style={styles.formIcon} />
+                        PUC Expiry Date || PUC समाप्ति तिथि
+                      </label>
+                      <input
+                        type="date"
+                        name="pucExpiryDate"
+                        value={formData.pucExpiryDate || ""}
+                        onChange={handleChange}
+                        style={styles.formInput}
+                      />
+                    </div>
+                  </>
+                )}
+
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>
                     <AlertCircle style={styles.formIcon} />
@@ -3131,47 +3234,52 @@ const SellLetterForm = () => {
                     <option value="Not Available">Not Available</option>
                   </select>
                 </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <Calendar style={styles.formIcon} />
-                    Insurance Expiry Date || बीमा समाप्ति तिथि
-                  </label>
-                  <input
-                    type="date"
-                    name="insuranceExpiryDate"
-                    value={formData.insuranceExpiryDate || ""}
-                    onChange={handleChange}
-                    style={styles.formInput}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <FileText style={styles.formIcon} />
-                    Insurance Company || बीमा कंपनी
-                  </label>
-                  <input
-                    type="text"
-                    name="insuranceCompany"
-                    value={formData.insuranceCompany || ""}
-                    onChange={handleChange}
-                    onInput={handleInput}
-                    style={styles.formInput}
-                  />
-                </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>
-                    <FileText style={styles.formIcon} />
-                    Insurance Policy Number || पॉलिसी नंबर
-                  </label>
-                  <input
-                    type="text"
-                    name="insurancePolicyNumber"
-                    value={formData.insurancePolicyNumber || ""}
-                    onChange={handleChange}
-                    onInput={handleInput}
-                    style={styles.formInput}
-                  />
-                </div>
+
+                {formData.insuranceStatus === "Valid" && (
+                  <>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>
+                        <Calendar style={styles.formIcon} />
+                        Insurance Expiry Date || बीमा समाप्ति तिथि
+                      </label>
+                      <input
+                        type="date"
+                        name="insuranceExpiryDate"
+                        value={formData.insuranceExpiryDate || ""}
+                        onChange={handleChange}
+                        style={styles.formInput}
+                      />
+                    </div>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>
+                        <FileText style={styles.formIcon} />
+                        Insurance Company || बीमा कंपनी
+                      </label>
+                      <input
+                        type="text"
+                        name="insuranceCompany"
+                        value={formData.insuranceCompany || ""}
+                        onChange={handleChange}
+                        onInput={handleInput}
+                        style={styles.formInput}
+                      />
+                    </div>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>
+                        <FileText style={styles.formIcon} />
+                        Insurance Policy Number || पॉलिसी नंबर
+                      </label>
+                      <input
+                        type="text"
+                        name="insurancePolicyNumber"
+                        value={formData.insurancePolicyNumber || ""}
+                        onChange={handleChange}
+                        onInput={handleInput}
+                        style={styles.formInput}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             {}
@@ -4232,8 +4340,8 @@ const SellLetterForm = () => {
                               {renderPreviewMedia(
                                 u,
                                 `insurance-cert-${idx + 1}`,
-                                styles.previewImgSmall,
-                                true,
+                                styles.previewImg,
+                                false,
                               )}
                             </div>
                           ))}
@@ -4302,8 +4410,8 @@ const SellLetterForm = () => {
                             {renderPreviewMedia(
                               u,
                               `vehicle-noc-${idx + 1}`,
-                              styles.previewImgSmall,
-                              true,
+                              styles.previewImg,
+                              false,
                             )}
                           </div>
                         ))}
@@ -4373,8 +4481,8 @@ const SellLetterForm = () => {
                               {renderPreviewMedia(
                                 u,
                                 `transfer-receipt-${idx + 1}`,
-                                styles.previewImgSmall,
-                                true,
+                                styles.previewImg,
+                                false,
                               )}
                             </div>
                           ))}
@@ -4554,17 +4662,52 @@ const SellLetterForm = () => {
                   padding: "12px",
                 }}
               >
-                <img
-                  src={previewImageUrl}
-                  alt={previewImageTitle}
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "100%",
-                    objectFit: "contain",
-                    borderRadius: "8px",
-                    background: "#fff",
-                  }}
-                />
+                {previewImageUrl &&
+                (previewImageUrl.toLowerCase().endsWith(".pdf") ||
+                  previewImageUrl.startsWith("data:application/pdf")) ? (
+                  <object
+                    data={previewImageUrl}
+                    type="application/pdf"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      border: "none",
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: "#fff",
+                        textAlign: "center",
+                        padding: "20px",
+                      }}
+                    >
+                      <p>Unable to display PDF directly.</p>
+                      <a
+                        href={previewImageUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          color: "#38bdf8",
+                          textDecoration: "underline",
+                        }}
+                      >
+                        Click here to open it in a new tab
+                      </a>
+                    </div>
+                  </object>
+                ) : (
+                  <img
+                    src={previewImageUrl}
+                    alt={previewImageTitle}
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "100%",
+                      objectFit: "contain",
+                      borderRadius: "8px",
+                      background: "#fff",
+                    }}
+                  />
+                )}
               </div>
               <button
                 style={styles.modalCloseButton}
