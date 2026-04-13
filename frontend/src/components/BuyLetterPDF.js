@@ -2898,11 +2898,14 @@ const BuyLetterForm = () => {
               ? formatDateForInput(data.insuranceExpiryDate)
               : "",
             sellerName: data.personName || data.sellerName || "",
-            sellerFatherName: data.personFatherName || data.sellerFatherName || "",
-            sellerCurrentAddress: data.personAddress || data.sellerCurrentAddress || "",
+            sellerFatherName:
+              data.personFatherName || data.sellerFatherName || "",
+            sellerCurrentAddress:
+              data.personAddress || data.sellerCurrentAddress || "",
             selleraadhar: data.personAadhar || data.selleraadhar || "",
             selleraadharphone: data.personPhone || data.selleraadharphone || "",
-            selleraadharphone2: data.personPhone2 || data.selleraadharphone2 || "",
+            selleraadharphone2:
+              data.personPhone2 || data.selleraadharphone2 || "",
           };
 
           setFormData((prev) => ({
@@ -2959,7 +2962,12 @@ const BuyLetterForm = () => {
         console.error("Error fetching vehicle details in BuyLetter:", error);
       }
     },
-    [setFormData, setFilePreviews, setAadhaarUploadMode, setVehicleRCUploadMode],
+    [
+      setFormData,
+      setFilePreviews,
+      setAadhaarUploadMode,
+      setVehicleRCUploadMode,
+    ],
   );
   const handleInput = (e) => {
     const start = e.target.selectionStart;

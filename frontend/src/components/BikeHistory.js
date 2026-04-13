@@ -2082,7 +2082,18 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return getActionPriority(firstItem) - getActionPriority(secondItem);
       });
 
-      setBikeHistory(combinedData);
+      // Filter out insurance and PUC items that don't have an expiry date
+      const filteredData = combinedData.filter((item) => {
+        if (item.type === "insurance" || item.type === "insurance-renewed") {
+          return !!(item.insuranceExpiryDate || item.insuranceExpiry);
+        }
+        if (item.type === "puc" || item.type === "puc-renewed") {
+          return !!(item.pucExpiryDate || item.pucExpiry);
+        }
+        return true;
+      });
+
+      setBikeHistory(filteredData);
     } catch (error) {
       console.error("Error fetching bike history:", error);
       setBikeHistory([]);
