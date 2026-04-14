@@ -5,7 +5,7 @@ import { Upload, Trash2, Eye, EyeOff, Menu } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 
-const API_BASE = "https://ok-motor-51l3.vercel.app";
+const API_BASE = "http://ok-motor-backend.vercel.app";
 
 const GalleryManagement = () => {
   const { user, logout } = useContext(AuthContext);

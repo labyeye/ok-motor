@@ -27,7 +27,7 @@ const InsuranceHistory = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const API_BASE_URL = "https://ok-motor-51l3.vercel.app/api";
+  const API_BASE_URL = "http://ok-motor-backend.vercel.app/api";
 
   const fetchHistory = async () => {
     try {

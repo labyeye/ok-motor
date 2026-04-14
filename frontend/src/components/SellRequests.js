@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 const API_BASE =
-  process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+  process.env.REACT_APP_API_URL || "http://ok-motor-backend.vercel.app";
 
 const SellRequests = () => {
   const { user, logout } = useContext(AuthContext);

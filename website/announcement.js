@@ -1,5 +1,5 @@
 ﻿(function () {
-  const base = "https://ok-motor-51l3.vercel.app";
+  const base = "http://ok-motor-backend.vercel.app";
   const API = `${base}/api/announcements/current`;
 
   async function fetchCurrent() {

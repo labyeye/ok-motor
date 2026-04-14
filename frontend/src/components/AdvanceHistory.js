@@ -599,7 +599,7 @@ const AdvanceHistory = () => {
       }
 
       await axios.delete(
-        `https://ok-motor-51l3.vercel.app/api/advance-bills/${id}`,
+        `http://ok-motor-backend.vercel.app/api/advance-bills/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },

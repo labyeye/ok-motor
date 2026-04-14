@@ -246,7 +246,7 @@ const BuyLetterForm = () => {
       try {
         if (!editLetter || !editLetter._id) return;
         const API_BASE =
-          process.env.REACT_APP_API_URL || "https://ok-motor-51l3.vercel.app";
+          process.env.REACT_APP_API_URL || "http://ok-motor-backend.vercel.app";
         const token = localStorage.getItem("token");
         const resp = await axios.get(
           `${API_BASE}/api/buy-letters/${editLetter._id}`,
@@ -457,7 +457,7 @@ const BuyLetterForm = () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE = "https://ok-motor-51l3.vercel.app";
+      const API_BASE = "http://ok-motor-backend.vercel.app";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
@@ -1074,7 +1074,7 @@ const BuyLetterForm = () => {
           response = await apiService.post("/api/buy-letters", form);
         } else {
           response = await axios.post(
-            "https://ok-motor-51l3.vercel.app/api/buy-letters",
+            "http://ok-motor-backend.vercel.app/api/buy-letters",
             form,
             {
               headers: { "Content-Type": "multipart/form-data" },
@@ -1162,7 +1162,7 @@ const BuyLetterForm = () => {
             response = await apiService.post("/api/buy-letters", form);
           } else {
             response = await axios.post(
-              "https://ok-motor-51l3.vercel.app/api/buy-letters",
+              "http://ok-motor-backend.vercel.app/api/buy-letters",
               form,
               {
                 headers: { "Content-Type": "multipart/form-data" },
@@ -1177,7 +1177,7 @@ const BuyLetterForm = () => {
             response = await apiService.post("/api/buy-letters", payload);
           } else {
             response = await axios.post(
-              "https://ok-motor-51l3.vercel.app/api/buy-letters",
+              "http://ok-motor-backend.vercel.app/api/buy-letters",
               payload,
               { timeout: 300000 },
             );

@@ -354,7 +354,7 @@ const AdvancePayBillForm = () => {
         console.log("Online mode - saving to server");
 
         const saveResponse = await axios.post(
-          "https://ok-motor-51l3.vercel.app/api/advance-bills",
+          "http://ok-motor-backend.vercel.app/api/advance-bills",
           requestData,
           {
             headers: {
@@ -649,7 +649,7 @@ const AdvancePayBillForm = () => {
         }
       } else {
         const saveResponse = await axios.post(
-          "https://ok-motor-51l3.vercel.app/api/advance-bills",
+          "http://ok-motor-backend.vercel.app/api/advance-bills",
           requestData,
           {
             headers: {
@@ -720,7 +720,7 @@ const AdvancePayBillForm = () => {
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
       const response = await axios.get(
-        "https://ok-motor-51l3.vercel.app/api/advance-bills/vehicle-details",
+        "http://ok-motor-backend.vercel.app/api/advance-bills/vehicle-details",
         {
           params: { registrationNumber },
         },

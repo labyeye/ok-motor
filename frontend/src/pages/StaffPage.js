@@ -39,8 +39,8 @@ const StaffPage = () => {
     try {
       setLoading(true);
       const endpoint = isOwnerView
-        ? `https://ok-motor-51l3.vercel.app/api/dashboard/owner`
-        : `https://ok-motor-51l3.vercel.app/api/dashboard/stats`;
+        ? `http://ok-motor-backend.vercel.app/api/dashboard/owner`
+        : `http://ok-motor-backend.vercel.app/api/dashboard/stats`;
 
       const response = await fetch(endpoint, {
         headers: {

@@ -657,7 +657,7 @@
         const makeSelect = document.getElementById("make");
         try {
           const response = await fetch(
-            `https://ok-motor-51l3.vercel.app/api/bikes/makes`,
+            `http://ok-motor-backend.vercel.app/api/bikes/makes`,
           );
           const result = await response.json();
 
@@ -719,7 +719,7 @@
         yearSelect.innerHTML = '<option value="">Loading years...</option>';
 
         try {
-          let url = `https://ok-motor-51l3.vercel.app/api/bikes?make=${encodeURIComponent(
+          let url = `http://ok-motor-backend.vercel.app/api/bikes?make=${encodeURIComponent(
             make,
           )}`;
           if (model) url += `&model=${encodeURIComponent(model)}`;
@@ -782,7 +782,7 @@
       async function loadBikeModels(make) {
         try {
           const response = await fetch(
-            `https://ok-motor-51l3.vercel.app/api/bikes/models?make=${encodeURIComponent(
+            `http://ok-motor-backend.vercel.app/api/bikes/models?make=${encodeURIComponent(
               make,
             )}`,
           );
@@ -801,7 +801,7 @@
 
       async function fetchBikeData(make, model, year) {
         try {
-          let url = `https://ok-motor-51l3.vercel.app/api/bikes?make=${encodeURIComponent(
+          let url = `http://ok-motor-backend.vercel.app/api/bikes?make=${encodeURIComponent(
             make,
           )}`;
           if (model) url += `&model=${encodeURIComponent(model)}`;

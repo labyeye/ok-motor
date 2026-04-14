@@ -101,7 +101,7 @@ const AdminPage = () => {
   const fetchVehicleStats = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      const API_BASE = "https://ok-motor-51l3.vercel.app";
+      const API_BASE = "http://ok-motor-backend.vercel.app";
       const headers = { headers: { Authorization: `Bearer ${token}` } };
 
       // Parallelize the independent API calls to reduce overall latency
@@ -271,8 +271,8 @@ const AdminPage = () => {
 
       const endpoint =
         user?.role === "admin"
-          ? "https://ok-motor-51l3.vercel.app/api/dashboard/stats"
-          : "https://ok-motor-51l3.vercel.app/api/dashboard/owner-stats";
+          ? "http://ok-motor-backend.vercel.app/api/dashboard/stats"
+          : "http://ok-motor-backend.vercel.app/api/dashboard/owner-stats";
 
       const response = await axios.get(endpoint, {
         headers: {
@@ -310,7 +310,7 @@ const AdminPage = () => {
     setIncompleteLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const API_BASE = "https://ok-motor-51l3.vercel.app";
+      const API_BASE = "http://ok-motor-backend.vercel.app";
       const res = await axios.get(
         `${API_BASE}/api/dashboard/incomplete-letters`,
         {
@@ -339,7 +339,7 @@ const AdminPage = () => {
       if (!token) return;
 
       const endpoint =
-        "https://ok-motor-51l3.vercel.app/api/dashboard/free-services";
+        "http://ok-motor-backend.vercel.app/api/dashboard/free-services";
       const params = { limit: 2000 };
       if (search && String(search).trim() !== "")
         params.search = String(search).trim();
@@ -1487,7 +1487,7 @@ const AdminPage = () => {
           const token = localStorage.getItem("token");
           if (!token) return;
 
-          const BASE = "https://ok-motor-51l3.vercel.app";
+          const BASE = "http://ok-motor-backend.vercel.app";
 
           // Use cached sell letters if available to avoid duplicate heavy requests
           let pucRecords = [];
@@ -2074,7 +2074,7 @@ const AdminPage = () => {
           const token = localStorage.getItem("token");
           if (!token) return;
 
-          const BASE = "https://ok-motor-51l3.vercel.app";
+          const BASE = "http://ok-motor-backend.vercel.app";
 
           // Use cached sell letters if available to avoid duplicate heavy requests
           let insuranceRecords = [];
