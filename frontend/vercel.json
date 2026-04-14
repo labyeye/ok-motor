@@ -1,15 +1,18 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "build",
+  "env": {
+    "PUBLIC_URL": "/software"
+  },
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/software/(.*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
     {
-      "source": "/static/(.*)",
+      "source": "/software/static/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -18,7 +21,7 @@
       ]
     },
     {
-      "source": "/(.*)",
+      "source": "/software/(.*)",
       "headers": [
         {
           "key": "X-Content-Type-Options",
