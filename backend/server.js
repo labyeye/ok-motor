@@ -25,7 +25,7 @@ const getAllowedOrigins = () => {
     "http://127.0.0.1:5500",
     "http://localhost:3000", // Local development
     "http://127.0.0.1:3000", // Local development
-    "https://ok-motor.vercel.app", // Production
+    "https://ok-motor-frontend.vercel.app", // Production
     "https://ok-motor-git-main-ok-motor.vercel.app", // Vercel preview
     "https://ok-motor-ok-motor.vercel.app", // Vercel deployment
     "https://okmotors.in",

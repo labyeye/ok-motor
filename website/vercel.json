@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/software",
-      "destination": "https://ok-motor.vercel.app/"
+      "destination": "https://ok-motor-frontend.vercel.app/"
     },
     {
       "source": "/software/:path*",
-      "destination": "https://ok-motor.vercel.app/:path*"
+      "destination": "https://ok-motor-frontend.vercel.app/:path*"
     }
   ]
 }
