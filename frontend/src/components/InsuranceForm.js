@@ -158,7 +158,7 @@ const InsuranceForm = () => {
     }
   };
 
-  const API_BASE_URL = "http://ok-motor-backend.vercel.app/api";
+  const API_BASE_URL = "https://ok-motor-backend.vercel.app/api";
 
   const handleSave = async (e) => {
     e.preventDefault();

@@ -73,7 +73,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link rel="preconnect" href="https://code.jquery.com" crossorigin />
-    <link rel="preconnect" href="http://ok-motor-backend.vercel.app" />
+    <link rel="preconnect" href="https://ok-motor-backend.vercel.app" />
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./updates.css" />
     <link
@@ -623,7 +623,7 @@
             alert("Please fill all fields and select a rating.");
             return;
           }
-          fetch("http://ok-motor-backend.vercel.app/api/reviews", {
+          fetch("https://ok-motor-backend.vercel.app/api/reviews", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name, message, rating }),
@@ -835,7 +835,7 @@
               return;
             }
 
-            fetch("http://ok-motor-backend.vercel.app/api/reviews", {
+            fetch("https://ok-motor-backend.vercel.app/api/reviews", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ name, message, rating }),
@@ -893,13 +893,13 @@
         )
           return url;
         if (url.startsWith("/"))
-          return "http://ok-motor-backend.vercel.app" + url;
+          return "https://ok-motor-backend.vercel.app" + url;
         return (
-          "http://ok-motor-backend.vercel.app/uploads/" + url.replace(/^\/+/, "")
+          "https://ok-motor-backend.vercel.app/uploads/" + url.replace(/^\/+/, "")
         );
       }
       // Fetch and render updates (simplified, no config dependency)
-      fetch("http://ok-motor-backend.vercel.app/api/updates")
+      fetch("https://ok-motor-backend.vercel.app/api/updates")
         .then((res) => {
           if (!res.ok) throw new Error("Network response was not ok");
           return res.json();

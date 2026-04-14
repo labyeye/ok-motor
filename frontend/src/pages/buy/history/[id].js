@@ -14,7 +14,7 @@ export default function BuyLetterDetailPage() {
       const fetchLetter = async () => {
         try {
           const response = await fetch(
-            `http://ok-motor-backend.vercel.app/api/buy-letter/${id}`,
+            `https://ok-motor-backend.vercel.app/api/buy-letter/${id}`,
           );
           if (response.ok) {
             const data = await response.json();

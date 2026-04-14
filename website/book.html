@@ -48,7 +48,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link rel="preconnect" href="https://code.jquery.com" crossorigin />
-    <link rel="preconnect" href="http://ok-motor-backend.vercel.app" />
+    <link rel="preconnect" href="https://ok-motor-backend.vercel.app" />
     <link rel="stylesheet" href="./globals.css" />
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./book.css" />
@@ -738,7 +738,7 @@
               alert("Please fill all fields and select a rating.");
               return;
             }
-            fetch("http://ok-motor-backend.vercel.app/api/reviews", {
+            fetch("https://ok-motor-backend.vercel.app/api/reviews", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ name, message, rating }),
@@ -784,7 +784,7 @@
           const bikeIdFromUrl = urlParams.get("bikeId");
 
           fetch(
-            "http://ok-motor-backend.vercel.app/api/vehicles/public/listings?limit=200",
+            "https://ok-motor-backend.vercel.app/api/vehicles/public/listings?limit=200",
           )
             .then((response) => response.json())
             .then((data) => {
@@ -849,7 +849,7 @@
               });
 
               const response = await fetch(
-                "http://ok-motor-backend.vercel.app/api/book-bike",
+                "https://ok-motor-backend.vercel.app/api/book-bike",
                 {
                   method: "POST",
                   headers: {

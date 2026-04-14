@@ -42,7 +42,7 @@ const AnnouncementPage = () => {
     setError(null);
     try {
       const response = await fetch(
-        "http://ok-motor-backend.vercel.app/api/announcements",
+        "https://ok-motor-backend.vercel.app/api/announcements",
       );
       if (!response.ok) throw new Error("Failed to fetch announcements");
       const data = await response.json();

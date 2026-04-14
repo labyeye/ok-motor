@@ -298,7 +298,7 @@ const BuyLetterHistory = () => {
 
         if (isOnline) {
           const response = await axios.get(
-            `http://ok-motor-backend.vercel.app/api/buy-letter/all`,
+            `https://ok-motor-backend.vercel.app/api/buy-letter/all`,
             {
               headers: {},
             },
@@ -1976,7 +1976,7 @@ const BuyLetterHistory = () => {
         }
 
         await axios.delete(
-          `http://ok-motor-backend.vercel.app/api/buy-letter/${id}`,
+          `https://ok-motor-backend.vercel.app/api/buy-letter/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

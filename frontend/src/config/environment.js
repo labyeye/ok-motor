@@ -14,7 +14,7 @@ const getApiUrl = () => {
 
   // For development or when running locally, use local backend
   if (isLocalhost) {
-    return "http://ok-motor-backend.vercel.app";
+    return "https://ok-motor-backend.vercel.app";
   }
 
   // For production, use the deployed backend

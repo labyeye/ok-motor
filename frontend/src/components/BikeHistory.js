@@ -1727,26 +1727,26 @@ const BikeHistory = ({ externalSearchTerm }) => {
         pucResp,
       ] = await Promise.all([
         axios.get(
-          `http://ok-motor-backend.vercel.app/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
+          `https://ok-motor-backend.vercel.app/api/buy-letter/by-registration?registrationNumber=${searchTerm}`,
         ),
         axios.get(
-          `http://ok-motor-backend.vercel.app/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
+          `https://ok-motor-backend.vercel.app/api/sell-letters/by-registration?registrationNumber=${searchTerm}`,
         ),
         axios.get(
-          `http://ok-motor-backend.vercel.app/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
+          `https://ok-motor-backend.vercel.app/api/service-bills/by-registration?registrationNumber=${searchTerm}`,
         ),
         axios.get(
-          `http://ok-motor-backend.vercel.app/api/advance-bills/by-registration?registrationNumber=${searchTerm}`,
+          `https://ok-motor-backend.vercel.app/api/advance-bills/by-registration?registrationNumber=${searchTerm}`,
         ),
         // insurance and puc endpoints return single records (or 404) when queried by vehicle
         axios
           .get(
-            `http://ok-motor-backend.vercel.app/api/insurance/vehicle/${encodeURIComponent(searchTerm)}`,
+            `https://ok-motor-backend.vercel.app/api/insurance/vehicle/${encodeURIComponent(searchTerm)}`,
           )
           .catch((e) => ({ status: e.response?.status || 500, data: null })),
         axios
           .get(
-            `http://ok-motor-backend.vercel.app/api/puc/vehicle/${encodeURIComponent(searchTerm)}`,
+            `https://ok-motor-backend.vercel.app/api/puc/vehicle/${encodeURIComponent(searchTerm)}`,
           )
           .catch((e) => ({ status: e.response?.status || 500, data: null })),
       ]);
@@ -1959,7 +1959,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
             if (item.type === "buy" || item.type === "sell") {
               return axios
                 .get(
-                  `http://ok-motor-backend.vercel.app/api/${item.type}-letter/${item.previousVersionId}`,
+                  `https://ok-motor-backend.vercel.app/api/${item.type}-letter/${item.previousVersionId}`,
                 )
                 .then((res) => ({ id: item._id, previousVersion: res.data }))
                 .catch(() => ({ id: item._id, previousVersion: null }));
@@ -2299,7 +2299,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         }
         return;
       } else if (type === "service") {
-        const endpoint = `http://ok-motor-backend.vercel.app/api/service-bills/${id}/pdf`;
+        const endpoint = `https://ok-motor-backend.vercel.app/api/service-bills/${id}/pdf`;
         const response = await axios.get(endpoint, {
           responseType: "blob",
         });
@@ -2308,7 +2308,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         setPdfUrl(pdfUrl);
         setShowPdfModal(true);
       } else if (type === "advance") {
-        const endpoint = `http://ok-motor-backend.vercel.app/api/advance-bills/${id}/pdf`;
+        const endpoint = `https://ok-motor-backend.vercel.app/api/advance-bills/${id}/pdf`;
         const response = await axios.get(endpoint, {
           responseType: "blob",
         });
@@ -2349,7 +2349,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         }
         return;
       } else if (type === "service") {
-        const endpoint = `http://ok-motor-backend.vercel.app/api/service-bills/${id}/pdf`;
+        const endpoint = `https://ok-motor-backend.vercel.app/api/service-bills/${id}/pdf`;
         const response = await axios.get(endpoint, {
           responseType: "blob",
         });
@@ -2364,7 +2364,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
       } else if (type === "advance") {
-        const endpoint = `http://ok-motor-backend.vercel.app/api/advance-bills/${id}/download`;
+        const endpoint = `https://ok-motor-backend.vercel.app/api/advance-bills/${id}/download`;
         const response = await axios.get(endpoint, {
           responseType: "blob",
         });

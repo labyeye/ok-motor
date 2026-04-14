@@ -46,7 +46,7 @@ const PUCForm = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, [location.state]);
 
-  const API_BASE_URL = "http://ok-motor-backend.vercel.app/api";
+  const API_BASE_URL = "https://ok-motor-backend.vercel.app/api";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
