@@ -3,8 +3,12 @@
   "outputDirectory": "build",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/software/(.*)",
       "destination": "/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "https://ok-motor-website.vercel.app/$1"
     }
   ],
   "headers": [
