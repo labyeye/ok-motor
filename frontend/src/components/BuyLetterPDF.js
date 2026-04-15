@@ -2905,11 +2905,12 @@ const BuyLetterForm = () => {
             registrationNumber,
           }));
 
-          // Pre-fill document previews from the existing letters (Only RC as per requirement)
-          if (data.buyLetterDocuments) {
-            const docs = data.buyLetterDocuments;
+          // Pre-fill document previews from the existing sell letter (RC and NOC)
+          if (data.documents) {
+            const docs = data.documents;
             const previews = {};
 
+            // Handle Vehicle RC
             if (docs.vehicleRCUploadMode)
               setVehicleRCUploadMode(docs.vehicleRCUploadMode);
 
@@ -2917,6 +2918,14 @@ const BuyLetterForm = () => {
               previews.vehicleRCFront = docs.vehicleRC.front;
             if (docs.vehicleRC?.back)
               previews.vehicleRCBack = docs.vehicleRC.back;
+
+            // Handle Vehicle NOC
+            if (docs.vehicleNOCUploadMode)
+              setVehicleNOCUploadMode(docs.vehicleNOCUploadMode);
+
+            if (docs.vehicleNOC?.pages && Array.isArray(docs.vehicleNOC.pages)) {
+              previews.vehicleNOC = docs.vehicleNOC.pages.slice();
+            }
 
             if (Object.keys(previews).length > 0) {
               setFilePreviews((prev) => ({ ...prev, ...previews }));
@@ -2931,6 +2940,7 @@ const BuyLetterForm = () => {
       setFormData,
       setFilePreviews,
       setVehicleRCUploadMode,
+      setVehicleNOCUploadMode,
     ],
   );
   const handleInput = (e) => {

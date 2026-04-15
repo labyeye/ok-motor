@@ -1005,6 +1005,16 @@ exports.getVehicleDetails = async (req, res) => {
       );
     }
 
+    // Attach documents from the most recent SellLetter (RC and NOC are common)
+    if (sellLetters[0] && sellLetters[0].documents) {
+      vehicleDetails.documents = {
+        vehicleRC: sellLetters[0].documents.vehicleRC,
+        vehicleRCUploadMode: sellLetters[0].documents.vehicleRCUploadMode,
+        vehicleNOC: sellLetters[0].documents.vehicleNOC,
+        vehicleNOCUploadMode: sellLetters[0].documents.vehicleNOCUploadMode,
+      };
+    }
+
     // Also attempt to load canonical Insurance and PUC master records by vehicleRegNo
     try {
       const regRegex = new RegExp(
