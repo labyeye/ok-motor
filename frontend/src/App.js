@@ -36,6 +36,7 @@ import PUCHistory from "./components/PUCHistory";
 import { useState, useEffect } from "react";
 import networkService from "./services/networkService";
 import "./services/syncService"; // initialize sync service for side-effects
+import AccessLockScreen from "./components/AccessLockScreen";
 
 const Rootredirect = () => {
   const { user, loading } = useAuth();
@@ -85,6 +86,9 @@ const Rootredirect = () => {
 
 function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isUnlocked, setIsUnlocked] = useState(
+    () => sessionStorage.getItem("okm_access") === "1"
+  );
 
   useEffect(() => {
     // Initialize services only in Electron
@@ -124,6 +128,10 @@ function App() {
       };
     }
   }, []);
+
+  if (!isUnlocked) {
+    return <AccessLockScreen onUnlock={() => setIsUnlocked(true)} />;
+  }
 
   return (
     <AuthProvider>
