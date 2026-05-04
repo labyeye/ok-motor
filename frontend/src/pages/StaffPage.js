@@ -57,15 +57,6 @@ const StaffPage = () => {
       setDashboardData(data.data);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
-      // Fallback data if API fails
-      // setDashboardData({
-      //   totalBuyLetters: 145,
-      //   totalSellLetters: 128,
-      //   totalBuyValue: 2450000,
-      //   totalSellValue: 2890000,
-      //   profit: 440000,
-      //   ownerName: user.name,
-      // });
     } finally {
       setLoading(false);
     }
@@ -95,7 +86,6 @@ const StaffPage = () => {
     logout();
     navigate("/login");
   };
-  // In the menuItems array (around line 250 in BuyLetterPDF.js)
 
   const DashboardCards = () => (
     <div style={styles.cardsGrid}>
@@ -303,7 +293,7 @@ const StaffPage = () => {
 
   return (
     <div style={{ ...styles.container, paddingTop: isMobile ? "56px" : "0" }}>
-      {/* Mobile Top Bar */}
+      {}
       <AppSidebar user={user} onLogout={handleLogout} />
 
       <div style={styles.mainContent}>
@@ -379,7 +369,7 @@ const StaffPage = () => {
               <DashboardCards />
               <RevenueCard />
 
-              {/* Quick Actions */}
+              {}
               <div style={styles.quickActionsCard}>
                 <h3 style={styles.quickActionsTitle}>Quick Actions</h3>
                 <div style={styles.quickActionsGrid}>
@@ -511,7 +501,7 @@ const styles = {
     background: "rgba(0, 0, 0, 0.5)",
     zIndex: 14,
   },
-  // Sidebar Styles
+
   sidebar: {
     width: "280px",
     backgroundColor: "#071952",

@@ -157,8 +157,7 @@ const getRecentTransactions = async (model, limit = 3, matchCriteria = {}) => {
 
 const getIncompleteLetterSummary = (letter, type) => {
   const missingFields = [];
-  
-  // Helper function to check if any part of a document exists (front, back, or combined)
+
   const hasDocumentPart = (docObj) => {
     if (!docObj) return false;
     return !!(docObj.front || docObj.back || docObj.combined);
@@ -175,30 +174,30 @@ const getIncompleteLetterSummary = (letter, type) => {
   };
 
   if (type === "buy") {
-    // Check Vehicle RC - if either front, back, or combined exists, it's not missing
     if (!hasDocumentPart(docPaths.rc)) missingFields.push("Vehicle RC");
-    
-    // Check Aadhaar - if either front, back, or combined exists, it's not missing
+
     if (!hasDocumentPart(docPaths.aadhaar)) missingFields.push("Aadhar");
-    
+
     if (!docPaths.signedDocBuy) missingFields.push("Signed Doc");
     if (!docPaths.pan) missingFields.push("PAN Card");
-    if (!docPaths.vehicleBuyReceiptPages || docPaths.vehicleBuyReceiptPages.length === 0) {
+    if (
+      !docPaths.vehicleBuyReceiptPages ||
+      docPaths.vehicleBuyReceiptPages.length === 0
+    ) {
       missingFields.push("Buy Receipt");
     }
-
   } else {
-    // Check Vehicle RC - if either front, back, or combined exists, it's not missing
     if (!hasDocumentPart(docPaths.rc)) missingFields.push("Vehicle RC");
-    
-    // Check Aadhaar - if either front, back, or combined exists, it's not missing
+
     if (!hasDocumentPart(docPaths.aadhaar)) missingFields.push("Aadhar");
-    
+
     if (!docPaths.signedDocSell) missingFields.push("Signed Doc");
     if (!docPaths.pan) missingFields.push("PAN Card");
-    
-    // Check Transfer Receipt
-    if (!docPaths.transferReceiptPages || docPaths.transferReceiptPages.length === 0) {
+
+    if (
+      !docPaths.transferReceiptPages ||
+      docPaths.transferReceiptPages.length === 0
+    ) {
       missingFields.push("Transfer Receipt");
     }
   }
@@ -208,15 +207,19 @@ const getIncompleteLetterSummary = (letter, type) => {
 
 exports.getIncompleteLetters = async (req, res) => {
   try {
-    // Fetch all buy and sell letters, sorted by updatedAt (latest first)
     const [allBuyLetters, allSellLetters] = await Promise.all([
-      BuyLetter.find({}).sort({ updatedAt: -1, createdAt: -1 }).limit(2000).lean(),
-      SellLetter.find({}).sort({ updatedAt: -1, createdAt: -1 }).limit(2000).lean(),
+      BuyLetter.find({})
+        .sort({ updatedAt: -1, createdAt: -1 })
+        .limit(2000)
+        .lean(),
+      SellLetter.find({})
+        .sort({ updatedAt: -1, createdAt: -1 })
+        .limit(2000)
+        .lean(),
     ]);
 
-    // Create a map to store only the latest version of each registration number
     const buyLetterMap = new Map();
-    allBuyLetters.forEach(letter => {
+    allBuyLetters.forEach((letter) => {
       const regNo = letter.registrationNumber;
       if (!buyLetterMap.has(regNo)) {
         buyLetterMap.set(regNo, letter);
@@ -224,43 +227,37 @@ exports.getIncompleteLetters = async (req, res) => {
     });
 
     const sellLetterMap = new Map();
-    allSellLetters.forEach(letter => {
+    allSellLetters.forEach((letter) => {
       const regNo = letter.registrationNumber;
       if (!sellLetterMap.has(regNo)) {
         sellLetterMap.set(regNo, letter);
       }
     });
 
-    // Get latest buy letters and filter for incomplete ones
     const latestBuyLetters = Array.from(buyLetterMap.values());
     const incompleteBuy = latestBuyLetters
-      .map(l => getIncompleteLetterSummary(l, "buy"))
-      .filter(l => l.missingFields.length > 0);
+      .map((l) => getIncompleteLetterSummary(l, "buy"))
+      .filter((l) => l.missingFields.length > 0);
 
-    // Get latest sell letters and filter for incomplete ones
     const latestSellLetters = Array.from(sellLetterMap.values());
     const incompleteSell = latestSellLetters
-      .map(l => getIncompleteLetterSummary(l, "sell"))
-      .filter(sellLetter => {
+      .map((l) => getIncompleteLetterSummary(l, "sell"))
+      .filter((sellLetter) => {
         if (sellLetter.missingFields.length === 0) return false;
 
         const buyLetter = buyLetterMap.get(sellLetter.registrationNumber);
-        if (!buyLetter) return true; // No corresponding buy letter, so it's incomplete on its own.
+        if (!buyLetter) return true;
 
         const buySummary = getIncompleteLetterSummary(buyLetter, "buy");
         if (buySummary.missingFields.length === 0) {
-          // The buy letter was complete. 
-          // Check if the sell letter is missing sell-specific fields
-          const isMissingSellSpecific = sellLetter.missingFields.some(f => 
-            ["Signed Doc", "Transfer Receipt"].includes(f)
+          const isMissingSellSpecific = sellLetter.missingFields.some((f) =>
+            ["Signed Doc", "Transfer Receipt"].includes(f),
           );
           if (isMissingSellSpecific) return true;
 
-          // Otherwise, don't show it as incomplete if it's just newly created.
           return false;
         }
 
-        // If the buy letter was also incomplete, show the sell letter.
         return true;
       });
 
@@ -282,7 +279,9 @@ exports.getOwnerDashboardStats = async (req, res) => {
     const isPrivileged = req.user.role === "staff" || req.user.role === "admin";
     const ownerId = req.user.id;
 
-    const matchCriteria = isPrivileged ? {} : { user: mongoose.Types.ObjectId(ownerId) };
+    const matchCriteria = isPrivileged
+      ? {}
+      : { user: mongoose.Types.ObjectId(ownerId) };
 
     const [
       buyStats,
@@ -559,14 +558,11 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
-// Returns sold vehicles with their first three service bill dates (free services usage)
-// Supports optional query params: `limit` (default 10) and `search` (registrationNumber partial, case-insensitive)
 exports.getFreeServiceUsage = async (req, res) => {
   try {
     const { limit = 10, search } = req.query;
     const numericLimit = Math.max(1, Math.min(2000, parseInt(limit, 10) || 10));
 
-    // Build a base match for sold vehicles (SellLetter)
     const baseMatch = {};
     if (search && String(search).trim() !== "") {
       const regex = new RegExp(
@@ -580,6 +576,16 @@ exports.getFreeServiceUsage = async (req, res) => {
 
     const pipeline = [
       { $match: baseMatch },
+      // Deduplicate: keep only the latest version of each sell letter
+      // (editing creates a new document; group by originalDocumentId to avoid duplicates)
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: { $ifNull: ["$originalDocumentId", "$_id"] },
+          doc: { $first: "$$ROOT" },
+        },
+      },
+      { $replaceRoot: { newRoot: "$doc" } },
       {
         $lookup: {
           from: "servicebills",
@@ -602,7 +608,7 @@ exports.getFreeServiceUsage = async (req, res) => {
           as: "services",
         },
       },
-      // Keep all sold vehicles (even if they have zero services)
+
       {
         $project: {
           saleDate: 1,
@@ -632,7 +638,6 @@ exports.getFreeServiceUsage = async (req, res) => {
       },
       {
         $addFields: {
-          // Use actual service date if present; otherwise project based on saleDate + n months
           month1: {
             $ifNull: [
               { $arrayElemAt: ["$serviceDates", 0] },
@@ -695,13 +700,10 @@ exports.getPucExpiryReminders = async (req, res) => {
     const { limit = 100, search } = req.query;
     const numericLimit = parseInt(limit, 10);
 
-    // Date Logic: Expiry <= Today + 7 days
     const now = new Date();
     const sevenDaysFromNow = new Date(now);
     sevenDaysFromNow.setDate(now.getDate() + 7);
 
-    // ── PUC is the SINGLE SOURCE OF TRUTH ──
-    // Query master PUC records only — the SellLetter/BuyLetter stale copies are NOT used.
     const pucBase = {
       $or: [
         { pucExpiry: { $exists: true, $ne: null, $lte: sevenDaysFromNow } },
@@ -710,7 +712,9 @@ exports.getPucExpiryReminders = async (req, res) => {
     };
 
     if (search && String(search).trim() !== "") {
-      const escaped = String(search).trim().replace(/[-/\\^+?.()|[\]{}]/g, "\\$&");
+      const escaped = String(search)
+        .trim()
+        .replace(/[-/\\^+?.()|[\]{}]/g, "\\$&");
       const regex = new RegExp(escaped, "i");
       pucBase.$and = [
         {
@@ -726,22 +730,28 @@ exports.getPucExpiryReminders = async (req, res) => {
     }
 
     const pucRecords = await PUC.find(pucBase)
-      .select("regNo vehicleRegNo personName personPhone personAlternateNo brand vehicleModel pucExpiry pucExpiryDate")
+      .select(
+        "regNo vehicleRegNo personName personPhone personAlternateNo brand vehicleModel pucExpiry pucExpiryDate",
+      )
       .sort({ pucExpiry: 1, pucExpiryDate: 1 })
       .limit(numericLimit * 2)
       .lean();
 
-    // For each PUC record, check if there is a matching SellLetter to determine context (sold vs. buy/standalone)
-    const allRegNos = pucRecords.map((p) => (p.vehicleRegNo || p.regNo || "").trim());
+    const allRegNos = pucRecords.map((p) =>
+      (p.vehicleRegNo || p.regNo || "").trim(),
+    );
     const uniqueRegNos = [...new Set(allRegNos.filter(Boolean))];
 
-    // Load matching sell letters to classify records as "Sold Vehicle"
     const sellLetterMap = {};
     if (uniqueRegNos.length > 0) {
       const sellMatches = await SellLetter.find({
-        registrationNumber: { $in: uniqueRegNos.map((r) => new RegExp(`^${r}$`, "i")) },
+        registrationNumber: {
+          $in: uniqueRegNos.map((r) => new RegExp(`^${r}$`, "i")),
+        },
       })
-        .select("registrationNumber buyerName buyerPhone vehicleName vehicleModel")
+        .select(
+          "registrationNumber buyerName buyerPhone vehicleName vehicleModel",
+        )
         .lean();
       for (const s of sellMatches) {
         const key = (s.registrationNumber || "").trim().toLowerCase();
@@ -766,13 +776,15 @@ exports.getPucExpiryReminders = async (req, res) => {
             ? `${sell.vehicleName || ""} ${sell.vehicleModel || ""}`.trim()
             : `${p.brand || ""} ${p.vehicleModel || ""}`.trim(),
           displayExpiry: expiry,
-          // expose the master PUC id so frontend can deep-link to PUC module
+
           pucId: p._id,
         };
       })
-      .filter((item) => item.type === "sold_vehicle"); // Only show sold vehicles
+      .filter((item) => item.type === "sold_vehicle");
 
-    finalData.sort((a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry));
+    finalData.sort(
+      (a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry),
+    );
     const sliced = finalData.slice(0, numericLimit);
 
     res.status(200).json({ success: true, data: sliced });
@@ -791,17 +803,25 @@ exports.getInsuranceExpiryReminders = async (req, res) => {
     const sevenDaysFromNow = new Date(now);
     sevenDaysFromNow.setDate(now.getDate() + 7);
 
-    // ── Insurance is the SINGLE SOURCE OF TRUTH ──
-    // Query master Insurance records only — the SellLetter/BuyLetter stale copies are NOT used.
     const insBase = {
       $or: [
-        { insuranceExpiry: { $exists: true, $ne: null, $lte: sevenDaysFromNow } },
-        { insuranceExpiryDate: { $exists: true, $ne: null, $lte: sevenDaysFromNow } },
+        {
+          insuranceExpiry: { $exists: true, $ne: null, $lte: sevenDaysFromNow },
+        },
+        {
+          insuranceExpiryDate: {
+            $exists: true,
+            $ne: null,
+            $lte: sevenDaysFromNow,
+          },
+        },
       ],
     };
 
     if (search && String(search).trim() !== "") {
-      const escaped = String(search).trim().replace(/[-/\\^+?.()|[\]{}]/g, "\\$&");
+      const escaped = String(search)
+        .trim()
+        .replace(/[-/\\^+?.()|[\]{}]/g, "\\$&");
       const regex = new RegExp(escaped, "i");
       insBase.$and = [
         {
@@ -818,21 +838,28 @@ exports.getInsuranceExpiryReminders = async (req, res) => {
     }
 
     const insRecords = await Insurance.find(insBase)
-      .select("regNo vehicleRegNo personName personPhone personAlternateNo brand vehicleModel insuranceExpiry insuranceExpiryDate insuranceCompany")
+      .select(
+        "regNo vehicleRegNo personName personPhone personAlternateNo brand vehicleModel insuranceExpiry insuranceExpiryDate insuranceCompany",
+      )
       .sort({ insuranceExpiry: 1, insuranceExpiryDate: 1 })
       .limit(numericLimit * 2)
       .lean();
 
-    // For each Insurance record, check if there is a matching SellLetter to determine context
-    const allRegNos = insRecords.map((i) => (i.vehicleRegNo || i.regNo || "").trim());
+    const allRegNos = insRecords.map((i) =>
+      (i.vehicleRegNo || i.regNo || "").trim(),
+    );
     const uniqueRegNos = [...new Set(allRegNos.filter(Boolean))];
 
     const sellLetterMap = {};
     if (uniqueRegNos.length > 0) {
       const sellMatches = await SellLetter.find({
-        registrationNumber: { $in: uniqueRegNos.map((r) => new RegExp(`^${r}$`, "i")) },
+        registrationNumber: {
+          $in: uniqueRegNos.map((r) => new RegExp(`^${r}$`, "i")),
+        },
       })
-        .select("registrationNumber buyerName buyerPhone vehicleName vehicleModel")
+        .select(
+          "registrationNumber buyerName buyerPhone vehicleName vehicleModel",
+        )
         .lean();
       for (const s of sellMatches) {
         const key = (s.registrationNumber || "").trim().toLowerCase();
@@ -858,13 +885,15 @@ exports.getInsuranceExpiryReminders = async (req, res) => {
             : `${ins.brand || ""} ${ins.vehicleModel || ""}`.trim(),
           displayExpiry: expiry,
           displayCompany: ins.insuranceCompany,
-          // expose master Insurance id so frontend can deep-link to Insurance module
+
           insuranceId: ins._id,
         };
       })
-      .filter((item) => item.type === "sold_vehicle"); // Only show sold vehicles
+      .filter((item) => item.type === "sold_vehicle");
 
-    finalData.sort((a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry));
+    finalData.sort(
+      (a, b) => new Date(a.displayExpiry) - new Date(b.displayExpiry),
+    );
     const sliced = finalData.slice(0, numericLimit);
 
     res.status(200).json({ success: true, data: sliced });

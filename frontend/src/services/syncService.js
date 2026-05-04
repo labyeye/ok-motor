@@ -1,9 +1,3 @@
-// src/services/syncService.js
-/**
- * Sync Service
- * Handles synchronization between offline storage and MongoDB
- */
-
 import offlineStorage from "./offlineStorage";
 import networkService from "./networkService";
 import axios from "axios";
@@ -15,17 +9,13 @@ class SyncService {
     this.lastSyncTime = null;
     this.syncListeners = [];
     this.autoSyncEnabled = true;
-    this.syncIntervalTime = 60000; // 1 minute
+    this.syncIntervalTime = 60000;
     this.syncInterval = null;
 
     this.init();
   }
 
-  /**
-   * Initialize sync service
-   */
   init() {
-    // Subscribe to network status changes
     networkService.subscribe((isOnline, wasOnline) => {
       if (isOnline && !wasOnline) {
         console.log("Connection restored, triggering auto-sync");
@@ -35,18 +25,13 @@ class SyncService {
       }
     });
 
-    // Load last sync time from storage
     this.loadSyncMetadata();
 
-    // Start auto-sync if enabled
     if (this.autoSyncEnabled) {
       this.startAutoSync();
     }
   }
 
-  /**
-   * Load sync metadata from storage
-   */
   async loadSyncMetadata() {
     if (window.electronAPI) {
       const lastSync = await window.electronAPI.getAppSetting("lastSyncTime");
@@ -61,25 +46,19 @@ class SyncService {
     }
   }
 
-  /**
-   * Save sync metadata
-   */
   async saveSyncMetadata() {
     this.lastSyncTime = new Date();
 
     if (window.electronAPI) {
       await window.electronAPI.setAppSetting(
         "lastSyncTime",
-        this.lastSyncTime.toISOString()
+        this.lastSyncTime.toISOString(),
       );
     } else {
       localStorage.setItem("lastSyncTime", this.lastSyncTime.toISOString());
     }
   }
 
-  /**
-   * Start automatic syncing
-   */
   startAutoSync() {
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
@@ -92,9 +71,6 @@ class SyncService {
     }, this.syncIntervalTime);
   }
 
-  /**
-   * Stop automatic syncing
-   */
   stopAutoSync() {
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
@@ -102,9 +78,6 @@ class SyncService {
     }
   }
 
-  /**
-   * Enable or disable auto-sync
-   */
   setAutoSync(enabled) {
     this.autoSyncEnabled = enabled;
 
@@ -115,13 +88,9 @@ class SyncService {
     }
   }
 
-  /**
-   * Subscribe to sync events
-   */
   subscribe(callback) {
     this.syncListeners.push(callback);
 
-    // Return unsubscribe function
     return () => {
       const index = this.syncListeners.indexOf(callback);
       if (index > -1) {
@@ -130,9 +99,6 @@ class SyncService {
     };
   }
 
-  /**
-   * Notify sync listeners
-   */
   notifyListeners(event, data) {
     this.syncListeners.forEach((callback) => {
       try {
@@ -143,9 +109,6 @@ class SyncService {
     });
   }
 
-  /**
-   * Sync all collections
-   */
   async syncAll() {
     if (this.isSyncing) {
       console.log("Sync already in progress");
@@ -168,7 +131,6 @@ class SyncService {
     };
 
     try {
-      // Sync each collection
       for (const collection of Object.keys(results)) {
         try {
           const result = await this.syncCollection(collection);
@@ -193,22 +155,17 @@ class SyncService {
     }
   }
 
-  /**
-   * Sync a specific collection
-   */
   async syncCollection(collection) {
     try {
       console.log(`🔄 Starting sync for collection: ${collection}`);
 
-      // Get unsynced documents
-      const unsyncedResult = await offlineStorage.getUnsyncedDocuments(
-        collection
-      );
+      const unsyncedResult =
+        await offlineStorage.getUnsyncedDocuments(collection);
 
       if (!unsyncedResult.success) {
         console.error(
           `❌ Failed to get unsynced documents for ${collection}:`,
-          unsyncedResult.error
+          unsyncedResult.error,
         );
         throw new Error(unsyncedResult.error);
       }
@@ -216,7 +173,7 @@ class SyncService {
       const unsyncedDocs = unsyncedResult.data;
       console.log(
         `📦 Found ${unsyncedDocs.length} unsynced documents in ${collection}:`,
-        unsyncedDocs
+        unsyncedDocs,
       );
 
       if (unsyncedDocs.length === 0) {
@@ -225,10 +182,9 @@ class SyncService {
       }
 
       console.log(
-        `📤 Syncing ${unsyncedDocs.length} documents from ${collection} to server...`
+        `📤 Syncing ${unsyncedDocs.length} documents from ${collection} to server...`,
       );
 
-      // Send to server
       const response = await axios.post(`/api/sync/${collection}`, {
         documents: unsyncedDocs,
       });
@@ -236,11 +192,10 @@ class SyncService {
       console.log(`📥 Server response for ${collection}:`, response.data);
 
       if (response.data.success) {
-        // Mark documents as synced
         const syncedIds =
           response.data.syncedIds || unsyncedDocs.map((doc) => doc._id);
         console.log(
-          `✅ Marking ${syncedIds.length} documents as synced in ${collection}`
+          `✅ Marking ${syncedIds.length} documents as synced in ${collection}`,
         );
         await offlineStorage.markAsSynced(collection, syncedIds);
 
@@ -252,14 +207,13 @@ class SyncService {
       } else {
         console.error(
           `❌ Sync failed for ${collection}:`,
-          response.data.message
+          response.data.message,
         );
         throw new Error(response.data.message || "Sync failed");
       }
     } catch (error) {
       console.error(`❌ Error syncing collection ${collection}:`, error);
 
-      // If it's a network error, we'll try again later
       if (error.code === "ECONNREFUSED" || error.code === "ERR_NETWORK") {
         return {
           success: false,
@@ -276,11 +230,7 @@ class SyncService {
     }
   }
 
-  /**
-   * Force sync now (manual sync)
-   */
   async forceSyncNow() {
-    // Force a network check first
     const isOnline = await networkService.forceCheck();
 
     if (!isOnline) {
@@ -290,9 +240,6 @@ class SyncService {
     return await this.syncAll();
   }
 
-  /**
-   * Get sync status
-   */
   getSyncStatus() {
     return {
       isSyncing: this.isSyncing,
@@ -302,9 +249,6 @@ class SyncService {
     };
   }
 
-  /**
-   * Get detailed sync statistics
-   */
   async getSyncStatistics() {
     try {
       const stats = await offlineStorage.getAllStats();
@@ -321,16 +265,10 @@ class SyncService {
     }
   }
 
-  /**
-   * Clear sync queue
-   */
   clearSyncQueue() {
     this.syncQueue = [];
   }
 
-  /**
-   * Clean up resources
-   */
   destroy() {
     this.stopAutoSync();
     this.syncListeners = [];

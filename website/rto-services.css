@@ -18,7 +18,7 @@
 .timeline-steps {
   position: relative;
   display: grid;
-  /* show all steps in a single row on large screens (supports 6 items) */
+
   grid-template-columns: repeat(6, 1fr);
   gap: 36px 32px;
   z-index: 1;
@@ -39,7 +39,6 @@
   transform: scale(1.05);
 }
 
-/* Small dotted circle above icon */
 .timeline-step::before {
   content: "";
   position: absolute;
@@ -53,14 +52,13 @@
   background: transparent;
 }
 
-/* Horizontal dashed connector line (only for items 1,2 and 4,5) */
 .timeline-step:nth-child(1)::after,
 .timeline-step:nth-child(2)::after,
 .timeline-step:nth-child(4)::after,
 .timeline-step:nth-child(5)::after {
   content: "";
   position: absolute;
-  /* center the dashed connector vertically relative to the step */
+
   top: 50%;
   transform: translateY(-50%);
   left: calc(50% + 44px);
@@ -76,7 +74,6 @@
   z-index: 1;
 }
 
-/* Remove fragmented per-step connectors and draw a single continuous dashed line */
 .timeline-step::after {
   display: none !important;
 }
@@ -86,7 +83,7 @@
   position: absolute;
   left: 48px;
   right: 48px;
-  /* position roughly at the vertical center of the icon circles */
+
   top: 54px;
   height: 2px;
   background-image: repeating-linear-gradient(
@@ -100,7 +97,6 @@
 }
 
 @media (max-width: 600px) {
-  /* hide the long connector on stacked layout */
   .timeline-steps::before {
     display: none;
   }
@@ -118,7 +114,7 @@
   border: none;
   transition: all 0.3s ease;
   box-shadow: 0 4px 16px rgba(11, 111, 178, 0.08);
-  z-index: 2; /* keep the circle above the connector */
+  z-index: 2;
 }
 
 .step-icon-wrapper i {
@@ -189,7 +185,6 @@
   }
 }
 
-/* CTA button used on service pages */
 .cta-whatsapp {
   display: inline-block;
   background: #303e27;
@@ -204,7 +199,6 @@
   filter: brightness(0.95);
 }
 
-/* Mobile action banner / search styles (moved from inline in pages) */
 .mobile-action-banner {
   display: none;
   width: 100%;

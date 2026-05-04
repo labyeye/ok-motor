@@ -23,9 +23,18 @@ const operatorOptions = {
   ],
 };
 
-const TableFilter = ({ type = "text", onApply = () => {}, onClear = () => {}, placeholder = "", compact = false, rangeOnly = false }) => {
+const TableFilter = ({
+  type = "text",
+  onApply = () => {},
+  onClear = () => {},
+  placeholder = "",
+  compact = false,
+  rangeOnly = false,
+}) => {
   const [open, setOpen] = useState(false);
-  const [op, setOp] = useState(rangeOnly ? "between" : operatorOptions[type]?.[0]?.key || "contains");
+  const [op, setOp] = useState(
+    rangeOnly ? "between" : operatorOptions[type]?.[0]?.key || "contains",
+  );
   const [value, setValue] = useState("");
   const [value2, setValue2] = useState("");
   const ref = useRef(null);
@@ -52,7 +61,6 @@ const TableFilter = ({ type = "text", onApply = () => {}, onClear = () => {}, pl
     const v2 = String(value2 || "").trim();
 
     if (op === "between") {
-      // require at least one of min/max to be provided
       if (!v1 && !v2) return;
     } else {
       if (!v1) return;
@@ -62,7 +70,8 @@ const TableFilter = ({ type = "text", onApply = () => {}, onClear = () => {}, pl
     setOpen(false);
   };
 
-  const inputType = type === "date" ? "date" : type === "number" ? "number" : "text";
+  const inputType =
+    type === "date" ? "date" : type === "number" ? "number" : "text";
 
   const betweenPlaceholders = (() => {
     if (type === "date") return ["From", "To"];
@@ -109,7 +118,12 @@ const TableFilter = ({ type = "text", onApply = () => {}, onClear = () => {}, pl
               <select
                 value={op}
                 onChange={(e) => setOp(e.target.value)}
-                style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #e6edf3" }}
+                style={{
+                  width: "100%",
+                  padding: "6px 8px",
+                  borderRadius: 6,
+                  border: "1px solid #e6edf3",
+                }}
               >
                 {(operatorOptions[type] || operatorOptions.text).map((o) => (
                   <option key={o.key} value={o.key}>
@@ -119,31 +133,68 @@ const TableFilter = ({ type = "text", onApply = () => {}, onClear = () => {}, pl
               </select>
             </div>
           ) : (
-            <div style={{ marginBottom: 8, fontSize: 13, color: "#374151" }}>Range</div>
+            <div style={{ marginBottom: 8, fontSize: 13, color: "#374151" }}>
+              Range
+            </div>
           )}
 
-          <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              marginBottom: 8,
+              alignItems: "center",
+            }}
+          >
             {op === "between" ? (
               <>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-                  <div style={{ fontSize: 12, color: "#64748b" }}>{betweenPlaceholders[0]}</div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 6,
+                    flex: 1,
+                  }}
+                >
+                  <div style={{ fontSize: 12, color: "#64748b" }}>
+                    {betweenPlaceholders[0]}
+                  </div>
                   <input
                     type={inputType}
                     value={value}
                     placeholder={type === "date" ? "yyyy-mm-dd" : "Min"}
                     onChange={(e) => setValue(e.target.value)}
-                    style={{ flex: 1, padding: "6px 8px", borderRadius: 6, border: "1px solid #e6edf3" }}
+                    style={{
+                      flex: 1,
+                      padding: "6px 8px",
+                      borderRadius: 6,
+                      border: "1px solid #e6edf3",
+                    }}
                     {...(inputType === "number" ? { step: 1 } : {})}
                   />
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, width: 110 }}>
-                  <div style={{ fontSize: 12, color: "#64748b" }}>{betweenPlaceholders[1]}</div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 6,
+                    width: 110,
+                  }}
+                >
+                  <div style={{ fontSize: 12, color: "#64748b" }}>
+                    {betweenPlaceholders[1]}
+                  </div>
                   <input
                     type={inputType}
                     value={value2}
                     placeholder={type === "date" ? "yyyy-mm-dd" : "Max"}
                     onChange={(e) => setValue2(e.target.value)}
-                    style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #e6edf3" }}
+                    style={{
+                      width: "100%",
+                      padding: "6px 8px",
+                      borderRadius: 6,
+                      border: "1px solid #e6edf3",
+                    }}
                     {...(inputType === "number" ? { step: 1 } : {})}
                   />
                 </div>
@@ -154,17 +205,41 @@ const TableFilter = ({ type = "text", onApply = () => {}, onClear = () => {}, pl
                 value={value}
                 placeholder={placeholder}
                 onChange={(e) => setValue(e.target.value)}
-                style={{ flex: 1, padding: "6px 8px", borderRadius: 6, border: "1px solid #e6edf3" }}
+                style={{
+                  flex: 1,
+                  padding: "6px 8px",
+                  borderRadius: 6,
+                  border: "1px solid #e6edf3",
+                }}
                 {...(inputType === "number" ? { step: 1 } : {})}
               />
             )}
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-            <button onClick={clear} style={{ padding: "6px 10px", background: "#f1f5f9", borderRadius: 6, border: "none", cursor: "pointer" }}>
+            <button
+              onClick={clear}
+              style={{
+                padding: "6px 10px",
+                background: "#f1f5f9",
+                borderRadius: 6,
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
               Clear
             </button>
-            <button onClick={apply} style={{ padding: "6px 10px", background: "#071952", color: "#fff", borderRadius: 6, border: "none", cursor: "pointer" }}>
+            <button
+              onClick={apply}
+              style={{
+                padding: "6px 10px",
+                background: "#071952",
+                color: "#fff",
+                borderRadius: 6,
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
               Apply
             </button>
           </div>

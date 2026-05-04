@@ -45,7 +45,11 @@ const BuyLetterSchema = new mongoose.Schema({
   insuranceExpiryDate: { type: Date },
   insuranceCompany: { type: String, trim: true },
   insurancePolicyNumber: { type: String, trim: true },
-  insuranceId: { type: mongoose.Schema.Types.ObjectId, ref: "Insurance", default: null },
+  insuranceId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Insurance",
+    default: null,
+  },
   pucId: { type: mongoose.Schema.Types.ObjectId, ref: "PUC", default: null },
 
   buyerName: { type: String, required: true },
@@ -95,9 +99,8 @@ const BuyLetterSchema = new mongoose.Schema({
     pan: { type: String },
     deliveryPhoto: { type: String },
     signedDocBuy: { type: String },
-    // New documents: insuranceCertificate, vehicleNOC, vehicleBuyReceipt
+
     insuranceCertificate: {
-      // store ordered array of page URLs (each page can be image or single-page PDF)
       pages: [{ type: String }],
     },
     insuranceCertificateUploadMode: {

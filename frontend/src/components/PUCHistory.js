@@ -298,7 +298,7 @@ const PUCHistory = () => {
       const d = new Date(dStr);
       if (isNaN(d.getTime())) return false;
       const v = new Date(eFilter.value);
-      // require value for non-range ops; for between allow one-sided
+
       if (eFilter.op !== "between" && isNaN(v.getTime())) return false;
       if (eFilter.op === "eq" && d.toDateString() !== v.toDateString())
         return false;
@@ -337,7 +337,7 @@ const PUCHistory = () => {
         paddingTop: isMobile ? "60px" : "0",
       }}
     >
-      {/* Mobile Sidebar Overlay */}
+      {}
       {isSidebarOpen && isMobile && (
         <div
           style={styles.sidebarOverlay}
@@ -345,7 +345,7 @@ const PUCHistory = () => {
         ></div>
       )}
 
-      {/* Mobile Top Bar */}
+      {}
       <AppSidebar user={user} onLogout={handleLogout} />
 
       <div style={styles.mainContent}>

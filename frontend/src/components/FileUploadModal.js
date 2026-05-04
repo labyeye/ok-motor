@@ -1,7 +1,12 @@
 import React, { useRef } from "react";
 import { Camera, Upload, FileText, X } from "lucide-react";
 
-const FileUploadModal = ({ onSelect, onCancel, allowPdf = false, allowMultiple = false }) => {
+const FileUploadModal = ({
+  onSelect,
+  onCancel,
+  allowPdf = false,
+  allowMultiple = false,
+}) => {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const pdfInputRef = useRef(null);
@@ -47,7 +52,7 @@ const FileUploadModal = ({ onSelect, onCancel, allowPdf = false, allowMultiple =
           <p style={styles.subtitle}>Choose how you want to upload:</p>
 
           <div style={styles.optionsContainer}>
-            {/* Camera Option */}
+            {}
             <button
               onClick={handleCameraClick}
               style={styles.optionButton}
@@ -58,7 +63,7 @@ const FileUploadModal = ({ onSelect, onCancel, allowPdf = false, allowMultiple =
               <span style={styles.optionDesc}>Use your device camera</span>
             </button>
 
-            {/* Upload Image Option */}
+            {}
             <button
               onClick={handleUploadClick}
               style={styles.optionButton}
@@ -71,7 +76,7 @@ const FileUploadModal = ({ onSelect, onCancel, allowPdf = false, allowMultiple =
               </span>
             </button>
 
-            {/* Upload PDF Option */}
+            {}
             {allowPdf && (
               <button
                 onClick={handlePdfClick}
@@ -86,7 +91,7 @@ const FileUploadModal = ({ onSelect, onCancel, allowPdf = false, allowMultiple =
           </div>
         </div>
 
-        {/* Hidden file inputs */}
+        {}
         <input
           type="file"
           ref={cameraInputRef}

@@ -1,4 +1,3 @@
-
 const { PDFDocument, rgb, degrees, StandardFonts } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
@@ -48,9 +47,7 @@ const formatIndianAmountInWords = (amount) => {
   const convertLessThanHundred = (n) => {
     if (n < 10) return units[n];
     if (n < 20) return teens[n - 10];
-    return (
-      tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + units[n % 10] : "")
-    );
+    return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + units[n % 10] : "");
   };
 
   const convertLessThanThousand = (n) => {
@@ -122,30 +119,46 @@ const formatTime = (timeString) => {
 
 const formatRupee = (val) => {
   if (val === undefined || val === null) return "0.00";
-  const num = typeof val === "string" ? parseFloat(val.replace(/,/g, "")) : Number(val);
-  return isNaN(num) ? "0.00" : new Intl.NumberFormat("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
+  const num =
+    typeof val === "string" ? parseFloat(val.replace(/,/g, "")) : Number(val);
+  return isNaN(num)
+    ? "0.00"
+    : new Intl.NumberFormat("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(num);
 };
 
 const formatKm = (val) => {
   if (val === undefined || val === null) return "0.00";
-  const num = typeof val === "string" ? parseFloat(val.replace(/,/g, "")) : Number(val);
-  return isNaN(num) ? "0.00" : new Intl.NumberFormat("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
+  const num =
+    typeof val === "string" ? parseFloat(val.replace(/,/g, "")) : Number(val);
+  return isNaN(num)
+    ? "0.00"
+    : new Intl.NumberFormat("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(num);
 };
 
-const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, language = "hindi") => {
+const generateSellLetterPDF = async (
+  sellLetterData,
+  returnBuffer = false,
+  language = "hindi",
+) => {
   try {
-    console.log("Starting PDF generation for sell letter:", sellLetterData._id || "new letter");
+    console.log(
+      "Starting PDF generation for sell letter:",
+      sellLetterData._id || "new letter",
+    );
 
-    
-    const templatePath = language === "hindi"
-      ? path.join(__dirname, "../../frontend/public/templates/sellletter.pdf")
-      : path.join(__dirname, "../../frontend/public/templates/englishsell.pdf");
+    const templatePath =
+      language === "hindi"
+        ? path.join(__dirname, "../../frontend/public/templates/sellletter.pdf")
+        : path.join(
+            __dirname,
+            "../../frontend/public/templates/englishsell.pdf",
+          );
 
     if (!fs.existsSync(templatePath)) {
       throw new Error(`PDF template not found: ${templatePath}`);
@@ -155,16 +168,21 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const firstPage = pdfDoc.getPages()[0];
 
-    // embed logo for header/footer if available
     let logoImage = null;
     try {
-      const logoPath = path.join(__dirname, "../../frontend/src/images/okmotorback.png");
+      const logoPath = path.join(
+        __dirname,
+        "../../frontend/src/images/okmotorback.png",
+      );
       if (fs.existsSync(logoPath)) {
         const logoBytes = fs.readFileSync(logoPath);
         logoImage = await pdfDoc.embedPng(logoBytes);
       }
     } catch (logoErr) {
-      console.warn("Logo not found for sell letter header:", logoErr.message || logoErr);
+      console.warn(
+        "Logo not found for sell letter header:",
+        logoErr.message || logoErr,
+      );
       logoImage = null;
     }
 
@@ -172,39 +190,74 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
 
     const addHeaderFooterToPage = (page) => {
       try {
-        // Header band
-        page.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });
+        page.drawRectangle({
+          x: 0,
+          y: 780,
+          width: 595,
+          height: 80,
+          color: rgb(0.047, 0.098, 0.196),
+        });
         if (logoImage) {
           page.drawImage(logoImage, { x: 50, y: 743, width: 150, height: 120 });
         }
-        page.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 805, size: 14, color: rgb(1, 1, 1), font: headerFont });
-        page.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 785, size: 14, color: rgb(1, 1, 1), font: headerFont });
+        page.drawText("UDAYAM-BR-26-0028550", {
+          x: 330,
+          y: 805,
+          size: 14,
+          color: rgb(1, 1, 1),
+          font: headerFont,
+        });
+        page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+          x: 330,
+          y: 785,
+          size: 14,
+          color: rgb(1, 1, 1),
+          font: headerFont,
+        });
 
-        // Footer - centered thank you + muted address line
         try {
           const thank = "Thank you for your business!";
-          const addr = "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+          const addr =
+            "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
           const thankW = headerFont.widthOfTextAtSize(thank, 12);
           const addrW = headerFont.widthOfTextAtSize(addr, 9);
           const centerXThank = (595 - thankW) / 2;
           const centerXAddr = (595 - addrW) / 2;
 
-          page.drawLine({ start: { x: 20, y: 52 }, end: { x: 575, y: 52 }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
-          page.drawText(thank, { x: centerXThank, y: 40, size: 12, color: rgb(0, 0, 0), font: headerFont });
-          page.drawText(addr, { x: centerXAddr, y: 26, size: 9, color: rgb(0.45, 0.45, 0.45), font: headerFont });
+          page.drawLine({
+            start: { x: 20, y: 52 },
+            end: { x: 575, y: 52 },
+            thickness: 0.5,
+            color: rgb(0.8, 0.8, 0.8),
+          });
+          page.drawText(thank, {
+            x: centerXThank,
+            y: 40,
+            size: 12,
+            color: rgb(0, 0, 0),
+            font: headerFont,
+          });
+          page.drawText(addr, {
+            x: centerXAddr,
+            y: 26,
+            size: 9,
+            color: rgb(0.45, 0.45, 0.45),
+            font: headerFont,
+          });
         } catch (e) {}
       } catch (err) {
-        console.warn("Failed to draw header/footer on page:", err && err.message ? err.message : err);
+        console.warn(
+          "Failed to draw header/footer on page:",
+          err && err.message ? err.message : err,
+        );
       }
     };
 
-    // Add header/footer to existing pages except the first (letter) page
     const existingPages = pdfDoc.getPages();
     for (let i = 1; i < existingPages.length; i++) {
       addHeaderFooterToPage(existingPages[i]);
     }
 
-    
     const formattedData = {
       ...sellLetterData,
       buyerName1: sellLetterData.buyerName,
@@ -216,11 +269,14 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
       saleTime: formatTime(sellLetterData.saleTime),
       todayDate: formatDate(sellLetterData.todayDate || new Date()),
       todayTime: formatTime(sellLetterData.todayTime || "12:00"),
-      previousDate: formatDate(sellLetterData.previousDate || sellLetterData.todayDate || new Date()),
-      previousTime: formatTime(sellLetterData.previousTime || sellLetterData.todayTime || "12:00"),
+      previousDate: formatDate(
+        sellLetterData.previousDate || sellLetterData.todayDate || new Date(),
+      ),
+      previousTime: formatTime(
+        sellLetterData.previousTime || sellLetterData.todayTime || "12:00",
+      ),
     };
 
-    
     const hindiFieldPositions = {
       vehicleName: { x: 303, y: 696, size: 11 },
       vehicleModel: { x: 39, y: 674, size: 11 },
@@ -277,12 +333,16 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
       note: { x: 70, y: 35, size: 10 },
     };
 
-    const positions = language === "hindi" ? hindiFieldPositions : englishFieldPositions;
+    const positions =
+      language === "hindi" ? hindiFieldPositions : englishFieldPositions;
 
-    
     const saleAmountText = formattedData.saleAmount || "";
-    const saleAmountWidth = saleAmountText.length * (positions.saleAmount.size / 2);
-    const amountInWordsX = positions.saleAmount.x + saleAmountWidth + 1 * (positions.saleAmount.size / 1);
+    const saleAmountWidth =
+      saleAmountText.length * (positions.saleAmount.size / 2);
+    const amountInWordsX =
+      positions.saleAmount.x +
+      saleAmountWidth +
+      1 * (positions.saleAmount.size / 1);
 
     firstPage.drawText(formattedData.amountInWords, {
       x: amountInWordsX,
@@ -291,7 +351,6 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
       color: rgb(0, 0, 0),
     });
 
-    
     for (const [fieldName, position] of Object.entries(positions)) {
       if (fieldName === "buyerPhone" && formattedData.buyerPhone) {
         const combinedPhones = `${formattedData.buyerPhone}${
@@ -313,9 +372,8 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
       }
     }
 
-    
     const invoicePage = pdfDoc.addPage([595, 842]);
-    // Ensure invoice page also has header/footer
+
     addHeaderFooterToPage(invoicePage);
 
     invoicePage.drawText("Vehicle Invoice", {
@@ -330,7 +388,6 @@ const generateSellLetterPDF = async (sellLetterData, returnBuffer = false, langu
       const pdfBytes = await pdfDoc.save();
       return Buffer.from(pdfBytes);
     } else {
-      
       const uploadDir = path.join(__dirname, "../uploads/sell-letters");
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });

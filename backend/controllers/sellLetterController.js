@@ -139,7 +139,6 @@ const syncMissingBuyDocsFromSell = async ({ regRegex, sellDocuments }) => {
   );
 };
 
-// New create handler which handles multipart form-data for images.
 exports.createSellLetter = [
   upload.fields([
     { name: "vehicleRCFront" },
@@ -150,7 +149,7 @@ exports.createSellLetter = [
     { name: "deliveryPhoto" },
     { name: "signedDocSell" },
     { name: "vehiclePhotos" },
-    // new multi-page document fields
+
     { name: "insuranceCertificate", maxCount: 50 },
     { name: "vehicleNOC", maxCount: 50 },
     { name: "transferReceipt", maxCount: 50 },
@@ -181,12 +180,9 @@ exports.createSellLetter = [
         }
       }
 
-      // Upsert Insurance and PUC records based on registration number so
-      // Sell acts only as a reference to the master records.
       const regNo = sellLetterData.registrationNumber;
       if (regNo) {
         try {
-          // Insurance: if insurance fields submitted, upsert; otherwise attach existing insurance if any
           const hasInsuranceFields =
             bodyData.insuranceCompany ||
             bodyData.insurancePolicyNumber ||
@@ -254,7 +250,6 @@ exports.createSellLetter = [
         }
 
         try {
-          // PUC: same logic as insurance
           const hasPUCFields =
             bodyData.pucIssueDate ||
             bodyData.pucExpiryDate ||
@@ -341,7 +336,6 @@ exports.createSellLetter = [
         }
       }
 
-      // Prepare file uploads: compress then upload to ImageKit
       const files = req.files || {};
       const uploadedUrls = {
         vehicleRC: { front: null, back: null },
@@ -355,7 +349,6 @@ exports.createSellLetter = [
         transferReceipt: { pages: [] },
       };
 
-      // Parse existingDocuments (full previous documents object — ultimate fallback)
       let existingDocuments = null;
       if (req.body.existingDocuments) {
         try {
@@ -400,16 +393,11 @@ exports.createSellLetter = [
             uploadedUrls.transferReceipt.pages = [...p.transferReceipt];
           }
         } else if (existingDocuments && !req.body.existingDocuments) {
-          // No preservedDocs AND no existingDocuments in request = skip fallback
-          // (preservedDocuments was explicitly sent as empty, so use only new uploads)
-          // Do nothing - only use newly uploaded files
         } else if (
           existingDocuments &&
           req.body.existingDocuments &&
           !req.body.preservedDocuments
         ) {
-          // Backward compatibility: only use fallback if NO preservedDocuments was sent at all
-          // No individual preservedDocs sent — populate from full existingDocuments
           const ed = existingDocuments;
           if (ed.vehicleRC?.front)
             uploadedUrls.vehicleRC.front = ed.vehicleRC.front;
@@ -440,7 +428,6 @@ exports.createSellLetter = [
         console.error("Error parsing preservedDocuments:", e);
       }
 
-      // helper to process single file
       const { PDFDocument } = require("pdf-lib");
 
       const processImageFile = async (file, nameHint) => {
@@ -454,7 +441,6 @@ exports.createSellLetter = [
         return uploaded.url;
       };
 
-      // Generic single-file processor: accepts image or PDF and returns an upload URL.
       const processFile = async (file, nameHint) => {
         if (!file) return null;
         const isPdf =
@@ -470,12 +456,11 @@ exports.createSellLetter = [
           );
           return uploaded.url;
         }
-        // fallback to image processing
+
         return await processImageFile(file, nameHint);
       };
 
       const processPdfFileToPages = async (file, nameHint) => {
-        // Split multi-page PDF into single-page PDF buffers and upload each page in parallel
         const srcPdf = await PDFDocument.load(file.buffer);
         const pageCount = srcPdf.getPageCount();
         const pageBuffers = await Promise.all(
@@ -501,7 +486,6 @@ exports.createSellLetter = [
       };
 
       try {
-        // Helper: process a multi-file group (images or PDFs) in parallel, keeping order
         const processMultiFileGroup = async (
           fileList,
           namePrefix,
@@ -522,7 +506,6 @@ exports.createSellLetter = [
           return results.flat();
         };
 
-        // Run all single-file uploads in parallel
         const [
           rcFront,
           rcBack,
@@ -563,7 +546,6 @@ exports.createSellLetter = [
         if (delivery !== null) uploadedUrls.deliveryPhoto = delivery;
         if (signedDocSell !== null) uploadedUrls.signedDocSell = signedDocSell;
 
-        // Run all multi-file group uploads in parallel
         const [
           vehiclePhotos,
           insuranceCertPages,
@@ -609,8 +591,6 @@ exports.createSellLetter = [
           .json({ message: "Image upload failed", error: uploadErr.message });
       }
 
-      // Final fallback: if existingDocuments was provided AND no preservedDocuments, restore any field still null
-      // If preservedDocuments was sent (even if empty), DON'T use fallback — respect user's deletions
       if (existingDocuments && !req.body.preservedDocuments) {
         const ed = existingDocuments;
         if (!uploadedUrls.vehicleRC.front && ed.vehicleRC?.front)
@@ -685,7 +665,6 @@ exports.createSellLetter = [
         meta: { uploadedAt: new Date(), uploader: req.user.id },
       };
 
-      // prefer explicit agent name from request body to override preserved/existing
       try {
         sellLetterData.documents.transferReceipt = sellLetterData.documents
           .transferReceipt || { pages: [] };
@@ -814,8 +793,7 @@ exports.createSellLetter = [
 
       try {
         const hasDocs = hasDocumentContent(sellLetterData.documents);
-        // Only merge from previous version if NO preservedDocuments was sent
-        // If preservedDocuments was sent, it means user explicitly chose which docs to keep
+
         const shouldMergePreviousDocs = !req.body.preservedDocuments;
 
         if (
@@ -943,7 +921,6 @@ exports.getVehicleDetails = async (req, res) => {
         .limit(1),
     ]);
 
-    // Prefer most-recent SellLetter for buyer details, then BuyLetter, then Vehicle
     const vehicleRecord = sellLetters[0] || buyLetters[0] || vehicles[0];
 
     if (!vehicleRecord) {
@@ -962,8 +939,6 @@ exports.getVehicleDetails = async (req, res) => {
       vehiclekm: vehicleRecord.vehiclekm,
     };
 
-    // Try to include brand and year where available. Prefer explicit fields
-    // from Vehicle, then fall back to other sources.
     vehicleDetails.brand =
       vehicleRecord.brand ||
       (vehicleRecord.vehicleName
@@ -976,8 +951,6 @@ exports.getVehicleDetails = async (req, res) => {
       vehicleRecord.year ||
       undefined;
 
-    // If the found record is a SellLetter it may contain PUC/Insurance information
-    // and buyer contact details. Copy those fields when present as a fallback.
     if (vehicleRecord.pucIssueDate)
       vehicleDetails.pucIssueDate = vehicleRecord.pucIssueDate;
     if (vehicleRecord.pucExpiryDate)
@@ -994,18 +967,12 @@ exports.getVehicleDetails = async (req, res) => {
       vehicleDetails.insurancePolicyNumber =
         vehicleRecord.insurancePolicyNumber;
 
-    // Contact details from either record type
-    // Person details excluded as per requirement
-
-    // Attach documents from the most recent BuyLetter so the sell letter form
-    // can pre-fill uploaded documents without requiring re-upload.
     if (buyLetters[0] && buyLetters[0].documents) {
       vehicleDetails.buyLetterDocuments = stripBuyOnlyDocuments(
         buyLetters[0].documents,
       );
     }
 
-    // Attach documents from the most recent SellLetter (RC and NOC are common)
     if (sellLetters[0] && sellLetters[0].documents) {
       vehicleDetails.documents = {
         vehicleRC: sellLetters[0].documents.vehicleRC,
@@ -1015,7 +982,6 @@ exports.getVehicleDetails = async (req, res) => {
       };
     }
 
-    // Also attempt to load canonical Insurance and PUC master records by vehicleRegNo
     try {
       const regRegex = new RegExp(
         `^${String(vehicleDetails.registrationNumber).trim()}$`,
@@ -1090,10 +1056,9 @@ exports.getSellLetters = async (req, res) => {
       )
       .lean();
 
-    // Merge live PUC/Insurance data from populated master records over the stale inline fields
     const sellLettersWithPrevious = sellLetters.map((letter) => {
       const merged = { ...letter, previousVersion: letter.previousVersionId };
-      // Overlay live PUC data from master record
+
       if (letter.pucId && typeof letter.pucId === "object") {
         const p = letter.pucId;
         merged.pucIssueDate = p.pucIssueDate ?? merged.pucIssueDate;
@@ -1101,7 +1066,7 @@ exports.getSellLetters = async (req, res) => {
           p.pucExpiryDate ?? p.pucExpiry ?? merged.pucExpiryDate;
         merged.pucStatus = p.pucStatus ?? merged.pucStatus;
       }
-      // Overlay live Insurance data from master record
+
       if (letter.insuranceId && typeof letter.insuranceId === "object") {
         const i = letter.insuranceId;
         merged.insuranceCompany = i.insuranceCompany ?? merged.insuranceCompany;
@@ -1177,7 +1142,6 @@ exports.getMySellLetters = async (req, res) => {
       )
       .lean();
 
-    // Merge live PUC/Insurance data from populated master records over the stale inline fields
     const sellLettersWithPrevious = sellLetters.map((letter) => {
       const merged = { ...letter, previousVersion: letter.previousVersionId };
       if (letter.pucId && typeof letter.pucId === "object") {
@@ -1235,7 +1199,6 @@ exports.getSellLetterById = async (req, res) => {
       return res.status(404).json({ message: "Sell letter not found" });
     }
 
-    // Overlay live PUC/Insurance master data over stale inline copies
     const result = { ...sellLetter };
     if (sellLetter.pucId && typeof sellLetter.pucId === "object") {
       const p = sellLetter.pucId;
@@ -1267,15 +1230,12 @@ exports.getSellLetterById = async (req, res) => {
 
 exports.updateSellLetter = async (req, res) => {
   try {
-    // Only admin should reach this function (route applies `admin` middleware).
-    // Lookup by id so admins can update any sell letter.
     const sellLetter = await SellLetter.findById(req.params.id);
 
     if (!sellLetter) {
       return res.status(404).json({ message: "Sell letter not found" });
     }
 
-    // Build update object: preserve saleDate unless explicitly provided
     const updateData = { ...req.body };
     if (!Object.prototype.hasOwnProperty.call(req.body, "saleDate")) {
       delete updateData.saleDate;
@@ -1283,17 +1243,14 @@ exports.updateSellLetter = async (req, res) => {
       updateData.saleDate = new Date(req.body.saleDate);
     }
 
-    // Set edited metadata
     const editedDate = new Date();
     updateData.editedAt = editedDate;
     updateData.editedBy = req.user && req.user.id ? req.user.id : undefined;
-    // Store edited time in HH:MM format
+
     const hours = String(editedDate.getHours()).padStart(2, "0");
     const minutes = String(editedDate.getMinutes()).padStart(2, "0");
     updateData.editedTime = `${hours}:${minutes}`;
 
-    // Two-way sync: if insurance or PUC fields are present in the update payload,
-    // persist them to the master Insurance / PUC collections using vehicle registration number
     try {
       const regNo =
         updateData.registrationNumber || sellLetter.registrationNumber;
@@ -1435,7 +1392,6 @@ exports.updateSellLetter = async (req, res) => {
 
 exports.deleteSellLetter = async (req, res) => {
   try {
-    // Admin-only action (route uses `admin` middleware). Find by id.
     const sellLetter = await SellLetter.findById(req.params.id);
 
     if (!sellLetter) {

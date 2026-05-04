@@ -3,7 +3,7 @@ import { Lock, ShieldAlert } from "lucide-react";
 import logo from "../images/company.png";
 
 const MAX_ATTEMPTS = 5;
-const LOCKOUT_MS = 60 * 1000; // 1 minute
+const LOCKOUT_MS = 60 * 1000;
 
 const AccessLockScreen = ({ onUnlock }) => {
   const [code, setCode] = useState("");
@@ -14,12 +14,10 @@ const AccessLockScreen = ({ onUnlock }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const inputRef = useRef(null);
 
-  // Focus input on mount
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-  // Countdown timer when locked out
   useEffect(() => {
     if (!lockedUntil) return;
     const interval = setInterval(() => {
@@ -49,7 +47,9 @@ const AccessLockScreen = ({ onUnlock }) => {
 
     const correctCode = process.env.REACT_APP_ACCESS_CODE;
     if (code === correctCode) {
-      try { sessionStorage.setItem("okm_access", "1"); } catch (_) {}
+      try {
+        sessionStorage.setItem("okm_access", "1");
+      } catch (_) {}
       onUnlock();
     } else {
       const newAttempts = attempts + 1;
@@ -61,7 +61,9 @@ const AccessLockScreen = ({ onUnlock }) => {
         setLockedUntil(Date.now() + LOCKOUT_MS);
         setError(`Too many wrong attempts. Locked for 60 seconds.`);
       } else {
-        setError(`Incorrect access code. ${MAX_ATTEMPTS - newAttempts} attempt${MAX_ATTEMPTS - newAttempts !== 1 ? "s" : ""} remaining.`);
+        setError(
+          `Incorrect access code. ${MAX_ATTEMPTS - newAttempts} attempt${MAX_ATTEMPTS - newAttempts !== 1 ? "s" : ""} remaining.`,
+        );
       }
     }
   };
@@ -76,10 +78,11 @@ const AccessLockScreen = ({ onUnlock }) => {
         <img src={logo} alt="OK Motors" style={styles.logo} />
 
         <div style={styles.lockIconWrap}>
-          {isLocked
-            ? <ShieldAlert size={36} color="#ef4444" />
-            : <Lock size={36} color="rgba(255,255,255,0.85)" />
-          }
+          {isLocked ? (
+            <ShieldAlert size={36} color="#ef4444" />
+          ) : (
+            <Lock size={36} color="rgba(255,255,255,0.85)" />
+          )}
         </div>
 
         <p style={styles.title}>
@@ -102,7 +105,10 @@ const AccessLockScreen = ({ onUnlock }) => {
             ref={inputRef}
             type="password"
             value={code}
-            onChange={(e) => { setCode(e.target.value); setError(""); }}
+            onChange={(e) => {
+              setCode(e.target.value);
+              setError("");
+            }}
             placeholder="Access code"
             disabled={!!isLocked}
             autoComplete="off"
@@ -116,7 +122,7 @@ const AccessLockScreen = ({ onUnlock }) => {
             disabled={!!isLocked || code.length === 0}
             style={{
               ...styles.button,
-              ...((isLocked || code.length === 0) ? styles.buttonDisabled : {}),
+              ...(isLocked || code.length === 0 ? styles.buttonDisabled : {}),
             }}
           >
             {isLocked ? `Locked (${timeLeft}s)` : "Unlock"}
@@ -251,7 +257,8 @@ const styles = {
     fontWeight: "600",
     border: "none",
     borderRadius: "0.75rem",
-    background: "linear-gradient(135deg, rgba(7,25,82,0.9), rgba(8,131,149,0.9))",
+    background:
+      "linear-gradient(135deg, rgba(7,25,82,0.9), rgba(8,131,149,0.9))",
     color: "white",
     cursor: "pointer",
     transition: "opacity 0.2s, transform 0.15s",

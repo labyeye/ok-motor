@@ -220,10 +220,12 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.8, 0.8, 0.8),
       font: fontBold,
     });
-    // Render GSTIN next to UDAYAM when missing — prefer bill value, then env, then fallback
+
     try {
       const headerGSTIN =
-        (serviceBill && serviceBill.businessGSTIN) || process.env.DEFAULT_GSTIN || "22ABCDE1234F1Z5";
+        (serviceBill && serviceBill.businessGSTIN) ||
+        process.env.DEFAULT_GSTIN ||
+        "22ABCDE1234F1Z5";
       currentPage.drawText(`GSTIN: ${headerGSTIN}`, {
         x: 400,
         y: 795,
@@ -232,7 +234,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: fontBold,
       });
     } catch (e) {
-      // fallback to a safe hardcoded GSTIN if anything goes wrong
       currentPage.drawText("GSTIN: 22ABCDE1234F1Z5", {
         x: 400,
         y: 795,
@@ -304,10 +305,6 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       color: rgb(0.8, 0.8, 0.8),
     });
 
-    // Show business info only when tax is enabled AND the client explicitly
-    // requested inclusion via `includeBusinessInPdf`. Previously we required
-    // GSTIN to be present; now the toggle controls visibility and fields
-    // will fall back to "N/A" when missing.
     const showBusinessInfo =
       Boolean(serviceBill.taxEnabled) &&
       Boolean(serviceBill.includeBusinessInPdf);

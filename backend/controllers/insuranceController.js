@@ -29,10 +29,6 @@ const normalizeInsurancePayload = (payload = {}) => {
   return normalized;
 };
 
-/**
- * Propagate Insurance master record changes back to any SellLetter or BuyLetter
- * that references the same vehicle registration number.
- */
 const syncInsuranceToLetters = async (insDoc) => {
   const regNo = insDoc.vehicleRegNo || insDoc.regNo;
   if (!regNo) return;
@@ -66,7 +62,6 @@ exports.createInsurance = async (req, res) => {
     const insurance = new Insurance(insuranceData);
     const savedInsurance = await insurance.save();
 
-    // Propagate to SellLetter & BuyLetter for any matching registration number
     try {
       await syncInsuranceToLetters(savedInsurance);
     } catch (syncErr) {
@@ -92,7 +87,7 @@ exports.createInsurance = async (req, res) => {
 
 exports.getAllInsurance = async (req, res) => {
   try {
-    const { limit = 1000 } = req.query; // Default large limit if not specified
+    const { limit = 1000 } = req.query;
     const insuranceList = await Insurance.find()
       .sort({ createdAt: -1 })
       .limit(parseInt(limit));
@@ -115,9 +110,6 @@ exports.deleteInsurance = async (req, res) => {
       return res.status(404).json({ message: "Insurance record not found" });
     }
 
-    // Optional: Check permissions (e.g., only admin or owner)
-    // if (req.user.role !== 'admin') ...
-
     await insurance.deleteOne();
     res.json({ message: "Insurance record deleted successfully" });
   } catch (error) {
@@ -139,7 +131,6 @@ exports.updateInsurance = async (req, res) => {
 
     const normalizedPayload = normalizeInsurancePayload(req.body);
 
-    // Add version tracking metadata
     const editedDate = new Date();
     normalizedPayload.editedAt = editedDate;
     normalizedPayload.editedBy = req.user?.id || null;
@@ -152,7 +143,6 @@ exports.updateInsurance = async (req, res) => {
       { new: true, runValidators: true },
     );
 
-    // Propagate changes to SellLetter & BuyLetter (keep stale copies in sync)
     try {
       await syncInsuranceToLetters(updatedInsurance);
     } catch (syncErr) {
@@ -192,7 +182,6 @@ exports.getInsuranceByVehicle = async (req, res) => {
   }
 };
 
-// Upsert insurance by vehicleRegNo (create or update)
 exports.upsertInsuranceByVehicle = async (req, res) => {
   try {
     const { vehicleRegNo } = req.params;
@@ -213,7 +202,6 @@ exports.upsertInsuranceByVehicle = async (req, res) => {
       setDefaultsOnInsert: true,
     });
 
-    // Propagate changes to SellLetter & BuyLetter
     try {
       await syncInsuranceToLetters(insurance);
     } catch (syncErr) {

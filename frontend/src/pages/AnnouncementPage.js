@@ -17,7 +17,6 @@ const AnnouncementPage = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Announcements state
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,7 +33,6 @@ const AnnouncementPage = () => {
 
   useEffect(() => {
     fetchAnnouncements();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAnnouncements = async () => {
@@ -146,7 +144,7 @@ const AnnouncementPage = () => {
 
   return (
     <div style={styles.container}>
-      {/* Mobile Top Bar */}
+      {}
       <AppSidebar user={user} onLogout={handleLogout} />
 
       <div style={styles.mainContent}>
@@ -192,7 +190,7 @@ const AnnouncementPage = () => {
             </button>
           </div>
 
-          {/* Management Form */}
+          {}
           {showManagement && (
             <div style={styles.managementPanel}>
               <h3 style={styles.formTitle}>
@@ -292,7 +290,7 @@ const AnnouncementPage = () => {
             </div>
           )}
 
-          {/* Loading State */}
+          {}
           {loading && (
             <div style={styles.loadingContainer}>
               <div style={styles.spinner}></div>
@@ -300,7 +298,7 @@ const AnnouncementPage = () => {
             </div>
           )}
 
-          {/* Error State */}
+          {}
           {error && (
             <div style={styles.errorContainer}>
               <XCircle size={48} color="#dc2626" />
@@ -312,7 +310,7 @@ const AnnouncementPage = () => {
             </div>
           )}
 
-          {/* No Announcements */}
+          {}
           {!loading &&
             !error &&
             announcements.length === 0 &&
@@ -326,7 +324,7 @@ const AnnouncementPage = () => {
               </div>
             )}
 
-          {/* Announcements Grid */}
+          {}
           {!loading && !error && announcements.length > 0 && (
             <div style={styles.grid}>
               {announcements.map((announcement) => {
@@ -378,7 +376,7 @@ const AnnouncementPage = () => {
                       )}
                     </div>
 
-                    {/* Management Actions */}
+                    {}
                     <div style={styles.cardActions}>
                       <button
                         style={styles.editButton}

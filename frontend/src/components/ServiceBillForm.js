@@ -91,7 +91,6 @@ const ServiceBillForm = () => {
       0,
     );
 
-    // Tax only on items that have gstApplicable:true
     const taxableBase = data.taxEnabled
       ? (data.serviceItems || []).reduce(
           (sum, item) =>
@@ -126,14 +125,12 @@ const ServiceBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      // Use unified apiService so Authorization header and offline handling are applied
       const vehicleResp = await apiService.get(
         `/api/advance-bills/vehicle-details?registrationNumber=${encodeURIComponent(
           registrationNumber,
         )}`,
       );
 
-      // Try to fetch sell-letter for this registration to autofill buyer details
       let sellLetters = [];
       try {
         const sellResp = await apiService.get(
@@ -141,10 +138,9 @@ const ServiceBillForm = () => {
             registrationNumber,
           )}`,
         );
-        // apiService returns the body directly (array of sell letters)
+
         sellLetters = Array.isArray(sellResp) ? sellResp : sellResp.data || [];
       } catch (err) {
-        // Non-fatal: if sell-letter lookup fails just continue with vehicle info
         console.warn("Sell-letter lookup failed:", err.message || err);
         sellLetters = [];
       }
@@ -163,7 +159,7 @@ const ServiceBillForm = () => {
         registrationNumber:
           vehicleData.registrationNumber || registrationNumber,
         kmReading: vehicleData.vehiclekm || prev.kmReading,
-        // If there is a sell-letter, autofill customer fields from buyer info
+
         customerName: latestSell?.buyerName || prev.customerName,
         customerPhone: latestSell?.buyerPhone || prev.customerPhone,
         customerAddress: latestSell?.buyerAddress || prev.customerAddress,
@@ -183,7 +179,6 @@ const ServiceBillForm = () => {
       const qty = parseFloat(items[index].quantity) || 1;
       const rateNum = parseFloat(cleanedValue) || 0;
 
-      // Amount is always rate × qty — tax is added on top via calculateAmounts
       const newAmount = parseFloat((rateNum * qty).toFixed(2));
 
       items[index] = {
@@ -277,13 +272,12 @@ const ServiceBillForm = () => {
     const { name, value, type } = e.target;
     const val = type === "number" ? parseFloat(value) || 0 : value;
 
-    // clear validation error for this field when user types
     if (name) {
       setErrors((prev) => {
         if (!prev) return prev;
         const next = { ...prev };
         if (next[name]) delete next[name];
-        // also handle array-style keys like serviceItems[0].description
+
         Object.keys(next).forEach((k) => {
           if (k.startsWith(name + "[") || k.includes(name)) {
             delete next[k];
@@ -350,10 +344,8 @@ const ServiceBillForm = () => {
       }
     });
 
-    // highlight fields in DOM
     Object.keys(errs).forEach((key) => {
       try {
-        // for array keys like serviceItems[0].description, try to find by name
         const el =
           document.querySelector(`[name="${key}"]`) ||
           document.querySelector(`[name^="serviceItems"]`);
@@ -400,21 +392,19 @@ const ServiceBillForm = () => {
     try {
       const errors = validateForm();
       if (errors) {
-        // Show first error message, then focus+scroll to that field and highlight it
         const firstKey = Object.keys(errors)[0];
         try {
           alert(
             errors[firstKey] || "Please fix the form errors before submitting",
           );
         } catch (err) {
-          // fallback
           alert("Please fix the form errors before submitting");
         }
 
         setTimeout(() => {
           try {
             const key = firstKey;
-            // handle array-style keys like serviceItems[0].description
+
             if (key && key.startsWith("serviceItems[")) {
               const m = key.match(/serviceItems\[(\d+)\]\.([^\]]+)/);
               if (m) {
@@ -439,7 +429,6 @@ const ServiceBillForm = () => {
               el.style.borderColor = "#ef4444";
               el.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.08)";
             } else {
-              // fallback: try to find by common field names
               const fallback = document.querySelector(
                 '[name="customerName"], [name="customerPhone"], [name="customerAddress"]',
               );
@@ -599,7 +588,7 @@ const ServiceBillForm = () => {
 
         try {
           const formattedDataForServer = { ...formattedData };
-          // Remove client-side versioning/offline-only fields before sending to server
+
           [
             "previousVersionId",
             "originalDocumentId",
@@ -612,7 +601,6 @@ const ServiceBillForm = () => {
 
           let saveResponse;
           if (formData._id) {
-            // Edit existing bill -> PUT
             saveResponse = await retryRequest(() =>
               axios.put(
                 `${API_BASE_URL}/service-bills/${formData._id}`,
@@ -627,7 +615,6 @@ const ServiceBillForm = () => {
               ),
             );
           } else {
-            // Create new bill -> POST
             saveResponse = await retryRequest(() =>
               axios.post(
                 `${API_BASE_URL}/service-bills`,
@@ -1427,7 +1414,7 @@ const ServiceBillForm = () => {
                   </select>
                 </div>
 
-                {/* Show custom description field if "free" (formerly custom) is selected */}
+                {}
                 {formData.serviceType === "free" && (
                   <div style={styles.formField}>
                     <label style={styles.formLabel}>
@@ -1742,7 +1729,7 @@ const ServiceBillForm = () => {
                     </label>
                   </div>
                 </div>
-                {/* Include-in-PDF toggle shown only when tax is enabled */}
+                {}
                 {formData.taxEnabled && (
                   <div style={styles.formField}>
                     <label style={styles.formLabel}>

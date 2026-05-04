@@ -8,26 +8,26 @@
 
 ## Summary Table
 
-| # | Vulnerability | Severity | Location | Status |
-|---|--------------|----------|----------|--------|
-| 1 | Secrets committed to `.env` files (DB password, JWT secret, API keys) | 🔴 CRITICAL | `backend/.env` | Open |
-| 2 | Weak JWT secret | 🔴 CRITICAL | `backend/.env` | Open |
-| 3 | No rate limiting on login endpoint | 🔴 CRITICAL | `backend/routes/authRoutes.js` | Open |
-| 4 | User enumeration via distinct error messages | 🟠 HIGH | `backend/controllers/authController.js:11,23` | Open |
-| 5 | JWT stored in `localStorage` (XSS-accessible) | 🟠 HIGH | `frontend/src/context/AuthContext.js:16` | Open |
-| 6 | 30-day JWT expiry with no refresh/revocation | 🟠 HIGH | `backend/controllers/authController.js:61` | Open |
-| 7 | Unauthenticated `/debug` endpoint exposes server info | 🟠 HIGH | `backend/routes/serviceBillRoutes.js:6` | Open |
-| 8 | 50 MB JSON body limit enables DoS | 🟡 MEDIUM | `backend/server.js:81-82` | Open |
-| 9 | No security headers (Helmet not used) | 🟡 MEDIUM | `backend/server.js` | Open |
-| 10 | CORS error leaks full allowed-origins list | 🟡 MEDIUM | `backend/server.js:186-189` | Open |
-| 11 | No input validation / NoSQL injection risk | 🟡 MEDIUM | All controllers | Open |
-| 12 | No account lockout after failed logins | 🟡 MEDIUM | `backend/controllers/authController.js` | Open |
-| 13 | Offline fallback sets fake "offline-user" object | 🟡 MEDIUM | `frontend/src/context/AuthContext.js:59` | Open |
-| 14 | Public registration toggle on login page | 🟡 MEDIUM | `frontend/src/pages/LoginPage.js:19` | Open |
-| 15 | Hardcoded production API URL in frontend source | 🟢 LOW | `frontend/src/context/AuthContext.js:41,77` | Open |
-| 16 | No password complexity requirement in backend | 🟢 LOW | `backend/models/User.js` | Open |
-| 17 | Public `/api/sell-request` POST has no rate limiting | 🟢 LOW | `backend/routes/sellRequestRoutes.js` | Open |
-| 18 | Verbose 404 handler leaks route path | 🟢 LOW | `backend/server.js:171-177` | Open |
+| #   | Vulnerability                                                         | Severity    | Location                                      | Status |
+| --- | --------------------------------------------------------------------- | ----------- | --------------------------------------------- | ------ |
+| 1   | Secrets committed to `.env` files (DB password, JWT secret, API keys) | 🔴 CRITICAL | `backend/.env`                                | Open   |
+| 2   | Weak JWT secret                                                       | 🔴 CRITICAL | `backend/.env`                                | Open   |
+| 3   | No rate limiting on login endpoint                                    | 🔴 CRITICAL | `backend/routes/authRoutes.js`                | Open   |
+| 4   | User enumeration via distinct error messages                          | 🟠 HIGH     | `backend/controllers/authController.js:11,23` | Open   |
+| 5   | JWT stored in `localStorage` (XSS-accessible)                         | 🟠 HIGH     | `frontend/src/context/AuthContext.js:16`      | Open   |
+| 6   | 30-day JWT expiry with no refresh/revocation                          | 🟠 HIGH     | `backend/controllers/authController.js:61`    | Open   |
+| 7   | Unauthenticated `/debug` endpoint exposes server info                 | 🟠 HIGH     | `backend/routes/serviceBillRoutes.js:6`       | Open   |
+| 8   | 50 MB JSON body limit enables DoS                                     | 🟡 MEDIUM   | `backend/server.js:81-82`                     | Open   |
+| 9   | No security headers (Helmet not used)                                 | 🟡 MEDIUM   | `backend/server.js`                           | Open   |
+| 10  | CORS error leaks full allowed-origins list                            | 🟡 MEDIUM   | `backend/server.js:186-189`                   | Open   |
+| 11  | No input validation / NoSQL injection risk                            | 🟡 MEDIUM   | All controllers                               | Open   |
+| 12  | No account lockout after failed logins                                | 🟡 MEDIUM   | `backend/controllers/authController.js`       | Open   |
+| 13  | Offline fallback sets fake "offline-user" object                      | 🟡 MEDIUM   | `frontend/src/context/AuthContext.js:59`      | Open   |
+| 14  | Public registration toggle on login page                              | 🟡 MEDIUM   | `frontend/src/pages/LoginPage.js:19`          | Open   |
+| 15  | Hardcoded production API URL in frontend source                       | 🟢 LOW      | `frontend/src/context/AuthContext.js:41,77`   | Open   |
+| 16  | No password complexity requirement in backend                         | 🟢 LOW      | `backend/models/User.js`                      | Open   |
+| 17  | Public `/api/sell-request` POST has no rate limiting                  | 🟢 LOW      | `backend/routes/sellRequestRoutes.js`         | Open   |
+| 18  | Verbose 404 handler leaks route path                                  | 🟢 LOW      | `backend/server.js:171-177`                   | Open   |
 
 ---
 
@@ -40,6 +40,7 @@
 **File:** `backend/.env`
 
 **What is exposed:**
+
 ```
 MONGO_URI=mongodb+srv://okmotors7860:okmotors1234@...   ← full DB credentials
 JWT_SECRET=fdsinaf327fdjk                               ← signing key
@@ -51,6 +52,7 @@ IMAGEKIT_PRIVATE_KEY=private_j6F4qkkMp76+...           ← cloud storage key
 **Risk:** Anyone with repository access (GitHub, git log) can authenticate to MongoDB directly, forge any JWT, or manage ImageKit storage.
 
 **Solution:**
+
 1. **Rotate all credentials immediately** — change DB password, regenerate JWT secret, cycle ImageKit keys.
 2. Add `.env` to `.gitignore` and purge it from git history (`git filter-repo` or BFG Repo Cleaner).
 3. Use a secrets manager (Vercel env vars, AWS Secrets Manager) — never commit secrets.
@@ -67,11 +69,13 @@ IMAGEKIT_PRIVATE_KEY=private_j6F4qkkMp76+...           ← cloud storage key
 **Risk:** An attacker who knows or brute-forces the secret can forge tokens for any user, including admin.
 
 **Solution:**
+
 ```bash
 # Generate a strong secret
 openssl rand -hex 64
 # e.g.: a3f8c...long...random...string
 ```
+
 Set this in your environment and never hardcode it.
 
 ---
@@ -83,18 +87,19 @@ Set this in your environment and never hardcode it.
 **Risk:** An attacker can try unlimited password combinations against `POST /api/auth/login`. With a common password list, any account with a weak password will be compromised within minutes.
 
 **Solution:** Install `express-rate-limit` and apply it to auth routes:
+
 ```js
-const rateLimit = require('express-rate-limit');
+const rateLimit = require("express-rate-limit");
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,                   // max 10 attempts per window
-  message: { message: 'Too many login attempts. Try again in 15 minutes.' },
+  max: 10, // max 10 attempts per window
+  message: { message: "Too many login attempts. Try again in 15 minutes." },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-router.post('/login', loginLimiter, loginUser);
+router.post("/login", loginLimiter, loginUser);
 ```
 
 ---
@@ -104,14 +109,16 @@ router.post('/login', loginLimiter, loginUser);
 **File:** `backend/controllers/authController.js:11,23`
 
 **Current code:**
+
 ```js
-throw new Error("User not found");    // line 11 — reveals the email doesn't exist
+throw new Error("User not found"); // line 11 — reveals the email doesn't exist
 throw new Error("Password is incorrect"); // line 23 — reveals email exists but password wrong
 ```
 
 **Risk:** An attacker can use these different messages to build a list of valid email addresses registered in the system.
 
 **Solution:** Return the **same** message for both cases:
+
 ```js
 // Replace both with:
 res.status(401);
@@ -128,17 +135,18 @@ throw new Error("Invalid email or password");
 
 **Solution:** Move token to an `httpOnly` cookie, which JavaScript cannot access:
 
-*Backend — set cookie on login:*
+_Backend — set cookie on login:_
+
 ```js
-res.cookie('token', token, {
+res.cookie("token", token, {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict',
-  maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict",
+  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
 });
 ```
 
-*Frontend — remove all `localStorage.setItem('token', ...)` calls; cookies are sent automatically.*
+_Frontend — remove all `localStorage.setItem('token', ...)` calls; cookies are sent automatically._
 
 ---
 
@@ -154,7 +162,7 @@ res.cookie('token', token, {
 
 ```js
 // Shorter access token
-expiresIn: "1h"
+expiresIn: "1h";
 
 // Issue a separate refresh token (stored in httpOnly cookie) that lasts 7d
 // On /api/auth/refresh, validate refresh token and issue new access token
@@ -167,10 +175,11 @@ expiresIn: "1h"
 **File:** `backend/routes/serviceBillRoutes.js:6-16`
 
 **Current code:**
+
 ```js
 router.get("/debug", (req, res) => {
-  res.json({ 
-    message: "Service bill API is working", 
+  res.json({
+    message: "Service bill API is working",
     timestamp: new Date().toISOString(),
     headers: { authorization: ..., 'user-agent': ... }
   });
@@ -180,6 +189,7 @@ router.get("/debug", (req, res) => {
 **Risk:** This endpoint is publicly accessible with no auth. It exposes server header information that helps attackers fingerprint your API. In production there is zero reason for it to exist.
 
 **Solution:** Delete this route entirely, or at minimum add `protect` middleware:
+
 ```js
 // Either delete it, or:
 router.get("/debug", protect, admin, (req, res) => { ... });
@@ -199,11 +209,12 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 **Risk:** Any unauthenticated requester can POST 50 MB of JSON repeatedly, exhausting memory and crashing the server.
 
 **Solution:** Use a small default limit (1 MB) and only raise it for specific file-upload routes:
+
 ```js
 app.use(express.json({ limit: "1mb" }));
 
 // Only on the specific route that needs it:
-router.post('/upload', express.json({ limit: "50mb" }), protect, uploadHandler);
+router.post("/upload", express.json({ limit: "50mb" }), protect, uploadHandler);
 ```
 
 ---
@@ -215,11 +226,13 @@ router.post('/upload', express.json({ limit: "50mb" }), protect, uploadHandler);
 **Risk:** Browser-based attacks (clickjacking, MIME sniffing, XSS via reflected content) go unmitigated.
 
 **Solution:**
+
 ```bash
 npm install helmet
 ```
+
 ```js
-const helmet = require('helmet');
+const helmet = require("helmet");
 app.use(helmet()); // sets X-Frame-Options, CSP, HSTS, X-Content-Type-Options, etc.
 ```
 
@@ -240,9 +253,10 @@ return res.status(403).json({
 **Risk:** An attacker can probe the CORS handler to enumerate all internal origins and craft targeted attacks.
 
 **Solution:**
+
 ```js
 return res.status(403).json({
-  message: "CORS error: Origin not allowed"
+  message: "CORS error: Origin not allowed",
   // remove origin and allowedOrigins fields
 });
 ```
@@ -254,17 +268,21 @@ return res.status(403).json({
 **Affected files:** All controllers that use `req.body` directly with MongoDB
 
 **Risk:** MongoDB operators (`$where`, `$gt`, `$regex`) can be injected via JSON body. Example:
+
 ```json
 { "email": { "$gt": "" }, "password": { "$gt": "" } }
 ```
+
 This could match any user if not sanitized.
 
 **Solution:** Install `express-validator` or `joi`, and sanitize inputs with `mongo-sanitize`:
+
 ```bash
 npm install express-mongo-sanitize joi
 ```
+
 ```js
-const mongoSanitize = require('express-mongo-sanitize');
+const mongoSanitize = require("express-mongo-sanitize");
 app.use(mongoSanitize()); // strips $ and . from req.body, req.query, req.params
 ```
 
@@ -277,6 +295,7 @@ app.use(mongoSanitize()); // strips $ and . from req.body, req.query, req.params
 **Risk:** Without lockout, brute-force can continue even with rate limiting in place if the attacker uses distributed IPs.
 
 **Solution:** Track failed attempts in the User model and lock the account:
+
 ```js
 // In User.js schema:
 failedLoginAttempts: { type: Number, default: 0 },
@@ -309,6 +328,7 @@ setUser({ email: "offline-user" }); // Placeholder user
 **Risk:** Components that check `if (user)` to gate access will pass with this fake object. If any component additionally checks `user.role`, this has no role and could cause unexpected behavior or access path bypasses.
 
 **Solution:** Keep the token present for reconnection but set `user` to `null` when there is no cached real user data:
+
 ```js
 const cachedUser = localStorage.getItem("userData");
 if (cachedUser) {
@@ -348,6 +368,7 @@ const res = await axios.post("https://ok-motor-backend.vercel.app/api/auth/login
 **Risk:** URL changes require code changes, and the production URL is embedded in source. Less a security risk, more a maintenance and accidental-data-exposure risk.
 
 **Solution:**
+
 ```js
 const API_URL = process.env.REACT_APP_API_URL;
 axios.get(`${API_URL}/api/auth/me`);
@@ -362,12 +383,15 @@ axios.get(`${API_URL}/api/auth/me`);
 **Risk:** Users can be created with passwords like `123456` or `aaaaaa`.
 
 **Solution:** Add validation in the controller or model:
+
 ```js
 // In authController.js registerUser():
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 if (!passwordRegex.test(password)) {
   res.status(400);
-  throw new Error('Password must be at least 8 characters and include a letter and a number');
+  throw new Error(
+    "Password must be at least 8 characters and include a letter and a number",
+  );
 }
 ```
 
@@ -390,7 +414,7 @@ if (!passwordRegex.test(password)) {
 ```js
 res.status(404).json({
   message: "Route not found",
-  path: req.originalUrl,   // ← echoes the attempted path back
+  path: req.originalUrl, // ← echoes the attempted path back
   method: req.method,
 });
 ```
@@ -398,6 +422,7 @@ res.status(404).json({
 **Risk:** Confirms to attackers which paths do and do not exist (path enumeration).
 
 **Solution:**
+
 ```js
 res.status(404).json({ message: "Not found" });
 ```

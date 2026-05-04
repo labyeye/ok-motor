@@ -6,7 +6,7 @@ const ImageSchema = new mongoose.Schema(
     fileId: { type: String, required: true },
     name: { type: String },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const UpdatesSchema = new mongoose.Schema(
@@ -17,7 +17,7 @@ const UpdatesSchema = new mongoose.Schema(
     status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
     isDeleted: { type: Boolean, default: false },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Updates", UpdatesSchema);

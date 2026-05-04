@@ -1,4 +1,3 @@
-
 const { PDFDocument, rgb, degrees, StandardFonts } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
@@ -48,9 +47,7 @@ const formatIndianAmountInWords = (amount) => {
   const convertLessThanHundred = (n) => {
     if (n < 10) return units[n];
     if (n < 20) return teens[n - 10];
-    return (
-      tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + units[n % 10] : "")
-    );
+    return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + units[n % 10] : "");
   };
 
   const convertLessThanThousand = (n) => {
@@ -122,30 +119,46 @@ const formatTime = (timeString) => {
 
 const formatRupee = (val) => {
   if (val === undefined || val === null) return "0.00";
-  const num = typeof val === "string" ? parseFloat(val.replace(/,/g, "")) : Number(val);
-  return isNaN(num) ? "0.00" : new Intl.NumberFormat("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
+  const num =
+    typeof val === "string" ? parseFloat(val.replace(/,/g, "")) : Number(val);
+  return isNaN(num)
+    ? "0.00"
+    : new Intl.NumberFormat("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(num);
 };
 
 const formatKm = (val) => {
   if (val === undefined || val === null) return "0.00";
-  const num = typeof val === "string" ? parseFloat(val.replace(/,/g, "")) : Number(val);
-  return isNaN(num) ? "0.00" : new Intl.NumberFormat("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
+  const num =
+    typeof val === "string" ? parseFloat(val.replace(/,/g, "")) : Number(val);
+  return isNaN(num)
+    ? "0.00"
+    : new Intl.NumberFormat("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(num);
 };
 
-const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, language = "hindi") => {
+const generateBuyLetterPDF = async (
+  buyLetterData,
+  returnBuffer = false,
+  language = "hindi",
+) => {
   try {
-    console.log("Starting PDF generation for buy letter:", buyLetterData._id || "new letter");
+    console.log(
+      "Starting PDF generation for buy letter:",
+      buyLetterData._id || "new letter",
+    );
 
-    
-    const templatePath = language === "hindi"
-      ? path.join(__dirname, "../../frontend/public/templates/buyletter.pdf")
-      : path.join(__dirname, "../../frontend/public/templates/englishbuyletter.pdf");
+    const templatePath =
+      language === "hindi"
+        ? path.join(__dirname, "../../frontend/public/templates/buyletter.pdf")
+        : path.join(
+            __dirname,
+            "../../frontend/public/templates/englishbuyletter.pdf",
+          );
 
     if (!fs.existsSync(templatePath)) {
       throw new Error(`PDF template not found: ${templatePath}`);
@@ -155,16 +168,21 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const firstPage = pdfDoc.getPages()[0];
 
-    // embed logo for header/footer if available
     let logoImage = null;
     try {
-      const logoPath = path.join(__dirname, "../../frontend/src/images/okmotorback.png");
+      const logoPath = path.join(
+        __dirname,
+        "../../frontend/src/images/okmotorback.png",
+      );
       if (fs.existsSync(logoPath)) {
         const logoBytes = fs.readFileSync(logoPath);
         logoImage = await pdfDoc.embedPng(logoBytes);
       }
     } catch (logoErr) {
-      console.warn("Logo not found for buy letter header:", logoErr.message || logoErr);
+      console.warn(
+        "Logo not found for buy letter header:",
+        logoErr.message || logoErr,
+      );
       logoImage = null;
     }
 
@@ -173,31 +191,77 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
 
     const addHeaderFooterToPage = (page) => {
       try {
-        page.drawRectangle({ x: 0, y: 780, width: 595, height: 80, color: rgb(0.047, 0.098, 0.196) });
+        page.drawRectangle({
+          x: 0,
+          y: 780,
+          width: 595,
+          height: 80,
+          color: rgb(0.047, 0.098, 0.196),
+        });
         if (logoImage) {
           page.drawImage(logoImage, { x: 50, y: 743, width: 150, height: 120 });
-          try { page.drawImage(logoImage, { x: 180, y: 430, width: 260, height: 220, opacity: 0.3 }); } catch (e) {}
+          try {
+            page.drawImage(logoImage, {
+              x: 180,
+              y: 430,
+              width: 260,
+              height: 220,
+              opacity: 0.3,
+            });
+          } catch (e) {}
         }
-        page.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 805, size: 14, color: rgb(1, 1, 1), font: headerFont });
-        page.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 785, size: 14, color: rgb(1, 1, 1), font: headerFont });
+        page.drawText("UDAYAM-BR-26-0028550", {
+          x: 330,
+          y: 805,
+          size: 14,
+          color: rgb(1, 1, 1),
+          font: headerFont,
+        });
+        page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+          x: 330,
+          y: 785,
+          size: 14,
+          color: rgb(1, 1, 1),
+          font: headerFont,
+        });
 
         try {
           const thank = "Thank you for your business!";
-          const addr = "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
+          const addr =
+            "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014";
           const thankW = headerFont.widthOfTextAtSize(thank, 12);
           const addrW = regularFont.widthOfTextAtSize(addr, 9);
           const centerXThank = (595 - thankW) / 2;
           const centerXAddr = (595 - addrW) / 2;
-          page.drawLine({ start: { x: 20, y: 52 }, end: { x: 575, y: 52 }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
-          page.drawText(thank, { x: centerXThank, y: 40, size: 12, color: rgb(0, 0, 0), font: headerFont });
-          page.drawText(addr, { x: centerXAddr, y: 26, size: 9, color: rgb(0.45, 0.45, 0.45), font: regularFont });
+          page.drawLine({
+            start: { x: 20, y: 52 },
+            end: { x: 575, y: 52 },
+            thickness: 0.5,
+            color: rgb(0.8, 0.8, 0.8),
+          });
+          page.drawText(thank, {
+            x: centerXThank,
+            y: 40,
+            size: 12,
+            color: rgb(0, 0, 0),
+            font: headerFont,
+          });
+          page.drawText(addr, {
+            x: centerXAddr,
+            y: 26,
+            size: 9,
+            color: rgb(0.45, 0.45, 0.45),
+            font: regularFont,
+          });
         } catch (e) {}
       } catch (err) {
-        console.warn("Failed to draw header/footer on page:", err && err.message ? err.message : err);
+        console.warn(
+          "Failed to draw header/footer on page:",
+          err && err.message ? err.message : err,
+        );
       }
     };
 
-    
     const formattedData = {
       ...buyLetterData,
       saleDate: formatDate(buyLetterData.saleDate),
@@ -211,7 +275,6 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
       amountInWords: formatIndianAmountInWords(buyLetterData.saleAmount),
     };
 
-    
     const fieldPositions = {
       sellerName: { x: 34, y: 632, size: 11 },
       sellerFatherName: { x: 322, y: 632, size: 11 },
@@ -249,11 +312,15 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
       note: { x: 58, y: 18, size: 10 },
     };
 
-    
     for (const [fieldName, position] of Object.entries(fieldPositions)) {
-      if (fieldName === "selleraadharphone" && formattedData.selleraadharphone) {
+      if (
+        fieldName === "selleraadharphone" &&
+        formattedData.selleraadharphone
+      ) {
         const combinedPhones = `${formattedData.selleraadharphone}${
-          formattedData.selleraadharphone2 ? ` , ${formattedData.selleraadharphone2}` : ""
+          formattedData.selleraadharphone2
+            ? ` , ${formattedData.selleraadharphone2}`
+            : ""
         }`;
         firstPage.drawText(combinedPhones, {
           x: position.x,
@@ -261,7 +328,10 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
           size: position.size,
           color: rgb(0, 0, 0),
         });
-      } else if (fieldName !== "selleraadharphone2" && formattedData[fieldName]) {
+      } else if (
+        fieldName !== "selleraadharphone2" &&
+        formattedData[fieldName]
+      ) {
         firstPage.drawText(String(formattedData[fieldName]), {
           x: position.x,
           y: position.y,
@@ -271,10 +341,13 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
       }
     }
 
-    
     const saleAmountText = formattedData.saleAmount || "";
-    const saleAmountWidth = saleAmountText.length * (fieldPositions.saleAmount.size / 2);
-    const amountInWordsX = fieldPositions.saleAmount.x + saleAmountWidth + 1.4 * (fieldPositions.saleAmount.size / 2);
+    const saleAmountWidth =
+      saleAmountText.length * (fieldPositions.saleAmount.size / 2);
+    const amountInWordsX =
+      fieldPositions.saleAmount.x +
+      saleAmountWidth +
+      1.4 * (fieldPositions.saleAmount.size / 2);
 
     firstPage.drawText(formattedData.amountInWords, {
       x: amountInWordsX,
@@ -283,9 +356,8 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
       color: rgb(0, 0, 0),
     });
 
-    
     const invoicePage = pdfDoc.addPage([595, 842]);
-    
+
     invoicePage.drawText("Vehicle Invoice", {
       x: 250,
       y: 800,
@@ -293,17 +365,23 @@ const generateBuyLetterPDF = async (buyLetterData, returnBuffer = false, languag
       color: rgb(0, 0, 0),
     });
 
-    // apply header/footer to all pages except the first (letter) page
     const allPages = pdfDoc.getPages();
     for (let i = 1; i < allPages.length; i++) {
-      try { addHeaderFooterToPage(allPages[i]); } catch (e) { console.warn('Header/footer draw failed on page', i, e && e.message ? e.message : e); }
+      try {
+        addHeaderFooterToPage(allPages[i]);
+      } catch (e) {
+        console.warn(
+          "Header/footer draw failed on page",
+          i,
+          e && e.message ? e.message : e,
+        );
+      }
     }
 
     if (returnBuffer) {
       const pdfBytes = await pdfDoc.save();
       return Buffer.from(pdfBytes);
     } else {
-      
       const uploadDir = path.join(__dirname, "../uploads/buy-letters");
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });

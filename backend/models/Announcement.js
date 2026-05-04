@@ -9,7 +9,7 @@ const AnnouncementSchema = new mongoose.Schema(
     endDate: { type: Date },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Announcement", AnnouncementSchema);

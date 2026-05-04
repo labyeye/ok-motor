@@ -1,13 +1,3 @@
-/**
- * One-time migration script: Backfill pucId and insuranceId references
- * on existing SellLetter and BuyLetter documents.
- *
- * Also ensures the inline PUC/Insurance fields on each letter match
- * the current master record values (single source of truth sync).
- *
- * Run: node backend/scripts/backfillPucInsuranceIds.js
- */
-
 require("dotenv").config({ path: require("path").join(__dirname, "../.env") });
 const mongoose = require("mongoose");
 
@@ -26,7 +16,6 @@ async function backfill() {
   await mongoose.connect(MONGO_URI);
   console.log("Connected.");
 
-  // Build lookup maps for PUC and Insurance by registration number
   const allPUC = await PUC.find().lean();
   const pucMap = {};
   for (const p of allPUC) {
@@ -45,12 +34,13 @@ async function backfill() {
     }
   }
 
-  console.log(`Loaded ${allPUC.length} PUC records, ${allInsurance.length} Insurance records.`);
+  console.log(
+    `Loaded ${allPUC.length} PUC records, ${allInsurance.length} Insurance records.`,
+  );
 
   let sellUpdated = 0;
   let buyUpdated = 0;
 
-  // ── Backfill SellLetters ──
   const sellLetters = await SellLetter.find().lean();
   for (const letter of sellLetters) {
     const regKey = (letter.registrationNumber || "").trim().toLowerCase();
@@ -62,11 +52,10 @@ async function backfill() {
     const update = {};
 
     if (pucDoc) {
-      // Only link if not already linked OR link is stale
       if (String(letter.pucId) !== String(pucDoc._id)) {
         update.pucId = pucDoc._id;
       }
-      // Always sync inline fields to master values
+
       update.pucIssueDate = pucDoc.pucIssueDate;
       update.pucExpiryDate = pucDoc.pucExpiryDate || pucDoc.pucExpiry;
       update.pucStatus = pucDoc.pucStatus;
@@ -77,8 +66,10 @@ async function backfill() {
         update.insuranceId = insDoc._id;
       }
       update.insuranceCompany = insDoc.insuranceCompany;
-      update.insurancePolicyNumber = insDoc.insurancePolicyNumber || insDoc.insurancePolicyNo;
-      update.insuranceExpiryDate = insDoc.insuranceExpiryDate || insDoc.insuranceExpiry;
+      update.insurancePolicyNumber =
+        insDoc.insurancePolicyNumber || insDoc.insurancePolicyNo;
+      update.insuranceExpiryDate =
+        insDoc.insuranceExpiryDate || insDoc.insuranceExpiry;
       update.insuranceStatus = insDoc.insuranceStatus;
     }
 
@@ -88,7 +79,6 @@ async function backfill() {
     }
   }
 
-  // ── Backfill BuyLetters ──
   const buyLetters = await BuyLetter.find().lean();
   for (const letter of buyLetters) {
     const regKey = (letter.registrationNumber || "").trim().toLowerCase();
@@ -113,8 +103,10 @@ async function backfill() {
         update.insuranceId = insDoc._id;
       }
       update.insuranceCompany = insDoc.insuranceCompany;
-      update.insurancePolicyNumber = insDoc.insurancePolicyNumber || insDoc.insurancePolicyNo;
-      update.insuranceExpiryDate = insDoc.insuranceExpiryDate || insDoc.insuranceExpiry;
+      update.insurancePolicyNumber =
+        insDoc.insurancePolicyNumber || insDoc.insurancePolicyNo;
+      update.insuranceExpiryDate =
+        insDoc.insuranceExpiryDate || insDoc.insuranceExpiry;
       update.insuranceStatus = insDoc.insuranceStatus;
     }
 

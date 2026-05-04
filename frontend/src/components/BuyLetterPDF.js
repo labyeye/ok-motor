@@ -45,7 +45,7 @@ const BuyLetterForm = () => {
   const [selectedLanguage, setSelectedLanguage] = useState("hindi");
   const [, setDownloadProgress] = useState(0);
   const [, setIsDownloading] = useState(false);
-  const [progressStep, setProgressStep] = useState(0); // 0=hidden,1=uploading,2=saving,3=generating,4=done
+  const [progressStep, setProgressStep] = useState(0);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
@@ -246,7 +246,8 @@ const BuyLetterForm = () => {
       try {
         if (!editLetter || !editLetter._id) return;
         const API_BASE =
-          process.env.REACT_APP_API_URL || "https://ok-motor-backend.vercel.app";
+          process.env.REACT_APP_API_URL ||
+          "https://ok-motor-backend.vercel.app";
         const token = localStorage.getItem("token");
         const resp = await axios.get(
           `${API_BASE}/api/buy-letters/${editLetter._id}`,
@@ -337,7 +338,7 @@ const BuyLetterForm = () => {
               pages.length <= 1 ? "single" : "separate",
             );
           }
-          // Handle both old format (direct array) and new format (pages array)
+
           if (full.documents.insuranceCertificate) {
             if (Array.isArray(full.documents.insuranceCertificate.pages)) {
               previews.insuranceCertificate =
@@ -354,7 +355,7 @@ const BuyLetterForm = () => {
             const pages = full.documents.vehicleNOC?.pages || [];
             setVehicleNOCUploadMode(pages.length <= 1 ? "single" : "separate");
           }
-          // Handle both old format (direct array) and new format (pages array)
+
           if (full.documents.vehicleNOC) {
             if (Array.isArray(full.documents.vehicleNOC.pages)) {
               previews.vehicleNOC = full.documents.vehicleNOC.pages.slice();
@@ -373,7 +374,7 @@ const BuyLetterForm = () => {
               pages.length <= 1 ? "single" : "separate",
             );
           }
-          // Handle both old format (direct array) and new format (pages array)
+
           if (full.documents.vehicleBuyReceipt) {
             if (Array.isArray(full.documents.vehicleBuyReceipt.pages)) {
               previews.vehicleBuyReceipt =
@@ -385,7 +386,7 @@ const BuyLetterForm = () => {
           }
 
           setFilePreviews((prev) => ({ ...prev, ...previews }));
-          setDeletedDocuments(new Set()); // Clear deleted documents when loading new edit
+          setDeletedDocuments(new Set());
         }
       } catch (err) {
         console.error("Failed to load full buy letter for edit:", err);
@@ -495,7 +496,6 @@ const BuyLetterForm = () => {
   };
 
   const ProcessingModal = ({ step }) => {
-    // step: 1=uploading docs, 2=saving data, 3=generating pdf, 4=done
     const steps = [
       { label: "Uploading Documents", icon: "📤" },
       { label: "Saving Data", icon: "💾" },
@@ -789,10 +789,8 @@ const BuyLetterForm = () => {
     return `${formattedHours}:${formattedMinutes} ${ampm}`;
   };
 
-  // Compress image files on the frontend before upload to stay under Vercel's 4.5MB body limit
   const compressImageFile = (file, maxWidthPx = 1600, quality = 0.75) => {
     return new Promise((resolve) => {
-      // PDFs and non-images pass through unchanged
       if (!file.type.startsWith("image/")) return resolve(file);
       const img = new window.Image();
       const url = URL.createObjectURL(file);
@@ -895,7 +893,6 @@ const BuyLetterForm = () => {
         form.append("vehicleNOCUploadMode", vehicleNOCUploadMode);
         form.append("vehicleBuyReceiptUploadMode", vehicleBuyReceiptUploadMode);
 
-        // Compress all image files before appending (PDFs pass through unchanged)
         const [
           rcFront,
           rcBack,
@@ -1062,7 +1059,6 @@ const BuyLetterForm = () => {
             }
           }
 
-          // Always send preservedDocuments during edit to override backend fallback
           form.append("preservedDocuments", JSON.stringify(preservedDocs));
           form.append(
             "existingDocuments",
@@ -1078,18 +1074,16 @@ const BuyLetterForm = () => {
             form,
             {
               headers: { "Content-Type": "multipart/form-data" },
-              timeout: 300000, // 5 minutes timeout
+              timeout: 300000,
               onUploadProgress: (evt) => {
                 if (evt.total && evt.loaded >= evt.total) {
-                  setProgressStep(2); // upload done → saving
+                  setProgressStep(2);
                 }
               },
             },
           );
         }
       } else {
-        // Even when no new files are selected, if we're editing we must
-        // preserve existing documents by sending them as preservedDocuments.
         if (editLetter?._id && editLetter.documents) {
           const form = new FormData();
 
@@ -1114,7 +1108,6 @@ const BuyLetterForm = () => {
             vehicleBuyReceiptUploadMode,
           );
 
-          // Build preservedDocs from filePreviews (which hold the existing URLs)
           const preservedDocs = {};
           const docMap = [
             "vehicleRCFront",
@@ -1151,7 +1144,6 @@ const BuyLetterForm = () => {
           )
             preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
 
-          // Also send the full existing documents object as an ultimate fallback
           form.append("preservedDocuments", JSON.stringify(preservedDocs));
           form.append(
             "existingDocuments",
@@ -1171,7 +1163,6 @@ const BuyLetterForm = () => {
             );
           }
         } else {
-          // New letter with no files — plain JSON is fine
           const payload = { ...dataToSave };
           if (isElectron) {
             response = await apiService.post("/api/buy-letters", payload);
@@ -1325,7 +1316,6 @@ const BuyLetterForm = () => {
           uploadModalFieldName === "vehicleNOC" ||
           uploadModalFieldName === "vehicleBuyReceipt"
         ) {
-          // If single image, crop it alone
           if (filesArr.length === 1 && isImageFile(filesArr[0])) {
             const singleImage = filesArr[0];
             const url = URL.createObjectURL(singleImage);
@@ -1337,7 +1327,6 @@ const BuyLetterForm = () => {
             return;
           }
 
-          // If multiple images, open multi-image crop modal
           if (filesArr.length > 1) {
             const imageFiles = filesArr.filter((f) => isImageFile(f));
             if (imageFiles.length > 0) {
@@ -1409,14 +1398,12 @@ const BuyLetterForm = () => {
         return;
       }
 
-      // Handle PDF files for single-file fields when allowPdf is true
       if (isPdfFile(file) && uploadModalAllowPdf) {
         setFilesState((prev) => ({
           ...prev,
           [uploadModalFieldName]: file,
         }));
 
-        // Create preview for PDF
         try {
           const pdfImages = await convertPdfToImages(file);
           if (Array.isArray(pdfImages) && pdfImages[0]?.data) {
@@ -1511,7 +1498,6 @@ const BuyLetterForm = () => {
       cropFieldName === "vehicleNOC" ||
       cropFieldName === "vehicleBuyReceipt"
     ) {
-      // Handle multi-page documents - store as array
       setFilesState((prev) => ({
         ...prev,
         [cropFieldName]: [file],
@@ -1538,22 +1524,19 @@ const BuyLetterForm = () => {
       return;
     }
 
-    // Convert blob/File objects to File objects if needed
     const finalFiles = croppedFiles.map((f, idx) => {
       if (f instanceof File) {
         return f;
       }
-      // If it's a Blob, convert to File
+
       return new File([f], `${fieldName}-${idx}.jpg`, { type: "image/jpeg" });
     });
 
-    // Update filesState with array of files
     setFilesState((prev) => ({
       ...prev,
       [fieldName]: finalFiles,
     }));
 
-    // Create preview URLs
     const previews = finalFiles.map((f) => URL.createObjectURL(f));
 
     setFilePreviews((prev) => ({
@@ -1584,14 +1567,12 @@ const BuyLetterForm = () => {
         (filesState.vehicleBuyReceipt &&
           filesState.vehicleBuyReceipt.length > 0);
 
-      // Step 1: uploading documents (only if files present, else skip to step 2)
       setProgressStep(hasFiles ? 1 : 2);
       setIsDownloading(true);
       setIsSaving(true);
 
       const savedLetter = await saveBuyLetter();
 
-      // Step 3: generating PDF
       setProgressStep(3);
 
       if (selectedLanguage === "hindi") {
@@ -2905,12 +2886,10 @@ const BuyLetterForm = () => {
             registrationNumber,
           }));
 
-          // Pre-fill document previews from the existing sell letter (RC and NOC)
           if (data.documents) {
             const docs = data.documents;
             const previews = {};
 
-            // Handle Vehicle RC
             if (docs.vehicleRCUploadMode)
               setVehicleRCUploadMode(docs.vehicleRCUploadMode);
 
@@ -2919,11 +2898,13 @@ const BuyLetterForm = () => {
             if (docs.vehicleRC?.back)
               previews.vehicleRCBack = docs.vehicleRC.back;
 
-            // Handle Vehicle NOC
             if (docs.vehicleNOCUploadMode)
               setVehicleNOCUploadMode(docs.vehicleNOCUploadMode);
 
-            if (docs.vehicleNOC?.pages && Array.isArray(docs.vehicleNOC.pages)) {
+            if (
+              docs.vehicleNOC?.pages &&
+              Array.isArray(docs.vehicleNOC.pages)
+            ) {
               previews.vehicleNOC = docs.vehicleNOC.pages.slice();
             }
 
@@ -5387,7 +5368,7 @@ const BuyLetterForm = () => {
           />
         )}
 
-        {/* Delete Confirmation Modal */}
+        {}
         {showDeleteConfirm && (
           <div
             style={{

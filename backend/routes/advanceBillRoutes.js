@@ -35,7 +35,7 @@ router.post("/preview", protect, async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      "inline; filename=advance-bill-preview.pdf"
+      "inline; filename=advance-bill-preview.pdf",
     );
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.setHeader("Pragma", "no-cache");
@@ -78,7 +78,7 @@ router.get("/:id/pdf", protect, async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `inline; filename="advance-bill-preview-${id}.pdf"`
+      `inline; filename="advance-bill-preview-${id}.pdf"`,
     );
 
     res.send(pdfBuffer);
@@ -98,7 +98,7 @@ router.get("/pdf/:filename", protect, async (req, res) => {
     const primaryPath = path.join(
       __dirname,
       "../uploads/advance-bills",
-      filename
+      filename,
     );
     const os = require("os");
     const fallbackPath = path.join(os.tmpdir(), "advance-bills", filename);
@@ -282,7 +282,7 @@ router.post("/", protect, async (req, res) => {
     }
 
     const missingFields = requiredFields.filter(
-      (field) => !advanceBillData[field]
+      (field) => !advanceBillData[field],
     );
 
     if (missingFields.length > 0) {
@@ -320,7 +320,7 @@ router.post("/", protect, async (req, res) => {
     } else {
       console.warn(
         "PDF generator returned empty filename for advance bill",
-        savedBill._id
+        savedBill._id,
       );
     }
 
@@ -397,7 +397,7 @@ router.get("/:id/download", protect, async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="advance-bill-${id}.pdf"`
+      `attachment; filename="advance-bill-${id}.pdf"`,
     );
 
     res.send(pdfBuffer);

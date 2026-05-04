@@ -60,7 +60,7 @@ const SellLetterForm = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [, setDownloadProgress] = useState(0);
   const [, setIsDownloading] = useState(false);
-  const [progressStep, setProgressStep] = useState(0); // 0=hidden,1=uploading,2=saving,3=generating,4=done
+  const [progressStep, setProgressStep] = useState(0);
   const [errors, setErrors] = useState({});
   const [focusedInput, setFocusedInput] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -267,7 +267,8 @@ const SellLetterForm = () => {
       try {
         if (!editLetter || !editLetter._id) return;
         const API_BASE =
-          process.env.REACT_APP_API_URL || "https://ok-motor-backend.vercel.app";
+          process.env.REACT_APP_API_URL ||
+          "https://ok-motor-backend.vercel.app";
         const token = localStorage.getItem("token");
         const resp = await axios.get(
           `${API_BASE}/api/sell-letters/${editLetter._id}`,
@@ -401,7 +402,6 @@ const SellLetterForm = () => {
 
           setFilePreviews((prev) => ({ ...prev, ...previews }));
 
-          // Helper to convert PDF URLs to images for existing records
           const convertPdfUrls = async (fieldName, urls) => {
             if (!urls || !Array.isArray(urls)) return;
             const newPreviews = [...urls];
@@ -418,8 +418,6 @@ const SellLetterForm = () => {
                   const blob = await response.blob();
                   const images = await convertPdfToImages(blob);
                   if (Array.isArray(images) && images.length) {
-                    // Replace the PDF URL with the images of its pages
-                    // Currently replacing with first page to keep array length manageable or as requested
                     newPreviews[i] = images[0].data;
                     changed = true;
                   }
@@ -440,7 +438,6 @@ const SellLetterForm = () => {
             }
           };
 
-          // Convert PDF previews for multi-page docs asynchronously
           if (previews.insuranceCertificate)
             convertPdfUrls(
               "insuranceCertificate",
@@ -452,7 +449,7 @@ const SellLetterForm = () => {
             convertPdfUrls("transferReceipt", previews.transferReceipt);
 
           setSavedSellLetter(full);
-          setDeletedDocuments(new Set()); // Clear deleted documents when loading new edit
+          setDeletedDocuments(new Set());
         }
       } catch (err) {
         console.error("Failed to load full sell letter for edit:", err);
@@ -677,7 +674,6 @@ const SellLetterForm = () => {
         if (multiFields.includes(uploadModalFieldName)) {
           const filesArr = file;
 
-          // If single image, crop it alone
           if (filesArr.length === 1 && isImageFile(filesArr[0])) {
             const singleImage = filesArr[0];
             const url = URL.createObjectURL(singleImage);
@@ -689,7 +685,6 @@ const SellLetterForm = () => {
             return;
           }
 
-          // If multiple images, open multi-image crop modal
           if (filesArr.length > 1) {
             const imageFiles = filesArr.filter((f) => isImageFile(f));
             if (imageFiles.length > 0) {
@@ -899,7 +894,6 @@ const SellLetterForm = () => {
       cropFieldName === "vehicleNOC" ||
       cropFieldName === "transferReceipt"
     ) {
-      // Handle multi-page documents - store as array
       setFilesState((prev) => ({
         ...prev,
         [cropFieldName]: [file],
@@ -926,22 +920,19 @@ const SellLetterForm = () => {
       return;
     }
 
-    // Convert blob/File objects to File objects if needed
     const finalFiles = croppedFiles.map((f, idx) => {
       if (f instanceof File) {
         return f;
       }
-      // If it's a Blob, convert to File
+
       return new File([f], `${fieldName}-${idx}.jpg`, { type: "image/jpeg" });
     });
 
-    // Update filesState with array of files
     setFilesState((prev) => ({
       ...prev,
       [fieldName]: finalFiles,
     }));
 
-    // Create preview URLs
     const previews = finalFiles.map((f) => URL.createObjectURL(f));
 
     setFilePreviews((prev) => ({
@@ -1396,7 +1387,6 @@ const SellLetterForm = () => {
     return `${formattedHours}:${formattedMinutes} ${ampm}`;
   };
 
-  // Compress image files on the frontend before upload to stay under Vercel's 4.5MB body limit
   const compressImageFile = (file, maxWidthPx = 1600, quality = 0.75) => {
     return new Promise((resolve) => {
       if (!file.type.startsWith("image/")) return resolve(file);
@@ -1698,7 +1688,6 @@ const SellLetterForm = () => {
         form.append("aadhaarUploadMode", aadhaarUploadMode);
         form.append("vehicleRCUploadMode", vehicleRCUploadMode);
 
-        // Compress all image files before appending (PDFs pass through unchanged)
         const [
           rcFront,
           rcBack,
@@ -1774,14 +1763,13 @@ const SellLetterForm = () => {
 
         if (editLetter?._id && editLetter.documents) {
           const preservedDocs = buildPreservedDocsFromPreviews(filesState);
-          // Always send preservedDocuments in edit mode (even if empty) to override fallback
+
           form.append("preservedDocuments", JSON.stringify(preservedDocs));
           form.append(
             "existingDocuments",
             JSON.stringify(editLetter.documents),
           );
         } else {
-          // New sell letter — carry over any documents pre-filled from buy letter lookup
           const preservedDocs = buildPreservedDocsFromPreviews(filesState);
           if (Object.keys(preservedDocs).length > 0) {
             form.append("preservedDocuments", JSON.stringify(preservedDocs));
@@ -1796,10 +1784,10 @@ const SellLetterForm = () => {
             form,
             {
               headers: { "Content-Type": "multipart/form-data" },
-              timeout: 300000, // 5 minutes timeout
+              timeout: 300000,
               onUploadProgress: (evt) => {
                 if (evt.total && evt.loaded >= evt.total) {
-                  setProgressStep(2); // upload done → saving
+                  setProgressStep(2);
                 }
               },
             },
@@ -1808,7 +1796,6 @@ const SellLetterForm = () => {
       } else {
         const preservedDocs = buildPreservedDocsFromPreviews(filesState);
 
-        // No new uploads, but there are preserved docs to carry forward.
         if (Object.keys(preservedDocs).length > 0) {
           const form = new FormData();
 
@@ -1824,7 +1811,6 @@ const SellLetterForm = () => {
           form.append("aadhaarUploadMode", aadhaarUploadMode);
           form.append("vehicleRCUploadMode", vehicleRCUploadMode);
 
-          // Also send the full existing documents object as an ultimate fallback
           form.append("preservedDocuments", JSON.stringify(preservedDocs));
           if (editLetter?.documents) {
             form.append(
@@ -1846,7 +1832,6 @@ const SellLetterForm = () => {
             );
           }
         } else {
-          // New letter with no files — plain JSON is fine
           if (isElectron) {
             response = await apiService.post("/api/sell-letters", dataToSave);
           } else {
@@ -2552,7 +2537,7 @@ const SellLetterForm = () => {
 
         if (response.data) {
           const data = response.data;
-          // Format dates to YYYY-MM-DD for input fields
+
           const formatDateForInput = (dateStr) => {
             if (!dateStr) return "";
             try {
@@ -2569,7 +2554,7 @@ const SellLetterForm = () => {
             pucIssueDate: formatDateForInput(data.pucIssueDate),
             pucExpiryDate: formatDateForInput(data.pucExpiryDate),
             insuranceExpiryDate: formatDateForInput(data.insuranceExpiryDate),
-            // Also format other dates if they exist and are relevant for the form
+
             saleDate: data.saleDate
               ? formatDateForInput(data.saleDate)
               : formData.saleDate,
@@ -2581,8 +2566,6 @@ const SellLetterForm = () => {
             registrationNumber,
           }));
 
-          // Pre-fill document previews from the existing BuyLetter so
-          // the user doesn't have to re-upload documents on the sell form.
           if (data.buyLetterDocuments) {
             const docs = data.buyLetterDocuments;
             const previews = {};

@@ -36,7 +36,6 @@ const VehicleHistory = () => {
 
   useEffect(() => {
     fetchVehicles();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filterType, filterStatus]);
 
   const fetchVehicles = async () => {
@@ -66,7 +65,6 @@ const VehicleHistory = () => {
   };
 
   const handleDelete = async (vehicleId) => {
-    // open confirm modal instead
     setConfirmTargetId(vehicleId);
     setConfirmOpen(true);
   };

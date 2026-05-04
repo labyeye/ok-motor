@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 
-// Set worker source
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@5.4.530/build/pdf.worker.min.mjs`;
 
 const PdfPreview = ({ pdfUrl }) => {
@@ -9,13 +8,12 @@ const PdfPreview = ({ pdfUrl }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const containerRef = useRef(null);
-  const pdfDocumentRef = useRef(null); // Ref to store the PDF document instance
+  const pdfDocumentRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
     const fetchPdf = async () => {
       if (!pdfUrl) {
-        // If pdfUrl becomes null/undefined, destroy any existing document
         if (pdfDocumentRef.current) {
           pdfDocumentRef.current.destroy();
           pdfDocumentRef.current = null;
@@ -25,7 +23,6 @@ const PdfPreview = ({ pdfUrl }) => {
         return;
       }
 
-      // Destroy previous document if a new one is being loaded
       if (pdfDocumentRef.current) {
         pdfDocumentRef.current.destroy();
         pdfDocumentRef.current = null;
@@ -35,25 +32,21 @@ const PdfPreview = ({ pdfUrl }) => {
         setLoading(true);
         setError(null);
 
-        // Load the PDF document
         const loadingTask = pdfjsLib.getDocument(pdfUrl);
         const pdf = await loadingTask.promise;
 
         if (!isMounted) {
-          pdf.destroy(); // Destroy if component unmounted while loading
+          pdf.destroy();
           return;
         }
 
-        pdfDocumentRef.current = pdf; // Store the PDF document
+        pdfDocumentRef.current = pdf;
 
         const renderedPages = [];
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
-          const viewport = page.getViewport({ scale: 1.5 }); // Adjust scale for better quality
+          const viewport = page.getViewport({ scale: 1.5 });
 
-          // We can't render canvas in useEffect directly easily without refs for each canvas
-          // Instead, we'll store page data and render in separate components or handle here
-          // For simplicity, let's store the page object and viewport to render
           renderedPages.push({ page, viewport, index: i });
         }
 
@@ -67,7 +60,7 @@ const PdfPreview = ({ pdfUrl }) => {
           setError("Failed to load PDF preview.");
           setLoading(false);
         }
-        // If an error occurred after loading the document, destroy it
+
         if (pdfDocumentRef.current) {
           pdfDocumentRef.current.destroy();
           pdfDocumentRef.current = null;
@@ -79,7 +72,7 @@ const PdfPreview = ({ pdfUrl }) => {
 
     return () => {
       isMounted = false;
-      // Cleanup: Destroy the PDF document when the component unmounts or pdfUrl changes
+
       if (pdfDocumentRef.current) {
         pdfDocumentRef.current.destroy();
         pdfDocumentRef.current = null;
@@ -163,8 +156,6 @@ const PdfPage = ({ page, viewport }) => {
     const renderTask = page.render(renderContext);
 
     renderTask.promise.catch((err) => {
-      // Suppress RenderingCancelledException — it's expected when the
-      // component unmounts or the page changes before rendering finishes.
       if (err?.name !== "RenderingCancelledException") {
         console.error("PDF render error:", err);
       }

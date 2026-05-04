@@ -1,9 +1,4 @@
-// Utility for handling PDF documents - extracting images and text
-
 export const extractImagesFromPdf = async (pdfFile) => {
-  // This uses pdfjs-dist to extract images from PDF
-  // For now, we'll store the PDF as-is and display it
-  // The actual image extraction would happen during printing
   try {
     const url = URL.createObjectURL(pdfFile);
     return {
@@ -22,8 +17,6 @@ export const convertPdfToImages = async (pdfFile) => {
   try {
     const pdfjsLib = await import("pdfjs-dist");
 
-    // Set worker source using unpkg CDN which is more reliable
-    // Must be set before calling getDocument
     pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@5.4.530/build/pdf.worker.min.mjs`;
 
     const arrayBuffer = await pdfFile.arrayBuffer();
@@ -56,7 +49,7 @@ export const convertPdfToImages = async (pdfFile) => {
     return images;
   } catch (error) {
     console.error("Error converting PDF to images:", error);
-    // If pdfjs-dist is not available, return the PDF as-is
+
     return {
       type: "pdf",
       file: pdfFile,

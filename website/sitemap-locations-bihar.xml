@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Sitemap for all Bihar city pages (generated list) -->
+  
   <url>
     <loc>https://www.okmotors.in/second-hand-bikes-muzaffarpur.html</loc>
     <lastmod>2025-11-06</lastmod>
@@ -61,7 +61,7 @@
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
-  <!-- Additional city links -->
+  
   <url><loc>https://www.okmotors.in/second-hand-bikes-gaya.html</loc><lastmod>2025-11-06</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://www.okmotors.in/second-hand-bikes-ara.html</loc><lastmod>2025-11-06</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
   <url><loc>https://www.okmotors.in/second-hand-bikes-nawada.html</loc><lastmod>2025-11-06</lastmod><changefreq>weekly</changefreq><priority>0.5</priority></url>

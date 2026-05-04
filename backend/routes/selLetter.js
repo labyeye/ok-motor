@@ -1,7 +1,6 @@
-
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { protect ,admin} = require('../middleware/auth');
+const { protect, admin } = require("../middleware/auth");
 const {
   createSellLetter,
   getSellLetters,
@@ -10,28 +9,24 @@ const {
   deleteSellLetter,
   getMySellLetters,
   getSellLettersByRegistration,
-  getVehicleDetails
-} = require('../controllers/sellLetterController');
-const multer = require('multer');
+  getVehicleDetails,
+} = require("../controllers/sellLetterController");
+const multer = require("multer");
 const upload = multer();
 
 router.use(protect);
 
-// Note: PDF generation is intentionally handled on the frontend.
-// Removed backend PDF route to keep backend responsibilities limited to image upload and data storage.
+router.route("/by-registration").get(getSellLettersByRegistration);
+router.route("/my-letters").get(getMySellLetters);
+router.route("/all").get(getMySellLetters);
 
-router.route('/by-registration').get(getSellLettersByRegistration); 
-router.route('/my-letters').get(getMySellLetters);
-router.route('/all').get(getMySellLetters);
+router.route("/").post(createSellLetter).get(getSellLetters);
 
-router.route('/')
-  .post(createSellLetter)
-  .get(getSellLetters);
-
-router.route('/vehicle-details').get(getVehicleDetails)
-router.route('/:id')
+router.route("/vehicle-details").get(getVehicleDetails);
+router
+  .route("/:id")
   .get(getSellLetterById)
-  .put(admin,updateSellLetter)
-  .delete(admin,deleteSellLetter);
+  .put(admin, updateSellLetter)
+  .delete(admin, deleteSellLetter);
 
 module.exports = router;

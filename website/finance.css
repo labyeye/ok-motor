@@ -1,4 +1,3 @@
-
 .partners {
   display: flex;
   flex-wrap: wrap;
@@ -27,17 +26,14 @@
   color: black;
 }
 
-/* Step description styling */
-
-/* New card-based layout for the financing process - single horizontal row */
 .process-cards {
   display: flex;
   flex-direction: row;
   gap: 16px;
   margin-top: 16px;
-  /* ensure cards always fit the container: no horizontal scroll */
+
   overflow-x: hidden;
-  padding-bottom: 6px; /* give space for shadows on small screens */
+  padding-bottom: 6px;
   align-items: stretch;
   justify-content: stretch;
   width: 100%;
@@ -45,7 +41,7 @@
 }
 
 .process-card {
-  background: #F6FAF7;
+  background: #f6faf7;
   border: 1px solid #e6e6e6;
   border-radius: 10px;
   padding: 18px;
@@ -54,9 +50,12 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
-  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
-  flex: 1 1 0; /* allow cards to shrink/grow and evenly distribute across full width */
-  min-width: 0; /* allow content to shrink inside card */
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+  flex: 1 1 0;
+  min-width: 0;
   box-sizing: border-box;
 }
 .process-card:hover {
@@ -88,18 +87,15 @@
   line-height: 1.5;
 }
 
-/* Footer stars styling */
 .footer-stars .star {
   color: gold;
   font-size: 1.5em;
 }
 
-/* Logo styling */
 .footer .logo img {
   width: 220px;
 }
 
-/* Social icons styling */
 .social-icons a i {
   color: #0400ff;
 }
@@ -112,7 +108,6 @@
   width: 20px;
 }
 
-/* Footer bottom link */
 .footer-bottom a {
   color: #a9a9a9;
 }
@@ -125,9 +120,7 @@
   }
 }
 
-/* Responsive tweaks specific to finance page */
 @media (max-width: 992px) {
-
   .partners {
     gap: 12px;
     justify-content: flex-start;
@@ -144,11 +137,9 @@
     padding: 0 12px;
     margin: 12px auto;
   }
-  /* Ensure the content container spans full width so headings center properly */
 }
 
 @media (max-width: 600px) {
-
   .partners {
     gap: 10px;
     padding: 6px 8px;
@@ -185,7 +176,6 @@
   }
 }
 
-/* Stack process cards vertically on small devices for better readability */
 @media (max-width: 640px) {
   .process-cards {
     flex-direction: column;

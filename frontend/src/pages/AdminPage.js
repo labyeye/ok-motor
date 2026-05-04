@@ -34,7 +34,7 @@ import AuthContext from "../context/AuthContext";
 import AppSidebar from "../components/common/AppSidebar";
 import axios from "axios";
 import BikeHistory from "../components/BikeHistory";
-// Register ChartJS components
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -104,7 +104,6 @@ const AdminPage = () => {
       const API_BASE = "https://ok-motor-backend.vercel.app";
       const headers = { headers: { Authorization: `Bearer ${token}` } };
 
-      // Parallelize the independent API calls to reduce overall latency
       const vehiclesPromise = axios.get(
         `${API_BASE}/api/vehicles?limit=2000`,
         headers,
@@ -135,13 +134,10 @@ const AdminPage = () => {
 
       const vehicles = vehiclesRes?.data?.vehicles || vehiclesRes?.data || [];
 
-      // Normalize different response shapes
       const sellLetters = Array.isArray(resSellLetters?.data)
         ? resSellLetters.data
         : resSellLetters?.data?.data || [];
 
-      // Cache sell letters for reuse by other dashboard tables to avoid
-      // duplicate heavy requests (PUC / Insurance tables also request this)
       setSellLettersState(Array.isArray(sellLetters) ? sellLetters : []);
 
       const buyLetters = Array.isArray(resBuyLetters?.data)
@@ -150,28 +146,43 @@ const AdminPage = () => {
 
       setBuyLettersState(Array.isArray(buyLetters) ? buyLetters : []);
 
-      // Logic to count unique sell letters (handling edits/versions)
+      // Normalize registration numbers: remove all spaces, lowercase
+      const normalizeReg = (reg) =>
+        String(reg || "")
+          .replace(/\s+/g, "")
+          .trim()
+          .toLowerCase();
+
       const uniqueSaleIds = new Set();
       const soldRegNos = new Set();
       for (const letter of sellLetters) {
         const saleId = letter.originalDocumentId || letter._id;
         if (saleId) uniqueSaleIds.add(saleId);
         if (letter.registrationNumber) {
-          soldRegNos.add(
-            String(letter.registrationNumber).trim().toLowerCase(),
-          );
+          soldRegNos.add(normalizeReg(letter.registrationNumber));
         }
       }
       const totalSoldLetters = uniqueSaleIds.size;
 
-      // Calculate unsold stock (Buys without Sells)
-      const unsoldList = (Array.isArray(buyLetters) ? buyLetters : []).filter(
-        (b) => {
-          if (!b || !b.registrationNumber) return false;
-          const reg = String(b.registrationNumber).trim().toLowerCase();
-          return !soldRegNos.has(reg);
-        },
-      );
+      // Deduplicate buy letters: keep only the latest version per original document.
+      // getBuyLetters is sorted createdAt desc, so the first entry per originalDocumentId
+      // is already the newest version.
+      const seenOriginals = new Set();
+      const deduplicatedBuyLetters = [];
+      for (const b of Array.isArray(buyLetters) ? buyLetters : []) {
+        if (!b) continue;
+        const originalId = String(b.originalDocumentId || b._id);
+        if (!seenOriginals.has(originalId)) {
+          seenOriginals.add(originalId);
+          deduplicatedBuyLetters.push(b);
+        }
+      }
+
+      const unsoldList = deduplicatedBuyLetters.filter((b) => {
+        if (!b.registrationNumber) return false;
+        const reg = normalizeReg(b.registrationNumber);
+        return !soldRegNos.has(reg);
+      });
       setUnsoldVehicles(unsoldList);
 
       const totalVehicles = Array.isArray(vehicles) ? vehicles.length : 0;
@@ -193,7 +204,6 @@ const AdminPage = () => {
         },
       ).length;
 
-      // Use the sell letters count for "Total Sold" instead of vehicle status
       const totalSold = totalSoldLetters;
 
       const now = new Date();
@@ -217,7 +227,6 @@ const AdminPage = () => {
         }
       }
 
-      // Process standalone PUC records
       const pucList = resPUC?.data || [];
       const normalizedPucList = Array.isArray(pucList)
         ? pucList
@@ -230,7 +239,6 @@ const AdminPage = () => {
         }
       }
 
-      // Process standalone Insurance records
       const insuranceList = resInsurance?.data || [];
       const normalizedInsuranceList = Array.isArray(insuranceList)
         ? insuranceList
@@ -256,7 +264,6 @@ const AdminPage = () => {
     } catch (e) {
       console.error("Error fetching vehicle stats", e);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchDashboardData = useCallback(async () => {
@@ -326,7 +333,6 @@ const AdminPage = () => {
       }
     } catch (error) {
       console.error("Error fetching incomplete letters:", error);
-      // Optionally set an error state to show in the UI
     } finally {
       setIncompleteLoading(false);
     }
@@ -349,7 +355,6 @@ const AdminPage = () => {
         params,
       });
 
-      // ensure dates are normalized on client
       const items = (response.data.data || []).map((row) => ({
         ...row,
         saleDate: row.saleDate || null,
@@ -358,7 +363,6 @@ const AdminPage = () => {
         month3: row.month3 || null,
       }));
 
-      // Filter out records before Dec 2025
       const cutoffDate = new Date("2025-12-01");
       const filteredItems = items.filter((row) => {
         if (!row.saleDate) return false;
@@ -377,7 +381,7 @@ const AdminPage = () => {
   useEffect(() => {
     if (user && activeMenu === "Dashboard") {
       fetchDashboardData();
-      // initial load with no search
+
       fetchFreeServicesData();
       fetchIncompleteLetters();
     }
@@ -389,7 +393,6 @@ const AdminPage = () => {
     fetchIncompleteLetters,
   ]);
 
-  // Debounce free services search and fetch from server
   useEffect(() => {
     if (!user || activeMenu !== "Dashboard") return;
 
@@ -416,7 +419,6 @@ const AdminPage = () => {
     return new Date(dateString).toLocaleDateString("en-IN", options);
   };
 
-  // Compute month-to-date revenue & expenses (robust to multiple monthlyData shapes)
   const monthTotals = useMemo(() => {
     const now = new Date();
     const monthIndex = now.getMonth();
@@ -583,15 +585,6 @@ const AdminPage = () => {
     navigate("/login");
   };
 
-  // Chart data removed - not currently used
-  // const monthlyChartData = { ... };
-  // const profitChartData = { ... };
-  // const transactionTypeData = { ... };
-
-  // Chart options removed - not currently used
-  // const chartOptions = { ... };
-  // const pieOptions = { ... };
-
   const DashboardCards = () => (
     <div className="cards-grid">
       {loading ? (
@@ -727,7 +720,7 @@ const AdminPage = () => {
 
   const DetailedStatsCards = () => (
     <div style={{ marginTop: "32px", marginBottom: "32px" }}>
-      {/* 1. Vehicle Counts */}
+      {}
       <h3
         style={{
           fontSize: "1.1rem",
@@ -809,7 +802,7 @@ const AdminPage = () => {
         </div>
       </div>
 
-      {/* 2. Free Service Counts */}
+      {}
       <h3
         style={{
           fontSize: "1.1rem",
@@ -856,7 +849,7 @@ const AdminPage = () => {
         </div>
       </div>
 
-      {/* 3. Expiry Counts */}
+      {}
       <h3
         style={{
           fontSize: "1.1rem",
@@ -902,8 +895,6 @@ const AdminPage = () => {
     </div>
   );
 
-  // RevenueCard component removed - not currently used
-
   const ChartsSection = () => {
     if (loading) {
       return (
@@ -938,10 +929,10 @@ const AdminPage = () => {
     const [usedFilter, setUsedFilter] = useState("all");
     const [sortBy, setSortBy] = useState(
       () => localStorage.getItem("sellDateSortBy") || "reminderScore",
-    ); // 'reminderScore' or 'saleDate'
+    );
     const [sortOrder, setSortOrder] = useState(
       () => localStorage.getItem("sellDateSortOrder") || "asc",
-    ); // 'asc' or 'desc'
+    );
 
     useEffect(() => {
       localStorage.setItem("sellDateSortBy", sortBy);
@@ -961,7 +952,6 @@ const AdminPage = () => {
         )
       : freeServices;
 
-    // prepare processed rows with reminder info and sort by urgency
     const processed = filtered.map((row) => {
       const months = [
         row.month1 || null,
@@ -994,7 +984,6 @@ const AdminPage = () => {
         return { ...p, daysUntil };
       });
 
-      // pick next pending: sort pendingWithDays ascending (overdue negatives first)
       pendingWithDays.sort((a, b) => a.daysUntil - b.daysUntil);
 
       const nextPending =
@@ -1266,7 +1255,7 @@ const AdminPage = () => {
 
     return (
       <div style={fsCardStyle}>
-        {/* Header */}
+        {}
         <div
           style={{
             display: "flex",
@@ -1489,7 +1478,6 @@ const AdminPage = () => {
 
           const BASE = "https://ok-motor-backend.vercel.app";
 
-          // Use cached sell letters if available to avoid duplicate heavy requests
           let pucRecords = [];
           let sellLetters = [];
           let buyLetters = [];
@@ -1511,7 +1499,6 @@ const AdminPage = () => {
                 : resBuy.data?.buyLetters || [];
             }
           } else {
-            // Fetch PUC model records AND sell letters in parallel
             const [resPUC, resSell, resBuy] = await Promise.all([
               axios.get(`${BASE}/api/puc?limit=2000`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -1537,14 +1524,12 @@ const AdminPage = () => {
               : resBuy.data?.buyLetters || [];
           }
 
-          // Build map: regNo -> master PUC record to find the real ID
           const masterPucMap = new Map();
           pucRecords.forEach((p) => {
             const key = (p.regNo || p.vehicleRegNo || "").trim().toLowerCase();
             if (key) masterPucMap.set(key, p);
           });
 
-          // Build map: regNo -> sell letter (only those with pucExpiryDate)
           const sellByReg = new Map();
           sellLetters.forEach((s) => {
             if (!s.pucExpiryDate) return;
@@ -1552,7 +1537,6 @@ const AdminPage = () => {
             if (key) sellByReg.set(key, s);
           });
 
-          // Rows from sell letters that have a PUC expiry date → "Sold Vehicle"
           const sellRows = [];
           sellByReg.forEach((s, key) => {
             const masterPuc = masterPucMap.get(key);
@@ -1571,7 +1555,6 @@ const AdminPage = () => {
             });
           });
 
-          // Build set of reg nos already covered by sell letters
           const soldRegNos = new Set(sellByReg.keys());
           const buyRegNos = new Set(
             (buyLetters || [])
@@ -1579,7 +1562,6 @@ const AdminPage = () => {
               .filter(Boolean),
           );
 
-          // PUC model records NOT in sell letters → "PUC Only"
           const pucOnlyRows = pucRecords
             .filter((p) => {
               if (!p || !p.pucExpiry) return false;
@@ -1618,7 +1600,6 @@ const AdminPage = () => {
     );
 
     useEffect(() => {
-      // Pass  cached sell letters (if any) to the fetcher so it can reuse them.
       fetchPucData(
         sellLettersState && sellLettersState.length > 0
           ? sellLettersState
@@ -1634,7 +1615,6 @@ const AdminPage = () => {
       .toLowerCase()
       .trim();
 
-    // Filter items for search and for expiry within next 7 days or already expired
     const processed = (items || [])
       .map((row) => {
         const expiry = row.displayExpiry ? new Date(row.displayExpiry) : null;
@@ -1643,7 +1623,6 @@ const AdminPage = () => {
       })
       .filter((it) => it.expiry !== null)
       .filter((it) => {
-        // Show everything, but apply search if q exists
         if (!q) return true;
 
         const r = it.row || {};
@@ -2076,7 +2055,6 @@ const AdminPage = () => {
 
           const BASE = "https://ok-motor-backend.vercel.app";
 
-          // Use cached sell letters if available to avoid duplicate heavy requests
           let insuranceRecords = [];
           let sellLetters = [];
           let buyLetters = [];
@@ -2101,7 +2079,6 @@ const AdminPage = () => {
                 : resBuy.data?.buyLetters || [];
             }
           } else {
-            // Fetch Insurance model records AND sell letters in parallel
             const [resInsurance, resSell, resBuy] = await Promise.all([
               axios.get(`${BASE}/api/insurance?limit=2000`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -2127,14 +2104,12 @@ const AdminPage = () => {
               : resBuy.data?.buyLetters || [];
           }
 
-          // Build map: regNo -> master Insurance record to find the real ID
           const masterInsuranceMap = new Map();
           insuranceRecords.forEach((p) => {
             const key = (p.regNo || p.vehicleRegNo || "").trim().toLowerCase();
             if (key) masterInsuranceMap.set(key, p);
           });
 
-          // Build map: regNo -> sell letter (only those with insuranceExpiryDate)
           const sellByReg = new Map();
           sellLetters.forEach((s) => {
             if (!s.insuranceExpiryDate) return;
@@ -2142,7 +2117,6 @@ const AdminPage = () => {
             if (key) sellByReg.set(key, s);
           });
 
-          // Rows from sell letters that have an insurance expiry date → "Sold Vehicle"
           const sellRows = [];
           sellByReg.forEach((s, key) => {
             const masterIns = masterInsuranceMap.get(key);
@@ -2162,7 +2136,6 @@ const AdminPage = () => {
             });
           });
 
-          // Build set of reg nos already covered by sell letters
           const soldRegNos = new Set(sellByReg.keys());
           const buyRegNos = new Set(
             (buyLetters || [])
@@ -2170,7 +2143,6 @@ const AdminPage = () => {
               .filter(Boolean),
           );
 
-          // Insurance model records NOT in sell letters → "Insurance Only"
           const insuranceOnlyRows = insuranceRecords
             .filter((s) => {
               if (!s || !s.insuranceExpiry) return false;
@@ -2233,7 +2205,6 @@ const AdminPage = () => {
       })
       .filter((it) => it.expiry !== null)
       .filter((it) => {
-        // Show everything, but apply search if q exists
         if (!q) return true;
 
         const r = it.row || {};
@@ -3443,9 +3414,6 @@ const AdminPage = () => {
       </div>
     );
   };
-
-  // NOTE: removed automatic refocus when modal closes to avoid reopen loop
-  // (closing modal previously focused the search input which re-opened the modal)
 
   return (
     <div className="admin-container">

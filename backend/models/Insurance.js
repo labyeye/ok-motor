@@ -3,9 +3,9 @@ const mongoose = require("mongoose");
 const InsuranceSchema = new mongoose.Schema(
   {
     personName: { type: String, required: true },
-    personPhone: { type: String }, // Phone number
-    personAlternateNo: { type: String }, // Alternate phone number
-    personEmail: { type: String }, // Email address
+    personPhone: { type: String },
+    personAlternateNo: { type: String },
+    personEmail: { type: String },
     sourceType: {
       type: String,
       enum: ["manual", "buy-letter", "sell-letter"],
@@ -14,9 +14,9 @@ const InsuranceSchema = new mongoose.Schema(
     vehicleModel: { type: String },
     brand: { type: String },
     year: { type: String },
-    // legacy field
+
     regNo: { type: String, required: true },
-    // canonical fields used by other modules
+
     vehicleRegNo: { type: String, index: true },
     insurancePolicyNo: { type: String },
     insurancePolicyNumber: { type: String },
@@ -41,7 +41,7 @@ const InsuranceSchema = new mongoose.Schema(
 
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Insurance", InsuranceSchema);

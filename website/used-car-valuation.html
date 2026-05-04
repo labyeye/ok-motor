@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -62,7 +62,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       crossorigin="anonymous"
     />
-    
+
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         var t = document.getElementById("mobileMenuBtn"),
@@ -119,7 +119,11 @@
     <div class="top-banner" id="topBanner" role="banner">
       <div class="top-banner-container">
         <div class="top-banner-left" id="topBannerMessage"></div>
-        <div class="top-banner-right" id="topBannerActions" aria-hidden="true"></div>
+        <div
+          class="top-banner-right"
+          id="topBannerActions"
+          aria-hidden="true"
+        ></div>
       </div>
     </div>
 
@@ -216,13 +220,19 @@
               role="menu"
               aria-label="Services submenu"
             >
-              <a class="dropdown-item" href="https://www.okmotors.in/tax-challan.html"
+              <a
+                class="dropdown-item"
+                href="https://www.okmotors.in/tax-challan.html"
                 >Traffic Challan</a
               >
-              <a class="dropdown-item" href="https://www.okmotors.in/insaurance.html"
+              <a
+                class="dropdown-item"
+                href="https://www.okmotors.in/insaurance.html"
                 >Insurance</a
               >
-              <a class="dropdown-item" href="https://www.okmotors.in/rto-services.html"
+              <a
+                class="dropdown-item"
+                href="https://www.okmotors.in/rto-services.html"
                 >RTO Services</a
               >
               <a class="dropdown-item" href="https://www.okmotors.in/puc.html"
@@ -280,37 +290,37 @@
         <div
           class="hero-slide active"
           style="
-            background-image: url('https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg');
+            background-image: url(&quot;https://m.media-amazon.com/images/I/71H3Wsh8rrL._AC_UF1000,1000_QL80_.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapercave.com/wp/wp12477050.jpg');
+            background-image: url(&quot;https://wallpapercave.com/wp/wp12477050.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://www.bmw-m.com/content/dam/bmw/marketBMW_M/www_bmw-m_com/topics/magazine-article-pool/2024/wallpaper/m-wallpaper/3-0-csl/bmw-3-0-csl-mi-05.jpg');
+            background-image: url(&quot;https://www.bmw-m.com/content/dam/bmw/marketBMW_M/www_bmw-m_com/topics/magazine-article-pool/2024/wallpaper/m-wallpaper/3-0-csl/bmw-3-0-csl-mi-05.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapers.com/images/hd/ktm-duke-390-front-angle-o247jx7vlg7ct83k.jpg');
+            background-image: url(&quot;https://wallpapers.com/images/hd/ktm-duke-390-front-angle-o247jx7vlg7ct83k.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://www.hdwallpapers.in/download/bmw_f30_widebody_car_4k_8k_hd_cars-1366x768.jpg');
+            background-image: url(&quot;https://www.hdwallpapers.in/download/bmw_f30_widebody_car_4k_8k_hd_cars-1366x768.jpg&quot;);
           "
         ></div>
         <div
           class="hero-slide"
           style="
-            background-image: url('https://wallpapers.com/images/hd/ktm-duke-pictures-zapyw35oajg0sraj.jpg');
+            background-image: url(&quot;https://wallpapers.com/images/hd/ktm-duke-pictures-zapyw35oajg0sraj.jpg&quot;);
           "
         ></div>
       </div>
@@ -726,15 +736,15 @@
 
           const priceFair = calculateValuation(
             { ...baseData, condition: "fair" },
-            "car"
+            "car",
           );
           const priceGood = calculateValuation(
             { ...baseData, condition: "good" },
-            "car"
+            "car",
           );
           const priceExcellent = calculateValuation(
             { ...baseData, condition: "excellent" },
-            "car"
+            "car",
           );
 
           const resultEl = document.getElementById("valuationResult");
@@ -742,18 +752,14 @@
 
           document.getElementById("resultTitle").textContent =
             titleText + " car";
-          document.getElementById(
-            "resultSubtitle"
-          ).textContent = `${year} model ${titleText}`;
-          document.getElementById(
-            "priceFair"
-          ).textContent = `Rs. ${priceFair.toLocaleString()}`;
-          document.getElementById(
-            "priceGood"
-          ).textContent = `Rs. ${priceGood.toLocaleString()}`;
-          document.getElementById(
-            "priceExcellent"
-          ).textContent = `Rs. ${priceExcellent.toLocaleString()}`;
+          document.getElementById("resultSubtitle").textContent =
+            `${year} model ${titleText}`;
+          document.getElementById("priceFair").textContent =
+            `Rs. ${priceFair.toLocaleString()}`;
+          document.getElementById("priceGood").textContent =
+            `Rs. ${priceGood.toLocaleString()}`;
+          document.getElementById("priceExcellent").textContent =
+            `Rs. ${priceExcellent.toLocaleString()}`;
 
           document.getElementById("sellVehicleName").textContent = titleText;
           document.getElementById("buyVehicleName").textContent = titleText;
@@ -765,7 +771,7 @@
       document.addEventListener("DOMContentLoaded", function () {
         document
           .querySelectorAll(
-            ".nav-dropdown .dropdown-toggle, .nav-dropdown .nav-link"
+            ".nav-dropdown .dropdown-toggle, .nav-dropdown .nav-link",
           )
           .forEach(function (btn) {
             btn.addEventListener("click", function (e) {
@@ -782,5 +788,3 @@
     <script src="./index.js"></script>
   </body>
 </html>
-
-

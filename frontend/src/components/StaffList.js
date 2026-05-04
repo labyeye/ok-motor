@@ -42,7 +42,6 @@ const StaffList = () => {
     setConfirmOpen(true);
   };
 
-  // Edit user (including password)
   const [editOpen, setEditOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -93,7 +92,7 @@ const StaffList = () => {
         role: editForm.role,
         status: editForm.status,
       };
-      // include password only if provided
+
       if (editForm.password && editForm.password.trim().length > 0) {
         payload.password = editForm.password;
       }
@@ -104,7 +103,6 @@ const StaffList = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      // update local list
       setStaff((prev) =>
         prev.map((u) =>
           u._id === editTarget._id ? { ...u, ...response.data } : u,
@@ -136,9 +134,12 @@ const StaffList = () => {
         return;
       }
 
-      await axios.delete(`https://ok-motor-backend.vercel.app/api/users/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(
+        `https://ok-motor-backend.vercel.app/api/users/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       setStaff((prev) => prev.filter((user) => user._id !== id));
     } catch (err) {
       if (err.response?.status === 401) {

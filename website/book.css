@@ -195,7 +195,6 @@
   overflow: hidden;
 }
 
-/* Form Container Styles */
 .book-form-container {
   flex: 1;
   min-width: 280px;
@@ -229,7 +228,7 @@
 }
 
 .book-form h3::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;
@@ -239,7 +238,6 @@
   border-radius: 2px;
 }
 
-/* Form Group Styles */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -306,7 +304,6 @@
   gap: 20px 24px;
 }
 
-/* Payment Methods */
 .payment-methods {
   display: flex;
   gap: 15px;
@@ -359,7 +356,6 @@
   font-weight: 500;
 }
 
-/* QR Code Section */
 .qr-code-container {
   text-align: center;
   margin: 15px 0;
@@ -384,7 +380,6 @@
   margin: 0;
 }
 
-/* Checkbox Styles */
 .checkbox-group {
   display: flex;
   align-items: flex-start;
@@ -414,7 +409,6 @@
   grid-column: 1 / -1;
 }
 
-/* Submit Button */
 .submit-btn {
   background: linear-gradient(90deg, #303e26, #4a5d3a);
   color: white;
@@ -445,7 +439,6 @@
   transform: none;
 }
 
-/* Image Upload */
 .image-upload-container {
   border: 2px dashed rgba(48, 62, 38, 0.2);
   border-radius: 8px;
@@ -497,7 +490,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Error Message Styles */
 .error-message {
   color: #d32f2f;
   font-size: 0.85rem;
@@ -511,7 +503,6 @@
   background-color: rgba(211, 47, 47, 0.05);
 }
 
-/* User Avatar */
 .user-avatar {
   width: 60px;
   height: 60px;
@@ -532,9 +523,6 @@
   font-weight: 600;
 }
 
-/* ===== RESPONSIVE DESIGN ===== */
-
-/* Tablet Breakpoint (768px and below) */
 @media (max-width: 768px) {
   .book-section {
     flex-direction: column;
@@ -600,7 +588,7 @@
   .form-group select,
   .form-group textarea {
     padding: 11px 12px;
-    font-size: 16px; /* Prevents zoom on mobile */
+    font-size: 16px;
   }
 
   .submit-btn {
@@ -627,7 +615,6 @@
   }
 }
 
-/* Mobile Breakpoint (480px and below) */
 @media (max-width: 480px) {
   .book-section {
     flex-direction: column;
@@ -777,7 +764,6 @@
   }
 }
 
-/* Extra Small Mobile (320px) */
 @media (max-width: 375px) {
   .book-section {
     padding: 0.75rem;
@@ -812,7 +798,6 @@
   }
 }
 
-/* Desktop Large Screens (1200px and above) */
 @media (min-width: 1200px) {
   .book-section {
     padding: 2.5rem;

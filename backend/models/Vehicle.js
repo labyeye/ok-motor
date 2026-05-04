@@ -178,7 +178,7 @@ const VehicleSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 VehicleSchema.index({ vehicleType: 1, availabilityStatus: 1 });

@@ -114,13 +114,11 @@ exports.uploadGalleryFiles = async (req, res) => {
     res.status(201).json({ success: true, images: savedImages });
   } catch (error) {
     console.error("Error uploading files to ImageKit:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to upload files",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Failed to upload files",
+      error: error.message,
+    });
   }
 };
 
@@ -244,7 +242,7 @@ exports.updateGalleryOrder = async (req, res) => {
     }
 
     const updatePromises = images.map(({ id, orderIndex }) =>
-      Gallery.findByIdAndUpdate(id, { orderIndex })
+      Gallery.findByIdAndUpdate(id, { orderIndex }),
     );
 
     await Promise.all(updatePromises);

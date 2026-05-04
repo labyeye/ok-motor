@@ -1,9 +1,3 @@
-// src/services/apiService.js
-/**
- * API Service - Unified API layer
- * Routes requests to online API or offline storage based on network status
- */
-
 import axios from "axios";
 import offlineStorage from "./offlineStorage";
 import networkService from "./networkService";
@@ -15,18 +9,12 @@ class ApiService {
       baseURL: this.baseURL,
     });
 
-    // Set up axios interceptors
     this.setupInterceptors();
 
-    // Set API URL for network health checks
     networkService.setApiUrl(`${this.baseURL}/api/health`);
   }
 
-  /**
-   * Setup axios interceptors for auth and error handling
-   */
   setupInterceptors() {
-    // Request interceptor
     this.axiosInstance.interceptors.request.use(
       (config) => {
         const token = localStorage.getItem("token");
@@ -40,11 +28,9 @@ class ApiService {
       },
     );
 
-    // Response interceptor
     this.axiosInstance.interceptors.response.use(
       (response) => response,
       (error) => {
-        // If network error and we're offline, don't throw
         if (
           !networkService.getStatus() &&
           (error.code === "ERR_NETWORK" ||
@@ -57,16 +43,10 @@ class ApiService {
     );
   }
 
-  /**
-   * Check if we should use offline mode
-   */
   shouldUseOffline() {
     return !networkService.getStatus();
   }
 
-  /**
-   * Generic request handler that routes to online or offline
-   */
   async request(method, endpoint, data = null, useOffline = null) {
     const offline = useOffline !== null ? useOffline : this.shouldUseOffline();
 
@@ -82,7 +62,6 @@ class ApiService {
       });
       return response.data;
     } catch (error) {
-      // If network error, fallback to offline
       if (error.code === "ERR_NETWORK" || !networkService.getStatus()) {
         console.log("Network error - falling back to offline mode");
         return this.handleOfflineRequest(method, endpoint, data);
@@ -91,11 +70,7 @@ class ApiService {
     }
   }
 
-  /**
-   * Handle offline requests
-   */
   async handleOfflineRequest(method, endpoint, data) {
-    // Parse endpoint to determine collection and action
     const parts = endpoint.split("/").filter((p) => p);
     const collection = this.getCollectionFromEndpoint(
       parts[parts.length - 1] || parts[0],
@@ -116,11 +91,7 @@ class ApiService {
     }
   }
 
-  /**
-   * Map endpoint to collection name
-   */
   getCollectionFromEndpoint(endpoint) {
-    // Support both plural and singular endpoint paths.
     const mapping = {
       "buy-letters": "buyLetters",
       "buy-letter": "buyLetters",
@@ -139,7 +110,6 @@ class ApiService {
       }
     }
 
-    // Fallback: if endpoint contains a known root like 'buy' or 'sell', map heuristically
     if (endpoint.includes("buy")) return "buyLetters";
     if (endpoint.includes("sell")) return "sellLetters";
     if (endpoint.includes("service")) return "serviceBills";
@@ -148,11 +118,7 @@ class ApiService {
     return endpoint;
   }
 
-  /**
-   * Handle offline GET request
-   */
   async handleOfflineGet(collection, endpoint) {
-    // Check if requesting by ID
     const idMatch = endpoint.match(/\/([a-f0-9]{24}|\w+)$/);
 
     if (idMatch) {
@@ -165,15 +131,11 @@ class ApiService {
         throw new Error("Document not found");
       }
     } else {
-      // Get all documents
       const result = await offlineStorage.find(collection);
       return { success: true, data: result.data || [] };
     }
   }
 
-  /**
-   * Handle offline POST request (create)
-   */
   async handleOfflinePost(collection, data) {
     const result = await offlineStorage.create(collection, data);
 
@@ -184,9 +146,6 @@ class ApiService {
     }
   }
 
-  /**
-   * Handle offline PUT/PATCH request (update)
-   */
   async handleOfflinePut(collection, endpoint, data) {
     const idMatch = endpoint.match(/\/([a-f0-9]{24}|\w+)$/);
 
@@ -204,9 +163,6 @@ class ApiService {
     }
   }
 
-  /**
-   * Handle offline DELETE request
-   */
   async handleOfflineDelete(collection, endpoint) {
     const idMatch = endpoint.match(/\/([a-f0-9]{24}|\w+)$/);
 
@@ -224,7 +180,6 @@ class ApiService {
     }
   }
 
-  // Convenience methods
   async get(endpoint) {
     return this.request("GET", endpoint);
   }

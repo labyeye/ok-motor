@@ -50,7 +50,6 @@ function initNavDropdownToggles() {
     const parent = anchor.closest && anchor.closest(".nav-dropdown");
     const isMobile = window.innerWidth <= 1024;
 
-    // Toggle dropdowns on mobile without leaving the page
     if (
       parent &&
       isMobile &&
@@ -62,7 +61,6 @@ function initNavDropdownToggles() {
       return;
     }
 
-    // Close menu after navigation on mobile
     if (isMobile) {
       nav.classList.remove("open", "mobile-active");
       document.body.style.overflow = "";
@@ -87,13 +85,11 @@ function initNavDropdownToggles() {
   });
 }
 
-// Store vehicle data globally
 let vehicleData = {
   bikes: null,
   cars: null,
 };
 
-// Load vehicle data from JSON files
 async function loadVehicleData() {
   try {
     const [bikesResponse, carsResponse] = await Promise.all([
@@ -112,12 +108,10 @@ async function loadVehicleData() {
   }
 }
 
-// Populate make dropdown based on vehicle type
 function populateMakeDropdown(vehicleType) {
   const makeFilter = document.getElementById("makeFilter");
   if (!makeFilter) return;
 
-  // Clear existing options except the first one
   makeFilter.innerHTML = '<option value="">Select Make</option>';
 
   const data = vehicleType === "bike" ? vehicleData.bikes : vehicleData.cars;
@@ -132,18 +126,15 @@ function populateMakeDropdown(vehicleType) {
   });
 }
 
-// Populate body dropdown based on vehicle type
 function populateBodyDropdown(vehicleType) {
   const bodyFilter = document.getElementById("bodyFilter");
   if (!bodyFilter) return;
 
-  // Clear existing options except the first one
   bodyFilter.innerHTML = '<option value="">Any Body</option>';
 
   const data = vehicleType === "bike" ? vehicleData.bikes : vehicleData.cars;
   if (!data || !data.brands) return;
 
-  // Collect unique body types
   const bodyTypes = new Set();
   data.brands.forEach((brand) => {
     if (brand.bodyTypes) {
@@ -151,7 +142,6 @@ function populateBodyDropdown(vehicleType) {
     }
   });
 
-  // Add options
   Array.from(bodyTypes)
     .sort()
     .forEach((type) => {
@@ -163,12 +153,10 @@ function populateBodyDropdown(vehicleType) {
     });
 }
 
-// Populate model dropdown based on selected make
 function populateModelDropdown(make, vehicleType) {
   const modelFilter = document.getElementById("modelFilter");
   if (!modelFilter) return;
 
-  // Clear existing options
   modelFilter.innerHTML = '<option value="">Select Model</option>';
 
   if (!make) return;
@@ -207,12 +195,10 @@ function initCategoryTabs() {
       const tab = this.getAttribute("data-tab");
       console.log("Selected tab:", tab);
 
-      // Update dropdowns based on selected tab
       updateFilters(tab);
     });
   });
 
-  // Listen for make selection to populate models
   if (makeFilter) {
     makeFilter.addEventListener("change", function () {
       const activeTab = document.querySelector(".tab-btn.active");
@@ -223,7 +209,6 @@ function initCategoryTabs() {
     });
   }
 
-  // Initialize filters for the default active tab
   const activeTab = document.querySelector(".tab-btn.active");
   if (activeTab) {
     const initialTab = activeTab.getAttribute("data-tab");
@@ -242,7 +227,6 @@ function initFilterSearch() {
     searchBtn.addEventListener("click", (e) => {
       e.preventDefault();
 
-      // Get active tab to determine vehicle type
       const activeTab = document.querySelector(".tab-btn.active");
       const vehicleType = activeTab
         ? activeTab.getAttribute("data-tab")
@@ -257,17 +241,14 @@ function initFilterSearch() {
 
       const params = new URLSearchParams();
 
-      // Add vehicle type
       if (vehicleType) {
         params.append("type", vehicleType);
       }
 
-      // Add filters based on direct selection
       if (make) params.append("brand", make);
       if (model) params.append("model", model);
       if (body) params.append("body", body);
 
-      // Handle keyword search - check if it matches any make, model, or keyword
       if (keyword) {
         const data =
           vehicleType === "bike" ? vehicleData.bikes : vehicleData.cars;
@@ -275,16 +256,13 @@ function initFilterSearch() {
         if (data && data.brands) {
           let matchFound = false;
 
-          // Search through brands
           for (const brand of data.brands) {
-            // Check if keyword matches make
             if (brand.make.toLowerCase().includes(keyword)) {
               if (!make) params.set("brand", brand.make);
               matchFound = true;
               break;
             }
 
-            // Check if keyword matches any model
             if (brand.models) {
               const matchingModel = brand.models.find((m) =>
                 m.toLowerCase().includes(keyword),
@@ -297,7 +275,6 @@ function initFilterSearch() {
               }
             }
 
-            // Check if keyword matches any brand keywords
             if (brand.keywords) {
               const keywordMatch = brand.keywords.some(
                 (k) =>
@@ -313,16 +290,13 @@ function initFilterSearch() {
           }
         }
 
-        // Always add the keyword to general search
         params.append("q", keyword);
       }
 
-      // Redirect to inventory page with filters
       window.location.href = `inventory.html?${params.toString()}`;
     });
   }
 
-  // Allow Enter key to trigger search in keyword field
   if (keywordFilter) {
     keywordFilter.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
@@ -334,7 +308,6 @@ function initFilterSearch() {
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
-  // Load vehicle data first
   await loadVehicleData();
 
   initStickyHeader();
@@ -442,22 +415,19 @@ function initPreconnect() {
   });
 }
 
-// Initialize backgrounds for cards that have data-bg attribute
 function initServiceCardBackgrounds() {
   try {
     const cards = document.querySelectorAll(".service-card[data-bg]");
     cards.forEach((card) => {
       const src = card.getAttribute("data-bg");
       if (!src) return;
-      // Apply background
+
       card.style.backgroundImage = `url('${src}')`;
       card.classList.add("bg-cover");
-      // If developer wants no overlay, they can add class `no-overlay`
-      // Lazy-load background by creating an Image object
+
       const img = new window.Image();
       img.src = src;
       img.onload = () => {
-        // fade-in effect
         card.style.transition =
           "background-image 200ms ease, opacity 220ms ease";
         card.style.opacity = "1";
@@ -565,7 +535,6 @@ function escapeHtml(text) {
 }
 
 function fetchFeaturedVehicles(vehicleType, sliderEl) {
-  // Load from backend API instead of JSON files
   const API_BASE = "https://ok-motor-backend.vercel.app";
 
   fetch(
@@ -584,7 +553,6 @@ function fetchFeaturedVehicles(vehicleType, sliderEl) {
         return;
       }
 
-      // Map vehicles to the expected format
       const formattedVehicles = vehicles.map((v) => ({
         _id: v._id,
         brand: v.vehicleName || "",
@@ -630,13 +598,11 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
     const card = document.createElement("div");
     card.className = "bike-card";
 
-    // Choose image
     const imageUrl =
       (vehicle.primaryImage && vehicle.primaryImage.url) ||
       (vehicle.images && vehicle.images.length && vehicle.images[0]) ||
       "https://via.placeholder.com/400x300/cccccc/666666?text=No+Image";
 
-    // Photo count
     const photos = vehicle.images ? vehicle.images.length : 0;
 
     const statusBadge =
@@ -718,7 +684,6 @@ function displayFeaturedVehicles(items, sliderEl, vehicleType) {
 
     sliderEl.appendChild(card);
 
-    // Add event listeners
     const contactBtn = card.querySelector(".contact-btn");
     const detailsBtn = card.querySelector(".view-details-btn");
 
@@ -814,7 +779,6 @@ function formatOwnership(owner) {
 }
 
 function initModals() {
-  // All modals have been removed - direct links are used instead
   return;
 }
 
@@ -1003,10 +967,9 @@ function attachStyleCarouselResizeHandler() {
 }
 
 function init() {
-  // initLanguage(); // Removed - function doesn't exist
   initHeroSlider();
   initMobileMenu();
-  // updateMobileMenuTranslations(); // Removed - function doesn't exist
+
   initLazyLoading();
   initPreconnect();
   initFeaturedSliders();
@@ -1024,9 +987,6 @@ function init() {
 
 document.addEventListener("DOMContentLoaded", init);
 
-/* ===========================
-   Phase 2: Price Range Filter
-   =========================== */
 function initPriceRangeFilter() {
   const minPriceInput = document.getElementById("minPrice");
   const maxPriceInput = document.getElementById("maxPrice");
@@ -1037,7 +997,6 @@ function initPriceRangeFilter() {
   if (!minPriceInput || !maxPriceInput || !minPriceSlider || !maxPriceSlider)
     return;
 
-  // Sync inputs with sliders
   minPriceInput.addEventListener("input", (e) => {
     const value = parseInt(e.target.value) || 0;
     minPriceSlider.value = value;
@@ -1070,7 +1029,6 @@ function initPriceRangeFilter() {
     updatePriceRange();
   });
 
-  // Quick filter buttons
   quickBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       quickBtns.forEach((b) => b.classList.remove("active"));
@@ -1094,9 +1052,6 @@ function initPriceRangeFilter() {
   }
 }
 
-/* ===========================
-   Phase 2: Smart Search Features
-   =========================== */
 function initSmartSearch() {
   const keywordInput = document.getElementById("keywordFilter");
   const recentSearchesDiv = document.getElementById("recentSearches");
@@ -1106,12 +1061,10 @@ function initSmartSearch() {
 
   if (!keywordInput) return;
 
-  // Load recent searches from localStorage
   let recentSearches = JSON.parse(
     localStorage.getItem("recentSearches") || "[]",
   );
 
-  // Show recent searches on focus
   keywordInput.addEventListener("focus", () => {
     if (recentSearches.length > 0) {
       displayRecentSearches();
@@ -1119,21 +1072,18 @@ function initSmartSearch() {
     }
   });
 
-  // Hide on blur (with delay for click events)
   keywordInput.addEventListener("blur", () => {
     setTimeout(() => {
       recentSearchesDiv.style.display = "none";
     }, 200);
   });
 
-  // Save search on Enter
   keywordInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter" && keywordInput.value.trim()) {
       saveRecentSearch(keywordInput.value.trim());
     }
   });
 
-  // Clear recent searches
   if (clearSearchesBtn) {
     clearSearchesBtn.addEventListener("click", () => {
       recentSearches = [];
@@ -1142,7 +1092,6 @@ function initSmartSearch() {
     });
   }
 
-  // Popular search tags
   popularTags.forEach((tag) => {
     tag.addEventListener("click", () => {
       const keyword = tag.dataset.keyword;
@@ -1153,11 +1102,10 @@ function initSmartSearch() {
   });
 
   function saveRecentSearch(search) {
-    // Remove if already exists
     recentSearches = recentSearches.filter((s) => s !== search);
-    // Add to beginning
+
     recentSearches.unshift(search);
-    // Keep only last 5
+
     recentSearches = recentSearches.slice(0, 5);
     localStorage.setItem("recentSearches", JSON.stringify(recentSearches));
   }
@@ -1176,9 +1124,6 @@ function initSmartSearch() {
   }
 }
 
-/* ===========================
-   Phase 2: Active Filters & Persistence
-   =========================== */
 function initFilterPersistence() {
   const filterElements = {
     type: document.querySelector(".tab-btn.active"),
@@ -1190,10 +1135,8 @@ function initFilterPersistence() {
     maxPrice: document.getElementById("maxPrice"),
   };
 
-  // Load saved filters on page load
   loadSavedFilters();
 
-  // Save filters on change
   Object.values(filterElements).forEach((el) => {
     if (el) {
       el.addEventListener("change", () => {
@@ -1207,7 +1150,6 @@ function initFilterPersistence() {
     }
   });
 
-  // Tab buttons
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       saveFilters();
@@ -1270,7 +1212,6 @@ function updateActiveFilters() {
 
   const filters = [];
 
-  // Check each filter
   const make = document.getElementById("makeFilter")?.value;
   const model = document.getElementById("modelFilter")?.value;
   const body = document.getElementById("bodyFilter")?.value;
@@ -1351,7 +1292,6 @@ function formatPrice(price) {
   return num.toString();
 }
 
-// Clear all filters button
 document.addEventListener("DOMContentLoaded", () => {
   const clearAllBtn = document.getElementById("clearAllFilters");
   if (clearAllBtn) {
@@ -1373,9 +1313,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-/* ===========================
-   Phase 3: Finance Calculator
-   =========================== */
 function initFinanceCalculator() {
   const loanAmount = document.getElementById("loanAmount");
   const loanAmountSlider = document.getElementById("loanAmountSlider");
@@ -1389,7 +1326,6 @@ function initFinanceCalculator() {
 
   let selectedTenure = 12;
 
-  // Sync inputs with sliders
   loanAmount.addEventListener("input", (e) => {
     loanAmountSlider.value = e.target.value;
     calculateEMI();
@@ -1420,7 +1356,6 @@ function initFinanceCalculator() {
     calculateEMI();
   });
 
-  // Tenure buttons
   tenureBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       tenureBtns.forEach((b) => b.classList.remove("active"));
@@ -1438,7 +1373,6 @@ function initFinanceCalculator() {
 
     if (principal <= 0 || rate <= 0 || months <= 0) return;
 
-    // EMI = [P x R x (1+R)^N]/[(1+R)^N-1]
     const emi =
       (principal * rate * Math.pow(1 + rate, months)) /
       (Math.pow(1 + rate, months) - 1);
@@ -1465,9 +1399,6 @@ function openFinanceModal() {
   }
 }
 
-/* ===========================
-   Phase 3: Vehicle Comparison Tool
-   =========================== */
 function initVehicleComparison() {
   let comparisonList = [];
   const comparisonBar = document.getElementById("comparisonBar");
@@ -1477,7 +1408,6 @@ function initVehicleComparison() {
 
   if (!comparisonBar) return;
 
-  // Add comparison checkboxes to vehicle cards (if they exist)
   document.querySelectorAll(".vehicle-card, .bike-card").forEach((card) => {
     if (!card.querySelector(".compare-checkbox")) {
       const checkbox = document.createElement("input");
@@ -1584,11 +1514,7 @@ function initVehicleComparison() {
   }
 }
 
-/* ===========================
-   Phase 3: Enhanced Forms
-   =========================== */
 function initEnhancedForms() {
-  // Finance Form
   const financeForm = document.getElementById("financeForm");
   if (financeForm) {
     financeForm.addEventListener("submit", (e) => {
@@ -1596,7 +1522,6 @@ function initEnhancedForms() {
       const formData = new FormData(financeForm);
       const data = Object.fromEntries(formData);
 
-      // Here you would send to your API
       console.log("Finance Application:", data);
 
       document.getElementById("financeSuccess").style.display = "flex";
@@ -1608,10 +1533,8 @@ function initEnhancedForms() {
     });
   }
 
-  // Test Drive Form
   const testDriveForm = document.getElementById("testDriveForm");
   if (testDriveForm) {
-    // Set minimum date to today
     const dateInput = document.getElementById("testDriveDate");
     if (dateInput) {
       const today = new Date().toISOString().split("T")[0];
@@ -1623,7 +1546,6 @@ function initEnhancedForms() {
       const formData = new FormData(testDriveForm);
       const data = Object.fromEntries(formData);
 
-      // Here you would send to your API
       console.log("Test Drive Booking:", data);
 
       document.getElementById("testDriveSuccess").style.display = "flex";
@@ -1635,14 +1557,12 @@ function initEnhancedForms() {
     });
   }
 
-  // Add modal close functionality
   document.querySelectorAll(".modal .close").forEach((closeBtn) => {
     closeBtn.addEventListener("click", function () {
       this.closest(".modal").style.display = "none";
     });
   });
 
-  // Close modal when clicking outside
   window.addEventListener("click", (e) => {
     if (e.target.classList.contains("modal")) {
       e.target.style.display = "none";
@@ -1650,7 +1570,6 @@ function initEnhancedForms() {
   });
 }
 
-// Global function to open test drive modal
 window.openTestDriveModal = function () {
   const modal = document.getElementById("testDriveModal");
   if (modal) {
@@ -1658,7 +1577,6 @@ window.openTestDriveModal = function () {
   }
 };
 
-// Scroll animation for service cards
 function initScrollAnimations() {
   const serviceCards = document.querySelectorAll(
     ".services-grid .service-card",
@@ -1686,11 +1604,8 @@ function initScrollAnimations() {
   });
 }
 
-// Initialize scroll animations when DOM is ready
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initScrollAnimations);
 } else {
   initScrollAnimations();
 }
-
-// Top banner announcement is handled by shared top-banner.js across pages

@@ -294,7 +294,7 @@ const AdvanceHistory = () => {
       const val = Number(bill.grandTotal || bill.total || 0);
       if (isNaN(val)) return false;
       const v = Number(toFilter.value);
-      // require value for non-range ops; for between allow one-sided
+
       if (toFilter.op !== "between" && isNaN(v)) return false;
       if (toFilter.op === "eq" && val !== v) return false;
       if (toFilter.op === "gt" && val <= v) return false;
@@ -321,7 +321,7 @@ const AdvanceHistory = () => {
       const val = Number(bill.advancePaid || 0);
       if (isNaN(val)) return false;
       const v = Number(advFilter.value);
-      // require value for non-range ops; for between allow one-sided
+
       if (advFilter.op !== "between" && isNaN(v)) return false;
       if (advFilter.op === "eq" && val !== v) return false;
       if (advFilter.op === "gt" && val <= v) return false;
@@ -348,7 +348,7 @@ const AdvanceHistory = () => {
       const val = Number(bill.balanceDue || 0);
       if (isNaN(val)) return false;
       const v = Number(balFilter.value);
-      // require value for non-range ops; for between allow one-sided
+
       if (balFilter.op !== "between" && isNaN(v)) return false;
       if (balFilter.op === "eq" && val !== v) return false;
       if (balFilter.op === "gt" && val <= v) return false;
@@ -377,7 +377,7 @@ const AdvanceHistory = () => {
       const d = new Date(dStr);
       if (isNaN(d.getTime())) return false;
       const v = new Date(dFilter.value);
-      // require value for non-range ops; for between allow one-sided
+
       if (dFilter.op !== "between" && isNaN(v.getTime())) return false;
       if (dFilter.op === "eq" && d.toDateString() !== v.toDateString())
         return false;
@@ -430,10 +430,8 @@ const AdvanceHistory = () => {
         return;
       }
 
-      // Generate PDF client-side (offline/online) using pdfService
       const result = await pdfService.generateAdvanceBillPDF(bill);
       if (result.success && result.blob) {
-        // If the PDF was already saved by fileSaveService (electron or browser fallback), skip creating another download link
         if (!result.saved) {
           const url = window.URL.createObjectURL(result.blob);
           const link = document.createElement("a");
@@ -551,7 +549,6 @@ const AdvanceHistory = () => {
         return;
       }
 
-      // Generate PDF client-side (offline/online) using pdfService (previewOnly=true)
       const result = await pdfService.generateAdvanceBillPDF(bill, true);
 
       if (result.success && result.blob) {
@@ -696,7 +693,7 @@ const AdvanceHistory = () => {
             </div>
           ) : (
             <>
-              {/* Desktop Table */}
+              {}
               {!isMobile && (
                 <div style={styles.tableContainer}>
                   <table style={styles.table}>
@@ -871,7 +868,7 @@ const AdvanceHistory = () => {
                 </div>
               )}
 
-              {/* Mobile Cards */}
+              {}
               {isMobile && (
                 <div
                   style={{

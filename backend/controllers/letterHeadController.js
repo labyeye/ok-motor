@@ -1,9 +1,6 @@
 const LetterHead = require("../models/LetterHead");
 const asyncHandler = require("express-async-handler");
 
-// @desc    Create a new letter head
-// @route   POST /api/letter-heads
-// @access  Private
 const createLetterHead = asyncHandler(async (req, res) => {
   const { date, to, subject, message } = req.body;
 
@@ -31,9 +28,6 @@ const createLetterHead = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Get all letter heads
-// @route   GET /api/letter-heads
-// @access  Private
 const getLetterHeads = asyncHandler(async (req, res) => {
   const pageSize = 20;
   const page = Number(req.query.pageNumber) || 1;
@@ -54,13 +48,10 @@ const getLetterHeads = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get letter head by ID
-// @route   GET /api/letter-heads/:id
-// @access  Private
 const getLetterHeadById = asyncHandler(async (req, res) => {
   const letterHead = await LetterHead.findById(req.params.id).populate(
     "user",
-    "name email"
+    "name email",
   );
 
   if (letterHead) {
@@ -74,9 +65,6 @@ const getLetterHeadById = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Update letter head
-// @route   PUT /api/letter-heads/:id
-// @access  Private
 const updateLetterHead = asyncHandler(async (req, res) => {
   const letterHead = await LetterHead.findById(req.params.id);
 
@@ -97,9 +85,6 @@ const updateLetterHead = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Delete letter head
-// @route   DELETE /api/letter-heads/:id
-// @access  Private
 const deleteLetterHead = asyncHandler(async (req, res) => {
   const letterHead = await LetterHead.findById(req.params.id);
 

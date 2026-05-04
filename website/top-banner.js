@@ -12,7 +12,6 @@
   }
 
   function renderMessage(banner, message) {
-    // Build marquee content, repeated 3 times
     var wrap = document.createElement("div");
     wrap.className = "marquee-wrap";
     var content = document.createElement("div");

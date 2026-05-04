@@ -17,7 +17,7 @@ if (IMAGEKIT_PUBLIC_KEY && IMAGEKIT_PRIVATE_KEY && IMAGEKIT_URL_ENDPOINT) {
   }
 } else {
   console.warn(
-    "ImageKit not configured - missing IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY or IMAGEKIT_URL_ENDPOINT"
+    "ImageKit not configured - missing IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY or IMAGEKIT_URL_ENDPOINT",
   );
 }
 
@@ -112,7 +112,7 @@ exports.getVehicles = async (req, res) => {
     if (req.query.registrationNumber) {
       conditions.registrationNumber = new RegExp(
         req.query.registrationNumber,
-        "i"
+        "i",
       );
     }
 
@@ -156,7 +156,7 @@ exports.getVehicleById = async (req, res) => {
   try {
     const vehicle = await Vehicle.findById(req.params.id).populate(
       "user",
-      "name email role"
+      "name email role",
     );
 
     if (!vehicle) {
@@ -341,7 +341,7 @@ exports.deleteVehicleImage = async (req, res) => {
     }
 
     const imageIndex = vehicle.images.findIndex(
-      (img) => img.fileId === req.params.fileId
+      (img) => img.fileId === req.params.fileId,
     );
 
     if (imageIndex === -1) {

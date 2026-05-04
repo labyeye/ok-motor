@@ -208,7 +208,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const logoImageBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
       const logoImage = await pdfDoc.embedPng(logoImageBytes);
 
-      // Draw header background
+      
       page.drawRectangle({
         x: 0,
         y: 780,
@@ -217,7 +217,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         color: rgb(0.047, 0.098, 0.196),
       });
 
-      // Draw logo
+      
       page.drawImage(logoImage, {
         x: 50,
         y: 740,
@@ -225,7 +225,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         height: 130,
       });
 
-      // Draw company info
+      
       page.drawText("UDAYAM-BR-26-0028550", {
         x: 330,
         y: 815,
@@ -242,7 +242,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         font: headerFont,
       });
 
-      // Draw footer
+      
       page.drawLine({
         start: { x: 20, y: 52 },
         end: { x: 575, y: 52 },
@@ -409,7 +409,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const topStart = 700;
 
       if (items.length === 2) {
-        // Two columns
+        
         const colWidth = (pageWidth - 3 * margin) / 2;
         for (let i = 0; i < 2; i++) {
           const item = items[i];
@@ -449,7 +449,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
           }
         }
       } else {
-        // Single item
+        
         const item = items[0];
         page.drawText(item.title, { x: margin, y: topStart, size: 12, font });
         const asset = await embedAssetFromUrl(pdfDoc, item.url);
@@ -636,7 +636,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
     buyerAddress: { x: 123 - 16, y: 599, size: 11 },
     buyerName1: { x: 120 - 16, y: 517, size: 11 },
     buyerName2: { x: 286 - 16, y: 482, size: 11 },
-    saleDate: { x: 120, y: 578, size: 11 }, // Updated
+    saleDate: { x: 120, y: 578, size: 11 }, 
     saleTime: { x: 181 - 16, y: 578, size: 11 },
     saleAmount: { x: 285 - 16, y: 578, size: 11 },
     todayDate: { x: 156 - 16, y: 557, size: 11 },
@@ -692,7 +692,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         note: letter.note || "",
       };
 
-      // Add header/footer to pages after the first (leave first page as the letter)
+      
       try {
         const pages = pdfDoc.getPages();
         if (pages.length > 1) {
@@ -784,7 +784,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
-      // Add document pages
+      
       await addDocumentPages(pdfDoc, letter.documents);
 
       const pdfBytes = await pdfDoc.save();
@@ -875,7 +875,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoiceForSell(invoicePage, pdfDoc, letter);
 
-      // Add document pages
+      
       await addDocumentPages(pdfDoc, letter.documents);
 
       const pdfBytes = await pdfDoc.save();
@@ -1738,7 +1738,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         axios.get(
           `https://ok-motor-backend.vercel.app/api/advance-bills/by-registration?registrationNumber=${searchTerm}`,
         ),
-        // insurance and puc endpoints return single records (or 404) when queried by vehicle
+        
         axios
           .get(
             `https://ok-motor-backend.vercel.app/api/insurance/vehicle/${encodeURIComponent(searchTerm)}`,
@@ -1806,7 +1806,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const processLetterData = (data, type) => {
         if (!data || data.length === 0) return [];
 
-        // 1. Group records by registration number and date part
+        
         const groups = {};
         data.forEach((item) => {
           const dateKey = item.saleDate
@@ -1820,7 +1820,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         const processed = [];
 
         Object.values(groups).forEach((group) => {
-          // Sort chronologically (oldest version first)
+          
           group.sort(
             (a, b) =>
               new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
@@ -1828,7 +1828,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
           const baseItem = group[0];
 
-          // Get the properly merged Sale Date and Sale Time
+          
           const actualSaleTimestamp = new Date(
             `${baseItem.saleDate.split("T")[0]}T${baseItem.saleTime}:00`,
           ).getTime();
@@ -1837,12 +1837,12 @@ const BikeHistory = ({ externalSearchTerm }) => {
             : 0;
           const creationTimestamp = actualSaleTimestamp || fallbackTimestamp;
 
-          // A) ALWAYS CREATE EXACTLY ONE "CREATED" ROW WITH PROPER TIME
+          
           processed.push({
             ...baseItem,
             type: type,
             date: creationTimestamp,
-            createdAt: creationTimestamp, // Bypass your `isEditedActionItem` check
+            createdAt: creationTimestamp, 
             saleDate: creationTimestamp,
             changeHistory: [],
             previousVersionId: null,
@@ -1850,15 +1850,15 @@ const BikeHistory = ({ externalSearchTerm }) => {
             _id: `${baseItem._id}-created-base`,
           });
 
-          // B) RENDER EVERY SINGLE EDIT ROW INDEPENDENTLY
+          
           group.forEach((doc, index) => {
-            // Check if this specific document has edit flags or is a subsequent version
+            
             const isEdit =
               doc.previousVersionId ||
               (Array.isArray(doc.changeHistory) &&
                 doc.changeHistory.length > 0) ||
               doc.editedAt ||
-              index > 0; // If index > 0, it's definitely an edit of the base
+              index > 0; 
 
             if (isEdit) {
               const editTimestamp = doc.editedAt
@@ -1871,7 +1871,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                 ...doc,
                 type: type,
                 date: editTimestamp,
-                editedAt: editTimestamp, // Forces UI to show as "Edited"
+                editedAt: editTimestamp, 
                 _id: `${doc._id}-edit-version-${index}`,
               });
             }
@@ -1883,7 +1883,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
       const processedBuyData = processLetterData(buyData, "buy");
       const processedSellData = processLetterData(sellData, "sell");
-      // --- END OF NEW FLAWLESS LOGIC ---
+      
 
       const combinedData = [
         ...processedBuyData,
@@ -1910,22 +1910,22 @@ const BikeHistory = ({ externalSearchTerm }) => {
         })),
       ];
 
-      // If no data at all, show empty state
+      
       if (combinedData.length === 0) {
         setBikeHistory([]);
         return;
       }
 
-      // If no data at all, show empty state
+      
       if (combinedData.length === 0) {
         setBikeHistory([]);
         return;
       }
 
-      // Add insurance renewal entries only if a previous version exists (meaning it's been edited)
+      
       insuranceData.forEach((item) => {
         if (item.previousVersionId) {
-          // Only add renewal entry if there's an actual previous version
+          
           combinedData.push({
             ...item,
             type: "insurance-renewed",
@@ -1935,10 +1935,10 @@ const BikeHistory = ({ externalSearchTerm }) => {
         }
       });
 
-      // Add PUC renewal entries only if a previous version exists (meaning it's been edited)
+      
       pucData.forEach((item) => {
         if (item.previousVersionId) {
-          // Only add renewal entry if there's an actual previous version
+          
           combinedData.push({
             ...item,
             type: "puc-renewed",
@@ -1948,7 +1948,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         }
       });
 
-      // Fetch previous versions for items that have been edited
+      
       const itemsWithPreviousVersionId = combinedData.filter(
         (item) => item.previousVersionId,
       );
@@ -1985,9 +1985,9 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const getSortTimestamp = (historyItem) => {
         const type = historyItem?.type;
         const candidateDates = [
-          // Prefer normalized action date first (set while building combinedData).
+          
           historyItem.date,
-          // Renewal entries should follow updated time as the action timestamp.
+          
           type === "puc-renewed" || type === "insurance-renewed"
             ? historyItem.updatedAt
             : null,
@@ -2040,7 +2040,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
           if (!Number.isNaN(timestamp)) return timestamp;
         }
 
-        // Keep entries with invalid dates at the bottom in latest-first sorting.
+        
         return 0;
       };
 
@@ -2069,7 +2069,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       combinedData.sort((firstItem, secondItem) => {
         const secondTimestamp = getSortTimestamp(secondItem);
         const firstTimestamp = getSortTimestamp(firstItem);
-        // Sort in descending order: newest at top, oldest at bottom
+        
         const timestampDiff = secondTimestamp - firstTimestamp;
         if (timestampDiff !== 0) return timestampDiff;
 
@@ -2093,7 +2093,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         return getActionPriority(firstItem) - getActionPriority(secondItem);
       });
 
-      // Filter out insurance and PUC items that don't have an expiry date
+      
       const filteredData = combinedData.filter((item) => {
         if (item.type === "insurance" || item.type === "insurance-renewed") {
           return !!(item.insuranceExpiryDate || item.insuranceExpiry);
@@ -2183,7 +2183,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoice(invoicePage, pdfDoc, letter);
 
-      // Add document pages
+      
       await addDocumentPages(pdfDoc, letter.documents);
 
       const pdfBytes = await pdfDoc.save();
@@ -2267,7 +2267,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       const invoicePage = pdfDoc.addPage([595, 842]);
       await drawVehicleInvoiceForSell(invoicePage, pdfDoc, letter);
 
-      // Add document pages
+      
       await addDocumentPages(pdfDoc, letter.documents);
 
       const pdfBytes = await pdfDoc.save();
@@ -2318,7 +2318,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         setShowPdfModal(true);
         return;
       }
-      // insurance and puc don't have PDFs; open their history pages instead
+      
       else if (type === "insurance" || type === "insurance-renewed") {
         navigate(`/insurance/history?reg=${encodeURIComponent(searchTerm)}`);
         return;
@@ -2445,7 +2445,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
   const isEditedActionItem = (item) => {
     if (!item || (item.type !== "buy" && item.type !== "sell")) return false;
 
-    // Check if there's a previousVersionId or changeHistory
+    
     if (
       item.previousVersionId ||
       (Array.isArray(item.changeHistory) && item.changeHistory.length > 0)
@@ -2453,18 +2453,18 @@ const BikeHistory = ({ externalSearchTerm }) => {
       return true;
     }
 
-    // For buy/sell letters, check if saleDate differs from createdAt
-    // If they differ significantly, it means the letter was edited
+    
+    
     if (item.saleDate && item.createdAt) {
       const saleTime = new Date(item.saleDate).getTime();
       const createdTime = new Date(item.createdAt).getTime();
       if (!Number.isNaN(saleTime) && !Number.isNaN(createdTime)) {
-        // If saleDate is different from createdAt, it was edited
+        
         return Math.abs(saleTime - createdTime) > 1000;
       }
     }
 
-    // Original check for editedAt vs createdAt
+    
     if (item.editedAt && item.createdAt) {
       const editedTime = new Date(item.editedAt).getTime();
       const createdTime = new Date(item.createdAt).getTime();
@@ -2511,7 +2511,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
     if (item.type === "advance") {
       return `Rs.${item.advancePaid}`;
     }
-    // insurance / puc do not have an amount to display in history
+    
     return "";
   };
 
@@ -2519,7 +2519,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
     const registrationNumber = searchTerm.replace(/\s+/g, "_");
     const date = new Date(item.date)
       .toLocaleDateString("en-IN")
-      .replace(/\//g, "-");
+      .replace(/\
 
     switch (item.type) {
       case "buy":
@@ -2690,7 +2690,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
     const editedFields = [];
 
-    // Normalize function to properly compare values
+    
     const normalize = (val) => {
       if (val === null || val === undefined) return "";
       return String(val).trim();
@@ -2709,7 +2709,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
       }
     };
 
-    // Check if the item has changeHistory field
+    
     if (
       item.changeHistory &&
       Array.isArray(item.changeHistory) &&
@@ -2729,12 +2729,12 @@ const BikeHistory = ({ externalSearchTerm }) => {
         }
       });
     } else if (item.previousVersion) {
-      // If we have a previous version object, compare fields
+      
       fieldsToCompare.forEach((field) => {
         const oldValue = item.previousVersion[field];
         const newValue = item[field];
 
-        // For date fields, use date normalization
+        
         if (
           [
             "saleDate",
@@ -2751,7 +2751,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
             });
           }
         } else {
-          // For regular fields, use text normalization
+          
           if (normalize(oldValue) !== normalize(newValue)) {
             editedFields.push({
               field: getFieldLabel(field),
@@ -2762,7 +2762,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
         }
       });
     } else if (item.editedAt && item.createdAt) {
-      // Fallback: Just show that it was edited
+      
       const createdDate = new Date(item.createdAt);
       const editedDate = new Date(item.editedAt);
 
@@ -2972,7 +2972,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                                   {(item.type === "buy" ||
                                     item.type === "sell") && (
                                     <>
-                                      {/* RC */}
+                                      {}
                                       <div
                                         title="RC"
                                         style={{
@@ -2993,7 +2993,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                                           <X size={10} strokeWidth={3} />
                                         )}
                                       </div>
-                                      {/* Aadhaar */}
+                                      {}
                                       <div
                                         title="Aadhaar"
                                         style={{
@@ -3011,7 +3011,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                                           <X size={10} strokeWidth={3} />
                                         )}
                                       </div>
-                                      {/* Insurance */}
+                                      {}
                                       <div
                                         title="Insurance"
                                         style={{
@@ -3034,7 +3034,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                                           <X size={10} strokeWidth={3} />
                                         )}
                                       </div>
-                                      {/* Transfer Receipt / Buy Receipt */}
+                                      {}
                                       <div
                                         title="Receipts"
                                         style={{
@@ -3064,7 +3064,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                               </td>
                               <td style={styles.tableCell}>
                                 <div style={styles.actionButtons}>
-                                  {/* Hide View button for PUC and Insurance (they show history, not PDF) */}
+                                  {}
                                   {!(
                                     item.type === "insurance" ||
                                     item.type === "insurance-renewed" ||
@@ -3139,7 +3139,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                           border: "1px solid #e2e8f0",
                         }}
                       >
-                        {/* Card Header */}
+                        {}
                         <div
                           style={{
                             display: "flex",
@@ -3186,7 +3186,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                           </div>
                         </div>
 
-                        {/* Card Details */}
+                        {}
                         <div
                           style={{
                             display: "flex",
@@ -3287,7 +3287,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                           )}
                         </div>
 
-                        {/* Actions */}
+                        {}
                         <div
                           style={{
                             display: "flex",
@@ -3296,7 +3296,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                             paddingTop: "10px",
                           }}
                         >
-                          {/* Hide View button for PUC and Insurance */}
+                          {}
                           {!(
                             item.type === "insurance" ||
                             item.type === "insurance-renewed" ||
@@ -3324,7 +3324,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                               <Eye size={14} /> View
                             </button>
                           )}
-                          {/* Only show Renew button for renewed entries */}
+                          {}
                           {(item.type === "puc-renewed" ||
                             item.type === "insurance-renewed") && (
                             <button
@@ -3386,7 +3386,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
                           </button>
                         </div>
 
-                        {/* Edit History Section for Mobile */}
+                        {}
                         {item.editedAt && getEditedFields(item).length > 0 && (
                           <div
                             style={{

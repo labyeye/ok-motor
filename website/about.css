@@ -165,7 +165,9 @@
   margin-bottom: 50px;
   opacity: 0;
   transform: translateY(30px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
   transition: all 0.6s ease;
 }
 
@@ -322,7 +324,6 @@
   color: #303e27;
 }
 
-/* Responsive Styles */
 @media (max-width: 992px) {
   .owner-content h2 {
     font-size: 2rem;

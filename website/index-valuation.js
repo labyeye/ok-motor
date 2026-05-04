@@ -1,4 +1,3 @@
-// Scope valuation features to avoid leaking globals that may collide
 (function () {
   const API_BASE =
     window.location.hostname === "localhost" ||
@@ -296,7 +295,6 @@
     modelFilter.innerHTML = '<option value="">Select Model</option>';
 
     if (!selectedMake) {
-      // If no make selected, populate year dropdown with all years
       valuationPopulateYearDropdown();
       return;
     }
@@ -324,7 +322,6 @@
       modelFilter.appendChild(option);
     });
 
-    // Repopulate year dropdown after models are loaded
     valuationPopulateYearDropdown();
   }
 
@@ -334,8 +331,6 @@
 
     yearFilter.innerHTML = '<option value="">Select Year</option>';
 
-    // Always show all years from current year back to 1990
-    // This allows selection of registration year (which may differ from manufacturing year)
     const currentYear = new Date().getFullYear();
     const years = [];
     for (let year = currentYear; year >= 1990; year--) {
@@ -358,7 +353,6 @@
       modelFilter.innerHTML = '<option value="">Select Model</option>';
     }
 
-    // Populate year dropdown with all years immediately
     valuationPopulateYearDropdown();
   }
 
@@ -387,9 +381,7 @@
     }
 
     if (modelFilter) {
-      modelFilter.addEventListener("change", function () {
-        // Year dropdown is now always populated, no need to reload
-      });
+      modelFilter.addEventListener("change", function () {});
     }
 
     const activeTab = document.querySelector(".tab-btn.active");
@@ -513,13 +505,11 @@
   document.addEventListener("DOMContentLoaded", async () => {
     await loadModelsData();
 
-    // Use namespaced valuation initializers to avoid collisions
     valuationInitCategoryTabs();
     valuationInitValuationForm();
     displayValuationResult();
   });
 
-  // Expose only what's needed globally
   window.calculateValuation = calculateValuation;
   window.VALUATION_API_BASE = API_BASE;
 })();

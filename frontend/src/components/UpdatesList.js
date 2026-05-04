@@ -2,10 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import config from "../config/environment";
 import { useNavigate } from "react-router-dom";
-import {
-  RefreshCw,
-  X,
-} from "lucide-react";
+import { RefreshCw, X } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import ConfirmModal from "./ConfirmModal";
@@ -108,7 +105,7 @@ const UpdatesList = () => {
 
       <AppSidebar user={user} onLogout={handleLogout} />
 
-      {/* Main Content */}
+      {}
       <div className="updates-main-content">
         <div className="content-padding">
           <div className="updates-header">
@@ -144,7 +141,7 @@ const UpdatesList = () => {
             </div>
           </div>
 
-          {/* Desktop Table */}
+          {}
           {!isMobile && (
             <div className="updates-table-wrapper">
               <table className="updates-table">
@@ -225,18 +222,24 @@ const UpdatesList = () => {
             </div>
           )}
 
-          {/* Mobile Cards */}
+          {}
           {isMobile && (
             <div className="updates-cards">
               {updates.map((u) => (
                 <div key={u._id} className="updates-card">
                   {u.images && u.images[0] && (
-                    <img src={u.images[0].url} alt={u.title} className="updates-card-img" />
+                    <img
+                      src={u.images[0].url}
+                      alt={u.title}
+                      className="updates-card-img"
+                    />
                   )}
                   <div className="updates-card-body">
                     <div className="updates-card-top">
                       <div className="updates-card-title">{u.title}</div>
-                      <span className={`updates-badge ${u.status === "Active" ? "updates-badge-active" : "updates-badge-inactive"}`}>
+                      <span
+                        className={`updates-badge ${u.status === "Active" ? "updates-badge-active" : "updates-badge-inactive"}`}
+                      >
                         {u.status}
                       </span>
                     </div>
@@ -244,18 +247,37 @@ const UpdatesList = () => {
                       <p className="updates-card-desc">{u.shortDescription}</p>
                     )}
                     <div className="updates-card-date">
-                      {new Date(u.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      {new Date(u.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </div>
                     <div className="updates-card-actions">
-                      <button onClick={() => setViewItem(u)} className="updates-card-btn">View</button>
-                      <button onClick={() => navigate(`/updates/edit/${u._id}`)} className="updates-card-btn">Edit</button>
+                      <button
+                        onClick={() => setViewItem(u)}
+                        className="updates-card-btn"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => navigate(`/updates/edit/${u._id}`)}
+                        className="updates-card-btn"
+                      >
+                        Edit
+                      </button>
                       <button
                         onClick={() => toggleStatus(u._id, u.status)}
                         className={`updates-card-btn ${u.status === "Active" ? "updates-card-btn-toggle-deactivate" : "updates-card-btn-toggle-activate"}`}
                       >
                         {u.status === "Active" ? "Deactivate" : "Activate"}
                       </button>
-                      <button onClick={() => handleDelete(u._id)} className="updates-card-btn updates-card-btn-delete">Delete</button>
+                      <button
+                        onClick={() => handleDelete(u._id)}
+                        className="updates-card-btn updates-card-btn-delete"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -263,24 +285,40 @@ const UpdatesList = () => {
             </div>
           )}
 
-          {/* View Modal */}
+          {}
           {viewItem && (
-            <div className="updates-modal-overlay" onClick={() => setViewItem(null)}>
-              <div className="updates-modal" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="updates-modal-overlay"
+              onClick={() => setViewItem(null)}
+            >
+              <div
+                className="updates-modal"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="updates-modal-header">
                   <h3 className="updates-modal-title">{viewItem.title}</h3>
-                  <button className="updates-modal-close" onClick={() => setViewItem(null)}>
+                  <button
+                    className="updates-modal-close"
+                    onClick={() => setViewItem(null)}
+                  >
                     <X size={20} />
                   </button>
                 </div>
-                <p className="updates-modal-desc">{viewItem.shortDescription}</p>
+                <p className="updates-modal-desc">
+                  {viewItem.shortDescription}
+                </p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {(viewItem.images || []).map((im, idx) => (
                     <img
                       key={idx}
                       src={im.url}
                       alt={viewItem.title}
-                      style={{ width: 160, height: 120, objectFit: "cover", borderRadius: 6 }}
+                      style={{
+                        width: 160,
+                        height: 120,
+                        objectFit: "cover",
+                        borderRadius: 6,
+                      }}
                     />
                   ))}
                 </div>

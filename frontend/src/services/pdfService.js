@@ -2249,12 +2249,10 @@ class PDFService {
   sanitizeTextForPDF(text) {
     if (!text) return "";
 
-    return (
-      String(text)
-        .replace(/₹/g, "Rs. ")
-        // eslint-disable-next-line no-control-regex
-        .replace(/[^\x00-\xFF]/g, "")
-    );
+    return String(text)
+      .replace(/₹/g, "Rs. ")
+
+      .replace(/[^\x00-\xFF]/g, "");
   }
 
   async generateLetterHeadPDFOffline(letterData, previewOnly = false) {

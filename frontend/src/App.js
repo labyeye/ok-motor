@@ -35,7 +35,7 @@ import PUCForm from "./components/PUCForm";
 import PUCHistory from "./components/PUCHistory";
 import { useState, useEffect } from "react";
 import networkService from "./services/networkService";
-import "./services/syncService"; // initialize sync service for side-effects
+import "./services/syncService";
 import AccessLockScreen from "./components/AccessLockScreen";
 
 const Rootredirect = () => {
@@ -74,12 +74,10 @@ const Rootredirect = () => {
     );
   }
 
-  // If not authenticated, redirect to login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // If authenticated, redirect based on role
   const redirectPath = user?.role === "admin" ? "/admin" : "/staff";
   return <Navigate to={redirectPath} replace />;
 };
@@ -87,29 +85,23 @@ const Rootredirect = () => {
 function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isUnlocked, setIsUnlocked] = useState(
-    () => sessionStorage.getItem("okm_access") === "1"
+    () => sessionStorage.getItem("okm_access") === "1",
   );
 
   useEffect(() => {
-    // Initialize services only in Electron
     const isElectron = window.electronAPI !== undefined;
 
     if (isElectron) {
       console.log("🚀 Initializing offline services in Electron...");
 
-      // Start network monitoring
       networkService.checkConnection();
 
-      // Subscribe to network changes
       const unsubscribeNetwork = networkService.subscribe((online) => {
         console.log(
-          `📡 Network status changed: ${online ? "Online" : "Offline"}`
+          `📡 Network status changed: ${online ? "Online" : "Offline"}`,
         );
         setIsOnline(online);
       });
-
-      // Sync service auto-initializes when imported
-      // It will automatically start monitoring and syncing
 
       console.log("✅ Offline services initialized successfully!");
 
@@ -117,7 +109,6 @@ function App() {
         unsubscribeNetwork();
       };
     } else {
-      // Browser - use default online/offline events
       const handleOnline = () => setIsOnline(true);
       const handleOffline = () => setIsOnline(false);
       window.addEventListener("online", handleOnline);

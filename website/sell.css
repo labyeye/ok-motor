@@ -34,11 +34,10 @@
   position: relative;
   height: auto;
   overflow: visible;
-
 }
 
 .sell-section::before {
-  display: none
+  display: none;
 }
 
 .sell-content {
@@ -185,7 +184,6 @@
   flex-direction: column;
   gap: 20px;
   flex: 1;
-
 }
 
 .sell-form h3 {
@@ -197,7 +195,7 @@
 }
 
 .sell-form h3::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;
@@ -321,7 +319,6 @@
   box-shadow: 0 8px 20px rgba(48, 62, 38, 0.4);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .sell-section {
     flex-direction: column;
@@ -363,7 +360,7 @@
     padding: 12px 20px;
     font-size: 1rem;
   }
-  
+
   .sell-form-container {
     padding: 15px;
   }

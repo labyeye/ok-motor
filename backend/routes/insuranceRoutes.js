@@ -17,7 +17,6 @@ router
   .delete(protect, deleteInsurance)
   .put(protect, updateInsurance);
 
-// Lookup by vehicle registration number and upsert by vehicle
 router
   .route("/vehicle/:vehicleRegNo")
   .get(protect, getInsuranceByVehicle)

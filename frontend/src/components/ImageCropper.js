@@ -17,7 +17,6 @@ const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
   const [isCropping, setIsCropping] = useState(false);
   const imgRef = useRef(null);
 
-  // Create a rotated version of the image whenever rotation changes
   useEffect(() => {
     const rotateImage = async () => {
       if (rotation === 0) {
@@ -35,7 +34,6 @@ const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
 
-      // Calculate new canvas size after rotation
       const rad = (rotation * Math.PI) / 180;
       const sin = Math.abs(Math.sin(rad));
       const cos = Math.abs(Math.cos(rad));
@@ -43,14 +41,12 @@ const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
       canvas.width = Math.ceil(img.width * cos + img.height * sin);
       canvas.height = Math.ceil(img.width * sin + img.height * cos);
 
-      // Rotate and draw the image
       ctx.translate(canvas.width / 2, canvas.height / 2);
       ctx.rotate(rad);
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
 
       setRotatedImageSrc(canvas.toDataURL("image/jpeg", 0.85));
 
-      // Reset crop when rotation changes
       setCrop({
         unit: "%",
         width: 50,
@@ -94,7 +90,6 @@ const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
       cropHeight,
     );
 
-    // Compress image to approximately 100KB
     return new Promise((resolve) => {
       const compressImage = async (quality) => {
         return new Promise((res) => {
@@ -109,18 +104,16 @@ const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
       };
 
       const findOptimalQuality = async () => {
-        const targetSize = 100 * 1024; // 100KB
+        const targetSize = 100 * 1024;
         let quality = 0.9;
         let blob = await compressImage(quality);
 
-        // If image is already small enough, return it
         if (blob.size <= targetSize) {
           const file = new File([blob], "cropped.jpg", { type: "image/jpeg" });
           resolve(file);
           return;
         }
 
-        // Binary search for optimal quality
         let minQuality = 0.1;
         let maxQuality = 0.9;
         let bestBlob = blob;
@@ -137,7 +130,6 @@ const ImageCropper = ({ imageSrc, onCancel, onCropComplete }) => {
           }
         }
 
-        // If still too large, try one more time with minimum quality
         if (bestBlob.size > targetSize * 1.5) {
           bestBlob = await compressImage(0.5);
         }

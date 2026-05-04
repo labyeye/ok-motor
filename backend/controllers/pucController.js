@@ -12,7 +12,6 @@ const normalizePucPayload = (payload = {}) => {
     normalized.vehicleRegNo = normalized.regNo;
   }
 
-  // Prefer pucExpiry (form field) over pucExpiryDate so edit flows don't keep stale values.
   const expirySource = normalized.pucExpiry || normalized.pucExpiryDate || null;
   if (expirySource) {
     const parsed = new Date(expirySource);
@@ -37,12 +36,6 @@ const normalizePucPayload = (payload = {}) => {
   return normalized;
 };
 
-/**
- * Propagate PUC master record changes back to any SellLetter or BuyLetter
- * that references the same vehicle registration number.
- * This keeps the stale copies in sync so that any existing queries reading
- * from those documents (e.g. PDF generation) still get current data.
- */
 const syncPUCToLetters = async (pucDoc) => {
   const regNo = pucDoc.vehicleRegNo || pucDoc.regNo;
   if (!regNo) return;
@@ -74,7 +67,6 @@ exports.createPUC = async (req, res) => {
     const puc = new PUC(pucData);
     const savedPUC = await puc.save();
 
-    // Propagate to SellLetter & BuyLetter for any matching registration number
     try {
       await syncPUCToLetters(savedPUC);
     } catch (syncErr) {
@@ -118,7 +110,6 @@ exports.updatePUC = async (req, res) => {
 
     const normalizedPayload = normalizePucPayload(req.body);
 
-    // Add version tracking metadata
     const editedDate = new Date();
     normalizedPayload.editedAt = editedDate;
     normalizedPayload.editedBy = req.user?.id || null;
@@ -130,7 +121,6 @@ exports.updatePUC = async (req, res) => {
       runValidators: true,
     });
 
-    // Propagate changes to SellLetter & BuyLetter (keep stale copies in sync)
     try {
       await syncPUCToLetters(puc);
     } catch (syncErr) {
@@ -215,7 +205,6 @@ exports.upsertPUCByVehicle = async (req, res) => {
       },
     );
 
-    // Propagate changes to SellLetter & BuyLetter
     try {
       await syncPUCToLetters(puc);
     } catch (syncErr) {

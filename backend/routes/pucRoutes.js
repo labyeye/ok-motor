@@ -12,7 +12,6 @@ const {
 
 router.route("/").post(protect, createPUC).get(protect, getAllPUC);
 
-// Lookup by registration and upsert
 router
   .route("/vehicle/:vehicleRegNo")
   .get(protect, getPUCByVehicle)

@@ -1,15 +1,15 @@
-// electron/main.js
+
 const { app, BrowserWindow, ipcMain, dialog, protocol } = require("electron");
 const path = require("path");
 const fs = require("fs").promises;
 const url = require("url");
 
-// Check if running in development
+
 const isDev = !app.isPackaged;
 
 const Store = require("electron-store");
 
-// Initialize persistent store
+
 const store = new Store();
 
 let mainWindow;
@@ -25,7 +25,7 @@ function createWindow() {
     },
   });
 
-  // Load React app
+  
   if (isDev) {
     const indexPath = path.join(__dirname, "..", "build", "index.html");
     const startUrl = url.format({
@@ -41,8 +41,8 @@ function createWindow() {
 
     mainWindow.loadURL(startUrl);
   } else {
-    // Production: Load from packaged build folder
-    // Use url.format to properly create file:// URL
+    
+    
     const indexPath = path.join(__dirname, "..", "build", "index.html");
     const startUrl = url.format({
       pathname: indexPath,
@@ -58,17 +58,17 @@ function createWindow() {
     mainWindow.loadURL(startUrl);
   }
 
-  // Log when page finishes loading
+  
   mainWindow.webContents.on("did-finish-load", () => {
     console.log("✅ Page loaded successfully");
   });
 
-  // Log any loading errors
+  
   mainWindow.webContents.on(
     "did-fail-load",
     (event, errorCode, errorDescription) => {
       console.error("❌ Failed to load:", errorCode, errorDescription);
-    }
+    },
   );
 
   mainWindow.on("closed", () => {
@@ -92,9 +92,9 @@ app.on("window-all-closed", () => {
   }
 });
 
-// IPC Handlers
 
-// Storage path management
+
+
 ipcMain.handle("get-storage-path", async () => {
   const storagePath = store.get("storagePath", app.getPath("userData"));
   return storagePath;
@@ -102,7 +102,7 @@ ipcMain.handle("get-storage-path", async () => {
 
 ipcMain.handle("set-storage-path", async (event, newPath) => {
   try {
-    // Verify the path exists or create it
+    
     await fs.mkdir(newPath, { recursive: true });
     store.set("storagePath", newPath);
     return { success: true, path: newPath };
@@ -126,7 +126,7 @@ ipcMain.handle("select-storage-path", async () => {
   return { success: false, canceled: true };
 });
 
-// JSON file operations
+
 ipcMain.handle("read-json-file", async (event, collection) => {
   try {
     const storagePath = store.get("storagePath", app.getPath("userData"));
@@ -139,7 +139,7 @@ ipcMain.handle("read-json-file", async (event, collection) => {
       const data = await fs.readFile(filePath, "utf8");
       return { success: true, data: JSON.parse(data) };
     } catch (error) {
-      // File doesn't exist, return empty array
+      
       if (error.code === "ENOENT") {
         return { success: true, data: [] };
       }
@@ -165,7 +165,7 @@ ipcMain.handle("write-json-file", async (event, collection, data) => {
   }
 });
 
-// PDF operations
+
 ipcMain.handle("save-pdf", async (event, { filename, buffer }) => {
   try {
     const storagePath = store.get("storagePath", app.getPath("userData"));
@@ -181,7 +181,7 @@ ipcMain.handle("save-pdf", async (event, { filename, buffer }) => {
   }
 });
 
-// Per-document save directories and silent save
+
 ipcMain.handle("get-save-dirs", async () => {
   try {
     const saveDirs = store.get("saveDirs", {});
@@ -247,10 +247,10 @@ ipcMain.handle(
     } catch (error) {
       return { success: false, error: error.message };
     }
-  }
+  },
 );
 
-// Clear a saved directory for a docType
+
 ipcMain.handle("clear-save-dir", async (event, docType) => {
   try {
     const allowed = ["buy", "sell", "advance", "service"];
@@ -277,7 +277,7 @@ ipcMain.handle("open-pdf-directory", async () => {
   }
 });
 
-// App settings
+
 ipcMain.handle("get-app-setting", async (event, key) => {
   return store.get(key);
 });
@@ -287,7 +287,7 @@ ipcMain.handle("set-app-setting", async (event, key, value) => {
   return { success: true };
 });
 
-// Export data for backup
+
 ipcMain.handle("export-all-data", async () => {
   try {
     const storagePath = store.get("storagePath", app.getPath("userData"));
@@ -311,28 +311,28 @@ ipcMain.handle("export-all-data", async () => {
   }
 });
 
-// PDF Template operations
+
 ipcMain.handle("get-pdf-template", async (event, templateName) => {
   try {
     let templatePath;
 
     if (isDev) {
-      // In development, templates are in public folder
+      
       templatePath = path.join(
         __dirname,
         "..",
         "public",
         "templates",
-        templateName
+        templateName,
       );
     } else {
-      // In production, templates are in build/templates folder
+      
       templatePath = path.join(
         __dirname,
         "..",
         "build",
         "templates",
-        templateName
+        templateName,
       );
     }
 
@@ -346,24 +346,24 @@ ipcMain.handle("get-pdf-template", async (event, templateName) => {
   }
 });
 
-// Read an arbitrary asset (image) from the app bundle or build output.
+
 ipcMain.handle("read-asset", async (event, assetUrl) => {
   try {
     let assetPath = null;
 
-    // If a file:// URL was provided, convert to a local path
+    
     if (typeof assetUrl === "string" && assetUrl.startsWith("file://")) {
       try {
         assetPath = url.fileURLToPath(assetUrl);
       } catch (e) {
-        // fallback: strip file://
-        assetPath = assetUrl.replace(/^file:\/\//, "");
+        
+        assetPath = assetUrl.replace(/^file:\/\
       }
     } else if (typeof assetUrl === "string" && assetUrl.startsWith("/")) {
-      // leading slash - treat as path under build directory
+      
       assetPath = path.join(__dirname, "..", "build", assetUrl);
     } else if (typeof assetUrl === "string") {
-      // relative path like static/media/xxx.png or similar
+      
       assetPath = path.join(__dirname, "..", "build", assetUrl);
     }
 
@@ -376,7 +376,7 @@ ipcMain.handle("read-asset", async (event, assetUrl) => {
     console.error(
       "❌ read-asset failed for",
       assetUrl,
-      error?.message || error
+      error?.message || error,
     );
     return { success: false, error: error.message };
   }

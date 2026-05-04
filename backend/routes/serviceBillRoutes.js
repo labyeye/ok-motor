@@ -4,14 +4,14 @@ const serviceBillController = require("../controllers/serviceBillController");
 const { protect, admin } = require("../middleware/auth");
 
 router.get("/debug", (req, res) => {
-  res.json({ 
-    message: "Service bill API is working", 
+  res.json({
+    message: "Service bill API is working",
     timestamp: new Date().toISOString(),
     headers: {
-      authorization: req.headers.authorization ? 'Present' : 'Missing',
-      'content-type': req.headers['content-type'],
-      'user-agent': req.headers['user-agent']?.substring(0, 50) + '...'
-    }
+      authorization: req.headers.authorization ? "Present" : "Missing",
+      "content-type": req.headers["content-type"],
+      "user-agent": req.headers["user-agent"]?.substring(0, 50) + "...",
+    },
   });
 });
 

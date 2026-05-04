@@ -17,7 +17,11 @@ const SellLetterSchema = new mongoose.Schema(
     },
     chassisNumber: { type: String },
     engineNumber: { type: String },
-    insuranceId: { type: mongoose.Schema.Types.ObjectId, ref: "Insurance", default: null },
+    insuranceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Insurance",
+      default: null,
+    },
     pucId: { type: mongoose.Schema.Types.ObjectId, ref: "PUC", default: null },
     vehiclekm: { type: String },
     vehicleCondition: { type: String, enum: ["running", "notRunning"] },
@@ -96,7 +100,7 @@ const SellLetterSchema = new mongoose.Schema(
       deliveryPhoto: { type: String },
       signedDocSell: { type: String },
       vehiclePhotos: [{ type: String }],
-      // New documents: insuranceCertificate, vehicleNOC, vehicleBuyReceipt
+
       insuranceCertificate: {
         pages: [{ type: String }],
       },

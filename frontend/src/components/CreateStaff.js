@@ -41,11 +41,15 @@ const CreateStaff = () => {
         return;
       }
 
-      await axios.post("https://ok-motor-backend.vercel.app/api/users", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      await axios.post(
+        "https://ok-motor-backend.vercel.app/api/users",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       setSuccess(true);
       setTimeout(() => {
         navigate("/staff/list");

@@ -895,7 +895,8 @@
         if (url.startsWith("/"))
           return "https://ok-motor-backend.vercel.app" + url;
         return (
-          "https://ok-motor-backend.vercel.app/uploads/" + url.replace(/^\/+/, "")
+          "https://ok-motor-backend.vercel.app/uploads/" +
+          url.replace(/^\/+/, "")
         );
       }
       // Fetch and render updates (simplified, no config dependency)

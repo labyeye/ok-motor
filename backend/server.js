@@ -19,20 +19,18 @@ const cors = require("cors");
 const app = express();
 connectDB();
 
-// Dynamic CORS configuration for different environments
 const getAllowedOrigins = () => {
   const origins = [
     "http://127.0.0.1:5500",
-    "http://localhost:3000", // Local development
-    "http://127.0.0.1:3000", // Local development
-    "https://ok-motor-frontend.vercel.app", // Production
-    "https://ok-motor-git-main-ok-motor.vercel.app", // Vercel preview
-    "https://ok-motor-ok-motor.vercel.app", // Vercel deployment
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://ok-motor-frontend.vercel.app",
+    "https://ok-motor-git-main-ok-motor.vercel.app",
+    "https://ok-motor-ok-motor.vercel.app",
     "https://okmotors.in",
     "https://www.okmotors.in",
   ];
 
-  // Add production origins from environment
   if (process.env.FRONTEND_URL) {
     origins.push(process.env.FRONTEND_URL);
   }
@@ -67,29 +65,23 @@ const corsOptions = {
     "Access-Control-Allow-Methods",
   ],
   credentials: true,
-  optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
+  optionsSuccessStatus: 200,
   preflightContinue: false,
 };
 
-// Apply CORS before other middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests explicitly
 app.options("*", cors(corsOptions));
 
-// Body parsing middleware
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// Add timeout middleware
 app.use((req, res, next) => {
-  // Set timeout for all requests to 120 seconds
   req.setTimeout(290000);
   res.setTimeout(290000);
   next();
 });
 
-// Add request logging for debugging
 app.use((req, res, next) => {
   console.log(
     `${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${
@@ -99,26 +91,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", protect, userRoutes);
 app.use("/api/buy-letter", buyLetterRoutes);
-app.use("/api/buy-letters", buyLetterRoutes); // Add alias for compatibility
+app.use("/api/buy-letters", buyLetterRoutes);
 app.use("/api/sell-letters", sellLetterRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/service-bills", serviceBillRoutes);
 app.use("/api/advance-bills", advanceBillRoutes);
-app.use("/api/sync", syncRoutes); // Sync routes
-app.use("/api/vehicles", vehicleRoutes); // Vehicle routes
-app.use("/api/gallery", require("./routes/galleryRoutes")); // Gallery routes
-app.use("/api/sell-request", sellRequestRoutes); // Sell form endpoints
-app.use("/api/updates", updatesRoutes); // Updates endpoints
-app.use("/api/announcements", announcementRoutes); // Announcements endpoints
-app.use("/api/bikes", bikeRoutes); // Bike API endpoints
-app.use("/api/insurance", require("./routes/insuranceRoutes")); // Insurance endpoints
-app.use("/api/puc", require("./routes/pucRoutes")); // PUC endpoints
+app.use("/api/sync", syncRoutes);
+app.use("/api/vehicles", vehicleRoutes);
+app.use("/api/gallery", require("./routes/galleryRoutes"));
+app.use("/api/sell-request", sellRequestRoutes);
+app.use("/api/updates", updatesRoutes);
+app.use("/api/announcements", announcementRoutes);
+app.use("/api/bikes", bikeRoutes);
+app.use("/api/insurance", require("./routes/insuranceRoutes"));
+app.use("/api/puc", require("./routes/pucRoutes"));
 
-// Health check endpoint (also in syncRoutes but duplicated here for convenience)
 app.get("/api/health", (req, res) => {
   res.json({
     success: true,
@@ -129,9 +119,7 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/letter-heads", require("./routes/letterHeadRoutes"));
 
-// Public root route
 app.get("/", (req, res) => {
-  // Ensure index.html is not aggressively cached by browsers/proxies
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.json({
     message: "OK Motor Backend API",
@@ -146,7 +134,6 @@ app.get("/", (req, res) => {
   });
 });
 
-// Health check endpoint
 app.get("/health", (req, res) => {
   res.json({
     status: "OK",
@@ -155,7 +142,6 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Test endpoint for debugging
 app.get("/test", (req, res) => {
   res.json({
     message: "Server is working!",
@@ -167,7 +153,6 @@ app.get("/test", (req, res) => {
   });
 });
 
-// 404 handler
 app.use("*", (req, res) => {
   console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
@@ -177,7 +162,6 @@ app.use("*", (req, res) => {
   });
 });
 
-// Error handler
 app.use((error, req, res, next) => {
   console.error("Error:", error);
 
@@ -197,8 +181,6 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Use PORT from environment variable (Render sets this automatically)
-// Default to 3500 to match frontend development configuration
 const PORT = process.env.PORT || 3500;
 
 app.listen(PORT, () => {

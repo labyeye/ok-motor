@@ -990,10 +990,8 @@ const BuyLetterHistory = () => {
       (letter.registrationNumber || "").toLowerCase().includes(q);
     if (!matchesSearch) return false;
 
-    // Year filter - prefer vehicle.manufacturingYear, fallback to saleDate/createdAt
     const yFilter = filters.year;
     if (yFilter && yFilter.op) {
-      // determine year to compare (check multiple vehicle year fields)
       let y = null;
       if (letter.vehicleModel) {
         const parsed = Number(letter.vehicleModel);
@@ -1001,7 +999,6 @@ const BuyLetterHistory = () => {
       }
       if (y === null && letter.vehicle) {
         try {
-          // vehicle may be populated object or just an id/string
           if (typeof letter.vehicle === "object") {
             const cand =
               letter.vehicle.manufacturingYear ??
@@ -1013,9 +1010,7 @@ const BuyLetterHistory = () => {
               if (!isNaN(ny)) y = ny;
             }
           }
-        } catch (e) {
-          // ignore and fallback
-        }
+        } catch (e) {}
       }
       if (y === null) {
         const d = new Date(letter.saleDate || letter.createdAt || null);
@@ -1025,7 +1020,7 @@ const BuyLetterHistory = () => {
       }
       if (y === null || isNaN(y)) return false;
       const v = Number(yFilter.value);
-      // require value for non-range ops; for between allow one-sided
+
       if (yFilter.op !== "between" && isNaN(v)) return false;
       if (yFilter.op === "eq" && y !== v) return false;
       if (yFilter.op === "gt" && y <= v) return false;
@@ -1047,13 +1042,12 @@ const BuyLetterHistory = () => {
       }
     }
 
-    // Amount filter
     const aFilter = filters.amount;
     if (aFilter && aFilter.op) {
       const a = Number(letter.saleAmount || letter.saleAmount || 0);
       if (isNaN(a)) return false;
       const v = Number(aFilter.value);
-      // require value for non-range ops; for between allow one-sided
+
       if (aFilter.op !== "between" && isNaN(v)) return false;
       if (aFilter.op === "eq" && a !== v) return false;
       if (aFilter.op === "gt" && a <= v) return false;
@@ -2109,7 +2103,7 @@ const BuyLetterHistory = () => {
             </div>
           ) : (
             <>
-              {/* Desktop Table */}
+              {}
               {!isMobile && (
                 <div style={styles.tableContainer}>
                   <table style={styles.table}>
@@ -2526,7 +2520,7 @@ const BuyLetterHistory = () => {
                 </div>
               )}
 
-              {/* Mobile Cards */}
+              {}
               {isMobile && (
                 <div
                   style={{
@@ -2548,7 +2542,7 @@ const BuyLetterHistory = () => {
                           border: "1px solid #e2e8f0",
                         }}
                       >
-                        {/* Card Header */}
+                        {}
                         <div
                           style={{
                             display: "flex",
@@ -2605,7 +2599,7 @@ const BuyLetterHistory = () => {
                           </div>
                         </div>
 
-                        {/* Card Details */}
+                        {}
                         <div
                           style={{
                             display: "flex",
@@ -2777,7 +2771,7 @@ const BuyLetterHistory = () => {
                           )}
                         </div>
 
-                        {/* Version changes */}
+                        {}
                         {letter.version > 1 &&
                           changes &&
                           changes.length > 0 && (
@@ -2842,7 +2836,7 @@ const BuyLetterHistory = () => {
                             </div>
                           )}
 
-                        {/* Document Status */}
+                        {}
                         <div
                           style={{
                             display: "flex",
@@ -2970,7 +2964,7 @@ const BuyLetterHistory = () => {
                           </div>
                         </div>
 
-                        {/* Actions */}
+                        {}
                         <div
                           style={{
                             display: "flex",

@@ -4,16 +4,16 @@
 }
 
 :root {
-  --bg-color: #F6FAF7;
+  --bg-color: #f6faf7;
   --text-color: #1a1a1a;
   --filter-btn-bg: #f5f5f5;
   --filter-btn-hover: #e0e0e0;
   --filter-btn-active-bg: red;
-  --filter-btn-active-text: #F6FAF7;
-  --dropdown-bg: #F6FAF7;
+  --filter-btn-active-text: #f6faf7;
+  --dropdown-bg: #f6faf7;
   --dropdown-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   --range-input-border: #dddddd;
-  --mobile-filter-bg: #F6FAF7;
+  --mobile-filter-bg: #f6faf7;
   --mobile-filter-header-border: #eeeeee;
   --reset-btn-bg: #f5f5f5;
 }
@@ -95,8 +95,6 @@
   display: block;
 }
 
-/* Mobile Filters */
-
 @keyframes slideUp {
   to {
     transform: translateY(0);
@@ -118,11 +116,7 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
 }
 
-/* Responsive */
-
-/* Make slider images full width on small screens and align arrows */
 @media (max-width: 768px) {
-
   .bike-slider .slide img,
   .bike-slider img,
   .image-container img {
@@ -133,18 +127,11 @@ input[type="range"]::-webkit-slider-thumb {
     object-fit: cover;
   }
 
-  /* Ensure the slider container uses full width */
   .image-container {
     width: 100%;
     padding: 0 12px;
     box-sizing: border-box;
   }
-
-  /* Position arrows vertically centered and outside edges */
-
-  /* Slightly larger icons on mobile */
-
-  /* Keep arrows outside the main image flow */
 }
 
 @media (max-width: 768px) {
@@ -157,20 +144,20 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
-
 .brand-logo {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
   overflow: visible;
-  /* ensure badges aren't clipped */
+
   min-width: 72px;
 }
 
 @media (max-width: 768px) {
-
   .brand-logo {
     width: 45px;
     height: 45px;
@@ -178,14 +165,11 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 @media (max-width: 480px) {
-
   .brand-logo {
     width: 40px;
     height: 40px;
   }
 }
-
-/* Mobile bottom action bar for filters & sort */
 
 .price-container {
   display: flex;
@@ -197,16 +181,13 @@ input[type="range"]::-webkit-slider-thumb {
 .price-container .price {
   font-size: 24px;
   font-weight: 700;
-  color: #303E27;
+  color: #303e27;
 }
 
 .price-container .emi {
   font-size: 14px;
   color: #666;
 }
-
-/* Main Inventory Layout */
-
 
 .status-badge {
   position: absolute;
@@ -247,7 +228,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .contact-btn {
-  background-color: #303E27;
+  background-color: #303e27;
   color: white;
 }
 
@@ -277,7 +258,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .filter-btn {
-  background: #F6FAF7;
+  background: #f6faf7;
   color: black;
   border: 1px solid #444;
   padding: 12px 20px;
@@ -294,11 +275,10 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .filter-btn.active {
-  background: #303E27;
-  border-color: #303E27;
+  background: #303e27;
+  border-color: #303e27;
   color: white;
   padding: 12px 20px;
-
 }
 
 .filter-btn:hover {
@@ -313,7 +293,6 @@ input[type="range"]::-webkit-slider-thumb {
   transform: rotate(180deg);
 }
 
-/* Bike Grid Container */
 .bike-grid-container {
   flex-grow: 1;
   padding-right: 20px;
@@ -321,11 +300,9 @@ input[type="range"]::-webkit-slider-thumb {
   width: calc(100% - 330px);
 }
 
-
-/* Bike Grid */
 .bike-grid {
   display: grid;
-  /* show 4 cards per row on desktop */
+
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   width: 100%;
@@ -333,17 +310,13 @@ input[type="range"]::-webkit-slider-thumb {
   margin: 0 auto;
 }
 
-
 @media (max-width: 1200px) {
-
   .bike-grid-container {
     width: calc(100% - 310px);
   }
 }
 
 @media (max-width: 992px) {
-
-  /* 3 columns for medium screens */
   .bike-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 18px;
@@ -351,13 +324,11 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 @media (max-width: 768px) {
-
   .bike-grid-container {
     width: 100%;
     padding-right: 0;
   }
 
-  /* 2 columns on tablets / small laptops */
   .bike-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
@@ -378,7 +349,6 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
-/* Animation for filter dropdown */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -391,11 +361,6 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
-/* Brand filter specific styles */
-
-/* Custom scrollbar for brand dropdown */
-
-/* Make the filter button show selected brand */
 .filter-btn[data-filter="brand"] {
   position: relative;
   overflow: hidden;
@@ -405,20 +370,16 @@ input[type="range"]::-webkit-slider-thumb {
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
-
 .bike-grid {
   display: grid;
-  /* enforce 4 columns on larger screens, with responsive fallback in media queries */
+
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-/* Search term display */
-
 @media (max-width: 768px) {
-
   .bike-grid {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -429,7 +390,6 @@ input[type="range"]::-webkit-slider-thumb {
     height: 40px;
   }
 
-  /* Button group in cards */
   .button-group {
     flex-direction: column;
     gap: 8px;
@@ -440,21 +400,13 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
-
-/* Mobile search container adjustments */
 @media (max-width: 768px) {
-
-
-  /* Mobile Filter Button */
-
   .bike-grid-container {
     width: 100% !important;
   }
-
 }
 
 @keyframes pulse {
-
   0%,
   100% {
     transform: scale(1);
@@ -465,13 +417,6 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
-/* Search and Sort Container */
-
-/* Modern Search Box */
-
-/* Modern Sort Dropdown */
-
-/* Responsive Design */
 @media (max-width: 768px) {
   .section-header {
     padding: 15px;
@@ -487,11 +432,8 @@ input[type="range"]::-webkit-slider-thumb {
   justify-content: space-between;
 }
 
-/* Page Title Section */
 .page-title {
-  background: linear-gradient(135deg,
-      var(--secondary-color) 0%,
-      #1a1b1d 100%);
+  background: linear-gradient(135deg, var(--secondary-color) 0%, #1a1b1d 100%);
   padding: 80px 20px;
   text-align: center;
   position: relative;
@@ -505,7 +447,8 @@ input[type="range"]::-webkit-slider-thumb {
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,96C1248,75,1344,53,1392,42.7L1440,32L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,96C1248,75,1344,53,1392,42.7L1440,32L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>')
+    no-repeat bottom;
   background-size: cover;
   opacity: 0.1;
 }
@@ -518,7 +461,6 @@ input[type="range"]::-webkit-slider-thumb {
   position: relative;
 }
 
-/* Filters Section */
 .filters-container {
   background: var(--white);
   padding: 30px 20px;
@@ -583,7 +525,6 @@ input[type="range"]::-webkit-slider-thumb {
   display: block;
 }
 
-/* Dropdown option buttons inside filter dropdowns */
 .filter-dropdown .filter-option {
   display: block;
   width: 100%;
@@ -602,7 +543,6 @@ input[type="range"]::-webkit-slider-thumb {
   background: rgba(0, 0, 0, 0.04);
 }
 
-/* small badge inside filter button to show active selection */
 .filter-btn .filter-badge {
   display: inline-block;
   margin-left: 8px;
@@ -621,7 +561,6 @@ input[type="range"]::-webkit-slider-thumb {
   color: #777;
 }
 
-/* Load more button */
 .load-more-container {
   text-align: center;
   margin: 24px 0 60px;
@@ -643,7 +582,6 @@ input[type="range"]::-webkit-slider-thumb {
   color: var(--text-color);
 }
 
-/* Section Header */
 .section-header {
   max-width: 1200px;
   margin: 40px auto;
@@ -655,9 +593,6 @@ input[type="range"]::-webkit-slider-thumb {
   gap: 20px;
 }
 
-/* Search and Sort */
-
-/* Bike Grid */
 .bike-grid-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -706,7 +641,6 @@ input[type="range"]::-webkit-slider-thumb {
   text-decoration: none;
   margin-bottom: 10px;
 }
-
 
 .model {
   color: var(--text-color);
@@ -792,8 +726,6 @@ input[type="range"]::-webkit-slider-thumb {
   border-color: var(--heading-color);
 }
 
-/* 
-/* Responsive Design */
 @media (max-width: 768px) {
   .page-title h1 {
     font-size: 36px;
@@ -814,7 +746,6 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
-/* Loading Animation */
 .loading {
   text-align: center;
   padding: 60px 20px;
@@ -839,9 +770,8 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
-/* Vehicle Card Styles */
 .bike-card {
-  background: #303E26;
+  background: #303e26;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -856,10 +786,9 @@ input[type="range"]::-webkit-slider-thumb {
 .bike-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-  border-color: #303E27;
+  border-color: #303e27;
 }
 
-/* Image Container */
 .bike-card .image-container {
   position: relative;
   width: 100%;
@@ -879,12 +808,11 @@ input[type="range"]::-webkit-slider-thumb {
   transform: scale(1.08);
 }
 
-/* Status Badge */
 .bike-card .status-badge {
   position: absolute;
   top: 13px;
   right: 12px;
-  /* anchor to top-right corner of image */
+
   left: auto;
   padding: 6px 10px;
   border-radius: 14px;
@@ -893,9 +821,9 @@ input[type="range"]::-webkit-slider-thumb {
   letter-spacing: 0.4px;
   text-transform: uppercase;
   color: white;
-  background: #303E27;
+  background: #303e27;
   z-index: 6;
-  /* above photo-count */
+
   box-shadow: 0 2px 8px rgba(255, 107, 0, 0.25);
   max-width: 140px;
   white-space: nowrap;
@@ -903,7 +831,6 @@ input[type="range"]::-webkit-slider-thumb {
   text-overflow: ellipsis;
 }
 
-/* Photo Count Badge */
 .bike-card .photo-count {
   position: absolute;
   top: 12px;
@@ -921,7 +848,6 @@ input[type="range"]::-webkit-slider-thumb {
   backdrop-filter: blur(10px);
 }
 
-/* Card Content */
 .bike-card .card-content {
   padding: 10px;
   display: flex;
@@ -930,12 +856,11 @@ input[type="range"]::-webkit-slider-thumb {
   min-height: 0;
 }
 
-/* Category Badge */
 .bike-card .car-body {
   display: inline-block;
   padding: 3px 8px;
   background: white;
-  color: #303E27;
+  color: #303e27;
   font-size: 10px;
   font-weight: 700;
   border-radius: 5px;
@@ -945,7 +870,6 @@ input[type="range"]::-webkit-slider-thumb {
   width: fit-content;
 }
 
-/* Title */
 .bike-card h3 {
   margin: 0 0 3px 0;
   font-size: 15px;
@@ -997,7 +921,6 @@ input[type="range"]::-webkit-slider-thumb {
   font-weight: 500;
 }
 
-/* Details Grid */
 .bike-card .details {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1019,7 +942,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .bike-card .detail-item i {
-  color: #303E27;
+  color: #303e27;
   font-size: 13px;
   margin-bottom: 0px;
 }
@@ -1030,7 +953,6 @@ input[type="range"]::-webkit-slider-thumb {
   font-size: 11px;
 }
 
-/* Price Container */
 .bike-card .price-container {
   padding-top: 0px;
 }
@@ -1051,7 +973,6 @@ input[type="range"]::-webkit-slider-thumb {
   margin-bottom: 4px;
 }
 
-/* Button Group */
 .bike-card .button-group {
   display: flex;
   gap: 6px;
@@ -1087,7 +1008,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .bike-card .contact-btn {
-  background: #B4BB72;
+  background: #b4bb72;
   color: white;
 }
 
@@ -1103,18 +1024,12 @@ input[type="range"]::-webkit-slider-thumb {
   opacity: 0.6;
 }
 
-/* Action Icons (Heart & Share) */
-
-/* Responsive Design */
-
-/* Large Desktops (1200px+) - 4 columns */
 @media (min-width: 1200px) {
   .bike-grid {
     grid-template-columns: repeat(4, 1fr);
   }
 }
 
-/* Medium Desktops (992px - 1199px) - 3 columns */
 @media (min-width: 992px) and (max-width: 1199px) {
   .bike-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -1125,7 +1040,6 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
-/* Tablets (768px - 991px) - 2 columns */
 @media (min-width: 768px) and (max-width: 991px) {
   .bike-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -1158,7 +1072,6 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
-/* Mobile Landscape (576px - 767px) - 2 columns */
 @media (min-width: 576px) and (max-width: 767px) {
   .bike-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -1210,7 +1123,6 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
-/* Mobile Portrait (less than 576px) - 1 column */
 @media (max-width: 575px) {
   .bike-grid {
     grid-template-columns: 1fr;
@@ -1232,15 +1144,15 @@ input[type="range"]::-webkit-slider-thumb {
     padding: 0;
   }
 
-  .bike-card .status-badge{
+  .bike-card .status-badge {
     display: none;
   }
 
-  .bike-card .photo-count{
+  .bike-card .photo-count {
     display: none;
   }
 
-  .bike-card .image-container img{
+  .bike-card .image-container img {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -1273,14 +1185,14 @@ input[type="range"]::-webkit-slider-thumb {
   }
 
   .bike-card h3.vehicle-title {
-      font-size: 16px;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 6px;
-  line-height: 1.4;
-  padding: 0px 0px;
-  border-radius: 8px;
-  text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 6px;
+    line-height: 1.4;
+    padding: 0px 0px;
+    border-radius: 8px;
+    text-align: center;
   }
 
   .bike-card .price-container {
@@ -1316,7 +1228,7 @@ input[type="range"]::-webkit-slider-thumb {
     text-align: center;
   }
 
-  .bike-card .contact-btn{
+  .bike-card .contact-btn {
     display: none;
   }
 
@@ -1335,7 +1247,6 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
-/* Extra Small Mobile (less than 380px) */
 @media (max-width: 379px) {
   .bike-card .image-container {
     height: 200px;

@@ -10,15 +10,14 @@ const LetterHeadSchema = new mongoose.Schema(
     letterNumber: { type: String, unique: true },
     date: { type: Date, required: true, default: Date.now },
     to: { type: String, required: true },
-    recipientName: { type: String }, // For whom the letter is made (bottom left signature area)
+    recipientName: { type: String },
     subject: { type: String, required: true },
     message: { type: String, required: true },
 
-    // Metadata
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 LetterHeadSchema.pre("save", async function (next) {

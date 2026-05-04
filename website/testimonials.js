@@ -1,8 +1,3 @@
-/* Shared testimonials script used by multiple pages.
-   - Fetches reviews from backend and renders a responsive carousel
-   - Wires the review modal (open/close, star rating, submission)
-   - Safe-guards: only runs once (window.__testimonialsLoaded)
-*/
 (function () {
   if (window.__testimonialsLoaded) return;
   window.__testimonialsLoaded = true;

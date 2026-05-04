@@ -1,6 +1,6 @@
 import { PDFDocument, rgb, degrees } from "pdf-lib";
 import brandlogo from "../images/okmotorback.png";
-// Port of backend template to client-side (browser) using pdf-lib
+
 export async function generateAdvanceClientPDF(advanceBill = {}) {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595, 842]);
@@ -18,7 +18,7 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
         const hours12 = hours % 12 || 12;
         return `${String(hours12).padStart(2, "0")}:${String(minutes).padStart(
           2,
-          "0"
+          "0",
         )} ${ampm}`;
       }
       if (typeof timeString === "string") {
@@ -33,7 +33,7 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
           const hours12 = hour % 12 || 12;
           const ampm = hour >= 12 ? "PM" : "AM";
           return `${String(hours12).padStart(2, "0")}:${String(
-            minute || 0
+            minute || 0,
           ).padStart(2, "0")} ${ampm}`;
         }
       }
@@ -69,7 +69,6 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
 
   const formatRupeeWithSymbol = (val) => `Rs.${formatRupee(val)}`;
 
-  // Try to fetch logo from several possible locations (imported path, public path, fallback)
   let logoImage = null;
   const possibleLogoUrls = [
     brandlogo,
@@ -83,24 +82,20 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
       const res = await fetch(url);
       if (!res || !res.ok) continue;
       const bytes = await res.arrayBuffer();
-      // try png then jpg
+
       try {
         logoImage = await pdfDoc.embedPng(bytes);
       } catch (pngErr) {
         try {
           logoImage = await pdfDoc.embedJpg(bytes);
         } catch (jpgErr) {
-          // continue to next
           logoImage = null;
         }
       }
       if (logoImage) break;
-    } catch (e) {
-      // ignore and try next
-    }
+    } catch (e) {}
   }
 
-  // Layout adapted from backend
   const pageWidth = 595;
 
   page.drawRectangle({
@@ -122,9 +117,7 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
         opacity: 0.3,
         rotate: degrees(45),
       });
-    } catch (e) {
-      // some pdf-lib builds might not support rotate in this environment; ignore
-    }
+    } catch (e) {}
   }
 
   page.drawText("UDAYAM-BR-26-0028550", {
@@ -173,9 +166,9 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
   const istDate = new Date(currentDate.getTime() + 5.5 * 60 * 60 * 1000);
   page.drawText(
     `Date: ${istDate.toLocaleDateString("en-IN")} Time: ${formatTime12Hour(
-      istDate
+      istDate,
     )}`,
-    { x: 400, y: 720, size: 10, color: rgb(0.2, 0.2, 0.2), font }
+    { x: 400, y: 720, size: 10, color: rgb(0.2, 0.2, 0.2), font },
   );
 
   page.drawLine({
@@ -193,7 +186,6 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
     opacity: 0.6,
   });
 
-  // Customer details
   const customerY = 690;
   page.drawText("CUSTOMER DETAILS", {
     x: 50,
@@ -246,7 +238,6 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
     opacity: 0.6,
   });
 
-  // Vehicle details
   const vehicleY = customerY - 80;
   page.drawText("VEHICLE DETAILS", {
     x: 50,
@@ -302,7 +293,6 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
     opacity: 0.6,
   });
 
-  // Dates and payment
   const serviceY = vehicleY - 140;
   page.drawText("ADVANCE PAYMENT DATES", {
     x: 50,
@@ -320,7 +310,7 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
   });
   page.drawText(
     new Date(advanceBill.serviceDate || Date.now()).toLocaleDateString("en-IN"),
-    { x: 180, y: serviceY - 25, size: 10, color: rgb(0.2, 0.2, 0.2), font }
+    { x: 180, y: serviceY - 25, size: 10, color: rgb(0.2, 0.2, 0.2), font },
   );
   page.drawText("Delivery Date:", {
     x: 350,
@@ -331,9 +321,9 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
   });
   page.drawText(
     new Date(
-      advanceBill.deliveryDate || Date.now() + 86400000
+      advanceBill.deliveryDate || Date.now() + 86400000,
     ).toLocaleDateString("en-IN"),
-    { x: 420, y: serviceY - 25, size: 10, color: rgb(0.2, 0.2, 0.2), font }
+    { x: 420, y: serviceY - 25, size: 10, color: rgb(0.2, 0.2, 0.2), font },
   );
   page.drawRectangle({
     x: 0,
@@ -401,7 +391,6 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
     opacity: 0.6,
   });
 
-  // Note + Terms
   let termsY = 250;
   if (advanceBill.note && advanceBill.note.trim()) {
     const noteY = 290;
@@ -424,7 +413,7 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
         size: 10,
         color: rgb(0.2, 0.2, 0.2),
         font,
-      })
+      }),
     );
     termsY = noteY - 20 - noteLines.length * 12 - 20;
     page.drawRectangle({
@@ -478,10 +467,9 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
       size: 9,
       color: rgb(0.2, 0.2, 0.2),
       font,
-    })
+    }),
   );
 
-  // Footer
   const footerY = 60;
   page.drawText("Customer Signature", {
     x: 100,
@@ -518,7 +506,7 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
   });
   page.drawText(
     "OK MOTORS | Pillar num.53, Bailey Rd, Raja Bazar, Patna, Bihar 800014",
-    { x: 160, y: footerY - 50, size: 8, color: rgb(0.5, 0.5, 0.5), font }
+    { x: 160, y: footerY - 50, size: 8, color: rgb(0.5, 0.5, 0.5), font },
   );
 
   const pdfBytes = await pdfDoc.save();

@@ -23,7 +23,7 @@ const SellRequestSchema = new mongoose.Schema(
     },
     notes: { type: String },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("SellRequest", SellRequestSchema);

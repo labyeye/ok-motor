@@ -167,7 +167,7 @@ const PUCForm = () => {
         year: formData.year,
         regNo: formData.regNo,
         pucNumber: formData.pucNumber,
-        // Keep both keys aligned for backward compatibility with existing readers.
+
         pucExpiry: formData.pucExpiry,
         pucExpiryDate: formData.pucExpiry,
         pucIssueDate: formData.pucIssueDate,
@@ -175,7 +175,6 @@ const PUCForm = () => {
       };
 
       if (formData._id) {
-        // Update existing record
         await axios.put(`${API_BASE_URL}/puc/${formData._id}`, payload, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -184,7 +183,6 @@ const PUCForm = () => {
         });
         alert("PUC record updated successfully!");
       } else {
-        // Create new record
         await axios.post(`${API_BASE_URL}/puc`, payload, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -205,7 +203,7 @@ const PUCForm = () => {
         pucNumber: "",
         pucExpiry: "",
       });
-      // specific navigation or state clear if needed
+
       if (formData._id) {
         navigate("/puc/history");
       }
@@ -433,7 +431,7 @@ const PUCForm = () => {
         paddingTop: isMobile ? "60px" : "0",
       }}
     >
-      {/* Mobile Sidebar Overlay */}
+      {}
       {isSidebarOpen && isMobile && (
         <div
           style={styles.sidebarOverlay}
@@ -441,12 +439,12 @@ const PUCForm = () => {
         ></div>
       )}
 
-      {/* Mobile Top Bar */}
+      {}
       <AppSidebar user={user} onLogout={handleLogout} />
 
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
-          {/* Header */}
+          {}
           <div style={styles.header}>
             <div style={styles.titleGroup}>
               <div

@@ -1,4 +1,3 @@
-// src/pages/SettingsPage.js
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
@@ -41,7 +40,6 @@ const SettingsPage = () => {
     loadSettings();
     loadSyncStats();
 
-    // load save dirs
     (async () => {
       if (window.electronAPI && window.electronAPI.getSaveDirs) {
         const res = await window.electronAPI.getSaveDirs();
@@ -49,12 +47,10 @@ const SettingsPage = () => {
       }
     })();
 
-    // Subscribe to network changes
     const unsubscribeNetwork = networkService.subscribe((online) => {
       setIsOnline(online);
     });
 
-    // Subscribe to sync events
     const unsubscribeSync = syncService.subscribe((event, data) => {
       if (event === "sync-start") {
         setIsSyncing(true);
@@ -162,7 +158,7 @@ const SettingsPage = () => {
     if (!window.electronAPI || !window.electronAPI.selectSaveDir) {
       showMessage(
         "error",
-        "Directory selection is only available in desktop app"
+        "Directory selection is only available in desktop app",
       );
       return;
     }
@@ -172,7 +168,7 @@ const SettingsPage = () => {
       setSaveDirs((prev) => ({ ...prev, [docType]: result.path }));
       showMessage(
         "success",
-        `Save directory for ${docType} set to ${result.path}`
+        `Save directory for ${docType} set to ${result.path}`,
       );
     } else if (!result.canceled) {
       showMessage("error", "Failed to set save directory");
@@ -195,7 +191,6 @@ const SettingsPage = () => {
       return;
     }
 
-    // Fallback: update UI state only
     setSaveDirs((prev) => {
       const copy = { ...prev };
       delete copy[docType];
@@ -206,7 +201,6 @@ const SettingsPage = () => {
 
   const handleTestSaveDir = async (docType) => {
     try {
-      // Create a tiny PDF for testing
       const pdfDoc = await PDFDocument.create();
       const page = pdfDoc.addPage([300, 200]);
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -222,17 +216,17 @@ const SettingsPage = () => {
       const res = await fileSaveService.savePdfToDefaultDir(
         filename,
         pdfBytes,
-        docType
+        docType,
       );
       if (res && res.success) {
         showMessage(
           "success",
-          `Test PDF saved${res.path ? ` to ${res.path}` : ""}`
+          `Test PDF saved${res.path ? ` to ${res.path}` : ""}`,
         );
       } else {
         showMessage(
           "error",
-          `Test save failed${res && res.error ? `: ${res.error}` : ""}`
+          `Test save failed${res && res.error ? `: ${res.error}` : ""}`,
         );
       }
     } catch (error) {
@@ -381,8 +375,8 @@ const SettingsPage = () => {
     },
     topBarLogo: {
       width: "250px",
-    height: "auto",
-    margin: "-40px",
+      height: "auto",
+      margin: "-40px",
       padding: 0,
       display: "block",
     },
@@ -439,7 +433,7 @@ const SettingsPage = () => {
                 Settings
               </h1>
 
-              {/* Network Status */}
+              {}
               <section
                 style={{
                   marginBottom: "2rem",
@@ -499,7 +493,7 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              {/* Storage Settings */}
+              {}
               {window.electronAPI && (
                 <section
                   style={{
@@ -587,7 +581,7 @@ const SettingsPage = () => {
                 </section>
               )}
 
-              {/* Sync Settings */}
+              {}
               <section
                 style={{
                   marginBottom: "2rem",
@@ -679,7 +673,7 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              {/* Sync Statistics */}
+              {}
               <section
                 style={{
                   marginBottom: "2rem",
@@ -819,7 +813,7 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              {/* Data Management */}
+              {}
               <section
                 style={{
                   marginBottom: "2rem",
@@ -864,7 +858,7 @@ const SettingsPage = () => {
                 </p>
               </section>
 
-              {/* Default PDF Save Locations */}
+              {}
               {window.electronAPI && (
                 <section
                   style={{ marginBottom: "2rem", paddingBottom: "2rem" }}
@@ -964,7 +958,7 @@ const SettingsPage = () => {
                 </section>
               )}
 
-              {/* Message Display */}
+              {}
               {message.text && (
                 <div
                   style={{
@@ -976,20 +970,20 @@ const SettingsPage = () => {
                       message.type === "success"
                         ? "#d1fae5"
                         : message.type === "error"
-                        ? "#fee2e2"
-                        : "#dbeafe",
+                          ? "#fee2e2"
+                          : "#dbeafe",
                     color:
                       message.type === "success"
                         ? "#065f46"
                         : message.type === "error"
-                        ? "#991b1b"
-                        : "#1e40af",
+                          ? "#991b1b"
+                          : "#1e40af",
                     border: `1px solid ${
                       message.type === "success"
                         ? "#10b981"
                         : message.type === "error"
-                        ? "#ef4444"
-                        : "#3b82f6"
+                          ? "#ef4444"
+                          : "#3b82f6"
                     }`,
                   }}
                 >

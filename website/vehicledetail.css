@@ -1,10 +1,9 @@
-
 :root {
-  --primary-color: #303E27;
+  --primary-color: #303e27;
   --primary-hover: #252f1f;
-  --accent: #303E27;
+  --accent: #303e27;
   --accent-2: #4a5c38;
-  --bg-color: #F6FAF7;
+  --bg-color: #f6faf7;
   --surface: #ffffff;
   --card-alt: #f8faf9;
   --text: #1a1a1a;
@@ -13,7 +12,6 @@
   --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Amazon-Style Layout */
 .vehicle-main-section {
   max-width: 1400px;
   margin: 40px auto;
@@ -28,7 +26,6 @@
   margin-bottom: 40px;
 }
 
-/* Left Side - Image Gallery */
 .vehicle-image-block {
   position: sticky;
   top: 100px;
@@ -66,11 +63,10 @@
 
 .vehicle-thumbnails img:hover,
 .vehicle-thumbnails img.selected {
-  border-color: #303E27;
+  border-color: #303e27;
   box-shadow: 0 2px 8px rgba(48, 62, 39, 0.3);
 }
 
-/* Right Side - Details */
 .vehicle-details-block {
   padding: 0;
 }
@@ -78,7 +74,7 @@
 .vehicle-title {
   font-size: 24px;
   font-weight: 400;
-  color: #0F1111;
+  color: #0f1111;
   line-height: 32px;
   margin: 0 0 8px 0;
 }
@@ -89,10 +85,9 @@
   margin: 0 0 16px 0;
 }
 
-/* Price Box - Amazon Style */
 .price-box {
   background: #ffffff;
-  border: 1px solid #D5D9D9;
+  border: 1px solid #d5d9d9;
   border-radius: 8px;
   padding: 20px;
   margin: 20px 0;
@@ -114,7 +109,7 @@
 .vehicle-price {
   font-size: 28px;
   font-weight: 400;
-  color: #B12704;
+  color: #b12704;
   line-height: 1;
 }
 
@@ -124,7 +119,6 @@
   margin-top: 8px;
 }
 
-/* Specs Section */
 .specs-section {
   margin: 24px 0;
   padding: 20px 0;
@@ -135,7 +129,7 @@
 .specs-title {
   font-size: 18px;
   font-weight: 700;
-  color: #0F1111;
+  color: #0f1111;
   margin: 0 0 16px 0;
 }
 
@@ -153,7 +147,7 @@
 
 .spec-icon {
   font-size: 20px;
-  color: #303E27;
+  color: #303e27;
   width: 24px;
   text-align: center;
 }
@@ -171,10 +165,9 @@
 .spec-value {
   font-size: 14px;
   font-weight: 600;
-  color: #0F1111;
+  color: #0f1111;
 }
 
-/* CTA Buttons - Amazon Style */
 .cta-section {
   display: flex;
   flex-direction: column;
@@ -183,13 +176,13 @@
 }
 
 .btn-primary {
-  background: #FFD814;
-  border: 1px solid #FCD200;
+  background: #ffd814;
+  border: 1px solid #fcd200;
   border-radius: 8px;
   padding: 12px 24px;
   font-size: 15px;
   font-weight: 500;
-  color: #0F1111;
+  color: #0f1111;
   cursor: pointer;
   transition: background 0.2s;
   width: 100%;
@@ -200,13 +193,13 @@
 }
 
 .btn-primary:hover {
-  background: #F7CA00;
-  border-color: #F2C200;
+  background: #f7ca00;
+  border-color: #f2c200;
 }
 
 .btn-secondary {
-  background: #303E27;
-  border: 1px solid #303E27;
+  background: #303e27;
+  border: 1px solid #303e27;
   border-radius: 8px;
   padding: 12px 24px;
   font-size: 15px;
@@ -228,12 +221,12 @@
 
 .btn-outline {
   background: #ffffff;
-  border: 1px solid #D5D9D9;
+  border: 1px solid #d5d9d9;
   border-radius: 8px;
   padding: 12px 24px;
   font-size: 15px;
   font-weight: 500;
-  color: #0F1111;
+  color: #0f1111;
   cursor: pointer;
   transition: all 0.2s;
   width: 100%;
@@ -244,18 +237,17 @@
 }
 
 .btn-outline:hover {
-  background: #F7FAFA;
+  background: #f7fafa;
   border-color: #008296;
 }
 
-/* Trust Badges */
 .trust-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
   margin: 24px 0;
   padding: 16px;
-  background: #F7FAFA;
+  background: #f7fafa;
   border-radius: 8px;
 }
 
@@ -271,7 +263,6 @@
   font-size: 16px;
 }
 
-/* Additional Info Section */
 .additional-info-section {
   margin: 40px 0;
   padding: 24px;
@@ -283,7 +274,7 @@
 .section-heading {
   font-size: 21px;
   font-weight: 700;
-  color: #0F1111;
+  color: #0f1111;
   margin: 0 0 16px 0;
 }
 
@@ -307,36 +298,35 @@
   padding: 12px 16px;
   font-size: 14px;
   font-weight: 600;
-  color: #0F1111;
-  background: #F7FAFA;
+  color: #0f1111;
+  background: #f7fafa;
 }
 
 .info-value {
   padding: 12px 16px;
   font-size: 14px;
-  color: #0F1111;
+  color: #0f1111;
 }
 
-/* Mobile Responsive */
 @media (max-width: 1024px) {
   .vehicle-content-row {
     grid-template-columns: 1fr;
     gap: 24px;
   }
-  
+
   .vehicle-image-block {
     position: relative;
     top: 0;
   }
-  
+
   .specs-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .info-row {
     grid-template-columns: 1fr;
   }
-  
+
   .info-label {
     border-bottom: 1px solid #e7e7e7;
     background: #ffffff;
@@ -344,13 +334,12 @@
   }
 }
 
-/* Why Choose Section */
 .why-choose-row {
   display: flex;
   justify-content: center;
   gap: 40px;
   padding: 32px;
-  background: #F7FAFA;
+  background: #f7fafa;
   border-radius: 8px;
   margin: 24px 0;
 }
@@ -360,17 +349,16 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  color: #0F1111;
+  color: #0f1111;
   font-size: 14px;
   font-weight: 500;
 }
 
 .why-choose-item i {
   font-size: 32px;
-  color: #303E27;
+  color: #303e27;
 }
 
-/* Other Cars Section */
 .other-cars-section {
   margin: 40px 0;
   padding: 24px;
@@ -381,7 +369,7 @@
 .other-cars-title {
   font-size: 21px;
   font-weight: 700;
-  color: #0F1111;
+  color: #0f1111;
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid #e7e7e7;
@@ -398,7 +386,7 @@
   min-width: 280px;
   max-width: 280px;
   background: #ffffff;
-  border: 1px solid #D5D9D9;
+  border: 1px solid #d5d9d9;
   border-radius: 8px;
   padding: 16px;
   transition: box-shadow 0.2s;
@@ -421,7 +409,7 @@
     flex-wrap: wrap;
     gap: 20px;
   }
-  
+
   .cta-section {
     position: fixed;
     bottom: 0;
@@ -435,17 +423,16 @@
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
-  
+
   .btn-outline {
     grid-column: 1 / -1;
   }
-  
+
   .vehicle-main-section {
     margin-bottom: 80px;
   }
 }
 
-/* Slider controls */
 .slider-btn {
   position: absolute;
   top: 50%;
@@ -453,12 +440,12 @@
   width: 40px;
   height: 40px;
   background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #D5D9D9;
+  border: 1px solid #d5d9d9;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #0F1111;
+  color: #0f1111;
   cursor: pointer;
   z-index: 10;
   opacity: 0;
@@ -477,7 +464,6 @@
   opacity: 1;
 }
 
-/* Scrollbar styling */
 .vehicle-thumbnails::-webkit-scrollbar,
 .other-cars-row::-webkit-scrollbar {
   height: 6px;
@@ -500,8 +486,6 @@
   background: #555;
 }
 
-
-
 .button-group {
   display: flex;
   gap: 12px;
@@ -509,7 +493,7 @@
 
 .contact-btn,
 .view-details-btn {
-  background: #303E27;
+  background: #303e27;
   color: #fff;
   border: none;
   border-radius: 999px;
@@ -535,7 +519,7 @@
   display: none;
   background: none;
   border: none;
-  /* Use a dark default color so the icon is visible on light nav backgrounds */
+
   color: #0f172a;
   font-size: 2rem;
   cursor: pointer;
@@ -545,18 +529,14 @@
   top: 25px;
 }
 
-/* hide desktop nav on small screens */
 @media (max-width: 900px) {
   .mobile-menu-toggle {
     display: block;
   }
 
-  /* Ensure the hamburger is visible on this page even if other stylesheets
-     (e.g., inventory.css/style.css) are loaded after and override basic rules.
-     Use higher specificity and !important so the button shows on mobile. */
   .hero-section header .mobile-menu-toggle {
     display: block !important;
-    color: white !important; /* dark icon on light background */
+    color: white !important;
     right: 5% !important;
     top: 32px !important;
     z-index: 9999 !important;
@@ -569,7 +549,6 @@
   }
 }
 
-/* Responsive adjustments */
 @media (max-width: 900px) {
   .vehicle-main-section {
     padding: 24px;
@@ -604,10 +583,9 @@
     justify-content: flex-start;
   }
 
-  /* Improve mobile image block layout for horizontal thumbnails */
   .vehicle-image-block {
     width: 100%;
-    background: linear-gradient(135deg, #f8fafc 0%, #F6FAF7 100%);
+    background: linear-gradient(135deg, #f8fafc 0%, #f6faf7 100%);
     border-radius: 16px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     border: 1px solid #e2e8f0;
@@ -625,7 +603,6 @@
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   }
 
-  /* Modern horizontal mobile thumbnails design */
   .mobile-thumbnails {
     display: flex;
     flex-direction: row !important;
@@ -646,8 +623,6 @@
     -webkit-overflow-scrolling: touch;
     position: relative;
   }
-
-  /* Remove duplicate mobile-thumbnails rule and the nested media query */
 
   .mobile-thumbnails img {
     flex: 0 0 auto;
@@ -674,7 +649,6 @@
     transform: translateY(-2px) scale(1.05);
   }
 
-  /* Hide scrollbar but keep functionality */
   .mobile-thumbnails::-webkit-scrollbar {
     display: none;
   }
@@ -685,7 +659,7 @@
   }
 
   .vehicle-thumbnails img {
-    width: 120px; /* Keep thumbnails a uniform fixed size */
+    width: 120px;
     height: 90px;
   }
 
@@ -780,7 +754,6 @@
     padding: 18px;
   }
 
-  /* Make CTA buttons easier to tap on mobile */
   .add-to-cart-btn,
   .contact-btn,
   .view-details-btn {
@@ -789,7 +762,6 @@
     font-size: 1rem;
   }
 
-  /* Make other-cars slider show one full card per swipe on small screens */
   .other-cars-row {
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
@@ -813,8 +785,6 @@
   }
 }
 
-/* Mobile slider styles */
-
 .vehicle-thumbnails {
   margin-top: 10px;
   display: flex;
@@ -835,10 +805,9 @@
 }
 
 .vehicle-thumbnails img.selected {
-  border-color: #303E27;
+  border-color: #303e27;
 }
 
-/* Desktop: clear two-column layout using flex to keep image and details aligned */
 @media (min-width: 900px) {
   .vehicle-main-section {
     max-width: 1920px;
@@ -898,7 +867,6 @@
   }
 }
 
-/* Thumbnail scrolling improvements */
 .vehicle-thumbnails {
   scroll-snap-type: x mandatory;
 }
@@ -907,7 +875,6 @@
   scroll-snap-align: center;
 }
 
-/* Action buttons styling */
 .action-btn {
   padding: 14px 28px;
   border: none;
@@ -924,7 +891,7 @@
 }
 
 .primary-btn {
-  background: #303E27;
+  background: #303e27;
   color: #ffffff;
   box-shadow: 0 4px 12px rgba(48, 62, 39, 0.3);
 }
@@ -937,12 +904,12 @@
 
 .secondary-btn {
   background: #f8faf9;
-  color: #303E27;
-  border: 2px solid #303E27;
+  color: #303e27;
+  border: 2px solid #303e27;
 }
 
 .secondary-btn:hover {
-  background: #303E27;
+  background: #303e27;
   color: #ffffff;
   transform: translateY(-2px);
 }
@@ -957,7 +924,6 @@
   background: #cbd5e1;
 }
 
-/* Vehicle details grid styling */
 .vehicle-details-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -969,7 +935,7 @@
   background: #f8faf9;
   padding: 16px;
   border-radius: 12px;
-  border-left: 4px solid #303E27;
+  border-left: 4px solid #303e27;
   transition: all 0.3s ease;
 }
 
@@ -988,7 +954,7 @@
 }
 
 .detail-label i {
-  color: #303E27;
+  color: #303e27;
   font-size: 1.1rem;
 }
 
@@ -1001,7 +967,7 @@
 .vehicle-title {
   font-size: 2rem;
   font-weight: 800;
-  color: #303E27;
+  color: #303e27;
   margin-bottom: 8px;
 }
 
@@ -1016,32 +982,31 @@
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
+
   .action-btn {
     width: 100%;
     padding: 12px 20px;
   }
-  
+
   .vehicle-title {
     font-size: 1.5rem;
   }
-  
+
   .vehicle-price {
     font-size: 2rem !important;
   }
-  
+
   .additional-details-section {
     margin-top: 20px;
   }
-  
+
   .action-buttons-section {
     gap: 8px;
   }
 }
 
-/* Price Section Styling */
 .price-section {
-  background: linear-gradient(135deg, #303E27 0%, #4a5c38 100%);
+  background: linear-gradient(135deg, #303e27 0%, #4a5c38 100%);
   padding: 20px;
   border-radius: 12px;
   margin: 20px 0;
@@ -1060,7 +1025,6 @@
   margin: 0;
 }
 
-/* Additional Details Section */
 .additional-details-section {
   margin-top: 30px;
   padding-top: 20px;
@@ -1070,7 +1034,7 @@
 .section-title {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #303E27;
+  color: #303e27;
   margin-bottom: 16px;
   display: flex;
   align-items: center;
@@ -1081,11 +1045,10 @@
   content: "";
   width: 4px;
   height: 24px;
-  background: #303E27;
+  background: #303e27;
   border-radius: 2px;
 }
 
-/* Action Buttons Section */
 .action-buttons-section {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1100,7 +1063,7 @@
 .back-btn {
   grid-column: 1 / -1;
   background: #f1f5f1 !important;
-  color: #303E27 !important;
+  color: #303e27 !important;
   border: 2px solid #e2e8f0 !important;
 }
 

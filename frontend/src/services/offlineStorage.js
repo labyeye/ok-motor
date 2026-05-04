@@ -1,9 +1,3 @@
-// src/services/offlineStorage.js
-/**
- * Offline Storage Service
- * Manages local JSON storage for offline data with MongoDB schema compatibility
- */
-
 class OfflineStorage {
   constructor() {
     this.collections = {
@@ -15,9 +9,6 @@ class OfflineStorage {
     };
   }
 
-  /**
-   * Check if running in Electron environment
-   */
   isElectron() {
     return (
       typeof window !== "undefined" &&
@@ -26,12 +17,7 @@ class OfflineStorage {
     );
   }
 
-  /**
-   * Generate a unique ID compatible with MongoDB ObjectId (24 hex characters)
-   */
   generateId() {
-    // MongoDB ObjectId is 24 hex characters
-    // 4 bytes timestamp + 5 bytes random + 3 bytes counter = 12 bytes = 24 hex chars
     const timestamp = Math.floor(Date.now() / 1000)
       .toString(16)
       .padStart(8, "0");
@@ -46,12 +32,8 @@ class OfflineStorage {
     return id;
   }
 
-  /**
-   * Read data from a collection
-   */
   async read(collection) {
     if (!this.isElectron()) {
-      // Fallback to localStorage for browser
       const data = localStorage.getItem(collection);
       return data ? JSON.parse(data) : [];
     }
@@ -69,12 +51,8 @@ class OfflineStorage {
     }
   }
 
-  /**
-   * Write data to a collection
-   */
   async write(collection, data) {
     if (!this.isElectron()) {
-      // Fallback to localStorage for browser
       localStorage.setItem(collection, JSON.stringify(data));
       return { success: true };
     }
@@ -88,14 +66,10 @@ class OfflineStorage {
     }
   }
 
-  /**
-   * Create a new document in a collection
-   */
   async create(collection, document) {
     try {
       const data = await this.read(collection);
 
-      // Add metadata
       const newDocument = {
         ...document,
         _id: document._id || this.generateId(),
@@ -115,14 +89,10 @@ class OfflineStorage {
     }
   }
 
-  /**
-   * Find documents in a collection
-   */
   async find(collection, query = {}) {
     try {
       const data = await this.read(collection);
 
-      // Simple query matching (extend as needed)
       if (Object.keys(query).length === 0) {
         return { success: true, data };
       }
@@ -143,9 +113,6 @@ class OfflineStorage {
     }
   }
 
-  /**
-   * Find a single document by ID
-   */
   async findById(collection, id) {
     try {
       const data = await this.read(collection);
@@ -161,9 +128,6 @@ class OfflineStorage {
     }
   }
 
-  /**
-   * Update a document by ID
-   */
   async updateById(collection, id, updates) {
     try {
       const data = await this.read(collection);
@@ -189,9 +153,6 @@ class OfflineStorage {
     }
   }
 
-  /**
-   * Delete a document by ID
-   */
   async deleteById(collection, id) {
     try {
       const data = await this.read(collection);
@@ -210,9 +171,6 @@ class OfflineStorage {
     }
   }
 
-  /**
-   * Get all unsynced documents from a collection
-   */
   async getUnsyncedDocuments(collection) {
     try {
       const data = await this.read(collection);
@@ -226,9 +184,6 @@ class OfflineStorage {
     }
   }
 
-  /**
-   * Mark documents as synced
-   */
   async markAsSynced(collection, ids) {
     try {
       const data = await this.read(collection);
@@ -250,9 +205,6 @@ class OfflineStorage {
     }
   }
 
-  /**
-   * Get sync statistics for a collection
-   */
   async getSyncStats(collection) {
     try {
       const data = await this.read(collection);
@@ -271,9 +223,6 @@ class OfflineStorage {
     }
   }
 
-  /**
-   * Clear all data from a collection (use with caution)
-   */
   async clearCollection(collection) {
     try {
       await this.write(collection, []);
@@ -284,9 +233,6 @@ class OfflineStorage {
     }
   }
 
-  /**
-   * Get all collections with their stats
-   */
   async getAllStats() {
     try {
       const stats = {};

@@ -30,7 +30,7 @@ const uploadFilesToImageKit = async (files = []) => {
       console.error(
         "ImageKit upload failed for",
         file.originalname,
-        err.message
+        err.message,
       );
       throw new Error("Image upload failed");
     }
@@ -42,12 +42,10 @@ const createUpdate = asyncHandler(async (req, res) => {
   try {
     const { title, shortDescription, status } = req.body;
     if (!title || !shortDescription) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Title and short description are required",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Title and short description are required",
+      });
     }
 
     const files = req.files || [];
@@ -66,12 +64,10 @@ const createUpdate = asyncHandler(async (req, res) => {
     res.status(201).json({ success: true, data: update });
   } catch (error) {
     console.error("Create update failed:", error.message || error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Failed to create update",
-      });
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to create update",
+    });
   }
 });
 

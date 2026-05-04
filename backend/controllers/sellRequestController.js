@@ -32,12 +32,10 @@ const createSellRequest = asyncHandler(async (req, res) => {
     const { name, email, phone, brand, model, year, price, notes } = req.body;
 
     if (!name || !email || !phone) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Name, email and phone are required",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Name, email and phone are required",
+      });
     }
 
     const files = req.files || [];

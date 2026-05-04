@@ -70,7 +70,7 @@ exports.createServiceBill = async (req, res) => {
 
     console.log(
       "Received service bill data:",
-      JSON.stringify({ serviceItems, ...otherData }, null, 2)
+      JSON.stringify({ serviceItems, ...otherData }, null, 2),
     );
 
     if (otherData.vehicle) {
@@ -102,35 +102,48 @@ exports.createServiceBill = async (req, res) => {
       });
     }
 
-    // Check free service expiration logic
-    if (otherData.serviceType === "free" || otherData.serviceType === "custom") {
+    if (
+      otherData.serviceType === "free" ||
+      otherData.serviceType === "custom"
+    ) {
       const SellLetter = require("../models/SellLetter");
       const sellLetter = await SellLetter.findOne({
-        registrationNumber: new RegExp(`^${otherData.registrationNumber}$`, "i")
+        registrationNumber: new RegExp(
+          `^${otherData.registrationNumber}$`,
+          "i",
+        ),
       }).sort({ saleDate: -1 });
 
       if (sellLetter) {
         const ServiceBillModel = require("../models/ServiceBill");
         const existingFreeServices = await ServiceBillModel.countDocuments({
-          registrationNumber: new RegExp(`^${otherData.registrationNumber}$`, "i"),
+          registrationNumber: new RegExp(
+            `^${otherData.registrationNumber}$`,
+            "i",
+          ),
           serviceType: { $in: ["free", "custom"] },
-          serviceDate: { $gte: sellLetter.saleDate }
+          serviceDate: { $gte: sellLetter.saleDate },
         });
 
         const fourMonthsFromSale = new Date(sellLetter.saleDate);
         fourMonthsFromSale.setMonth(fourMonthsFromSale.getMonth() + 4);
 
-        if (existingFreeServices === 0 && new Date(otherData.serviceDate) > fourMonthsFromSale) {
+        if (
+          existingFreeServices === 0 &&
+          new Date(otherData.serviceDate) > fourMonthsFromSale
+        ) {
           return res.status(400).json({
             success: false,
-            message: "Free service has expired. 1st service was not done within 4 months of the sale date. Only regular service is allowed.",
+            message:
+              "Free service has expired. 1st service was not done within 4 months of the sale date. Only regular service is allowed.",
           });
         }
-        
+
         if (existingFreeServices >= 3) {
           return res.status(400).json({
             success: false,
-            message: "Limit reached: All 3 free services have already been used.",
+            message:
+              "Limit reached: All 3 free services have already been used.",
           });
         }
       }
@@ -337,7 +350,7 @@ exports.previewServiceBillPDF = async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      "inline; filename=service-bill-preview.pdf"
+      "inline; filename=service-bill-preview.pdf",
     );
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.setHeader("Pragma", "no-cache");
@@ -383,7 +396,7 @@ exports.downloadServiceBillPDF = async (req, res) => {
       "Content-Disposition",
       `attachment; filename=service-bill-${
         serviceBill.billNumber || serviceBill._id
-      }.pdf`
+      }.pdf`,
     );
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.setHeader("Pragma", "no-cache");
@@ -435,20 +448,25 @@ exports.updateServiceBill = async (req, res) => {
   try {
     const serviceBill = await ServiceBill.findById(req.params.id);
     if (!serviceBill) {
-      return res.status(404).json({ success: false, message: "Service bill not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Service bill not found" });
     }
 
-    // Permission: allow owner or admin
-    if (req.user.role !== "admin" && String(serviceBill.user) !== String(req.user._id)) {
-      return res.status(403).json({ success: false, message: "Not authorized to update this service bill" });
+    if (
+      req.user.role !== "admin" &&
+      String(serviceBill.user) !== String(req.user._id)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update this service bill",
+      });
     }
 
-    // Prepare update data
     const updateData = { ...req.body };
-    // Do not allow changing billNumber on edit
+
     if (updateData.billNumber) delete updateData.billNumber;
 
-    // If serviceItems / financial fields are present, normalize and recalc totals
     const willRecalc =
       Object.prototype.hasOwnProperty.call(req.body, "serviceItems") ||
       Object.prototype.hasOwnProperty.call(req.body, "discount") ||
@@ -458,49 +476,76 @@ exports.updateServiceBill = async (req, res) => {
       Object.prototype.hasOwnProperty.call(req.body, "advancePaid");
 
     if (willRecalc) {
-      const items = (req.body.serviceItems && Array.isArray(req.body.serviceItems))
-        ? req.body.serviceItems
-        : serviceBill.serviceItems || [];
+      const items =
+        req.body.serviceItems && Array.isArray(req.body.serviceItems)
+          ? req.body.serviceItems
+          : serviceBill.serviceItems || [];
 
       const normalized = items.map((item) => {
         const qty = parseFloat(item.quantity) || 0;
         const rate = parseFloat(item.rate) || 0;
         const amount =
-          item.amount !== undefined && item.amount !== null && item.amount !== ""
+          item.amount !== undefined &&
+          item.amount !== null &&
+          item.amount !== ""
             ? parseFloat(item.amount) || 0
             : rate * qty;
         return { ...item, quantity: qty, rate: rate, amount };
       });
 
       updateData.serviceItems = normalized;
-      updateData.totalAmount = normalized.reduce((sum, it) => sum + (parseFloat(it.amount) || 0), 0);
-      updateData.taxAmount = ((parseFloat(req.body.taxRate) || parseFloat(serviceBill.taxRate) || 0) / 100) * updateData.totalAmount;
+      updateData.totalAmount = normalized.reduce(
+        (sum, it) => sum + (parseFloat(it.amount) || 0),
+        0,
+      );
+      updateData.taxAmount =
+        ((parseFloat(req.body.taxRate) ||
+          parseFloat(serviceBill.taxRate) ||
+          0) /
+          100) *
+        updateData.totalAmount;
 
       let discountAmount = 0;
-      const discountType = req.body.discountType || serviceBill.discountType || "fixed";
+      const discountType =
+        req.body.discountType || serviceBill.discountType || "fixed";
       if (discountType === "percentage") {
-        const pct = parseFloat(req.body.discountPercentage) || parseFloat(serviceBill.discountPercentage) || 0;
+        const pct =
+          parseFloat(req.body.discountPercentage) ||
+          parseFloat(serviceBill.discountPercentage) ||
+          0;
         discountAmount = (pct / 100) * updateData.totalAmount;
       } else {
-        discountAmount = parseFloat(req.body.discount) || parseFloat(serviceBill.discount) || 0;
+        discountAmount =
+          parseFloat(req.body.discount) ||
+          parseFloat(serviceBill.discount) ||
+          0;
       }
 
-      updateData.grandTotal = updateData.totalAmount + updateData.taxAmount - discountAmount;
-      updateData.balanceDue = updateData.grandTotal - (parseFloat(req.body.advancePaid) || parseFloat(serviceBill.advancePaid) || 0);
+      updateData.grandTotal =
+        updateData.totalAmount + updateData.taxAmount - discountAmount;
+      updateData.balanceDue =
+        updateData.grandTotal -
+        (parseFloat(req.body.advancePaid) ||
+          parseFloat(serviceBill.advancePaid) ||
+          0);
     }
 
     updateData.editedAt = new Date();
     updateData.editedBy = req.user._id;
 
-    const updated = await ServiceBill.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true, runValidators: true });
+    const updated = await ServiceBill.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateData },
+      { new: true, runValidators: true },
+    );
 
-    // Re-generate PDF if financials changed (best-effort)
     if (willRecalc) {
       try {
         const buffer = await generateServiceBillPDF(updated, true);
-        // When generateServiceBillPDF returns a Buffer, we can't derive a URL here reliably.
-        // Save timestamp to indicate regeneration; frontend can request fresh PDF via download route.
-        await ServiceBill.findByIdAndUpdate(updated._id, { $set: { pdfUpdatedAt: new Date() } });
+
+        await ServiceBill.findByIdAndUpdate(updated._id, {
+          $set: { pdfUpdatedAt: new Date() },
+        });
       } catch (pdfErr) {
         console.error("Failed generating PDF after update:", pdfErr);
       }
@@ -510,7 +555,11 @@ exports.updateServiceBill = async (req, res) => {
   } catch (error) {
     console.error("Error updating service bill:", error);
     if (error && (error.code === 11000 || error.name === "MongoServerError")) {
-      return res.status(409).json({ success: false, message: "Duplicate key error", error: error.keyValue || error.message });
+      return res.status(409).json({
+        success: false,
+        message: "Duplicate key error",
+        error: error.keyValue || error.message,
+      });
     }
     res.status(400).json({ success: false, message: error.message });
   }
@@ -518,7 +567,6 @@ exports.updateServiceBill = async (req, res) => {
 
 exports.deleteServiceBill = async (req, res) => {
   try {
-    // Find the service bill
     const serviceBill = await ServiceBill.findById(req.params.id);
 
     if (!serviceBill) {
@@ -528,7 +576,6 @@ exports.deleteServiceBill = async (req, res) => {
       });
     }
 
-    // Allow deletion by admin or owner
     const isOwner =
       serviceBill.user && serviceBill.user.toString() === req.user.id;
     if (req.user.role !== "admin" && !isOwner) {

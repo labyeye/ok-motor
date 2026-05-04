@@ -8,7 +8,7 @@
 :root {
   --primary-color: #a32919;
   --secondary-color: #100f0f;
-  --text-color: #F6FAF7;
+  --text-color: #f6faf7;
   --light-gray: #a9a9a9;
   --dark-gray: #464646;
 }
@@ -27,7 +27,6 @@
 .form-group label span {
   color: var(--primary-color);
 }
-
 
 .form-group input,
 .form-group select,
@@ -80,7 +79,7 @@
 }
 
 .submit-btn {
-  background: linear-gradient(90deg, var(--primary-color), #CF1819);
+  background: linear-gradient(90deg, var(--primary-color), #cf1819);
   color: white;
   border: none;
   border-radius: 30px;
@@ -108,7 +107,7 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(90deg, var(--primary-color), #CF1819);
+  background: linear-gradient(90deg, var(--primary-color), #cf1819);
   color: white;
   display: flex;
   align-items: center;
@@ -131,7 +130,7 @@
 }
 
 .cta-button {
-  background: linear-gradient(90deg, var(--primary-color), #CF1819);
+  background: linear-gradient(90deg, var(--primary-color), #cf1819);
   color: white;
   border: none;
   border-radius: 30px;
@@ -147,7 +146,6 @@
   box-shadow: 0 8px 20px rgba(163, 41, 25, 0.4);
 }
 
-/* Testimonials Section */
 .testimonials-section {
   padding: 80px 20px;
   background: #1a1a1a;
@@ -158,7 +156,7 @@
   color: white;
   font-size: 2.5rem;
   margin-bottom: 50px;
-  background: linear-gradient(90deg, var(--primary-color), #CF1819);
+  background: linear-gradient(90deg, var(--primary-color), #cf1819);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -256,9 +254,7 @@
   background: var(--primary-color);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
-
   .testimonials-section {
     padding: 60px 20px;
   }
@@ -278,7 +274,6 @@
 }
 
 @media (max-width: 480px) {
-
   .form-group input,
   .form-group select,
   .form-group textarea {

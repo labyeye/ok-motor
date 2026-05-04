@@ -27,7 +27,7 @@ const getBikeDetails = asyncHandler(async (req, res) => {
           "X-Api-Key": API_NINJAS_KEY,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     if (!response.ok) {
@@ -102,7 +102,7 @@ const getBikeModels = asyncHandler(async (req, res) => {
           "X-Api-Key": API_NINJAS_KEY,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     if (!response.ok) {

@@ -79,7 +79,6 @@ const SellLetterHistory = () => {
     note: { x: 60, y: 33, size: 10 },
   };
 
-  // Helper: parse an item's sale datetime (prefer `saleDate`+`saleTime`, fallback to `createdAt`)
   const parseSaleDateTime = (item) => {
     try {
       if (!item) return new Date(0);
@@ -87,19 +86,19 @@ const SellLetterHistory = () => {
       const parseDateString = (ds) => {
         if (!ds) return null;
         if (ds instanceof Date) return ds;
-        // Handle dd/mm/yyyy -> convert to yyyy-mm-dd
+
         if (typeof ds === "string" && ds.includes("/")) {
           const parts = ds.split("/").map((s) => s.trim());
           if (parts.length >= 3) {
             const [d, m, y] = parts;
-            // guard against already yyyy/mm/dd
+
             if (y.length === 4)
               return new Date(
                 `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`,
               );
           }
         }
-        // Last resort: let Date try to parse
+
         return new Date(ds);
       };
 
@@ -107,11 +106,11 @@ const SellLetterHistory = () => {
         if (!ts) return "00:00:00";
         if (typeof ts !== "string") ts = String(ts);
         ts = ts.trim();
-        // If format like '07:30' -> add seconds
+
         if (/^\d{1,2}:\d{2}$/.test(ts)) return `${ts}:00`;
-        // If format like '07:30:45' -> ok
+
         if (/^\d{1,2}:\d{2}:\d{2}$/.test(ts)) return ts;
-        // If contains AM/PM e.g. '07:30 AM' or '7:30pm'
+
         const ampmMatch = ts.match(
           /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])$/,
         );
@@ -124,7 +123,7 @@ const SellLetterHistory = () => {
           if (ampm === "am" && hh === 12) hh = 0;
           return `${String(hh).padStart(2, "0")}:${mm}:${ss}`;
         }
-        // Fallback: try to extract hh:mm
+
         const basic = ts.match(/(\d{1,2}):(\d{2})/);
         if (basic) return `${basic[1].padStart(2, "0")}:${basic[2]}:00`;
         return "00:00:00";
@@ -134,9 +133,8 @@ const SellLetterHistory = () => {
         const d = parseDateString(item.saleDate);
         if (item.saleTime) {
           const t = parseTimeString(item.saleTime);
-          // If d is valid date
+
           if (d && !isNaN(d.getTime())) {
-            // Combine as ISO
             const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
             return new Date(`${isoDate}T${t}`);
           }
@@ -153,7 +151,6 @@ const SellLetterHistory = () => {
     }
   };
 
-  // Format a letter's sale datetime for display (date and optional time)
   const formatSaleDateTimeDisplay = (letter) => {
     if (!letter) return "";
     const dt = parseSaleDateTime(letter);
@@ -162,18 +159,14 @@ const SellLetterHistory = () => {
     const month = String(dt.getMonth() + 1).padStart(2, "0");
     const year = dt.getFullYear();
     const datePart = `${day}/${month}/${year}`;
-    // If letter has explicit saleTime, prefer formatting that
+
     let timePart = "";
     if (letter.saleTime) {
-      // reuse formatTime12Hour helper if present
       try {
         const t = formatTime12Hour(letter.saleTime);
         if (t) timePart = t;
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
     } else {
-      // if parsed datetime has non-zero time, show 12-hour time
       if (dt.getHours() !== 0 || dt.getMinutes() !== 0) {
         const hh = dt.getHours();
         const mm = dt.getMinutes();
@@ -529,11 +522,11 @@ const SellLetterHistory = () => {
             `https://ok-motor-backend.vercel.app/api/sell-letters/all`,
             { headers: {} },
           );
-          // normalize response to array
+
           const items = Array.isArray(response.data)
             ? response.data
             : response.data?.sellLetters || response.data?.data || [];
-          // sort by saleDate/saleTime (most recent first), fallback to createdAt
+
           items.sort((a, b) => parseSaleDateTime(b) - parseSaleDateTime(a));
           setSellLetters(items);
         } else {
@@ -703,7 +696,7 @@ const SellLetterHistory = () => {
       }, 100);
     });
   };
-  // Module-scoped header/footer drawer used by multiple PDF generators
+
   const drawHeaderFooter = async (pdfDoc, page) => {
     try {
       const headerFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -712,7 +705,6 @@ const SellLetterHistory = () => {
       const logoBytes = await fetch(logoUrl).then((r) => r.arrayBuffer());
       const logoImg = await pdfDoc.embedPng(logoBytes);
 
-      // Header
       page.drawRectangle({
         x: 0,
         y: 780,
@@ -745,7 +737,6 @@ const SellLetterHistory = () => {
         font: headerFont,
       });
 
-      // Footer
       try {
         const thank = "Thank you for your business!";
         const addr =
@@ -869,7 +860,6 @@ const SellLetterHistory = () => {
       (letter.buyerName || "").toLowerCase().includes(q);
     if (!matchesSearch) return false;
 
-    // Year filter -> saleDate or createdAt
     const yFilter = filters.year;
     if (yFilter && yFilter.op) {
       let y = null;
@@ -898,7 +888,7 @@ const SellLetterHistory = () => {
       }
       if (y === null || isNaN(y)) return false;
       const v = Number(yFilter.value);
-      // require value for non-range ops; for between allow one-sided
+
       if (yFilter.op !== "between" && isNaN(v)) return false;
       if (yFilter.op === "eq" && y !== v) return false;
       if (yFilter.op === "gt" && y <= v) return false;
@@ -920,13 +910,12 @@ const SellLetterHistory = () => {
       }
     }
 
-    // Amount filter
     const aFilter = filters.amount;
     if (aFilter && aFilter.op) {
       const a = Number(letter.saleAmount || 0);
       if (isNaN(a)) return false;
       const v = Number(aFilter.value);
-      // require value for non-range ops; for between allow one-sided
+
       if (aFilter.op !== "between" && isNaN(v)) return false;
       if (aFilter.op === "eq" && a !== v) return false;
       if (aFilter.op === "gt" && a <= v) return false;
@@ -1104,7 +1093,7 @@ const SellLetterHistory = () => {
                 });
             }
           }
-          // Separate PAN and Delivery Photo into their own arrays for individual page rendering
+
           if (documentsObj.pan)
             panItems.push({ title: "PAN Card", url: documentsObj.pan });
           if (documentsObj.deliveryPhoto || documentsObj.vehicleKM)
@@ -1349,7 +1338,6 @@ const SellLetterHistory = () => {
             }
           }
 
-          // Render PAN Card on its own page (1 per page)
           for (const item of panItems) {
             const page = pdfDoc.addPage([595, 842]);
             try {
@@ -1408,7 +1396,6 @@ const SellLetterHistory = () => {
             }
           }
 
-          // Render Delivery Photo on its own page (1 per page)
           for (const item of deliveryPhotoItems) {
             const page = pdfDoc.addPage([595, 842]);
             try {
@@ -1467,7 +1454,6 @@ const SellLetterHistory = () => {
             }
           }
 
-          // Render other items (Aadhaar separate, Vehicle Photos) - 2 per page
           for (let i = 0; i < items.length; i += 2) {
             const page = pdfDoc.addPage([595, 842]);
             try {
@@ -1526,7 +1512,6 @@ const SellLetterHistory = () => {
             }
           }
 
-          // Render Insurance Certificate items (1 per page)
           for (const item of insuranceCertificateItems) {
             const page = pdfDoc.addPage([595, 842]);
             try {
@@ -1603,7 +1588,6 @@ const SellLetterHistory = () => {
             }
           }
 
-          // Render Vehicle NOC items (1 per page)
           for (const item of vehicleNOCItems) {
             const page = pdfDoc.addPage([595, 842]);
             try {
@@ -1668,7 +1652,6 @@ const SellLetterHistory = () => {
             }
           }
 
-          // Render Transfer Receipt items
           for (const item of transferReceiptItems) {
             const page = pdfDoc.addPage([595, 842]);
             try {
@@ -1733,7 +1716,6 @@ const SellLetterHistory = () => {
             }
           }
 
-          // Render Signed Doc items (1 per page)
           for (const item of signedDocSellItems) {
             const page = pdfDoc.addPage([595, 842]);
             try {
@@ -2088,7 +2070,7 @@ const SellLetterHistory = () => {
               });
           }
         }
-        // Separate PAN and Delivery Photo into their own arrays for individual page rendering
+
         if (documentsObj.pan)
           panItems.push({ title: "PAN Card", url: documentsObj.pan });
         if (documentsObj.deliveryPhoto || documentsObj.vehicleKM)
@@ -2299,7 +2281,6 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Render PAN Card on its own page (1 per page)
         for (const item of panItems) {
           const page = pdfDoc.addPage([595, 842]);
           try {
@@ -2358,7 +2339,6 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Render Delivery Photo on its own page (1 per page)
         for (const item of deliveryPhotoItems) {
           const page = pdfDoc.addPage([595, 842]);
           try {
@@ -2484,7 +2464,6 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Render Insurance Certificate items (1 per page)
         for (const item of insuranceCertificateItems) {
           const page = pdfDoc.addPage([595, 842]);
           try {
@@ -2543,7 +2522,6 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Render Transfer Receipt items
         for (const item of transferReceiptItems) {
           const page = pdfDoc.addPage([595, 842]);
           try {
@@ -2608,7 +2586,6 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Render Vehicle NOC items (1 per page)
         for (const item of vehicleNOCItems) {
           const page = pdfDoc.addPage([595, 842]);
           try {
@@ -3063,7 +3040,6 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Render PAN Card on its own page (1 per page)
         for (const item of panItems) {
           const page = pdfDoc.addPage([595, 842]);
           try {
@@ -3122,7 +3098,6 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Render Delivery Photo on its own page (1 per page)
         for (const item of deliveryPhotoItems) {
           const page = pdfDoc.addPage([595, 842]);
           try {
@@ -3247,7 +3222,6 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Render Insurance Certificate items (1 per page)
         for (const item of insuranceCertificateItems) {
           const page = pdfDoc.addPage([595, 842]);
           try {
@@ -3306,7 +3280,6 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Render Transfer Receipt items
         for (const item of transferReceiptItems) {
           const page = pdfDoc.addPage([595, 842]);
           try {
@@ -3371,7 +3344,6 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Render Transfer Receipt items
         for (const item of transferReceiptItems) {
           const page = pdfDoc.addPage([595, 842]);
           try {
@@ -3436,7 +3408,6 @@ const SellLetterHistory = () => {
           }
         }
 
-        // Render Vehicle NOC items (1 per page)
         for (const item of vehicleNOCItems) {
           const page = pdfDoc.addPage([595, 842]);
           try {
@@ -4104,7 +4075,7 @@ const SellLetterHistory = () => {
             </div>
           ) : (
             <>
-              {/* Desktop Table */}
+              {}
               {!isMobile && (
                 <div style={styles.tableContainer}>
                   <table style={styles.table}>
@@ -4569,7 +4540,7 @@ const SellLetterHistory = () => {
                 </div>
               )}
 
-              {/* Mobile Cards */}
+              {}
               {isMobile && (
                 <div
                   style={{
@@ -4591,7 +4562,7 @@ const SellLetterHistory = () => {
                           border: "1px solid #e2e8f0",
                         }}
                       >
-                        {/* Card Header */}
+                        {}
                         <div
                           style={{
                             display: "flex",
@@ -4646,7 +4617,7 @@ const SellLetterHistory = () => {
                           </div>
                         </div>
 
-                        {/* Card Details */}
+                        {}
                         <div
                           style={{
                             display: "flex",
@@ -4791,7 +4762,7 @@ const SellLetterHistory = () => {
                           )}
                         </div>
 
-                        {/* Version changes */}
+                        {}
                         {letter.version > 1 &&
                           changes &&
                           changes.length > 0 && (
@@ -4856,7 +4827,7 @@ const SellLetterHistory = () => {
                             </div>
                           )}
 
-                        {/* Document Status */}
+                        {}
                         <div
                           style={{
                             display: "flex",
@@ -4999,7 +4970,7 @@ const SellLetterHistory = () => {
                           </div>
                         </div>
 
-                        {/* Actions */}
+                        {}
                         <div
                           style={{
                             display: "flex",

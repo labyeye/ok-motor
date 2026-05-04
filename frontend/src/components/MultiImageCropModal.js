@@ -23,7 +23,7 @@ const MultiImageCropModal = ({ isOpen, files, fieldName, onSave, onClose }) => {
   useEffect(() => {
     if (isOpen && files && files.length > 0) {
       setIsLoading(true);
-      // Convert File objects to data URLs
+
       const promises = files.map((file) => {
         return new Promise((resolve) => {
           const reader = new FileReader();
@@ -385,32 +385,29 @@ const MultiImageCropModal = ({ isOpen, files, fieldName, onSave, onClose }) => {
 
   const getRotatedImageSrc = () => {
     if (rotation === 0) return currentImageDataUrl;
-    
+
     const img = new Image();
     img.src = currentImageDataUrl;
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
-    
+
     const rad = (rotation * Math.PI) / 180;
     const sin = Math.abs(Math.sin(rad));
     const cos = Math.abs(Math.cos(rad));
-    
+
     canvas.width = Math.ceil(img.width * cos + img.height * sin);
     canvas.height = Math.ceil(img.width * sin + img.height * cos);
-    
+
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.rotate(rad);
     ctx.drawImage(img, -img.width / 2, -img.height / 2);
-    
+
     return canvas.toDataURL("image/jpeg", 0.85);
   };
 
   return (
     <div style={styles.modalOverlay} onClick={handleClose}>
-      <div
-        style={styles.modalContent}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div style={styles.header}>
           <h2 style={styles.title}>
             Crop Images - {fieldName || "Documents"} ({files.length})
@@ -445,7 +442,11 @@ const MultiImageCropModal = ({ isOpen, files, fieldName, onSave, onClose }) => {
                   >
                     <img
                       ref={imgRef}
-                      src={rotation === 0 ? currentImageDataUrl : getRotatedImageSrc()}
+                      src={
+                        rotation === 0
+                          ? currentImageDataUrl
+                          : getRotatedImageSrc()
+                      }
                       alt="Crop preview"
                       style={{
                         maxWidth: "100%",

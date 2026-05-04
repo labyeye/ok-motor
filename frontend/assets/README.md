@@ -5,7 +5,7 @@ To build the Electron app with a custom icon, you need to add icon files to the 
 ## required Files:
 
 1. **icon.icns** - For Mac builds
-2. **icon.ico** - For Windows builds  
+2. **icon.ico** - For Windows builds
 3. **icon.png** - For Linux builds
 
 ## How to Create Icons:
@@ -17,11 +17,13 @@ For now, the app will build without custom icons. Electron Builder will use defa
 ### Option 2: Create Your Own Icons
 
 #### Starting Point:
+
 Create a **512x512 pixel PNG** image with your logo/icon.
 
 #### Convert to required Formats:
 
 **On Mac:**
+
 ```bash
 # Install ImageMagick
 brew install imagemagick
@@ -42,6 +44,7 @@ cp your-icon.png assets/icon.png
 ```
 
 **On Windows:**
+
 ```bash
 # Use online converter for .ico:
 # 1. Go to https://convertio.co/png-ico/
@@ -70,17 +73,18 @@ If you don't add custom icons, Electron Builder will use default Electron icons.
 **Impact:** App will build and work fine, but will use default Electron icon
 
 **To add icons later:**
+
 1. Create your icon files (see above)
 2. Place them in `frontend/assets/`
 3. Rebuild the app with `npm run electron:build:mac` or `npm run electron:build:win`
 
 ## Icon Specifications:
 
-| Platform | File | Format | Size |
-|----------|------|--------|------|
-| Mac | icon.icns | ICNS | 512x512 (multi-resolution) |
-| Windows | icon.ico | ICO | 256x256 (multi-resolution) |
-| Linux | icon.png | PNG | 512x512 |
+| Platform | File      | Format | Size                       |
+| -------- | --------- | ------ | -------------------------- |
+| Mac      | icon.icns | ICNS   | 512x512 (multi-resolution) |
+| Windows  | icon.ico  | ICO    | 256x256 (multi-resolution) |
+| Linux    | icon.png  | PNG    | 512x512                    |
 
 ## Notes:
 

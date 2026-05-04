@@ -292,7 +292,6 @@ const InsuranceHistory = () => {
       (item.personName || "").toLowerCase().includes(q);
     if (!matchesSearch) return false;
 
-    // Expiry date filter
     const eFilter = filters.expiry;
     if (eFilter && eFilter.op) {
       const dStr = item.insuranceExpiry || item.insuranceExpiryDate;
@@ -300,7 +299,7 @@ const InsuranceHistory = () => {
       const d = new Date(dStr);
       if (isNaN(d.getTime())) return false;
       const v = new Date(eFilter.value);
-      // require value for non-range ops; for between allow one-sided
+
       if (eFilter.op !== "between" && isNaN(v.getTime())) return false;
       if (eFilter.op === "eq" && d.toDateString() !== v.toDateString())
         return false;

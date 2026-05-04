@@ -69,8 +69,6 @@ const VehicleCreate = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, [editVehicleId]);
 
-  // formatDateForInput function removed - not currently used
-
   const loadVehicleForEdit = async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -95,7 +93,7 @@ const VehicleCreate = () => {
         registrationNumber: v.registrationNumber || "",
         chassisNumber: v.chassisNumber || "",
         engineNumber: v.engineNumber || "",
-        // insurance fields moved to Sell Letter model; removed from vehicle
+
         seatingCapacity: v.seatingCapacity || "",
         bodyType: v.bodyType || "",
         purchasePrice: v.purchasePrice || "",

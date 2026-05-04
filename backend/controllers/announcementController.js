@@ -7,7 +7,7 @@ exports.createAnnouncement = async (req, res) => {
     }
 
     const { message, link, active, startDate, endDate } = req.body;
-    // If activating this announcement, deactivate others (simple policy)
+
     if (active) {
       await Announcement.updateMany({}, { active: false });
     }
@@ -38,7 +38,7 @@ exports.updateAnnouncement = async (req, res) => {
     const ann = await Announcement.findByIdAndUpdate(
       id,
       { message, link, active: !!active, startDate, endDate },
-      { new: true }
+      { new: true },
     );
     res.json({ success: true, data: ann });
   } catch (err) {
@@ -77,7 +77,7 @@ exports.getCurrentAnnouncement = async (req, res) => {
       updatedAt: -1,
     });
     if (!ann) return res.json({ success: true, data: null });
-    // If restricted by date, check (endDate is end of day)
+
     if (ann.startDate && ann.startDate > now)
       return res.json({ success: true, data: null });
     if (ann.endDate) {

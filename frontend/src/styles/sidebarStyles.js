@@ -112,9 +112,11 @@ export const sidebarStyles = {
     marginLeft: "14px",
     marginBottom: "8px",
   },
-  submenuItem: {    display: "flex",
+  submenuItem: {
+    display: "flex",
     alignItems: "center",
-    gap: "10px",    padding: "9px 12px 9px 18px",
+    gap: "10px",
+    padding: "9px 12px 9px 18px",
     cursor: "pointer",
     color: "#ffffff",
     fontSize: "0.86rem",

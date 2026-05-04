@@ -41,7 +41,6 @@ const ServiceHistory = () => {
   const [confirmTargetId, setConfirmTargetId] = useState(null);
   const navigate = useNavigate();
 
-  // Preview modal states
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
   const [previewBill, setPreviewBill] = useState(null);
@@ -94,7 +93,6 @@ const ServiceHistory = () => {
             serviceResponse.data.data || serviceResponse.data || [];
           setTotalPages(serviceResponse.data.totalPages || 1);
 
-          // If some bills have previousVersionId, fetch those previous docs
           try {
             const prevIds = serviceData
               .map((b) => b.previousVersionId)
@@ -127,7 +125,6 @@ const ServiceHistory = () => {
                 }
               });
 
-              // Merge: for each bill, keep it and insert previous version right after if available
               const merged = [];
               serviceData.forEach((b) => {
                 merged.push(b);
@@ -142,7 +139,6 @@ const ServiceHistory = () => {
               setServiceBills(serviceData);
             }
           } catch (err) {
-            // if previous-version fetch fails, just set primary list
             setServiceBills(serviceData);
           }
 
@@ -171,7 +167,6 @@ const ServiceHistory = () => {
               (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
             );
 
-            // include previous versions (offline): fetch by id and insert adjacent
             const merged = [];
             for (const b of sortedData) {
               merged.push(b);
@@ -191,9 +186,7 @@ const ServiceHistory = () => {
                     prev._isPreviousVersion = true;
                     merged.push(prev);
                   }
-                } catch (err) {
-                  // ignore missing previous
-                }
+                } catch (err) {}
               }
             }
 
@@ -296,7 +289,7 @@ const ServiceHistory = () => {
       const amt = Number(b.grandTotal || b.total || 0);
       if (isNaN(amt)) return false;
       const v = Number(aFilter.value);
-      // require value for non-range ops; for between allow one-sided
+
       if (aFilter.op !== "between" && isNaN(v)) return false;
       if (aFilter.op === "eq" && amt !== v) return false;
       if (aFilter.op === "gt" && amt <= v) return false;
@@ -325,7 +318,7 @@ const ServiceHistory = () => {
       const d = new Date(dStr);
       if (isNaN(d.getTime())) return false;
       const v = new Date(dFilter.value);
-      // require value for non-range ops; for between allow one-sided
+
       if (dFilter.op !== "between" && isNaN(v.getTime())) return false;
       if (dFilter.op === "eq" && d.toDateString() !== v.toDateString())
         return false;
@@ -827,7 +820,7 @@ const ServiceHistory = () => {
             </div>
           ) : (
             <>
-              {/* Desktop Table */}
+              {}
               {!isMobile && (
                 <div style={styles.tableContainer}>
                   {filteredServiceBills.length === 0 ? (
@@ -1101,7 +1094,7 @@ const ServiceHistory = () => {
                 </div>
               )}
 
-              {/* Mobile Cards */}
+              {}
               {isMobile && (
                 <div
                   style={{

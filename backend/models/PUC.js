@@ -3,8 +3,8 @@ const mongoose = require("mongoose");
 const PUCSchema = new mongoose.Schema(
   {
     personName: { type: String, required: true },
-    personPhone: { type: String }, // Phone number
-    personAlternateNo: { type: String }, // Alternate phone number
+    personPhone: { type: String },
+    personAlternateNo: { type: String },
     personEmail: { type: String },
     sourceType: {
       type: String,
@@ -38,7 +38,7 @@ const PUCSchema = new mongoose.Schema(
 
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("PUC", PUCSchema);

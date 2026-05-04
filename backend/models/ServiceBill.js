@@ -117,9 +117,8 @@ ServiceBillSchema.pre("save", async function (next) {
     const getFinancialYear = () => {
       const d = new Date();
       const year = d.getFullYear();
-      const month = d.getMonth(); // 0-11 (Jan is 0)
+      const month = d.getMonth();
       if (month >= 3) {
-        // April onwards
         return `${year}-${String(year + 1).slice(-2)}`;
       } else {
         return `${year - 1}-${String(year).slice(-2)}`;

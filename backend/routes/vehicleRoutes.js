@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 const vehicleController = require("../controllers/vehicleController");
@@ -17,7 +16,7 @@ router.get("/", vehicleController.getVehicles);
 router.get("/:id", vehicleController.getVehicleById);
 router.get(
   "/registration/:registrationNumber",
-  vehicleController.getVehicleByRegistration
+  vehicleController.getVehicleByRegistration,
 );
 router.put("/:id", vehicleController.updateVehicle);
 router.delete("/:id", vehicleController.deleteVehicle);
