@@ -2252,7 +2252,7 @@ class PDFService {
     return String(text)
       .replace(/₹/g, "Rs. ")
 
-      .replace(/[^\x00-\xFF]/g, "");
+      .replace(/[^\u0020-\u00FF]/g, "");
   }
 
   async generateLetterHeadPDFOffline(letterData, previewOnly = false) {

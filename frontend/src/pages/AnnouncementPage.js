@@ -33,7 +33,7 @@ const AnnouncementPage = () => {
 
   useEffect(() => {
     fetchAnnouncements();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchAnnouncements = async () => {
     setLoading(true);
