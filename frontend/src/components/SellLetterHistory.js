@@ -10,6 +10,8 @@ import {
   Check,
   RefreshCw,
   Eye,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
@@ -50,6 +52,17 @@ const SellLetterHistory = () => {
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
   const [previewLetter, setPreviewLetter] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [expandedGroups, setExpandedGroups] = useState(new Set());
+
+  const toggleGroup = (groupId) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
+  };
+
   const navigate = useNavigate();
   const hindiFieldPositions = {
     vehicleName: { x: 303, y: 696, size: 11 },
@@ -260,86 +273,6 @@ const SellLetterHistory = () => {
       note: "Note",
     };
     return labels[fieldName] || fieldName;
-  };
-
-  const groupChangesByCategory = (changes) => {
-    const grouped = {
-      "Vehicle Details": [],
-      "Document Changes": [],
-      "Buyer Information": [],
-      "Transaction Details": [],
-      "PUC & Insurance": [],
-      Other: [],
-    };
-
-    const categoryMap = {
-      vehicleName: "Vehicle Details",
-      vehicleModel: "Vehicle Details",
-      vehicleColor: "Vehicle Details",
-      registrationNumber: "Vehicle Details",
-      chassisNumber: "Vehicle Details",
-      engineNumber: "Vehicle Details",
-      vehiclekm: "Vehicle Details",
-      vehicleCondition: "Vehicle Details",
-      buyerName: "Buyer Information",
-      buyerFatherName: "Buyer Information",
-      buyerAddress: "Buyer Information",
-      buyerPhone: "Buyer Information",
-      buyerPhone2: "Buyer Information",
-      buyerEmail: "Buyer Information",
-      buyerAadhar: "Buyer Information",
-      saleDate: "Transaction Details",
-      saleTime: "Transaction Details",
-      saleAmount: "Transaction Details",
-      paymentMethod: "Transaction Details",
-      todayDate: "Transaction Details",
-      todayTime: "Transaction Details",
-      previousDate: "Transaction Details",
-      previousTime: "Transaction Details",
-      pucStatus: "PUC & Insurance",
-      pucIssueDate: "PUC & Insurance",
-      pucExpiryDate: "PUC & Insurance",
-      insuranceStatus: "PUC & Insurance",
-      insuranceExpiryDate: "PUC & Insurance",
-      insuranceCompany: "PUC & Insurance",
-      insurancePolicyNumber: "PUC & Insurance",
-      witnessName: "Other",
-      witnessPhone: "Other",
-      note: "Other",
-      transferReceipt: "Document Changes",
-      signedDocSell: "Document Changes",
-      vehicleRC: "Document Changes",
-      aadhaar: "Document Changes",
-      pan: "Document Changes",
-      deliveryPhoto: "Document Changes",
-      insuranceCertificate: "Document Changes",
-      vehicleNOC: "Document Changes",
-    };
-
-    changes?.forEach((change) => {
-      let fieldStr = String(change.field).toLowerCase();
-      let category = "Other";
-
-      for (const [key, cat] of Object.entries(categoryMap)) {
-        if (fieldStr.includes(key.toLowerCase())) {
-          category = cat;
-          break;
-        }
-      }
-
-      if (
-        category === "Document Changes" ||
-        change.field?.includes("uploaded") ||
-        change.newValue === "Uploaded"
-      ) {
-        category = "Document Changes";
-      }
-
-      if (!grouped[category]) grouped[category] = [];
-      grouped[category].push(change);
-    });
-
-    return Object.entries(grouped).filter(([_, items]) => items.length > 0);
   };
 
   const getChanges = (letter) => {
@@ -941,6 +874,25 @@ const SellLetterHistory = () => {
 
     return true;
   });
+
+  const groupedLetters = (() => {
+    const groupMap = {};
+    filteredLetters.forEach((letter) => {
+      const key = String(letter.originalDocumentId || letter._id);
+      if (!groupMap[key]) groupMap[key] = [];
+      groupMap[key].push(letter);
+    });
+    return Object.values(groupMap).map((versions) => {
+      const sorted = [...versions].sort(
+        (a, b) => (b.version || 1) - (a.version || 1),
+      );
+      return {
+        groupId: String(sorted[0].originalDocumentId || sorted[0]._id),
+        latestVersion: sorted[0],
+        allVersions: sorted,
+      };
+    });
+  })();
 
   const handleDownload = (letter) => {
     setSelectedLetter(letter);
@@ -4058,7 +4010,7 @@ const SellLetterHistory = () => {
               <p>Loading sell letters...</p>
               {}
             </div>
-          ) : filteredLetters.length === 0 ? (
+          ) : groupedLetters.length === 0 ? (
             <div style={styles.emptyState}>
               <FileText size={48} style={styles.emptyIcon} />
               <p style={styles.emptyText}>
@@ -4136,33 +4088,109 @@ const SellLetterHistory = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredLetters.map((letter) => {
-                        const changes = getChanges(letter);
-                        return (
-                          <React.Fragment key={letter._id}>
+                      {groupedLetters.map(
+                        ({ groupId, latestVersion: letter, allVersions }) => {
+                          const isExpanded = expandedGroups.has(groupId);
+                          const docStatus = [
+                            {
+                              label: "RC",
+                              exists:
+                                letter.documents?.vehicleRC?.front ||
+                                letter.documents?.vehicleRC?.back,
+                            },
+                            {
+                              label: "Aadhaar",
+                              exists:
+                                letter.documents?.aadhaar?.front ||
+                                letter.documents?.aadhaar?.back,
+                            },
+                            { label: "PAN", exists: letter.documents?.pan },
+                            {
+                              label: "Photo",
+                              exists:
+                                letter.documents?.deliveryPhoto ||
+                                letter.documents?.vehicleKM ||
+                                letter.documents?.vehiclePhotos?.length > 0,
+                            },
+                            {
+                              label: "Signed Doc",
+                              exists: letter.documents?.signedDocSell,
+                            },
+                            {
+                              label: "Insurance",
+                              exists:
+                                letter.documents?.insuranceCertificate?.pages
+                                  ?.length > 0 ||
+                                (Array.isArray(
+                                  letter.documents?.insuranceCertificate,
+                                ) &&
+                                  letter.documents.insuranceCertificate.length >
+                                    0) ||
+                                (typeof letter.documents?.insuranceCertificate ===
+                                  "string" &&
+                                  letter.documents.insuranceCertificate.length >
+                                    0),
+                            },
+                            {
+                              label: "NOC",
+                              exists:
+                                letter.documents?.vehicleNOC?.pages?.length >
+                                  0 ||
+                                (Array.isArray(letter.documents?.vehicleNOC) &&
+                                  letter.documents.vehicleNOC.length > 0) ||
+                                (typeof letter.documents?.vehicleNOC ===
+                                  "string" &&
+                                  letter.documents.vehicleNOC.length > 0),
+                            },
+                            {
+                              label: "Transfer",
+                              exists:
+                                letter.documents?.transferReceipt?.pages
+                                  ?.length > 0 ||
+                                (Array.isArray(
+                                  letter.documents?.transferReceipt,
+                                ) &&
+                                  letter.documents.transferReceipt.length >
+                                    0) ||
+                                (typeof letter.documents?.transferReceipt ===
+                                  "string" &&
+                                  letter.documents.transferReceipt.length > 0),
+                            },
+                          ];
+                          return (
+                          <React.Fragment key={groupId}>
                             <tr style={styles.tableRow}>
                               <td style={styles.tableCell}>
-                                {letter.buyerName}
-                                {letter.version > 1 && (
-                                  <span
-                                    style={{
-                                      fontSize: "0.75rem",
-                                      color: "#ff9800",
-                                      marginLeft: "6px",
-                                      fontWeight: "600",
-                                    }}
-                                  >
-                                    (v{letter.version})
-                                  </span>
-                                )}
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                  }}
+                                >
+                                  {letter.buyerName}
+                                  {allVersions.length > 1 && (
+                                    <span
+                                      style={{
+                                        fontSize: "0.68rem",
+                                        color: "#16a34a",
+                                        fontWeight: "700",
+                                        padding: "1px 5px",
+                                        backgroundColor: "#dcfce7",
+                                        borderRadius: "8px",
+                                        border: "1px solid #bbf7d0",
+                                      }}
+                                    >
+                                      v{letter.version}
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                               <td style={styles.tableCell}>
                                 {letter.vehicleModel}
                               </td>
                               <td style={styles.tableCell}>
-                                {`${letter.vehicleName || ""} ${
-                                  letter.vehicleModel || ""
-                                }`.trim()}
+                                {`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim()}
                               </td>
                               <td style={styles.tableCell}>
                                 {letter.registrationNumber}
@@ -4188,8 +4216,6 @@ const SellLetterHistory = () => {
                                     }}
                                   >
                                     Edited: {formatDate(letter.editedAt)}
-                                    {letter.editedAt &&
-                                      ` at ${formatTimeFromDate(letter.editedAt)}`}
                                   </div>
                                 )}
                               </td>
@@ -4201,6 +4227,14 @@ const SellLetterHistory = () => {
                                     : ""}
                               </td>
                               <td style={styles.tableCell}>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "2px",
+                                    flexWrap: "wrap",
+                                  }}
+                                >
                                 <button
                                   onClick={() => {
                                     setSelectedLetter(letter);
@@ -4237,13 +4271,47 @@ const SellLetterHistory = () => {
                                     </button>
                                   </>
                                 )}
+                                {allVersions.length > 1 && (
+                                  <button
+                                    onClick={() => toggleGroup(groupId)}
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "3px",
+                                      padding: "3px 7px",
+                                      backgroundColor: isExpanded
+                                        ? "#dbeafe"
+                                        : "#f1f5f9",
+                                      border: `1px solid ${isExpanded ? "#93c5fd" : "#cbd5e1"}`,
+                                      borderRadius: "12px",
+                                      cursor: "pointer",
+                                      fontSize: "0.7rem",
+                                      color: isExpanded ? "#1d4ed8" : "#475569",
+                                      fontWeight: "600",
+                                      marginLeft: "2px",
+                                    }}
+                                    title={
+                                      isExpanded
+                                        ? "Hide version history"
+                                        : "Show version history"
+                                    }
+                                  >
+                                    {isExpanded ? (
+                                      <ChevronUp size={11} />
+                                    ) : (
+                                      <ChevronDown size={11} />
+                                    )}
+                                    {allVersions.length}v
+                                  </button>
+                                )}
+                                </div>
                               </td>
                             </tr>
                             <tr style={{ backgroundColor: "#f8fafc" }}>
                               <td
                                 colSpan="8"
                                 style={{
-                                  padding: "10px 16px",
+                                  padding: "8px 16px",
                                   borderBottom: "1px solid #e2e8f0",
                                 }}
                               >
@@ -4251,122 +4319,32 @@ const SellLetterHistory = () => {
                                   style={{
                                     display: "flex",
                                     flexWrap: "wrap",
-                                    gap: "12px",
+                                    gap: "8px",
                                     alignItems: "center",
                                   }}
                                 >
                                   <span
                                     style={{
                                       fontWeight: "600",
-                                      fontSize: "0.85rem",
+                                      fontSize: "0.8rem",
                                       color: "#475569",
-                                      marginRight: "4px",
+                                      marginRight: "2px",
                                     }}
                                   >
-                                    Document Status:
+                                    Docs:
                                   </span>
-                                  {[
-                                    {
-                                      label: "RC",
-                                      exists:
-                                        letter.documents?.vehicleRC?.front ||
-                                        letter.documents?.vehicleRC?.back,
-                                    },
-                                    {
-                                      label: "Aadhaar",
-                                      exists:
-                                        letter.documents?.aadhaar?.front ||
-                                        letter.documents?.aadhaar?.back,
-                                    },
-                                    {
-                                      label: "PAN",
-                                      exists: letter.documents?.pan,
-                                    },
-                                    {
-                                      label: "Photo",
-                                      exists:
-                                        letter.documents?.deliveryPhoto ||
-                                        letter.documents?.vehicleKM ||
-                                        letter.documents?.vehiclePhotos
-                                          ?.length > 0,
-                                    },
-                                    {
-                                      label: "Signed Doc",
-                                      exists: letter.documents?.signedDocSell,
-                                    },
-                                    {
-                                      label: "Insurance",
-                                      exists:
-                                        letter.documents?.insuranceCertificate
-                                          ?.pages?.length > 0 ||
-                                        (Array.isArray(
-                                          letter.documents
-                                            ?.insuranceCertificate,
-                                        ) &&
-                                          letter.documents.insuranceCertificate
-                                            .length > 0) ||
-                                        (typeof letter.documents
-                                          ?.insuranceCertificate === "string" &&
-                                          letter.documents.insuranceCertificate
-                                            .length > 0),
-                                    },
-                                    {
-                                      label: "NOC",
-                                      exists:
-                                        letter.documents?.vehicleNOC?.pages
-                                          ?.length > 0 ||
-                                        (Array.isArray(
-                                          letter.documents?.vehicleNOC,
-                                        ) &&
-                                          letter.documents.vehicleNOC.length >
-                                            0) ||
-                                        (typeof letter.documents?.vehicleNOC ===
-                                          "string" &&
-                                          letter.documents.vehicleNOC.length >
-                                            0),
-                                    },
-                                    {
-                                      label: "Transfer",
-                                      exists:
-                                        letter.documents?.transferReceipt?.pages
-                                          ?.length > 0 ||
-                                        (Array.isArray(
-                                          letter.documents?.transferReceipt,
-                                        ) &&
-                                          letter.documents.transferReceipt
-                                            .length > 0) ||
-                                        (typeof letter.documents
-                                          ?.transferReceipt === "string" &&
-                                          letter.documents.transferReceipt
-                                            .length > 0),
-                                    },
-                                    {
-                                      label: "Buy Rcpt",
-                                      exists:
-                                        letter.documents?.vehicleBuyReceipt
-                                          ?.pages?.length > 0 ||
-                                        (Array.isArray(
-                                          letter.documents?.vehicleBuyReceipt,
-                                        ) &&
-                                          letter.documents.vehicleBuyReceipt
-                                            .length > 0) ||
-                                        (typeof letter.documents
-                                          ?.vehicleBuyReceipt === "string" &&
-                                          letter.documents.vehicleBuyReceipt
-                                            .length > 0),
-                                    },
-                                  ].map((doc, idx) => (
+                                  {docStatus.map((doc, idx) => (
                                     <div
                                       key={idx}
                                       style={{
                                         display: "flex",
                                         alignItems: "center",
-                                        gap: "4px",
-                                        padding: "4px 8px",
+                                        gap: "3px",
+                                        padding: "3px 7px",
                                         backgroundColor: "#fff",
                                         borderRadius: "6px",
                                         border: "1px solid #e2e8f0",
-                                        fontSize: "0.8rem",
+                                        fontSize: "0.75rem",
                                         color: doc.exists
                                           ? "#16a34a"
                                           : "#dc2626",
@@ -4374,9 +4352,9 @@ const SellLetterHistory = () => {
                                       }}
                                     >
                                       {doc.exists ? (
-                                        <Check size={14} strokeWidth={3} />
+                                        <Check size={11} strokeWidth={3} />
                                       ) : (
-                                        <X size={14} strokeWidth={3} />
+                                        <X size={11} strokeWidth={3} />
                                       )}
                                       {doc.label}
                                     </div>
@@ -4384,157 +4362,225 @@ const SellLetterHistory = () => {
                                 </div>
                               </td>
                             </tr>
-                            {letter.version > 1 && (
-                              <tr
-                                style={{
-                                  backgroundColor:
-                                    changes && changes.length > 0
-                                      ? "#ffffff"
-                                      : "#ffffff",
-                                }}
-                              >
+                            {allVersions.length > 1 && isExpanded && (
+                              <tr>
                                 <td
                                   colSpan="8"
                                   style={{
-                                    padding: "12px 16px",
-                                    borderBottom: "1px solid #e2e8f0",
+                                    padding: "0",
+                                    borderBottom: "2px solid #bfdbfe",
                                   }}
                                 >
-                                  <div style={{ fontSize: "0.85rem" }}>
+                                  <div
+                                    style={{
+                                      backgroundColor: "#f0f9ff",
+                                      padding: "14px 16px",
+                                    }}
+                                  >
                                     <div
                                       style={{
-                                        fontWeight: "600",
-                                        color:
-                                          changes && changes.length > 0
-                                            ? "#f57c00"
-                                            : "#757575",
-                                        marginBottom: "12px",
                                         display: "flex",
                                         alignItems: "center",
                                         gap: "6px",
+                                        fontWeight: "700",
+                                        color: "#0369a1",
+                                        fontSize: "0.85rem",
+                                        marginBottom: "12px",
                                       }}
                                     >
                                       <RefreshCw size={14} />
-                                      Changes from previous version:
+                                      Version History ({allVersions.length}{" "}
+                                      versions)
                                     </div>
-                                    {changes && changes.length > 0 ? (
-                                      <div
-                                        style={{
-                                          display: "flex",
-                                          flexDirection: "column",
-                                          gap: "12px",
-                                        }}
-                                      >
-                                        {groupChangesByCategory(changes).map(
-                                          ([category, categoryChanges]) => (
-                                            <div
-                                              key={category}
-                                              style={{
-                                                backgroundColor: "#fafafa",
-                                                borderLeft: "3px solid #f57c00",
-                                                borderRadius: "4px",
-                                                padding: "10px 12px",
-                                              }}
-                                            >
-                                              <div
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "8px",
+                                      }}
+                                    >
+                                      {allVersions.map((ver, vidx) => {
+                                        const verChanges =
+                                          vidx < allVersions.length - 1
+                                            ? getChanges(ver)
+                                            : null;
+                                        return (
+                                          <div
+                                            key={ver._id}
+                                            style={{
+                                              backgroundColor:
+                                                vidx === 0
+                                                  ? "#f0fdf4"
+                                                  : "#ffffff",
+                                              border: `1px solid ${vidx === 0 ? "#bbf7d0" : "#e2e8f0"}`,
+                                              borderRadius: "8px",
+                                              padding: "10px 14px",
+                                              display: "flex",
+                                              gap: "14px",
+                                              alignItems: "flex-start",
+                                            }}
+                                          >
+                                            <div style={{ minWidth: "110px" }}>
+                                              <span
                                                 style={{
+                                                  display: "inline-block",
+                                                  padding: "2px 8px",
+                                                  borderRadius: "10px",
+                                                  backgroundColor:
+                                                    vidx === 0
+                                                      ? "#16a34a"
+                                                      : "#6b7280",
+                                                  color: "#fff",
+                                                  fontSize: "0.7rem",
                                                   fontWeight: "700",
-                                                  color: "#f57c00",
-                                                  fontSize: "0.9rem",
-                                                  marginBottom: "8px",
-                                                  display: "flex",
-                                                  alignItems: "center",
-                                                  gap: "4px",
+                                                  marginBottom: "4px",
                                                 }}
                                               >
-                                                📋 {category}
-                                              </div>
+                                                v{ver.version || 1}
+                                                {vidx === 0 ? " · Latest" : ""}
+                                              </span>
                                               <div
                                                 style={{
-                                                  display: "grid",
-                                                  gridTemplateColumns:
-                                                    "repeat(auto-fit, minmax(280px, 1fr))",
-                                                  gap: "8px",
+                                                  fontSize: "0.68rem",
+                                                  color: "#64748b",
+                                                  lineHeight: "1.5",
                                                 }}
                                               >
-                                                {categoryChanges.map(
-                                                  (change, idx) => (
+                                                {ver.editedAt
+                                                  ? `Edited: ${formatDate(ver.editedAt)}`
+                                                  : `Created: ${formatDate(ver.createdAt)}`}
+                                              </div>
+                                            </div>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                              {verChanges &&
+                                              verChanges.length > 0 ? (
+                                                <div
+                                                  style={{
+                                                    display: "flex",
+                                                    flexWrap: "wrap",
+                                                    gap: "5px",
+                                                  }}
+                                                >
+                                                  {verChanges.map((ch, ci) => (
                                                     <div
-                                                      key={idx}
+                                                      key={ci}
                                                       style={{
-                                                        padding: "8px 10px",
+                                                        padding: "3px 8px",
                                                         backgroundColor:
-                                                          "#ffffff",
+                                                          "#fff8e1",
                                                         borderRadius: "4px",
                                                         border:
                                                           "1px solid #ffe0b2",
+                                                        fontSize: "0.72rem",
                                                       }}
                                                     >
-                                                      <div
+                                                      <span
                                                         style={{
                                                           fontWeight: "600",
                                                           color: "#424242",
-                                                          marginBottom: "4px",
-                                                          fontSize: "0.85rem",
                                                         }}
                                                       >
-                                                        {change.field}:
-                                                      </div>
-                                                      <div
+                                                        {ch.field}:{" "}
+                                                      </span>
+                                                      <span
                                                         style={{
-                                                          fontSize: "0.75rem",
+                                                          textDecoration:
+                                                            "line-through",
                                                           color: "#e53935",
-                                                          marginBottom: "2px",
                                                         }}
                                                       >
-                                                        <span
-                                                          style={{
-                                                            textDecoration:
-                                                              "line-through",
-                                                          }}
-                                                        >
-                                                          {change.oldValue}
-                                                        </span>
-                                                      </div>
-                                                      <div
+                                                        {ch.oldValue}
+                                                      </span>
+                                                      <span
                                                         style={{
-                                                          fontSize: "0.75rem",
-                                                          color: "#43a047",
-                                                          fontWeight: "500",
+                                                          color: "#16a34a",
+                                                          fontWeight: "600",
                                                         }}
                                                       >
-                                                        ✓ {change.newValue}
-                                                      </div>
+                                                        {" "}
+                                                        → {ch.newValue}
+                                                      </span>
                                                     </div>
-                                                  ),
-                                                )}
-                                              </div>
+                                                  ))}
+                                                </div>
+                                              ) : (
+                                                <span
+                                                  style={{
+                                                    fontSize: "0.72rem",
+                                                    color: "#94a3b8",
+                                                    fontStyle: "italic",
+                                                  }}
+                                                >
+                                                  {vidx ===
+                                                  allVersions.length - 1
+                                                    ? "Original version"
+                                                    : "No field changes detected"}
+                                                </span>
+                                              )}
                                             </div>
-                                          ),
-                                        )}
-                                      </div>
-                                    ) : (
-                                      <div
-                                        style={{
-                                          padding: "8px 12px",
-                                          backgroundColor: "#ffffff",
-                                          borderRadius: "4px",
-                                          border: "1px solid #e0e0e0",
-                                          color: "#757575",
-                                          fontStyle: "italic",
-                                        }}
-                                      >
-                                        No changes detected from previous
-                                        version
-                                      </div>
-                                    )}
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                gap: "3px",
+                                                flexShrink: 0,
+                                                alignItems: "center",
+                                              }}
+                                            >
+                                              <button
+                                                onClick={() => {
+                                                  setSelectedLetter(ver);
+                                                  setLanguageAction("preview");
+                                                  setShowLanguageModal(true);
+                                                }}
+                                                style={styles.iconButton}
+                                                title="View"
+                                              >
+                                                <Eye size={14} />
+                                              </button>
+                                              <button
+                                                onClick={() =>
+                                                  handleDownload(ver)
+                                                }
+                                                style={styles.iconButton}
+                                                title="Download"
+                                              >
+                                                <Download size={14} />
+                                              </button>
+                                              {user?.role === "admin" && (
+                                                <>
+                                                  <button
+                                                    onClick={() =>
+                                                      handleEdit(ver)
+                                                    }
+                                                    style={styles.iconButton}
+                                                    title="Edit"
+                                                  >
+                                                    <Edit size={14} />
+                                                  </button>
+                                                  <button
+                                                    onClick={() =>
+                                                      handleDelete(ver._id)
+                                                    }
+                                                    style={styles.iconButton}
+                                                    title="Delete"
+                                                  >
+                                                    <Trash2 size={14} />
+                                                  </button>
+                                                </>
+                                              )}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
                                   </div>
                                 </td>
                               </tr>
                             )}
                           </React.Fragment>
                         );
-                      })}
+                        },
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -4549,20 +4595,21 @@ const SellLetterHistory = () => {
                     gap: "12px",
                   }}
                 >
-                  {filteredLetters.map((letter) => {
-                    const changes = getChanges(letter);
-                    return (
+                  {groupedLetters.map(
+                    ({ groupId, latestVersion: letter, allVersions }) => {
+                      const isExpanded = expandedGroups.has(groupId);
+                      return (
                       <div
-                        key={letter._id}
+                        key={groupId}
                         style={{
                           backgroundColor: "#ffffff",
                           borderRadius: "12px",
                           boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                          padding: "16px",
                           border: "1px solid #e2e8f0",
+                          overflow: "hidden",
+                          padding: "16px",
                         }}
                       >
-                        {}
                         <div
                           style={{
                             display: "flex",
@@ -4580,16 +4627,20 @@ const SellLetterHistory = () => {
                               }}
                             >
                               {letter.registrationNumber}
-                              {letter.version > 1 && (
+                              {allVersions.length > 1 && (
                                 <span
                                   style={{
-                                    fontSize: "0.75rem",
-                                    color: "#ff9800",
+                                    fontSize: "0.68rem",
+                                    color: "#16a34a",
                                     marginLeft: "6px",
-                                    fontWeight: "600",
+                                    fontWeight: "700",
+                                    padding: "1px 5px",
+                                    backgroundColor: "#dcfce7",
+                                    borderRadius: "8px",
+                                    border: "1px solid #bbf7d0",
                                   }}
                                 >
-                                  (v{letter.version})
+                                  v{letter.version}
                                 </span>
                               )}
                             </div>
@@ -4603,17 +4654,40 @@ const SellLetterHistory = () => {
                               {formatDate(letter.createdAt)}
                             </div>
                           </div>
-                          <div
-                            style={{
-                              backgroundColor: "rgba(8,131,149,0.1)",
-                              color: "#071952",
-                              borderRadius: "20px",
-                              padding: "4px 10px",
-                              fontSize: "0.75rem",
-                              fontWeight: "600",
-                            }}
-                          >
-                            Sell Letter
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <div
+                              style={{
+                                backgroundColor: "rgba(8,131,149,0.1)",
+                                color: "#071952",
+                                borderRadius: "20px",
+                                padding: "4px 10px",
+                                fontSize: "0.75rem",
+                                fontWeight: "600",
+                              }}
+                            >
+                              Sell Letter
+                            </div>
+                            {allVersions.length > 1 && (
+                              <button
+                                onClick={() => toggleGroup(groupId)}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "3px",
+                                  padding: "3px 8px",
+                                  backgroundColor: isExpanded ? "#dbeafe" : "#f1f5f9",
+                                  border: `1px solid ${isExpanded ? "#93c5fd" : "#cbd5e1"}`,
+                                  borderRadius: "12px",
+                                  cursor: "pointer",
+                                  fontSize: "0.7rem",
+                                  color: isExpanded ? "#1d4ed8" : "#475569",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                {isExpanded ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                                {allVersions.length} versions
+                              </button>
+                            )}
                           </div>
                         </div>
 
@@ -4762,72 +4836,6 @@ const SellLetterHistory = () => {
                           )}
                         </div>
 
-                        {}
-                        {letter.version > 1 &&
-                          changes &&
-                          changes.length > 0 && (
-                            <div
-                              style={{
-                                backgroundColor: "#fff8e1",
-                                borderRadius: "8px",
-                                padding: "10px",
-                                marginBottom: "10px",
-                                border: "1px solid #ffe0b2",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  fontWeight: "600",
-                                  color: "#f57c00",
-                                  fontSize: "0.78rem",
-                                  marginBottom: "6px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <RefreshCw size={12} /> Changes from previous
-                                version:
-                              </div>
-                              {changes.map((change, idx) => (
-                                <div
-                                  key={idx}
-                                  style={{
-                                    fontSize: "0.75rem",
-                                    marginBottom: "4px",
-                                  }}
-                                >
-                                  <span
-                                    style={{
-                                      fontWeight: "600",
-                                      color: "#424242",
-                                    }}
-                                  >
-                                    {change.field}:{" "}
-                                  </span>
-                                  <span
-                                    style={{
-                                      textDecoration: "line-through",
-                                      color: "#e53935",
-                                    }}
-                                  >
-                                    {change.oldValue}
-                                  </span>
-                                  <span
-                                    style={{
-                                      color: "#43a047",
-                                      fontWeight: "500",
-                                    }}
-                                  >
-                                    {" "}
-                                    → {change.newValue}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                        {}
                         <div
                           style={{
                             display: "flex",
@@ -5068,9 +5076,196 @@ const SellLetterHistory = () => {
                             </>
                           )}
                         </div>
+                        {allVersions.length > 1 && isExpanded && (
+                          <div
+                            style={{
+                              borderTop: "2px solid #bfdbfe",
+                              backgroundColor: "#f0f9ff",
+                              padding: "12px",
+                              margin: "12px -16px -16px -16px",
+                              borderRadius: "0 0 12px 12px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "5px",
+                                fontWeight: "700",
+                                color: "#0369a1",
+                                fontSize: "0.8rem",
+                                marginBottom: "10px",
+                              }}
+                            >
+                              <RefreshCw size={13} />
+                              Version History ({allVersions.length} versions)
+                            </div>
+                            {allVersions.map((ver, vidx) => {
+                              const verChanges =
+                                vidx < allVersions.length - 1
+                                  ? getChanges(ver)
+                                  : null;
+                              return (
+                                <div
+                                  key={ver._id}
+                                  style={{
+                                    backgroundColor:
+                                      vidx === 0 ? "#f0fdf4" : "#ffffff",
+                                    border: `1px solid ${vidx === 0 ? "#bbf7d0" : "#e2e8f0"}`,
+                                    borderRadius: "8px",
+                                    padding: "10px",
+                                    marginBottom:
+                                      vidx < allVersions.length - 1
+                                        ? "6px"
+                                        : "0",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "flex-start",
+                                      marginBottom: "6px",
+                                    }}
+                                  >
+                                    <div>
+                                      <span
+                                        style={{
+                                          display: "inline-block",
+                                          padding: "2px 7px",
+                                          borderRadius: "10px",
+                                          backgroundColor:
+                                            vidx === 0 ? "#16a34a" : "#6b7280",
+                                          color: "#fff",
+                                          fontSize: "0.68rem",
+                                          fontWeight: "700",
+                                          marginBottom: "3px",
+                                        }}
+                                      >
+                                        v{ver.version || 1}
+                                        {vidx === 0 ? " · Latest" : ""}
+                                      </span>
+                                      <div
+                                        style={{
+                                          fontSize: "0.68rem",
+                                          color: "#64748b",
+                                        }}
+                                      >
+                                        {ver.editedAt
+                                          ? `Edited: ${formatDate(ver.editedAt)}`
+                                          : `Created: ${formatDate(ver.createdAt)}`}
+                                      </div>
+                                    </div>
+                                    <div style={{ display: "flex", gap: "3px" }}>
+                                      <button
+                                        onClick={() => {
+                                          setSelectedLetter(ver);
+                                          setLanguageAction("preview");
+                                          setShowLanguageModal(true);
+                                        }}
+                                        style={styles.iconButton}
+                                        title="View"
+                                      >
+                                        <Eye size={13} />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDownload(ver)}
+                                        style={styles.iconButton}
+                                        title="Download"
+                                      >
+                                        <Download size={13} />
+                                      </button>
+                                      {user?.role === "admin" && (
+                                        <>
+                                          <button
+                                            onClick={() => handleEdit(ver)}
+                                            style={styles.iconButton}
+                                            title="Edit"
+                                          >
+                                            <Edit size={13} />
+                                          </button>
+                                          <button
+                                            onClick={() =>
+                                              handleDelete(ver._id)
+                                            }
+                                            style={styles.iconButton}
+                                            title="Delete"
+                                          >
+                                            <Trash2 size={13} />
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {verChanges && verChanges.length > 0 ? (
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        flexWrap: "wrap",
+                                        gap: "4px",
+                                      }}
+                                    >
+                                      {verChanges.map((ch, ci) => (
+                                        <div
+                                          key={ci}
+                                          style={{
+                                            padding: "2px 6px",
+                                            backgroundColor: "#fff8e1",
+                                            borderRadius: "4px",
+                                            border: "1px solid #ffe0b2",
+                                            fontSize: "0.68rem",
+                                          }}
+                                        >
+                                          <span
+                                            style={{
+                                              fontWeight: "600",
+                                              color: "#424242",
+                                            }}
+                                          >
+                                            {ch.field}:{" "}
+                                          </span>
+                                          <span
+                                            style={{
+                                              textDecoration: "line-through",
+                                              color: "#e53935",
+                                            }}
+                                          >
+                                            {ch.oldValue}
+                                          </span>
+                                          <span
+                                            style={{
+                                              color: "#16a34a",
+                                              fontWeight: "600",
+                                            }}
+                                          >
+                                            {" "}
+                                            → {ch.newValue}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span
+                                      style={{
+                                        fontSize: "0.68rem",
+                                        color: "#94a3b8",
+                                        fontStyle: "italic",
+                                      }}
+                                    >
+                                      {vidx === allVersions.length - 1
+                                        ? "Original version"
+                                        : "No field changes detected"}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
-                  })}
+                    },
+                  )}
                 </div>
               )}
             </>
