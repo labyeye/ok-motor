@@ -1257,44 +1257,67 @@ exports.updateSellLetter = async (req, res) => {
       if (regNo) {
         const regRegex = new RegExp(`^${String(regNo).trim()}$`, "i");
 
+        const normDate = (d) =>
+          d ? new Date(d).toISOString().split("T")[0] : "";
+
         const hasInsuranceFields =
           updateData.insuranceCompany ||
           updateData.insurancePolicyNumber ||
           updateData.insuranceExpiryDate ||
           updateData.insuranceStatus;
         if (hasInsuranceFields) {
-          const insuranceData = {
-            personName:
-              updateData.buyerName || sellLetter.buyerName || "Unknown",
-            personPhone: updateData.buyerPhone || sellLetter.buyerPhone || "",
-            personEmail: updateData.buyerEmail || sellLetter.buyerEmail || "",
-            sourceType: "sell-letter",
-            vehicleModel:
-              updateData.vehicleModel || sellLetter.vehicleModel || "",
-            brand: updateData.vehicleName || sellLetter.vehicleName || "",
-            year: "",
-            regNo: regNo,
-            vehicleRegNo: regNo,
-            insuranceCompany: updateData.insuranceCompany,
-            insurancePolicyNumber: updateData.insurancePolicyNumber,
-            insuranceExpiryDate: updateData.insuranceExpiryDate
-              ? new Date(updateData.insuranceExpiryDate)
-              : undefined,
-            insuranceStatus: updateData.insuranceStatus,
-            user: req.user.id,
-          };
-          const insuranceDoc = await Insurance.findOneAndUpdate(
-            { vehicleRegNo: regRegex },
-            insuranceData,
-            {
-              new: true,
-              upsert: true,
-              runValidators: true,
-              setDefaultsOnInsert: true,
-            },
-          );
-          if (insuranceDoc) {
-            updateData.insuranceId = insuranceDoc._id;
+          const existingIns = await Insurance.findOne({
+            vehicleRegNo: regRegex,
+          }).lean();
+          const insuranceChanged =
+            !existingIns ||
+            String(updateData.insuranceCompany || "") !==
+              String(existingIns.insuranceCompany || "") ||
+            String(updateData.insurancePolicyNumber || "") !==
+              String(existingIns.insurancePolicyNumber || "") ||
+            normDate(updateData.insuranceExpiryDate) !==
+              normDate(existingIns.insuranceExpiryDate) ||
+            String(updateData.insuranceStatus || "") !==
+              String(existingIns.insuranceStatus || "");
+
+          if (insuranceChanged) {
+            const insuranceData = {
+              personName:
+                updateData.buyerName || sellLetter.buyerName || "Unknown",
+              personPhone:
+                updateData.buyerPhone || sellLetter.buyerPhone || "",
+              personEmail:
+                updateData.buyerEmail || sellLetter.buyerEmail || "",
+              sourceType: "sell-letter",
+              vehicleModel:
+                updateData.vehicleModel || sellLetter.vehicleModel || "",
+              brand: updateData.vehicleName || sellLetter.vehicleName || "",
+              year: "",
+              regNo: regNo,
+              vehicleRegNo: regNo,
+              insuranceCompany: updateData.insuranceCompany,
+              insurancePolicyNumber: updateData.insurancePolicyNumber,
+              insuranceExpiryDate: updateData.insuranceExpiryDate
+                ? new Date(updateData.insuranceExpiryDate)
+                : undefined,
+              insuranceStatus: updateData.insuranceStatus,
+              user: req.user.id,
+            };
+            const insuranceDoc = await Insurance.findOneAndUpdate(
+              { vehicleRegNo: regRegex },
+              insuranceData,
+              {
+                new: true,
+                upsert: true,
+                runValidators: true,
+                setDefaultsOnInsert: true,
+              },
+            );
+            if (insuranceDoc) {
+              updateData.insuranceId = insuranceDoc._id;
+            }
+          } else if (existingIns) {
+            updateData.insuranceId = existingIns._id;
           }
         }
 
@@ -1304,44 +1327,62 @@ exports.updateSellLetter = async (req, res) => {
           updateData.pucExpiry ||
           updateData.pucStatus;
         if (hasPUCFields) {
-          const pucData = {
-            personName:
-              updateData.buyerName || sellLetter.buyerName || "Unknown",
-            personPhone: updateData.buyerPhone || sellLetter.buyerPhone || "",
-            personEmail: updateData.buyerEmail || sellLetter.buyerEmail || "",
-            sourceType: "sell-letter",
-            vehicleModel:
-              updateData.vehicleModel || sellLetter.vehicleModel || "",
-            brand: updateData.vehicleName || sellLetter.vehicleName || "",
-            year: "",
-            regNo: regNo,
-            vehicleRegNo: regNo,
-            pucIssueDate: updateData.pucIssueDate
-              ? new Date(updateData.pucIssueDate)
-              : undefined,
-            pucExpiryDate:
-              updateData.pucExpiryDate || updateData.pucExpiry
-                ? new Date(updateData.pucExpiryDate || updateData.pucExpiry)
+          const existingPUC = await PUC.findOne({
+            $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }],
+          }).lean();
+          const pucChanged =
+            !existingPUC ||
+            normDate(updateData.pucIssueDate) !==
+              normDate(existingPUC.pucIssueDate) ||
+            normDate(updateData.pucExpiryDate || updateData.pucExpiry) !==
+              normDate(existingPUC.pucExpiryDate || existingPUC.pucExpiry) ||
+            String(updateData.pucStatus || "") !==
+              String(existingPUC.pucStatus || "");
+
+          if (pucChanged) {
+            const pucData = {
+              personName:
+                updateData.buyerName || sellLetter.buyerName || "Unknown",
+              personPhone:
+                updateData.buyerPhone || sellLetter.buyerPhone || "",
+              personEmail:
+                updateData.buyerEmail || sellLetter.buyerEmail || "",
+              sourceType: "sell-letter",
+              vehicleModel:
+                updateData.vehicleModel || sellLetter.vehicleModel || "",
+              brand: updateData.vehicleName || sellLetter.vehicleName || "",
+              year: "",
+              regNo: regNo,
+              vehicleRegNo: regNo,
+              pucIssueDate: updateData.pucIssueDate
+                ? new Date(updateData.pucIssueDate)
                 : undefined,
-            pucExpiry:
-              updateData.pucExpiryDate || updateData.pucExpiry
-                ? new Date(updateData.pucExpiryDate || updateData.pucExpiry)
-                : undefined,
-            pucStatus: updateData.pucStatus,
-            user: req.user.id,
-          };
-          const pucDoc = await PUC.findOneAndUpdate(
-            { $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }] },
-            pucData,
-            {
-              new: true,
-              upsert: true,
-              runValidators: true,
-              setDefaultsOnInsert: true,
-            },
-          );
-          if (pucDoc) {
-            updateData.pucId = pucDoc._id;
+              pucExpiryDate:
+                updateData.pucExpiryDate || updateData.pucExpiry
+                  ? new Date(updateData.pucExpiryDate || updateData.pucExpiry)
+                  : undefined,
+              pucExpiry:
+                updateData.pucExpiryDate || updateData.pucExpiry
+                  ? new Date(updateData.pucExpiryDate || updateData.pucExpiry)
+                  : undefined,
+              pucStatus: updateData.pucStatus,
+              user: req.user.id,
+            };
+            const pucDoc = await PUC.findOneAndUpdate(
+              { $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }] },
+              pucData,
+              {
+                new: true,
+                upsert: true,
+                runValidators: true,
+                setDefaultsOnInsert: true,
+              },
+            );
+            if (pucDoc) {
+              updateData.pucId = pucDoc._id;
+            }
+          } else if (existingPUC) {
+            updateData.pucId = existingPUC._id;
           }
         }
 

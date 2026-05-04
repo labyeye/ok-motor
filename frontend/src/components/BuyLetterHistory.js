@@ -692,7 +692,8 @@ const BuyLetterHistory = () => {
             width = dims.width;
             height = dims.height;
           } else {
-            const p = asset.embeddedPage;
+            const p = asset.embeddedPages?.[0];
+            if (!p) continue;
             width = p.width || p.getWidth?.() || 595;
             height = p.height || p.getHeight?.() || 842;
           }
@@ -717,7 +718,7 @@ const BuyLetterHistory = () => {
             });
           } else {
             try {
-              page.drawPage(asset.embeddedPage, {
+              page.drawPage(asset.embeddedPages[0], {
                 x: centeredX,
                 y: drawY,
                 width: drawW,
@@ -772,7 +773,8 @@ const BuyLetterHistory = () => {
             height: drawH,
           });
         } else if (asset.kind === "pdf") {
-          const embeddedPage = asset.embeddedPage;
+          const embeddedPage = asset.embeddedPages?.[0];
+          if (!embeddedPage) continue;
           const embeddedWidth =
             embeddedPage.width || embeddedPage.getWidth?.() || 595;
           const embeddedHeight =
@@ -843,7 +845,8 @@ const BuyLetterHistory = () => {
           width = dims.width;
           height = dims.height;
         } else {
-          const p = asset.embeddedPage;
+          const p = asset.embeddedPages?.[0];
+          if (!p) return;
           width = p.width || p.getWidth?.() || 595;
           height = p.height || p.getHeight?.() || 842;
         }
@@ -868,7 +871,7 @@ const BuyLetterHistory = () => {
           });
         } else {
           try {
-            page.drawPage(asset.embeddedPage, {
+            page.drawPage(asset.embeddedPages[0], {
               x: xPos,
               y: yPos,
               width: drawW,
@@ -926,7 +929,8 @@ const BuyLetterHistory = () => {
             width = dims.width;
             height = dims.height;
           } else {
-            const p = asset.embeddedPage;
+            const p = asset.embeddedPages?.[0];
+            if (!p) continue;
             width = p.width || p.getWidth?.() || 595;
             height = p.height || p.getHeight?.() || 842;
           }
@@ -948,7 +952,7 @@ const BuyLetterHistory = () => {
             });
           } else {
             try {
-              page.drawPage(asset.embeddedPage, {
+              page.drawPage(asset.embeddedPages[0], {
                 x,
                 y: drawY,
                 width: drawW,

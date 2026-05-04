@@ -1469,6 +1469,7 @@ const AdminPage = () => {
     const [loadingItems, setLoadingItems] = useState(true);
     const [search, setSearch] = useState("");
     const [showAllPuc, setShowAllPuc] = useState(false);
+    const [showAllPucExpired, setShowAllPucExpired] = useState(false);
 
     const fetchPucData = useCallback(
       async (cachedSellLetters = null, cachedBuyLetters = null) => {
@@ -1643,6 +1644,9 @@ const AdminPage = () => {
         );
       })
       .sort((a, b) => a.daysUntil - b.daysUntil);
+
+    const expiredItems = processed.filter((it) => it.daysUntil < 0);
+    const expiringSoonItems = processed.filter((it) => it.daysUntil >= 0);
 
     const daysBadge = (daysUntil) => {
       if (daysUntil < 0)
@@ -1869,170 +1873,373 @@ const AdminPage = () => {
           </div>
         ) : (
           <>
-            <div
-              style={{
-                overflowX: "auto",
-                borderRadius: 12,
-                border: "1.5px solid #e2e8f0",
-                boxShadow: "0 1px 4px rgba(7,25,82,0.04)",
-              }}
-            >
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  fontSize: "0.8rem",
-                }}
+            {expiredItems.length > 0 && (
+              <div
+                style={{ marginBottom: expiringSoonItems.length > 0 ? 24 : 0 }}
               >
-                <thead>
-                  <tr>
-                    {[
-                      "Registration",
-                      "Name",
-                      "Phone",
-                      "Alternate Phone",
-                      "Vehicle",
-                      "PUC Expiry",
-                      "Days Left",
-                      "Source",
-                    ].map((h) => (
-                      <th key={h} style={tThStyle}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {(showAllPuc ? processed : processed.slice(0, 10)).map(
-                    (it, idx) => {
-                      const { row, expiry, daysUntil } = it;
-                      const isOverdue = daysUntil < 0;
-                      const isDueSoon = daysUntil >= 0 && daysUntil <= 7;
-                      return (
-                        <tr
-                          key={`${row._id}-${idx}`}
-                          onClick={() => {
-                            handlePucRowEdit(row);
-                          }}
-                          style={{
-                            cursor: "pointer",
-                            background: isOverdue
-                              ? "#fff5f5"
-                              : isDueSoon
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 10,
+                  }}
+                >
+                  <span
+                    style={{
+                      background: "#fee2e2",
+                      color: "#991b1b",
+                      padding: "3px 14px",
+                      borderRadius: 20,
+                      fontWeight: 700,
+                      fontSize: "0.82rem",
+                      border: "1px solid #fca5a5",
+                    }}
+                  >
+                    ⚠ Already Expired ({expiredItems.length})
+                  </span>
+                </div>
+                <div
+                  style={{
+                    overflowX: "auto",
+                    borderRadius: 12,
+                    border: "1.5px solid #fca5a5",
+                    boxShadow: "0 1px 4px rgba(153,27,27,0.06)",
+                  }}
+                >
+                  <table
+                    style={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    <thead>
+                      <tr>
+                        {[
+                          "Registration",
+                          "Name",
+                          "Phone",
+                          "Alternate Phone",
+                          "Vehicle",
+                          "PUC Expiry",
+                          "Days Left",
+                          "Source",
+                        ].map((h) => (
+                          <th key={h} style={tThStyle}>
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(showAllPucExpired
+                        ? expiredItems
+                        : expiredItems.slice(0, 10)
+                      ).map((it, idx) => {
+                        const { row, expiry, daysUntil } = it;
+                        return (
+                          <tr
+                            key={`exp-${row._id}-${idx}`}
+                            onClick={() => handlePucRowEdit(row)}
+                            style={{
+                              cursor: "pointer",
+                              background: "#fff5f5",
+                              transition: "background 0.15s",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = "#fee2e2")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "#fff5f5")
+                            }
+                          >
+                            <td style={tTdStyle}>
+                              <span
+                                style={{
+                                  background: "#EBF4F6",
+                                  color: "#088395",
+                                  padding: "2px 8px",
+                                  borderRadius: 6,
+                                  fontWeight: 700,
+                                  fontSize: "0.75rem",
+                                }}
+                              >
+                                {row.displayReg || "—"}
+                              </span>
+                            </td>
+                            <td
+                              style={{
+                                ...tTdStyle,
+                                fontWeight: 600,
+                                color: "#0f172a",
+                              }}
+                            >
+                              {row.displayName || "—"}
+                            </td>
+                            <td style={{ ...tTdStyle, color: "#475569" }}>
+                              {row.displayPhone || "—"}
+                            </td>
+                            <td style={{ ...tTdStyle, color: "#64748b" }}>
+                              {row.displayPersonAlternateNo || "—"}
+                            </td>
+                            <td style={tTdStyle}>
+                              {row.displayVehicle || "—"}
+                            </td>
+                            <td style={tTdStyle}>
+                              {expiry ? formatDate(expiry) : "—"}
+                            </td>
+                            <td style={tTdStyle}>{daysBadge(daysUntil)}</td>
+                            <td style={tTdStyle}>
+                              {row.source === "Sold Vehicle" ? (
+                                <span
+                                  style={{
+                                    fontSize: "0.72rem",
+                                    padding: "3px 8px",
+                                    background: "#dcfce7",
+                                    color: "#15803d",
+                                    borderRadius: 20,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  🚗 Sold Vehicle
+                                </span>
+                              ) : (
+                                <span
+                                  style={{
+                                    fontSize: "0.72rem",
+                                    padding: "3px 8px",
+                                    background: "#f3e8ff",
+                                    color: "#7e22ce",
+                                    borderRadius: 20,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  PUC Only
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {expiredItems.length > 10 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      marginTop: 12,
+                    }}
+                  >
+                    <button
+                      onClick={() => setShowAllPucExpired((s) => !s)}
+                      style={{
+                        padding: "8px 18px",
+                        background: "#991b1b",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        fontSize: "0.82rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {showAllPucExpired
+                        ? "Show Less ▲"
+                        : `View All Expired (${expiredItems.length}) ▼`}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            {expiringSoonItems.length > 0 && (
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 10,
+                  }}
+                >
+                  <span
+                    style={{
+                      background: "#fef9c3",
+                      color: "#854d0e",
+                      padding: "3px 14px",
+                      borderRadius: 20,
+                      fontWeight: 700,
+                      fontSize: "0.82rem",
+                      border: "1px solid #fde68a",
+                    }}
+                  >
+                    🔔 Expiring Soon ({expiringSoonItems.length})
+                  </span>
+                </div>
+                <div
+                  style={{
+                    overflowX: "auto",
+                    borderRadius: 12,
+                    border: "1.5px solid #e2e8f0",
+                    boxShadow: "0 1px 4px rgba(7,25,82,0.04)",
+                  }}
+                >
+                  <table
+                    style={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    <thead>
+                      <tr>
+                        {[
+                          "Registration",
+                          "Name",
+                          "Phone",
+                          "Alternate Phone",
+                          "Vehicle",
+                          "PUC Expiry",
+                          "Days Left",
+                          "Source",
+                        ].map((h) => (
+                          <th key={h} style={tThStyle}>
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(showAllPuc
+                        ? expiringSoonItems
+                        : expiringSoonItems.slice(0, 10)
+                      ).map((it, idx) => {
+                        const { row, expiry, daysUntil } = it;
+                        const isDueSoon = daysUntil <= 7;
+                        return (
+                          <tr
+                            key={`soon-${row._id}-${idx}`}
+                            onClick={() => handlePucRowEdit(row)}
+                            style={{
+                              cursor: "pointer",
+                              background: isDueSoon
                                 ? "#fffbeb"
                                 : idx % 2 === 0
                                   ? "#fff"
                                   : "#f8fafc",
-                            transition: "background 0.15s",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = "#EBF4F6")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.background = isOverdue
-                              ? "#fff5f5"
-                              : isDueSoon
+                              transition: "background 0.15s",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = "#EBF4F6")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = isDueSoon
                                 ? "#fffbeb"
                                 : idx % 2 === 0
                                   ? "#fff"
                                   : "#f8fafc")
-                          }
-                        >
-                          <td style={tTdStyle}>
-                            <span
+                            }
+                          >
+                            <td style={tTdStyle}>
+                              <span
+                                style={{
+                                  background: "#EBF4F6",
+                                  color: "#088395",
+                                  padding: "2px 8px",
+                                  borderRadius: 6,
+                                  fontWeight: 700,
+                                  fontSize: "0.75rem",
+                                }}
+                              >
+                                {row.displayReg || "—"}
+                              </span>
+                            </td>
+                            <td
                               style={{
-                                background: "#EBF4F6",
-                                color: "#088395",
-                                padding: "2px 8px",
-                                borderRadius: 6,
-                                fontWeight: 700,
-                                fontSize: "0.75rem",
+                                ...tTdStyle,
+                                fontWeight: 600,
+                                color: "#0f172a",
                               }}
                             >
-                              {row.displayReg || "—"}
-                            </span>
-                          </td>
-                          <td
-                            style={{
-                              ...tTdStyle,
-                              fontWeight: 600,
-                              color: "#0f172a",
-                            }}
-                          >
-                            {row.displayName || "—"}
-                          </td>
-                          <td style={{ ...tTdStyle, color: "#475569" }}>
-                            {row.displayPhone || "—"}
-                          </td>
-                          <td style={{ ...tTdStyle, color: "#64748b" }}>
-                            {row.displayPersonAlternateNo || "—"}
-                          </td>
-                          <td style={tTdStyle}>{row.displayVehicle || "—"}</td>
-                          <td style={tTdStyle}>
-                            {expiry ? formatDate(expiry) : "—"}
-                          </td>
-                          <td style={tTdStyle}>{daysBadge(daysUntil)}</td>
-                          <td style={tTdStyle}>
-                            {row.source === "Sold Vehicle" ? (
-                              <span
-                                style={{
-                                  fontSize: "0.72rem",
-                                  padding: "3px 8px",
-                                  background: "#dcfce7",
-                                  color: "#15803d",
-                                  borderRadius: 20,
-                                  fontWeight: 600,
-                                }}
-                              >
-                                🚗 Sold Vehicle
-                              </span>
-                            ) : (
-                              <span
-                                style={{
-                                  fontSize: "0.72rem",
-                                  padding: "3px 8px",
-                                  background: "#f3e8ff",
-                                  color: "#7e22ce",
-                                  borderRadius: 20,
-                                  fontWeight: 600,
-                                }}
-                              >
-                                PUC Only
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    },
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {processed.length > 10 && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  marginTop: 12,
-                }}
-              >
-                <button
-                  onClick={() => setShowAllPuc((s) => !s)}
-                  style={{
-                    padding: "8px 18px",
-                    background: "#071952",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    cursor: "pointer",
-                    fontSize: "0.82rem",
-                    fontWeight: 600,
-                  }}
-                >
-                  {showAllPuc
-                    ? "Show Less ▲"
-                    : `View All (${processed.length}) ▼`}
-                </button>
+                              {row.displayName || "—"}
+                            </td>
+                            <td style={{ ...tTdStyle, color: "#475569" }}>
+                              {row.displayPhone || "—"}
+                            </td>
+                            <td style={{ ...tTdStyle, color: "#64748b" }}>
+                              {row.displayPersonAlternateNo || "—"}
+                            </td>
+                            <td style={tTdStyle}>
+                              {row.displayVehicle || "—"}
+                            </td>
+                            <td style={tTdStyle}>
+                              {expiry ? formatDate(expiry) : "—"}
+                            </td>
+                            <td style={tTdStyle}>{daysBadge(daysUntil)}</td>
+                            <td style={tTdStyle}>
+                              {row.source === "Sold Vehicle" ? (
+                                <span
+                                  style={{
+                                    fontSize: "0.72rem",
+                                    padding: "3px 8px",
+                                    background: "#dcfce7",
+                                    color: "#15803d",
+                                    borderRadius: 20,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  🚗 Sold Vehicle
+                                </span>
+                              ) : (
+                                <span
+                                  style={{
+                                    fontSize: "0.72rem",
+                                    padding: "3px 8px",
+                                    background: "#f3e8ff",
+                                    color: "#7e22ce",
+                                    borderRadius: 20,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  PUC Only
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {expiringSoonItems.length > 10 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      marginTop: 12,
+                    }}
+                  >
+                    <button
+                      onClick={() => setShowAllPuc((s) => !s)}
+                      style={{
+                        padding: "8px 18px",
+                        background: "#071952",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        fontSize: "0.82rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {showAllPuc
+                        ? "Show Less ▲"
+                        : `View All (${expiringSoonItems.length}) ▼`}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </>
@@ -2046,6 +2253,8 @@ const AdminPage = () => {
     const [loadingItems, setLoadingItems] = useState(true);
     const [search, setSearch] = useState("");
     const [showAllInsurance, setShowAllInsurance] = useState(false);
+    const [showAllInsuranceExpired, setShowAllInsuranceExpired] =
+      useState(false);
 
     const fetchInsuranceData = useCallback(
       async (cachedSellLetters = null, cachedBuyLetters = null) => {
@@ -2225,6 +2434,9 @@ const AdminPage = () => {
         );
       })
       .sort((a, b) => a.daysUntil - b.daysUntil);
+
+    const insExpiredItems = processed.filter((it) => it.daysUntil < 0);
+    const insExpiringSoonItems = processed.filter((it) => it.daysUntil >= 0);
 
     const iThStyle = {
       padding: "11px 14px",
@@ -2465,182 +2677,403 @@ const AdminPage = () => {
           </div>
         ) : (
           <>
-            <div
-              style={{
-                overflowX: "auto",
-                borderRadius: 12,
-                border: "1.5px solid #e2e8f0",
-                boxShadow: "0 1px 4px rgba(7,25,82,0.04)",
-              }}
-            >
-              <table
+            {insExpiredItems.length > 0 && (
+              <div
                 style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  fontSize: "0.8rem",
+                  marginBottom: insExpiringSoonItems.length > 0 ? 24 : 0,
                 }}
               >
-                <thead>
-                  <tr>
-                    {[
-                      "Registration",
-                      "Name",
-                      "Phone",
-                      "Alternate Phone",
-                      "Vehicle",
-                      "Insurance Expiry",
-                      "Days Left",
-                      "Company",
-                      "Source",
-                    ].map((h) => (
-                      <th key={h} style={iThStyle}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {(showAllInsurance ? processed : processed.slice(0, 10)).map(
-                    (it, idx) => {
-                      const { row, expiry, daysUntil } = it;
-                      const isOverdue = daysUntil < 0;
-                      const isDueSoon = daysUntil >= 0 && daysUntil <= 30;
-                      return (
-                        <tr
-                          key={`${row._id}-${idx}`}
-                          onClick={() => handleInsuranceRowEdit(row)}
-                          style={{
-                            cursor: "pointer",
-                            background: isOverdue
-                              ? "#fff5f5"
-                              : isDueSoon
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 10,
+                  }}
+                >
+                  <span
+                    style={{
+                      background: "#fee2e2",
+                      color: "#991b1b",
+                      padding: "3px 14px",
+                      borderRadius: 20,
+                      fontWeight: 700,
+                      fontSize: "0.82rem",
+                      border: "1px solid #fca5a5",
+                    }}
+                  >
+                    ⚠ Already Expired ({insExpiredItems.length})
+                  </span>
+                </div>
+                <div
+                  style={{
+                    overflowX: "auto",
+                    borderRadius: 12,
+                    border: "1.5px solid #fca5a5",
+                    boxShadow: "0 1px 4px rgba(153,27,27,0.06)",
+                  }}
+                >
+                  <table
+                    style={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    <thead>
+                      <tr>
+                        {[
+                          "Registration",
+                          "Name",
+                          "Phone",
+                          "Alternate Phone",
+                          "Vehicle",
+                          "Insurance Expiry",
+                          "Days Left",
+                          "Company",
+                          "Source",
+                        ].map((h) => (
+                          <th key={h} style={iThStyle}>
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(showAllInsuranceExpired
+                        ? insExpiredItems
+                        : insExpiredItems.slice(0, 10)
+                      ).map((it, idx) => {
+                        const { row, expiry, daysUntil } = it;
+                        return (
+                          <tr
+                            key={`exp-${row._id}-${idx}`}
+                            onClick={() => handleInsuranceRowEdit(row)}
+                            style={{
+                              cursor: "pointer",
+                              background: "#fff5f5",
+                              transition: "background 0.15s",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = "#fee2e2")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "#fff5f5")
+                            }
+                          >
+                            <td style={iTdStyle}>
+                              <span
+                                style={{
+                                  background: "#EBF4F6",
+                                  color: "#088395",
+                                  padding: "2px 8px",
+                                  borderRadius: 6,
+                                  fontWeight: 700,
+                                  fontSize: "0.75rem",
+                                }}
+                              >
+                                {row.displayReg || "—"}
+                              </span>
+                            </td>
+                            <td
+                              style={{
+                                ...iTdStyle,
+                                fontWeight: 600,
+                                color: "#0f172a",
+                              }}
+                            >
+                              {row.displayName || "—"}
+                            </td>
+                            <td style={{ ...iTdStyle, color: "#475569" }}>
+                              {row.displayPhone || "—"}
+                            </td>
+                            <td style={{ ...iTdStyle, color: "#64748b" }}>
+                              {row.displayPersonAlternateNo || "—"}
+                            </td>
+                            <td style={iTdStyle}>
+                              {row.displayVehicle || "—"}
+                            </td>
+                            <td style={iTdStyle}>
+                              {expiry
+                                ? new Date(expiry).toLocaleDateString("en-IN")
+                                : "—"}
+                            </td>
+                            <td style={iTdStyle}>{iDaysBadge(daysUntil)}</td>
+                            <td style={iTdStyle}>
+                              {row.displayCompany ? (
+                                <span title={row.displayCompany}>
+                                  {row.displayCompany.length > 20
+                                    ? `${row.displayCompany.slice(0, 10)}…`
+                                    : row.displayCompany}
+                                </span>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                            <td style={iTdStyle}>
+                              {row.source === "Sold Vehicle" ? (
+                                <span
+                                  style={{
+                                    fontSize: "0.72rem",
+                                    padding: "3px 8px",
+                                    background: "#dcfce7",
+                                    color: "#15803d",
+                                    borderRadius: 20,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  🚗 Sold Vehicle
+                                </span>
+                              ) : (
+                                <span
+                                  style={{
+                                    fontSize: "0.72rem",
+                                    padding: "3px 8px",
+                                    background: "#f3e8ff",
+                                    color: "#7e22ce",
+                                    borderRadius: 20,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  Insurance Only
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {insExpiredItems.length > 10 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      marginTop: 12,
+                    }}
+                  >
+                    <button
+                      onClick={() => setShowAllInsuranceExpired((s) => !s)}
+                      style={{
+                        padding: "8px 18px",
+                        background: "#991b1b",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        fontSize: "0.82rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {showAllInsuranceExpired
+                        ? "Show Less ▲"
+                        : `View All Expired (${insExpiredItems.length}) ▼`}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            {insExpiringSoonItems.length > 0 && (
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 10,
+                  }}
+                >
+                  <span
+                    style={{
+                      background: "#fef9c3",
+                      color: "#854d0e",
+                      padding: "3px 14px",
+                      borderRadius: 20,
+                      fontWeight: 700,
+                      fontSize: "0.82rem",
+                      border: "1px solid #fde68a",
+                    }}
+                  >
+                    🔔 Expiring Soon ({insExpiringSoonItems.length})
+                  </span>
+                </div>
+                <div
+                  style={{
+                    overflowX: "auto",
+                    borderRadius: 12,
+                    border: "1.5px solid #e2e8f0",
+                    boxShadow: "0 1px 4px rgba(7,25,82,0.04)",
+                  }}
+                >
+                  <table
+                    style={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    <thead>
+                      <tr>
+                        {[
+                          "Registration",
+                          "Name",
+                          "Phone",
+                          "Alternate Phone",
+                          "Vehicle",
+                          "Insurance Expiry",
+                          "Days Left",
+                          "Company",
+                          "Source",
+                        ].map((h) => (
+                          <th key={h} style={iThStyle}>
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(showAllInsurance
+                        ? insExpiringSoonItems
+                        : insExpiringSoonItems.slice(0, 10)
+                      ).map((it, idx) => {
+                        const { row, expiry, daysUntil } = it;
+                        const isDueSoon = daysUntil <= 30;
+                        return (
+                          <tr
+                            key={`soon-${row._id}-${idx}`}
+                            onClick={() => handleInsuranceRowEdit(row)}
+                            style={{
+                              cursor: "pointer",
+                              background: isDueSoon
                                 ? "#fffbeb"
                                 : idx % 2 === 0
                                   ? "#fff"
                                   : "#f8fafc",
-                            transition: "background 0.15s",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = "#EBF4F6")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.background = isOverdue
-                              ? "#fff5f5"
-                              : isDueSoon
+                              transition: "background 0.15s",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = "#EBF4F6")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = isDueSoon
                                 ? "#fffbeb"
                                 : idx % 2 === 0
                                   ? "#fff"
                                   : "#f8fafc")
-                          }
-                        >
-                          <td style={iTdStyle}>
-                            <span
+                            }
+                          >
+                            <td style={iTdStyle}>
+                              <span
+                                style={{
+                                  background: "#EBF4F6",
+                                  color: "#088395",
+                                  padding: "2px 8px",
+                                  borderRadius: 6,
+                                  fontWeight: 700,
+                                  fontSize: "0.75rem",
+                                }}
+                              >
+                                {row.displayReg || "—"}
+                              </span>
+                            </td>
+                            <td
                               style={{
-                                background: "#EBF4F6",
-                                color: "#088395",
-                                padding: "2px 8px",
-                                borderRadius: 6,
-                                fontWeight: 700,
-                                fontSize: "0.75rem",
+                                ...iTdStyle,
+                                fontWeight: 600,
+                                color: "#0f172a",
                               }}
                             >
-                              {row.displayReg || "—"}
-                            </span>
-                          </td>
-                          <td
-                            style={{
-                              ...iTdStyle,
-                              fontWeight: 600,
-                              color: "#0f172a",
-                            }}
-                          >
-                            {row.displayName || "—"}
-                          </td>
-                          <td style={{ ...iTdStyle, color: "#475569" }}>
-                            {row.displayPhone || "—"}
-                          </td>
-                          <td style={{ ...iTdStyle, color: "#64748b" }}>
-                            {row.displayPersonAlternateNo || "—"}
-                          </td>
-                          <td style={iTdStyle}>{row.displayVehicle || "—"}</td>
-                          <td style={iTdStyle}>
-                            {expiry
-                              ? new Date(expiry).toLocaleDateString("en-IN")
-                              : "—"}
-                          </td>
-                          <td style={iTdStyle}>{iDaysBadge(daysUntil)}</td>
-                          <td style={iTdStyle}>
-                            {row.displayCompany ? (
-                              <span title={row.displayCompany}>
-                                {row.displayCompany.length > 20
-                                  ? `${row.displayCompany.slice(0, 10)}…`
-                                  : row.displayCompany}
-                              </span>
-                            ) : (
-                              "—"
-                            )}
-                          </td>
-                          <td style={iTdStyle}>
-                            {row.source === "Sold Vehicle" ? (
-                              <span
-                                style={{
-                                  fontSize: "0.72rem",
-                                  padding: "3px 8px",
-                                  background: "#dcfce7",
-                                  color: "#15803d",
-                                  borderRadius: 20,
-                                  fontWeight: 600,
-                                }}
-                              >
-                                🚗 Sold Vehicle
-                              </span>
-                            ) : (
-                              <span
-                                style={{
-                                  fontSize: "0.72rem",
-                                  padding: "3px 8px",
-                                  background: "#f3e8ff",
-                                  color: "#7e22ce",
-                                  borderRadius: 20,
-                                  fontWeight: 600,
-                                }}
-                              >
-                                Insurance Only
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    },
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {processed.length > 10 && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  marginTop: 12,
-                }}
-              >
-                <button
-                  onClick={() => setShowAllInsurance((s) => !s)}
-                  style={{
-                    padding: "8px 18px",
-                    background: "#071952",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    cursor: "pointer",
-                    fontSize: "0.82rem",
-                    fontWeight: 600,
-                  }}
-                >
-                  {showAllInsurance
-                    ? "Show Less ▲"
-                    : `View All (${processed.length}) ▼`}
-                </button>
+                              {row.displayName || "—"}
+                            </td>
+                            <td style={{ ...iTdStyle, color: "#475569" }}>
+                              {row.displayPhone || "—"}
+                            </td>
+                            <td style={{ ...iTdStyle, color: "#64748b" }}>
+                              {row.displayPersonAlternateNo || "—"}
+                            </td>
+                            <td style={iTdStyle}>
+                              {row.displayVehicle || "—"}
+                            </td>
+                            <td style={iTdStyle}>
+                              {expiry
+                                ? new Date(expiry).toLocaleDateString("en-IN")
+                                : "—"}
+                            </td>
+                            <td style={iTdStyle}>{iDaysBadge(daysUntil)}</td>
+                            <td style={iTdStyle}>
+                              {row.displayCompany ? (
+                                <span title={row.displayCompany}>
+                                  {row.displayCompany.length > 20
+                                    ? `${row.displayCompany.slice(0, 10)}…`
+                                    : row.displayCompany}
+                                </span>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                            <td style={iTdStyle}>
+                              {row.source === "Sold Vehicle" ? (
+                                <span
+                                  style={{
+                                    fontSize: "0.72rem",
+                                    padding: "3px 8px",
+                                    background: "#dcfce7",
+                                    color: "#15803d",
+                                    borderRadius: 20,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  🚗 Sold Vehicle
+                                </span>
+                              ) : (
+                                <span
+                                  style={{
+                                    fontSize: "0.72rem",
+                                    padding: "3px 8px",
+                                    background: "#f3e8ff",
+                                    color: "#7e22ce",
+                                    borderRadius: 20,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  Insurance Only
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {insExpiringSoonItems.length > 10 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      marginTop: 12,
+                    }}
+                  >
+                    <button
+                      onClick={() => setShowAllInsurance((s) => !s)}
+                      style={{
+                        padding: "8px 18px",
+                        background: "#071952",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        fontSize: "0.82rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {showAllInsurance
+                        ? "Show Less ▲"
+                        : `View All (${insExpiringSoonItems.length}) ▼`}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </>
