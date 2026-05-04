@@ -120,6 +120,13 @@ exports.createBuyLetter = [
         }
       }
 
+      // Strip stray non-alphanumeric characters (backticks, spaces, etc.) from reg number
+      if (buyLetterData.registrationNumber) {
+        buyLetterData.registrationNumber = String(buyLetterData.registrationNumber)
+          .replace(/[^a-zA-Z0-9]/g, "")
+          .toUpperCase();
+      }
+
       const regNo = buyLetterData.registrationNumber;
       if (regNo) {
         try {
@@ -855,6 +862,13 @@ exports.updateBuyLetter = async (req, res) => {
       delete updateData.saleDate;
     } else if (req.body.saleDate) {
       updateData.saleDate = new Date(req.body.saleDate);
+    }
+
+    // Strip stray non-alphanumeric characters (backticks, spaces, etc.) from reg number
+    if (updateData.registrationNumber) {
+      updateData.registrationNumber = String(updateData.registrationNumber)
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .toUpperCase();
     }
 
     const editedDate = new Date();

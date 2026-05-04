@@ -146,11 +146,11 @@ const AdminPage = () => {
 
       setBuyLettersState(Array.isArray(buyLetters) ? buyLetters : []);
 
-      // Normalize registration numbers: remove all spaces, lowercase
+      // Normalize registration numbers: keep only alphanumeric chars, lowercase.
+      // Handles backticks, spaces, hyphens, or any stray characters in stored values.
       const normalizeReg = (reg) =>
         String(reg || "")
-          .replace(/\s+/g, "")
-          .trim()
+          .replace(/[^a-zA-Z0-9]/g, "")
           .toLowerCase();
 
       const uniqueSaleIds = new Set();
