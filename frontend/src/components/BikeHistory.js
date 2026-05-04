@@ -2519,7 +2519,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
     const registrationNumber = searchTerm.replace(/\s+/g, "_");
     const date = new Date(item.date)
       .toLocaleDateString("en-IN")
-      .replace(/\
+      .replace(/\//g, "_");
 
     switch (item.type) {
       case "buy":
