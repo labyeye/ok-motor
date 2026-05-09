@@ -85,12 +85,6 @@ const AdvancePayBillForm = () => {
     }
   }, [navigate]);
 
-  useEffect(() => {
-    if (isEditMode && id) {
-      loadBillData(id);
-    }
-  }, [id, isEditMode, loadBillData]);
-
   const loadBillData = async (billId) => {
     try {
       setIsLoadingBill(true);
@@ -182,6 +176,12 @@ const AdvancePayBillForm = () => {
       setIsLoadingBill(false);
     }
   };
+
+  useEffect(() => {
+    if (isEditMode && id) {
+      loadBillData(id);
+    }
+  }, [id, isEditMode]);
 
   const calculateAmounts = (data) => {
     const total = parseFloat(String(data.totalAmount).replace(/,/g, "")) || 0;
