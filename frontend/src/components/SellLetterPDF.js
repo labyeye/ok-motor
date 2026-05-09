@@ -72,6 +72,10 @@ const SellLetterForm = () => {
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [loadingVehicles, setLoadingVehicles] = useState(false);
+  const [fetchedValidity, setFetchedValidity] = useState({
+    puc: null,
+    insurance: null,
+  });
   const getCurrentDate = () => new Date().toISOString().split("T")[0];
   const getCurrentTime = () => {
     const now = new Date();
@@ -2566,6 +2570,27 @@ const SellLetterForm = () => {
             registrationNumber,
           }));
 
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const pucExpiry = formattedData.pucExpiryDate
+            ? new Date(formattedData.pucExpiryDate)
+            : null;
+          const insExpiry = formattedData.insuranceExpiryDate
+            ? new Date(formattedData.insuranceExpiryDate)
+            : null;
+          setFetchedValidity({
+            puc: pucExpiry
+              ? pucExpiry >= today
+                ? "valid"
+                : "expired"
+              : null,
+            insurance: insExpiry
+              ? insExpiry >= today
+                ? "valid"
+                : "expired"
+              : null,
+          });
+
           if (data.buyLetterDocuments) {
             const docs = data.buyLetterDocuments;
             const previews = {};
@@ -3151,16 +3176,27 @@ const SellLetterForm = () => {
                     <option value="notRunning">Not Running</option>
                   </select>
                 </div>
-                <div style={styles.formField}>
+                <div style={{
+                  ...styles.formField,
+                  ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                  ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                }}>
                   <label style={styles.formLabel}>
                     <AlertCircle style={styles.formIcon} />
                     PUC Status || PUC स्थिति
+                    {fetchedValidity.puc === "valid" && <span style={{ color: "#155724", marginLeft: 8, fontSize: 12 }}>(Valid - Locked)</span>}
+                    {fetchedValidity.puc === "expired" && <span style={{ color: "#721c24", marginLeft: 8, fontSize: 12 }}>(Expired - Editable)</span>}
                   </label>
                   <select
                     name="pucStatus"
                     value={formData.pucStatus || ""}
                     onChange={handleChange}
-                    style={styles.formSelect}
+                    disabled={fetchedValidity.puc === "valid"}
+                    style={{
+                      ...styles.formSelect,
+                      ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed", opacity: 0.85 } : {}),
+                      ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
+                    }}
                   >
                     <option value="">Select</option>
                     <option value="Valid">Valid</option>
@@ -3171,7 +3207,11 @@ const SellLetterForm = () => {
 
                 {formData.pucStatus === "Valid" && (
                   <>
-                    <div style={styles.formField}>
+                    <div style={{
+                      ...styles.formField,
+                      ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                      ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                    }}>
                       <label style={styles.formLabel}>
                         <Calendar style={styles.formIcon} />
                         PUC Issue Date || PUC जारी तिथि
@@ -3181,10 +3221,19 @@ const SellLetterForm = () => {
                         name="pucIssueDate"
                         value={formData.pucIssueDate || ""}
                         onChange={handleChange}
-                        style={styles.formInput}
+                        readOnly={fetchedValidity.puc === "valid"}
+                        style={{
+                          ...styles.formInput,
+                          ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed" } : {}),
+                          ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
+                        }}
                       />
                     </div>
-                    <div style={styles.formField}>
+                    <div style={{
+                      ...styles.formField,
+                      ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                      ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                    }}>
                       <label style={styles.formLabel}>
                         <Calendar style={styles.formIcon} />
                         PUC Expiry Date || PUC समाप्ति तिथि
@@ -3194,22 +3243,38 @@ const SellLetterForm = () => {
                         name="pucExpiryDate"
                         value={formData.pucExpiryDate || ""}
                         onChange={handleChange}
-                        style={styles.formInput}
+                        readOnly={fetchedValidity.puc === "valid"}
+                        style={{
+                          ...styles.formInput,
+                          ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed" } : {}),
+                          ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
+                        }}
                       />
                     </div>
                   </>
                 )}
 
-                <div style={styles.formField}>
+                <div style={{
+                  ...styles.formField,
+                  ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                  ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                }}>
                   <label style={styles.formLabel}>
                     <AlertCircle style={styles.formIcon} />
                     Insurance Status || बीमा स्थिति
+                    {fetchedValidity.insurance === "valid" && <span style={{ color: "#155724", marginLeft: 8, fontSize: 12 }}>(Valid - Locked)</span>}
+                    {fetchedValidity.insurance === "expired" && <span style={{ color: "#721c24", marginLeft: 8, fontSize: 12 }}>(Expired - Editable)</span>}
                   </label>
                   <select
                     name="insuranceStatus"
                     value={formData.insuranceStatus || ""}
                     onChange={handleChange}
-                    style={styles.formSelect}
+                    disabled={fetchedValidity.insurance === "valid"}
+                    style={{
+                      ...styles.formSelect,
+                      ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed", opacity: 0.85 } : {}),
+                      ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
+                    }}
                   >
                     <option value="">Select</option>
                     <option value="Valid">Valid</option>
@@ -3220,7 +3285,11 @@ const SellLetterForm = () => {
 
                 {formData.insuranceStatus === "Valid" && (
                   <>
-                    <div style={styles.formField}>
+                    <div style={{
+                      ...styles.formField,
+                      ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                      ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                    }}>
                       <label style={styles.formLabel}>
                         <Calendar style={styles.formIcon} />
                         Insurance Expiry Date || बीमा समाप्ति तिथि
@@ -3230,10 +3299,19 @@ const SellLetterForm = () => {
                         name="insuranceExpiryDate"
                         value={formData.insuranceExpiryDate || ""}
                         onChange={handleChange}
-                        style={styles.formInput}
+                        readOnly={fetchedValidity.insurance === "valid"}
+                        style={{
+                          ...styles.formInput,
+                          ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed" } : {}),
+                          ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
+                        }}
                       />
                     </div>
-                    <div style={styles.formField}>
+                    <div style={{
+                      ...styles.formField,
+                      ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                      ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                    }}>
                       <label style={styles.formLabel}>
                         <FileText style={styles.formIcon} />
                         Insurance Company || बीमा कंपनी
@@ -3244,10 +3322,19 @@ const SellLetterForm = () => {
                         value={formData.insuranceCompany || ""}
                         onChange={handleChange}
                         onInput={handleInput}
-                        style={styles.formInput}
+                        readOnly={fetchedValidity.insurance === "valid"}
+                        style={{
+                          ...styles.formInput,
+                          ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed" } : {}),
+                          ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
+                        }}
                       />
                     </div>
-                    <div style={styles.formField}>
+                    <div style={{
+                      ...styles.formField,
+                      ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                      ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                    }}>
                       <label style={styles.formLabel}>
                         <FileText style={styles.formIcon} />
                         Insurance Policy Number || पॉलिसी नंबर
@@ -3258,7 +3345,12 @@ const SellLetterForm = () => {
                         value={formData.insurancePolicyNumber || ""}
                         onChange={handleChange}
                         onInput={handleInput}
-                        style={styles.formInput}
+                        readOnly={fetchedValidity.insurance === "valid"}
+                        style={{
+                          ...styles.formInput,
+                          ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed" } : {}),
+                          ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
+                        }}
                       />
                     </div>
                   </>

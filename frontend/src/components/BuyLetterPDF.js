@@ -62,6 +62,10 @@ const BuyLetterForm = () => {
   const [vehicleNOCUploadMode, setVehicleNOCUploadMode] = useState("separate");
   const [vehicleBuyReceiptUploadMode, setVehicleBuyReceiptUploadMode] =
     useState("separate");
+  const [fetchedValidity, setFetchedValidity] = useState({
+    puc: null,
+    insurance: null,
+  });
 
   const [filesState, setFilesState] = useState({
     vehicleRCFront: null,
@@ -2886,6 +2890,27 @@ const BuyLetterForm = () => {
             registrationNumber,
           }));
 
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const pucExpiry = formattedData.pucExpiryDate
+            ? new Date(formattedData.pucExpiryDate)
+            : null;
+          const insExpiry = formattedData.insuranceExpiryDate
+            ? new Date(formattedData.insuranceExpiryDate)
+            : null;
+          setFetchedValidity({
+            puc: pucExpiry
+              ? pucExpiry >= today
+                ? "valid"
+                : "expired"
+              : null,
+            insurance: insExpiry
+              ? insExpiry >= today
+                ? "valid"
+                : "expired"
+              : null,
+          });
+
           if (data.documents) {
             const docs = data.documents;
             const previews = {};
@@ -4675,10 +4700,16 @@ const BuyLetterForm = () => {
                 <Calendar style={styles.sectionIcon} /> PUC & Insurance
               </h2>
               <div style={styles.formGrid}>
-                <div style={styles.formField}>
+                <div style={{
+                  ...styles.formField,
+                  ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                  ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                }}>
                   <label style={styles.formLabel}>
                     <AlertCircle style={styles.formIcon} />
                     PUC Status || PUC स्थिति
+                    {fetchedValidity.puc === "valid" && <span style={{ color: "#155724", marginLeft: 8, fontSize: 12 }}>(Valid - Locked)</span>}
+                    {fetchedValidity.puc === "expired" && <span style={{ color: "#721c24", marginLeft: 8, fontSize: 12 }}>(Expired - Editable)</span>}
                   </label>
                   <select
                     name="pucStatus"
@@ -4686,7 +4717,12 @@ const BuyLetterForm = () => {
                     onChange={handleChange}
                     onFocus={() => setFocusedInput("pucStatus")}
                     onBlur={() => setFocusedInput(null)}
-                    style={styles.formSelect}
+                    disabled={fetchedValidity.puc === "valid"}
+                    style={{
+                      ...styles.formSelect,
+                      ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed", opacity: 0.85 } : {}),
+                      ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
+                    }}
                   >
                     <option value="">Select</option>
                     <option value="Valid">Valid</option>
@@ -4697,7 +4733,11 @@ const BuyLetterForm = () => {
 
                 {formData.pucStatus === "Valid" && (
                   <>
-                    <div style={styles.formField}>
+                    <div style={{
+                      ...styles.formField,
+                      ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                      ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                    }}>
                       <label style={styles.formLabel}>
                         <Calendar style={styles.formIcon} />
                         PUC Issue Date || PUC जारी तिथि
@@ -4709,16 +4749,23 @@ const BuyLetterForm = () => {
                         onChange={handleChange}
                         onFocus={() => setFocusedInput("pucIssueDate")}
                         onBlur={() => setFocusedInput(null)}
+                        readOnly={fetchedValidity.puc === "valid"}
                         style={{
                           ...styles.formInput,
-                          ...(focusedInput === "pucIssueDate"
+                          ...(focusedInput === "pucIssueDate" && fetchedValidity.puc !== "valid"
                             ? styles.inputFocused
                             : {}),
+                          ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed" } : {}),
+                          ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
                         }}
                       />
                     </div>
 
-                    <div style={styles.formField}>
+                    <div style={{
+                      ...styles.formField,
+                      ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                      ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                    }}>
                       <label style={styles.formLabel}>
                         <Calendar style={styles.formIcon} />
                         PUC Expiry Date || PUC समाप्ति तिथि
@@ -4730,21 +4777,30 @@ const BuyLetterForm = () => {
                         onChange={handleChange}
                         onFocus={() => setFocusedInput("pucExpiryDate")}
                         onBlur={() => setFocusedInput(null)}
+                        readOnly={fetchedValidity.puc === "valid"}
                         style={{
                           ...styles.formInput,
-                          ...(focusedInput === "pucExpiryDate"
+                          ...(focusedInput === "pucExpiryDate" && fetchedValidity.puc !== "valid"
                             ? styles.inputFocused
                             : {}),
+                          ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed" } : {}),
+                          ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
                         }}
                       />
                     </div>
                   </>
                 )}
 
-                <div style={styles.formField}>
+                <div style={{
+                  ...styles.formField,
+                  ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                  ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                }}>
                   <label style={styles.formLabel}>
                     <AlertCircle style={styles.formIcon} />
                     Insurance Status || बीमा स्थिति
+                    {fetchedValidity.insurance === "valid" && <span style={{ color: "#155724", marginLeft: 8, fontSize: 12 }}>(Valid - Locked)</span>}
+                    {fetchedValidity.insurance === "expired" && <span style={{ color: "#721c24", marginLeft: 8, fontSize: 12 }}>(Expired - Editable)</span>}
                   </label>
                   <select
                     name="insuranceStatus"
@@ -4752,7 +4808,12 @@ const BuyLetterForm = () => {
                     onChange={handleChange}
                     onFocus={() => setFocusedInput("insuranceStatus")}
                     onBlur={() => setFocusedInput(null)}
-                    style={styles.formSelect}
+                    disabled={fetchedValidity.insurance === "valid"}
+                    style={{
+                      ...styles.formSelect,
+                      ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed", opacity: 0.85 } : {}),
+                      ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
+                    }}
                   >
                     <option value="">Select</option>
                     <option value="Valid">Valid</option>
@@ -4763,7 +4824,11 @@ const BuyLetterForm = () => {
 
                 {formData.insuranceStatus === "Valid" && (
                   <>
-                    <div style={styles.formField}>
+                    <div style={{
+                      ...styles.formField,
+                      ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                      ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                    }}>
                       <label style={styles.formLabel}>
                         <Calendar style={styles.formIcon} />
                         Insurance Expiry Date || बीमा समाप्ति तिथि
@@ -4775,16 +4840,23 @@ const BuyLetterForm = () => {
                         onChange={handleChange}
                         onFocus={() => setFocusedInput("insuranceExpiryDate")}
                         onBlur={() => setFocusedInput(null)}
+                        readOnly={fetchedValidity.insurance === "valid"}
                         style={{
                           ...styles.formInput,
-                          ...(focusedInput === "insuranceExpiryDate"
+                          ...(focusedInput === "insuranceExpiryDate" && fetchedValidity.insurance !== "valid"
                             ? styles.inputFocused
                             : {}),
+                          ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed" } : {}),
+                          ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
                         }}
                       />
                     </div>
 
-                    <div style={styles.formField}>
+                    <div style={{
+                      ...styles.formField,
+                      ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                      ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                    }}>
                       <label style={styles.formLabel}>
                         <User style={styles.formIcon} />
                         Insurance Company || बीमा कंपनी
@@ -4796,16 +4868,23 @@ const BuyLetterForm = () => {
                         onChange={handleChange}
                         onFocus={() => setFocusedInput("insuranceCompany")}
                         onBlur={() => setFocusedInput(null)}
+                        readOnly={fetchedValidity.insurance === "valid"}
                         style={{
                           ...styles.formInput,
-                          ...(focusedInput === "insuranceCompany"
+                          ...(focusedInput === "insuranceCompany" && fetchedValidity.insurance !== "valid"
                             ? styles.inputFocused
                             : {}),
+                          ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed" } : {}),
+                          ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
                         }}
                       />
                     </div>
 
-                    <div style={styles.formField}>
+                    <div style={{
+                      ...styles.formField,
+                      ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#d4edda", borderRadius: 8, padding: 8 } : {}),
+                      ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f8d7da", borderRadius: 8, padding: 8 } : {}),
+                    }}>
                       <label style={styles.formLabel}>
                         <User style={styles.formIcon} />
                         Insurance Policy Number || पॉलिसी संख्या
@@ -4817,11 +4896,14 @@ const BuyLetterForm = () => {
                         onChange={handleChange}
                         onFocus={() => setFocusedInput("insurancePolicyNumber")}
                         onBlur={() => setFocusedInput(null)}
+                        readOnly={fetchedValidity.insurance === "valid"}
                         style={{
                           ...styles.formInput,
-                          ...(focusedInput === "insurancePolicyNumber"
+                          ...(focusedInput === "insurancePolicyNumber" && fetchedValidity.insurance !== "valid"
                             ? styles.inputFocused
                             : {}),
+                          ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed" } : {}),
+                          ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
                         }}
                       />
                     </div>
