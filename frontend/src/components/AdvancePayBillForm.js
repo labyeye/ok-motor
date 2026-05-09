@@ -85,7 +85,7 @@ const AdvancePayBillForm = () => {
     }
   }, [navigate]);
 
-  const loadBillData = async (billId) => {
+  const loadBillData = useCallback(async (billId) => {
     try {
       setIsLoadingBill(true);
       const token = localStorage.getItem("token");
@@ -175,13 +175,13 @@ const AdvancePayBillForm = () => {
     } finally {
       setIsLoadingBill(false);
     }
-  };
+  }, [navigate, logout, setAlertInfo, setFormData]);
 
   useEffect(() => {
     if (isEditMode && id) {
       loadBillData(id);
     }
-  }, [id, isEditMode]);
+  }, [id, isEditMode, loadBillData]);
 
   const calculateAmounts = (data) => {
     const total = parseFloat(String(data.totalAmount).replace(/,/g, "")) || 0;
