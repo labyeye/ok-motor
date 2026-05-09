@@ -31,6 +31,7 @@ const AdvancePayBillForm = () => {
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [previewPdf, setPreviewPdf] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingBill, setIsLoadingBill] = useState(isEditMode);
   const [focusedInput, setFocusedInput] = useState(null);
