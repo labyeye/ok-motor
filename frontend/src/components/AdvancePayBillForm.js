@@ -89,7 +89,7 @@ const AdvancePayBillForm = () => {
     if (isEditMode && id) {
       loadBillData(id);
     }
-  }, [id, isEditMode]);
+  }, [id, isEditMode, loadBillData]);
 
   const loadBillData = async (billId) => {
     try {

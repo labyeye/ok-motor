@@ -1862,8 +1862,6 @@ class PDFService {
         });
       });
 
-      const addressEndY = customerY - 40 - (customerAddressLines.length - 1) * 12 - 20;
-
       page.drawText(`Phone: ${advanceBill.customerPhone || "N/A"}`, {
         x: 350,
         y: customerY - 25,
