@@ -48,7 +48,7 @@
 
   function fetchAndRender() {
     var banner = ensureBanner();
-    var API = "https://ok-motor-backend.vercel.app/api/announcements/current";
+    var API = "https://backend.okmotors.in/api/announcements/current";
 
     console.log("Fetching announcement from:", API);
 

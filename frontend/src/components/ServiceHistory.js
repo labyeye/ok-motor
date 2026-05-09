@@ -87,7 +87,7 @@ const ServiceHistory = () => {
 
         if (isOnline) {
           const serviceResponse = await axios.get(
-            `https://ok-motor-backend.vercel.app/api/service-bills?page=${currentPage}`,
+            `https://backend.okmotors.in/api/service-bills?page=${currentPage}`,
           );
           const serviceData =
             serviceResponse.data.data || serviceResponse.data || [];
@@ -106,7 +106,7 @@ const ServiceHistory = () => {
                 uniquePrevIds.map((id) =>
                   axios
                     .get(
-                      `https://ok-motor-backend.vercel.app/api/service-bills/${id}`,
+                      `https://backend.okmotors.in/api/service-bills/${id}`,
                       {
                         headers,
                       },
@@ -150,7 +150,7 @@ const ServiceHistory = () => {
           setPurchaseHistory(Array.isArray(purchaseRaw) ? purchaseRaw : []);
 
           const sellResponse = await axios.get(
-            `https://ok-motor-backend.vercel.app/api/sell-letters`,
+            `https://backend.okmotors.in/api/sell-letters`,
           );
           const sellRaw = sellResponse.data.data || sellResponse.data;
           setSellHistory(Array.isArray(sellRaw) ? sellRaw : []);
@@ -537,7 +537,7 @@ const ServiceHistory = () => {
       );
 
       const response = await axios.get(
-        "https://ok-motor-backend.vercel.app/api/auth/me",
+        "https://backend.okmotors.in/api/auth/me",
       );
       console.log("Auth test successful:", response.data);
     } catch (error) {
@@ -715,7 +715,7 @@ const ServiceHistory = () => {
       } else {
         const token = localStorage.getItem("token");
         const resp = await axios.get(
-          `https://ok-motor-backend.vercel.app/api/service-bills/${prevId}`,
+          `https://backend.okmotors.in/api/service-bills/${prevId}`,
           { headers: { Authorization: `Bearer ${token}` } },
         );
         previous = resp.data.data || resp.data;
@@ -748,7 +748,7 @@ const ServiceHistory = () => {
     const id = confirmTargetId;
     try {
       await axios.delete(
-        `https://ok-motor-backend.vercel.app/api/service-bills/${id}`,
+        `https://backend.okmotors.in/api/service-bills/${id}`,
       );
       setServiceBills((prev) => prev.filter((bill) => bill._id !== id));
     } catch (error) {

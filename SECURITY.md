@@ -361,8 +361,8 @@ if (cachedUser) {
 **File:** `frontend/src/context/AuthContext.js:41,77`
 
 ```js
-const res = await axios.get("https://ok-motor-backend.vercel.app/api/auth/me");
-const res = await axios.post("https://ok-motor-backend.vercel.app/api/auth/login", ...);
+const res = await axios.get("https://backend.okmotors.in/api/auth/me");
+const res = await axios.post("https://backend.okmotors.in/api/auth/login", ...);
 ```
 
 **Risk:** URL changes require code changes, and the production URL is embedded in source. Less a security risk, more a maintenance and accidental-data-exposure risk.

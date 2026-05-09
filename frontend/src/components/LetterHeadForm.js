@@ -52,7 +52,7 @@ const LetterHeadForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const API_BASE_URL = "https://ok-motor-backend.vercel.app/api";
+  const API_BASE_URL = "https://backend.okmotors.in/api";
 
   const handleEdit = (letter) => {
     const safeDate = letter?.date

@@ -4,7 +4,7 @@ import networkService from "./networkService";
 
 class ApiService {
   constructor() {
-    this.baseURL = "https://ok-motor-backend.vercel.app";
+    this.baseURL = "https://backend.okmotors.in";
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,
     });

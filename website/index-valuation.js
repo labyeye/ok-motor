@@ -1,7 +1,7 @@
 (function () {
   const API_BASE =
     window.location.hostname === "localhost" ||
-    window.location.hostname === "https://ok-motor-backend.vercel.app";
+    window.location.hostname === "https://backend.okmotors.in";
 
   const vehicleModelsData = {
     bike: null,
@@ -53,7 +53,7 @@
   async function fetchBikeMakes() {
     try {
       const response = await fetch(
-        `https://ok-motor-backend.vercel.app/api/bikes/makes`,
+        `https://backend.okmotors.in/api/bikes/makes`,
       );
       const result = await response.json();
 
@@ -95,7 +95,7 @@
   async function fetchBikeModels(make) {
     try {
       const response = await fetch(
-        `https://ok-motor-backend.vercel.app/api/bikes/models?make=${encodeURIComponent(
+        `https://backend.okmotors.in/api/bikes/models?make=${encodeURIComponent(
           make,
         )}`,
       );
@@ -114,7 +114,7 @@
 
   async function fetchBikeDetails(make, model, year) {
     try {
-      let url = `https://ok-motor-backend.vercel.app/api/bikes?make=${encodeURIComponent(
+      let url = `https://backend.okmotors.in/api/bikes?make=${encodeURIComponent(
         make,
       )}`;
       if (model) url += `&model=${encodeURIComponent(model)}`;

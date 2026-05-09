@@ -101,7 +101,7 @@ const AdminPage = () => {
   const fetchVehicleStats = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      const API_BASE = "https://ok-motor-backend.vercel.app";
+      const API_BASE = "https://backend.okmotors.in";
       const headers = { headers: { Authorization: `Bearer ${token}` } };
 
       const vehiclesPromise = axios.get(
@@ -278,8 +278,8 @@ const AdminPage = () => {
 
       const endpoint =
         user?.role === "admin"
-          ? "https://ok-motor-backend.vercel.app/api/dashboard/stats"
-          : "https://ok-motor-backend.vercel.app/api/dashboard/owner-stats";
+          ? "https://backend.okmotors.in/api/dashboard/stats"
+          : "https://backend.okmotors.in/api/dashboard/owner-stats";
 
       const response = await axios.get(endpoint, {
         headers: {
@@ -317,7 +317,7 @@ const AdminPage = () => {
     setIncompleteLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const API_BASE = "https://ok-motor-backend.vercel.app";
+      const API_BASE = "https://backend.okmotors.in";
       const res = await axios.get(
         `${API_BASE}/api/dashboard/incomplete-letters`,
         {
@@ -345,7 +345,7 @@ const AdminPage = () => {
       if (!token) return;
 
       const endpoint =
-        "https://ok-motor-backend.vercel.app/api/dashboard/free-services";
+        "https://backend.okmotors.in/api/dashboard/free-services";
       const params = { limit: 2000 };
       if (search && String(search).trim() !== "")
         params.search = String(search).trim();
@@ -1477,7 +1477,7 @@ const AdminPage = () => {
           const token = localStorage.getItem("token");
           if (!token) return;
 
-          const BASE = "https://ok-motor-backend.vercel.app";
+          const BASE = "https://backend.okmotors.in";
 
           let pucRecords = [];
           let sellLetters = [];
@@ -2262,7 +2262,7 @@ const AdminPage = () => {
           const token = localStorage.getItem("token");
           if (!token) return;
 
-          const BASE = "https://ok-motor-backend.vercel.app";
+          const BASE = "https://backend.okmotors.in";
 
           let insuranceRecords = [];
           let sellLetters = [];

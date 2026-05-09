@@ -26,7 +26,7 @@ const PUCHistory = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const API_BASE_URL = "https://ok-motor-backend.vercel.app/api";
+  const API_BASE_URL = "https://backend.okmotors.in/api";
 
   const fetchHistory = async () => {
     try {

@@ -21,7 +21,7 @@ const StaffList = () => {
     const fetchStaff = async () => {
       try {
         const response = await axios.get(
-          "https://ok-motor-backend.vercel.app/api/users",
+          "https://backend.okmotors.in/api/users",
         );
         setStaff(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
@@ -98,7 +98,7 @@ const StaffList = () => {
       }
 
       const response = await axios.put(
-        `https://ok-motor-backend.vercel.app/api/users/${editTarget._id}`,
+        `https://backend.okmotors.in/api/users/${editTarget._id}`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -135,7 +135,7 @@ const StaffList = () => {
       }
 
       await axios.delete(
-        `https://ok-motor-backend.vercel.app/api/users/${id}`,
+        `https://backend.okmotors.in/api/users/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },

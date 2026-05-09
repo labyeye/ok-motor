@@ -27,7 +27,7 @@ const VehicleCreate = () => {
   const searchParams = new URLSearchParams(location.search);
   const editVehicleId = searchParams.get("vehicleId");
 
-  const API_BASE = "https://ok-motor-backend.vercel.app";
+  const API_BASE = "https://backend.okmotors.in";
 
   const [formData, setFormData] = useState({
     vehicleType: "Car",

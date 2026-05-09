@@ -444,7 +444,7 @@ window.API_BASE = (function () {
     if (host === "localhost" || host === "127.0.0.1")
       return `${window.location.protocol}//${host}:3500`;
   } catch (e) {}
-  return "https://ok-motor-backend.vercel.app";
+  return "https://backend.okmotors.in";
 })();
 
 window.dataLayer = window.dataLayer || [];
@@ -535,7 +535,7 @@ function escapeHtml(text) {
 }
 
 function fetchFeaturedVehicles(vehicleType, sliderEl) {
-  const API_BASE = "https://ok-motor-backend.vercel.app";
+  const API_BASE = "https://backend.okmotors.in";
 
   fetch(
     `${API_BASE}/api/vehicles/public/listings?limit=8&vehicleType=${vehicleType}`,

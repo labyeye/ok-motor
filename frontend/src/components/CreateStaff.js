@@ -42,7 +42,7 @@ const CreateStaff = () => {
       }
 
       await axios.post(
-        "https://ok-motor-backend.vercel.app/api/users",
+        "https://backend.okmotors.in/api/users",
         formData,
         {
           headers: {

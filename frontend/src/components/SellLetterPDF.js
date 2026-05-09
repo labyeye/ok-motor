@@ -209,7 +209,7 @@ const SellLetterForm = () => {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
       const API_BASE =
-        process.env.REACT_APP_API_URL || "https://ok-motor-backend.vercel.app";
+        process.env.REACT_APP_API_URL || "https://backend.okmotors.in";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
@@ -268,7 +268,7 @@ const SellLetterForm = () => {
         if (!editLetter || !editLetter._id) return;
         const API_BASE =
           process.env.REACT_APP_API_URL ||
-          "https://ok-motor-backend.vercel.app";
+          "https://backend.okmotors.in";
         const token = localStorage.getItem("token");
         const resp = await axios.get(
           `${API_BASE}/api/sell-letters/${editLetter._id}`,
@@ -1780,7 +1780,7 @@ const SellLetterForm = () => {
           response = await apiService.post("/api/sell-letters", form);
         } else {
           response = await axios.post(
-            "https://ok-motor-backend.vercel.app/api/sell-letters",
+            "https://backend.okmotors.in/api/sell-letters",
             form,
             {
               headers: { "Content-Type": "multipart/form-data" },
@@ -1823,7 +1823,7 @@ const SellLetterForm = () => {
             response = await apiService.post("/api/sell-letters", form);
           } else {
             response = await axios.post(
-              "https://ok-motor-backend.vercel.app/api/sell-letters",
+              "https://backend.okmotors.in/api/sell-letters",
               form,
               {
                 headers: { "Content-Type": "multipart/form-data" },
@@ -1836,7 +1836,7 @@ const SellLetterForm = () => {
             response = await apiService.post("/api/sell-letters", dataToSave);
           } else {
             response = await axios.post(
-              "https://ok-motor-backend.vercel.app/api/sell-letters",
+              "https://backend.okmotors.in/api/sell-letters",
               dataToSave,
               { timeout: 300000 },
             );
@@ -2532,7 +2532,7 @@ const SellLetterForm = () => {
     async (registrationNumber) => {
       try {
         const response = await axios.get(
-          `https://ok-motor-backend.vercel.app/api/sell-letters/vehicle-details?registrationNumber=${registrationNumber}`,
+          `https://backend.okmotors.in/api/sell-letters/vehicle-details?registrationNumber=${registrationNumber}`,
         );
 
         if (response.data) {

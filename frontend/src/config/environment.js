@@ -10,7 +10,7 @@ const getApiUrl = () => {
   }
 
   if (isLocalhost) {
-    return "https://ok-motor-backend.vercel.app";
+    return "https://backend.okmotors.in";
   }
 
   return window.location.origin;

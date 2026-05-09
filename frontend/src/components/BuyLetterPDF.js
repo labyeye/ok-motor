@@ -247,7 +247,7 @@ const BuyLetterForm = () => {
         if (!editLetter || !editLetter._id) return;
         const API_BASE =
           process.env.REACT_APP_API_URL ||
-          "https://ok-motor-backend.vercel.app";
+          "https://backend.okmotors.in";
         const token = localStorage.getItem("token");
         const resp = await axios.get(
           `${API_BASE}/api/buy-letters/${editLetter._id}`,
@@ -458,7 +458,7 @@ const BuyLetterForm = () => {
     try {
       setLoadingVehicles(true);
       const token = localStorage.getItem("token");
-      const API_BASE = "https://ok-motor-backend.vercel.app";
+      const API_BASE = "https://backend.okmotors.in";
       const response = await axios.get(
         `${API_BASE}/api/vehicles?availabilityStatus=Available&limit=1000`,
         {
@@ -1070,7 +1070,7 @@ const BuyLetterForm = () => {
           response = await apiService.post("/api/buy-letters", form);
         } else {
           response = await axios.post(
-            "https://ok-motor-backend.vercel.app/api/buy-letters",
+            "https://backend.okmotors.in/api/buy-letters",
             form,
             {
               headers: { "Content-Type": "multipart/form-data" },
@@ -1154,7 +1154,7 @@ const BuyLetterForm = () => {
             response = await apiService.post("/api/buy-letters", form);
           } else {
             response = await axios.post(
-              "https://ok-motor-backend.vercel.app/api/buy-letters",
+              "https://backend.okmotors.in/api/buy-letters",
               form,
               {
                 headers: { "Content-Type": "multipart/form-data" },
@@ -1168,7 +1168,7 @@ const BuyLetterForm = () => {
             response = await apiService.post("/api/buy-letters", payload);
           } else {
             response = await axios.post(
-              "https://ok-motor-backend.vercel.app/api/buy-letters",
+              "https://backend.okmotors.in/api/buy-letters",
               payload,
               { timeout: 300000 },
             );

@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
 
         try {
           const res = await axios.get(
-            "https://ok-motor-backend.vercel.app/api/auth/me",
+            "https://backend.okmotors.in/api/auth/me",
           );
 
           const fetchedUser = res.data?.data || res.data || null;
@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const res = await axios.post(
-        "https://ok-motor-backend.vercel.app/api/auth/login",
+        "https://backend.okmotors.in/api/auth/login",
         {
           email,
           password,
