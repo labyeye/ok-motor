@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import pdfService from "../services/pdfService";
-import { FileText, Search, Download, Trash2, X, Eye } from "lucide-react";
+import { FileText, Search, Download, Trash2, X, Eye, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
@@ -845,6 +845,13 @@ const AdvanceHistory = () => {
                               <Eye size={16} />
                             </button>
                             <button
+                              onClick={() => navigate(`/advance-pay-bill/${bill._id}`)}
+                              style={styles.iconButton}
+                              title="Edit"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button
                               onClick={() => handleDownload(bill._id)}
                               style={styles.iconButton}
                               title="Download PDF"
@@ -1007,6 +1014,26 @@ const AdvanceHistory = () => {
                             }}
                           >
                             <Eye size={14} /> View
+                          </button>
+                          <button
+                            onClick={() => navigate(`/advance-pay-bill/${bill._id}`)}
+                            style={{
+                              flex: 1,
+                              padding: "8px",
+                              backgroundColor: "#f0fdf4",
+                              border: "none",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              fontSize: "0.78rem",
+                              color: "#15803d",
+                              fontWeight: "500",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "4px",
+                            }}
+                          >
+                            <Edit size={14} /> Edit
                           </button>
                           <button
                             onClick={() => handleDownload(bill._id)}

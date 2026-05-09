@@ -204,8 +204,11 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
 
   const customerAddress = advanceBill.customerAddress || "N/A";
   const customerAddressLines = [];
-  for (let i = 0; i < customerAddress.length; i += 45)
-    customerAddressLines.push(customerAddress.substring(i, i + 30));
+  const addressLineLimit = 35;
+
+  for (let i = 0; i < customerAddress.length; i += addressLineLimit)
+    customerAddressLines.push(customerAddress.substring(i, i + addressLineLimit));
+
   customerAddressLines.forEach((line, idx) => {
     page.drawText(idx === 0 ? `Address: ${line}` : line, {
       x: idx === 0 ? 60 : 100,

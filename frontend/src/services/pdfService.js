@@ -1846,8 +1846,10 @@ class PDFService {
 
       const customerAddress = advanceBill.customerAddress || "N/A";
       const customerAddressLines = [];
-      for (let i = 0; i < customerAddress.length; i += 45) {
-        customerAddressLines.push(customerAddress.substring(i, i + 45));
+      const addressLineLimit = 35;
+
+      for (let i = 0; i < customerAddress.length; i += addressLineLimit) {
+        customerAddressLines.push(customerAddress.substring(i, i + addressLineLimit));
       }
 
       customerAddressLines.forEach((line, index) => {
@@ -1859,6 +1861,8 @@ class PDFService {
           font: font,
         });
       });
+
+      const addressEndY = customerY - 40 - (customerAddressLines.length - 1) * 12 - 20;
 
       page.drawText(`Phone: ${advanceBill.customerPhone || "N/A"}`, {
         x: 350,

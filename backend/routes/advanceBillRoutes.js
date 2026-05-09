@@ -219,6 +219,89 @@ router.get("/vehicle-details", protect, async (req, res) => {
   }
 });
 
+router.put("/:id", protect, async (req, res) => {
+  try {
+    const advanceBill = await AdvanceBill.findById(req.params.id);
+
+    if (!advanceBill) {
+      return res.status(404).json({
+        success: false,
+        message: "Advance bill not found",
+      });
+    }
+
+    if (
+      advanceBill.user.toString() !== req.user.id &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized to edit this advance bill",
+      });
+    }
+
+    const updatedData = req.body;
+
+    const totalAmount = parseFloat(updatedData.totalAmount) || 0;
+    const advancePaid = parseFloat(updatedData.advancePaid) || 0;
+    const discount = parseFloat(updatedData.discount) || 0;
+
+    const grandTotal = totalAmount - discount;
+    const balanceDue = grandTotal - advancePaid;
+
+    const fieldsToUpdate = {
+      customerName: updatedData.customerName,
+      customerPhone: updatedData.customerPhone,
+      customerAddress: updatedData.customerAddress,
+      customerEmail: updatedData.customerEmail,
+      vehicleType: updatedData.vehicleType,
+      vehicleBrand: updatedData.vehicleBrand,
+      vehicleModel: updatedData.vehicleModel,
+      registrationNumber: updatedData.registrationNumber,
+      chassisNumber: updatedData.chassisNumber,
+      engineNumber: updatedData.engineNumber,
+      kmReading: updatedData.kmReading,
+      serviceDate: updatedData.serviceDate,
+      deliveryDate: updatedData.deliveryDate,
+      totalAmount: totalAmount,
+      advancePaid: advancePaid,
+      discount: discount,
+      grandTotal: grandTotal,
+      balanceDue: balanceDue,
+      paymentMethod: updatedData.paymentMethod,
+      note: updatedData.note,
+      editedAt: new Date(),
+      editedBy: req.user.id,
+    };
+
+    const updatedBill = await AdvanceBill.findByIdAndUpdate(
+      req.params.id,
+      fieldsToUpdate,
+      { new: true },
+    );
+
+    const filename = await generateAdvanceBillPDF(updatedBill, false);
+
+    if (filename) {
+      updatedBill.pdfUrl = `/api/advance-bills/pdf/${filename}`;
+      await updatedBill.save();
+    }
+
+    res.json({
+      success: true,
+      message: "Advance bill updated successfully",
+      data: updatedBill,
+    });
+  } catch (error) {
+    console.error("Error updating advance bill:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update advance bill",
+      error: error.message,
+    });
+  }
+});
+
 router.delete("/:id", protect, async (req, res) => {
   try {
     const advanceBill = await AdvanceBill.findById(req.params.id);

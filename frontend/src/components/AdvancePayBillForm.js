@@ -10,7 +10,7 @@ import {
   IndianRupee,
   X,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import pdfService from "../services/pdfService";
 import networkService from "../services/networkService";
@@ -25,10 +25,14 @@ const AdvancePayBillForm = () => {
   const { user, logout } = useContext(AuthContext);
 
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = !!id;
+
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [previewPdf, setPreviewPdf] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingBill, setIsLoadingBill] = useState(isEditMode);
   const [focusedInput, setFocusedInput] = useState(null);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -40,6 +44,7 @@ const AdvancePayBillForm = () => {
     type: "success",
   });
   const [formData, setFormData] = useState({
+    _id: null,
     customerName: "",
     customerPhone: "",
     customerAddress: "",
@@ -71,8 +76,6 @@ const AdvancePayBillForm = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const [previewMode, setPreviewMode] = useState(false);
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -80,6 +83,104 @@ const AdvancePayBillForm = () => {
       return;
     }
   }, [navigate]);
+
+  useEffect(() => {
+    if (isEditMode && id) {
+      loadBillData(id);
+    }
+  }, [id, isEditMode]);
+
+  const loadBillData = async (billId) => {
+    try {
+      setIsLoadingBill(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setAlertInfo({
+          isOpen: true,
+          message: "You are not authenticated. Please login again.",
+          type: "error",
+        });
+        logout();
+        navigate("/login");
+        return;
+      }
+
+      const response = await axios.get(
+        `https://ok-motor-backend.vercel.app/api/advance-bills/${billId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.data?.success && response.data?.data) {
+        const bill = response.data.data;
+        setFormData({
+          _id: bill._id,
+          customerName: bill.customerName || "",
+          customerPhone: bill.customerPhone || "",
+          customerAddress: bill.customerAddress || "",
+          customerEmail: bill.customerEmail || "",
+          vehicleType: bill.vehicleType || "bike",
+          vehicleBrand: bill.vehicleBrand || "",
+          vehicleModel: bill.vehicleModel || "",
+          registrationNumber: bill.registrationNumber || "",
+          chassisNumber: bill.chassisNumber || "",
+          engineNumber: bill.engineNumber || "",
+          kmReading: bill.kmReading || "",
+          serviceDate: bill.serviceDate
+            ? bill.serviceDate.split("T")[0]
+            : new Date().toISOString().split("T")[0],
+          deliveryDate: bill.deliveryDate
+            ? bill.deliveryDate.split("T")[0]
+            : new Date(Date.now() + 86400000).toISOString().split("T")[0],
+          totalAmount: bill.totalAmount?.toString() || "0.00",
+          discount: bill.discount?.toString() || "0",
+          advancePaid: bill.advancePaid?.toString() || "0.00",
+          paymentMethod: bill.paymentMethod || "cash",
+          note: bill.note || "",
+          grandTotal: bill.grandTotal?.toString() || "0.00",
+          balanceDue: bill.balanceDue?.toString() || "0.00",
+        });
+        setAlertInfo({
+          isOpen: true,
+          message: "Bill loaded successfully",
+          type: "success",
+        });
+      } else {
+        throw new Error("Invalid response format");
+      }
+    } catch (error) {
+      console.error("Error loading bill:", error);
+      if (error.response?.status === 401) {
+        setAlertInfo({
+          isOpen: true,
+          message: "Your session has expired. Please login again.",
+          type: "error",
+        });
+        logout();
+        navigate("/login");
+      } else if (error.response?.status === 404) {
+        setAlertInfo({
+          isOpen: true,
+          message: "Bill not found.",
+          type: "error",
+        });
+        navigate("/advance-bills-history");
+      } else {
+        setAlertInfo({
+          isOpen: true,
+          message: `Failed to load bill: ${
+            error.response?.data?.message || error.message
+          }`,
+          type: "error",
+        });
+      }
+    } finally {
+      setIsLoadingBill(false);
+    }
+  };
 
   const calculateAmounts = (data) => {
     const total = parseFloat(String(data.totalAmount).replace(/,/g, "")) || 0;
@@ -254,107 +355,26 @@ const AdvancePayBillForm = () => {
         balanceDue: parseFloat(formData.balanceDue) || 0,
         kmReading: parseFloat(formData.kmReading) || 0,
         discount: parseFloat(formData.discount) || 0,
-
-        ...(formData._id && {
-          originalDocumentId: formData.originalDocumentId || formData._id,
-          previousVersionId: formData._id,
-          version: (formData.version || 1) + 1,
-          editedAt: new Date().toISOString(),
-          editedBy: user?._id || user?.id,
-        }),
-        ...(!formData._id && {
-          originalDocumentId: null,
-          previousVersionId: null,
-          version: 1,
-        }),
       };
 
       let billId;
       let pdfBlob;
 
-      if (!isOnline) {
-        console.log("Offline mode - saving to local storage");
-
-        const result = await offlineStorage.create("advanceBills", requestData);
-        if (result.success) {
-          billId = result.data._id;
-          if (formData._id) {
-            setAlertInfo({
-              isOpen: true,
-              message:
-                "Advance bill saved as new version offline! Will sync when online.",
-              type: "info",
-            });
-          } else {
-            setAlertInfo({
-              isOpen: true,
-              message:
-                "Advance bill saved offline successfully! Will sync when online.",
-              type: "success",
-            });
-          }
-        } else {
-          throw new Error(result.error || "Failed to save offline");
-        }
-
-        const pdfResult = await pdfService.generateAdvanceBillPDF({
-          ...requestData,
-          _id: billId,
-          billNumber: `ADV-${new Date().getFullYear()}-${billId.substring(
-            0,
-            4,
-          )}`,
-        });
-
-        if (pdfResult.success) {
-          pdfBlob = pdfResult.blob;
-        } else {
-          throw new Error(pdfResult.error || "Failed to generate PDF");
-        }
-
-        await progressPromise;
-
-        if (pdfResult.saved && window.electronAPI) {
+      if (isEditMode && formData._id) {
+        // Update existing bill
+        if (!isOnline) {
           setAlertInfo({
             isOpen: true,
-            message: `PDF saved to ${
-              pdfResult.savedPath || "default PDF folder"
-            }`,
-            type: "success",
+            message: "Cannot edit bills in offline mode. Please go online.",
+            type: "error",
           });
-        } else {
-          saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+          setIsSaving(false);
+          setIsDownloading(false);
+          return;
         }
 
-        setFormData({
-          customerName: "",
-          customerPhone: "",
-          customerAddress: "",
-          customerEmail: "",
-          vehicleType: "bike",
-          vehicleBrand: "",
-          vehicleModel: "",
-          registrationNumber: "",
-          chassisNumber: "",
-          engineNumber: "",
-          kmReading: "",
-          serviceDate: new Date().toISOString().split("T")[0],
-          deliveryDate: new Date(Date.now() + 86400000)
-            .toISOString()
-            .split("T")[0],
-          totalAmount: 0,
-          advancePaid: 0,
-          grandTotal: 0,
-          balanceDue: 0,
-          discount: 0,
-          paymentMethod: "cash",
-          note: "",
-        });
-      } else {
-        console.log("Online mode - saving to server");
-
-        const saveResponse = await axios.post(
-          "https://ok-motor-backend.vercel.app/api/advance-bills",
+        const updateResponse = await axios.put(
+          `https://ok-motor-backend.vercel.app/api/advance-bills/${formData._id}`,
           requestData,
           {
             headers: {
@@ -364,16 +384,16 @@ const AdvancePayBillForm = () => {
           },
         );
 
-        if (!saveResponse.data?.data?._id) {
+        if (!updateResponse.data?.data?._id) {
           throw new Error("Invalid response format from server");
         }
 
-        billId = saveResponse.data.data._id;
+        billId = updateResponse.data.data._id;
 
         const pdfResult = await pdfService.generateAdvanceBillPDF({
           ...requestData,
           _id: billId,
-          billNumber: saveResponse.data.data.billNumber,
+          billNumber: updateResponse.data.data.billNumber,
         });
 
         if (pdfResult.success) {
@@ -387,7 +407,7 @@ const AdvancePayBillForm = () => {
         if (pdfResult.saved && window.electronAPI) {
           setAlertInfo({
             isOpen: true,
-            message: `PDF saved to ${
+            message: `PDF updated and saved to ${
               pdfResult.savedPath || "default PDF folder"
             }`,
             type: "success",
@@ -396,14 +416,107 @@ const AdvancePayBillForm = () => {
           saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
         }
 
-        if (formData._id) {
-          setAlertInfo({
-            isOpen: true,
-            message:
-              "Advance bill saved as new version! Original remains unchanged.",
-            type: "info",
+        setAlertInfo({
+          isOpen: true,
+          message: "Advance bill updated successfully!",
+          type: "success",
+        });
+
+        setTimeout(() => {
+          navigate("/advance-bills-history");
+        }, 1500);
+      } else {
+        // Create new bill
+        if (!isOnline) {
+          console.log("Offline mode - saving to local storage");
+
+          const result = await offlineStorage.create("advanceBills", requestData);
+          if (result.success) {
+            billId = result.data._id;
+            setAlertInfo({
+              isOpen: true,
+              message:
+                "Advance bill saved offline successfully! Will sync when online.",
+              type: "success",
+            });
+          } else {
+            throw new Error(result.error || "Failed to save offline");
+          }
+
+          const pdfResult = await pdfService.generateAdvanceBillPDF({
+            ...requestData,
+            _id: billId,
+            billNumber: `ADV-${new Date().getFullYear()}-${billId.substring(
+              0,
+              4,
+            )}`,
           });
+
+          if (pdfResult.success) {
+            pdfBlob = pdfResult.blob;
+          } else {
+            throw new Error(pdfResult.error || "Failed to generate PDF");
+          }
+
+          await progressPromise;
+
+          if (pdfResult.saved && window.electronAPI) {
+            setAlertInfo({
+              isOpen: true,
+              message: `PDF saved to ${
+                pdfResult.savedPath || "default PDF folder"
+              }`,
+              type: "success",
+            });
+          } else {
+            saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+          }
         } else {
+          console.log("Online mode - saving to server");
+
+          const saveResponse = await axios.post(
+            "https://ok-motor-backend.vercel.app/api/advance-bills",
+            requestData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            },
+          );
+
+          if (!saveResponse.data?.data?._id) {
+            throw new Error("Invalid response format from server");
+          }
+
+          billId = saveResponse.data.data._id;
+
+          const pdfResult = await pdfService.generateAdvanceBillPDF({
+            ...requestData,
+            _id: billId,
+            billNumber: saveResponse.data.data.billNumber,
+          });
+
+          if (pdfResult.success) {
+            pdfBlob = pdfResult.blob;
+          } else {
+            throw new Error(pdfResult.error || "Failed to generate PDF");
+          }
+
+          await progressPromise;
+
+          if (pdfResult.saved && window.electronAPI) {
+            setAlertInfo({
+              isOpen: true,
+              message: `PDF saved to ${
+                pdfResult.savedPath || "default PDF folder"
+              }`,
+              type: "success",
+            });
+          } else {
+            saveAs(pdfBlob, `advance-bill-${billId}.pdf`);
+          }
+
           setAlertInfo({
             isOpen: true,
             message: "Advance bill saved and downloaded successfully!",
@@ -412,6 +525,7 @@ const AdvancePayBillForm = () => {
         }
 
         setFormData({
+          _id: null,
           customerName: "",
           customerPhone: "",
           customerAddress: "",
@@ -427,11 +541,11 @@ const AdvancePayBillForm = () => {
           deliveryDate: new Date(Date.now() + 86400000)
             .toISOString()
             .split("T")[0],
-          totalAmount: 0,
-          advancePaid: 0,
-          grandTotal: 0,
-          balanceDue: 0,
-          discount: 0,
+          totalAmount: "0",
+          advancePaid: "0",
+          grandTotal: "0",
+          balanceDue: "0",
+          discount: "0",
           paymentMethod: "cash",
           note: "",
         });
@@ -450,7 +564,7 @@ const AdvancePayBillForm = () => {
       } else if (error.response?.status === 403) {
         setAlertInfo({
           isOpen: true,
-          message: "You don't have permission to create advance bills.",
+          message: "You don't have permission to modify advance bills.",
           type: "error",
         });
       } else {
@@ -793,16 +907,34 @@ const AdvancePayBillForm = () => {
           <div style={styles.header}>
             <div style={styles.headerTop}>
               <div>
-                <h1 style={styles.pageTitle}>Create Advance Payment Invoice</h1>
+                <h1 style={styles.pageTitle}>
+                  {isEditMode ? "Edit Advance Payment Invoice" : "Create Advance Payment Invoice"}
+                </h1>
                 <p style={styles.pageSubtitle}>
-                  Fill in the details to generate an advance payment invoice for
-                  the vehicle
+                  {isEditMode
+                    ? "Update the details of the advance payment invoice"
+                    : "Fill in the details to generate an advance payment invoice for the vehicle"}
                 </p>
               </div>
             </div>
           </div>
 
           <form style={styles.form}>
+            {isLoadingBill && (
+              <div
+                style={{
+                  backgroundColor: "#e0f2fe",
+                  border: "1px solid #bae6fd",
+                  color: "#0369a1",
+                  padding: "12px",
+                  borderRadius: "6px",
+                  marginBottom: "16px",
+                  textAlign: "center",
+                }}
+              >
+                Loading bill data...
+              </div>
+            )}
             {Object.keys(errors || {}).length > 0 && (
               <div
                 style={{
@@ -1267,7 +1399,7 @@ const AdvancePayBillForm = () => {
                 type="button"
                 onClick={() => generateAdvanceBillPDF(formData, true)}
                 style={styles.previewButton}
-                disabled={isSaving}
+                disabled={isSaving || isLoadingBill}
               >
                 <FileText style={styles.buttonIcon} /> Preview
               </button>
@@ -1275,9 +1407,9 @@ const AdvancePayBillForm = () => {
                 type="button"
                 onClick={handleSaveAndDownload}
                 style={styles.downloadButton}
-                disabled={isSaving}
+                disabled={isSaving || isLoadingBill}
               >
-                <Download style={styles.buttonIcon} /> Save & Download
+                <Download style={styles.buttonIcon} /> {isEditMode ? "Update" : "Save & Download"}
               </button>
             </div>
           </form>
