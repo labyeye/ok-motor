@@ -56,6 +56,14 @@ router.post("/preview", protect, async (req, res) => {
 router.get("/:id/pdf", protect, async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID provided",
+      });
+    }
+
     const advanceBill = await AdvanceBill.findOne({
       _id: id,
       $or: [
@@ -221,7 +229,16 @@ router.get("/vehicle-details", protect, async (req, res) => {
 
 router.put("/:id", protect, async (req, res) => {
   try {
-    const advanceBill = await AdvanceBill.findById(req.params.id);
+    const { id } = req.params;
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID provided",
+      });
+    }
+
+    const advanceBill = await AdvanceBill.findById(id);
 
     if (!advanceBill) {
       return res.status(404).json({
@@ -275,7 +292,7 @@ router.put("/:id", protect, async (req, res) => {
     };
 
     const updatedBill = await AdvanceBill.findByIdAndUpdate(
-      req.params.id,
+      id,
       fieldsToUpdate,
       { new: true },
     );
@@ -304,7 +321,16 @@ router.put("/:id", protect, async (req, res) => {
 
 router.delete("/:id", protect, async (req, res) => {
   try {
-    const advanceBill = await AdvanceBill.findById(req.params.id);
+    const { id } = req.params;
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID provided",
+      });
+    }
+
+    const advanceBill = await AdvanceBill.findById(id);
 
     if (!advanceBill) {
       return res.status(404).json({
@@ -323,7 +349,7 @@ router.delete("/:id", protect, async (req, res) => {
       });
     }
 
-    await AdvanceBill.findByIdAndDelete(req.params.id);
+    await AdvanceBill.findByIdAndDelete(id);
 
     res.json({
       success: true,
@@ -458,6 +484,14 @@ router.post("/generate-pdf", protect, async (req, res) => {
 router.get("/:id/download", protect, async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID provided",
+      });
+    }
+
     const advanceBill = await AdvanceBill.findOne({
       _id: id,
       $or: [
@@ -524,7 +558,16 @@ router.get("/", protect, async (req, res) => {
 });
 router.get("/:id", protect, async (req, res) => {
   try {
-    const advanceBill = await AdvanceBill.findById(req.params.id);
+    const { id } = req.params;
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID provided",
+      });
+    }
+
+    const advanceBill = await AdvanceBill.findById(id);
     if (!advanceBill) {
       return res.status(404).json({
         success: false,

@@ -374,7 +374,16 @@ exports.downloadServiceBillPDF = async (req, res) => {
   console.log("User making request:", req.user.email);
 
   try {
-    let query = { _id: req.params.id };
+    const { id } = req.params;
+    
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID provided"
+      });
+    }
+    
+    let query = { _id: id };
     if (req.user.role === "admin" || req.user.role === "staff") {
     } else {
       query.user = req.user.id;
@@ -415,8 +424,17 @@ exports.downloadServiceBillPDF = async (req, res) => {
 
 exports.getServiceBill = async (req, res) => {
   try {
+    const { id } = req.params;
+    
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID provided"
+      });
+    }
+    
     const serviceBill = await ServiceBill.findOne({
-      _id: req.params.id,
+      _id: id,
       $or: [
         { user: req.user.id },
         { visibility: "staff" },
@@ -446,7 +464,16 @@ exports.getServiceBill = async (req, res) => {
 
 exports.updateServiceBill = async (req, res) => {
   try {
-    const serviceBill = await ServiceBill.findById(req.params.id);
+    const { id } = req.params;
+    
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID provided"
+      });
+    }
+    
+    const serviceBill = await ServiceBill.findById(id);
     if (!serviceBill) {
       return res
         .status(404)
@@ -567,7 +594,16 @@ exports.updateServiceBill = async (req, res) => {
 
 exports.deleteServiceBill = async (req, res) => {
   try {
-    const serviceBill = await ServiceBill.findById(req.params.id);
+    const { id } = req.params;
+    
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID provided"
+      });
+    }
+    
+    const serviceBill = await ServiceBill.findById(id);
 
     if (!serviceBill) {
       return res.status(404).json({
@@ -601,8 +637,17 @@ exports.deleteServiceBill = async (req, res) => {
 
 exports.generateServiceBillPDF = async (req, res) => {
   try {
+    const { id } = req.params;
+    
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID provided"
+      });
+    }
+    
     const serviceBill = await ServiceBill.findOne({
-      _id: req.params.id,
+      _id: id,
       $or: [
         { user: req.user.id },
         { visibility: "staff" },
