@@ -274,6 +274,14 @@ function App() {
             }
           />
           <Route
+            path="/advance-pay-bill/:id"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <AdvancePayBillForm />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/advance/history"
             element={
               <PrivateRoute roles={["admin", "staff"]}>

@@ -26,6 +26,7 @@ import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import PdfPreview from "./PdfPreview";
 import logo1 from "../images/okmotorback.png";
+import VehicleLetterDownloader from "./common/VehicleLetterDownloader";
 
 const BikeHistory = ({ externalSearchTerm }) => {
   const { user, logout } = useContext(AuthContext);
@@ -39,6 +40,8 @@ const BikeHistory = ({ externalSearchTerm }) => {
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [selectedLetter, setSelectedLetter] = useState(null);
   const [languageAction, setLanguageAction] = useState(null);
+  const [downloadLetter, setDownloadLetter] = useState(null);
+  const [downloadLetterType, setDownloadLetterType] = useState(null);
   const navigate = useNavigate();
 
   const lastExternalSearch = useRef(null);
@@ -2339,9 +2342,8 @@ const BikeHistory = ({ externalSearchTerm }) => {
           (item) => item._id === id && item.type === type,
         );
         if (letter) {
-          setSelectedLetter(letter);
-          setLanguageAction("download");
-          setShowLanguageModal(true);
+          setDownloadLetter(letter);
+          setDownloadLetterType(type);
         } else {
           alert(
             `${type.charAt(0).toUpperCase() + type.slice(1)} letter data not found`,
@@ -3711,6 +3713,14 @@ const BikeHistory = ({ externalSearchTerm }) => {
           </div>
         </div>
       )}
+      <VehicleLetterDownloader
+        letter={downloadLetter}
+        letterType={downloadLetterType}
+        onClose={() => {
+          setDownloadLetter(null);
+          setDownloadLetterType(null);
+        }}
+      />
     </div>
   );
 };

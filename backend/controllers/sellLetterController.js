@@ -361,6 +361,21 @@ exports.createSellLetter = [
         }
       }
 
+      let removedDocumentsSet = new Set();
+      if (req.body.removedDocuments) {
+        try {
+          const parsed =
+            typeof req.body.removedDocuments === "string"
+              ? JSON.parse(req.body.removedDocuments)
+              : req.body.removedDocuments;
+          if (Array.isArray(parsed)) {
+            removedDocumentsSet = new Set(parsed);
+          }
+        } catch (e) {
+          console.error("Error parsing removedDocuments:", e);
+        }
+      }
+
       try {
         if (req.body.preservedDocuments) {
           const p = JSON.parse(req.body.preservedDocuments);
@@ -389,40 +404,6 @@ exports.createSellLetter = [
           if (p.transferReceiptAgent) {
             uploadedUrls.transferReceipt.agentName = p.transferReceiptAgent;
           }
-          if (p.transferReceipt && Array.isArray(p.transferReceipt)) {
-            uploadedUrls.transferReceipt.pages = [...p.transferReceipt];
-          }
-        } else if (existingDocuments && !req.body.existingDocuments) {
-        } else if (
-          existingDocuments &&
-          req.body.existingDocuments &&
-          !req.body.preservedDocuments
-        ) {
-          const ed = existingDocuments;
-          if (ed.vehicleRC?.front)
-            uploadedUrls.vehicleRC.front = ed.vehicleRC.front;
-          if (ed.vehicleRC?.back)
-            uploadedUrls.vehicleRC.back = ed.vehicleRC.back;
-          if (ed.aadhaar?.front) uploadedUrls.aadhaar.front = ed.aadhaar.front;
-          if (ed.aadhaar?.back) uploadedUrls.aadhaar.back = ed.aadhaar.back;
-          if (ed.pan) uploadedUrls.pan = ed.pan;
-          if (ed.deliveryPhoto) uploadedUrls.deliveryPhoto = ed.deliveryPhoto;
-          if (ed.signedDocSell) uploadedUrls.signedDocSell = ed.signedDocSell;
-          if (ed.vehiclePhotos?.length)
-            uploadedUrls.vehiclePhotos = [...ed.vehiclePhotos];
-          if (ed.insuranceCertificate?.pages?.length)
-            uploadedUrls.insuranceCertificate.pages = [
-              ...ed.insuranceCertificate.pages,
-            ];
-          if (ed.vehicleNOC?.pages?.length)
-            uploadedUrls.vehicleNOC.pages = [...ed.vehicleNOC.pages];
-          if (ed.transferReceipt?.pages?.length)
-            uploadedUrls.transferReceipt.pages = [...ed.transferReceipt.pages];
-          if (ed.transferReceipt?.agentName)
-            uploadedUrls.transferReceipt.agentName =
-              ed.transferReceipt.agentName;
-          if (ed.transferReceipt?.pages?.length)
-            uploadedUrls.transferReceipt.pages = [...ed.transferReceipt.pages];
         }
       } catch (e) {
         console.error("Error parsing preservedDocuments:", e);
@@ -591,38 +572,72 @@ exports.createSellLetter = [
           .json({ message: "Image upload failed", error: uploadErr.message });
       }
 
-      if (existingDocuments && !req.body.preservedDocuments) {
+      if (existingDocuments) {
         const ed = existingDocuments;
-        if (!uploadedUrls.vehicleRC.front && ed.vehicleRC?.front)
+        const notRemoved = (key) => !removedDocumentsSet.has(key);
+
+        if (
+          !uploadedUrls.vehicleRC.front &&
+          ed.vehicleRC?.front &&
+          notRemoved("vehicleRCFront")
+        )
           uploadedUrls.vehicleRC.front = ed.vehicleRC.front;
-        if (!uploadedUrls.vehicleRC.back && ed.vehicleRC?.back)
+        if (
+          !uploadedUrls.vehicleRC.back &&
+          ed.vehicleRC?.back &&
+          notRemoved("vehicleRCBack")
+        )
           uploadedUrls.vehicleRC.back = ed.vehicleRC.back;
-        if (!uploadedUrls.aadhaar.front && ed.aadhaar?.front)
+        if (
+          !uploadedUrls.aadhaar.front &&
+          ed.aadhaar?.front &&
+          notRemoved("aadhaarFront")
+        )
           uploadedUrls.aadhaar.front = ed.aadhaar.front;
-        if (!uploadedUrls.aadhaar.back && ed.aadhaar?.back)
+        if (
+          !uploadedUrls.aadhaar.back &&
+          ed.aadhaar?.back &&
+          notRemoved("aadhaarBack")
+        )
           uploadedUrls.aadhaar.back = ed.aadhaar.back;
-        if (!uploadedUrls.pan && ed.pan) uploadedUrls.pan = ed.pan;
-        if (!uploadedUrls.deliveryPhoto && ed.deliveryPhoto)
+        if (!uploadedUrls.pan && ed.pan && notRemoved("panPhoto"))
+          uploadedUrls.pan = ed.pan;
+        if (
+          !uploadedUrls.deliveryPhoto &&
+          ed.deliveryPhoto &&
+          notRemoved("deliveryPhoto")
+        )
           uploadedUrls.deliveryPhoto = ed.deliveryPhoto;
-        if (!uploadedUrls.signedDocSell && ed.signedDocSell)
+        if (
+          !uploadedUrls.signedDocSell &&
+          ed.signedDocSell &&
+          notRemoved("signedDocSell")
+        )
           uploadedUrls.signedDocSell = ed.signedDocSell;
-        if (!uploadedUrls.vehiclePhotos?.length && ed.vehiclePhotos?.length)
+        if (
+          !uploadedUrls.vehiclePhotos?.length &&
+          ed.vehiclePhotos?.length &&
+          notRemoved("vehiclePhotos")
+        )
           uploadedUrls.vehiclePhotos = [...ed.vehiclePhotos];
         if (
           !uploadedUrls.insuranceCertificate.pages?.length &&
-          ed.insuranceCertificate?.pages?.length
+          ed.insuranceCertificate?.pages?.length &&
+          notRemoved("insuranceCertificate")
         )
           uploadedUrls.insuranceCertificate.pages = [
             ...ed.insuranceCertificate.pages,
           ];
         if (
           !uploadedUrls.vehicleNOC.pages?.length &&
-          ed.vehicleNOC?.pages?.length
+          ed.vehicleNOC?.pages?.length &&
+          notRemoved("vehicleNOC")
         )
           uploadedUrls.vehicleNOC.pages = [...ed.vehicleNOC.pages];
         if (
           !uploadedUrls.transferReceipt.pages?.length &&
-          ed.transferReceipt?.pages?.length
+          ed.transferReceipt?.pages?.length &&
+          notRemoved("transferReceipt")
         )
           uploadedUrls.transferReceipt.pages = [...ed.transferReceipt.pages];
         if (

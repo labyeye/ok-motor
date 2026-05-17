@@ -370,6 +370,7 @@ const BuyLetterHistory = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
   const DownloadProgressModal = ({ progress, onClose }) => {
     return (
       <div style={modalStyles.overlay}>

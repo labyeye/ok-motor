@@ -829,6 +829,60 @@ const BuyLetterForm = () => {
     });
   };
 
+  const buildBuyPreservedDocs = (currentFilesState) => {
+    const preservedDocs = {};
+    const existingDocs = editLetter?.documents || {};
+    const fs = currentFilesState || {};
+
+    const pickSingle = (fieldName, fileStateKey, existingValue) => {
+      if (fs[fileStateKey]) return;
+      if (deletedDocuments.has(fieldName)) return;
+      const value = filePreviews[fieldName] || existingValue || null;
+      if (value) preservedDocs[fieldName] = value;
+    };
+
+    const pickArray = (fieldName, fileStateKey, existingArray) => {
+      const stateArr = fs[fileStateKey];
+      if (Array.isArray(stateArr) && stateArr.length > 0) return;
+      if (deletedDocuments.has(fieldName)) return;
+      const fromPreviews = filePreviews[fieldName];
+      const value =
+        Array.isArray(fromPreviews) && fromPreviews.length > 0
+          ? fromPreviews
+          : Array.isArray(existingArray) && existingArray.length > 0
+            ? existingArray
+            : null;
+      if (value) preservedDocs[fieldName] = value;
+    };
+
+    pickSingle(
+      "vehicleRCFront",
+      "vehicleRCFront",
+      existingDocs.vehicleRC?.front,
+    );
+    pickSingle("vehicleRCBack", "vehicleRCBack", existingDocs.vehicleRC?.back);
+    pickSingle("aadhaarFront", "aadhaarFront", existingDocs.aadhaar?.front);
+    pickSingle("aadhaarBack", "aadhaarBack", existingDocs.aadhaar?.back);
+    pickSingle("panPhoto", "panPhoto", existingDocs.pan);
+    pickSingle("deliveryPhoto", "deliveryPhoto", existingDocs.deliveryPhoto);
+    pickSingle("signedDocBuy", "signedDocBuy", existingDocs.signedDocBuy);
+
+    pickArray("vehiclePhotos", "vehiclePhotos", existingDocs.vehiclePhotos);
+    pickArray(
+      "insuranceCertificate",
+      "insuranceCertificate",
+      existingDocs.insuranceCertificate?.pages,
+    );
+    pickArray("vehicleNOC", "vehicleNOC", existingDocs.vehicleNOC?.pages);
+    pickArray(
+      "vehicleBuyReceipt",
+      "vehicleBuyReceipt",
+      existingDocs.vehicleBuyReceipt?.pages,
+    );
+
+    return preservedDocs;
+  };
+
   const saveBuyLetter = async () => {
     try {
       setIsSaving(true);
@@ -962,111 +1016,15 @@ const BuyLetterForm = () => {
         }
 
         if (editLetter?._id && editLetter.documents) {
-          const preservedDocs = {};
-
-          if (
-            !filesState.vehicleRCFront &&
-            filePreviews.vehicleRCFront &&
-            !deletedDocuments.has("vehicleRCFront")
-          ) {
-            preservedDocs.vehicleRCFront = filePreviews.vehicleRCFront;
-          }
-          if (
-            !filesState.vehicleRCBack &&
-            filePreviews.vehicleRCBack &&
-            !deletedDocuments.has("vehicleRCBack")
-          ) {
-            preservedDocs.vehicleRCBack = filePreviews.vehicleRCBack;
-          }
-
-          if (
-            !filesState.aadhaarFront &&
-            filePreviews.aadhaarFront &&
-            !deletedDocuments.has("aadhaarFront")
-          ) {
-            preservedDocs.aadhaarFront = filePreviews.aadhaarFront;
-          }
-          if (
-            !filesState.aadhaarBack &&
-            filePreviews.aadhaarBack &&
-            !deletedDocuments.has("aadhaarBack")
-          ) {
-            preservedDocs.aadhaarBack = filePreviews.aadhaarBack;
-          }
-
-          if (
-            !filesState.panPhoto &&
-            filePreviews.panPhoto &&
-            !deletedDocuments.has("panPhoto")
-          ) {
-            preservedDocs.panPhoto = filePreviews.panPhoto;
-          }
-          if (
-            !filesState.deliveryPhoto &&
-            filePreviews.deliveryPhoto &&
-            !deletedDocuments.has("deliveryPhoto")
-          ) {
-            preservedDocs.deliveryPhoto = filePreviews.deliveryPhoto;
-          }
-          if (
-            !filesState.signedDocBuy &&
-            filePreviews.signedDocBuy &&
-            !deletedDocuments.has("signedDocBuy")
-          ) {
-            preservedDocs.signedDocBuy = filePreviews.signedDocBuy;
-          }
-
-          if (
-            (!filesState.vehiclePhotos ||
-              filesState.vehiclePhotos.length === 0) &&
-            filePreviews.vehiclePhotos &&
-            filePreviews.vehiclePhotos.length > 0 &&
-            !deletedDocuments.has("vehiclePhotos")
-          ) {
-            preservedDocs.vehiclePhotos = filePreviews.vehiclePhotos;
-          }
-
-          if (
-            !filesState.insuranceCertificate ||
-            filesState.insuranceCertificate.length === 0
-          ) {
-            if (
-              filePreviews.insuranceCertificate &&
-              Array.isArray(filePreviews.insuranceCertificate) &&
-              !deletedDocuments.has("insuranceCertificate")
-            ) {
-              preservedDocs.insuranceCertificate =
-                filePreviews.insuranceCertificate;
-            }
-          }
-
-          if (!filesState.vehicleNOC || filesState.vehicleNOC.length === 0) {
-            if (
-              filePreviews.vehicleNOC &&
-              Array.isArray(filePreviews.vehicleNOC) &&
-              !deletedDocuments.has("vehicleNOC")
-            ) {
-              preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
-            }
-          }
-
-          if (
-            !filesState.vehicleBuyReceipt ||
-            filesState.vehicleBuyReceipt.length === 0
-          ) {
-            if (
-              filePreviews.vehicleBuyReceipt &&
-              Array.isArray(filePreviews.vehicleBuyReceipt) &&
-              !deletedDocuments.has("vehicleBuyReceipt")
-            ) {
-              preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
-            }
-          }
-
+          const preservedDocs = buildBuyPreservedDocs(filesState);
           form.append("preservedDocuments", JSON.stringify(preservedDocs));
           form.append(
             "existingDocuments",
             JSON.stringify(editLetter.documents),
+          );
+          form.append(
+            "removedDocuments",
+            JSON.stringify([...deletedDocuments]),
           );
         }
 
@@ -1112,46 +1070,16 @@ const BuyLetterForm = () => {
             vehicleBuyReceiptUploadMode,
           );
 
-          const preservedDocs = {};
-          const docMap = [
-            "vehicleRCFront",
-            "vehicleRCBack",
-            "aadhaarFront",
-            "aadhaarBack",
-            "panPhoto",
-            "deliveryPhoto",
-            "signedDocBuy",
-          ];
-          docMap.forEach((key) => {
-            if (filePreviews[key] && !deletedDocuments.has(key))
-              preservedDocs[key] = filePreviews[key];
-          });
-          if (
-            filePreviews.vehiclePhotos?.length &&
-            !deletedDocuments.has("vehiclePhotos")
-          )
-            preservedDocs.vehiclePhotos = filePreviews.vehiclePhotos;
-          if (
-            filePreviews.insuranceCertificate?.length &&
-            !deletedDocuments.has("insuranceCertificate")
-          )
-            preservedDocs.insuranceCertificate =
-              filePreviews.insuranceCertificate;
-          if (
-            filePreviews.vehicleNOC?.length &&
-            !deletedDocuments.has("vehicleNOC")
-          )
-            preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
-          if (
-            filePreviews.vehicleBuyReceipt?.length &&
-            !deletedDocuments.has("vehicleBuyReceipt")
-          )
-            preservedDocs.vehicleBuyReceipt = filePreviews.vehicleBuyReceipt;
+          const preservedDocs = buildBuyPreservedDocs({});
 
           form.append("preservedDocuments", JSON.stringify(preservedDocs));
           form.append(
             "existingDocuments",
             JSON.stringify(editLetter.documents),
+          );
+          form.append(
+            "removedDocuments",
+            JSON.stringify([...deletedDocuments]),
           );
 
           if (isElectron) {
@@ -3294,6 +3222,7 @@ const BuyLetterForm = () => {
       "7. The seller confirms that the bike has not been involved in any major accidents or insurance claims.",
       "8. Vehicle handover includes all keys, documents, and accessories as agreed.",
       "9. The seller confirms that the chassis and engine numbers are intact and not tampered with.",
+      "10. Ownership of this vehicle will be transferred to another person after the sale, and the seller will not have any future claims on it.",
     ];
 
     terms.forEach((term, index) => {
@@ -4720,7 +4649,7 @@ const BuyLetterForm = () => {
                     disabled={fetchedValidity.puc === "valid"}
                     style={{
                       ...styles.formSelect,
-                      ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed", opacity: 0.85 } : {}),
+                      display: fetchedValidity.puc === "valid" ? "none" : undefined,
                       ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
                     }}
                   >
@@ -4729,6 +4658,23 @@ const BuyLetterForm = () => {
                     <option value="Expired">Expired</option>
                     <option value="Not Available">Not Available</option>
                   </select>
+                  {fetchedValidity.puc === "valid" && (
+                    <div
+                      style={{
+                        ...styles.formSelect,
+                        backgroundColor: "#c3e6cb",
+                        cursor: "not-allowed",
+                        color: "#155724",
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      {formData.pucExpiryDate
+                        ? `Valid · Expires ${new Date(formData.pucExpiryDate).toLocaleDateString("en-GB")}`
+                        : "Valid"}
+                    </div>
+                  )}
                 </div>
 
                 {formData.pucStatus === "Valid" && (
@@ -4811,7 +4757,7 @@ const BuyLetterForm = () => {
                     disabled={fetchedValidity.insurance === "valid"}
                     style={{
                       ...styles.formSelect,
-                      ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed", opacity: 0.85 } : {}),
+                      display: fetchedValidity.insurance === "valid" ? "none" : undefined,
                       ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
                     }}
                   >
@@ -4820,6 +4766,23 @@ const BuyLetterForm = () => {
                     <option value="Expired">Expired</option>
                     <option value="Not Available">Not Available</option>
                   </select>
+                  {fetchedValidity.insurance === "valid" && (
+                    <div
+                      style={{
+                        ...styles.formSelect,
+                        backgroundColor: "#c3e6cb",
+                        cursor: "not-allowed",
+                        color: "#155724",
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      {formData.insuranceExpiryDate
+                        ? `Valid · Expires ${new Date(formData.insuranceExpiryDate).toLocaleDateString("en-GB")}`
+                        : "Valid"}
+                    </div>
+                  )}
                 </div>
 
                 {formData.insuranceStatus === "Valid" && (

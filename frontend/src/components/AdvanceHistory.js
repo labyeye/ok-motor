@@ -596,7 +596,7 @@ const AdvanceHistory = () => {
       }
 
       await axios.delete(
-        `https://backend.okmotors.in/api/advance-bills/${id}`,
+        `/api/advance-bills/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },

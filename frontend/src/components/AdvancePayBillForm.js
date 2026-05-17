@@ -101,7 +101,7 @@ const AdvancePayBillForm = () => {
       }
 
       const response = await axios.get(
-        `https://backend.okmotors.in/api/advance-bills/${billId}`,
+        `/api/advance-bills/${billId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -162,7 +162,7 @@ const AdvancePayBillForm = () => {
           message: "Bill not found.",
           type: "error",
         });
-        navigate("/advance-bills-history");
+        navigate("/advance/history");
       } else {
         setAlertInfo({
           isOpen: true,
@@ -375,7 +375,7 @@ const AdvancePayBillForm = () => {
         }
 
         const updateResponse = await axios.put(
-          `https://backend.okmotors.in/api/advance-bills/${formData._id}`,
+          `/api/advance-bills/${formData._id}`,
           requestData,
           {
             headers: {
@@ -424,7 +424,7 @@ const AdvancePayBillForm = () => {
         });
 
         setTimeout(() => {
-          navigate("/advance-bills-history");
+          navigate("/advance/history");
         }, 1500);
       } else {
         // Create new bill
@@ -476,7 +476,7 @@ const AdvancePayBillForm = () => {
           console.log("Online mode - saving to server");
 
           const saveResponse = await axios.post(
-            "https://backend.okmotors.in/api/advance-bills",
+            "/api/advance-bills",
             requestData,
             {
               headers: {
@@ -764,7 +764,7 @@ const AdvancePayBillForm = () => {
         }
       } else {
         const saveResponse = await axios.post(
-          "https://backend.okmotors.in/api/advance-bills",
+          "/api/advance-bills",
           requestData,
           {
             headers: {
@@ -835,7 +835,7 @@ const AdvancePayBillForm = () => {
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
       const response = await axios.get(
-        "https://backend.okmotors.in/api/advance-bills/vehicle-details",
+        "/api/advance-bills/vehicle-details",
         {
           params: { registrationNumber },
         },

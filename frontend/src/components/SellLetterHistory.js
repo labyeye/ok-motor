@@ -514,6 +514,7 @@ const SellLetterHistory = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
   const formatTime12Hour = (timeString) => {
     if (!timeString) return "";
     const [hours, minutes] = timeString.split(":").map(Number);

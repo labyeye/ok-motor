@@ -5,6 +5,7 @@ import {
   Search,
   Edit,
   Trash2,
+  Download,
   ChevronLeft,
   ChevronRight as ChevronRightIcon,
 } from "lucide-react";
@@ -13,6 +14,7 @@ import axios from "axios";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import ConfirmModal from "./ConfirmModal";
+import VehicleLetterDownloader from "./common/VehicleLetterDownloader";
 
 const VehicleHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -71,6 +73,66 @@ const VehicleHistory = () => {
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTargetId, setConfirmTargetId] = useState(null);
+  const [downloadingId, setDownloadingId] = useState(null);
+  const [downloadLetter, setDownloadLetter] = useState(null);
+  const [downloadLetterType, setDownloadLetterType] = useState(null);
+
+  const handleDownloadVehicle = async (vehicle) => {
+    const regNo = vehicle?.registrationNumber;
+    if (!regNo) {
+      alert("This vehicle has no registration number, cannot find letters.");
+      return;
+    }
+    try {
+      setDownloadingId(vehicle._id);
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
+      const query = `?registrationNumber=${encodeURIComponent(regNo)}`;
+
+      try {
+        const sellRes = await axios.get(
+          `${API_BASE}/api/sell-letters/by-registration${query}`,
+          { headers },
+        );
+        const sellList = Array.isArray(sellRes.data)
+          ? sellRes.data
+          : sellRes.data?.sellLetters || sellRes.data?.data || [];
+        if (sellList.length > 0) {
+          setDownloadLetter(sellList[0]);
+          setDownloadLetterType("sell");
+          return;
+        }
+      } catch (sellErr) {
+        console.warn("Sell letter lookup failed:", sellErr?.message);
+      }
+
+      try {
+        const buyRes = await axios.get(
+          `${API_BASE}/api/buy-letters/by-registration${query}`,
+          { headers },
+        );
+        const buyList = Array.isArray(buyRes.data)
+          ? buyRes.data
+          : buyRes.data?.buyLetters || buyRes.data?.data || [];
+        if (buyList.length > 0) {
+          setDownloadLetter(buyList[0]);
+          setDownloadLetterType("buy");
+          return;
+        }
+      } catch (buyErr) {
+        console.warn("Buy letter lookup failed:", buyErr?.message);
+      }
+
+      alert(
+        `No buy or sell letter found for ${regNo}. Nothing to download.`,
+      );
+    } catch (err) {
+      console.error("Vehicle download lookup failed:", err);
+      alert("Failed to find letter for this vehicle. Please try again.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const performDelete = async () => {
     const vehicleId = confirmTargetId;
@@ -439,6 +501,14 @@ const VehicleHistory = () => {
         onConfirm={performDelete}
         onCancel={() => setConfirmOpen(false)}
       />
+      <VehicleLetterDownloader
+        letter={downloadLetter}
+        letterType={downloadLetterType}
+        onClose={() => {
+          setDownloadLetter(null);
+          setDownloadLetterType(null);
+        }}
+      />
       <AppSidebar user={user} onLogout={handleLogout} />
 
       <div style={styles.mainContent}>
@@ -708,6 +778,28 @@ const VehicleHistory = () => {
                               }}
                             >
                               <div style={{ display: "flex", gap: 8 }}>
+                                <button
+                                  style={{
+                                    ...styles.btn,
+                                    ...styles.btnEdit,
+                                    backgroundColor: "#0284c7",
+                                    color: "#fff",
+                                    opacity:
+                                      downloadingId === vehicle._id ? 0.6 : 1,
+                                    cursor:
+                                      downloadingId === vehicle._id
+                                        ? "wait"
+                                        : "pointer",
+                                  }}
+                                  disabled={downloadingId === vehicle._id}
+                                  onClick={() => handleDownloadVehicle(vehicle)}
+                                  title="Download vehicle documents"
+                                >
+                                  <Download size={14} />{" "}
+                                  {downloadingId === vehicle._id
+                                    ? "Loading..."
+                                    : "Download"}
+                                </button>
                                 {user?.role !== "staff" && (
                                   <>
                                     <button

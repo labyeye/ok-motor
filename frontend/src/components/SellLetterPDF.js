@@ -1429,82 +1429,57 @@ const SellLetterForm = () => {
 
   const buildPreservedDocsFromPreviews = (currentFilesState) => {
     const preservedDocs = {};
+    const existingDocs = editLetter?.documents || {};
 
-    if (
-      !currentFilesState.vehicleRCFront &&
-      filePreviews.vehicleRCFront &&
-      !deletedDocuments.has("vehicleRCFront")
-    )
-      preservedDocs.vehicleRCFront = filePreviews.vehicleRCFront;
-    if (
-      !currentFilesState.vehicleRCBack &&
-      filePreviews.vehicleRCBack &&
-      !deletedDocuments.has("vehicleRCBack")
-    )
-      preservedDocs.vehicleRCBack = filePreviews.vehicleRCBack;
-    if (
-      !currentFilesState.aadhaarFront &&
-      filePreviews.aadhaarFront &&
-      !deletedDocuments.has("aadhaarFront")
-    )
-      preservedDocs.aadhaarFront = filePreviews.aadhaarFront;
-    if (
-      !currentFilesState.aadhaarBack &&
-      filePreviews.aadhaarBack &&
-      !deletedDocuments.has("aadhaarBack")
-    )
-      preservedDocs.aadhaarBack = filePreviews.aadhaarBack;
-    if (
-      !currentFilesState.panPhoto &&
-      filePreviews.panPhoto &&
-      !deletedDocuments.has("panPhoto")
-    )
-      preservedDocs.panPhoto = filePreviews.panPhoto;
-    if (
-      !currentFilesState.deliveryPhoto &&
-      filePreviews.deliveryPhoto &&
-      !deletedDocuments.has("deliveryPhoto")
-    )
-      preservedDocs.deliveryPhoto = filePreviews.deliveryPhoto;
-    if (
-      !currentFilesState.signedDocSell &&
-      filePreviews.signedDocSell &&
-      !deletedDocuments.has("signedDocSell")
-    )
-      preservedDocs.signedDocSell = filePreviews.signedDocSell;
+    const pickSingle = (fieldName, fileStateKey, existingValue) => {
+      if (currentFilesState[fileStateKey]) return;
+      if (deletedDocuments.has(fieldName)) return;
+      const value = filePreviews[fieldName] || existingValue || null;
+      if (value) preservedDocs[fieldName] = value;
+    };
 
-    if (
-      (!currentFilesState.vehiclePhotos ||
-        currentFilesState.vehiclePhotos.length === 0) &&
-      filePreviews.vehiclePhotos?.length &&
-      !deletedDocuments.has("vehiclePhotos")
-    ) {
-      preservedDocs.vehiclePhotos = filePreviews.vehiclePhotos;
-    }
-    if (
-      (!currentFilesState.insuranceCertificate ||
-        currentFilesState.insuranceCertificate.length === 0) &&
-      filePreviews.insuranceCertificate?.length &&
-      !deletedDocuments.has("insuranceCertificate")
-    ) {
-      preservedDocs.insuranceCertificate = filePreviews.insuranceCertificate;
-    }
-    if (
-      (!currentFilesState.vehicleNOC ||
-        currentFilesState.vehicleNOC.length === 0) &&
-      filePreviews.vehicleNOC?.length &&
-      !deletedDocuments.has("vehicleNOC")
-    ) {
-      preservedDocs.vehicleNOC = filePreviews.vehicleNOC;
-    }
-    if (
-      (!currentFilesState.transferReceipt ||
-        currentFilesState.transferReceipt.length === 0) &&
-      filePreviews.transferReceipt?.length &&
-      !deletedDocuments.has("transferReceipt")
-    ) {
-      preservedDocs.transferReceipt = filePreviews.transferReceipt;
-    }
+    const pickArray = (fieldName, fileStateKey, existingArray) => {
+      const stateArr = currentFilesState[fileStateKey];
+      if (Array.isArray(stateArr) && stateArr.length > 0) return;
+      if (deletedDocuments.has(fieldName)) return;
+      const fromPreviews = filePreviews[fieldName];
+      const value =
+        Array.isArray(fromPreviews) && fromPreviews.length > 0
+          ? fromPreviews
+          : Array.isArray(existingArray) && existingArray.length > 0
+            ? existingArray
+            : null;
+      if (value) preservedDocs[fieldName] = value;
+    };
+
+    pickSingle(
+      "vehicleRCFront",
+      "vehicleRCFront",
+      existingDocs.vehicleRC?.front,
+    );
+    pickSingle("vehicleRCBack", "vehicleRCBack", existingDocs.vehicleRC?.back);
+    pickSingle("aadhaarFront", "aadhaarFront", existingDocs.aadhaar?.front);
+    pickSingle("aadhaarBack", "aadhaarBack", existingDocs.aadhaar?.back);
+    pickSingle("panPhoto", "panPhoto", existingDocs.pan);
+    pickSingle(
+      "deliveryPhoto",
+      "deliveryPhoto",
+      existingDocs.deliveryPhoto || existingDocs.vehicleKM,
+    );
+    pickSingle("signedDocSell", "signedDocSell", existingDocs.signedDocSell);
+
+    pickArray("vehiclePhotos", "vehiclePhotos", existingDocs.vehiclePhotos);
+    pickArray(
+      "insuranceCertificate",
+      "insuranceCertificate",
+      existingDocs.insuranceCertificate?.pages,
+    );
+    pickArray("vehicleNOC", "vehicleNOC", existingDocs.vehicleNOC?.pages);
+    pickArray(
+      "transferReceipt",
+      "transferReceipt",
+      existingDocs.transferReceipt?.pages,
+    );
 
     return preservedDocs;
   };
@@ -1773,10 +1748,20 @@ const SellLetterForm = () => {
             "existingDocuments",
             JSON.stringify(editLetter.documents),
           );
+          form.append(
+            "removedDocuments",
+            JSON.stringify([...deletedDocuments]),
+          );
         } else {
           const preservedDocs = buildPreservedDocsFromPreviews(filesState);
           if (Object.keys(preservedDocs).length > 0) {
             form.append("preservedDocuments", JSON.stringify(preservedDocs));
+          }
+          if (deletedDocuments.size > 0) {
+            form.append(
+              "removedDocuments",
+              JSON.stringify([...deletedDocuments]),
+            );
           }
         }
 
@@ -1820,6 +1805,12 @@ const SellLetterForm = () => {
             form.append(
               "existingDocuments",
               JSON.stringify(editLetter.documents),
+            );
+          }
+          if (deletedDocuments.size > 0) {
+            form.append(
+              "removedDocuments",
+              JSON.stringify([...deletedDocuments]),
             );
           }
 
@@ -3187,22 +3178,38 @@ const SellLetterForm = () => {
                     {fetchedValidity.puc === "valid" && <span style={{ color: "#155724", marginLeft: 8, fontSize: 12 }}>(Valid - Locked)</span>}
                     {fetchedValidity.puc === "expired" && <span style={{ color: "#721c24", marginLeft: 8, fontSize: 12 }}>(Expired - Editable)</span>}
                   </label>
-                  <select
-                    name="pucStatus"
-                    value={formData.pucStatus || ""}
-                    onChange={handleChange}
-                    disabled={fetchedValidity.puc === "valid"}
-                    style={{
-                      ...styles.formSelect,
-                      ...(fetchedValidity.puc === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed", opacity: 0.85 } : {}),
-                      ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
-                    }}
-                  >
-                    <option value="">Select</option>
-                    <option value="Valid">Valid</option>
-                    <option value="Expired">Expired</option>
-                    <option value="Not Available">Not Available</option>
-                  </select>
+                  {fetchedValidity.puc === "valid" ? (
+                    <div
+                      style={{
+                        ...styles.formSelect,
+                        backgroundColor: "#c3e6cb",
+                        cursor: "not-allowed",
+                        color: "#155724",
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      {formData.pucExpiryDate
+                        ? `Valid · Expires ${new Date(formData.pucExpiryDate).toLocaleDateString("en-GB")}`
+                        : "Valid"}
+                    </div>
+                  ) : (
+                    <select
+                      name="pucStatus"
+                      value={formData.pucStatus || ""}
+                      onChange={handleChange}
+                      style={{
+                        ...styles.formSelect,
+                        ...(fetchedValidity.puc === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
+                      }}
+                    >
+                      <option value="">Select</option>
+                      <option value="Valid">Valid</option>
+                      <option value="Expired">Expired</option>
+                      <option value="Not Available">Not Available</option>
+                    </select>
+                  )}
                 </div>
 
                 {formData.pucStatus === "Valid" && (
@@ -3265,22 +3272,38 @@ const SellLetterForm = () => {
                     {fetchedValidity.insurance === "valid" && <span style={{ color: "#155724", marginLeft: 8, fontSize: 12 }}>(Valid - Locked)</span>}
                     {fetchedValidity.insurance === "expired" && <span style={{ color: "#721c24", marginLeft: 8, fontSize: 12 }}>(Expired - Editable)</span>}
                   </label>
-                  <select
-                    name="insuranceStatus"
-                    value={formData.insuranceStatus || ""}
-                    onChange={handleChange}
-                    disabled={fetchedValidity.insurance === "valid"}
-                    style={{
-                      ...styles.formSelect,
-                      ...(fetchedValidity.insurance === "valid" ? { backgroundColor: "#c3e6cb", cursor: "not-allowed", opacity: 0.85 } : {}),
-                      ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
-                    }}
-                  >
-                    <option value="">Select</option>
-                    <option value="Valid">Valid</option>
-                    <option value="Expired">Expired</option>
-                    <option value="Not Available">Not Available</option>
-                  </select>
+                  {fetchedValidity.insurance === "valid" ? (
+                    <div
+                      style={{
+                        ...styles.formSelect,
+                        backgroundColor: "#c3e6cb",
+                        cursor: "not-allowed",
+                        color: "#155724",
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      {formData.insuranceExpiryDate
+                        ? `Valid · Expires ${new Date(formData.insuranceExpiryDate).toLocaleDateString("en-GB")}`
+                        : "Valid"}
+                    </div>
+                  ) : (
+                    <select
+                      name="insuranceStatus"
+                      value={formData.insuranceStatus || ""}
+                      onChange={handleChange}
+                      style={{
+                        ...styles.formSelect,
+                        ...(fetchedValidity.insurance === "expired" ? { backgroundColor: "#f5c6cb" } : {}),
+                      }}
+                    >
+                      <option value="">Select</option>
+                      <option value="Valid">Valid</option>
+                      <option value="Expired">Expired</option>
+                      <option value="Not Available">Not Available</option>
+                    </select>
+                  )}
                 </div>
 
                 {formData.insuranceStatus === "Valid" && (
