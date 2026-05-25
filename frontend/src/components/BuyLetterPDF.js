@@ -793,9 +793,79 @@ const BuyLetterForm = () => {
     return `${formattedHours}:${formattedMinutes} ${ampm}`;
   };
 
+  const compressPdfFile = async (
+    file,
+    { maxWidthPx = 1400, quality = 0.7 } = {},
+  ) => {
+    const pdfjsLib = await import("pdfjs-dist");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@5.4.530/build/pdf.worker.min.mjs`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const srcPdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const outPdf = await PDFDocument.create();
+
+    for (let i = 1; i <= srcPdf.numPages; i++) {
+      const page = await srcPdf.getPage(i);
+      let viewport = page.getViewport({ scale: 2 });
+      if (viewport.width > maxWidthPx) {
+        viewport = page.getViewport({
+          scale: (maxWidthPx / viewport.width) * 2,
+        });
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      const jpegBlob = await new Promise((resolve) =>
+        canvas.toBlob((b) => resolve(b), "image/jpeg", quality),
+      );
+      const jpegBytes = await jpegBlob.arrayBuffer();
+
+      const embedded = await outPdf.embedJpg(jpegBytes);
+      const newPage = outPdf.addPage([viewport.width, viewport.height]);
+      newPage.drawImage(embedded, {
+        x: 0,
+        y: 0,
+        width: viewport.width,
+        height: viewport.height,
+      });
+
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+
+    const bytes = await outPdf.save();
+    const name = file.name?.toLowerCase().endsWith(".pdf")
+      ? file.name
+      : `${file.name || "document"}.pdf`;
+    return new File([bytes], name, {
+      type: "application/pdf",
+      lastModified: Date.now(),
+    });
+  };
+
   const compressImageFile = (file, maxWidthPx = 1600, quality = 0.75) => {
     return new Promise((resolve) => {
-      if (!file.type.startsWith("image/")) return resolve(file);
+      if (!file.type.startsWith("image/")) {
+        const looksLikePdf =
+          file.type === "application/pdf" ||
+          file.name?.toLowerCase().endsWith(".pdf");
+        if (looksLikePdf) {
+          compressPdfFile(file)
+            .then(resolve)
+            .catch((err) => {
+              console.warn("PDF compression failed, sending raw:", err);
+              resolve(file);
+            });
+          return;
+        }
+        return resolve(file);
+      }
       const img = new window.Image();
       const url = URL.createObjectURL(file);
       img.onload = () => {
