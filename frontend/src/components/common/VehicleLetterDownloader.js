@@ -88,23 +88,6 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
     return `${formattedHours}:${formattedMinutes} ${ampm}`;
   };
 
-  const formatTimeFromDate = (dateObj) => {
-    if (!dateObj) return "";
-    try {
-      const date = new Date(dateObj);
-      if (isNaN(date.getTime())) return "";
-      let hours = date.getHours();
-      const minutes = date.getMinutes();
-      const ampm = hours >= 12 ? "PM" : "AM";
-      hours = hours % 12 || 12;
-      const formattedHours = String(hours).padStart(2, "0");
-      const formattedMinutes = String(minutes).padStart(2, "0");
-      return `${formattedHours}:${formattedMinutes} ${ampm}`;
-    } catch (e) {
-      return "";
-    }
-  };
-
   const formatKm = (val) => {
     const num = parseFloat((val ?? "").toString().replace(/,/g, ""));
     return isNaN(num)
