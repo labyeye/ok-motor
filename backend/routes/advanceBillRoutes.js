@@ -376,6 +376,7 @@ router.post("/", protect, async (req, res) => {
     ];
 
     const advanceBillData = Object.assign({}, req.body);
+    delete advanceBillData._id;
 
     if (advanceBillData.vehicle) {
       const vehicle = await Vehicle.findById(advanceBillData.vehicle);
