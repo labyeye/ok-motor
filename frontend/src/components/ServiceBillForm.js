@@ -125,29 +125,51 @@ const ServiceBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const vehicleResp = await apiService.get(
-        `/api/advance-bills/vehicle-details?registrationNumber=${encodeURIComponent(
-          registrationNumber,
-        )}`,
-      );
-
-      let sellLetters = [];
-      try {
-        const sellResp = await apiService.get(
+      const [vehicleResp, sellResp, serviceBillsResp] = await Promise.allSettled([
+        apiService.get(
+          `/api/advance-bills/vehicle-details?registrationNumber=${encodeURIComponent(
+            registrationNumber,
+          )}`,
+        ),
+        apiService.get(
           `/api/sell-letters/by-registration?registrationNumber=${encodeURIComponent(
             registrationNumber,
           )}`,
-        );
+        ),
+        apiService.get(
+          `/api/service-bills/by-registration?registrationNumber=${encodeURIComponent(
+            registrationNumber,
+          )}`,
+        ),
+      ]);
 
-        sellLetters = Array.isArray(sellResp) ? sellResp : sellResp.data || [];
-      } catch (err) {
-        console.warn("Sell-letter lookup failed:", err.message || err);
-        sellLetters = [];
-      }
+      const vehicleData =
+        vehicleResp.status === "fulfilled" ? vehicleResp.value || {} : {};
 
-      const vehicleData = vehicleResp || {};
-      const latestSell =
-        sellLetters && sellLetters.length > 0 ? sellLetters[0] : null;
+      const sellLetters =
+        sellResp.status === "fulfilled"
+          ? Array.isArray(sellResp.value)
+            ? sellResp.value
+            : sellResp.value?.data || []
+          : [];
+
+      const serviceBills =
+        serviceBillsResp.status === "fulfilled"
+          ? Array.isArray(serviceBillsResp.value?.data)
+            ? serviceBillsResp.value.data
+            : Array.isArray(serviceBillsResp.value)
+              ? serviceBillsResp.value
+              : []
+          : [];
+
+      const latestSell = sellLetters.length > 0 ? sellLetters[0] : null;
+
+      // KM priority: previous service bill → sell letter → advance-bills (buy letter)
+      const previousServiceKm =
+        serviceBills.length > 0 ? serviceBills[0].kmReading : null;
+      const sellLetterKm = latestSell?.vehiclekm || null;
+      const kmReading =
+        previousServiceKm || sellLetterKm || vehicleData.vehiclekm || "";
 
       setFormData((prev) => ({
         ...prev,
@@ -158,7 +180,7 @@ const ServiceBillForm = () => {
         vehicleModel: vehicleData.vehicleModel || prev.vehicleModel,
         registrationNumber:
           vehicleData.registrationNumber || registrationNumber,
-        kmReading: vehicleData.vehiclekm || prev.kmReading,
+        kmReading: kmReading || prev.kmReading,
 
         customerName: latestSell?.buyerName || prev.customerName,
         customerPhone: latestSell?.buyerPhone || prev.customerPhone,

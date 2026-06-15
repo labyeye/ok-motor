@@ -26,7 +26,7 @@ router.route("/vehicle-details").get(getVehicleDetails);
 router
   .route("/:id")
   .get(getSellLetterById)
-  .put(admin, updateSellLetter)
+  .put(updateSellLetter)
   .delete(admin, deleteSellLetter);
 
 module.exports = router;

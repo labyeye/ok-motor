@@ -1624,13 +1624,6 @@ const SellLetterForm = () => {
       const dataToSave = {
         ...cleanFormData,
 
-        ...(editLetter?._id && {
-          originalDocumentId: editLetter.originalDocumentId || editLetter._id,
-          previousVersionId: editLetter._id,
-          version: (editLetter.version || 1) + 1,
-          editedAt: new Date().toISOString(),
-          editedBy: user?._id || user?.id,
-        }),
         ...(!editLetter?._id && {
           originalDocumentId: null,
           previousVersionId: null,
@@ -1765,55 +1758,25 @@ const SellLetterForm = () => {
           }
         }
 
-        if (isElectron) {
-          response = await apiService.post("/api/sell-letters", form);
-        } else {
-          response = await axios.post(
-            "https://backend.okmotors.in/api/sell-letters",
-            form,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-              timeout: 300000,
-              onUploadProgress: (evt) => {
-                if (evt.total && evt.loaded >= evt.total) {
-                  setProgressStep(2);
-                }
+        if (editLetter?._id) {
+          if (isElectron) {
+            response = await apiService.put(`/api/sell-letters/${editLetter._id}`, form);
+          } else {
+            response = await axios.put(
+              `https://backend.okmotors.in/api/sell-letters/${editLetter._id}`,
+              form,
+              {
+                headers: { "Content-Type": "multipart/form-data" },
+                timeout: 300000,
+                onUploadProgress: (evt) => {
+                  if (evt.total && evt.loaded >= evt.total) {
+                    setProgressStep(2);
+                  }
+                },
               },
-            },
-          );
-        }
-      } else {
-        const preservedDocs = buildPreservedDocsFromPreviews(filesState);
-
-        if (Object.keys(preservedDocs).length > 0) {
-          const form = new FormData();
-
-          Object.entries(dataToSave).forEach(([key, value]) => {
-            if (value === undefined || value === null) return;
-            if (typeof value === "object") {
-              form.append(key, JSON.stringify(value));
-            } else {
-              form.append(key, String(value));
-            }
-          });
-
-          form.append("aadhaarUploadMode", aadhaarUploadMode);
-          form.append("vehicleRCUploadMode", vehicleRCUploadMode);
-
-          form.append("preservedDocuments", JSON.stringify(preservedDocs));
-          if (editLetter?.documents) {
-            form.append(
-              "existingDocuments",
-              JSON.stringify(editLetter.documents),
             );
           }
-          if (deletedDocuments.size > 0) {
-            form.append(
-              "removedDocuments",
-              JSON.stringify([...deletedDocuments]),
-            );
-          }
-
+        } else {
           if (isElectron) {
             response = await apiService.post("/api/sell-letters", form);
           } else {
@@ -1823,7 +1786,24 @@ const SellLetterForm = () => {
               {
                 headers: { "Content-Type": "multipart/form-data" },
                 timeout: 300000,
+                onUploadProgress: (evt) => {
+                  if (evt.total && evt.loaded >= evt.total) {
+                    setProgressStep(2);
+                  }
+                },
               },
+            );
+          }
+        }
+      } else {
+        if (editLetter?._id) {
+          if (isElectron) {
+            response = await apiService.put(`/api/sell-letters/${editLetter._id}`, dataToSave);
+          } else {
+            response = await axios.put(
+              `https://backend.okmotors.in/api/sell-letters/${editLetter._id}`,
+              dataToSave,
+              { timeout: 300000 },
             );
           }
         } else {
@@ -1839,11 +1819,7 @@ const SellLetterForm = () => {
         }
       }
 
-      if (editLetter?._id) {
-        alert("Sell letter saved as new version! Original remains unchanged.");
-      } else {
-        alert("Sell letter saved successfully!");
-      }
+      alert(editLetter?._id ? "Sell letter updated successfully!" : "Sell letter saved successfully!");
 
       if (response.data) {
         if (response.data._cached) {

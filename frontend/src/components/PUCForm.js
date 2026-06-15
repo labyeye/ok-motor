@@ -39,12 +39,15 @@ const PUCForm = () => {
           ? new Date(expiryValue).toISOString().split("T")[0]
           : "",
       });
+      if (data.regNo) {
+        fetchVehicleDetails(data.regNo);
+      }
     }
 
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [location.state]);
+  }, [location.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const API_BASE_URL = "https://backend.okmotors.in/api";
 

@@ -1820,13 +1820,22 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
           const baseItem = group[0];
 
-          const actualSaleTimestamp = new Date(
-            `${baseItem.saleDate.split("T")[0]}T${baseItem.saleTime}:00`,
-          ).getTime();
+          const saleDateStr = baseItem.saleDate
+            ? String(baseItem.saleDate).split("T")[0]
+            : null;
+          const actualSaleTimestamp =
+            saleDateStr && baseItem.saleTime
+              ? new Date(
+                  `${saleDateStr}T${baseItem.saleTime}:00`,
+                ).getTime()
+              : NaN;
           const fallbackTimestamp = baseItem.createdAt
             ? new Date(baseItem.createdAt).getTime()
             : 0;
-          const creationTimestamp = actualSaleTimestamp || fallbackTimestamp;
+          const creationTimestamp =
+            !isNaN(actualSaleTimestamp) && actualSaleTimestamp
+              ? actualSaleTimestamp
+              : fallbackTimestamp;
 
           processed.push({
             ...baseItem,

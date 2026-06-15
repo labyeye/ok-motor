@@ -972,13 +972,6 @@ const BuyLetterForm = () => {
 
       const dataToSave = {
         ...formDataWithoutId,
-        ...(editLetter?._id && {
-          originalDocumentId: editLetter.originalDocumentId || editLetter._id,
-          previousVersionId: editLetter._id,
-          version: (editLetter.version || 1) + 1,
-          editedAt: new Date().toISOString(),
-          editedBy: user?._id || user?.id,
-        }),
         ...(!editLetter?._id && {
           originalDocumentId: null,
           previousVersionId: null,
@@ -1098,60 +1091,30 @@ const BuyLetterForm = () => {
           );
         }
 
-        if (isElectron) {
-          response = await apiService.post("/api/buy-letters", form);
-        } else {
-          response = await axios.post(
-            "https://backend.okmotors.in/api/buy-letters",
-            form,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-              timeout: 300000,
-              onUploadProgress: (evt) => {
-                if (evt.total && evt.loaded >= evt.total) {
-                  setProgressStep(2);
-                }
+        if (editLetter?._id) {
+          if (editLetter.documents) {
+            form.append("preservedDocuments", JSON.stringify(buildBuyPreservedDocs(filesState)));
+            form.append("existingDocuments", JSON.stringify(editLetter.documents));
+            form.append("removedDocuments", JSON.stringify([...deletedDocuments]));
+          }
+          if (isElectron) {
+            response = await apiService.put(`/api/buy-letters/${editLetter._id}`, form);
+          } else {
+            response = await axios.put(
+              `https://backend.okmotors.in/api/buy-letters/${editLetter._id}`,
+              form,
+              {
+                headers: { "Content-Type": "multipart/form-data" },
+                timeout: 300000,
+                onUploadProgress: (evt) => {
+                  if (evt.total && evt.loaded >= evt.total) {
+                    setProgressStep(2);
+                  }
+                },
               },
-            },
-          );
-        }
-      } else {
-        if (editLetter?._id && editLetter.documents) {
-          const form = new FormData();
-
-          Object.entries(dataToSave).forEach(([key, value]) => {
-            if (value === undefined || value === null) return;
-            if (typeof value === "object") {
-              form.append(key, JSON.stringify(value));
-            } else {
-              form.append(key, String(value));
-            }
-          });
-
-          form.append("aadhaarUploadMode", aadhaarUploadMode);
-          form.append("vehicleRCUploadMode", vehicleRCUploadMode);
-          form.append(
-            "insuranceCertificateUploadMode",
-            insuranceCertificateUploadMode,
-          );
-          form.append("vehicleNOCUploadMode", vehicleNOCUploadMode);
-          form.append(
-            "vehicleBuyReceiptUploadMode",
-            vehicleBuyReceiptUploadMode,
-          );
-
-          const preservedDocs = buildBuyPreservedDocs({});
-
-          form.append("preservedDocuments", JSON.stringify(preservedDocs));
-          form.append(
-            "existingDocuments",
-            JSON.stringify(editLetter.documents),
-          );
-          form.append(
-            "removedDocuments",
-            JSON.stringify([...deletedDocuments]),
-          );
-
+            );
+          }
+        } else {
           if (isElectron) {
             response = await apiService.post("/api/buy-letters", form);
           } else {
@@ -1161,7 +1124,25 @@ const BuyLetterForm = () => {
               {
                 headers: { "Content-Type": "multipart/form-data" },
                 timeout: 300000,
+                onUploadProgress: (evt) => {
+                  if (evt.total && evt.loaded >= evt.total) {
+                    setProgressStep(2);
+                  }
+                },
               },
+            );
+          }
+        }
+      } else {
+        if (editLetter?._id) {
+          const payload = { ...dataToSave };
+          if (isElectron) {
+            response = await apiService.put(`/api/buy-letters/${editLetter._id}`, payload);
+          } else {
+            response = await axios.put(
+              `https://backend.okmotors.in/api/buy-letters/${editLetter._id}`,
+              payload,
+              { timeout: 300000 },
             );
           }
         } else {
@@ -1178,20 +1159,13 @@ const BuyLetterForm = () => {
         }
       }
 
-      if (editLetter?._id) {
-        setAlertInfo({
-          isOpen: true,
-          message:
-            "Buy letter saved as new version! Original remains unchanged.",
-          type: "success",
-        });
-      } else {
-        setAlertInfo({
-          isOpen: true,
-          message: "Buy letter saved successfully!",
-          type: "success",
-        });
-      }
+      setAlertInfo({
+        isOpen: true,
+        message: editLetter?._id
+          ? "Buy letter updated successfully!"
+          : "Buy letter saved successfully!",
+        type: "success",
+      });
 
       const normalizedResponse =
         response && response.data ? response.data : response;
@@ -2909,9 +2883,10 @@ const BuyLetterForm = () => {
               : null,
           });
 
+          const previews = {};
+
           if (data.documents) {
             const docs = data.documents;
-            const previews = {};
 
             if (docs.vehicleRCUploadMode)
               setVehicleRCUploadMode(docs.vehicleRCUploadMode);
@@ -2930,10 +2905,24 @@ const BuyLetterForm = () => {
             ) {
               previews.vehicleNOC = docs.vehicleNOC.pages.slice();
             }
+          }
 
-            if (Object.keys(previews).length > 0) {
-              setFilePreviews((prev) => ({ ...prev, ...previews }));
-            }
+          // Fallback: if sell letter didn't have RC, pull it from the existing buy letter
+          if (
+            (!previews.vehicleRCFront && !previews.vehicleRCBack) &&
+            data.buyLetterDocuments
+          ) {
+            const buyDocs = data.buyLetterDocuments;
+            if (buyDocs.vehicleRCUploadMode)
+              setVehicleRCUploadMode(buyDocs.vehicleRCUploadMode);
+            if (buyDocs.vehicleRC?.front)
+              previews.vehicleRCFront = buyDocs.vehicleRC.front;
+            if (buyDocs.vehicleRC?.back)
+              previews.vehicleRCBack = buyDocs.vehicleRC.back;
+          }
+
+          if (Object.keys(previews).length > 0) {
+            setFilePreviews((prev) => ({ ...prev, ...previews }));
           }
         }
       } catch (error) {

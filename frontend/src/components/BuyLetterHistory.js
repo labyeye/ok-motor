@@ -24,6 +24,18 @@ import ConfirmModal from "./ConfirmModal";
 import AlertModal from "./common/AlertModal";
 import TableFilter from "./common/TableFilter";
 
+const getValidityStatus = (expiryDate) => {
+  if (!expiryDate) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const expiry = new Date(expiryDate);
+  expiry.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((expiry - today) / 86400000);
+  if (diffDays < 0) return { status: "expired", color: "#dc2626", bg: "#fef2f2" };
+  if (diffDays <= 30) return { status: "expiring", color: "#d97706", bg: "#fffbeb" };
+  return { status: "valid", color: "#16a34a", bg: "#f0fdf4" };
+};
+
 const BuyLetterHistory = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -2198,6 +2210,7 @@ const BuyLetterHistory = () => {
                         </th>
                         <th style={styles.tableHeader}>Date</th>
                         <th style={styles.tableHeader}>Create By</th>
+                        <th style={styles.tableHeader}>PUC / Ins.</th>
                         <th style={styles.tableHeader}>Actions</th>
                       </tr>
                     </thead>
@@ -2346,6 +2359,39 @@ const BuyLetterHistory = () => {
                                     : letter.user && letter.user.name
                                       ? letter.user.name
                                       : ""}
+                                </td>
+                                <td style={styles.tableCell}>
+                                  {(() => {
+                                    const pucStatus = getValidityStatus(letter.pucExpiryDate);
+                                    const insStatus = getValidityStatus(letter.insuranceExpiryDate);
+                                    const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : "";
+                                    return (
+                                      <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: "110px" }}>
+                                        {pucStatus ? (
+                                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                            <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", padding: "2px 6px", backgroundColor: pucStatus.bg, color: pucStatus.color, borderRadius: "10px", fontSize: "0.68rem", fontWeight: "600", border: `1px solid ${pucStatus.color}44` }}>
+                                              <span style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: pucStatus.color, display: "inline-block" }} />
+                                              PUC {fmtDate(letter.pucExpiryDate)}
+                                            </span>
+                                            {pucStatus.status === "expired" && (
+                                              <button onClick={() => navigate("/puc/create", { state: { pucData: { regNo: letter.registrationNumber } } })} style={{ fontSize: "0.62rem", padding: "1px 5px", backgroundColor: "#dc2626", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}>Edit</button>
+                                            )}
+                                          </div>
+                                        ) : <span style={{ fontSize: "0.68rem", color: "#94a3b8" }}>No PUC</span>}
+                                        {insStatus ? (
+                                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                            <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", padding: "2px 6px", backgroundColor: insStatus.bg, color: insStatus.color, borderRadius: "10px", fontSize: "0.68rem", fontWeight: "600", border: `1px solid ${insStatus.color}44` }}>
+                                              <span style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: insStatus.color, display: "inline-block" }} />
+                                              Ins. {fmtDate(letter.insuranceExpiryDate)}
+                                            </span>
+                                            {insStatus.status === "expired" && (
+                                              <button onClick={() => navigate("/insurance/create", { state: { insuranceData: { regNo: letter.registrationNumber } } })} style={{ fontSize: "0.62rem", padding: "1px 5px", backgroundColor: "#dc2626", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}>Edit</button>
+                                            )}
+                                          </div>
+                                        ) : <span style={{ fontSize: "0.68rem", color: "#94a3b8" }}>No Ins.</span>}
+                                      </div>
+                                    );
+                                  })()}
                                 </td>
                                 <td style={styles.tableCell}>
                                   <div
@@ -3138,6 +3184,40 @@ const BuyLetterHistory = () => {
                             ))}
                           </div>
                         </div>
+
+                        {(() => {
+                          const pucStatus = getValidityStatus(letter.pucExpiryDate);
+                          const insStatus = getValidityStatus(letter.insuranceExpiryDate);
+                          const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : "";
+                          if (!pucStatus && !insStatus) return null;
+                          return (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px", padding: "10px", backgroundColor: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                              <div style={{ fontWeight: "600", fontSize: "0.8rem", color: "#475569", marginBottom: "2px" }}>PUC / Insurance:</div>
+                              {pucStatus && (
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "3px 8px", backgroundColor: pucStatus.bg, color: pucStatus.color, borderRadius: "12px", fontSize: "0.73rem", fontWeight: "600", border: `1px solid ${pucStatus.color}44` }}>
+                                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: pucStatus.color, display: "inline-block" }} />
+                                    PUC — {fmtDate(letter.pucExpiryDate)}
+                                  </span>
+                                  {pucStatus.status === "expired" && (
+                                    <button onClick={() => navigate("/puc/create", { state: { pucData: { regNo: letter.registrationNumber } } })} style={{ fontSize: "0.7rem", padding: "2px 8px", backgroundColor: "#dc2626", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "600" }}>Edit PUC</button>
+                                  )}
+                                </div>
+                              )}
+                              {insStatus && (
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "3px 8px", backgroundColor: insStatus.bg, color: insStatus.color, borderRadius: "12px", fontSize: "0.73rem", fontWeight: "600", border: `1px solid ${insStatus.color}44` }}>
+                                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: insStatus.color, display: "inline-block" }} />
+                                    Ins. — {fmtDate(letter.insuranceExpiryDate)}
+                                  </span>
+                                  {insStatus.status === "expired" && (
+                                    <button onClick={() => navigate("/insurance/create", { state: { insuranceData: { regNo: letter.registrationNumber } } })} style={{ fontSize: "0.7rem", padding: "2px 8px", backgroundColor: "#dc2626", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "600" }}>Edit Ins.</button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
 
                         {}
                         <div

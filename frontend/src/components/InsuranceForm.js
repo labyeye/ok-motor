@@ -55,23 +55,21 @@ const InsuranceForm = () => {
                 .split("T")[0]
             : "",
       });
+      if (data.regNo) {
+        fetchVehicleDetails(data.regNo);
+      }
     }
 
     return () => window.removeEventListener("resize", handleResize);
-  }, [location.state]);
+  }, [location.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleRegNoKeyDown = async (e) => {
-    if (e.key !== "Enter") return;
-    e.preventDefault();
-
-    const reg = formData.regNo?.trim();
+  const fetchVehicleDetails = async (reg) => {
     if (!reg) return;
-
     try {
       setIsFetching(true);
       const token = localStorage.getItem("token");
@@ -147,6 +145,11 @@ const InsuranceForm = () => {
                 .toISOString()
                 .split("T")[0]
             : prev.insuranceExpiry,
+        personAlternateNo:
+          insData.personAlternateNo ||
+          pucData.personAlternateNo ||
+          vehicleData.personAlternateNo ||
+          prev.personAlternateNo,
       }));
     } catch (err) {
       console.error("Failed to fetch vehicle details:", err);
@@ -155,6 +158,19 @@ const InsuranceForm = () => {
       );
     } finally {
       setIsFetching(false);
+    }
+  };
+
+  const handleRegNoKeyDown = async (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const reg = formData.regNo?.trim();
+    if (!reg) return;
+
+    try {
+      await fetchVehicleDetails(reg);
+    } catch (err) {
     }
   };
 

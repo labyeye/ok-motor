@@ -944,6 +944,10 @@ exports.getVehicleDetails = async (req, res) => {
       });
     }
 
+    // KM should always come from the buy letter (odometer at purchase),
+    // falling back to sell letter or vehicle record only when no buy letter exists.
+    const kmSource = buyLetters[0] || vehicles[0] || vehicleRecord;
+
     const vehicleDetails = {
       vehicleName: vehicleRecord.vehicleName,
       vehicleModel: vehicleRecord.vehicleModel,
@@ -951,7 +955,7 @@ exports.getVehicleDetails = async (req, res) => {
       registrationNumber: vehicleRecord.registrationNumber,
       chassisNumber: vehicleRecord.chassisNumber,
       engineNumber: vehicleRecord.engineNumber,
-      vehiclekm: vehicleRecord.vehiclekm,
+      vehiclekm: kmSource.vehiclekm,
     };
 
     vehicleDetails.brand =
@@ -964,6 +968,11 @@ exports.getVehicleDetails = async (req, res) => {
       vehicleRecord.manufacturingYear ||
       vehicleRecord.year ||
       vehicleRecord.year ||
+      undefined;
+
+    vehicleDetails.personAlternateNo =
+      vehicleRecord.buyerPhone2 ||
+      vehicleRecord.personAlternateNo ||
       undefined;
 
     if (vehicleRecord.pucIssueDate)
@@ -1243,7 +1252,21 @@ exports.getSellLetterById = async (req, res) => {
   }
 };
 
-exports.updateSellLetter = async (req, res) => {
+exports.updateSellLetter = [
+  upload.fields([
+    { name: "vehicleRCFront" },
+    { name: "vehicleRCBack" },
+    { name: "aadhaarFront" },
+    { name: "aadhaarBack" },
+    { name: "panPhoto" },
+    { name: "deliveryPhoto" },
+    { name: "signedDocSell" },
+    { name: "vehiclePhotos" },
+    { name: "insuranceCertificate", maxCount: 50 },
+    { name: "vehicleNOC", maxCount: 50 },
+    { name: "transferReceipt", maxCount: 50 },
+  ]),
+  async (req, res) => {
   try {
     const sellLetter = await SellLetter.findById(req.params.id);
 
@@ -1284,56 +1307,17 @@ exports.updateSellLetter = async (req, res) => {
           const existingIns = await Insurance.findOne({
             vehicleRegNo: regRegex,
           }).lean();
-          const insuranceChanged =
-            !existingIns ||
-            String(updateData.insuranceCompany || "") !==
-              String(existingIns.insuranceCompany || "") ||
-            String(updateData.insurancePolicyNumber || "") !==
-              String(existingIns.insurancePolicyNumber || "") ||
-            normDate(updateData.insuranceExpiryDate) !==
-              normDate(existingIns.insuranceExpiryDate) ||
-            String(updateData.insuranceStatus || "") !==
-              String(existingIns.insuranceStatus || "");
-
-          if (insuranceChanged) {
-            const insuranceData = {
-              personName:
-                updateData.buyerName || sellLetter.buyerName || "Unknown",
-              personPhone:
-                updateData.buyerPhone || sellLetter.buyerPhone || "",
-              personEmail:
-                updateData.buyerEmail || sellLetter.buyerEmail || "",
-              sourceType: "sell-letter",
-              vehicleModel:
-                updateData.vehicleModel || sellLetter.vehicleModel || "",
-              brand: updateData.vehicleName || sellLetter.vehicleName || "",
-              year: "",
-              regNo: regNo,
-              vehicleRegNo: regNo,
-              insuranceCompany: updateData.insuranceCompany,
-              insurancePolicyNumber: updateData.insurancePolicyNumber,
-              insuranceExpiryDate: updateData.insuranceExpiryDate
-                ? new Date(updateData.insuranceExpiryDate)
-                : undefined,
-              insuranceStatus: updateData.insuranceStatus,
-              user: req.user.id,
-            };
-            const insuranceDoc = await Insurance.findOneAndUpdate(
-              { vehicleRegNo: regRegex },
-              insuranceData,
-              {
-                new: true,
-                upsert: true,
-                runValidators: true,
-                setDefaultsOnInsert: true,
-              },
-            );
-            if (insuranceDoc) {
-              updateData.insuranceId = insuranceDoc._id;
-            }
-          } else if (existingIns) {
+          if (existingIns) {
+            // Insurance master exists — read from it, never overwrite it
             updateData.insuranceId = existingIns._id;
+            updateData.insuranceCompany = existingIns.insuranceCompany;
+            updateData.insurancePolicyNumber =
+              existingIns.insurancePolicyNumber || existingIns.insurancePolicyNo;
+            updateData.insuranceExpiryDate =
+              existingIns.insuranceExpiryDate || existingIns.insuranceExpiry;
+            updateData.insuranceStatus = existingIns.insuranceStatus;
           }
+          // If no Insurance master exists, keep the sell letter's own fields as-is
         }
 
         const hasPUCFields =
@@ -1345,60 +1329,17 @@ exports.updateSellLetter = async (req, res) => {
           const existingPUC = await PUC.findOne({
             $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }],
           }).lean();
-          const pucChanged =
-            !existingPUC ||
-            normDate(updateData.pucIssueDate) !==
-              normDate(existingPUC.pucIssueDate) ||
-            normDate(updateData.pucExpiryDate || updateData.pucExpiry) !==
-              normDate(existingPUC.pucExpiryDate || existingPUC.pucExpiry) ||
-            String(updateData.pucStatus || "") !==
-              String(existingPUC.pucStatus || "");
-
-          if (pucChanged) {
-            const pucData = {
-              personName:
-                updateData.buyerName || sellLetter.buyerName || "Unknown",
-              personPhone:
-                updateData.buyerPhone || sellLetter.buyerPhone || "",
-              personEmail:
-                updateData.buyerEmail || sellLetter.buyerEmail || "",
-              sourceType: "sell-letter",
-              vehicleModel:
-                updateData.vehicleModel || sellLetter.vehicleModel || "",
-              brand: updateData.vehicleName || sellLetter.vehicleName || "",
-              year: "",
-              regNo: regNo,
-              vehicleRegNo: regNo,
-              pucIssueDate: updateData.pucIssueDate
-                ? new Date(updateData.pucIssueDate)
-                : undefined,
-              pucExpiryDate:
-                updateData.pucExpiryDate || updateData.pucExpiry
-                  ? new Date(updateData.pucExpiryDate || updateData.pucExpiry)
-                  : undefined,
-              pucExpiry:
-                updateData.pucExpiryDate || updateData.pucExpiry
-                  ? new Date(updateData.pucExpiryDate || updateData.pucExpiry)
-                  : undefined,
-              pucStatus: updateData.pucStatus,
-              user: req.user.id,
-            };
-            const pucDoc = await PUC.findOneAndUpdate(
-              { $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }] },
-              pucData,
-              {
-                new: true,
-                upsert: true,
-                runValidators: true,
-                setDefaultsOnInsert: true,
-              },
-            );
-            if (pucDoc) {
-              updateData.pucId = pucDoc._id;
-            }
-          } else if (existingPUC) {
+          if (existingPUC) {
+            // PUC master exists — read from it, never overwrite it
             updateData.pucId = existingPUC._id;
+            updateData.pucIssueDate = existingPUC.pucIssueDate;
+            updateData.pucExpiryDate =
+              existingPUC.pucExpiryDate || existingPUC.pucExpiry;
+            updateData.pucExpiry =
+              existingPUC.pucExpiryDate || existingPUC.pucExpiry;
+            updateData.pucStatus = existingPUC.pucStatus;
           }
+          // If no PUC master exists, keep the sell letter's own fields as-is
         }
 
         try {
@@ -1444,7 +1385,8 @@ exports.updateSellLetter = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
   }
-};
+  },
+];
 
 exports.deleteSellLetter = async (req, res) => {
   try {

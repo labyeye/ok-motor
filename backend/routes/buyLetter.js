@@ -50,7 +50,7 @@ router.route("/by-registration").get(getBuyLettersByRegistration);
 router
   .route("/:id")
   .get(getBuyLetterById)
-  .put(admin, updateBuyLetter)
+  .put(updateBuyLetter)
   .delete(admin, deleteBuyLetter);
 
 module.exports = router;
