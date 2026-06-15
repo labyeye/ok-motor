@@ -2083,7 +2083,7 @@ const SellLetterForm = () => {
       color: rgb(1, 1, 1),
       font: boldFont,
     });
-    page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+    page.drawText("GSTIN: 10BZFPR3150P1Z8", {
       x: 330,
       y: 795,
       size: 14,
@@ -2404,7 +2404,7 @@ const SellLetterForm = () => {
       color: rgb(1, 1, 1),
       font: boldFont,
     });
-    page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+    page.drawText("GSTIN: 10BZFPR3150P1Z8", {
       x: 330,
       y: 405,
       size: 14,

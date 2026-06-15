@@ -723,7 +723,7 @@ class PDFService {
         color: rgb(0.8, 0.8, 0.8),
         font: fontBold,
       });
-      currentPage.drawText("GSTIN: 22ABCDE1234F1Z5", {
+      currentPage.drawText("GSTIN: 10BZFPR3150P1Z8", {
         x: 400,
         y: 780,
         size: 14,
@@ -1757,7 +1757,7 @@ class PDFService {
         color: rgb(0.8, 0.8, 0.8),
         font: fontBold,
       });
-      page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+      page.drawText("GSTIN: 10BZFPR3150P1Z8", {
         x: 400,
         y: 795,
         size: 14,
@@ -2315,7 +2315,7 @@ class PDFService {
             color: rgb(0.8, 0.8, 0.8),
             font: fontBold,
           });
-          p.drawText("GSTIN: 22ABCDE1234F1Z5", {
+          p.drawText("GSTIN: 10BZFPR3150P1Z8", {
             x: 400,
             y: 800,
             size: 14,

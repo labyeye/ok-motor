@@ -225,7 +225,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
       const headerGSTIN =
         (serviceBill && serviceBill.businessGSTIN) ||
         process.env.DEFAULT_GSTIN ||
-        "22ABCDE1234F1Z5";
+        "10BZFPR3150P1Z8";
       currentPage.drawText(`GSTIN: ${headerGSTIN}`, {
         x: 400,
         y: 795,
@@ -234,7 +234,7 @@ exports.generateServiceBillPDF = async (serviceBill, returnBuffer = false) => {
         font: fontBold,
       });
     } catch (e) {
-      currentPage.drawText("GSTIN: 22ABCDE1234F1Z5", {
+      currentPage.drawText("GSTIN: 10BZFPR3150P1Z8", {
         x: 400,
         y: 795,
         size: 14,

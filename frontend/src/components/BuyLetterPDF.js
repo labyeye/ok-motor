@@ -1862,7 +1862,7 @@ const BuyLetterForm = () => {
                 color: rgb(1, 1, 1),
                 font: headerFont,
               });
-              page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+              page.drawText("GSTIN: 10BZFPR3150P1Z8", {
                 x: 330,
                 y: 785,
                 size: 14,
@@ -2078,7 +2078,7 @@ const BuyLetterForm = () => {
               color: rgb(1, 1, 1),
               font,
             });
-            page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+            page.drawText("GSTIN: 10BZFPR3150P1Z8", {
               x: 330,
               y: 785,
               size: 18,
@@ -2427,7 +2427,7 @@ const BuyLetterForm = () => {
                 color: rgb(1, 1, 1),
                 font: headerFont,
               });
-              page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+              page.drawText("GSTIN: 10BZFPR3150P1Z8", {
                 x: 330,
                 y: 785,
                 size: 14,
@@ -2634,7 +2634,7 @@ const BuyLetterForm = () => {
               color: rgb(1, 1, 1),
               font,
             });
-            page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+            page.drawText("GSTIN: 10BZFPR3150P1Z8", {
               x: 330,
               y: 785,
               size: 18,
@@ -2997,7 +2997,7 @@ const BuyLetterForm = () => {
       color: rgb(1, 1, 1),
       font: font,
     });
-    page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+    page.drawText("GSTIN: 10BZFPR3150P1Z8", {
       x: 330,
       y: 785,
       size: 14,
@@ -3005,7 +3005,7 @@ const BuyLetterForm = () => {
       font: font,
     });
     page.drawText(
-      "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+      "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 10BZFPR3150P1Z8",
       {
         x: 50,
         y: 770,

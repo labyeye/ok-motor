@@ -373,7 +373,7 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
       page.drawText("UDAYAM-BR-26-0028550", {
         x: 330, y: 805, size: 14, color: rgb(1, 1, 1), font: headerFont,
       });
-      page.drawText("GSTIN: 22ABCDE1234F1Z5", {
+      page.drawText("GSTIN: 10BZFPR3150P1Z8", {
         x: 330, y: 785, size: 14, color: rgb(1, 1, 1), font: headerFont,
       });
 
@@ -443,10 +443,10 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
     page.drawImage(logoImage, { x: 180, y: 130, width: 260, height: 220, opacity: 0.3 });
 
     page.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 815, size: 14, color: rgb(1, 1, 1), font: boldFont });
-    page.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 795, size: 14, color: rgb(1, 1, 1), font: boldFont });
+    page.drawText("GSTIN: 10BZFPR3150P1Z8", { x: 330, y: 795, size: 14, color: rgb(1, 1, 1), font: boldFont });
     try {
       page.drawText(
-        "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+        "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 10BZFPR3150P1Z8",
         { x: 50, y: 28, size: 8, color: rgb(1, 1, 1), font: boldFont }
       );
     } catch (e) {}
@@ -541,11 +541,11 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
       x: 130, y: 345, size: 17, color: rgb(0, 0, 0), fontWeight: "bold", font: boldFont,
     });
     page.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 395, size: 14, color: rgb(1, 1, 1), font: boldFont });
-    page.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 375, size: 14, color: rgb(1, 1, 1), font: boldFont });
+    page.drawText("GSTIN: 10BZFPR3150P1Z8", { x: 330, y: 375, size: 14, color: rgb(1, 1, 1), font: boldFont });
 
     try {
       page.drawText(
-        "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+        "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 10BZFPR3150P1Z8",
         { x: 50, y: 28, size: 8, color: rgb(1, 1, 1), font: boldFont }
       );
     } catch (e) {}
@@ -594,15 +594,15 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
     });
 
     page.drawText("UDAYAM-BR-26-0028550", { x: 330, y: 815, size: 14, color: rgb(1, 1, 1), font });
-    page.drawText("GSTIN: 22ABCDE1234F1Z5", { x: 330, y: 795, size: 14, color: rgb(1, 1, 1), font });
+    page.drawText("GSTIN: 10BZFPR3150P1Z8", { x: 330, y: 795, size: 14, color: rgb(1, 1, 1), font });
     try {
       page.drawText(
-        "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+        "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 10BZFPR3150P1Z8",
         { x: 50, y: 28, size: 8, color: rgb(1, 1, 1), font }
       );
     } catch (e) {}
     page.drawText(
-      "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 22ABCDE1234F1Z5",
+      "123 Main Street, Patna, Bihar - 800001 | Phone: 9876543210 | GSTIN: 10BZFPR3150P1Z8",
       { x: 50, y: 770, size: 8, color: rgb(0.8, 0.8, 0.8), font }
     );
     page.drawRectangle({ x: 0, y: 750, width: 595, height: 30, color: rgb(0.9, 0.9, 0.9) });
