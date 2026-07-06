@@ -125,26 +125,40 @@ exports.createServiceBill = async (req, res) => {
           serviceDate: { $gte: sellLetter.saleDate },
         });
 
-        const fourMonthsFromSale = new Date(sellLetter.saleDate);
-        fourMonthsFromSale.setMonth(fourMonthsFromSale.getMonth() + 4);
+        const manualFreeServiceIndex = parseInt(
+          otherData.freeServiceIndex,
+          10,
+        );
+        const hasManualOverride =
+          [1, 2, 3].includes(manualFreeServiceIndex);
 
-        if (
-          existingFreeServices === 0 &&
-          new Date(otherData.serviceDate) > fourMonthsFromSale
-        ) {
-          return res.status(400).json({
-            success: false,
-            message:
-              "Free service has expired. 1st service was not done within 4 months of the sale date. Only regular service is allowed.",
-          });
-        }
+        if (hasManualOverride) {
+          // Staff explicitly chose which free service slot this bill counts
+          // against (e.g. backfilling/correcting a missed visit) — honor it.
+          otherData.freeServiceIndex = manualFreeServiceIndex;
+        } else {
+          if (existingFreeServices >= 3) {
+            return res.status(400).json({
+              success: false,
+              message:
+                "Limit reached: All 3 free services have already been used.",
+            });
+          }
 
-        if (existingFreeServices >= 3) {
-          return res.status(400).json({
-            success: false,
-            message:
-              "Limit reached: All 3 free services have already been used.",
-          });
+          const fourMonthsFromSale = new Date(sellLetter.saleDate);
+          fourMonthsFromSale.setMonth(fourMonthsFromSale.getMonth() + 4);
+
+          if (
+            existingFreeServices === 0 &&
+            new Date(otherData.serviceDate) > fourMonthsFromSale
+          ) {
+            // 1st (and by extension 2nd) free service window has lapsed —
+            // record this as the final free service slot instead of
+            // blocking the customer outright.
+            otherData.freeServiceIndex = 3;
+          } else {
+            otherData.freeServiceIndex = existingFreeServices + 1;
+          }
         }
       }
     }

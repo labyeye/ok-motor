@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -n \"const FreeService\\\\|function FreeService\\\\|Free Service\\\\|const.*=.*\\(\\\\\\) =>\\\\s*{$\" /Users/labh/Desktop/Projects/ok-motor/frontend/src/pages/AdminPage.js)"
+      "Bash(grep -n \"const FreeService\\\\|function FreeService\\\\|Free Service\\\\|const.*=.*\\(\\\\\\) =>\\\\s*{$\" /Users/labh/Desktop/Projects/ok-motor/frontend/src/pages/AdminPage.js)",
+      "Bash(node -e \"require\\('./backend/models/ServiceBill.js'\\); console.log\\('model OK'\\)\")",
+      "Bash(node -e \"require\\('./backend/controllers/serviceBillController.js'\\); console.log\\('controller OK'\\)\")"
     ]
   }
 }

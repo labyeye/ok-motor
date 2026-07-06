@@ -62,6 +62,7 @@ const ServiceBillForm = () => {
     serviceDate: new Date().toISOString().split("T")[0],
     deliveryDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
     serviceType: "regular",
+    freeServiceIndex: null,
     serviceItems: [
       {
         description: "",
@@ -83,6 +84,7 @@ const ServiceBillForm = () => {
     warrantyInfo: "",
   });
 
+  const [freeServiceStatus, setFreeServiceStatus] = useState(null);
   const [previewMode, setPreviewMode] = useState(false);
   const API_BASE_URL = "https://backend.okmotors.in/api";
   const calculateAmounts = (data) => {
@@ -171,6 +173,34 @@ const ServiceBillForm = () => {
       const kmReading =
         previousServiceKm || sellLetterKm || vehicleData.vehiclekm || "";
 
+      let suggestedFreeServiceIndex = null;
+      let freeStatus = null;
+      if (latestSell?.saleDate) {
+        const saleDate = new Date(latestSell.saleDate);
+        const freeBillsUsed = serviceBills.filter(
+          (b) =>
+            (b.serviceType === "free" || b.serviceType === "custom") &&
+            new Date(b.serviceDate) >= saleDate,
+        ).length;
+
+        const fourMonthsFromSale = new Date(saleDate);
+        fourMonthsFromSale.setMonth(fourMonthsFromSale.getMonth() + 4);
+
+        if (freeBillsUsed >= 3) {
+          suggestedFreeServiceIndex = null;
+        } else if (freeBillsUsed === 0 && new Date() > fourMonthsFromSale) {
+          // 1st (and by extension 2nd) free service window has lapsed —
+          // default to the final free service slot instead of blocking it.
+          suggestedFreeServiceIndex = 3;
+        } else {
+          suggestedFreeServiceIndex = freeBillsUsed + 1;
+        }
+
+        freeStatus = { saleDate: latestSell.saleDate, freeBillsUsed };
+      }
+
+      setFreeServiceStatus(freeStatus);
+
       setFormData((prev) => ({
         ...prev,
         vehicleBrand:
@@ -186,6 +216,7 @@ const ServiceBillForm = () => {
         customerPhone: latestSell?.buyerPhone || prev.customerPhone,
         customerAddress: latestSell?.buyerAddress || prev.customerAddress,
         customerEmail: latestSell?.buyerEmail || prev.customerEmail || "NA",
+        freeServiceIndex: suggestedFreeServiceIndex,
       }));
     } catch (error) {
       console.error("Error fetching vehicle details:", error);
@@ -953,6 +984,10 @@ const ServiceBillForm = () => {
         serviceDate: new Date(billData.serviceDate).toISOString(),
         deliveryDate: new Date(billData.deliveryDate).toISOString(),
         serviceType: billData.serviceType || formData.serviceType,
+        freeServiceIndex:
+          billData.serviceType === "free" && billData.freeServiceIndex
+            ? parseInt(billData.freeServiceIndex, 10)
+            : undefined,
         customServiceDescription:
           billData.customServiceDescription ||
           formData.customServiceDescription,
@@ -1438,21 +1473,51 @@ const ServiceBillForm = () => {
 
                 {}
                 {formData.serviceType === "free" && (
-                  <div style={styles.formField}>
-                    <label style={styles.formLabel}>
-                      <Wrench style={styles.formIcon} />
-                      Free Service Description || फ्री सर्विस विवरण
-                    </label>
-                    <textarea
-                      name="customServiceDescription"
-                      value={formData.customServiceDescription}
-                      onChange={handleChange}
-                      rows={3}
-                      style={styles.formTextarea}
-                      placeholder="Describe the custom service requirements"
-                      maxLength={100}
-                    />
-                  </div>
+                  <>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>
+                        <Wrench style={styles.formIcon} />
+                        Free Service Number || फ्री सर्विस नंबर
+                      </label>
+                      <select
+                        name="freeServiceIndex"
+                        value={formData.freeServiceIndex || ""}
+                        onChange={handleChange}
+                        style={styles.formSelect}
+                      >
+                        <option value="">Auto (recommended)</option>
+                        <option value="1">1st Free Service</option>
+                        <option value="2">2nd Free Service</option>
+                        <option value="3">3rd Free Service</option>
+                      </select>
+                      {freeServiceStatus &&
+                        freeServiceStatus.freeBillsUsed >= 0 && (
+                          <small style={{ color: "#64748b" }}>
+                            {freeServiceStatus.freeBillsUsed} free service(s)
+                            already used for this vehicle
+                            {formData.freeServiceIndex
+                              ? ` — will be recorded as service #${formData.freeServiceIndex}`
+                              : ""}
+                            .
+                          </small>
+                        )}
+                    </div>
+                    <div style={styles.formField}>
+                      <label style={styles.formLabel}>
+                        <Wrench style={styles.formIcon} />
+                        Free Service Description || फ्री सर्विस विवरण
+                      </label>
+                      <textarea
+                        name="customServiceDescription"
+                        value={formData.customServiceDescription}
+                        onChange={handleChange}
+                        rows={3}
+                        style={styles.formTextarea}
+                        placeholder="Describe the custom service requirements"
+                        maxLength={100}
+                      />
+                    </div>
+                  </>
                 )}
               </div>
             </div>

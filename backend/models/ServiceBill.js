@@ -31,6 +31,10 @@ const ServiceBillSchema = new mongoose.Schema(
       required: true,
       enum: ["regular", "free"],
     },
+    freeServiceIndex: {
+      type: Number,
+      enum: [1, 2, 3],
+    },
     serviceItems: [
       {
         description: { type: String, required: true },
