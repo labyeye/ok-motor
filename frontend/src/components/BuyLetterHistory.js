@@ -226,6 +226,13 @@ const BuyLetterHistory = () => {
             });
           }
         } else {
+          if (
+            ["pucStatus", "insuranceStatus"].includes(field) &&
+            !normalize(oldValue) &&
+            normalize(newValue) === "Not Available"
+          ) {
+            return;
+          }
           if (normalize(oldValue) !== normalize(newValue)) {
             changes.push({
               field: getFieldLabel(field),

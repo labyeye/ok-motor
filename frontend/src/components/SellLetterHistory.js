@@ -341,6 +341,14 @@ const SellLetterHistory = () => {
         const oldValue = letter.previousVersion[field];
         const newValue = letter[field];
 
+        if (
+          ["pucStatus", "insuranceStatus"].includes(field) &&
+          !normalize(oldValue) &&
+          normalize(newValue) === "Not Available"
+        ) {
+          return;
+        }
+
         if (normalize(oldValue) !== normalize(newValue)) {
           changes.push({
             field: getFieldLabel(field),
