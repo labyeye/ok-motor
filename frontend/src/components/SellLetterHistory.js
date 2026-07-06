@@ -4388,32 +4388,28 @@ const SellLetterHistory = () => {
                                   >
                                     Docs:
                                   </span>
-                                  {docStatus.map((doc, idx) => (
-                                    <div
-                                      key={idx}
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "3px",
-                                        padding: "3px 7px",
-                                        backgroundColor: "#fff",
-                                        borderRadius: "6px",
-                                        border: "1px solid #e2e8f0",
-                                        fontSize: "0.75rem",
-                                        color: doc.exists
-                                          ? "#16a34a"
-                                          : "#dc2626",
-                                        fontWeight: "500",
-                                      }}
-                                    >
-                                      {doc.exists ? (
+                                  {docStatus
+                                    .filter((doc) => doc.exists)
+                                    .map((doc, idx) => (
+                                      <div
+                                        key={idx}
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "3px",
+                                          padding: "3px 7px",
+                                          backgroundColor: "#fff",
+                                          borderRadius: "6px",
+                                          border: "1px solid #e2e8f0",
+                                          fontSize: "0.75rem",
+                                          color: "#16a34a",
+                                          fontWeight: "500",
+                                        }}
+                                      >
                                         <Check size={11} strokeWidth={3} />
-                                      ) : (
-                                        <X size={11} strokeWidth={3} />
-                                      )}
-                                      {doc.label}
-                                    </div>
-                                  ))}
+                                        {doc.label}
+                                      </div>
+                                    ))}
                                 </div>
                               </td>
                             </tr>
@@ -5006,30 +5002,28 @@ const SellLetterHistory = () => {
                                     letter.documents.vehicleBuyReceipt.length >
                                       0),
                               },
-                            ].map((doc, idx) => (
-                              <div
-                                key={idx}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                  padding: "4px 8px",
-                                  backgroundColor: "#fff",
-                                  borderRadius: "6px",
-                                  border: "1px solid #e2e8f0",
-                                  fontSize: "0.75rem",
-                                  color: doc.exists ? "#16a34a" : "#dc2626",
-                                  fontWeight: "500",
-                                }}
-                              >
-                                {doc.exists ? (
+                            ]
+                              .filter((doc) => doc.exists)
+                              .map((doc, idx) => (
+                                <div
+                                  key={idx}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    padding: "4px 8px",
+                                    backgroundColor: "#fff",
+                                    borderRadius: "6px",
+                                    border: "1px solid #e2e8f0",
+                                    fontSize: "0.75rem",
+                                    color: "#16a34a",
+                                    fontWeight: "500",
+                                  }}
+                                >
                                   <Check size={12} strokeWidth={3} />
-                                ) : (
-                                  <X size={12} strokeWidth={3} />
-                                )}
-                                {doc.label}
-                              </div>
-                            ))}
+                                  {doc.label}
+                                </div>
+                              ))}
                           </div>
                         </div>
 

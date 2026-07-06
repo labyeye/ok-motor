@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"const FreeService\\\\|function FreeService\\\\|Free Service\\\\|const.*=.*\\(\\\\\\) =>\\\\s*{$\" /Users/labh/Desktop/Projects/ok-motor/frontend/src/pages/AdminPage.js)"
+    ]
+  }
+}

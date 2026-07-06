@@ -1382,6 +1382,7 @@ const AdminPage = () => {
               <tbody>
                 {processed
                   .filter((item) => {
+                    if (item.isExpired) return false;
                     if (usedFilter !== "all") {
                       if (item.used !== Number(usedFilter)) return false;
                     }
