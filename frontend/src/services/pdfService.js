@@ -1196,10 +1196,9 @@ class PDFService {
 
         const amount = parseFloat(item.amount) || 0;
         const qty = parseFloat(item.quantity) || 0;
-        const perUnitAmount = qty > 0 ? amount / qty : rate;
-        const discountPerUnit = rate - perUnitAmount;
+        const discount = rate * qty - amount;
 
-        currentPage.drawText(discountPerUnit.toFixed(2), {
+        currentPage.drawText(discount.toFixed(2), {
           x: 400,
           y: currentY,
           size: 9,
