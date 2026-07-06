@@ -75,7 +75,7 @@ const AdminPage = () => {
   const [error, setError] = useState(null);
   const [freeServices, setFreeServices] = useState([]);
   const [freeServicesLoading, setFreeServicesLoading] = useState(true);
-  const [freeSearch] = useState("");
+  const [freeSearch, setFreeSearch] = useState("");
   const navigate = useNavigate();
 
   const [extraStats, setExtraStats] = useState({
@@ -1286,6 +1286,34 @@ const AdminPage = () => {
             </span>
           </h3>
           <div style={fsFilterRowStyle}>
+            <div style={{ position: "relative" }}>
+              <Search
+                size={14}
+                style={{
+                  position: "absolute",
+                  left: 10,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#94a3b8",
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Search by registration number..."
+                value={freeSearch}
+                onChange={(e) => setFreeSearch(e.target.value)}
+                style={{
+                  padding: "7px 12px 7px 30px",
+                  borderRadius: 8,
+                  border: "1.5px solid #cbd5e1",
+                  fontSize: "0.85rem",
+                  color: "#1e293b",
+                  background: "#f8fafc",
+                  outline: "none",
+                  width: "220px",
+                }}
+              />
+            </div>
             <span style={fsLabelStyle}>Show:</span>
             <select
               value={serviceFilter}
