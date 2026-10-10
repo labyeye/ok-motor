@@ -5,7 +5,8 @@ const { protect, roleAuth } = require("../middleware/auth");
 const roleCheck = require("../middleware/role");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-router.post("/login", loginUser);
+const { loginLimiter } = require("../middleware/rateLimit");
+router.post("/login", loginLimiter, loginUser);
 router.post("/register", protect, roleCheck(["admin"]), registerUser);
 router.get("/me", authenticateToken, async (req, res) => {
   try {

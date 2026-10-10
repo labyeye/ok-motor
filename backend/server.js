@@ -17,6 +17,8 @@ const bikeRoutes = require("./routes/bikeRoutes");
 const { protect } = require("./middleware/auth");
 const cors = require("cors");
 const app = express();
+// Behind nginx: use the real client IP (needed for rate limiting).
+app.set("trust proxy", 1);
 connectDB();
 
 const getAllowedOrigins = () => {
@@ -185,7 +187,10 @@ app.use((error, req, res, next) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
 
   res.status(statusCode).json({
-    message: error.message,
+    message:
+      statusCode >= 500 && process.env.NODE_ENV === "production"
+        ? "Server error"
+        : error.message,
     stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
   });
 });

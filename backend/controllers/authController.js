@@ -9,7 +9,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   if (!user) {
     res.status(401);
-    throw new Error("User not found");
+    throw new Error("Invalid email or password");
   }
 
   if (await user.matchPassword(password)) {
@@ -22,7 +22,7 @@ const loginUser = asyncHandler(async (req, res) => {
     });
   } else {
     res.status(401);
-    throw new Error("Password is incorrect");
+    throw new Error("Invalid email or password");
   }
 });
 

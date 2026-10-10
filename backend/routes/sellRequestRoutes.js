@@ -10,8 +10,14 @@ const {
 } = require("../controllers/sellRequestController");
 
 const upload = require("../middleware/upload");
+const { publicUploadLimiter } = require("../middleware/rateLimit");
 
-router.post("/", upload.array("images", 5), createSellRequest);
+router.post(
+  "/",
+  publicUploadLimiter,
+  upload.array("images", 5),
+  createSellRequest,
+);
 
 router.get("/", protect, roleAuth(["admin"]), getAllSellRequests);
 router.get("/:id", protect, roleAuth(["admin"]), getSellRequest);
