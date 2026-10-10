@@ -1624,6 +1624,13 @@ const SellLetterForm = () => {
       const dataToSave = {
         ...cleanFormData,
 
+        ...(editLetter?._id && {
+          originalDocumentId: editLetter.originalDocumentId || editLetter._id,
+          previousVersionId: editLetter._id,
+          version: (editLetter.version || 1) + 1,
+          editedAt: new Date().toISOString(),
+          editedBy: user?._id || user?.id,
+        }),
         ...(!editLetter?._id && {
           originalDocumentId: null,
           previousVersionId: null,
@@ -1758,25 +1765,7 @@ const SellLetterForm = () => {
           }
         }
 
-        if (editLetter?._id) {
-          if (isElectron) {
-            response = await apiService.put(`/api/sell-letters/${editLetter._id}`, form);
-          } else {
-            response = await axios.put(
-              `https://backend.okmotors.in/api/sell-letters/${editLetter._id}`,
-              form,
-              {
-                headers: { "Content-Type": "multipart/form-data" },
-                timeout: 300000,
-                onUploadProgress: (evt) => {
-                  if (evt.total && evt.loaded >= evt.total) {
-                    setProgressStep(2);
-                  }
-                },
-              },
-            );
-          }
-        } else {
+        {
           if (isElectron) {
             response = await apiService.post("/api/sell-letters", form);
           } else {
@@ -1796,17 +1785,14 @@ const SellLetterForm = () => {
           }
         }
       } else {
-        if (editLetter?._id) {
-          if (isElectron) {
-            response = await apiService.put(`/api/sell-letters/${editLetter._id}`, dataToSave);
-          } else {
-            response = await axios.put(
-              `https://backend.okmotors.in/api/sell-letters/${editLetter._id}`,
-              dataToSave,
-              { timeout: 300000 },
-            );
+        {
+          // Editing creates a new version; carry existing documents over.
+          if (editLetter?._id && editLetter.documents) {
+            dataToSave.preservedDocuments =
+              buildPreservedDocsFromPreviews(filesState);
+            dataToSave.existingDocuments = editLetter.documents;
+            dataToSave.removedDocuments = [...deletedDocuments];
           }
-        } else {
           if (isElectron) {
             response = await apiService.post("/api/sell-letters", dataToSave);
           } else {
@@ -1819,7 +1805,7 @@ const SellLetterForm = () => {
         }
       }
 
-      alert(editLetter?._id ? "Sell letter updated successfully!" : "Sell letter saved successfully!");
+      alert(editLetter?._id ? "Sell letter saved as new version! Original remains unchanged." : "Sell letter saved successfully!");
 
       if (response.data) {
         if (response.data._cached) {

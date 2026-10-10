@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
 const { protect } = require("../middleware/auth");
 const roleAuth = require("../middleware/role");
 const {
@@ -10,8 +9,7 @@ const {
   updateSellRequestStatus,
 } = require("../controllers/sellRequestController");
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = require("../middleware/upload");
 
 router.post("/", upload.array("images", 5), createSellRequest);
 

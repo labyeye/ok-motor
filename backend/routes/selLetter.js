@@ -11,8 +11,6 @@ const {
   getSellLettersByRegistration,
   getVehicleDetails,
 } = require("../controllers/sellLetterController");
-const multer = require("multer");
-const upload = multer();
 
 router.use(protect);
 

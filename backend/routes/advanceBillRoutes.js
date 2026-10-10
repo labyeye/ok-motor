@@ -102,7 +102,7 @@ router.get("/:id/pdf", protect, async (req, res) => {
 
 router.get("/pdf/:filename", protect, async (req, res) => {
   try {
-    const { filename } = req.params;
+    const filename = path.basename(req.params.filename);
     const primaryPath = path.join(
       __dirname,
       "../uploads/advance-bills",
@@ -573,6 +573,19 @@ router.get("/:id", protect, async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Advance bill not found",
+      });
+    }
+
+    const isStaffOrAdmin =
+      req.user.role === "staff" || req.user.role === "admin";
+    if (
+      !isStaffOrAdmin &&
+      advanceBill.user.toString() !== req.user.id &&
+      advanceBill.visibility !== "staff"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to view this advance bill",
       });
     }
 

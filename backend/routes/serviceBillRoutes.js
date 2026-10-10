@@ -41,13 +41,13 @@ router
   .get(protect, serviceBillController.downloadServiceBillPDF);
 
 router
+  .route("/vehicle-details")
+  .get(protect, serviceBillController.getVehicleDetails);
+
+router
   .route("/:id")
   .get(protect, serviceBillController.getServiceBill)
   .put(protect, serviceBillController.updateServiceBill)
   .delete(protect, serviceBillController.deleteServiceBill);
-
-router
-  .route("/vehicle-details")
-  .get(protect, serviceBillController.getVehicleDetails);
 
 module.exports = router;

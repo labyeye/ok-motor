@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
 const { protect, admin } = require("../middleware/auth");
 const {
   createUpdate,
@@ -11,8 +10,7 @@ const {
   deleteUpdate,
 } = require("../controllers/updatesController");
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = require("../middleware/upload");
 
 router.get("/", getActiveUpdates);
 

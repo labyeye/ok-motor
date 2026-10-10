@@ -972,6 +972,13 @@ const BuyLetterForm = () => {
 
       const dataToSave = {
         ...formDataWithoutId,
+        ...(editLetter?._id && {
+          originalDocumentId: editLetter.originalDocumentId || editLetter._id,
+          previousVersionId: editLetter._id,
+          version: (editLetter.version || 1) + 1,
+          editedAt: new Date().toISOString(),
+          editedBy: user?._id || user?.id,
+        }),
         ...(!editLetter?._id && {
           originalDocumentId: null,
           previousVersionId: null,
@@ -1091,30 +1098,7 @@ const BuyLetterForm = () => {
           );
         }
 
-        if (editLetter?._id) {
-          if (editLetter.documents) {
-            form.append("preservedDocuments", JSON.stringify(buildBuyPreservedDocs(filesState)));
-            form.append("existingDocuments", JSON.stringify(editLetter.documents));
-            form.append("removedDocuments", JSON.stringify([...deletedDocuments]));
-          }
-          if (isElectron) {
-            response = await apiService.put(`/api/buy-letters/${editLetter._id}`, form);
-          } else {
-            response = await axios.put(
-              `https://backend.okmotors.in/api/buy-letters/${editLetter._id}`,
-              form,
-              {
-                headers: { "Content-Type": "multipart/form-data" },
-                timeout: 300000,
-                onUploadProgress: (evt) => {
-                  if (evt.total && evt.loaded >= evt.total) {
-                    setProgressStep(2);
-                  }
-                },
-              },
-            );
-          }
-        } else {
+        {
           if (isElectron) {
             response = await apiService.post("/api/buy-letters", form);
           } else {
@@ -1134,19 +1118,14 @@ const BuyLetterForm = () => {
           }
         }
       } else {
-        if (editLetter?._id) {
+        {
           const payload = { ...dataToSave };
-          if (isElectron) {
-            response = await apiService.put(`/api/buy-letters/${editLetter._id}`, payload);
-          } else {
-            response = await axios.put(
-              `https://backend.okmotors.in/api/buy-letters/${editLetter._id}`,
-              payload,
-              { timeout: 300000 },
-            );
+          // Editing creates a new version; carry existing documents over.
+          if (editLetter?._id && editLetter.documents) {
+            payload.preservedDocuments = buildBuyPreservedDocs(filesState);
+            payload.existingDocuments = editLetter.documents;
+            payload.removedDocuments = [...deletedDocuments];
           }
-        } else {
-          const payload = { ...dataToSave };
           if (isElectron) {
             response = await apiService.post("/api/buy-letters", payload);
           } else {
@@ -1162,7 +1141,7 @@ const BuyLetterForm = () => {
       setAlertInfo({
         isOpen: true,
         message: editLetter?._id
-          ? "Buy letter updated successfully!"
+          ? "Buy letter saved as new version! Original remains unchanged."
           : "Buy letter saved successfully!",
         type: "success",
       });

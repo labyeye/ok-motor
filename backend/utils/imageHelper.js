@@ -39,6 +39,25 @@ const compressBuffer = async (buffer, targetKb = 100) => {
   return output;
 };
 
+// At most 4 ImageKit uploads in flight; the rest queue.
+const MAX_CONCURRENT_UPLOADS = 4;
+let active = 0;
+const waiting = [];
+
+const acquire = () => {
+  if (active < MAX_CONCURRENT_UPLOADS) {
+    active++;
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => waiting.push(resolve));
+};
+
+const release = () => {
+  const next = waiting.shift();
+  if (next) next();
+  else active--;
+};
+
 const uploadBufferToImageKit = async (
   buffer,
   filename,
@@ -46,11 +65,17 @@ const uploadBufferToImageKit = async (
 ) => {
   const base64 = buffer.toString("base64");
   const dataUri = `data:${mimeType};base64,${base64}`;
-  const result = await imagekit.upload({
-    file: dataUri,
-    fileName: filename,
-    useUniqueFileName: true,
-  });
+  await acquire();
+  let result;
+  try {
+    result = await imagekit.upload({
+      file: dataUri,
+      fileName: filename,
+      useUniqueFileName: true,
+    });
+  } finally {
+    release();
+  }
   return {
     url: result.url,
     fileId: result.fileId,

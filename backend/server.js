@@ -173,6 +173,15 @@ app.use((error, req, res, next) => {
     });
   }
 
+  if (error.name === "MulterError") {
+    const tooBig = error.code === "LIMIT_FILE_SIZE";
+    return res.status(tooBig ? 413 : 400).json({
+      message: tooBig
+        ? "File too large (max 15 MB per file)"
+        : `Upload error: ${error.message}`,
+    });
+  }
+
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
 
   res.status(statusCode).json({

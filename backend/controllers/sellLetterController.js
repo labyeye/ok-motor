@@ -3,13 +3,11 @@ const BuyLetter = require("../models/BuyLetter");
 const Vehicle = require("../models/Vehicle");
 const Insurance = require("../models/Insurance");
 const PUC = require("../models/PUC");
-const multer = require("multer");
+const upload = require("../middleware/upload");
 const {
   compressBuffer,
   uploadBufferToImageKit,
 } = require("../utils/imageHelper");
-
-const upload = multer();
 
 const stripBuyOnlyDocuments = (docs) => {
   if (!docs) return docs;

@@ -5,13 +5,11 @@ const Insurance = require("../models/Insurance");
 const PUC = require("../models/PUC");
 const fs = require("fs");
 const path = require("path");
-const multer = require("multer");
+const upload = require("../middleware/upload");
 const {
   compressBuffer,
   uploadBufferToImageKit,
 } = require("../utils/imageHelper");
-
-const upload = multer();
 
 const hasText = (value) => typeof value === "string" && value.trim().length > 0;
 const hasArray = (value) => Array.isArray(value) && value.length > 0;
