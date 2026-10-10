@@ -1107,7 +1107,7 @@ const BuyLetterForm = () => {
               form,
               {
                 headers: { "Content-Type": "multipart/form-data" },
-                timeout: 300000,
+                timeout: 0,
                 onUploadProgress: (evt) => {
                   if (evt.total && evt.loaded >= evt.total) {
                     setProgressStep(2);
@@ -1132,7 +1132,7 @@ const BuyLetterForm = () => {
             response = await axios.post(
               "https://backend.okmotors.in/api/buy-letters",
               payload,
-              { timeout: 300000 },
+              { timeout: 0 },
             );
           }
         }

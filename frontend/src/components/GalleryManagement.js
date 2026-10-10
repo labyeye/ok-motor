@@ -67,6 +67,7 @@ const GalleryManagement = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
+        timeout: 0,
       });
 
       if (!resp.data?.success) {

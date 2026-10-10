@@ -1774,7 +1774,7 @@ const SellLetterForm = () => {
               form,
               {
                 headers: { "Content-Type": "multipart/form-data" },
-                timeout: 300000,
+                timeout: 0,
                 onUploadProgress: (evt) => {
                   if (evt.total && evt.loaded >= evt.total) {
                     setProgressStep(2);
@@ -1799,7 +1799,7 @@ const SellLetterForm = () => {
             response = await axios.post(
               "https://backend.okmotors.in/api/sell-letters",
               dataToSave,
-              { timeout: 300000 },
+              { timeout: 0 },
             );
           }
         }

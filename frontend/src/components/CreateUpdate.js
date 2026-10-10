@@ -66,6 +66,7 @@ const CreateUpdate = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
+          timeout: 0,
         });
       } else {
         await axios.post(`${config.API_BASE_URL}/updates`, fd, {
@@ -73,6 +74,7 @@ const CreateUpdate = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
+          timeout: 0,
         });
       }
       navigate("/updates");

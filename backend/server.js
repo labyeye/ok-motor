@@ -79,12 +79,6 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 app.use((req, res, next) => {
-  req.setTimeout(290000);
-  res.setTimeout(290000);
-  next();
-});
-
-app.use((req, res, next) => {
   console.log(
     `${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${
       req.headers.origin || "No origin"
@@ -179,7 +173,7 @@ app.use((error, req, res, next) => {
     const tooBig = error.code === "LIMIT_FILE_SIZE";
     return res.status(tooBig ? 413 : 400).json({
       message: tooBig
-        ? "File too large (max 15 MB per file)"
+        ? "File too large (max 100 MB per file)"
         : `Upload error: ${error.message}`,
     });
   }
@@ -197,6 +191,10 @@ app.use((error, req, res, next) => {
 
 const PORT = process.env.PORT || 3500;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Slow connections: don't cut off long uploads (Node defaults to 5 min).
+server.requestTimeout = 0;
+server.timeout = 0;
