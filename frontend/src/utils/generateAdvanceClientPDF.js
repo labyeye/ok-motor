@@ -207,7 +207,9 @@ export async function generateAdvanceClientPDF(advanceBill = {}) {
   const addressLineLimit = 35;
 
   for (let i = 0; i < customerAddress.length; i += addressLineLimit)
-    customerAddressLines.push(customerAddress.substring(i, i + addressLineLimit));
+    customerAddressLines.push(
+      customerAddress.substring(i, i + addressLineLimit),
+    );
 
   customerAddressLines.forEach((line, idx) => {
     page.drawText(idx === 0 ? `Address: ${line}` : line, {

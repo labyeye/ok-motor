@@ -595,12 +595,9 @@ const AdvanceHistory = () => {
         return;
       }
 
-      await axios.delete(
-        `/api/advance-bills/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      await axios.delete(`/api/advance-bills/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setAdvanceBills((prev) => prev.filter((bill) => bill._id !== id));
     } catch (error) {
       console.error("Error deleting advance bill:", error);
@@ -845,7 +842,9 @@ const AdvanceHistory = () => {
                               <Eye size={16} />
                             </button>
                             <button
-                              onClick={() => navigate(`/advance-pay-bill/${bill._id}`)}
+                              onClick={() =>
+                                navigate(`/advance-pay-bill/${bill._id}`)
+                              }
                               style={styles.iconButton}
                               title="Edit"
                             >
@@ -1016,7 +1015,9 @@ const AdvanceHistory = () => {
                             <Eye size={14} /> View
                           </button>
                           <button
-                            onClick={() => navigate(`/advance-pay-bill/${bill._id}`)}
+                            onClick={() =>
+                              navigate(`/advance-pay-bill/${bill._id}`)
+                            }
                             style={{
                               flex: 1,
                               padding: "8px",

@@ -85,97 +85,97 @@ const AdvancePayBillForm = () => {
     }
   }, [navigate]);
 
-  const loadBillData = useCallback(async (billId) => {
-    try {
-      setIsLoadingBill(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setAlertInfo({
-          isOpen: true,
-          message: "You are not authenticated. Please login again.",
-          type: "error",
-        });
-        logout();
-        navigate("/login");
-        return;
-      }
+  const loadBillData = useCallback(
+    async (billId) => {
+      try {
+        setIsLoadingBill(true);
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setAlertInfo({
+            isOpen: true,
+            message: "You are not authenticated. Please login again.",
+            type: "error",
+          });
+          logout();
+          navigate("/login");
+          return;
+        }
 
-      const response = await axios.get(
-        `/api/advance-bills/${billId}`,
-        {
+        const response = await axios.get(`/api/advance-bills/${billId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
-      );
+        });
 
-      if (response.data?.success && response.data?.data) {
-        const bill = response.data.data;
-        setFormData({
-          _id: bill._id,
-          customerName: bill.customerName || "",
-          customerPhone: bill.customerPhone || "",
-          customerAddress: bill.customerAddress || "",
-          customerEmail: bill.customerEmail || "",
-          vehicleType: bill.vehicleType || "bike",
-          vehicleBrand: bill.vehicleBrand || "",
-          vehicleModel: bill.vehicleModel || "",
-          registrationNumber: bill.registrationNumber || "",
-          chassisNumber: bill.chassisNumber || "",
-          engineNumber: bill.engineNumber || "",
-          kmReading: bill.kmReading || "",
-          serviceDate: bill.serviceDate
-            ? bill.serviceDate.split("T")[0]
-            : new Date().toISOString().split("T")[0],
-          deliveryDate: bill.deliveryDate
-            ? bill.deliveryDate.split("T")[0]
-            : new Date(Date.now() + 86400000).toISOString().split("T")[0],
-          totalAmount: bill.totalAmount?.toString() || "0.00",
-          discount: bill.discount?.toString() || "0",
-          advancePaid: bill.advancePaid?.toString() || "0.00",
-          paymentMethod: bill.paymentMethod || "cash",
-          note: bill.note || "",
-          grandTotal: bill.grandTotal?.toString() || "0.00",
-          balanceDue: bill.balanceDue?.toString() || "0.00",
-        });
-        setAlertInfo({
-          isOpen: true,
-          message: "Bill loaded successfully",
-          type: "success",
-        });
-      } else {
-        throw new Error("Invalid response format");
+        if (response.data?.success && response.data?.data) {
+          const bill = response.data.data;
+          setFormData({
+            _id: bill._id,
+            customerName: bill.customerName || "",
+            customerPhone: bill.customerPhone || "",
+            customerAddress: bill.customerAddress || "",
+            customerEmail: bill.customerEmail || "",
+            vehicleType: bill.vehicleType || "bike",
+            vehicleBrand: bill.vehicleBrand || "",
+            vehicleModel: bill.vehicleModel || "",
+            registrationNumber: bill.registrationNumber || "",
+            chassisNumber: bill.chassisNumber || "",
+            engineNumber: bill.engineNumber || "",
+            kmReading: bill.kmReading || "",
+            serviceDate: bill.serviceDate
+              ? bill.serviceDate.split("T")[0]
+              : new Date().toISOString().split("T")[0],
+            deliveryDate: bill.deliveryDate
+              ? bill.deliveryDate.split("T")[0]
+              : new Date(Date.now() + 86400000).toISOString().split("T")[0],
+            totalAmount: bill.totalAmount?.toString() || "0.00",
+            discount: bill.discount?.toString() || "0",
+            advancePaid: bill.advancePaid?.toString() || "0.00",
+            paymentMethod: bill.paymentMethod || "cash",
+            note: bill.note || "",
+            grandTotal: bill.grandTotal?.toString() || "0.00",
+            balanceDue: bill.balanceDue?.toString() || "0.00",
+          });
+          setAlertInfo({
+            isOpen: true,
+            message: "Bill loaded successfully",
+            type: "success",
+          });
+        } else {
+          throw new Error("Invalid response format");
+        }
+      } catch (error) {
+        console.error("Error loading bill:", error);
+        if (error.response?.status === 401) {
+          setAlertInfo({
+            isOpen: true,
+            message: "Your session has expired. Please login again.",
+            type: "error",
+          });
+          logout();
+          navigate("/login");
+        } else if (error.response?.status === 404) {
+          setAlertInfo({
+            isOpen: true,
+            message: "Bill not found.",
+            type: "error",
+          });
+          navigate("/advance/history");
+        } else {
+          setAlertInfo({
+            isOpen: true,
+            message: `Failed to load bill: ${
+              error.response?.data?.message || error.message
+            }`,
+            type: "error",
+          });
+        }
+      } finally {
+        setIsLoadingBill(false);
       }
-    } catch (error) {
-      console.error("Error loading bill:", error);
-      if (error.response?.status === 401) {
-        setAlertInfo({
-          isOpen: true,
-          message: "Your session has expired. Please login again.",
-          type: "error",
-        });
-        logout();
-        navigate("/login");
-      } else if (error.response?.status === 404) {
-        setAlertInfo({
-          isOpen: true,
-          message: "Bill not found.",
-          type: "error",
-        });
-        navigate("/advance/history");
-      } else {
-        setAlertInfo({
-          isOpen: true,
-          message: `Failed to load bill: ${
-            error.response?.data?.message || error.message
-          }`,
-          type: "error",
-        });
-      }
-    } finally {
-      setIsLoadingBill(false);
-    }
-  }, [navigate, logout, setAlertInfo, setFormData]);
+    },
+    [navigate, logout, setAlertInfo, setFormData],
+  );
 
   useEffect(() => {
     if (isEditMode && id) {
@@ -431,7 +431,10 @@ const AdvancePayBillForm = () => {
         if (!isOnline) {
           console.log("Offline mode - saving to local storage");
 
-          const result = await offlineStorage.create("advanceBills", requestData);
+          const result = await offlineStorage.create(
+            "advanceBills",
+            requestData,
+          );
           if (result.success) {
             billId = result.data._id;
             setAlertInfo({
@@ -834,12 +837,9 @@ const AdvancePayBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const response = await axios.get(
-        "/api/advance-bills/vehicle-details",
-        {
-          params: { registrationNumber },
-        },
-      );
+      const response = await axios.get("/api/advance-bills/vehicle-details", {
+        params: { registrationNumber },
+      });
 
       if (response.data) {
         setFormData((prev) => ({
@@ -909,7 +909,9 @@ const AdvancePayBillForm = () => {
             <div style={styles.headerTop}>
               <div>
                 <h1 style={styles.pageTitle}>
-                  {isEditMode ? "Edit Advance Payment Invoice" : "Create Advance Payment Invoice"}
+                  {isEditMode
+                    ? "Edit Advance Payment Invoice"
+                    : "Create Advance Payment Invoice"}
                 </h1>
                 <p style={styles.pageSubtitle}>
                   {isEditMode
@@ -1410,7 +1412,8 @@ const AdvancePayBillForm = () => {
                 style={styles.downloadButton}
                 disabled={isSaving || isLoadingBill}
               >
-                <Download style={styles.buttonIcon} /> {isEditMode ? "Update" : "Save & Download"}
+                <Download style={styles.buttonIcon} />{" "}
+                {isEditMode ? "Update" : "Save & Download"}
               </button>
             </div>
           </form>

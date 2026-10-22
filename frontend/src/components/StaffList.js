@@ -134,12 +134,9 @@ const StaffList = () => {
         return;
       }
 
-      await axios.delete(
-        `https://backend.okmotors.in/api/users/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      await axios.delete(`https://backend.okmotors.in/api/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setStaff((prev) => prev.filter((user) => user._id !== id));
     } catch (err) {
       if (err.response?.status === 401) {

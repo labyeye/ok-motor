@@ -1825,9 +1825,7 @@ const BikeHistory = ({ externalSearchTerm }) => {
             : null;
           const actualSaleTimestamp =
             saleDateStr && baseItem.saleTime
-              ? new Date(
-                  `${saleDateStr}T${baseItem.saleTime}:00`,
-                ).getTime()
+              ? new Date(`${saleDateStr}T${baseItem.saleTime}:00`).getTime()
               : NaN;
           const fallbackTimestamp = baseItem.createdAt
             ? new Date(baseItem.createdAt).getTime()

@@ -41,15 +41,11 @@ const CreateStaff = () => {
         return;
       }
 
-      await axios.post(
-        "https://backend.okmotors.in/api/users",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      await axios.post("https://backend.okmotors.in/api/users", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
       setSuccess(true);
       setTimeout(() => {
         navigate("/staff/list");

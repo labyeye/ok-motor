@@ -3882,9 +3882,9 @@ const AdminPage = () => {
       <AppSidebar user={user} onLogout={handleLogout} />
       <div className="main-content">
         <div className="content-padding">
-          <div className="banner">
+          {/* <div className="banner">
             <img src={logo1} alt="Company Logo" className="banner-logo" />
-          </div>
+          </div> */}
 
           <div className="history-search-container">
             <div className="history-search-box">

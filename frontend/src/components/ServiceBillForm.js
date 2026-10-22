@@ -127,23 +127,24 @@ const ServiceBillForm = () => {
   };
   const fetchVehicleDetails = useCallback(async (registrationNumber) => {
     try {
-      const [vehicleResp, sellResp, serviceBillsResp] = await Promise.allSettled([
-        apiService.get(
-          `/api/advance-bills/vehicle-details?registrationNumber=${encodeURIComponent(
-            registrationNumber,
-          )}`,
-        ),
-        apiService.get(
-          `/api/sell-letters/by-registration?registrationNumber=${encodeURIComponent(
-            registrationNumber,
-          )}`,
-        ),
-        apiService.get(
-          `/api/service-bills/by-registration?registrationNumber=${encodeURIComponent(
-            registrationNumber,
-          )}`,
-        ),
-      ]);
+      const [vehicleResp, sellResp, serviceBillsResp] =
+        await Promise.allSettled([
+          apiService.get(
+            `/api/advance-bills/vehicle-details?registrationNumber=${encodeURIComponent(
+              registrationNumber,
+            )}`,
+          ),
+          apiService.get(
+            `/api/sell-letters/by-registration?registrationNumber=${encodeURIComponent(
+              registrationNumber,
+            )}`,
+          ),
+          apiService.get(
+            `/api/service-bills/by-registration?registrationNumber=${encodeURIComponent(
+              registrationNumber,
+            )}`,
+          ),
+        ]);
 
       const vehicleData =
         vehicleResp.status === "fulfilled" ? vehicleResp.value || {} : {};

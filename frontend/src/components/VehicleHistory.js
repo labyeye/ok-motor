@@ -123,9 +123,7 @@ const VehicleHistory = () => {
         console.warn("Buy letter lookup failed:", buyErr?.message);
       }
 
-      alert(
-        `No buy or sell letter found for ${regNo}. Nothing to download.`,
-      );
+      alert(`No buy or sell letter found for ${regNo}. Nothing to download.`);
     } catch (err) {
       console.error("Vehicle download lookup failed:", err);
       alert("Failed to find letter for this vehicle. Please try again.");

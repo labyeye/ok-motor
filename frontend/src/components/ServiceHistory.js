@@ -747,9 +747,7 @@ const ServiceHistory = () => {
   const performDelete = async () => {
     const id = confirmTargetId;
     try {
-      await axios.delete(
-        `https://backend.okmotors.in/api/service-bills/${id}`,
-      );
+      await axios.delete(`https://backend.okmotors.in/api/service-bills/${id}`);
       setServiceBills((prev) => prev.filter((bill) => bill._id !== id));
     } catch (error) {
       console.error("Error deleting service bill:", error);

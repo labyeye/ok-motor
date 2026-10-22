@@ -31,8 +31,10 @@ const getValidityStatus = (expiryDate) => {
   const expiry = new Date(expiryDate);
   expiry.setHours(0, 0, 0, 0);
   const diffDays = Math.floor((expiry - today) / 86400000);
-  if (diffDays < 0) return { status: "expired", color: "#dc2626", bg: "#fef2f2" };
-  if (diffDays <= 30) return { status: "expiring", color: "#d97706", bg: "#fffbeb" };
+  if (diffDays < 0)
+    return { status: "expired", color: "#dc2626", bg: "#fef2f2" };
+  if (diffDays <= 30)
+    return { status: "expiring", color: "#d97706", bg: "#fffbeb" };
   return { status: "valid", color: "#16a34a", bg: "#f0fdf4" };
 };
 
@@ -2025,14 +2027,11 @@ const BuyLetterHistory = () => {
           return;
         }
 
-        await axios.delete(
-          `https://backend.okmotors.in/api/buy-letter/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        await axios.delete(`https://backend.okmotors.in/api/buy-letter/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
         setBuyLetters((prev) => prev.filter((letter) => letter._id !== id));
         setAlertInfo({
           isOpen: true,
@@ -2260,8 +2259,8 @@ const BuyLetterHistory = () => {
                                 ) &&
                                   letter.documents.insuranceCertificate.length >
                                     0) ||
-                                (typeof letter.documents?.insuranceCertificate ===
-                                  "string" &&
+                                (typeof letter.documents
+                                  ?.insuranceCertificate === "string" &&
                                   letter.documents.insuranceCertificate.length >
                                     0),
                             },
@@ -2354,8 +2353,7 @@ const BuyLetterHistory = () => {
                                           marginTop: "2px",
                                         }}
                                       >
-                                        Edited:{" "}
-                                        {formatDate(letter.editedAt)}
+                                        Edited: {formatDate(letter.editedAt)}
                                       </div>
                                     )}
                                   </div>
@@ -2369,33 +2367,181 @@ const BuyLetterHistory = () => {
                                 </td>
                                 <td style={styles.tableCell}>
                                   {(() => {
-                                    const pucStatus = getValidityStatus(letter.pucExpiryDate);
-                                    const insStatus = getValidityStatus(letter.insuranceExpiryDate);
-                                    const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : "";
+                                    const pucStatus = getValidityStatus(
+                                      letter.pucExpiryDate,
+                                    );
+                                    const insStatus = getValidityStatus(
+                                      letter.insuranceExpiryDate,
+                                    );
+                                    const fmtDate = (d) =>
+                                      d
+                                        ? new Date(d).toLocaleDateString(
+                                            "en-IN",
+                                            {
+                                              day: "2-digit",
+                                              month: "short",
+                                              year: "2-digit",
+                                            },
+                                          )
+                                        : "";
                                     return (
-                                      <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: "110px" }}>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: "4px",
+                                          minWidth: "110px",
+                                        }}
+                                      >
                                         {pucStatus ? (
-                                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                            <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", padding: "2px 6px", backgroundColor: pucStatus.bg, color: pucStatus.color, borderRadius: "10px", fontSize: "0.68rem", fontWeight: "600", border: `1px solid ${pucStatus.color}44` }}>
-                                              <span style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: pucStatus.color, display: "inline-block" }} />
-                                              PUC {fmtDate(letter.pucExpiryDate)}
+                                          <div
+                                            style={{
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: "4px",
+                                            }}
+                                          >
+                                            <span
+                                              style={{
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                gap: "3px",
+                                                padding: "2px 6px",
+                                                backgroundColor: pucStatus.bg,
+                                                color: pucStatus.color,
+                                                borderRadius: "10px",
+                                                fontSize: "0.68rem",
+                                                fontWeight: "600",
+                                                border: `1px solid ${pucStatus.color}44`,
+                                              }}
+                                            >
+                                              <span
+                                                style={{
+                                                  width: "5px",
+                                                  height: "5px",
+                                                  borderRadius: "50%",
+                                                  backgroundColor:
+                                                    pucStatus.color,
+                                                  display: "inline-block",
+                                                }}
+                                              />
+                                              PUC{" "}
+                                              {fmtDate(letter.pucExpiryDate)}
                                             </span>
                                             {pucStatus.status === "expired" && (
-                                              <button onClick={() => navigate("/puc/create", { state: { pucData: { regNo: letter.registrationNumber } } })} style={{ fontSize: "0.62rem", padding: "1px 5px", backgroundColor: "#dc2626", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}>Edit</button>
+                                              <button
+                                                onClick={() =>
+                                                  navigate("/puc/create", {
+                                                    state: {
+                                                      pucData: {
+                                                        regNo:
+                                                          letter.registrationNumber,
+                                                      },
+                                                    },
+                                                  })
+                                                }
+                                                style={{
+                                                  fontSize: "0.62rem",
+                                                  padding: "1px 5px",
+                                                  backgroundColor: "#dc2626",
+                                                  color: "#fff",
+                                                  border: "none",
+                                                  borderRadius: "6px",
+                                                  cursor: "pointer",
+                                                  fontWeight: "600",
+                                                }}
+                                              >
+                                                Edit
+                                              </button>
                                             )}
                                           </div>
-                                        ) : <span style={{ fontSize: "0.68rem", color: "#94a3b8" }}>No PUC</span>}
+                                        ) : (
+                                          <span
+                                            style={{
+                                              fontSize: "0.68rem",
+                                              color: "#94a3b8",
+                                            }}
+                                          >
+                                            No PUC
+                                          </span>
+                                        )}
                                         {insStatus ? (
-                                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                            <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", padding: "2px 6px", backgroundColor: insStatus.bg, color: insStatus.color, borderRadius: "10px", fontSize: "0.68rem", fontWeight: "600", border: `1px solid ${insStatus.color}44` }}>
-                                              <span style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: insStatus.color, display: "inline-block" }} />
-                                              Ins. {fmtDate(letter.insuranceExpiryDate)}
+                                          <div
+                                            style={{
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: "4px",
+                                            }}
+                                          >
+                                            <span
+                                              style={{
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                gap: "3px",
+                                                padding: "2px 6px",
+                                                backgroundColor: insStatus.bg,
+                                                color: insStatus.color,
+                                                borderRadius: "10px",
+                                                fontSize: "0.68rem",
+                                                fontWeight: "600",
+                                                border: `1px solid ${insStatus.color}44`,
+                                              }}
+                                            >
+                                              <span
+                                                style={{
+                                                  width: "5px",
+                                                  height: "5px",
+                                                  borderRadius: "50%",
+                                                  backgroundColor:
+                                                    insStatus.color,
+                                                  display: "inline-block",
+                                                }}
+                                              />
+                                              Ins.{" "}
+                                              {fmtDate(
+                                                letter.insuranceExpiryDate,
+                                              )}
                                             </span>
                                             {insStatus.status === "expired" && (
-                                              <button onClick={() => navigate("/insurance/create", { state: { insuranceData: { regNo: letter.registrationNumber } } })} style={{ fontSize: "0.62rem", padding: "1px 5px", backgroundColor: "#dc2626", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}>Edit</button>
+                                              <button
+                                                onClick={() =>
+                                                  navigate(
+                                                    "/insurance/create",
+                                                    {
+                                                      state: {
+                                                        insuranceData: {
+                                                          regNo:
+                                                            letter.registrationNumber,
+                                                        },
+                                                      },
+                                                    },
+                                                  )
+                                                }
+                                                style={{
+                                                  fontSize: "0.62rem",
+                                                  padding: "1px 5px",
+                                                  backgroundColor: "#dc2626",
+                                                  color: "#fff",
+                                                  border: "none",
+                                                  borderRadius: "6px",
+                                                  cursor: "pointer",
+                                                  fontWeight: "600",
+                                                }}
+                                              >
+                                                Edit
+                                              </button>
                                             )}
                                           </div>
-                                        ) : <span style={{ fontSize: "0.68rem", color: "#94a3b8" }}>No Ins.</span>}
+                                        ) : (
+                                          <span
+                                            style={{
+                                              fontSize: "0.68rem",
+                                              color: "#94a3b8",
+                                            }}
+                                          >
+                                            No Ins.
+                                          </span>
+                                        )}
                                       </div>
                                     );
                                   })()}
@@ -2563,7 +2709,9 @@ const BuyLetterHistory = () => {
                                         }}
                                       >
                                         <RefreshCw size={14} />
-                                        Version History ({allVersions.length}{" "}
+                                        Version History ({
+                                          allVersions.length
+                                        }{" "}
                                         versions)
                                       </div>
                                       <div
@@ -2724,7 +2872,9 @@ const BuyLetterHistory = () => {
                                               >
                                                 <button
                                                   onClick={() => {
-                                                    setLanguageAction("preview");
+                                                    setLanguageAction(
+                                                      "preview",
+                                                    );
                                                     setSelectedLetter(ver);
                                                     setShowLanguageModal(true);
                                                   }}
@@ -2795,246 +2945,121 @@ const BuyLetterHistory = () => {
                     ({ groupId, latestVersion: letter, allVersions }) => {
                       const isExpanded = expandedGroups.has(groupId);
                       return (
-                      <div
-                        key={groupId}
-                        style={{
-                          backgroundColor: "#ffffff",
-                          borderRadius: "12px",
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                          border: "1px solid #e2e8f0",
-                          overflow: "hidden",
-                          padding: "16px",
-                        }}
-                      >
                         <div
+                          key={groupId}
                           style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "flex-start",
-                            marginBottom: "12px",
+                            backgroundColor: "#ffffff",
+                            borderRadius: "12px",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                            border: "1px solid #e2e8f0",
+                            overflow: "hidden",
+                            padding: "16px",
                           }}
                         >
-                          <div>
-                            <div
-                              style={{
-                                fontWeight: "700",
-                                fontSize: "1rem",
-                                color: "#1e293b",
-                              }}
-                            >
-                              {letter.registrationNumber}
-                              {allVersions.length > 1 && (
-                                <span
-                                  style={{
-                                    fontSize: "0.68rem",
-                                    color: "#16a34a",
-                                    marginLeft: "6px",
-                                    fontWeight: "700",
-                                    padding: "1px 5px",
-                                    backgroundColor: "#dcfce7",
-                                    borderRadius: "8px",
-                                    border: "1px solid #bbf7d0",
-                                  }}
-                                >
-                                  v{letter.version}
-                                </span>
-                              )}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "0.8rem",
-                                color: "#64748b",
-                                marginTop: "2px",
-                              }}
-                            >
-                              {letter.saleDate
-                                ? formatDate(letter.saleDate)
-                                : formatDate(letter.createdAt)}
-                            </div>
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <div
-                              style={{
-                                backgroundColor: "rgba(8,131,149,0.1)",
-                                color: "#071952",
-                                borderRadius: "20px",
-                                padding: "4px 10px",
-                                fontSize: "0.75rem",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Buy Letter
-                            </div>
-                            {allVersions.length > 1 && (
-                              <button
-                                onClick={() => toggleGroup(groupId)}
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              marginBottom: "12px",
+                            }}
+                          >
+                            <div>
+                              <div
                                 style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "3px",
-                                  padding: "3px 8px",
-                                  backgroundColor: isExpanded ? "#dbeafe" : "#f1f5f9",
-                                  border: `1px solid ${isExpanded ? "#93c5fd" : "#cbd5e1"}`,
-                                  borderRadius: "12px",
-                                  cursor: "pointer",
-                                  fontSize: "0.7rem",
-                                  color: isExpanded ? "#1d4ed8" : "#475569",
+                                  fontWeight: "700",
+                                  fontSize: "1rem",
+                                  color: "#1e293b",
+                                }}
+                              >
+                                {letter.registrationNumber}
+                                {allVersions.length > 1 && (
+                                  <span
+                                    style={{
+                                      fontSize: "0.68rem",
+                                      color: "#16a34a",
+                                      marginLeft: "6px",
+                                      fontWeight: "700",
+                                      padding: "1px 5px",
+                                      backgroundColor: "#dcfce7",
+                                      borderRadius: "8px",
+                                      border: "1px solid #bbf7d0",
+                                    }}
+                                  >
+                                    v{letter.version}
+                                  </span>
+                                )}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#64748b",
+                                  marginTop: "2px",
+                                }}
+                              >
+                                {letter.saleDate
+                                  ? formatDate(letter.saleDate)
+                                  : formatDate(letter.createdAt)}
+                              </div>
+                            </div>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  backgroundColor: "rgba(8,131,149,0.1)",
+                                  color: "#071952",
+                                  borderRadius: "20px",
+                                  padding: "4px 10px",
+                                  fontSize: "0.75rem",
                                   fontWeight: "600",
                                 }}
                               >
-                                {isExpanded ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
-                                {allVersions.length} versions
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        {}
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "6px",
-                            marginBottom: "12px",
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontSize: "0.8rem",
-                                color: "#64748b",
-                                fontWeight: "500",
-                              }}
-                            >
-                              Seller
-                            </span>
-                            <span
-                              style={{
-                                fontSize: "0.8rem",
-                                color: "#1e293b",
-                                fontWeight: "600",
-                                textAlign: "right",
-                                maxWidth: "60%",
-                              }}
-                            >
-                              {letter.sellerName}
-                            </span>
-                          </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontSize: "0.8rem",
-                                color: "#64748b",
-                                fontWeight: "500",
-                              }}
-                            >
-                              Buyer
-                            </span>
-                            <span
-                              style={{
-                                fontSize: "0.8rem",
-                                color: "#1e293b",
-                                fontWeight: "600",
-                                textAlign: "right",
-                                maxWidth: "60%",
-                              }}
-                            >
-                              {letter.buyerName}
-                            </span>
-                          </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontSize: "0.8rem",
-                                color: "#64748b",
-                                fontWeight: "500",
-                              }}
-                            >
-                              Vehicle
-                            </span>
-                            <span
-                              style={{
-                                fontSize: "0.8rem",
-                                color: "#1e293b",
-                                fontWeight: "600",
-                                textAlign: "right",
-                                maxWidth: "60%",
-                              }}
-                            >
-                              {`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim()}
-                            </span>
-                          </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontSize: "0.8rem",
-                                color: "#64748b",
-                                fontWeight: "500",
-                              }}
-                            >
-                              Amount
-                            </span>
-                            <span
-                              style={{
-                                fontSize: "0.85rem",
-                                color: "#071952",
-                                fontWeight: "700",
-                              }}
-                            >
-                              ₹
-                              {new Intl.NumberFormat("en-IN").format(
-                                letter.saleAmount,
+                                Buy Letter
+                              </div>
+                              {allVersions.length > 1 && (
+                                <button
+                                  onClick={() => toggleGroup(groupId)}
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "3px",
+                                    padding: "3px 8px",
+                                    backgroundColor: isExpanded
+                                      ? "#dbeafe"
+                                      : "#f1f5f9",
+                                    border: `1px solid ${isExpanded ? "#93c5fd" : "#cbd5e1"}`,
+                                    borderRadius: "12px",
+                                    cursor: "pointer",
+                                    fontSize: "0.7rem",
+                                    color: isExpanded ? "#1d4ed8" : "#475569",
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  {isExpanded ? (
+                                    <ChevronUp size={11} />
+                                  ) : (
+                                    <ChevronDown size={11} />
+                                  )}
+                                  {allVersions.length} versions
+                                </button>
                               )}
-                            </span>
+                            </div>
                           </div>
+
+                          {}
                           <div
                             style={{
                               display: "flex",
-                              justifyContent: "space-between",
+                              flexDirection: "column",
+                              gap: "6px",
+                              marginBottom: "12px",
                             }}
                           >
-                            <span
-                              style={{
-                                fontSize: "0.8rem",
-                                color: "#64748b",
-                                fontWeight: "500",
-                              }}
-                            >
-                              Created By
-                            </span>
-                            <span
-                              style={{
-                                fontSize: "0.8rem",
-                                color: "#1e293b",
-                                fontWeight: "600",
-                              }}
-                            >
-                              {letter.user && letter.user.role === "admin"
-                                ? "admin"
-                                : letter.user?.name || ""}
-                            </span>
-                          </div>
-                          {letter.editedAt && (
                             <div
                               style={{
                                 display: "flex",
@@ -3048,472 +3073,755 @@ const BuyLetterHistory = () => {
                                   fontWeight: "500",
                                 }}
                               >
-                                Edited
+                                Seller
                               </span>
                               <span
-                                style={{ fontSize: "0.8rem", color: "#64748b" }}
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#1e293b",
+                                  fontWeight: "600",
+                                  textAlign: "right",
+                                  maxWidth: "60%",
+                                }}
                               >
-                                {formatDate(letter.editedAt)}
-                                {letter.editedAt &&
-                                  ` at ${formatTimeFromDate(letter.editedAt)}`}
+                                {letter.sellerName}
                               </span>
                             </div>
-                          )}
-                        </div>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "8px",
-                            marginBottom: "12px",
-                            padding: "10px",
-                            backgroundColor: "#f8fafc",
-                            borderRadius: "8px",
-                            border: "1px solid #e2e8f0",
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontWeight: "600",
-                              fontSize: "0.8rem",
-                              color: "#475569",
-                              marginBottom: "4px",
-                            }}
-                          >
-                            Document Status:
-                          </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              flexWrap: "wrap",
-                              gap: "8px",
-                            }}
-                          >
-                            {[
-                              {
-                                label: "RC",
-                                exists:
-                                  letter.documents?.vehicleRC?.front ||
-                                  letter.documents?.vehicleRC?.back,
-                              },
-                              {
-                                label: "Aadhaar",
-                                exists:
-                                  letter.documents?.aadhaar?.front ||
-                                  letter.documents?.aadhaar?.back,
-                              },
-                              {
-                                label: "PAN",
-                                exists: letter.documents?.pan,
-                              },
-                              {
-                                label: "Photo",
-                                exists:
-                                  letter.documents?.deliveryPhoto ||
-                                  letter.documents?.vehicleKM ||
-                                  letter.documents?.vehiclePhotos?.length > 0,
-                              },
-                              {
-                                label: "Signed Doc",
-                                exists: letter.documents?.signedDocBuy,
-                              },
-                              {
-                                label: "Insurance",
-                                exists:
-                                  letter.documents?.insuranceCertificate?.pages
-                                    ?.length > 0 ||
-                                  (Array.isArray(
-                                    letter.documents?.insuranceCertificate,
-                                  ) &&
-                                    letter.documents.insuranceCertificate
-                                      .length > 0) ||
-                                  (typeof letter.documents
-                                    ?.insuranceCertificate === "string" &&
-                                    letter.documents.insuranceCertificate
-                                      .length > 0),
-                              },
-                              {
-                                label: "NOC",
-                                exists:
-                                  letter.documents?.vehicleNOC?.pages?.length >
-                                    0 ||
-                                  (Array.isArray(
-                                    letter.documents?.vehicleNOC,
-                                  ) &&
-                                    letter.documents.vehicleNOC.length > 0) ||
-                                  (typeof letter.documents?.vehicleNOC ===
-                                    "string" &&
-                                    letter.documents.vehicleNOC.length > 0),
-                              },
-                              {
-                                label: "Receipt",
-                                exists:
-                                  letter.documents?.vehicleBuyReceipt?.pages
-                                    ?.length > 0 ||
-                                  (Array.isArray(
-                                    letter.documents?.vehicleBuyReceipt,
-                                  ) &&
-                                    letter.documents.vehicleBuyReceipt.length >
-                                      0) ||
-                                  (typeof letter.documents
-                                    ?.vehicleBuyReceipt === "string" &&
-                                    letter.documents.vehicleBuyReceipt.length >
-                                      0),
-                              },
-                            ]
-                              .filter((doc) => doc.exists)
-                              .map((doc, idx) => (
-                                <div
-                                  key={idx}
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#64748b",
+                                  fontWeight: "500",
+                                }}
+                              >
+                                Buyer
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#1e293b",
+                                  fontWeight: "600",
+                                  textAlign: "right",
+                                  maxWidth: "60%",
+                                }}
+                              >
+                                {letter.buyerName}
+                              </span>
+                            </div>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#64748b",
+                                  fontWeight: "500",
+                                }}
+                              >
+                                Vehicle
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#1e293b",
+                                  fontWeight: "600",
+                                  textAlign: "right",
+                                  maxWidth: "60%",
+                                }}
+                              >
+                                {`${letter.vehicleName || ""} ${letter.vehicleModel || ""}`.trim()}
+                              </span>
+                            </div>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#64748b",
+                                  fontWeight: "500",
+                                }}
+                              >
+                                Amount
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "0.85rem",
+                                  color: "#071952",
+                                  fontWeight: "700",
+                                }}
+                              >
+                                ₹
+                                {new Intl.NumberFormat("en-IN").format(
+                                  letter.saleAmount,
+                                )}
+                              </span>
+                            </div>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#64748b",
+                                  fontWeight: "500",
+                                }}
+                              >
+                                Created By
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#1e293b",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                {letter.user && letter.user.role === "admin"
+                                  ? "admin"
+                                  : letter.user?.name || ""}
+                              </span>
+                            </div>
+                            {letter.editedAt && (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                }}
+                              >
+                                <span
                                   style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                    padding: "4px 8px",
-                                    backgroundColor: "#fff",
-                                    borderRadius: "6px",
-                                    border: "1px solid #e2e8f0",
-                                    fontSize: "0.75rem",
-                                    color: "#16a34a",
+                                    fontSize: "0.8rem",
+                                    color: "#64748b",
                                     fontWeight: "500",
                                   }}
                                 >
-                                  <Check size={12} strokeWidth={3} />
-                                  {doc.label}
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-
-                        {(() => {
-                          const pucStatus = getValidityStatus(letter.pucExpiryDate);
-                          const insStatus = getValidityStatus(letter.insuranceExpiryDate);
-                          const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : "";
-                          if (!pucStatus && !insStatus) return null;
-                          return (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px", padding: "10px", backgroundColor: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                              <div style={{ fontWeight: "600", fontSize: "0.8rem", color: "#475569", marginBottom: "2px" }}>PUC / Insurance:</div>
-                              <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
-                                {pucStatus && (
-                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "3px 8px", backgroundColor: pucStatus.bg, color: pucStatus.color, borderRadius: "12px", fontSize: "0.73rem", fontWeight: "600", border: `1px solid ${pucStatus.color}44` }}>
-                                      <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: pucStatus.color, display: "inline-block" }} />
-                                      PUC — {fmtDate(letter.pucExpiryDate)}
-                                    </span>
-                                    {pucStatus.status === "expired" && (
-                                      <button onClick={() => navigate("/puc/create", { state: { pucData: { regNo: letter.registrationNumber } } })} style={{ fontSize: "0.7rem", padding: "2px 8px", backgroundColor: "#dc2626", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "600" }}>Edit PUC</button>
-                                    )}
-                                  </div>
-                                )}
-                                {insStatus && (
-                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "3px 8px", backgroundColor: insStatus.bg, color: insStatus.color, borderRadius: "12px", fontSize: "0.73rem", fontWeight: "600", border: `1px solid ${insStatus.color}44` }}>
-                                      <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: insStatus.color, display: "inline-block" }} />
-                                      Ins. — {fmtDate(letter.insuranceExpiryDate)}
-                                    </span>
-                                    {insStatus.status === "expired" && (
-                                      <button onClick={() => navigate("/insurance/create", { state: { insuranceData: { regNo: letter.registrationNumber } } })} style={{ fontSize: "0.7rem", padding: "2px 8px", backgroundColor: "#dc2626", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "600" }}>Edit Ins.</button>
-                                    )}
-                                  </div>
-                                )}
+                                  Edited
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: "0.8rem",
+                                    color: "#64748b",
+                                  }}
+                                >
+                                  {formatDate(letter.editedAt)}
+                                  {letter.editedAt &&
+                                    ` at ${formatTimeFromDate(letter.editedAt)}`}
+                                </span>
                               </div>
-                            </div>
-                          );
-                        })()}
+                            )}
+                          </div>
 
-                        {}
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "8px",
-                            borderTop: "1px solid #e2e8f0",
-                            paddingTop: "12px",
-                          }}
-                        >
-                          <button
-                            onClick={() => {
-                              setLanguageAction("preview");
-                              setSelectedLetter(letter);
-                              setShowLanguageModal(true);
-                            }}
-                            style={{
-                              flex: 1,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "4px",
-                              padding: "8px",
-                              backgroundColor: "#f1f5f9",
-                              border: "1px solid #e2e8f0",
-                              borderRadius: "8px",
-                              cursor: "pointer",
-                              fontSize: "0.78rem",
-                              color: "#1e293b",
-                              fontWeight: "500",
-                            }}
-                          >
-                            <Eye size={14} /> View
-                          </button>
-                          <button
-                            onClick={() => handleDownload(letter)}
-                            style={{
-                              flex: 1,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "4px",
-                              padding: "8px",
-                              backgroundColor: "#071952",
-                              border: "none",
-                              borderRadius: "8px",
-                              cursor: "pointer",
-                              fontSize: "0.78rem",
-                              color: "#ffffff",
-                              fontWeight: "500",
-                            }}
-                          >
-                            <Download size={14} /> Download
-                          </button>
-                          {user?.role !== "staff" && (
-                            <>
-                              <button
-                                onClick={() => handleEdit(letter)}
-                                style={{
-                                  flex: 1,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: "4px",
-                                  padding: "8px",
-                                  backgroundColor: "#f1f5f9",
-                                  border: "1px solid #e2e8f0",
-                                  borderRadius: "8px",
-                                  cursor: "pointer",
-                                  fontSize: "0.78rem",
-                                  color: "#1e293b",
-                                  fontWeight: "500",
-                                }}
-                              >
-                                <Edit size={14} /> Edit
-                              </button>
-                              <button
-                                onClick={() => handleDelete(letter._id)}
-                                style={{
-                                  flex: 1,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: "4px",
-                                  padding: "8px",
-                                  backgroundColor: "#fee2e2",
-                                  border: "none",
-                                  borderRadius: "8px",
-                                  cursor: "pointer",
-                                  fontSize: "0.78rem",
-                                  color: "#991b1b",
-                                  fontWeight: "500",
-                                }}
-                              >
-                                <Trash2 size={14} /> Delete
-                              </button>
-                            </>
-                          )}
-                        </div>
-                        {allVersions.length > 1 && isExpanded && (
                           <div
                             style={{
-                              borderTop: "2px solid #bfdbfe",
-                              backgroundColor: "#f0f9ff",
-                              padding: "12px",
-                              margin: "12px -16px -16px -16px",
-                              borderRadius: "0 0 12px 12px",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "8px",
+                              marginBottom: "12px",
+                              padding: "10px",
+                              backgroundColor: "#f8fafc",
+                              borderRadius: "8px",
+                              border: "1px solid #e2e8f0",
                             }}
                           >
                             <div
                               style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "5px",
-                                fontWeight: "700",
-                                color: "#0369a1",
+                                fontWeight: "600",
                                 fontSize: "0.8rem",
-                                marginBottom: "10px",
+                                color: "#475569",
+                                marginBottom: "4px",
                               }}
                             >
-                              <RefreshCw size={13} />
-                              Version History ({allVersions.length} versions)
+                              Document Status:
                             </div>
-                            {allVersions.map((ver, vidx) => {
-                              const verChanges =
-                                vidx < allVersions.length - 1
-                                  ? getChanges(ver)
-                                  : null;
-                              return (
-                                <div
-                                  key={ver._id}
-                                  style={{
-                                    backgroundColor:
-                                      vidx === 0 ? "#f0fdf4" : "#ffffff",
-                                    border: `1px solid ${vidx === 0 ? "#bbf7d0" : "#e2e8f0"}`,
-                                    borderRadius: "8px",
-                                    padding: "10px",
-                                    marginBottom:
-                                      vidx < allVersions.length - 1
-                                        ? "6px"
-                                        : "0",
-                                  }}
-                                >
+                            <div
+                              style={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: "8px",
+                              }}
+                            >
+                              {[
+                                {
+                                  label: "RC",
+                                  exists:
+                                    letter.documents?.vehicleRC?.front ||
+                                    letter.documents?.vehicleRC?.back,
+                                },
+                                {
+                                  label: "Aadhaar",
+                                  exists:
+                                    letter.documents?.aadhaar?.front ||
+                                    letter.documents?.aadhaar?.back,
+                                },
+                                {
+                                  label: "PAN",
+                                  exists: letter.documents?.pan,
+                                },
+                                {
+                                  label: "Photo",
+                                  exists:
+                                    letter.documents?.deliveryPhoto ||
+                                    letter.documents?.vehicleKM ||
+                                    letter.documents?.vehiclePhotos?.length > 0,
+                                },
+                                {
+                                  label: "Signed Doc",
+                                  exists: letter.documents?.signedDocBuy,
+                                },
+                                {
+                                  label: "Insurance",
+                                  exists:
+                                    letter.documents?.insuranceCertificate
+                                      ?.pages?.length > 0 ||
+                                    (Array.isArray(
+                                      letter.documents?.insuranceCertificate,
+                                    ) &&
+                                      letter.documents.insuranceCertificate
+                                        .length > 0) ||
+                                    (typeof letter.documents
+                                      ?.insuranceCertificate === "string" &&
+                                      letter.documents.insuranceCertificate
+                                        .length > 0),
+                                },
+                                {
+                                  label: "NOC",
+                                  exists:
+                                    letter.documents?.vehicleNOC?.pages
+                                      ?.length > 0 ||
+                                    (Array.isArray(
+                                      letter.documents?.vehicleNOC,
+                                    ) &&
+                                      letter.documents.vehicleNOC.length > 0) ||
+                                    (typeof letter.documents?.vehicleNOC ===
+                                      "string" &&
+                                      letter.documents.vehicleNOC.length > 0),
+                                },
+                                {
+                                  label: "Receipt",
+                                  exists:
+                                    letter.documents?.vehicleBuyReceipt?.pages
+                                      ?.length > 0 ||
+                                    (Array.isArray(
+                                      letter.documents?.vehicleBuyReceipt,
+                                    ) &&
+                                      letter.documents.vehicleBuyReceipt
+                                        .length > 0) ||
+                                    (typeof letter.documents
+                                      ?.vehicleBuyReceipt === "string" &&
+                                      letter.documents.vehicleBuyReceipt
+                                        .length > 0),
+                                },
+                              ]
+                                .filter((doc) => doc.exists)
+                                .map((doc, idx) => (
                                   <div
+                                    key={idx}
                                     style={{
                                       display: "flex",
-                                      justifyContent: "space-between",
-                                      alignItems: "flex-start",
-                                      marginBottom: "6px",
+                                      alignItems: "center",
+                                      gap: "4px",
+                                      padding: "4px 8px",
+                                      backgroundColor: "#fff",
+                                      borderRadius: "6px",
+                                      border: "1px solid #e2e8f0",
+                                      fontSize: "0.75rem",
+                                      color: "#16a34a",
+                                      fontWeight: "500",
                                     }}
                                   >
-                                    <div>
+                                    <Check size={12} strokeWidth={3} />
+                                    {doc.label}
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+
+                          {(() => {
+                            const pucStatus = getValidityStatus(
+                              letter.pucExpiryDate,
+                            );
+                            const insStatus = getValidityStatus(
+                              letter.insuranceExpiryDate,
+                            );
+                            const fmtDate = (d) =>
+                              d
+                                ? new Date(d).toLocaleDateString("en-IN", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "2-digit",
+                                  })
+                                : "";
+                            if (!pucStatus && !insStatus) return null;
+                            return (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "6px",
+                                  marginBottom: "10px",
+                                  padding: "10px",
+                                  backgroundColor: "#f8fafc",
+                                  borderRadius: "8px",
+                                  border: "1px solid #e2e8f0",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontWeight: "600",
+                                    fontSize: "0.8rem",
+                                    color: "#475569",
+                                    marginBottom: "2px",
+                                  }}
+                                >
+                                  PUC / Insurance:
+                                </div>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "row",
+                                    flexWrap: "wrap",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                  }}
+                                >
+                                  {pucStatus && (
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                      }}
+                                    >
                                       <span
                                         style={{
-                                          display: "inline-block",
-                                          padding: "2px 7px",
-                                          borderRadius: "10px",
-                                          backgroundColor:
-                                            vidx === 0 ? "#16a34a" : "#6b7280",
-                                          color: "#fff",
-                                          fontSize: "0.68rem",
-                                          fontWeight: "700",
-                                          marginBottom: "3px",
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: "4px",
+                                          padding: "3px 8px",
+                                          backgroundColor: pucStatus.bg,
+                                          color: pucStatus.color,
+                                          borderRadius: "12px",
+                                          fontSize: "0.73rem",
+                                          fontWeight: "600",
+                                          border: `1px solid ${pucStatus.color}44`,
                                         }}
                                       >
-                                        v{ver.version || 1}
-                                        {vidx === 0 ? " · Latest" : ""}
-                                      </span>
-                                      <div
-                                        style={{
-                                          fontSize: "0.68rem",
-                                          color: "#64748b",
-                                        }}
-                                      >
-                                        {ver.editedAt
-                                          ? `Edited: ${formatDate(ver.editedAt)}`
-                                          : `Created: ${formatDate(ver.createdAt)}`}
-                                      </div>
-                                    </div>
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        gap: "3px",
-                                      }}
-                                    >
-                                      <button
-                                        onClick={() => {
-                                          setLanguageAction("preview");
-                                          setSelectedLetter(ver);
-                                          setShowLanguageModal(true);
-                                        }}
-                                        style={styles.iconButton}
-                                        title="View"
-                                      >
-                                        <Eye size={13} />
-                                      </button>
-                                      <button
-                                        onClick={() => handleDownload(ver)}
-                                        style={styles.iconButton}
-                                        title="Download"
-                                      >
-                                        <Download size={13} />
-                                      </button>
-                                      {user?.role !== "staff" && (
-                                        <>
-                                          <button
-                                            onClick={() => handleEdit(ver)}
-                                            style={styles.iconButton}
-                                            title="Edit"
-                                          >
-                                            <Edit size={13} />
-                                          </button>
-                                          <button
-                                            onClick={() =>
-                                              handleDelete(ver._id)
-                                            }
-                                            style={styles.iconButton}
-                                            title="Delete"
-                                          >
-                                            <Trash2 size={13} />
-                                          </button>
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
-                                  {verChanges && verChanges.length > 0 ? (
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        flexWrap: "wrap",
-                                        gap: "4px",
-                                      }}
-                                    >
-                                      {verChanges.map((ch, ci) => (
-                                        <div
-                                          key={ci}
+                                        <span
                                           style={{
-                                            padding: "2px 6px",
-                                            backgroundColor: "#fff8e1",
-                                            borderRadius: "4px",
-                                            border: "1px solid #ffe0b2",
-                                            fontSize: "0.68rem",
+                                            width: "6px",
+                                            height: "6px",
+                                            borderRadius: "50%",
+                                            backgroundColor: pucStatus.color,
+                                            display: "inline-block",
+                                          }}
+                                        />
+                                        PUC — {fmtDate(letter.pucExpiryDate)}
+                                      </span>
+                                      {pucStatus.status === "expired" && (
+                                        <button
+                                          onClick={() =>
+                                            navigate("/puc/create", {
+                                              state: {
+                                                pucData: {
+                                                  regNo:
+                                                    letter.registrationNumber,
+                                                },
+                                              },
+                                            })
+                                          }
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            padding: "2px 8px",
+                                            backgroundColor: "#dc2626",
+                                            color: "#fff",
+                                            border: "none",
+                                            borderRadius: "8px",
+                                            cursor: "pointer",
+                                            fontWeight: "600",
                                           }}
                                         >
-                                          <span
-                                            style={{
-                                              fontWeight: "600",
-                                              color: "#424242",
-                                            }}
-                                          >
-                                            {ch.field}:{" "}
-                                          </span>
-                                          <span
-                                            style={{
-                                              textDecoration: "line-through",
-                                              color: "#e53935",
-                                            }}
-                                          >
-                                            {ch.oldValue}
-                                          </span>
-                                          <span
-                                            style={{
-                                              color: "#16a34a",
-                                              fontWeight: "600",
-                                            }}
-                                          >
-                                            {" "}
-                                            → {ch.newValue}
-                                          </span>
-                                        </div>
-                                      ))}
+                                          Edit PUC
+                                        </button>
+                                      )}
                                     </div>
-                                  ) : (
-                                    <span
+                                  )}
+                                  {insStatus && (
+                                    <div
                                       style={{
-                                        fontSize: "0.68rem",
-                                        color: "#94a3b8",
-                                        fontStyle: "italic",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
                                       }}
                                     >
-                                      {vidx === allVersions.length - 1
-                                        ? "Original version"
-                                        : "No field changes detected"}
-                                    </span>
+                                      <span
+                                        style={{
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: "4px",
+                                          padding: "3px 8px",
+                                          backgroundColor: insStatus.bg,
+                                          color: insStatus.color,
+                                          borderRadius: "12px",
+                                          fontSize: "0.73rem",
+                                          fontWeight: "600",
+                                          border: `1px solid ${insStatus.color}44`,
+                                        }}
+                                      >
+                                        <span
+                                          style={{
+                                            width: "6px",
+                                            height: "6px",
+                                            borderRadius: "50%",
+                                            backgroundColor: insStatus.color,
+                                            display: "inline-block",
+                                          }}
+                                        />
+                                        Ins. —{" "}
+                                        {fmtDate(letter.insuranceExpiryDate)}
+                                      </span>
+                                      {insStatus.status === "expired" && (
+                                        <button
+                                          onClick={() =>
+                                            navigate("/insurance/create", {
+                                              state: {
+                                                insuranceData: {
+                                                  regNo:
+                                                    letter.registrationNumber,
+                                                },
+                                              },
+                                            })
+                                          }
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            padding: "2px 8px",
+                                            backgroundColor: "#dc2626",
+                                            color: "#fff",
+                                            border: "none",
+                                            borderRadius: "8px",
+                                            cursor: "pointer",
+                                            fontWeight: "600",
+                                          }}
+                                        >
+                                          Edit Ins.
+                                        </button>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
-                              );
-                            })}
+                              </div>
+                            );
+                          })()}
+
+                          {}
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "8px",
+                              borderTop: "1px solid #e2e8f0",
+                              paddingTop: "12px",
+                            }}
+                          >
+                            <button
+                              onClick={() => {
+                                setLanguageAction("preview");
+                                setSelectedLetter(letter);
+                                setShowLanguageModal(true);
+                              }}
+                              style={{
+                                flex: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px",
+                                padding: "8px",
+                                backgroundColor: "#f1f5f9",
+                                border: "1px solid #e2e8f0",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                fontSize: "0.78rem",
+                                color: "#1e293b",
+                                fontWeight: "500",
+                              }}
+                            >
+                              <Eye size={14} /> View
+                            </button>
+                            <button
+                              onClick={() => handleDownload(letter)}
+                              style={{
+                                flex: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px",
+                                padding: "8px",
+                                backgroundColor: "#071952",
+                                border: "none",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                fontSize: "0.78rem",
+                                color: "#ffffff",
+                                fontWeight: "500",
+                              }}
+                            >
+                              <Download size={14} /> Download
+                            </button>
+                            {user?.role !== "staff" && (
+                              <>
+                                <button
+                                  onClick={() => handleEdit(letter)}
+                                  style={{
+                                    flex: 1,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "4px",
+                                    padding: "8px",
+                                    backgroundColor: "#f1f5f9",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
+                                    fontSize: "0.78rem",
+                                    color: "#1e293b",
+                                    fontWeight: "500",
+                                  }}
+                                >
+                                  <Edit size={14} /> Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(letter._id)}
+                                  style={{
+                                    flex: 1,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "4px",
+                                    padding: "8px",
+                                    backgroundColor: "#fee2e2",
+                                    border: "none",
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
+                                    fontSize: "0.78rem",
+                                    color: "#991b1b",
+                                    fontWeight: "500",
+                                  }}
+                                >
+                                  <Trash2 size={14} /> Delete
+                                </button>
+                              </>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                          {allVersions.length > 1 && isExpanded && (
+                            <div
+                              style={{
+                                borderTop: "2px solid #bfdbfe",
+                                backgroundColor: "#f0f9ff",
+                                padding: "12px",
+                                margin: "12px -16px -16px -16px",
+                                borderRadius: "0 0 12px 12px",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "5px",
+                                  fontWeight: "700",
+                                  color: "#0369a1",
+                                  fontSize: "0.8rem",
+                                  marginBottom: "10px",
+                                }}
+                              >
+                                <RefreshCw size={13} />
+                                Version History ({allVersions.length} versions)
+                              </div>
+                              {allVersions.map((ver, vidx) => {
+                                const verChanges =
+                                  vidx < allVersions.length - 1
+                                    ? getChanges(ver)
+                                    : null;
+                                return (
+                                  <div
+                                    key={ver._id}
+                                    style={{
+                                      backgroundColor:
+                                        vidx === 0 ? "#f0fdf4" : "#ffffff",
+                                      border: `1px solid ${vidx === 0 ? "#bbf7d0" : "#e2e8f0"}`,
+                                      borderRadius: "8px",
+                                      padding: "10px",
+                                      marginBottom:
+                                        vidx < allVersions.length - 1
+                                          ? "6px"
+                                          : "0",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "flex-start",
+                                        marginBottom: "6px",
+                                      }}
+                                    >
+                                      <div>
+                                        <span
+                                          style={{
+                                            display: "inline-block",
+                                            padding: "2px 7px",
+                                            borderRadius: "10px",
+                                            backgroundColor:
+                                              vidx === 0
+                                                ? "#16a34a"
+                                                : "#6b7280",
+                                            color: "#fff",
+                                            fontSize: "0.68rem",
+                                            fontWeight: "700",
+                                            marginBottom: "3px",
+                                          }}
+                                        >
+                                          v{ver.version || 1}
+                                          {vidx === 0 ? " · Latest" : ""}
+                                        </span>
+                                        <div
+                                          style={{
+                                            fontSize: "0.68rem",
+                                            color: "#64748b",
+                                          }}
+                                        >
+                                          {ver.editedAt
+                                            ? `Edited: ${formatDate(ver.editedAt)}`
+                                            : `Created: ${formatDate(ver.createdAt)}`}
+                                        </div>
+                                      </div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          gap: "3px",
+                                        }}
+                                      >
+                                        <button
+                                          onClick={() => {
+                                            setLanguageAction("preview");
+                                            setSelectedLetter(ver);
+                                            setShowLanguageModal(true);
+                                          }}
+                                          style={styles.iconButton}
+                                          title="View"
+                                        >
+                                          <Eye size={13} />
+                                        </button>
+                                        <button
+                                          onClick={() => handleDownload(ver)}
+                                          style={styles.iconButton}
+                                          title="Download"
+                                        >
+                                          <Download size={13} />
+                                        </button>
+                                        {user?.role !== "staff" && (
+                                          <>
+                                            <button
+                                              onClick={() => handleEdit(ver)}
+                                              style={styles.iconButton}
+                                              title="Edit"
+                                            >
+                                              <Edit size={13} />
+                                            </button>
+                                            <button
+                                              onClick={() =>
+                                                handleDelete(ver._id)
+                                              }
+                                              style={styles.iconButton}
+                                              title="Delete"
+                                            >
+                                              <Trash2 size={13} />
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    </div>
+                                    {verChanges && verChanges.length > 0 ? (
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexWrap: "wrap",
+                                          gap: "4px",
+                                        }}
+                                      >
+                                        {verChanges.map((ch, ci) => (
+                                          <div
+                                            key={ci}
+                                            style={{
+                                              padding: "2px 6px",
+                                              backgroundColor: "#fff8e1",
+                                              borderRadius: "4px",
+                                              border: "1px solid #ffe0b2",
+                                              fontSize: "0.68rem",
+                                            }}
+                                          >
+                                            <span
+                                              style={{
+                                                fontWeight: "600",
+                                                color: "#424242",
+                                              }}
+                                            >
+                                              {ch.field}:{" "}
+                                            </span>
+                                            <span
+                                              style={{
+                                                textDecoration: "line-through",
+                                                color: "#e53935",
+                                              }}
+                                            >
+                                              {ch.oldValue}
+                                            </span>
+                                            <span
+                                              style={{
+                                                color: "#16a34a",
+                                                fontWeight: "600",
+                                              }}
+                                            >
+                                              {" "}
+                                              → {ch.newValue}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <span
+                                        style={{
+                                          fontSize: "0.68rem",
+                                          color: "#94a3b8",
+                                          fontStyle: "italic",
+                                        }}
+                                      >
+                                        {vidx === allVersions.length - 1
+                                          ? "Original version"
+                                          : "No field changes detected"}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    },
+                  )}
                 </div>
               )}
             </>

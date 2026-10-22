@@ -170,8 +170,7 @@ const InsuranceForm = () => {
 
     try {
       await fetchVehicleDetails(reg);
-    } catch (err) {
-    }
+    } catch (err) {}
   };
 
   const API_BASE_URL = "https://backend.okmotors.in/api";
