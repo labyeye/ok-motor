@@ -1102,43 +1102,39 @@ const BuyLetterForm = () => {
           );
         }
 
-        {
-          if (isElectron) {
-            response = await apiService.post("/api/buy-letters", form);
-          } else {
-            response = await axios.post(
-              "https://backend.okmotors.in/api/buy-letters",
-              form,
-              {
-                headers: { "Content-Type": "multipart/form-data" },
-                timeout: 0,
-                onUploadProgress: (evt) => {
-                  if (evt.total && evt.loaded >= evt.total) {
-                    setProgressStep(2);
-                  }
-                },
+        if (isElectron) {
+          response = await apiService.post("/api/buy-letters", form);
+        } else {
+          response = await axios.post(
+            "https://backend.okmotors.in/api/buy-letters",
+            form,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+              timeout: 0,
+              onUploadProgress: (evt) => {
+                if (evt.total && evt.loaded >= evt.total) {
+                  setProgressStep(2);
+                }
               },
-            );
-          }
+            },
+          );
         }
       } else {
-        {
-          const payload = { ...dataToSave };
-          // Editing creates a new version; carry existing documents over.
-          if (editLetter?._id && editLetter.documents) {
-            payload.preservedDocuments = buildBuyPreservedDocs(filesState);
-            payload.existingDocuments = editLetter.documents;
-            payload.removedDocuments = [...deletedDocuments];
-          }
-          if (isElectron) {
-            response = await apiService.post("/api/buy-letters", payload);
-          } else {
-            response = await axios.post(
-              "https://backend.okmotors.in/api/buy-letters",
-              payload,
-              { timeout: 0 },
-            );
-          }
+        const payload = { ...dataToSave };
+        // Editing creates a new version; carry existing documents over.
+        if (editLetter?._id && editLetter.documents) {
+          payload.preservedDocuments = buildBuyPreservedDocs(filesState);
+          payload.existingDocuments = editLetter.documents;
+          payload.removedDocuments = [...deletedDocuments];
+        }
+        if (isElectron) {
+          response = await apiService.post("/api/buy-letters", payload);
+        } else {
+          response = await axios.post(
+            "https://backend.okmotors.in/api/buy-letters",
+            payload,
+            { timeout: 0 },
+          );
         }
       }
 

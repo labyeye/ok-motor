@@ -18,7 +18,7 @@ const RULES = [
   [/e-?mail/i, Mail],
   [/date|expiry|valid|month/i, Calendar],
   [
-    /amount|price|rate|total|payment|advance|balance|gst|tax|charge|cost/i,
+    /amount|price|(?:^|\s)rate(?:\s|$)|total|payment|advance|balance|gst|tax|charge|cost/i,
     IndianRupee,
   ],
   [/address|city|state|pin ?code|location|district/i, MapPin],
