@@ -34,6 +34,7 @@ import {
   extractImagesFromPdf,
   convertPdfToImages,
 } from "../utils/pdfHandler";
+import { formatIndianAmount, parseIndianAmount } from "../utils/formatters";
 
 const dataUrlToFile = (dataUrl, filename) => {
   const arr = dataUrl.split(",");
@@ -2308,9 +2309,9 @@ const SellLetterForm = () => {
     );
     page.drawText(
       `Amount in Words: ${formatIndianAmountInWords(
-        !formData.saleAmount || isNaN(Number(formData.saleAmount))
+        !formData.saleAmount || !parseIndianAmount(formData.saleAmount)
           ? 0
-          : Number(formData.saleAmount),
+          : parseIndianAmount(formData.saleAmount),
       )}`,
       {
         x: 60,
@@ -2625,9 +2626,9 @@ const SellLetterForm = () => {
         buyerName2: formData.buyerName,
         saleAmount: formatRupee(formData.saleAmount),
         amountInWords: formatIndianAmountInWords(
-          !formData.saleAmount || isNaN(Number(formData.saleAmount))
+          !formData.saleAmount || !parseIndianAmount(formData.saleAmount)
             ? 0
-            : Number(formData.saleAmount),
+            : parseIndianAmount(formData.saleAmount),
         ),
         vehiclekm: formatKm(formData.vehiclekm),
         saleDate: formatDate(formData.saleDate),
@@ -2737,9 +2738,9 @@ const SellLetterForm = () => {
         buyerName2: formData.buyerName,
         saleAmount: formData.saleAmount,
         amountInWords: formatIndianAmountInWords(
-          !formData.saleAmount || isNaN(Number(formData.saleAmount))
+          !formData.saleAmount || !parseIndianAmount(formData.saleAmount)
             ? 0
-            : Number(formData.saleAmount),
+            : parseIndianAmount(formData.saleAmount),
         ),
         vehiclekm: formatKm(formData.vehiclekm),
         saleDate: formatDate(formData.saleDate),
@@ -3799,12 +3800,14 @@ const SellLetterForm = () => {
                   <input
                     type="text"
                     name="saleAmount"
-                    value={formData.saleAmount}
+                    value={formatIndianAmount(formData.saleAmount)}
                     onChange={(e) => {
-                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      const rawValue = e.target.value
+                        .replace(/[^0-9]/g, "")
+                        .replace(/^0+(?=\d)/, "");
                       setFormData((prev) => ({
                         ...prev,
-                        saleAmount: rawValue,
+                        saleAmount: formatIndianAmount(rawValue),
                       }));
                     }}
                     onFocus={() => setFocusedInput("saleAmount")}

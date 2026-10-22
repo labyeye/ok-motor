@@ -8,9 +8,12 @@ const {
   updateInsurance,
   getInsuranceByVehicle,
   upsertInsuranceByVehicle,
+  getInsuranceByEmail,
 } = require("../controllers/insuranceController");
 
 router.route("/").post(protect, createInsurance).get(protect, getAllInsurance);
+
+router.get("/email/:email", protect, getInsuranceByEmail);
 
 router
   .route("/:id")

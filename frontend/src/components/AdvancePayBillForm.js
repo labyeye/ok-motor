@@ -17,6 +17,7 @@ import networkService from "../services/networkService";
 import offlineStorage from "../services/offlineStorage";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
+import { formatIndianAmount } from "../utils/formatters";
 import logo1 from "../images/okmotorback.png";
 import PdfPreview from "./PdfPreview";
 import AlertModal from "./common/AlertModal";
@@ -247,10 +248,10 @@ const AdvancePayBillForm = () => {
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    if (["totalAmount", "advancePaid"].includes(name)) {
+    if (["totalAmount", "advancePaid", "discount"].includes(name)) {
       let numericValue = parseFloat(value.replace(/,/g, ""));
       if (isNaN(numericValue)) numericValue = 0;
-      const formattedValue = numericValue.toFixed(2);
+      const formattedValue = formatIndianAmount(numericValue.toFixed(2));
       const updatedData = {
         ...formData,
         [name]: formattedValue,

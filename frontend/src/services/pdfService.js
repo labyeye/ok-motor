@@ -2381,24 +2381,36 @@ class PDFService {
       });
       yPosition -= 20;
 
-      const toLines = sanitizedData.to.split("\n");
+      const toLines = String(sanitizedData.to || "")
+        .replace(/\r\n/g, "\n")
+        .split("\n");
       for (const line of toLines) {
         checkPageBreak(20);
         currentPage.drawText(line, {
-          x: 50,
+          x: 58,
           y: yPosition,
           size: headerFontSize,
           font: font,
           color: rgb(0, 0, 0),
         });
-        yPosition -= 20;
+        yPosition -= 19;
       }
 
-      yPosition -= 20;
+      if (sanitizedData.recipientName) {
+        checkPageBreak(20);
+        currentPage.drawText(sanitizedData.recipientName, {
+          x: 58,
+          y: yPosition,
+          size: headerFontSize,
+          font: font,
+          color: rgb(0, 0, 0),
+        });
+        yPosition -= 22;
+      }
 
       checkPageBreak(20);
       currentPage.drawText("Subject:", {
-        x: 50,
+        x: 58,
         y: yPosition,
         size: headerFontSize,
         font: fontBold,
@@ -2406,7 +2418,7 @@ class PDFService {
       });
 
       currentPage.drawText(sanitizedData.subject, {
-        x: 120,
+        x: 126,
         y: yPosition,
         size: headerFontSize,
         font: fontBold,
@@ -2415,45 +2427,49 @@ class PDFService {
       yPosition -= 40;
 
       const message = sanitizedData.message || "";
-      const maxWidth = 500;
-
-      const paragraphs = message.split("\n");
+      const maxWidth = 479;
+      const lineHeight = 17;
+      const paragraphs = message.replace(/\r\n/g, "\n").split("\n");
 
       for (const paragraph of paragraphs) {
-        const words = paragraph.split(" ");
+        const words = paragraph.trim().split(/\s+/).filter(Boolean);
         let line = "";
 
         for (const word of words) {
-          const testLine = line + word + " ";
+          const testLine = line ? `${line} ${word}` : word;
           const textWidth = font.widthOfTextAtSize(testLine, contentFontSize);
 
           if (textWidth > maxWidth) {
-            checkPageBreak(13);
+            checkPageBreak(lineHeight);
             currentPage.drawText(line, {
-              x: 50,
+              x: 58,
               y: yPosition,
               size: contentFontSize,
               font: font,
             });
-            line = word + " ";
-            yPosition -= 13;
+            line = word;
+            yPosition -= lineHeight;
           } else {
             line = testLine;
           }
         }
 
-        checkPageBreak(13);
-        currentPage.drawText(line, {
-          x: 50,
-          y: yPosition,
-          size: contentFontSize,
-          font: font,
-        });
-        yPosition -= 20;
+        if (line) {
+          checkPageBreak(lineHeight);
+          currentPage.drawText(line, {
+            x: 58,
+            y: yPosition,
+            size: contentFontSize,
+            font: font,
+          });
+          yPosition -= lineHeight;
+        } else {
+          yPosition -= 8;
+        }
       }
 
       checkPageBreak(100);
-      yPosition -= 120;
+      yPosition -= 50;
 
       currentPage.drawLine({
         start: { x: 70, y: yPosition },

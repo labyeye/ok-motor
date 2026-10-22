@@ -1422,7 +1422,7 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
       const margin = 40;
       const colWidth = (595 - 3 * margin) / 2;
       const colGap = margin;
-      const maxHeight = 250;
+      const maxHeight = 280;
       for (let i = 0; i < rcItems.length; i++) {
         const item = rcItems[i];
         const xPos = margin + i * (colWidth + colGap);
@@ -1651,7 +1651,7 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
         const asset = await embedAssetFromUrl(pdfDoc, item.url);
         if (asset) {
           const cellMaxW = 500,
-            cellMaxH = 320;
+            cellMaxH = 350;
           let width, height;
           if (asset.kind === "image") {
             const d = asset.embedded.scale(1);
@@ -1990,7 +1990,7 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
       await drawHeaderFooter(pdfDoc, page);
       const colWidth = (595 - 2 * 10) / 2;
       const colGap = 0;
-      const maxHeight = 250;
+      const maxHeight = 280;
       for (let i = 0; i < pageItems.length; i++) {
         const item = pageItems[i];
         const xPos = 10 + i * (colWidth + colGap);
@@ -2207,7 +2207,7 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
         const asset = await embedAssetFromUrl(pdfDoc, item.url);
         if (asset) {
           const cellMaxW = 500,
-            cellMaxH = 320;
+            cellMaxH = 350;
           let width, height;
           if (asset.kind === "image") {
             const d = asset.embedded.scale(1);

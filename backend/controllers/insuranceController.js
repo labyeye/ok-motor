@@ -182,6 +182,21 @@ exports.getInsuranceByVehicle = async (req, res) => {
   }
 };
 
+exports.getInsuranceByEmail = async (req, res) => {
+  try {
+    const email = String(req.params.email || "").trim();
+    if (!email) return res.status(400).json({ message: "email is required" });
+    const insurance = await Insurance.findOne({
+      personEmail: { $regex: `^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" },
+    }).sort({ updatedAt: -1, createdAt: -1 });
+    if (!insurance) return res.status(404).json({ message: "Not found" });
+    res.json(insurance);
+  } catch (error) {
+    console.error("Error fetching insurance by email:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
 exports.upsertInsuranceByVehicle = async (req, res) => {
   try {
     const { vehicleRegNo } = req.params;

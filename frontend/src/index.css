@@ -61,6 +61,86 @@ button {
 button:hover {
   background-color: #088395 !important;
 }
+
+/* Shared motion for dashboard cards, action icons, and data tables. */
+.ui-card,
+[style*="box-shadow"] {
+  animation: ui-fade-slide-in 420ms ease both;
+}
+
+svg {
+  transition:
+    transform 180ms ease,
+    color 180ms ease;
+}
+
+button:hover svg,
+a:hover svg {
+  transform: scale(1.08);
+}
+
+table {
+  animation: ui-slide-in 480ms ease both;
+}
+
+tbody tr {
+  animation: ui-row-in 320ms ease both;
+}
+
+tbody tr:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+tbody tr:nth-child(3) {
+  animation-delay: 80ms;
+}
+
+tbody tr:nth-child(4) {
+  animation-delay: 120ms;
+}
+
+@keyframes ui-fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ui-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes ui-row-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 code {
   font-family:
     source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;

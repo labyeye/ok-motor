@@ -33,6 +33,7 @@ import {
   convertPdfToImages,
 } from "../utils/pdfHandler";
 import AlertModal from "./common/AlertModal";
+import { formatIndianAmount, parseIndianAmount } from "../utils/formatters";
 
 const BuyLetterForm = () => {
   const { user, logout } = useContext(AuthContext);
@@ -3223,9 +3224,9 @@ const BuyLetterForm = () => {
     );
     page.drawText(
       `Amount in Words: ${formatIndianAmountInWords(
-        !formData.saleAmount || isNaN(Number(formData.saleAmount))
+        !formData.saleAmount || !parseIndianAmount(formData.saleAmount)
           ? 0
-          : Number(formData.saleAmount),
+          : parseIndianAmount(formData.saleAmount),
       )}`,
       {
         x: 60,
@@ -5294,12 +5295,14 @@ const BuyLetterForm = () => {
                   <input
                     type="text"
                     name="saleAmount"
-                    value={formData.saleAmount}
+                    value={formatIndianAmount(formData.saleAmount)}
                     onChange={(e) => {
-                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                      const rawValue = e.target.value
+                        .replace(/[^0-9]/g, "")
+                        .replace(/^0+(?=\d)/, "");
                       setFormData((prev) => ({
                         ...prev,
-                        saleAmount: rawValue,
+                        saleAmount: formatIndianAmount(rawValue),
                       }));
                     }}
                     onFocus={() => setFocusedInput("saleAmount")}

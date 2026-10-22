@@ -130,17 +130,24 @@ const InsuranceForm = () => {
         year: insData.year || pucData.year || vehicleData.year || prev.year,
 
         insuranceCompany:
+          vehicleData.insuranceRecord?.insuranceCompany ||
           insData.insuranceCompany ||
           vehicleData.insuranceCompany ||
           prev.insuranceCompany,
         insurancePolicyNo:
+          vehicleData.insuranceRecord?.insurancePolicyNo ||
+          vehicleData.insuranceRecord?.insurancePolicyNumber ||
           insData.insurancePolicyNumber ||
           insData.insurancePolicyNo ||
           vehicleData.insurancePolicyNumber ||
           prev.insurancePolicyNo,
         insuranceExpiry: insData.insuranceExpiryDate
           ? new Date(insData.insuranceExpiryDate).toISOString().split("T")[0]
-          : vehicleData.insuranceExpiryDate
+          : vehicleData.insuranceRecord?.insuranceExpiryDate
+            ? new Date(vehicleData.insuranceRecord.insuranceExpiryDate)
+                .toISOString()
+                .split("T")[0]
+            : vehicleData.insuranceExpiryDate
             ? new Date(vehicleData.insuranceExpiryDate)
                 .toISOString()
                 .split("T")[0]
@@ -171,6 +178,35 @@ const InsuranceForm = () => {
     try {
       await fetchVehicleDetails(reg);
     } catch (err) {}
+  };
+
+  const handleEmailKeyDown = async (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    const email = formData.personEmail?.trim();
+    if (!email) return;
+    try {
+      setIsFetching(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API_BASE_URL}/insurance/email/${encodeURIComponent(email)}`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : undefined },
+      );
+      const data = response.data;
+      setFormData((prev) => ({
+        ...prev,
+        ...data,
+        insurancePolicyNo:
+          data.insurancePolicyNo || data.insurancePolicyNumber || prev.insurancePolicyNo,
+        insuranceExpiry: data.insuranceExpiryDate || data.insuranceExpiry
+          ? new Date(data.insuranceExpiryDate || data.insuranceExpiry).toISOString().split("T")[0]
+          : prev.insuranceExpiry,
+      }));
+    } catch (err) {
+      alert(err.response?.data?.message || "No insurance data found for this email");
+    } finally {
+      setIsFetching(false);
+    }
   };
 
   const API_BASE_URL = "https://backend.okmotors.in/api";
@@ -540,6 +576,7 @@ const InsuranceForm = () => {
                   type="email"
                   name="personEmail"
                   value={formData.personEmail}
+                  onKeyDown={handleEmailKeyDown}
                   onChange={handleChange}
                   style={styles.input}
                   placeholder="name@example.com"

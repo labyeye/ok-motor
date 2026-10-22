@@ -691,7 +691,7 @@ const BuyLetterHistory = () => {
       const margin = 0;
       const colWidth = (595 - 2 * 10) / 2;
       const colGap = margin;
-      const maxHeight = 250;
+      const maxHeight = 280;
 
       for (let i = 0; i < pageItems.length; i++) {
         const item = pageItems[i];
@@ -943,7 +943,7 @@ const BuyLetterHistory = () => {
         const asset = await embedAssetFromUrl(pdfDoc, item.url);
         if (asset) {
           const cellMaxW = 500;
-          const cellMaxH = 320;
+          const cellMaxH = 350;
 
           let width, height;
           if (asset.kind === "image") {
@@ -2214,7 +2214,8 @@ const BuyLetterHistory = () => {
                             />
                           </div>
                         </th>
-                        <th style={styles.tableHeader}>Date</th>
+                        <th style={styles.tableHeader}>Created Date</th>
+                        <th style={styles.tableHeader}>Edited Date</th>
                         <th style={styles.tableHeader}>Create By</th>
                         <th style={styles.tableHeader}>PUC / Ins.</th>
                         <th style={styles.tableHeader}>Actions</th>
@@ -2224,6 +2225,14 @@ const BuyLetterHistory = () => {
                       {groupedLetters.map(
                         ({ groupId, latestVersion: letter, allVersions }) => {
                           const isExpanded = expandedGroups.has(groupId);
+                          const createdDate = allVersions.reduce(
+                            (oldest, version) =>
+                              !oldest ||
+                              new Date(version.createdAt) < new Date(oldest)
+                                ? version.createdAt
+                                : oldest,
+                            null,
+                          );
                           const docStatus = [
                             {
                               label: "RC",
@@ -2339,24 +2348,12 @@ const BuyLetterHistory = () => {
                                   )}
                                 </td>
                                 <td style={styles.tableCell}>
-                                  <div>
-                                    <div>
-                                      {letter.saleDate
-                                        ? formatDate(letter.saleDate)
-                                        : formatDate(letter.createdAt)}
-                                    </div>
-                                    {letter.editedAt && (
-                                      <div
-                                        style={{
-                                          color: "#64748b",
-                                          fontSize: "0.9em",
-                                          marginTop: "2px",
-                                        }}
-                                      >
-                                        Edited: {formatDate(letter.editedAt)}
-                                      </div>
-                                    )}
-                                  </div>
+                                  {formatDate(createdDate)}
+                                </td>
+                                <td style={styles.tableCell}>
+                                  {letter.version > 1 && letter.editedAt
+                                    ? formatDate(letter.editedAt)
+                                    : "-"}
                                 </td>
                                 <td style={styles.tableCell}>
                                   {letter.user && letter.user.role === "admin"

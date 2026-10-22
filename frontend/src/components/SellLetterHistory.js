@@ -1191,7 +1191,7 @@ const SellLetterHistory = () => {
             const margin = 20;
             const colWidth = (595 - 2 * margin) / 2;
             const colGap = margin;
-            const maxHeight = 250;
+            const maxHeight = 280;
 
             for (let i = 0; i < rcItems.length; i++) {
               const item = rcItems[i];
@@ -1446,7 +1446,7 @@ const SellLetterHistory = () => {
               const asset = await embedAssetFromUrl(pdfDoc, item.url);
               if (asset) {
                 const cellMaxW = 500;
-                const cellMaxH = 320;
+                const cellMaxH = 350;
                 let width, height;
                 if (asset.kind === "image") {
                   const dims = asset.embedded.scale(1);
@@ -2135,7 +2135,7 @@ const SellLetterHistory = () => {
           const margin = 40;
           const colWidth = (595 - 3 * margin) / 2;
           const colGap = margin;
-          const maxHeight = 250;
+          const maxHeight = 280;
 
           for (let i = 0; i < rcItems.length; i++) {
             const item = rcItems[i];
@@ -2399,7 +2399,7 @@ const SellLetterHistory = () => {
             const asset = await embedAssetFromUrl(pdfDoc, item.url);
             if (asset) {
               const cellMaxW = 500;
-              const cellMaxH = 320;
+              const cellMaxH = 350;
               let width, height;
               if (asset.kind === "image") {
                 const dims = asset.embedded.scale(1);
@@ -2894,7 +2894,7 @@ const SellLetterHistory = () => {
           const margin = 40;
           const colWidth = (595 - 3 * margin) / 2;
           const colGap = margin;
-          const maxHeight = 250;
+          const maxHeight = 280;
 
           for (let i = 0; i < rcItems.length; i++) {
             const item = rcItems[i];
@@ -3158,7 +3158,7 @@ const SellLetterHistory = () => {
             const asset = await embedAssetFromUrl(pdfDoc, item.url);
             if (asset) {
               const cellMaxW = 500;
-              const cellMaxH = 320;
+              const cellMaxH = 350;
               let width, height;
               if (asset.kind === "image") {
                 const dims = asset.embedded.scale(1);
@@ -4105,7 +4105,8 @@ const SellLetterHistory = () => {
                             />
                           </div>
                         </th>
-                        <th style={styles.tableHeader}>Date</th>
+                        <th style={styles.tableHeader}>Created Date</th>
+                        <th style={styles.tableHeader}>Edited Date</th>
                         <th style={styles.tableHeader}>Created By</th>
                         <th style={styles.tableHeader}>PUC / Ins.</th>
                         <th style={styles.tableHeader}>Actions</th>
@@ -4115,6 +4116,14 @@ const SellLetterHistory = () => {
                       {groupedLetters.map(
                         ({ groupId, latestVersion: letter, allVersions }) => {
                           const isExpanded = expandedGroups.has(groupId);
+                          const createdDate = allVersions.reduce(
+                            (oldest, version) =>
+                              !oldest ||
+                              new Date(version.createdAt) < new Date(oldest)
+                                ? version.createdAt
+                                : oldest,
+                            null,
+                          );
                           const docStatus = [
                             {
                               label: "RC",
@@ -4226,27 +4235,15 @@ const SellLetterHistory = () => {
                                   )}
                                 </td>
                                 <td style={styles.tableCell}>
-                                  {String(
-                                    formatSaleDateTimeDisplay(letter) || "",
-                                  )
-                                    .split("\n")
-                                    .map((line, idx) => (
-                                      <div key={idx}>{line}</div>
-                                    ))}
-                                  {letter.editedAt && (
-                                    <div
-                                      style={{
-                                        fontSize: "0.7rem",
-                                        color: "#64748b",
-                                        marginTop: "2px",
-                                      }}
-                                    >
-                                      Edited: {formatDate(letter.editedAt)}
-                                    </div>
-                                  )}
+                                  {formatDate(createdDate)}
                                 </td>
                                 <td style={styles.tableCell}>
-                                  {letter.user && letter.user.role === "admin"
+                                  {letter.version > 1 && letter.editedAt
+                                    ? formatDate(letter.editedAt)
+                                    : "-"}
+                                </td>
+                                <td style={styles.tableCell}>
+                                  {letter.user &&letter.user.role === "admin"
                                     ? "admin"
                                     : letter.user && letter.user.name
                                       ? letter.user.name

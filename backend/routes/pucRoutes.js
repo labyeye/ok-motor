@@ -8,9 +8,12 @@ const {
   updatePUC,
   getPUCByVehicle,
   upsertPUCByVehicle,
+  getPUCByEmail,
 } = require("../controllers/pucController");
 
 router.route("/").post(protect, createPUC).get(protect, getAllPUC);
+
+router.get("/email/:email", protect, getPUCByEmail);
 
 router
   .route("/vehicle/:vehicleRegNo")

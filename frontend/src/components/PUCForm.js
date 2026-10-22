@@ -118,17 +118,33 @@ const PUCForm = () => {
         brand:
           pucData.brand || insData.brand || vehicleData.brand || prev.brand,
         year: pucData.year || insData.year || vehicleData.year || prev.year,
-        pucNumber: pucData.pucNumber || vehicleData.pucNumber || prev.pucNumber,
+        pucNumber:
+          vehicleData.pucRecord?.pucNumber ||
+          pucData.pucNumber ||
+          vehicleData.pucNumber ||
+          prev.pucNumber,
         pucExpiry:
           pucData.pucExpiryDate || pucData.pucExpiry
             ? new Date(pucData.pucExpiryDate || pucData.pucExpiry)
                 .toISOString()
                 .split("T")[0]
-            : vehicleData.pucExpiryDate || vehicleData.pucExpiry
-              ? new Date(vehicleData.pucExpiryDate || vehicleData.pucExpiry)
+            : vehicleData.pucRecord?.pucExpiryDate
+              ? new Date(vehicleData.pucRecord.pucExpiryDate)
                   .toISOString()
                   .split("T")[0]
-              : prev.pucExpiry,
+              : vehicleData.pucExpiryDate || vehicleData.pucExpiry
+                ? new Date(vehicleData.pucExpiryDate || vehicleData.pucExpiry)
+                    .toISOString()
+                    .split("T")[0]
+                : prev.pucExpiry,
+        pucIssueDate:
+            vehicleData.pucRecord?.pucIssueDate ||
+            pucData.pucIssueDate ||
+            prev.pucIssueDate,
+        pucStatus:
+            vehicleData.pucRecord?.pucStatus ||
+            pucData.pucStatus ||
+            prev.pucStatus,
       }));
     } catch (err) {
       console.error("Failed to fetch vehicle/puc details:", err);
@@ -144,6 +160,33 @@ const PUCForm = () => {
     if (e.key !== "Enter") return;
     e.preventDefault();
     await fetchVehicleDetails(formData.regNo?.trim());
+  };
+
+  const handleEmailKeyDown = async (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    const email = formData.personEmail?.trim();
+    if (!email) return;
+    try {
+      setIsFetching(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API_BASE_URL}/puc/email/${encodeURIComponent(email)}`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : undefined },
+      );
+      const data = response.data;
+      setFormData((prev) => ({
+        ...prev,
+        ...data,
+        pucExpiry: data.pucExpiryDate || data.pucExpiry
+          ? new Date(data.pucExpiryDate || data.pucExpiry).toISOString().split("T")[0]
+          : prev.pucExpiry,
+      }));
+    } catch (err) {
+      alert(err.response?.data?.message || "No PUC data found for this email");
+    } finally {
+      setIsFetching(false);
+    }
   };
 
   const handleSave = async (e) => {
@@ -530,6 +573,7 @@ const PUCForm = () => {
                   type="email"
                   name="personEmail"
                   value={formData.personEmail}
+                  onKeyDown={handleEmailKeyDown}
                   onChange={handleChange}
                   style={styles.input}
                   placeholder="name@example.com"

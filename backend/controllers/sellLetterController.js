@@ -954,6 +954,7 @@ exports.getVehicleDetails = async (req, res) => {
       chassisNumber: vehicleRecord.chassisNumber,
       engineNumber: vehicleRecord.engineNumber,
       vehiclekm: kmSource.vehiclekm,
+      personEmail: vehicleRecord.buyerEmail || vehicleRecord.personEmail,
     };
 
     vehicleDetails.brand =
@@ -1019,6 +1020,7 @@ exports.getVehicleDetails = async (req, res) => {
       ]);
 
       if (insuranceDoc) {
+        vehicleDetails.insuranceRecord = insuranceDoc;
         vehicleDetails.insuranceCompany =
           insuranceDoc.insuranceCompany || vehicleDetails.insuranceCompany;
         vehicleDetails.insurancePolicyNumber =
@@ -1035,6 +1037,7 @@ exports.getVehicleDetails = async (req, res) => {
       }
 
       if (pucDoc) {
+        vehicleDetails.pucRecord = pucDoc;
         vehicleDetails.pucIssueDate =
           pucDoc.pucIssueDate || vehicleDetails.pucIssueDate;
         vehicleDetails.pucExpiryDate =
