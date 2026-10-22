@@ -1354,29 +1354,53 @@ const BuyLetterForm = () => {
       }
 
       if (isPdfFile(file) && uploadModalAllowPdf) {
-        setFilesState((prev) => ({
-          ...prev,
-          [uploadModalFieldName]: file,
-        }));
-
         try {
           const pdfImages = await convertPdfToImages(file);
-          if (Array.isArray(pdfImages) && pdfImages[0]?.data) {
-            setFilePreviews((prev) => ({
-              ...prev,
-              [uploadModalFieldName]: pdfImages[0].data,
-            }));
-          } else {
-            setFilePreviews((prev) => ({
-              ...prev,
-              [uploadModalFieldName]: URL.createObjectURL(file),
-            }));
-          }
-        } catch (err) {
-          console.warn("PDF preview generation failed", err);
+          const preview =
+            Array.isArray(pdfImages) && pdfImages[0]?.data
+              ? pdfImages[0].data
+              : URL.createObjectURL(file);
+          const isSingleDocument =
+            (uploadModalFieldName === "vehicleRCFront" &&
+              vehicleRCUploadMode === "single") ||
+            (uploadModalFieldName === "aadhaarFront" &&
+              aadhaarUploadMode === "single");
+          const pairedField =
+            uploadModalFieldName === "vehicleRCFront"
+              ? "vehicleRCBack"
+              : "aadhaarBack";
+
+          setFilesState((prev) => ({
+            ...prev,
+            [uploadModalFieldName]: file,
+            ...(isSingleDocument ? { [pairedField]: file } : {}),
+          }));
           setFilePreviews((prev) => ({
             ...prev,
-            [uploadModalFieldName]: URL.createObjectURL(file),
+            [uploadModalFieldName]: preview,
+            ...(isSingleDocument ? { [pairedField]: preview } : {}),
+          }));
+        } catch (err) {
+          console.warn("PDF preview generation failed", err);
+          const preview = URL.createObjectURL(file);
+          const isSingleDocument =
+            (uploadModalFieldName === "vehicleRCFront" &&
+              vehicleRCUploadMode === "single") ||
+            (uploadModalFieldName === "aadhaarFront" &&
+              aadhaarUploadMode === "single");
+          const pairedField =
+            uploadModalFieldName === "vehicleRCFront"
+              ? "vehicleRCBack"
+              : "aadhaarBack";
+          setFilesState((prev) => ({
+            ...prev,
+            [uploadModalFieldName]: file,
+            ...(isSingleDocument ? { [pairedField]: file } : {}),
+          }));
+          setFilePreviews((prev) => ({
+            ...prev,
+            [uploadModalFieldName]: preview,
+            ...(isSingleDocument ? { [pairedField]: preview } : {}),
           }));
         }
 

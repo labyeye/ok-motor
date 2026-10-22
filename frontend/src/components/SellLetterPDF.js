@@ -753,16 +753,11 @@ const SellLetterForm = () => {
       }
 
       if (isPdfFile(file)) {
-        let convertedFile = null;
         let previewImage = null;
         try {
           const pdfImages = await convertPdfToImages(file);
           if (Array.isArray(pdfImages) && pdfImages[0]?.data) {
             previewImage = pdfImages[0].data;
-            convertedFile = dataUrlToFile(
-              pdfImages[0].data,
-              `${uploadModalFieldName || "document"}.png`,
-            );
           }
         } catch (err) {
           console.warn("PDF to image conversion failed", err);
@@ -771,7 +766,9 @@ const SellLetterForm = () => {
         const pdfData = await extractImagesFromPdf(file);
         const pdfUrl = pdfData?.url || URL.createObjectURL(file);
 
-        const finalFile = convertedFile || file;
+        // Keep the original PDF so all pages (including the back side) are
+        // uploaded; the rendered image is only used for the UI preview.
+        const finalFile = file;
         const effectivePreview = previewImage || pdfUrl;
 
         if (
