@@ -9,12 +9,14 @@ import TableFilter from "./common/TableFilter";
 import ConfirmModal from "./ConfirmModal";
 import PdfPreview from "./PdfPreview";
 import AlertModal from "./common/AlertModal";
+import HistoryExportToolbar from "./HistoryExportToolbar";
 
 const AdvanceHistory = () => {
   const { user, logout } = useContext(AuthContext);
   const [advanceBills, setAdvanceBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const handleSort = () => setAdvanceBills((items) => [...items].reverse());
   const [filters, setFilters] = useState({
     total: null,
     advance: null,
@@ -671,17 +673,31 @@ const AdvanceHistory = () => {
             </p>
           </div>
 
-          <div style={styles.searchContainer}>
-            <div style={styles.searchInputContainer}>
-              <Search size={18} style={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Search by registration number or customer name..."
-                value={searchTerm}
-                onChange={handleSearch}
-                style={styles.searchInput}
-              />
+          <div className="history-controls">
+            <div style={styles.searchContainer}>
+              <div style={styles.searchInputContainer}>
+                <Search size={18} style={styles.searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Search by registration number or customer name..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  style={styles.searchInput}
+                />
+              </div>
             </div>
+            <HistoryExportToolbar
+              rows={filteredBills}
+              title="Advance History"
+              filename="advance-history"
+              onSort={handleSort}
+              onFilter={() =>
+                document
+                  .querySelector('input[placeholder^="Search by registration"]')
+                  ?.focus()
+              }
+              filterActive={Boolean(searchTerm)}
+            />
           </div>
 
           {loading ? (

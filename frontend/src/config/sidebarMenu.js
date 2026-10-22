@@ -147,6 +147,16 @@ export function getSidebarMenu(userRole) {
       icon: "Settings",
       path: "/settings",
     },
+    {
+      name: "Reports",
+      icon: "FileText",
+      path: "/reports",
+    },
+    {
+      name: "Document Vault",
+      icon: "FolderOpen",
+      path: "/document-vault",
+    },
   ];
 
   if (userRole === "staff") {

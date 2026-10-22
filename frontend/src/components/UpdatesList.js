@@ -6,12 +6,20 @@ import { RefreshCw, X } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import ConfirmModal from "./ConfirmModal";
+import HistoryExportToolbar from "./HistoryExportToolbar";
 
 const UpdatesList = () => {
   const { user, logout } = useContext(AuthContext);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const [updates, setUpdates] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const handleSort = () => setUpdates((items) => [...items].reverse());
+  const filteredUpdates = updates.filter((update) =>
+    `${update.title || ""} ${update.shortDescription || ""} ${update.status || ""}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase()),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [viewItem, setViewItem] = useState(null);
@@ -141,7 +149,27 @@ const UpdatesList = () => {
             </div>
           </div>
 
-          {}
+          <div className="history-controls">
+            <input
+              placeholder="Search updates..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="updates-search-input"
+            />
+            <HistoryExportToolbar
+              rows={filteredUpdates}
+              title="Updates"
+              filename="updates"
+              onSort={handleSort}
+              onFilter={() =>
+                document
+                  .querySelector('input[placeholder^="Search updates"]')
+                  ?.focus()
+              }
+              filterActive={Boolean(searchTerm)}
+            />
+          </div>
+
           {!isMobile && (
             <div className="updates-table-wrapper">
               <table className="updates-table">
@@ -156,7 +184,7 @@ const UpdatesList = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {updates.map((u) => (
+                  {filteredUpdates.map((u) => (
                     <tr key={u._id} className="updates-tr">
                       <td className="updates-td">{u.title}</td>
                       <td className="updates-td">
@@ -225,7 +253,7 @@ const UpdatesList = () => {
           {}
           {isMobile && (
             <div className="updates-cards">
-              {updates.map((u) => (
+              {filteredUpdates.map((u) => (
                 <div key={u._id} className="updates-card">
                   {u.images && u.images[0] && (
                     <img

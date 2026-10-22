@@ -23,6 +23,12 @@ const InsuranceForm = () => {
     vehicleModel: "",
     brand: "",
     year: "",
+    vehicleColor: "",
+    chassisNumber: "",
+    engineNumber: "",
+    vehicleType: "",
+    fuelType: "",
+    kmReading: "",
     regNo: "",
     insurancePolicyNo: "",
     insuranceCompany: "",
@@ -44,6 +50,12 @@ const InsuranceForm = () => {
         vehicleModel: data.vehicleModel || "",
         brand: data.brand || "",
         year: data.year || "",
+        vehicleColor: data.vehicleColor || "",
+        chassisNumber: data.chassisNumber || "",
+        engineNumber: data.engineNumber || "",
+        vehicleType: data.vehicleType || "",
+        fuelType: data.fuelType || "",
+        kmReading: data.kmReading || "",
         regNo: data.regNo || "",
         insurancePolicyNo:
           data.insurancePolicyNo || data.insurancePolicyNumber || "",
@@ -128,6 +140,37 @@ const InsuranceForm = () => {
         brand:
           insData.brand || pucData.brand || vehicleData.brand || prev.brand,
         year: insData.year || pucData.year || vehicleData.year || prev.year,
+        vehicleColor:
+          insData.vehicleColor ||
+          pucData.vehicleColor ||
+          vehicleData.vehicleColor ||
+          prev.vehicleColor,
+        chassisNumber:
+          insData.chassisNumber ||
+          pucData.chassisNumber ||
+          vehicleData.chassisNumber ||
+          prev.chassisNumber,
+        engineNumber:
+          insData.engineNumber ||
+          pucData.engineNumber ||
+          vehicleData.engineNumber ||
+          prev.engineNumber,
+        vehicleType:
+          insData.vehicleType ||
+          pucData.vehicleType ||
+          vehicleData.vehicleType ||
+          prev.vehicleType,
+        fuelType:
+          insData.fuelType ||
+          pucData.fuelType ||
+          vehicleData.fuelType ||
+          prev.fuelType,
+        kmReading:
+          insData.kmReading ||
+          pucData.kmReading ||
+          vehicleData.kmReading ||
+          vehicleData.vehiclekm ||
+          prev.kmReading,
 
         insuranceCompany:
           vehicleData.insuranceRecord?.insuranceCompany ||
@@ -148,10 +191,10 @@ const InsuranceForm = () => {
                 .toISOString()
                 .split("T")[0]
             : vehicleData.insuranceExpiryDate
-            ? new Date(vehicleData.insuranceExpiryDate)
-                .toISOString()
-                .split("T")[0]
-            : prev.insuranceExpiry,
+              ? new Date(vehicleData.insuranceExpiryDate)
+                  .toISOString()
+                  .split("T")[0]
+              : prev.insuranceExpiry,
         personAlternateNo:
           insData.personAlternateNo ||
           pucData.personAlternateNo ||
@@ -197,13 +240,20 @@ const InsuranceForm = () => {
         ...prev,
         ...data,
         insurancePolicyNo:
-          data.insurancePolicyNo || data.insurancePolicyNumber || prev.insurancePolicyNo,
-        insuranceExpiry: data.insuranceExpiryDate || data.insuranceExpiry
-          ? new Date(data.insuranceExpiryDate || data.insuranceExpiry).toISOString().split("T")[0]
-          : prev.insuranceExpiry,
+          data.insurancePolicyNo ||
+          data.insurancePolicyNumber ||
+          prev.insurancePolicyNo,
+        insuranceExpiry:
+          data.insuranceExpiryDate || data.insuranceExpiry
+            ? new Date(data.insuranceExpiryDate || data.insuranceExpiry)
+                .toISOString()
+                .split("T")[0]
+            : prev.insuranceExpiry,
       }));
     } catch (err) {
-      alert(err.response?.data?.message || "No insurance data found for this email");
+      alert(
+        err.response?.data?.message || "No insurance data found for this email",
+      );
     } finally {
       setIsFetching(false);
     }
@@ -255,6 +305,12 @@ const InsuranceForm = () => {
           vehicleModel: "",
           brand: "",
           year: "",
+          vehicleColor: "",
+          chassisNumber: "",
+          engineNumber: "",
+          vehicleType: "",
+          fuelType: "",
+          kmReading: "",
           regNo: "",
           insurancePolicyNo: "",
           insuranceCompany: "",
@@ -397,7 +453,7 @@ const InsuranceForm = () => {
     },
     contentPadding: {
       padding: isMobile ? "24px 16px" : "32px",
-      maxWidth: "1200px",
+      maxWidth: "100%",
       margin: "0 auto",
     },
     header: {
@@ -608,6 +664,68 @@ const InsuranceForm = () => {
                   type="text"
                   name="year"
                   value={formData.year}
+                  onChange={handleChange}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Vehicle Color (Optional)</label>
+                <input
+                  type="text"
+                  name="vehicleColor"
+                  value={formData.vehicleColor}
+                  onChange={handleChange}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Chassis Number (Optional)</label>
+                <input
+                  type="text"
+                  name="chassisNumber"
+                  value={formData.chassisNumber}
+                  onChange={handleChange}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Engine Number (Optional)</label>
+                <input
+                  type="text"
+                  name="engineNumber"
+                  value={formData.engineNumber}
+                  onChange={handleChange}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Vehicle Type (Optional)</label>
+                <input
+                  type="text"
+                  name="vehicleType"
+                  value={formData.vehicleType}
+                  onChange={handleChange}
+                  style={styles.input}
+                  placeholder="Car, Bike, SUV..."
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Fuel Type (Optional)</label>
+                <input
+                  type="text"
+                  name="fuelType"
+                  value={formData.fuelType}
+                  onChange={handleChange}
+                  style={styles.input}
+                  placeholder="Petrol, Diesel, CNG..."
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>KM Reading (Optional)</label>
+                <input
+                  type="text"
+                  name="kmReading"
+                  value={formData.kmReading}
                   onChange={handleChange}
                   style={styles.input}
                 />

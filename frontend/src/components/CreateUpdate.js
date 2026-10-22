@@ -127,7 +127,7 @@ const CreateUpdate = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ maxWidth: 900 }}>
+          <form onSubmit={handleSubmit} style={{ maxWidth: "100%" }}>
             <div style={{ marginBottom: 12 }}>
               <label style={{ display: "block", marginBottom: 6 }}>Title</label>
               <input

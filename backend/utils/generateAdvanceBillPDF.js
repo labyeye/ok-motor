@@ -288,7 +288,9 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
     const addressLineLimit = 35;
 
     for (let i = 0; i < customerAddress.length; i += addressLineLimit) {
-      customerAddressLines.push(customerAddress.substring(i, i + addressLineLimit));
+      customerAddressLines.push(
+        customerAddress.substring(i, i + addressLineLimit),
+      );
     }
 
     customerAddressLines.forEach((line, index) => {
@@ -301,7 +303,8 @@ const generateAdvanceBillPDF = async (advanceBill, returnBuffer = false) => {
       });
     });
 
-    const addressEndY = customerY - 40 - (customerAddressLines.length - 1) * 12 - 20;
+    const addressEndY =
+      customerY - 40 - (customerAddressLines.length - 1) * 12 - 20;
 
     page.drawText(`Phone: ${advanceBill.customerPhone || "N/A"}`, {
       x: 350,

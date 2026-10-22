@@ -120,7 +120,9 @@ exports.createBuyLetter = [
 
       // Strip stray non-alphanumeric characters (backticks, spaces, etc.) from reg number
       if (buyLetterData.registrationNumber) {
-        buyLetterData.registrationNumber = String(buyLetterData.registrationNumber)
+        buyLetterData.registrationNumber = String(
+          buyLetterData.registrationNumber,
+        )
           .replace(/[^a-zA-Z0-9]/g, "")
           .toUpperCase();
       }
@@ -916,112 +918,114 @@ exports.updateBuyLetter = [
     { name: "vehiclePhotos" },
   ]),
   async (req, res) => {
-  try {
-    let buyLetter = await BuyLetter.findById(req.params.id);
-
-    if (!buyLetter) {
-      return res.status(404).json({ message: "Buy letter not found" });
-    }
-
-    const updateData = { ...req.body };
-    if (!Object.prototype.hasOwnProperty.call(req.body, "saleDate")) {
-      delete updateData.saleDate;
-    } else if (req.body.saleDate) {
-      updateData.saleDate = new Date(req.body.saleDate);
-    }
-
-    // Strip stray non-alphanumeric characters (backticks, spaces, etc.) from reg number
-    if (updateData.registrationNumber) {
-      updateData.registrationNumber = String(updateData.registrationNumber)
-        .replace(/[^a-zA-Z0-9]/g, "")
-        .toUpperCase();
-    }
-
-    const editedDate = new Date();
-    updateData.editedAt = editedDate;
-    updateData.editedBy = req.user.id;
-
-    const hours = String(editedDate.getHours()).padStart(2, "0");
-    const minutes = String(editedDate.getMinutes()).padStart(2, "0");
-    updateData.editedTime = `${hours}:${minutes}`;
-
     try {
+      let buyLetter = await BuyLetter.findById(req.params.id);
+
+      if (!buyLetter) {
+        return res.status(404).json({ message: "Buy letter not found" });
+      }
+
+      const updateData = { ...req.body };
+      if (!Object.prototype.hasOwnProperty.call(req.body, "saleDate")) {
+        delete updateData.saleDate;
+      } else if (req.body.saleDate) {
+        updateData.saleDate = new Date(req.body.saleDate);
+      }
+
+      // Strip stray non-alphanumeric characters (backticks, spaces, etc.) from reg number
+      if (updateData.registrationNumber) {
+        updateData.registrationNumber = String(updateData.registrationNumber)
+          .replace(/[^a-zA-Z0-9]/g, "")
+          .toUpperCase();
+      }
+
+      const editedDate = new Date();
+      updateData.editedAt = editedDate;
+      updateData.editedBy = req.user.id;
+
+      const hours = String(editedDate.getHours()).padStart(2, "0");
+      const minutes = String(editedDate.getMinutes()).padStart(2, "0");
+      updateData.editedTime = `${hours}:${minutes}`;
+
+      try {
+        const regNo =
+          updateData.registrationNumber || buyLetter.registrationNumber;
+        if (regNo) {
+          const regRegex = new RegExp(`^${String(regNo).trim()}$`, "i");
+
+          const normDate = (d) =>
+            d ? new Date(d).toISOString().split("T")[0] : "";
+
+          const hasInsuranceFields =
+            updateData.insuranceCompany ||
+            updateData.insurancePolicyNumber ||
+            updateData.insuranceExpiryDate ||
+            updateData.insuranceStatus;
+          if (hasInsuranceFields) {
+            const existingIns = await Insurance.findOne({
+              vehicleRegNo: regRegex,
+            }).lean();
+            if (existingIns) {
+              // Insurance master exists — read from it, never overwrite it
+              updateData.insuranceId = existingIns._id;
+              updateData.insuranceCompany = existingIns.insuranceCompany;
+              updateData.insurancePolicyNumber =
+                existingIns.insurancePolicyNumber ||
+                existingIns.insurancePolicyNo;
+              updateData.insuranceExpiryDate =
+                existingIns.insuranceExpiryDate || existingIns.insuranceExpiry;
+              updateData.insuranceStatus = existingIns.insuranceStatus;
+            }
+            // If no Insurance master exists, keep the buy letter's own fields as-is
+          }
+
+          const hasPUCFields =
+            updateData.pucIssueDate ||
+            updateData.pucExpiryDate ||
+            updateData.pucExpiry ||
+            updateData.pucStatus;
+          if (hasPUCFields) {
+            const existingPUC = await PUC.findOne({
+              $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }],
+            }).lean();
+            if (existingPUC) {
+              // PUC master exists — read from it, never overwrite it
+              updateData.pucId = existingPUC._id;
+              updateData.pucIssueDate = existingPUC.pucIssueDate;
+              updateData.pucExpiryDate =
+                existingPUC.pucExpiryDate || existingPUC.pucExpiry;
+              updateData.pucExpiry =
+                existingPUC.pucExpiryDate || existingPUC.pucExpiry;
+              updateData.pucStatus = existingPUC.pucStatus;
+            }
+            // If no PUC master exists, keep the buy letter's own fields as-is
+          }
+        }
+      } catch (e) {
+        console.error("Failed to sync Insurance/PUC on buy update:", e);
+      }
+
+      buyLetter = await BuyLetter.findByIdAndUpdate(
+        req.params.id,
+        { $set: updateData },
+        { new: true, runValidators: true },
+      );
+
       const regNo =
         updateData.registrationNumber || buyLetter.registrationNumber;
-      if (regNo) {
+      if (regNo && buyLetter.documents) {
         const regRegex = new RegExp(`^${String(regNo).trim()}$`, "i");
-
-        const normDate = (d) =>
-          d ? new Date(d).toISOString().split("T")[0] : "";
-
-        const hasInsuranceFields =
-          updateData.insuranceCompany ||
-          updateData.insurancePolicyNumber ||
-          updateData.insuranceExpiryDate ||
-          updateData.insuranceStatus;
-        if (hasInsuranceFields) {
-          const existingIns = await Insurance.findOne({
-            vehicleRegNo: regRegex,
-          }).lean();
-          if (existingIns) {
-            // Insurance master exists — read from it, never overwrite it
-            updateData.insuranceId = existingIns._id;
-            updateData.insuranceCompany = existingIns.insuranceCompany;
-            updateData.insurancePolicyNumber =
-              existingIns.insurancePolicyNumber || existingIns.insurancePolicyNo;
-            updateData.insuranceExpiryDate =
-              existingIns.insuranceExpiryDate || existingIns.insuranceExpiry;
-            updateData.insuranceStatus = existingIns.insuranceStatus;
-          }
-          // If no Insurance master exists, keep the buy letter's own fields as-is
-        }
-
-        const hasPUCFields =
-          updateData.pucIssueDate ||
-          updateData.pucExpiryDate ||
-          updateData.pucExpiry ||
-          updateData.pucStatus;
-        if (hasPUCFields) {
-          const existingPUC = await PUC.findOne({
-            $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }],
-          }).lean();
-          if (existingPUC) {
-            // PUC master exists — read from it, never overwrite it
-            updateData.pucId = existingPUC._id;
-            updateData.pucIssueDate = existingPUC.pucIssueDate;
-            updateData.pucExpiryDate =
-              existingPUC.pucExpiryDate || existingPUC.pucExpiry;
-            updateData.pucExpiry =
-              existingPUC.pucExpiryDate || existingPUC.pucExpiry;
-            updateData.pucStatus = existingPUC.pucStatus;
-          }
-          // If no PUC master exists, keep the buy letter's own fields as-is
-        }
+        await syncBuyDocsToSellLetters({
+          regRegex,
+          buyDocuments: buyLetter.documents,
+        });
       }
-    } catch (e) {
-      console.error("Failed to sync Insurance/PUC on buy update:", e);
+
+      res.json(buyLetter);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server Error" });
     }
-
-    buyLetter = await BuyLetter.findByIdAndUpdate(
-      req.params.id,
-      { $set: updateData },
-      { new: true, runValidators: true },
-    );
-
-    const regNo = updateData.registrationNumber || buyLetter.registrationNumber;
-    if (regNo && buyLetter.documents) {
-      const regRegex = new RegExp(`^${String(regNo).trim()}$`, "i");
-      await syncBuyDocsToSellLetters({
-        regRegex,
-        buyDocuments: buyLetter.documents,
-      });
-    }
-
-    res.json(buyLetter);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
-  }
   },
 ];
 

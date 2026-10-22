@@ -22,6 +22,12 @@ const PUCForm = () => {
     vehicleModel: "",
     brand: "",
     year: "",
+    vehicleColor: "",
+    chassisNumber: "",
+    engineNumber: "",
+    vehicleType: "",
+    fuelType: "",
+    kmReading: "",
     regNo: "",
     pucNumber: "",
     pucExpiry: "",
@@ -118,6 +124,37 @@ const PUCForm = () => {
         brand:
           pucData.brand || insData.brand || vehicleData.brand || prev.brand,
         year: pucData.year || insData.year || vehicleData.year || prev.year,
+        vehicleColor:
+          pucData.vehicleColor ||
+          insData.vehicleColor ||
+          vehicleData.vehicleColor ||
+          prev.vehicleColor,
+        chassisNumber:
+          pucData.chassisNumber ||
+          insData.chassisNumber ||
+          vehicleData.chassisNumber ||
+          prev.chassisNumber,
+        engineNumber:
+          pucData.engineNumber ||
+          insData.engineNumber ||
+          vehicleData.engineNumber ||
+          prev.engineNumber,
+        vehicleType:
+          pucData.vehicleType ||
+          insData.vehicleType ||
+          vehicleData.vehicleType ||
+          prev.vehicleType,
+        fuelType:
+          pucData.fuelType ||
+          insData.fuelType ||
+          vehicleData.fuelType ||
+          prev.fuelType,
+        kmReading:
+          pucData.kmReading ||
+          insData.kmReading ||
+          vehicleData.kmReading ||
+          vehicleData.vehiclekm ||
+          prev.kmReading,
         pucNumber:
           vehicleData.pucRecord?.pucNumber ||
           pucData.pucNumber ||
@@ -138,13 +175,13 @@ const PUCForm = () => {
                     .split("T")[0]
                 : prev.pucExpiry,
         pucIssueDate:
-            vehicleData.pucRecord?.pucIssueDate ||
-            pucData.pucIssueDate ||
-            prev.pucIssueDate,
+          vehicleData.pucRecord?.pucIssueDate ||
+          pucData.pucIssueDate ||
+          prev.pucIssueDate,
         pucStatus:
-            vehicleData.pucRecord?.pucStatus ||
-            pucData.pucStatus ||
-            prev.pucStatus,
+          vehicleData.pucRecord?.pucStatus ||
+          pucData.pucStatus ||
+          prev.pucStatus,
       }));
     } catch (err) {
       console.error("Failed to fetch vehicle/puc details:", err);
@@ -178,9 +215,12 @@ const PUCForm = () => {
       setFormData((prev) => ({
         ...prev,
         ...data,
-        pucExpiry: data.pucExpiryDate || data.pucExpiry
-          ? new Date(data.pucExpiryDate || data.pucExpiry).toISOString().split("T")[0]
-          : prev.pucExpiry,
+        pucExpiry:
+          data.pucExpiryDate || data.pucExpiry
+            ? new Date(data.pucExpiryDate || data.pucExpiry)
+                .toISOString()
+                .split("T")[0]
+            : prev.pucExpiry,
       }));
     } catch (err) {
       alert(err.response?.data?.message || "No PUC data found for this email");
@@ -211,6 +251,12 @@ const PUCForm = () => {
         vehicleModel: formData.vehicleModel,
         brand: formData.brand,
         year: formData.year,
+        vehicleColor: formData.vehicleColor,
+        chassisNumber: formData.chassisNumber,
+        engineNumber: formData.engineNumber,
+        vehicleType: formData.vehicleType,
+        fuelType: formData.fuelType,
+        kmReading: formData.kmReading,
         regNo: formData.regNo,
         pucNumber: formData.pucNumber,
 
@@ -245,6 +291,12 @@ const PUCForm = () => {
         vehicleModel: "",
         brand: "",
         year: "",
+        vehicleColor: "",
+        chassisNumber: "",
+        engineNumber: "",
+        vehicleType: "",
+        fuelType: "",
+        kmReading: "",
         regNo: "",
         pucNumber: "",
         pucExpiry: "",
@@ -389,7 +441,7 @@ const PUCForm = () => {
     },
     contentPadding: {
       padding: isMobile ? "24px 16px" : "32px",
-      maxWidth: "1200px",
+      maxWidth: "100%",
       margin: "0 auto",
     },
     header: {
@@ -605,6 +657,68 @@ const PUCForm = () => {
                   type="text"
                   name="year"
                   value={formData.year}
+                  onChange={handleChange}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Vehicle Color (Optional)</label>
+                <input
+                  type="text"
+                  name="vehicleColor"
+                  value={formData.vehicleColor}
+                  onChange={handleChange}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Chassis Number (Optional)</label>
+                <input
+                  type="text"
+                  name="chassisNumber"
+                  value={formData.chassisNumber}
+                  onChange={handleChange}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Engine Number (Optional)</label>
+                <input
+                  type="text"
+                  name="engineNumber"
+                  value={formData.engineNumber}
+                  onChange={handleChange}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Vehicle Type (Optional)</label>
+                <input
+                  type="text"
+                  name="vehicleType"
+                  value={formData.vehicleType}
+                  onChange={handleChange}
+                  style={styles.input}
+                  placeholder="Car, Bike, SUV..."
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Fuel Type (Optional)</label>
+                <input
+                  type="text"
+                  name="fuelType"
+                  value={formData.fuelType}
+                  onChange={handleChange}
+                  style={styles.input}
+                  placeholder="Petrol, Diesel, CNG..."
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>KM Reading (Optional)</label>
+                <input
+                  type="text"
+                  name="kmReading"
+                  value={formData.kmReading}
                   onChange={handleChange}
                   style={styles.input}
                 />

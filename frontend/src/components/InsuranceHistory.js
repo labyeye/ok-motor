@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import TableFilter from "./common/TableFilter";
+import HistoryExportToolbar from "./HistoryExportToolbar";
 
 const InsuranceHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -14,6 +15,8 @@ const InsuranceHistory = () => {
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const handleSort = () => setHistory((items) => [...items].reverse());
+
   const [filters, setFilters] = useState({
     company: null,
     expiry: null,
@@ -360,24 +363,40 @@ const InsuranceHistory = () => {
             </p>
           </div>
 
-          <div style={styles.searchContainer}>
-            <div style={styles.searchInputContainer}>
-              <Search size={18} style={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Search by name or reg number..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={styles.searchInput}
-              />
+          <div className="history-controls">
+            <div style={styles.searchContainer}>
+              <div style={styles.searchInputContainer}>
+                <Search size={18} style={styles.searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Search by name or reg number..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={styles.searchInput}
+                />
+              </div>
+              <button
+                style={styles.newLetterButton}
+                onClick={() => navigate("/insurance/create")}
+              >
+                <Shield size={16} />
+                New Insurance
+              </button>
             </div>
-            <button
-              style={styles.newLetterButton}
-              onClick={() => navigate("/insurance/create")}
-            >
-              <Shield size={16} />
-              New Insurance
-            </button>
+            <HistoryExportToolbar
+              rows={filteredHistory}
+              title="Insurance History"
+              filename="insurance-history"
+              onSort={handleSort}
+              onFilter={() =>
+                document
+                  .querySelector('input[placeholder^="Search by name"]')
+                  ?.focus()
+              }
+              filterActive={Boolean(
+                searchTerm || filters.expiry || filters.expiryTone !== "all",
+              )}
+            />
           </div>
 
           <div style={styles.tableContainer}>

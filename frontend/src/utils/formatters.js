@@ -1,6 +1,8 @@
 export const formatIndianAmount = (value) => {
   if (value === null || value === undefined || value === "") return "";
-  const numeric = String(value).replace(/,/g, "").replace(/[^\d.]/g, "");
+  const numeric = String(value)
+    .replace(/,/g, "")
+    .replace(/[^\d.]/g, "");
   if (!numeric) return "";
   const [whole, decimal] = numeric.split(".");
   const formattedWhole = Number(whole || 0).toLocaleString("en-IN");

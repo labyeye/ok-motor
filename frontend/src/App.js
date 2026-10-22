@@ -37,6 +37,10 @@ import { useState, useEffect } from "react";
 import networkService from "./services/networkService";
 import "./services/syncService";
 import AccessLockScreen from "./components/AccessLockScreen";
+import ReportsPage from "./pages/ReportsPage";
+import LabelIcons from "./components/common/LabelIcons";
+import FieldEnhancer from "./components/common/FieldEnhancer";
+import DocumentVaultPage from "./pages/DocumentVaultPage";
 
 const Rootredirect = () => {
   const { user, loading } = useAuth();
@@ -142,6 +146,8 @@ function App() {
         {isOnline ? "Online" : "Offline"}
       </div>
       <Router>
+        <LabelIcons />
+        <FieldEnhancer />
         <Routes>
           <Route path="/" element={<Rootredirect />} />
           <Route path="/login" element={<LoginPage />} />
@@ -150,6 +156,22 @@ function App() {
             element={
               <PrivateRoute roles={["admin"]}>
                 <AdminPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <ReportsPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/document-vault"
+            element={
+              <PrivateRoute roles={["admin", "staff"]}>
+                <DocumentVaultPage />
               </PrivateRoute>
             }
           />

@@ -27,11 +27,13 @@ import AppSidebar from "./common/AppSidebar";
 import PdfPreview from "./PdfPreview";
 import logo1 from "../images/okmotorback.png";
 import VehicleLetterDownloader from "./common/VehicleLetterDownloader";
+import HistoryExportToolbar from "./HistoryExportToolbar";
 
 const BikeHistory = ({ externalSearchTerm }) => {
   const { user, logout } = useContext(AuthContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [bikeHistory, setBikeHistory] = useState([]);
+  const handleSort = () => setBikeHistory((items) => [...items].reverse());
   const [loading, setLoading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState("");
   const [showPdfModal, setShowPdfModal] = useState(false);
@@ -2762,17 +2764,31 @@ const BikeHistory = ({ externalSearchTerm }) => {
 
       <div style={styles.mainContent}>
         <div style={styles.contentPadding}>
-          <div style={styles.searchContainer}>
-            <div style={styles.searchInputContainer}>
-              <Search size={18} style={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Enter bike registration number..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={styles.searchInput}
-              />
+          <div className="history-controls">
+            <div style={styles.searchContainer}>
+              <div style={styles.searchInputContainer}>
+                <Search size={18} style={styles.searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Enter bike registration number..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={styles.searchInput}
+                />
+              </div>
             </div>
+            <HistoryExportToolbar
+              rows={bikeHistory}
+              title="Bike History"
+              filename="bike-history"
+              onSort={handleSort}
+              onFilter={() =>
+                document
+                  .querySelector('input[placeholder^="Enter bike"]')
+                  ?.focus()
+              }
+              filterActive={Boolean(searchTerm)}
+            />
           </div>
 
           {loading ? (

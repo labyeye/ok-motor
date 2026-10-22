@@ -15,6 +15,7 @@ import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import ConfirmModal from "./ConfirmModal";
 import VehicleLetterDownloader from "./common/VehicleLetterDownloader";
+import HistoryExportToolbar from "./HistoryExportToolbar";
 
 const VehicleHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -24,6 +25,7 @@ const VehicleHistory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("Available");
+  const handleSort = () => setVehicles((items) => [...items].reverse());
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
@@ -521,39 +523,53 @@ const VehicleHistory = () => {
           </div>
 
           {}
-          <div style={styles.filters}>
-            <div style={styles.searchBox}>
-              <Search size={20} style={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Search by brand, model, registration..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={styles.searchInput}
-              />
+          <div className="history-controls">
+            <div style={styles.filters}>
+              <div style={styles.searchBox}>
+                <Search size={20} style={styles.searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Search by brand, model, registration..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={styles.searchInput}
+                />
+              </div>
+
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                style={styles.select}
+              >
+                <option value="">All Types</option>
+                <option value="Car">Cars</option>
+                <option value="Bike">Bikes</option>
+              </select>
+
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                style={styles.select}
+              >
+                <option value="">All Status</option>
+                <option value="Available">Available</option>
+                <option value="Sold">Sold</option>
+                <option value="Reserved">Reserved</option>
+                <option value="Under Service">Under Service</option>
+              </select>
             </div>
-
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              style={styles.select}
-            >
-              <option value="">All Types</option>
-              <option value="Car">Cars</option>
-              <option value="Bike">Bikes</option>
-            </select>
-
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              style={styles.select}
-            >
-              <option value="">All Status</option>
-              <option value="Available">Available</option>
-              <option value="Sold">Sold</option>
-              <option value="Reserved">Reserved</option>
-              <option value="Under Service">Under Service</option>
-            </select>
+            <HistoryExportToolbar
+              rows={filteredVehicles}
+              title="Vehicle History"
+              filename="vehicle-history"
+              onSort={handleSort}
+              onFilter={() =>
+                document
+                  .querySelector('input[placeholder^="Search by brand"]')
+                  ?.focus()
+              }
+              filterActive={Boolean(searchTerm || filterType || filterStatus)}
+            />
           </div>
 
           {}

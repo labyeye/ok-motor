@@ -308,7 +308,7 @@ const modalContent = {
   background: "#fff",
   padding: 20,
   borderRadius: 6,
-  maxWidth: 900,
+  maxWidth: "100%",
   width: "92%",
   maxHeight: "86%",
   overflowY: "auto",

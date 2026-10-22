@@ -23,6 +23,7 @@ import AppSidebar from "./common/AppSidebar";
 import ConfirmModal from "./ConfirmModal";
 import AlertModal from "./common/AlertModal";
 import TableFilter from "./common/TableFilter";
+import HistoryExportToolbar from "./HistoryExportToolbar";
 
 const getValidityStatus = (expiryDate) => {
   if (!expiryDate) return null;
@@ -60,6 +61,7 @@ const BuyLetterHistory = () => {
     vehicleBuyReceipt: true,
   });
   const [buyLetters, setBuyLetters] = useState([]);
+  const handleSort = () => setBuyLetters((items) => [...items].reverse());
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ year: null, amount: null });
@@ -685,7 +687,7 @@ const BuyLetterHistory = () => {
         items.push({ title: `Vehicle Photo ${i + 1}`, url: u }),
       );
     }
-    const renderTwoColumnPage = async (pageItems, pageTitle = null) => {
+    const renderTwoColumnPage = async (pageItems) => {
       const page = pdfDoc.addPage([595, 842]);
       await drawHeaderFooter(pdfDoc, page);
       const margin = 0;
@@ -2135,15 +2137,31 @@ const BuyLetterHistory = () => {
             </p>
           </div>
 
-          <div style={styles.searchContainer}>
-            <div style={styles.searchInputContainer}>
-              <Search size={18} style={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Search buy letters..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={styles.searchInput}
+          <div style={styles.headercontainer}>
+            <div className="history-controls">
+              <div style={styles.searchContainer}>
+                <div style={styles.searchInputContainer}>
+                  <Search size={18} style={styles.searchIcon} />
+                  <input
+                    type="text"
+                    placeholder="Search buy letters..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={styles.searchInput}
+                  />
+                </div>
+              </div>
+              <HistoryExportToolbar
+                rows={filteredLetters}
+                title="Buy Letter History"
+                filename="buy-letter-history"
+                onSort={handleSort}
+                onFilter={() =>
+                  document.querySelector('input[type="text"]')?.focus()
+                }
+                filterActive={Boolean(
+                  searchTerm || filters.year || filters.amount,
+                )}
               />
             </div>
           </div>
@@ -3324,8 +3342,7 @@ const BuyLetterHistory = () => {
                                         .length > 0),
                                 },
                               ]
-                                .filter((doc) => doc.exists)
-                                .map((doc, idx) => (
+                                                                .map((doc, idx) => (
                                   <div
                                     key={idx}
                                     style={{
@@ -3333,15 +3350,15 @@ const BuyLetterHistory = () => {
                                       alignItems: "center",
                                       gap: "4px",
                                       padding: "4px 8px",
-                                      backgroundColor: "#fff",
+                                      backgroundColor: doc.exists ? "#fff" : "#f1f5f9",
                                       borderRadius: "6px",
                                       border: "1px solid #e2e8f0",
                                       fontSize: "0.75rem",
-                                      color: "#16a34a",
+                                      color: doc.exists ? "#16a34a" : "#94a3b8",
                                       fontWeight: "500",
                                     }}
                                   >
-                                    <Check size={12} strokeWidth={3} />
+                                    {doc.exists ? <Check size={12} strokeWidth={3} /> : <X size={12} strokeWidth={3} />}
                                     {doc.label}
                                   </div>
                                 ))}
@@ -4720,6 +4737,9 @@ const styles = {
     backgroundColor: "#EBF4F6",
     fontFamily: "'Inter', sans-serif",
   },
+  headercontainer: {
+    width: "100%",
+  },
   topBar: {
     position: "fixed",
     top: 0,
@@ -4879,9 +4899,11 @@ const styles = {
   },
   searchContainer: {
     display: "flex",
-    justifyContent: "space-between",
+    flex: "1 1 280px",
+    minWidth: 0,
+    justifyContent: "flex-start",
     alignItems: "center",
-    marginBottom: "24px",
+    marginBottom: 0,
   },
   searchInputContainer: {
     position: "relative",

@@ -970,9 +970,7 @@ exports.getVehicleDetails = async (req, res) => {
       undefined;
 
     vehicleDetails.personAlternateNo =
-      vehicleRecord.buyerPhone2 ||
-      vehicleRecord.personAlternateNo ||
-      undefined;
+      vehicleRecord.buyerPhone2 || vehicleRecord.personAlternateNo || undefined;
 
     if (vehicleRecord.pucIssueDate)
       vehicleDetails.pucIssueDate = vehicleRecord.pucIssueDate;
@@ -1268,124 +1266,125 @@ exports.updateSellLetter = [
     { name: "transferReceipt", maxCount: 50 },
   ]),
   async (req, res) => {
-  try {
-    const sellLetter = await SellLetter.findById(req.params.id);
-
-    if (!sellLetter) {
-      return res.status(404).json({ message: "Sell letter not found" });
-    }
-
-    const updateData = { ...req.body };
-    if (!Object.prototype.hasOwnProperty.call(req.body, "saleDate")) {
-      delete updateData.saleDate;
-    } else if (req.body.saleDate) {
-      updateData.saleDate = new Date(req.body.saleDate);
-    }
-
-    const editedDate = new Date();
-    updateData.editedAt = editedDate;
-    updateData.editedBy = req.user && req.user.id ? req.user.id : undefined;
-
-    const hours = String(editedDate.getHours()).padStart(2, "0");
-    const minutes = String(editedDate.getMinutes()).padStart(2, "0");
-    updateData.editedTime = `${hours}:${minutes}`;
-
     try {
-      const regNo =
-        updateData.registrationNumber || sellLetter.registrationNumber;
-      if (regNo) {
-        const regRegex = new RegExp(`^${String(regNo).trim()}$`, "i");
+      const sellLetter = await SellLetter.findById(req.params.id);
 
-        const normDate = (d) =>
-          d ? new Date(d).toISOString().split("T")[0] : "";
-
-        const hasInsuranceFields =
-          updateData.insuranceCompany ||
-          updateData.insurancePolicyNumber ||
-          updateData.insuranceExpiryDate ||
-          updateData.insuranceStatus;
-        if (hasInsuranceFields) {
-          const existingIns = await Insurance.findOne({
-            vehicleRegNo: regRegex,
-          }).lean();
-          if (existingIns) {
-            // Insurance master exists — read from it, never overwrite it
-            updateData.insuranceId = existingIns._id;
-            updateData.insuranceCompany = existingIns.insuranceCompany;
-            updateData.insurancePolicyNumber =
-              existingIns.insurancePolicyNumber || existingIns.insurancePolicyNo;
-            updateData.insuranceExpiryDate =
-              existingIns.insuranceExpiryDate || existingIns.insuranceExpiry;
-            updateData.insuranceStatus = existingIns.insuranceStatus;
-          }
-          // If no Insurance master exists, keep the sell letter's own fields as-is
-        }
-
-        const hasPUCFields =
-          updateData.pucIssueDate ||
-          updateData.pucExpiryDate ||
-          updateData.pucExpiry ||
-          updateData.pucStatus;
-        if (hasPUCFields) {
-          const existingPUC = await PUC.findOne({
-            $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }],
-          }).lean();
-          if (existingPUC) {
-            // PUC master exists — read from it, never overwrite it
-            updateData.pucId = existingPUC._id;
-            updateData.pucIssueDate = existingPUC.pucIssueDate;
-            updateData.pucExpiryDate =
-              existingPUC.pucExpiryDate || existingPUC.pucExpiry;
-            updateData.pucExpiry =
-              existingPUC.pucExpiryDate || existingPUC.pucExpiry;
-            updateData.pucStatus = existingPUC.pucStatus;
-          }
-          // If no PUC master exists, keep the sell letter's own fields as-is
-        }
-
-        try {
-          await syncMasterIdentityFromSellLetter({
-            regRegex,
-            buyerName: updateData.buyerName || sellLetter.buyerName,
-            buyerPhone: updateData.buyerPhone || sellLetter.buyerPhone,
-            buyerEmail: updateData.buyerEmail || sellLetter.buyerEmail,
-          });
-        } catch (e) {
-          console.error("Sell identity resync failed:", e);
-        }
+      if (!sellLetter) {
+        return res.status(404).json({ message: "Sell letter not found" });
       }
-    } catch (e) {
-      console.error("Failed to sync Insurance/PUC on sell update:", e);
-    }
 
-    const updated = await SellLetter.findByIdAndUpdate(
-      req.params.id,
-      { $set: updateData },
-      { new: true, runValidators: true },
-    );
+      const updateData = { ...req.body };
+      if (!Object.prototype.hasOwnProperty.call(req.body, "saleDate")) {
+        delete updateData.saleDate;
+      } else if (req.body.saleDate) {
+        updateData.saleDate = new Date(req.body.saleDate);
+      }
 
-    if (updated?.registrationNumber) {
+      const editedDate = new Date();
+      updateData.editedAt = editedDate;
+      updateData.editedBy = req.user && req.user.id ? req.user.id : undefined;
+
+      const hours = String(editedDate.getHours()).padStart(2, "0");
+      const minutes = String(editedDate.getMinutes()).padStart(2, "0");
+      updateData.editedTime = `${hours}:${minutes}`;
+
       try {
-        await syncMissingBuyDocsFromSell({
-          regRegex: new RegExp(
-            `^${String(updated.registrationNumber).trim()}$`,
-            "i",
-          ),
-          sellDocuments: updated.documents,
-        });
-      } catch (docSyncError) {
-        console.error(
-          "Failed to sync buy docs from updated sell letter:",
-          docSyncError,
-        );
-      }
-    }
+        const regNo =
+          updateData.registrationNumber || sellLetter.registrationNumber;
+        if (regNo) {
+          const regRegex = new RegExp(`^${String(regNo).trim()}$`, "i");
 
-    res.json(updated);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
-  }
+          const normDate = (d) =>
+            d ? new Date(d).toISOString().split("T")[0] : "";
+
+          const hasInsuranceFields =
+            updateData.insuranceCompany ||
+            updateData.insurancePolicyNumber ||
+            updateData.insuranceExpiryDate ||
+            updateData.insuranceStatus;
+          if (hasInsuranceFields) {
+            const existingIns = await Insurance.findOne({
+              vehicleRegNo: regRegex,
+            }).lean();
+            if (existingIns) {
+              // Insurance master exists — read from it, never overwrite it
+              updateData.insuranceId = existingIns._id;
+              updateData.insuranceCompany = existingIns.insuranceCompany;
+              updateData.insurancePolicyNumber =
+                existingIns.insurancePolicyNumber ||
+                existingIns.insurancePolicyNo;
+              updateData.insuranceExpiryDate =
+                existingIns.insuranceExpiryDate || existingIns.insuranceExpiry;
+              updateData.insuranceStatus = existingIns.insuranceStatus;
+            }
+            // If no Insurance master exists, keep the sell letter's own fields as-is
+          }
+
+          const hasPUCFields =
+            updateData.pucIssueDate ||
+            updateData.pucExpiryDate ||
+            updateData.pucExpiry ||
+            updateData.pucStatus;
+          if (hasPUCFields) {
+            const existingPUC = await PUC.findOne({
+              $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }],
+            }).lean();
+            if (existingPUC) {
+              // PUC master exists — read from it, never overwrite it
+              updateData.pucId = existingPUC._id;
+              updateData.pucIssueDate = existingPUC.pucIssueDate;
+              updateData.pucExpiryDate =
+                existingPUC.pucExpiryDate || existingPUC.pucExpiry;
+              updateData.pucExpiry =
+                existingPUC.pucExpiryDate || existingPUC.pucExpiry;
+              updateData.pucStatus = existingPUC.pucStatus;
+            }
+            // If no PUC master exists, keep the sell letter's own fields as-is
+          }
+
+          try {
+            await syncMasterIdentityFromSellLetter({
+              regRegex,
+              buyerName: updateData.buyerName || sellLetter.buyerName,
+              buyerPhone: updateData.buyerPhone || sellLetter.buyerPhone,
+              buyerEmail: updateData.buyerEmail || sellLetter.buyerEmail,
+            });
+          } catch (e) {
+            console.error("Sell identity resync failed:", e);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to sync Insurance/PUC on sell update:", e);
+      }
+
+      const updated = await SellLetter.findByIdAndUpdate(
+        req.params.id,
+        { $set: updateData },
+        { new: true, runValidators: true },
+      );
+
+      if (updated?.registrationNumber) {
+        try {
+          await syncMissingBuyDocsFromSell({
+            regRegex: new RegExp(
+              `^${String(updated.registrationNumber).trim()}$`,
+              "i",
+            ),
+            sellDocuments: updated.documents,
+          });
+        } catch (docSyncError) {
+          console.error(
+            "Failed to sync buy docs from updated sell letter:",
+            docSyncError,
+          );
+        }
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server Error" });
+    }
   },
 ];
 

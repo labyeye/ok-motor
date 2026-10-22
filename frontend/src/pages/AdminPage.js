@@ -7,6 +7,8 @@ import {
   useMemo,
 } from "react";
 import {
+  BarChart3,
+  PieChart,
   ShoppingCart,
   TrendingUp,
   Wrench,
@@ -18,7 +20,7 @@ import {
   Shield,
   X,
 } from "lucide-react";
-import logo1 from "../images/dash.png";
+//import logo1 from "../images/dash.png";
 import { useNavigate } from "react-router-dom";
 import {
   Chart as ChartJS,
@@ -29,11 +31,15 @@ import {
   Tooltip,
   Legend,
   ArcElement,
+  PointElement,
+  LineElement,
+  Filler,
 } from "chart.js";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "../components/common/AppSidebar";
 import axios from "axios";
 import BikeHistory from "../components/BikeHistory";
+import { Bar, Doughnut, Line } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
@@ -43,6 +49,9 @@ ChartJS.register(
   Tooltip,
   Legend,
   ArcElement,
+  PointElement,
+  LineElement,
+  Filler,
 );
 
 const AdminPage = () => {
@@ -75,6 +84,33 @@ const AdminPage = () => {
   const [error, setError] = useState(null);
   const [freeServices, setFreeServices] = useState([]);
   const [freeServicesLoading, setFreeServicesLoading] = useState(true);
+  const [chartRange, setChartRange] = useState(1); // months shown in dashboard charts
+  // Overdue (date passed) services per month slot, and next-due within 30 days.
+  const { pendingCounts, upcomingFreeCount } = useMemo(() => {
+    const now = new Date();
+    const pendingCounts = [0, 0, 0];
+    let upcomingFreeCount = 0;
+    freeServices.forEach((row) => {
+      const used = row.usedCount || 0;
+      let nextFound = false;
+      [row.month1, row.month2, row.month3].forEach((m, i) => {
+        if (i + 1 <= used) return;
+        const d = m
+          ? new Date(m)
+          : new Date(
+              new Date(row.saleDate).setMonth(
+                new Date(row.saleDate).getMonth() + i + 1,
+              ),
+            );
+        if (d <= now) pendingCounts[i]++;
+        else if (!nextFound) {
+          nextFound = true;
+          if (Math.ceil((d - now) / 86400000) <= 30) upcomingFreeCount++;
+        }
+      });
+    });
+    return { pendingCounts, upcomingFreeCount };
+  }, [freeServices]);
   const [freeSearch, setFreeSearch] = useState("");
   const navigate = useNavigate();
 
@@ -84,11 +120,17 @@ const AdminPage = () => {
     totalSold: 0,
     insuranceExpiring: 0,
     pucExpiring: 0,
+    insuranceUpcoming: 0,
+    pucUpcoming: 0,
+    totalInsurance: 0,
+    totalPuc: 0,
     month1Pending: 0,
     month2Pending: 0,
     month3Pending: 0,
     totalValidInsurance: 0,
     totalValidPuc: 0,
+    totalExpiredInsurance: 0,
+    totalExpiredPuc: 0,
   });
 
   const [incompleteBuyLetters, setIncompleteBuyLetters] = useState([]);
@@ -211,19 +253,39 @@ const AdminPage = () => {
 
       let insuranceExpiring = 0;
       let pucExpiring = 0;
+      let insuranceUpcoming = 0;
+      let pucUpcoming = 0;
       let totalValidInsurance = 0;
       let totalValidPuc = 0;
+      let totalExpiredInsurance = 0;
+      let totalExpiredPuc = 0;
+
+      const countExpiry = (value, kind) => {
+        if (!value) return;
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return;
+        const days = Math.ceil((date - now) / (24 * 60 * 60 * 1000));
+        if (kind === "insurance") {
+          if (days >= 0 && days <= 30) insuranceUpcoming++;
+        } else if (days >= 0 && days <= 30) {
+          pucUpcoming++;
+        }
+      };
 
       for (const v of sellLetters) {
         if (v.insuranceExpiryDate) {
           const d = new Date(v.insuranceExpiryDate);
           if (d >= now && d <= sevenDays) insuranceExpiring++;
+          countExpiry(v.insuranceExpiryDate, "insurance");
           if (d >= now) totalValidInsurance++;
+          if (d < now) totalExpiredInsurance++;
         }
         if (v.pucExpiryDate) {
           const d = new Date(v.pucExpiryDate);
           if (d >= now && d <= sevenDays) pucExpiring++;
+          countExpiry(v.pucExpiryDate, "puc");
           if (d >= now) totalValidPuc++;
+          if (d < now) totalExpiredPuc++;
         }
       }
 
@@ -235,7 +297,9 @@ const AdminPage = () => {
         if (p && p.pucExpiry) {
           const d = new Date(p.pucExpiry);
           if (d >= now && d <= sevenDays) pucExpiring++;
+          countExpiry(p.pucExpiry, "puc");
           if (d >= now) totalValidPuc++;
+          if (d < now) totalExpiredPuc++;
         }
       }
 
@@ -247,7 +311,9 @@ const AdminPage = () => {
         if (ins && ins.insuranceExpiry) {
           const d = new Date(ins.insuranceExpiry);
           if (d >= now && d <= sevenDays) insuranceExpiring++;
+          countExpiry(ins.insuranceExpiry, "insurance");
           if (d >= now) totalValidInsurance++;
+          if (d < now) totalExpiredInsurance++;
         }
       }
 
@@ -258,8 +324,18 @@ const AdminPage = () => {
         totalSold,
         insuranceExpiring,
         pucExpiring,
+        insuranceUpcoming,
+        pucUpcoming,
+        totalInsurance:
+          normalizedInsuranceList.length +
+          sellLetters.filter((letter) => letter.insuranceExpiryDate).length,
+        totalPuc:
+          normalizedPucList.length +
+          sellLetters.filter((letter) => letter.pucExpiryDate).length,
         totalValidInsurance,
         totalValidPuc,
+        totalExpiredInsurance,
+        totalExpiredPuc,
       }));
     } catch (e) {
       console.error("Error fetching vehicle stats", e);
@@ -743,7 +819,6 @@ const AdminPage = () => {
             </div>
           </div>
         </div>
-
         <div className="card">
           <div className="card-content">
             <div>
@@ -781,8 +856,8 @@ const AdminPage = () => {
         <div className="card">
           <div className="card-content">
             <div>
-              <p className="card-label">Total Valid Insurance</p>
-              <p className="card-value">{extraStats.totalValidInsurance}</p>
+              <p className="card-label">Total Insurance</p>
+              <p className="card-value">{extraStats.totalInsurance}</p>
             </div>
             <div className="card-icon blue">
               <Shield />
@@ -792,10 +867,54 @@ const AdminPage = () => {
         <div className="card">
           <div className="card-content">
             <div>
-              <p className="card-label">Total Valid PUC</p>
-              <p className="card-value">{extraStats.totalValidPuc}</p>
+              <p className="card-label">Total PUC</p>
+              <p className="card-value">{extraStats.totalPuc}</p>
             </div>
             <div className="card-icon orange">
+              <FileText />
+            </div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-content">
+            <div>
+              <p className="card-label">Expired Insurance</p>
+              <p className="card-value">{extraStats.totalExpiredInsurance}</p>
+            </div>
+            <div className="card-icon orange">
+              <Shield />
+            </div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-content">
+            <div>
+              <p className="card-label">Insurance Expiring (30 Days)</p>
+              <p className="card-value">{extraStats.insuranceUpcoming}</p>
+            </div>
+            <div className="card-icon blue">
+              <Shield />
+            </div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-content">
+            <div>
+              <p className="card-label">PUC Expiring (30 Days)</p>
+              <p className="card-value">{extraStats.pucUpcoming}</p>
+            </div>
+            <div className="card-icon orange">
+              <FileText />
+            </div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-content">
+            <div>
+              <p className="card-label">Expired PUC</p>
+              <p className="card-value">{extraStats.totalExpiredPuc}</p>
+            </div>
+            <div className="card-icon blue">
               <FileText />
             </div>
           </div>
@@ -818,7 +937,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">1st Month Pending</p>
-              <p className="card-value">{extraStats.month1Pending}</p>
+              <p className="card-value">{pendingCounts[0]}</p>
             </div>
             <div className="card-icon orange">
               <Wrench />
@@ -829,7 +948,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">2nd Month Pending</p>
-              <p className="card-value">{extraStats.month2Pending}</p>
+              <p className="card-value">{pendingCounts[1]}</p>
             </div>
             <div className="card-icon blue">
               <Wrench />
@@ -840,9 +959,20 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">3rd Month Pending</p>
-              <p className="card-value">{extraStats.month3Pending}</p>
+              <p className="card-value">{pendingCounts[2]}</p>
             </div>
             <div className="card-icon orange">
+              <Wrench />
+            </div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-content">
+            <div>
+              <p className="card-label">Upcoming Free Services (30 Days)</p>
+              <p className="card-value">{upcomingFreeCount}</p>
+            </div>
+            <div className="card-icon blue">
               <Wrench />
             </div>
           </div>
@@ -896,6 +1026,121 @@ const AdminPage = () => {
   );
 
   const ChartsSection = () => {
+    const monthly = (
+      Array.isArray(dashboardData.monthlyData) ? dashboardData.monthlyData : []
+    ).slice(-chartRange);
+    const labels = monthly.map(
+      (item, index) =>
+        (item.monthKey && item.month
+          ? `${item.month} '${item.monthKey.slice(2, 4)}`
+          : null) ||
+        item.monthName ||
+        item.label ||
+        item.month ||
+        `Month ${index + 1}`,
+    );
+    const numeric = (item, keys) => {
+      for (const key of keys) {
+        const value = Number(String(item?.[key] ?? "").replace(/,/g, ""));
+        if (Number.isFinite(value)) return value;
+      }
+      return 0;
+    };
+    const revenue = monthly.map((item) =>
+      numeric(item, [
+        "sellAmount",
+        "revenue",
+        "totalRevenue",
+        "income",
+        "sales",
+        "amount",
+        "total",
+      ]),
+    );
+    const expenses = monthly.map((item) =>
+      numeric(item, [
+        "buyAmount",
+        "expenses",
+        "totalExpenses",
+        "cost",
+        "expense",
+        "totalCost",
+      ]),
+    );
+    const sales = monthly.map((item) =>
+      numeric(item, [
+        "sell",
+        "salesCount",
+        "sellCount",
+        "totalSales",
+        "sold",
+        "count",
+      ]),
+    );
+    const chartLabels = labels.length ? labels : ["Current"];
+    const chartRevenue = revenue.length
+      ? revenue
+      : [dashboardData.totalSellValue || 0];
+    const chartExpenses = expenses.length
+      ? expenses
+      : [dashboardData.totalExpenses || 0];
+    const chartSales = sales.length
+      ? sales
+      : [dashboardData.totalSellLetters || 0];
+    const chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 1400, easing: "easeOutQuart" },
+      plugins: { legend: { position: "bottom" } },
+      scales: { y: { beginAtZero: true } },
+    };
+    const trendData = {
+      labels: chartLabels,
+      datasets: [
+        {
+          label: "Revenue",
+          data: chartRevenue,
+          borderColor: "#0E0F3B",
+          backgroundColor: "#ffffff",
+          fill: true,
+          tension: 0.35,
+        },
+        {
+          label: "Expenses",
+          data: chartExpenses,
+          borderColor: "#f7931e",
+          backgroundColor: "#ffffff",
+          fill: true,
+          tension: 0.35,
+        },
+      ],
+    };
+    const salesData = {
+      labels: chartLabels,
+      datasets: [
+        {
+          label: "Sales",
+          data: chartSales,
+          backgroundColor: "#0E0F3B",
+          borderRadius: 6,
+        },
+      ],
+    };
+    const distributionData = {
+      labels: ["Bought", "Sold", "Services"],
+      datasets: [
+        {
+          data: [
+            dashboardData.totalBuyLetters || 0,
+            dashboardData.totalSellLetters || 0,
+            dashboardData.totalServices || 0,
+          ],
+          backgroundColor: ["#f7931e", "#0E0F3B", "#38bdf8"],
+          borderWidth: 0,
+        },
+      ],
+    };
+
     if (loading) {
       return (
         <div className="charts-container">
@@ -922,11 +1167,89 @@ const AdminPage = () => {
         </div>
       );
     }
+
+    return (
+      <section className="dashboard-analytics">
+        <div className="analytics-heading">
+          <h2>Business Analytics</h2>
+          <p>Revenue, expenses, sales, and activity at a glance.</p>
+          <div className="range-tabs">
+            {[
+              [1, "1M"],
+              [3, "3M"],
+              [6, "6M"],
+              [12, "1Y"],
+            ].map(([m, label]) => (
+              <button
+                key={m}
+                type="button"
+                className={chartRange === m ? "active" : ""}
+                onClick={() => setChartRange(m)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="charts-container">
+          <article className="chart-card">
+            <h3 className="chart-title">
+              <TrendingUp
+                size={18}
+                style={{
+                  marginRight: 8,
+                  verticalAlign: "middle",
+                  color: "#0E0F3B",
+                }}
+              />
+              Revenue vs Expenses
+            </h3>
+            <div className="chart-wrapper">
+              <Line data={trendData} options={chartOptions} />
+            </div>
+          </article>
+          <article className="chart-card">
+            <h3 className="chart-title">
+              <BarChart3
+                size={18}
+                style={{
+                  marginRight: 8,
+                  verticalAlign: "middle",
+                  color: "#0E0F3B",
+                }}
+              />
+              Sales Trend
+            </h3>
+            <div className="chart-wrapper">
+              <Bar data={salesData} options={chartOptions} />
+            </div>
+          </article>
+          <article className="chart-card">
+            <h3 className="chart-title">
+              <PieChart
+                size={18}
+                style={{
+                  marginRight: 8,
+                  verticalAlign: "middle",
+                  color: "#0E0F3B",
+                }}
+              />
+              Business Distribution
+            </h3>
+            <div className="chart-wrapper chart-wrapper-doughnut">
+              <Doughnut data={distributionData} options={chartOptions} />
+            </div>
+          </article>
+        </div>
+      </section>
+    );
   };
 
   const FreeServicesTable = () => {
     const [serviceFilter, setServiceFilter] = useState("all");
     const [usedFilter, setUsedFilter] = useState("all");
+    const [serviceStatus, setServiceStatus] = useState("all");
+    const [showAllServices, setShowAllServices] = useState(false);
     const [sortBy, setSortBy] = useState(
       () => localStorage.getItem("sellDateSortBy") || "reminderScore",
     );
@@ -1272,7 +1595,7 @@ const AdminPage = () => {
                 background: "#ffffff",
                 borderRadius: 8,
                 padding: "4px 10px",
-                color: "#088395",
+                color: "#0E0F3B",
                 fontSize: "1rem",
               }}
             >
@@ -1324,6 +1647,19 @@ const AdminPage = () => {
               <option value="1">1st free service</option>
               <option value="2">2nd free service</option>
               <option value="3">3rd free service</option>
+            </select>
+            <span style={fsLabelStyle}>Status:</span>
+            <select
+              value={serviceStatus}
+              onChange={(e) => {
+                setServiceStatus(e.target.value);
+                setShowAllServices(false);
+              }}
+              style={fsSelectStyle}
+            >
+              <option value="all">All</option>
+              <option value="pending">Pending / Overdue</option>
+              <option value="upcoming">Upcoming (30 days)</option>
             </select>
           </div>
         </div>
@@ -1411,6 +1747,18 @@ const AdminPage = () => {
                 {processed
                   .filter((item) => {
                     if (item.isExpired) return false;
+                    if (serviceStatus !== "all") {
+                      const days = item.nextPending?.daysUntil;
+                      if (
+                        serviceStatus === "upcoming" &&
+                        !(days > 0 && days <= 30)
+                      ) {
+                        return false;
+                      }
+                      if (serviceStatus === "pending" && !(days <= 0)) {
+                        return false;
+                      }
+                    }
                     if (usedFilter !== "all") {
                       if (item.used !== Number(usedFilter)) return false;
                     }
@@ -1418,6 +1766,7 @@ const AdminPage = () => {
                     const sel = Number(serviceFilter);
                     return item.nextPending && item.nextPending.idx === sel;
                   })
+                  .slice(0, showAllServices ? undefined : 15)
                   .map((item, idx) => {
                     const { row, nextPending, isExpired } = item;
                     return (
@@ -1487,6 +1836,34 @@ const AdminPage = () => {
                   })}
               </tbody>
             </table>
+            {processed.filter((item) => {
+              if (item.isExpired) return false;
+              if (serviceStatus === "upcoming") {
+                return (
+                  item.nextPending?.daysUntil > 0 &&
+                  item.nextPending?.daysUntil <= 30
+                );
+              }
+              if (serviceStatus === "pending") {
+                return item.nextPending?.daysUntil <= 0;
+              }
+              return true;
+            }).length > 15 && (
+              <button
+                type="button"
+                onClick={() => setShowAllServices((current) => !current)}
+                style={{
+                  margin: "12px",
+                  padding: "8px 14px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 8,
+                  background: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                {showAllServices ? "Show Less" : "View More"}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -1964,7 +2341,7 @@ const AdminPage = () => {
                     <tbody>
                       {(showAllPucExpired
                         ? expiredItems
-                        : expiredItems.slice(0, 10)
+                        : expiredItems.slice(0, 15)
                       ).map((it, idx) => {
                         const { row, expiry, daysUntil } = it;
                         return (
@@ -2143,7 +2520,7 @@ const AdminPage = () => {
                     <tbody>
                       {(showAllPuc
                         ? expiringSoonItems
-                        : expiringSoonItems.slice(0, 10)
+                        : expiringSoonItems.slice(0, 15)
                       ).map((it, idx) => {
                         const { row, expiry, daysUntil } = it;
                         const isDueSoon = daysUntil <= 7;
@@ -2771,7 +3148,7 @@ const AdminPage = () => {
                     <tbody>
                       {(showAllInsuranceExpired
                         ? insExpiredItems
-                        : insExpiredItems.slice(0, 10)
+                        : insExpiredItems.slice(0, 15)
                       ).map((it, idx) => {
                         const { row, expiry, daysUntil } = it;
                         return (
@@ -2832,7 +3209,7 @@ const AdminPage = () => {
                               {row.displayCompany ? (
                                 <span title={row.displayCompany}>
                                   {row.displayCompany.length > 20
-                                    ? `${row.displayCompany.slice(0, 10)}…`
+                                    ? `${row.displayCompany.slice(0, 15)}…`
                                     : row.displayCompany}
                                 </span>
                               ) : (
@@ -2964,7 +3341,7 @@ const AdminPage = () => {
                     <tbody>
                       {(showAllInsurance
                         ? insExpiringSoonItems
-                        : insExpiringSoonItems.slice(0, 10)
+                        : insExpiringSoonItems.slice(0, 15)
                       ).map((it, idx) => {
                         const { row, expiry, daysUntil } = it;
                         const isDueSoon = daysUntil <= 30;
@@ -3034,7 +3411,7 @@ const AdminPage = () => {
                               {row.displayCompany ? (
                                 <span title={row.displayCompany}>
                                   {row.displayCompany.length > 20
-                                    ? `${row.displayCompany.slice(0, 10)}…`
+                                    ? `${row.displayCompany.slice(0, 15)}…`
                                     : row.displayCompany}
                                 </span>
                               ) : (
@@ -3297,7 +3674,7 @@ const AdminPage = () => {
                 <tbody>
                   {(showAllIncompleteBuy
                     ? filteredLetters
-                    : filteredLetters.slice(0, 10)
+                    : filteredLetters.slice(0, 15)
                   ).map((letter, idx) => (
                     <tr
                       key={letter._id}
@@ -3595,7 +3972,7 @@ const AdminPage = () => {
                 <tbody>
                   {(showAllIncompleteSell
                     ? filteredLetters
-                    : filteredLetters.slice(0, 10)
+                    : filteredLetters.slice(0, 15)
                   ).map((letter, idx) => (
                     <tr
                       key={letter._id}
@@ -3914,13 +4291,13 @@ const AdminPage = () => {
             <>
               <DashboardCards />
               <DetailedStatsCards />
+              <ChartsSection />
               <FreeServicesTable />
               <PucReminderTable />
               <InsuranceReminderTable />
               <UnsoldVehiclesTable />
               <IncompleteBuyLettersTable />
               <IncompleteSellLettersTable />
-              <ChartsSection />
               {!loading && !error}
             </>
           )}
@@ -4257,8 +4634,8 @@ const AdminPage = () => {
 
         /* Revenue Card */
         .revenue-card {
-          background: #09121a;
-          backdrop-filter: blur(10px);
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
           border-radius: 0.75rem;
           padding: 1.5rem;
           margin-bottom: 1.5rem;
@@ -4268,7 +4645,7 @@ const AdminPage = () => {
         .revenue-title {
           font-size: 1.125rem;
           font-weight: 600;
-          color: #ffffff;
+          color: #0e0f3b;
           margin: 0 0 1rem 0;
         }
 
@@ -4402,14 +4779,42 @@ const AdminPage = () => {
         /* Charts */
         .charts-container {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 1.5rem;
           margin-bottom: 2rem;
         }
 
+        .dashboard-analytics {
+          width: 100%;
+          margin: 2rem 0;
+        }
+
+        .analytics-heading {
+          margin-bottom: 1rem;
+        }
+
+        .analytics-heading h2 {
+          margin: 0;
+          color: #0e0f3b;
+          font-size: 1.25rem;
+        }
+
+        .analytics-heading p {
+          margin: 0.35rem 0 0;
+          color: #64748b;
+          font-size: 0.9rem;
+        }
+
+        .range-tabs { display: inline-flex; gap: 6px; margin-top: 12px; }
+        .range-tabs button { padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 999px; background: #fff; color: #0e0f3b; font-weight: 600; cursor: pointer; }
+        .range-tabs button.active { background: #088395; border-color: #088395; color: #fff; }
+        .chart-card-wide {
+          grid-column: span 2;
+        }
+
         .chart-card {
-          background: #09121a;
-          backdrop-filter: blur(10px);
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
           border-radius: 0.75rem;
           padding: 1.5rem;
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -4424,11 +4829,18 @@ const AdminPage = () => {
 
         .chart-wrapper {
           height: 300px;
+          min-height: 230px;
           width: 100%;
+          position: relative;
+        }
+
+        .chart-wrapper-doughnut {
+          max-width: 360px;
+          margin: 0 auto;
         }
 
         .no-data {
-          color: #ffffff;
+          color: #64748b;
           text-align: center;
           padding: 1.25rem;
           opacity: 0.7;
@@ -4991,7 +5403,269 @@ const AdminPage = () => {
           background: #0E0F3B;}
           .orange {
             background: #F7931E;}
-      `}</style>
+
+          /* Dashboard responsive overrides */
+          .admin-container {
+            display: flex;
+            width: 100%;
+            min-width: 0;
+            overflow-x: hidden;
+          }
+
+          .main-content {
+            min-width: 0;
+            width: 100%;
+          }
+
+          .content-padding {
+            width: 100%;
+            max-width: none;
+            box-sizing: border-box;
+          }
+
+          .content-padding > *,
+          .content-padding .free-services-card,
+          .content-padding .revenue-card,
+          .content-padding .charts-container,
+          .content-padding .transactions-container,
+          .content-padding .quick-actions-grid,
+          .content-padding .social-media-grid {
+            max-width: none;
+            min-width: 0;
+          }
+
+          .cards-grid,
+          .revenue-grid,
+          .charts-container,
+          .transactions-container,
+          .quick-actions-grid,
+          .social-media-grid {
+            width: 100%;
+            min-width: 0;
+          }
+
+          .card {
+            min-width: 0;
+            box-sizing: border-box;
+          }
+
+          .card-content {
+            min-width: 0;
+            gap: 12px;
+          }
+
+          .card-content > div:first-child {
+            min-width: 0;
+            overflow-wrap: anywhere;
+          }
+
+          .card-value {
+            overflow-wrap: anywhere;
+          }
+
+          .table-wrapper,
+          .responsive-table-wrap,
+          .free-services-card,
+          .chart-card,
+          .history-search-container {
+            max-width: 100%;
+            box-sizing: border-box;
+          }
+
+          .table-wrapper,
+          .free-services-card .table-wrapper,
+          .responsive-table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+
+          .main-content table {
+            min-width: 680px;
+          }
+
+          .history-search-box {
+            width: 100%;
+            max-width: 720px;
+            box-sizing: border-box;
+          }
+
+          .history-search-input {
+            min-width: 0;
+          }
+
+          .document-upload-guide,
+          .formGrid {
+            min-width: 0;
+          }
+
+          @media (max-width: 1024px) {
+            .content-padding {
+              padding: 24px 20px;
+            }
+
+            .cards-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 16px;
+            }
+
+            .card {
+              padding: 18px;
+            }
+
+            .card-value {
+              font-size: 1.55rem;
+            }
+
+            .charts-container,
+            .transactions-container {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .chart-card-wide {
+              grid-column: span 2;
+            }
+          }
+
+          @media (max-width: 768px) {
+            .admin-container {
+              display: block;
+            }
+
+            .main-content {
+              width: 100%;
+              overflow-x: hidden;
+            }
+
+            .content-padding {
+              padding: 88px 12px 20px;
+            }
+
+            .cards-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 12px;
+            }
+
+            .charts-container,
+            .transactions-container,
+            .revenue-grid,
+            .quick-actions-grid {
+              grid-template-columns: 1fr;
+              gap: 12px;
+            }
+
+            .chart-card-wide {
+              grid-column: auto;
+            }
+
+            .chart-wrapper {
+              height: 250px;
+            }
+
+            .social-media-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .card-content {
+              flex-direction: row;
+              align-items: center;
+              text-align: left;
+            }
+
+            .card-icon {
+              flex: 0 0 auto;
+            }
+
+            .free-services-card {
+              padding: 12px;
+              margin: 18px 0;
+            }
+
+            .free-services-card h3,
+            .free-services-card .card-title {
+              font-size: 1rem;
+              line-height: 1.35;
+            }
+
+            .free-services-search,
+            .history-search-container {
+              width: 100%;
+            }
+
+            .free-services-search input,
+            .history-search-input {
+              width: 100% !important;
+              min-width: 0;
+            }
+
+            .main-content table {
+              min-width: 620px;
+            }
+
+            .modal-content {
+              width: calc(100vw - 24px);
+              max-width: none;
+              padding: 12px;
+            }
+          }
+
+          @media (max-width: 480px) {
+            .content-padding {
+              padding-left: 10px;
+              padding-right: 10px;
+            }
+
+            .cards-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .social-media-grid {
+              grid-template-columns: 1fr;
+            }
+
+            .card {
+              padding: 14px;
+            }
+
+            .card-label {
+              font-size: 0.78rem;
+            }
+
+            .card-value {
+              font-size: 1.3rem;
+            }
+
+            .card-value.currency {
+              font-size: 1.05rem;
+            }
+
+            .main-content table {
+              min-width: 560px;
+            }
+
+            .free-services-table th,
+            .free-services-table td {
+              padding: 8px;
+            }
+          }
+
+        /* Mobile cards: identical layout per card so the grid is evenly spaced. */
+        @media (max-width: 768px) {
+          .cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
+          .cards-grid .card { min-height: 88px; padding: 12px !important; box-sizing: border-box; }
+          .cards-grid .card-content {
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+            gap: 10px !important;
+            height: 100%;
+          }
+          .cards-grid .card-icon { order: 0 !important; flex: 0 0 40px; width: 40px; height: 40px; padding: 0 !important; box-sizing: border-box; }
+          .cards-grid .card-content > div:first-child { order: 1 !important; min-width: 0; flex: 1; }
+          .cards-grid .card-label { font-size: 0.7rem !important; line-height: 1.25; }
+          .cards-grid .card-value { font-size: 1.1rem !important; }
+        }
+        `}</style>
     </div>
   );
 };

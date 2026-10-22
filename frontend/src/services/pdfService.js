@@ -2274,8 +2274,14 @@ class PDFService {
         console.warn("Logo not found:", logoError);
       }
 
+      // Times Roman is the PDF equivalent of Times New Roman. Keep the
+      // document scale consistent with the form: 14px headings and 12px body.
       const headerFontSize = 14;
       const contentFontSize = 12;
+      const contentX = 58;
+      const contentWidth = 479;
+      const signatureTop = 132;
+      const contentBottom = 185;
 
       const createPage = (isFirstPage = false) => {
         const p = pdfDoc.addPage([595, 842]);
@@ -2335,7 +2341,7 @@ class PDFService {
           p.drawText("LETTER HEAD", {
             x: 240,
             y: 758,
-            size: 18,
+            size: headerFontSize,
             color: rgb(0.047, 0.098, 0.196),
             font: fontBold,
           });
@@ -2355,10 +2361,36 @@ class PDFService {
       };
 
       const checkPageBreak = (neededSpace = 20) => {
-        if (yPosition < 50 + neededSpace) {
+        if (yPosition < contentBottom + neededSpace) {
           currentPage = createPage(false);
           yPosition = 750;
         }
+      };
+
+      const drawBodyLine = (text, justify = false) => {
+        const value = String(text || "");
+        const words = value.split(/\s+/).filter(Boolean);
+        const textWidth = font.widthOfTextAtSize(value, contentFontSize);
+        let wordSpacing = 0;
+
+        if (justify && words.length > 1 && textWidth < contentWidth) {
+          wordSpacing = (contentWidth - textWidth) / (words.length - 1);
+        }
+
+        let x = contentX;
+        words.forEach((word, index) => {
+          currentPage.drawText(word, {
+            x,
+            y: yPosition,
+            size: contentFontSize,
+            font,
+            color: rgb(0, 0, 0),
+          });
+          x += font.widthOfTextAtSize(word, contentFontSize);
+          if (index < words.length - 1) {
+            x += font.widthOfTextAtSize(" ", contentFontSize) + wordSpacing;
+          }
+        });
       };
 
       checkPageBreak(20);
@@ -2427,9 +2459,8 @@ class PDFService {
       yPosition -= 40;
 
       const message = sanitizedData.message || "";
-      const maxWidth = 479;
       const lineHeight = 17;
-      const paragraphs = message.replace(/\r\n/g, "\n").split("\n");
+      const paragraphs = message.replace(/\r\n?/g, "\n").split("\n");
 
       for (const paragraph of paragraphs) {
         const words = paragraph.trim().split(/\s+/).filter(Boolean);
@@ -2439,14 +2470,9 @@ class PDFService {
           const testLine = line ? `${line} ${word}` : word;
           const textWidth = font.widthOfTextAtSize(testLine, contentFontSize);
 
-          if (textWidth > maxWidth) {
+          if (textWidth > contentWidth && line) {
             checkPageBreak(lineHeight);
-            currentPage.drawText(line, {
-              x: 58,
-              y: yPosition,
-              size: contentFontSize,
-              font: font,
-            });
+            drawBodyLine(line, true);
             line = word;
             yPosition -= lineHeight;
           } else {
@@ -2456,47 +2482,50 @@ class PDFService {
 
         if (line) {
           checkPageBreak(lineHeight);
-          currentPage.drawText(line, {
-            x: 58,
-            y: yPosition,
-            size: contentFontSize,
-            font: font,
-          });
+          drawBodyLine(line, false);
           yPosition -= lineHeight;
         } else {
-          yPosition -= 8;
+          // Preserve an intentional blank line from the textarea.
+          checkPageBreak(10);
+          yPosition -= 10;
         }
+        // Separate paragraphs without collapsing explicit line breaks.
+        if (paragraphs.length > 1) yPosition -= 4;
       }
 
-      checkPageBreak(100);
-      yPosition -= 50;
+      // Keep the signature block on the final page at a stable position.
+      // Body pagination reserves this area, so it cannot overlap text/footer.
+      if (yPosition < contentBottom) {
+        currentPage = createPage(false);
+      }
+      const signatureY = signatureTop;
 
       currentPage.drawLine({
-        start: { x: 70, y: yPosition },
-        end: { x: 250, y: yPosition },
+        start: { x: 70, y: signatureY },
+        end: { x: 250, y: signatureY },
         thickness: 1,
         color: rgb(0, 0, 0),
       });
 
       currentPage.drawLine({
-        start: { x: 345, y: yPosition },
-        end: { x: 525, y: yPosition },
+        start: { x: 345, y: signatureY },
+        end: { x: 525, y: signatureY },
         thickness: 1,
         color: rgb(0, 0, 0),
       });
 
       currentPage.drawText("Recipient Signature", {
         x: 120,
-        y: yPosition - 30,
-        size: 11,
+        y: signatureY - 30,
+        size: contentFontSize,
         font: font,
         color: rgb(0.5, 0.5, 0.5),
       });
 
       currentPage.drawText("Authorized Signatory", {
         x: 385,
-        y: yPosition - 30,
-        size: 11,
+        y: signatureY - 30,
+        size: contentFontSize,
         font: font,
         color: rgb(0.5, 0.5, 0.5),
       });

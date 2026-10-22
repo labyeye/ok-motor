@@ -125,12 +125,8 @@ exports.createServiceBill = async (req, res) => {
           serviceDate: { $gte: sellLetter.saleDate },
         });
 
-        const manualFreeServiceIndex = parseInt(
-          otherData.freeServiceIndex,
-          10,
-        );
-        const hasManualOverride =
-          [1, 2, 3].includes(manualFreeServiceIndex);
+        const manualFreeServiceIndex = parseInt(otherData.freeServiceIndex, 10);
+        const hasManualOverride = [1, 2, 3].includes(manualFreeServiceIndex);
 
         if (hasManualOverride) {
           // Staff explicitly chose which free service slot this bill counts
@@ -389,14 +385,14 @@ exports.downloadServiceBillPDF = async (req, res) => {
 
   try {
     const { id } = req.params;
-    
-    if (!id || typeof id !== 'string' || id.trim() === '') {
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
       return res.status(400).json({
         success: false,
-        message: "Invalid ID provided"
+        message: "Invalid ID provided",
       });
     }
-    
+
     let query = { _id: id };
     if (req.user.role === "admin" || req.user.role === "staff") {
     } else {
@@ -439,14 +435,14 @@ exports.downloadServiceBillPDF = async (req, res) => {
 exports.getServiceBill = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    if (!id || typeof id !== 'string' || id.trim() === '') {
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
       return res.status(400).json({
         success: false,
-        message: "Invalid ID provided"
+        message: "Invalid ID provided",
       });
     }
-    
+
     const serviceBill = await ServiceBill.findOne({
       _id: id,
       $or: [
@@ -479,14 +475,14 @@ exports.getServiceBill = async (req, res) => {
 exports.updateServiceBill = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    if (!id || typeof id !== 'string' || id.trim() === '') {
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
       return res.status(400).json({
         success: false,
-        message: "Invalid ID provided"
+        message: "Invalid ID provided",
       });
     }
-    
+
     const serviceBill = await ServiceBill.findById(id);
     if (!serviceBill) {
       return res
@@ -609,14 +605,14 @@ exports.updateServiceBill = async (req, res) => {
 exports.deleteServiceBill = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    if (!id || typeof id !== 'string' || id.trim() === '') {
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
       return res.status(400).json({
         success: false,
-        message: "Invalid ID provided"
+        message: "Invalid ID provided",
       });
     }
-    
+
     const serviceBill = await ServiceBill.findById(id);
 
     if (!serviceBill) {
@@ -652,14 +648,14 @@ exports.deleteServiceBill = async (req, res) => {
 exports.generateServiceBillPDF = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    if (!id || typeof id !== 'string' || id.trim() === '') {
+
+    if (!id || typeof id !== "string" || id.trim() === "") {
       return res.status(400).json({
         success: false,
-        message: "Invalid ID provided"
+        message: "Invalid ID provided",
       });
     }
-    
+
     const serviceBill = await ServiceBill.findOne({
       _id: id,
       $or: [

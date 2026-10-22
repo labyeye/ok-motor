@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import TableFilter from "./common/TableFilter";
+import HistoryExportToolbar from "./HistoryExportToolbar";
 import pdfService from "../services/pdfService";
 
 import config from "../config/environment";
@@ -23,6 +24,7 @@ import PdfPreview from "./PdfPreview";
 const ServiceHistory = () => {
   const { user, logout } = useContext(AuthContext);
   const [serviceBills, setServiceBills] = useState([]);
+  const handleSort = () => setServiceBills((items) => [...items].reverse());
   const [, setPurchaseHistory] = useState([]);
   const [, setSellHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -799,17 +801,31 @@ const ServiceHistory = () => {
             </p>
           </div>
 
-          <div style={styles.searchContainer}>
-            <div style={styles.searchInputContainer}>
-              <Search size={18} style={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Search by registration number..."
-                value={searchTerm}
-                onChange={handleSearch}
-                style={styles.searchInput}
-              />
+          <div className="history-controls">
+            <div style={styles.searchContainer}>
+              <div style={styles.searchInputContainer}>
+                <Search size={18} style={styles.searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Search by registration number..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  style={styles.searchInput}
+                />
+              </div>
             </div>
+            <HistoryExportToolbar
+              rows={filteredServiceBills}
+              title="Service History"
+              filename="service-history"
+              onSort={handleSort}
+              onFilter={() =>
+                document.querySelector('input[type="text"]')?.focus()
+              }
+              filterActive={Boolean(
+                searchTerm || filters.regNo || filters.amount || filters.date,
+              )}
+            />
           </div>
 
           {loading ? (

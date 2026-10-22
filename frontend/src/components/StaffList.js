@@ -1,17 +1,25 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { User, Edit, Trash2, UserPlus } from "lucide-react";
+import { User, Edit, Trash2, UserPlus, Search } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 
 import ConfirmModal from "./ConfirmModal";
+import HistoryExportToolbar from "./HistoryExportToolbar";
 
 const StaffList = () => {
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
 
   const [staff, setStaff] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const handleSort = () => setStaff((items) => [...items].reverse());
+  const filteredStaff = staff.filter((member) =>
+    `${member.name || ""} ${member.email || ""} ${member.role || ""}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase()),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -197,6 +205,30 @@ const StaffList = () => {
 
           {error && <div style={styles.errorAlert}>{error}</div>}
 
+          <div className="history-controls">
+            <div style={styles.searchInputContainer}>
+              <Search size={18} style={styles.searchIcon} />
+              <input
+                placeholder="Search staff..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={styles.searchInput}
+              />
+            </div>
+            <HistoryExportToolbar
+              rows={filteredStaff}
+              title="Staff Members"
+              filename="staff-members"
+              onSort={handleSort}
+              onFilter={() =>
+                document
+                  .querySelector('input[placeholder^="Search staff"]')
+                  ?.focus()
+              }
+              filterActive={Boolean(searchTerm)}
+            />
+          </div>
+
           {loading ? (
             <div style={styles.loading}>Loading staff members...</div>
           ) : (
@@ -213,7 +245,7 @@ const StaffList = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {(Array.isArray(staff) ? staff : []).map((user) => (
+                  {filteredStaff.map((user) => (
                     <tr key={user._id}>
                       <td style={styles.td}>
                         <div style={styles.userCell}>

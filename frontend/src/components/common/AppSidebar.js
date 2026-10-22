@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Bike,
@@ -29,6 +29,7 @@ import {
   ShieldCheck,
   UserPlus,
   Users as UsersIcon,
+  FolderOpen,
 } from "lucide-react";
 import { getSidebarMenu } from "../../config/sidebarMenu";
 import { sidebarStyles } from "../../styles/sidebarStyles";
@@ -59,6 +60,7 @@ const ICONS = {
   ShieldCheck,
   UserPlus,
   UsersIcon,
+  FolderOpen,
 };
 
 const resolvePath = (path, userRole) => {
@@ -80,7 +82,14 @@ const AppSidebar = ({ user, onLogout }) => {
   const { pathname } = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
-  const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" && window.innerWidth <= 768,
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const menuItems = useMemo(() => getSidebarMenu(user?.role), [user?.role]);
 
@@ -154,6 +163,10 @@ const AppSidebar = ({ user, onLogout }) => {
         />
       )}
 
+      {/* Fixed sidebar leaves the layout flow; the spacer keeps its column. */}
+      {!isMobile && (
+        <div style={{ width: 280, minWidth: 280, flexShrink: 0 }} />
+      )}
       <aside
         style={{
           ...sidebarStyles.shell,
@@ -167,6 +180,9 @@ const AppSidebar = ({ user, onLogout }) => {
                   : "translateX(-100%)",
               }
             : {
+                position: "fixed",
+                top: 0,
+                left: 0,
                 transform: "translateX(0)",
               }),
         }}

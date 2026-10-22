@@ -187,7 +187,10 @@ exports.getInsuranceByEmail = async (req, res) => {
     const email = String(req.params.email || "").trim();
     if (!email) return res.status(400).json({ message: "email is required" });
     const insurance = await Insurance.findOne({
-      personEmail: { $regex: `^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" },
+      personEmail: {
+        $regex: `^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+        $options: "i",
+      },
     }).sort({ updatedAt: -1, createdAt: -1 });
     if (!insurance) return res.status(404).json({ message: "Not found" });
     res.json(insurance);

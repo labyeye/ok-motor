@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import TableFilter from "./common/TableFilter";
+import HistoryExportToolbar from "./HistoryExportToolbar";
 
 const PUCHistory = () => {
   const { user, logout } = useContext(AuthContext);
@@ -14,6 +15,8 @@ const PUCHistory = () => {
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const handleSort = () => setHistory((items) => [...items].reverse());
+
   const [filters, setFilters] = useState({
     expiry: null,
     expiryTone: "all",
@@ -355,24 +358,40 @@ const PUCHistory = () => {
             <p style={styles.pageSubtitle}>View and manage all PUC records.</p>
           </div>
 
-          <div style={styles.searchContainer}>
-            <div style={styles.searchInputContainer}>
-              <Search size={18} style={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Search by name or reg number..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={styles.searchInput}
-              />
+          <div className="history-controls">
+            <div style={styles.searchContainer}>
+              <div style={styles.searchInputContainer}>
+                <Search size={18} style={styles.searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Search by name or reg number..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={styles.searchInput}
+                />
+              </div>
+              <button
+                style={styles.newLetterButton}
+                onClick={() => navigate("/puc/create")}
+              >
+                <FileText size={16} />
+                New PUC
+              </button>
             </div>
-            <button
-              style={styles.newLetterButton}
-              onClick={() => navigate("/puc/create")}
-            >
-              <FileText size={16} />
-              New PUC
-            </button>
+            <HistoryExportToolbar
+              rows={filteredHistory}
+              title="PUC History"
+              filename="puc-history"
+              onSort={handleSort}
+              onFilter={() =>
+                document
+                  .querySelector('input[placeholder^="Search by name"]')
+                  ?.focus()
+              }
+              filterActive={Boolean(
+                searchTerm || filters.expiry || filters.expiryTone !== "all",
+              )}
+            />
           </div>
 
           <div style={styles.tableContainer}>

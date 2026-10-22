@@ -8,8 +8,9 @@ const mongoose = require("mongoose");
 
 const getMonthlyData = async (model, matchCriteria = {}) => {
   const currentDate = new Date();
+  // 12 months so the dashboard can offer 1M / 3M / 6M / 1Y ranges.
   const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(currentDate.getMonth() - 6);
+  sixMonthsAgo.setMonth(currentDate.getMonth() - 12);
 
   let amountField;
   if (model.modelName === "BuyLetter" || model.modelName === "SellLetter") {
@@ -73,6 +74,8 @@ const getMonthlyData = async (model, matchCriteria = {}) => {
             },
           },
         },
+        year: "$_id.year",
+        monthNum: "$_id.month",
         count: 1,
         totalAmount: 1,
       },
@@ -343,23 +346,27 @@ exports.getOwnerDashboardStats = async (req, res) => {
       ]);
 
     const monthlyData = [];
+    const keyOf = (item) =>
+      `${item.year}-${String(item.monthNum).padStart(2, "0")}`;
     const months = [
       ...new Set([
-        ...monthlyBuyData.map((item) => item.month),
-        ...monthlySellData.map((item) => item.month),
-        ...monthlyServiceData.map((item) => item.month),
+        ...monthlyBuyData.map(keyOf),
+        ...monthlySellData.map(keyOf),
+        ...monthlyServiceData.map(keyOf),
       ]),
-    ];
+    ].sort();
 
-    months.forEach((month) => {
-      const buyMonth = monthlyBuyData.find((item) => item.month === month);
-      const sellMonth = monthlySellData.find((item) => item.month === month);
+    months.forEach((key) => {
+      const buyMonth = monthlyBuyData.find((item) => keyOf(item) === key);
+      const sellMonth = monthlySellData.find((item) => keyOf(item) === key);
       const serviceMonth = monthlyServiceData.find(
-        (item) => item.month === month,
+        (item) => keyOf(item) === key,
       );
+      const month = (buyMonth || sellMonth || serviceMonth).month;
 
       monthlyData.push({
         month,
+        monthKey: key,
         buy: buyMonth ? buyMonth.count : 0,
         sell: sellMonth ? sellMonth.count : 0,
         service: serviceMonth ? serviceMonth.count : 0,
@@ -470,23 +477,27 @@ exports.getDashboardStats = async (req, res) => {
       ]);
 
     const monthlyData = [];
+    const keyOf = (item) =>
+      `${item.year}-${String(item.monthNum).padStart(2, "0")}`;
     const months = [
       ...new Set([
-        ...monthlyBuyData.map((item) => item.month),
-        ...monthlySellData.map((item) => item.month),
-        ...monthlyServiceData.map((item) => item.month),
+        ...monthlyBuyData.map(keyOf),
+        ...monthlySellData.map(keyOf),
+        ...monthlyServiceData.map(keyOf),
       ]),
-    ];
+    ].sort();
 
-    months.forEach((month) => {
-      const buyMonth = monthlyBuyData.find((item) => item.month === month);
-      const sellMonth = monthlySellData.find((item) => item.month === month);
+    months.forEach((key) => {
+      const buyMonth = monthlyBuyData.find((item) => keyOf(item) === key);
+      const sellMonth = monthlySellData.find((item) => keyOf(item) === key);
       const serviceMonth = monthlyServiceData.find(
-        (item) => item.month === month,
+        (item) => keyOf(item) === key,
       );
+      const month = (buyMonth || sellMonth || serviceMonth).month;
 
       monthlyData.push({
         month,
+        monthKey: key,
         buy: buyMonth ? buyMonth.count : 0,
         sell: sellMonth ? sellMonth.count : 0,
         service: serviceMonth ? serviceMonth.count : 0,

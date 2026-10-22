@@ -182,7 +182,10 @@ exports.getPUCByEmail = async (req, res) => {
     const email = String(req.params.email || "").trim();
     if (!email) return res.status(400).json({ message: "email is required" });
     const puc = await PUC.findOne({
-      personEmail: { $regex: `^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" },
+      personEmail: {
+        $regex: `^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+        $options: "i",
+      },
     }).sort({ updatedAt: -1, createdAt: -1 });
     if (!puc) return res.status(404).json({ message: "Not found" });
     res.json(puc);

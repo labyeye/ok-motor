@@ -18,6 +18,7 @@ import AuthContext from "../context/AuthContext";
 import AppSidebar from "./common/AppSidebar";
 import pdfService from "../services/pdfService";
 import PdfPreview from "./PdfPreview";
+import HistoryExportToolbar from "./HistoryExportToolbar";
 
 const LetterHeadForm = () => {
   const { user, logout } = useContext(AuthContext);
@@ -215,6 +216,13 @@ const LetterHeadForm = () => {
   };
 
   const [history, setHistory] = useState([]);
+  const [historySearch, setHistorySearch] = useState("");
+  const handleSort = () => setHistory((items) => [...items].reverse());
+  const filteredHistory = history.filter((letter) =>
+    `${letter.letterNumber || ""} ${letter.to || ""} ${letter.subject || ""}`
+      .toLowerCase()
+      .includes(historySearch.toLowerCase()),
+  );
   const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
@@ -418,7 +426,7 @@ const LetterHeadForm = () => {
     },
     contentPadding: {
       padding: isMobile ? "24px 16px" : "32px",
-      maxWidth: "1200px",
+      maxWidth: "100%",
       margin: "0 auto",
     },
 
@@ -494,12 +502,12 @@ const LetterHeadForm = () => {
       padding: "12px 14px",
       borderRadius: "8px",
       border: "1px solid #cbd5e1",
-      fontSize: "15px",
+      fontSize: "12px",
       color: "#1e293b",
       minHeight: "300px",
       resize: "vertical",
       lineHeight: "1.6",
-      fontFamily: "inherit",
+      fontFamily: "'Times New Roman', Times, serif",
     },
     button: {
       display: "flex",
@@ -733,9 +741,29 @@ const LetterHeadForm = () => {
           {}
           <div style={styles.tableCard}>
             <h2 style={styles.tableTitle}>Recent Letter Heads</h2>
+            <div className="history-controls">
+              <input
+                placeholder="Search letter history..."
+                value={historySearch}
+                onChange={(e) => setHistorySearch(e.target.value)}
+                style={styles.inputArgs}
+              />
+              <HistoryExportToolbar
+                rows={filteredHistory}
+                title="Letter Head History"
+                filename="letter-head-history"
+                onSort={handleSort}
+                onFilter={() =>
+                  document
+                    .querySelector('input[placeholder^="Search letter"]')
+                    ?.focus()
+                }
+                filterActive={Boolean(historySearch)}
+              />
+            </div>
             {loadingHistory ? (
               <p>Loading history...</p>
-            ) : history.length === 0 ? (
+            ) : filteredHistory.length === 0 ? (
               <p style={{ color: "#64748b" }}>No letter heads created yet.</p>
             ) : (
               <div style={{ overflowX: "auto" }}>
@@ -750,7 +778,7 @@ const LetterHeadForm = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {history
+                    {filteredHistory
                       .sort(
                         (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
                       )

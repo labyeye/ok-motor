@@ -1,5 +1,161 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
+.page-shell {
+  display: flex;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+.page-main {
+  flex: 1;
+  min-width: 0;
+  padding: 32px;
+}
+.responsive-page {
+  width: 100%;
+  box-sizing: border-box;
+}
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.page-heading h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: #0e0f3b;
+}
+.page-heading p {
+  margin: 6px 0 0;
+  color: #64748b;
+}
+.history-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.history-toolbar button,
+.page-heading > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #fff;
+  color: #0e0f3b;
+  cursor: pointer;
+}
+.history-toolbar button.active {
+  background: #0e0f3b;
+  color: #fff;
+}
+.responsive-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+.data-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+.data-table th,
+.data-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  white-space: nowrap;
+}
+.data-table th {
+  background: #eef3f8;
+  color: #0e0f3b;
+}
+.vault-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 420px;
+  margin-bottom: 18px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+}
+.vault-search input {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+}
+.responsive-page form,
+.responsive-page section,
+.responsive-page .form-section {
+  width: 100%;
+  max-width: none;
+}
+.responsive-page input,
+.responsive-page select,
+.responsive-page textarea {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.document-upload-guide {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+}
+.document-upload-guide-card {
+  display: flex;
+  min-height: 92px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px dashed #94a3b8;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.document-upload-guide-card.selected,
+.document-upload-guide-card:hover {
+  border-color: #088395;
+  background: #ecfeff;
+  box-shadow: 0 0 0 2px #08839533;
+}
+.document-upload-guide-card img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+.document-upload-guide-icon svg {
+  color: #0e0f3b;
+}
+@media (max-width: 900px) {
+  .page-main {
+    padding: 22px 16px;
+  }
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .document-upload-guide {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+}
+
 body {
   margin: 0;
   font-family:
@@ -65,7 +221,9 @@ button:hover {
 /* Shared motion for dashboard cards, action icons, and data tables. */
 .ui-card,
 [style*="box-shadow"] {
-  animation: ui-fade-slide-in 420ms ease both;
+  /* "backwards", not "both": holding the end keyframe would override inline
+     transforms (e.g. the mobile sidebar's translateX(-100%)). */
+  animation: ui-fade-slide-in 420ms ease backwards;
 }
 
 svg {
@@ -158,4 +316,219 @@ code {
 .announcement-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Large screens: use the extra width instead of leaving tables cramped. */
+@media (min-width: 1600px) {
+  .page-main {
+    padding: 40px 56px;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 14px 20px;
+    font-size: 1rem;
+  }
+  .responsive-table-wrap > table,
+  .responsive-page table {
+    width: 100%;
+  }
+}
+
+/* History pages: search on the left, Sort/Filter/PDF/Excel on the right. */
+.history-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+.history-controls > * {
+  margin-bottom: 0 !important;
+}
+.history-controls > :first-child {
+  flex: 1 1 320px;
+}
+.history-controls > .history-toolbar {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* Sidebar menu scrolls but shows no scrollbar. */
+aside nav {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+aside nav::-webkit-scrollbar {
+  display: none;
+}
+aside {
+  scrollbar-width: none;
+}
+aside::-webkit-scrollbar {
+  display: none;
+}
+
+.report-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.report-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 18px;
+  text-align: left;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  color: #0e0f3b;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+.report-card span {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+.report-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+  background: #fff !important;
+}
+.report-card.selected {
+  border-color: #088395;
+  box-shadow: 0 0 0 2px #08839540;
+}
+.report-card.selected svg {
+  color: #088395;
+}
+
+.vault-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.vault-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  color: #088395;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.vault-summary-card strong {
+  font-size: 1.6rem;
+  color: #0e0f3b;
+}
+.vault-summary-card span {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+.vault-document-heading {
+  width: 44px;
+  min-width: 44px;
+  padding: 7px 3px !important;
+  text-align: center !important;
+  color: #0e0f3b;
+}
+.vault-document-heading svg,
+.vault-document-logo {
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin: 0 auto 2px;
+  object-fit: contain;
+}
+.vault-document-heading span {
+  display: block;
+  font-size: 0.57rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--document-color, #0e0f3b);
+}
+.vault-document-status {
+  text-align: center;
+}
+.vault-status-present,
+.vault-status-missing {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+}
+.vault-status-present {
+  color: #15803d;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+}
+.vault-status-missing {
+  color: #dc2626;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+}
+.vault-download-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 7px;
+}
+.vault-download-button:hover:not(:disabled) {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Form fields: stay inside their grid column and keep rows aligned. */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="url"],
+input[type="number"],
+input[type="date"],
+input[type="password"],
+select,
+textarea {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+div:has(> label + input),
+div:has(> label + textarea),
+div:has(> label + select) {
+  min-width: 0;
+}
+div:has(> label + input) > label,
+div:has(> label + textarea) > label,
+div:has(> label + select) > label {
+  min-height: 2.8em;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
 }
