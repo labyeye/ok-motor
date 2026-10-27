@@ -44,6 +44,11 @@ const syncMasterIdentityFromSellLetter = async ({
 
 const hasText = (value) => typeof value === "string" && value.trim().length > 0;
 const hasArray = (value) => Array.isArray(value) && value.length > 0;
+const normalizeAmount = (value) => {
+  if (typeof value !== "string") return value;
+  const normalized = Number(value.replace(/,/g, "").trim());
+  return Number.isFinite(normalized) ? normalized : value;
+};
 
 const mergeMissingSellDocumentsIntoBuy = (target, source) => {
   if (!target || !source) return target;
@@ -161,6 +166,7 @@ exports.createSellLetter = [
       const bodyData = req.body || {};
       const sellLetterData = {
         ...bodyData,
+        saleAmount: normalizeAmount(bodyData.saleAmount),
         user: req.user.id,
       };
 

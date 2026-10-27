@@ -1624,6 +1624,7 @@ const SellLetterForm = () => {
 
       const dataToSave = {
         ...cleanFormData,
+        saleAmount: parseIndianAmount(cleanFormData.saleAmount),
 
         ...(editLetter?._id && {
           originalDocumentId: editLetter.originalDocumentId || editLetter._id,
