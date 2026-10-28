@@ -59,8 +59,24 @@ exports.createInsurance = async (req, res) => {
       user: req.user.id,
     };
 
-    const insurance = new Insurance(insuranceData);
-    const savedInsurance = await insurance.save();
+    // Editing from the sell letter sends no _id, so update the vehicle's existing record instead of duplicating it
+    const reg = String(
+      insuranceData.vehicleRegNo || insuranceData.regNo || "",
+    ).trim();
+    const existing = reg
+      ? await Insurance.findOne({
+          $or: [
+            { vehicleRegNo: new RegExp(`^${reg}$`, "i") },
+            { regNo: new RegExp(`^${reg}$`, "i") },
+          ],
+        })
+      : null;
+    const savedInsurance = existing
+      ? await Insurance.findByIdAndUpdate(existing._id, insuranceData, {
+          new: true,
+          runValidators: true,
+        })
+      : await new Insurance(insuranceData).save();
 
     try {
       await syncInsuranceToLetters(savedInsurance);

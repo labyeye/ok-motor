@@ -64,8 +64,17 @@ exports.createPUC = async (req, res) => {
       user: req.user.id,
     };
 
-    const puc = new PUC(pucData);
-    const savedPUC = await puc.save();
+    // Editing from the sell letter sends no _id, so update the vehicle's existing record instead of duplicating it
+    const reg = String(pucData.vehicleRegNo || "").trim();
+    const existing = reg
+      ? await PUC.findOne({ vehicleRegNo: new RegExp(`^${reg}$`, "i") })
+      : null;
+    const savedPUC = existing
+      ? await PUC.findByIdAndUpdate(existing._id, pucData, {
+          new: true,
+          runValidators: true,
+        })
+      : await new PUC(pucData).save();
 
     try {
       await syncPUCToLetters(savedPUC);
