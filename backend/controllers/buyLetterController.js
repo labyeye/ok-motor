@@ -1,6 +1,7 @@
 const BuyLetter = require("../models/BuyLetter");
 const SellLetter = require("../models/SellLetter");
 const Vehicle = require("../models/Vehicle");
+const { regRegex: regexForReg, findFreshDuplicate } = require("../utils/regDup");
 const Insurance = require("../models/Insurance");
 const PUC = require("../models/PUC");
 const fs = require("fs");
@@ -160,7 +161,7 @@ exports.createBuyLetter = [
             };
 
             const insuranceDoc = await Insurance.findOneAndUpdate(
-              { vehicleRegNo: new RegExp(`^${regNo}$`, "i") },
+              { $or: [{ vehicleRegNo: regexForReg(regNo) }, { regNo: regexForReg(regNo) }] },
               insuranceData,
               {
                 new: true,
@@ -181,7 +182,7 @@ exports.createBuyLetter = [
             }
           } else {
             const existingInsurance = await Insurance.findOne({
-              vehicleRegNo: new RegExp(`^${regNo}$`, "i"),
+              $or: [{ vehicleRegNo: regexForReg(regNo) }, { regNo: regexForReg(regNo) }],
             });
             if (existingInsurance) {
               buyLetterData.insuranceId = existingInsurance._id;
@@ -671,41 +672,13 @@ exports.createBuyLetter = [
         }
       }
 
-      const escapeRegExp = (string) =>
-        string.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
-      if (
-        buyLetterData.registrationNumber &&
-        String(buyLetterData.registrationNumber).trim()
-      ) {
-        const regex = new RegExp(
-          `^${escapeRegExp(String(buyLetterData.registrationNumber).trim())}$`,
-          "i",
-        );
-        const query = { registrationNumber: regex };
-
-        if (buyLetterData.previousVersionId) {
-          query._id = { $ne: buyLetterData.previousVersionId };
-
-          if (buyLetterData.originalDocumentId) {
-            query.originalDocumentId = {
-              $ne: buyLetterData.originalDocumentId,
-            };
-            query._id = {
-              $nin: [
-                buyLetterData.previousVersionId,
-                buyLetterData.originalDocumentId,
-              ],
-            };
-          }
-        }
-
-        const existing = await BuyLetter.findOne(query);
-        if (existing) {
-          return res.status(409).json({
-            message: "Buy letter with this registration number already exists",
-            existing,
-          });
-        }
+      const existing = await findFreshDuplicate(BuyLetter, buyLetterData);
+      if (existing) {
+        return res.status(409).json({
+          message:
+            "A buy letter for this registration number already exists. Open it and edit it instead of creating a new one.",
+          existing,
+        });
       }
 
       const buyLetter = new BuyLetter(buyLetterData);
@@ -963,7 +936,7 @@ exports.updateBuyLetter = [
             updateData.insuranceStatus;
           if (hasInsuranceFields) {
             const existingIns = await Insurance.findOne({
-              vehicleRegNo: regRegex,
+              $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }],
             }).lean();
             if (existingIns) {
               // Insurance master exists — read from it, never overwrite it

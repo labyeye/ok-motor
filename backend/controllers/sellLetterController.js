@@ -1,6 +1,7 @@
 const SellLetter = require("../models/SellLetter");
 const BuyLetter = require("../models/BuyLetter");
 const Vehicle = require("../models/Vehicle");
+const { regRegex: regexForReg, findFreshDuplicate } = require("../utils/regDup");
 const Insurance = require("../models/Insurance");
 const PUC = require("../models/PUC");
 const upload = require("../middleware/upload");
@@ -214,7 +215,7 @@ exports.createSellLetter = [
             };
 
             const insuranceDoc = await Insurance.findOneAndUpdate(
-              { vehicleRegNo: new RegExp(`^${regNo}$`, "i") },
+              { $or: [{ vehicleRegNo: regexForReg(regNo) }, { regNo: regexForReg(regNo) }] },
               insuranceData,
               {
                 new: true,
@@ -235,7 +236,7 @@ exports.createSellLetter = [
             }
           } else {
             const existingInsurance = await Insurance.findOne({
-              vehicleRegNo: new RegExp(`^${regNo}$`, "i"),
+              $or: [{ vehicleRegNo: regexForReg(regNo) }, { regNo: regexForReg(regNo) }],
             });
             if (existingInsurance) {
               sellLetterData.insuranceId = existingInsurance._id;
@@ -330,7 +331,7 @@ exports.createSellLetter = [
 
         try {
           await syncMasterIdentityFromSellLetter({
-            regRegex,
+            regRegex: new RegExp(`^${String(regNo).trim()}$`, "i"),
             buyerName: bodyData.buyerName,
             buyerPhone: bodyData.buyerPhone,
             buyerEmail: bodyData.buyerEmail,
@@ -855,6 +856,15 @@ exports.createSellLetter = [
         );
       }
 
+      const existingSell = await findFreshDuplicate(SellLetter, sellLetterData);
+      if (existingSell) {
+        return res.status(409).json({
+          message:
+            "A sell letter for this registration number already exists. Open it and edit it instead of creating a new one.",
+          existing: existingSell,
+        });
+      }
+
       const sellLetter = new SellLetter(sellLetterData);
       const savedSellLetter = await sellLetter.save();
 
@@ -1310,7 +1320,7 @@ exports.updateSellLetter = [
             updateData.insuranceStatus;
           if (hasInsuranceFields) {
             const existingIns = await Insurance.findOne({
-              vehicleRegNo: regRegex,
+              $or: [{ vehicleRegNo: regRegex }, { regNo: regRegex }],
             }).lean();
             if (existingIns) {
               // Insurance master exists — read from it, never overwrite it
