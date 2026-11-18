@@ -144,7 +144,7 @@ const InsuranceHistory = () => {
     },
     pageTitle: {
       fontSize: "1.875rem",
-      fontWeight: "700",
+      fontWeight: "600",
       color: "#1e293b",
       margin: 0,
     },
@@ -176,7 +176,7 @@ const InsuranceHistory = () => {
       border: "1px solid #cbd5e1",
       borderRadius: "8px",
       fontSize: "0.875rem",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
       backgroundColor: "#f8fafc",
     },
     newLetterButton: {
@@ -191,7 +191,7 @@ const InsuranceHistory = () => {
       fontSize: "0.875rem",
       fontWeight: "500",
       cursor: "pointer",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     tableContainer: {
       overflowX: "auto",
@@ -459,10 +459,10 @@ const InsuranceHistory = () => {
                             title="Filter by expiry color status"
                           >
                             <option value="all">All Colors</option>
-                            <option value="expired">🔴 Expired</option>
-                            <option value="missing">🔵 Not Entered</option>
-                            <option value="soon">🟡 0-7 Days</option>
-                            <option value="healthy">🟢 8+ Days</option>
+                            <option value="expired">Expired</option>
+                            <option value="missing">Not entered</option>
+                            <option value="soon">0-7 days</option>
+                            <option value="healthy">8+ days</option>
                           </select>
                           <TableFilter
                             type="date"

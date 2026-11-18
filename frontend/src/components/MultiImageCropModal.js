@@ -334,7 +334,7 @@ const MultiImageCropModal = ({ isOpen, files, fieldName, onSave, onClose }) => {
       fontSize: "13px",
       fontWeight: "500",
       color: "#334155",
-      transition: "all 0.2s",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     navBtnDisabled: {
       opacity: 0.5,

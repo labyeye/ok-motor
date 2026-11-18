@@ -199,7 +199,7 @@ const AuthForm = ({ isLogin }) => {
 
         .auth-title {
           font-size: 2rem;
-          font-weight: 700;
+          font-weight: 600;
           color: white;
           margin-bottom: 0.5rem;
           letter-spacing: -0.025em;
@@ -231,7 +231,7 @@ const AuthForm = ({ isLogin }) => {
 
         .input-group {
           position: relative;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out;
         }
 
         .form-input {
@@ -242,7 +242,7 @@ const AuthForm = ({ isLogin }) => {
           border-radius: 0.75rem;
           background: rgba(199, 199, 199, 0.15);
           backdrop-filter: blur(5px);
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out;
           box-sizing: border-box;
           color: white;
         }
@@ -282,7 +282,7 @@ const AuthForm = ({ isLogin }) => {
           transform: translateY(-50%);
           color: rgba(255, 255, 255, 0.7);
           font-size: 1rem;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out;
           pointer-events: none;
           background: transparent;
         }
@@ -320,18 +320,14 @@ const AuthForm = ({ isLogin }) => {
           position: relative;
           width: 100%;
           padding: 1rem 1.5rem;
-          background: linear-gradient(
-            135deg,
-            rgba(7, 25, 82, 0.9),
-            rgba(8, 131, 149, 0.9)
-          );
+          background: #071952;
           color: white;
           border: none;
           font-size: 1rem;
           font-weight: 600;
           border-radius: 0.75rem;
           cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out;
           display: flex;
           align-items: center;
           justify-content: center;

@@ -389,7 +389,7 @@ const styles = {
     padding: "12px 24px",
     cursor: "pointer",
     color: "#e2e8f0",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
   },
   menuItemActive: {
     backgroundColor: "rgba(8, 131, 149, 0.2)",
@@ -420,7 +420,7 @@ const styles = {
   header: { marginBottom: "24px" },
   pageTitle: {
     fontSize: "1.5rem",
-    fontWeight: "700",
+    fontWeight: "600",
     color: "#0f172a",
     margin: 0,
   },

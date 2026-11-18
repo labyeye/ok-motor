@@ -193,7 +193,7 @@ const styles = {
     border: "2px solid #eee",
     borderRadius: "8px",
     cursor: "pointer",
-    transition: "all 0.3s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     fontSize: "14px",
   },
   icon: {

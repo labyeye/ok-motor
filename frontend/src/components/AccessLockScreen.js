@@ -200,7 +200,7 @@ const styles = {
   title: {
     color: "white",
     fontSize: "1.25rem",
-    fontWeight: "700",
+    fontWeight: "600",
     margin: 0,
     textAlign: "center",
     letterSpacing: "-0.02em",
@@ -258,7 +258,7 @@ const styles = {
     border: "none",
     borderRadius: "0.75rem",
     background:
-      "linear-gradient(135deg, rgba(7,25,82,0.9), rgba(8,131,149,0.9))",
+      "#071952",
     color: "white",
     cursor: "pointer",
     transition: "opacity 0.2s, transform 0.15s",

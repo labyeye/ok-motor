@@ -427,7 +427,7 @@ const styles = {
     padding: "12px 24px",
     cursor: "pointer",
     color: "#e2e8f0",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#1e293b",
     },
@@ -462,7 +462,7 @@ const styles = {
     cursor: "pointer",
     color: "#cbd5e1",
     fontSize: "0.875rem",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#2d3748",
     },
@@ -479,7 +479,7 @@ const styles = {
     color: "#f87171",
     marginTop: "16px",
     borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#7f1d1d20",
     },
@@ -502,7 +502,7 @@ const styles = {
   },
   pageTitle: {
     fontSize: "1.875rem",
-    fontWeight: "700",
+    fontWeight: "600",
     color: "#1e293b",
     margin: 0,
   },
@@ -522,7 +522,7 @@ const styles = {
     fontSize: "0.875rem",
     fontWeight: "500",
     cursor: "pointer",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#2563eb",
     },
@@ -616,7 +616,7 @@ const styles = {
     border: "none",
     borderRadius: "4px",
     cursor: "pointer",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#bae6fd",
     },
@@ -632,7 +632,7 @@ const styles = {
     border: "none",
     borderRadius: "4px",
     cursor: "pointer",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#fecaca",
     },

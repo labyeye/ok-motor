@@ -141,7 +141,7 @@ const VehicleHistory = () => {
       await axios.delete(`${API_BASE}/api/vehicles/${vehicleId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert("Vehicle deleted successfully!");
+      alert("Vehicle deleted successfully");
       fetchVehicles();
     } catch (error) {
       console.error("Error deleting vehicle:", error);
@@ -232,7 +232,7 @@ const VehicleHistory = () => {
       padding: "12px 24px",
       cursor: "pointer",
       color: "#e2e8f0",
-      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     menuItemActive: {
       backgroundColor: "rgba(8, 131, 149, 0.2)",
@@ -267,7 +267,7 @@ const VehicleHistory = () => {
       cursor: "pointer",
       color: "#cbd5e1",
       fontSize: "0.875rem",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     logoutButton: {
       display: "flex",
@@ -277,7 +277,7 @@ const VehicleHistory = () => {
       color: "#f87171",
       marginTop: "16px",
       borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     mainContent: {
       flex: 1,
@@ -313,7 +313,7 @@ const VehicleHistory = () => {
       fontSize: "0.875rem",
       fontWeight: "500",
       cursor: "pointer",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     filters: {
       display: "flex",
@@ -359,7 +359,7 @@ const VehicleHistory = () => {
       boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
       border: "1px solid #e2e8f0",
       overflow: "hidden",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     vehicleImage: {
       position: "relative",
@@ -416,7 +416,7 @@ const VehicleHistory = () => {
     },
     vehiclePrice: {
       fontSize: "1.25rem",
-      fontWeight: "700",
+      fontWeight: "600",
       color: "#088395",
       marginBottom: "16px",
     },
@@ -436,7 +436,7 @@ const VehicleHistory = () => {
       fontSize: "0.875rem",
       fontWeight: "500",
       cursor: "pointer",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     btnEdit: {
       backgroundColor: "#088395",
@@ -475,7 +475,7 @@ const VehicleHistory = () => {
       fontSize: "0.875rem",
       fontWeight: "500",
       cursor: "pointer",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     loading: {
       textAlign: "center",
@@ -719,7 +719,7 @@ const VehicleHistory = () => {
                               style={{
                                 padding: "12px 16px",
                                 verticalAlign: "middle",
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 color: "#10b981",
                               }}
                             >

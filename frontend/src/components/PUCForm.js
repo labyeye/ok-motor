@@ -273,7 +273,7 @@ const PUCForm = () => {
             "Content-Type": "application/json",
           },
         });
-        alert("PUC record updated successfully!");
+        alert("PUC record updated successfully");
       } else {
         await axios.post(`${API_BASE_URL}/puc`, payload, {
           headers: {
@@ -281,7 +281,7 @@ const PUCForm = () => {
             "Content-Type": "application/json",
           },
         });
-        alert("PUC record saved successfully!");
+        alert("PUC record saved successfully");
       }
 
       setFormData({
@@ -389,7 +389,7 @@ const PUCForm = () => {
       padding: "12px 24px",
       cursor: "pointer",
       color: "#e2e8f0",
-      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     menuItemActive: {
       backgroundColor: "rgba(8, 131, 149, 0.2)",
@@ -417,7 +417,7 @@ const PUCForm = () => {
       cursor: "pointer",
       color: "#cbd5e1",
       fontSize: "0.875rem",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     submenuItemActive: {
       color: "#37B7C3",
@@ -431,7 +431,7 @@ const PUCForm = () => {
       color: "#f87171",
       marginTop: "16px",
       borderTop: "1px solid #1e293b",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     mainContent: {
       flex: 1,
@@ -459,7 +459,7 @@ const PUCForm = () => {
     },
     title: {
       fontSize: "24px",
-      fontWeight: "700",
+      fontWeight: "600",
       color: "#0f172a",
       margin: 0,
     },
@@ -568,7 +568,7 @@ const PUCForm = () => {
           <form onSubmit={handleSave} style={styles.formCard}>
             <div style={styles.grid}>
               <div style={styles.formGroup}>
-                <label styles={{ fontWeight: "bold" }}>
+                <label styles={{ fontWeight: "600" }}>
                   Registration Number
                 </label>
                 <input

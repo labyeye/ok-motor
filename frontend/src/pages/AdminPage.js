@@ -19,8 +19,15 @@ import {
   Bike,
   Shield,
   X,
+  ClipboardList,
+  CheckCircle2,
+  AlertTriangle,
+  Bell,
+  Car,
+  PenLine,
+  Search as SearchIcon,
 } from "lucide-react";
-//import logo1 from "../images/dash.png";
+import logo1 from "../images/dash.png";
 import { useNavigate } from "react-router-dom";
 import {
   Chart as ChartJS,
@@ -53,6 +60,27 @@ ChartJS.register(
   LineElement,
   Filler,
 );
+
+// Counts the first number in `children` from 0 up to its value.
+const CountUp = ({ children, duration = 900 }) => {
+  const text = String(children ?? "");
+  const m = text.match(/\d[\d,]*/);
+  const target = m ? parseInt(m[0].replace(/,/g, ""), 10) : 0;
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    let raf;
+    const t0 = performance.now();
+    const tick = (t) => {
+      const k = Math.min((t - t0) / duration, 1);
+      setN(Math.round(target * (1 - Math.pow(1 - k, 3))));
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  if (!m) return text;
+  return text.replace(m[0], n.toLocaleString("en-IN"));
+};
 
 const AdminPage = () => {
   const { user, logout } = useContext(AuthContext);
@@ -704,7 +732,7 @@ const AdminPage = () => {
             <div className="card-content">
               <div>
                 <p className="card-label">Total Services</p>
-                <p className="card-value">{dashboardData.totalServices}</p>
+                <p className="card-value"><CountUp>{dashboardData.totalServices}</CountUp></p>
               </div>
               <div className="card-icon blue">
                 <Wrench />
@@ -716,9 +744,7 @@ const AdminPage = () => {
             <div className="card-content">
               <div>
                 <p className="card-label">Total Revenue</p>
-                <p className="card-value currency">
-                  {formatCurrency(dashboardData.totalRevenue)}
-                </p>
+                <p className="card-value currency"><CountUp>{formatCurrency(dashboardData.totalRevenue)}</CountUp></p>
               </div>
               <div className="card-icon orange">
                 <TrendingUp />
@@ -730,9 +756,7 @@ const AdminPage = () => {
             <div className="card-content">
               <div>
                 <p className="card-label">Total Expenses</p>
-                <p className="card-value currency">
-                  {formatCurrency(dashboardData.totalExpenses)}
-                </p>
+                <p className="card-value currency"><CountUp>{formatCurrency(dashboardData.totalExpenses)}</CountUp></p>
               </div>
               <div className="card-icon blue">
                 <ShoppingCart />
@@ -753,9 +777,7 @@ const AdminPage = () => {
             <div className="card-content">
               <div>
                 <p className="card-label">Unsold Vehicles</p>
-                <p className={`card-value`}>
-                  {unsoldVehicles ? unsoldVehicles.length : 0}
-                </p>
+                <p className={`card-value`}><CountUp>{unsoldVehicles ? unsoldVehicles.length : 0}</CountUp></p>
               </div>
               <div className="card-icon orange">
                 <Bike />
@@ -766,9 +788,7 @@ const AdminPage = () => {
             <div className="card-content">
               <div>
                 <p className="card-label">Revenue (This Month)</p>
-                <p className="card-value currency">
-                  {formatCurrency(monthTotals.revenue || 0)}
-                </p>
+                <p className="card-value currency"><CountUp>{formatCurrency(monthTotals.revenue || 0)}</CountUp></p>
               </div>
               <div className="card-icon orange">
                 <TrendingUp />
@@ -780,9 +800,7 @@ const AdminPage = () => {
             <div className="card-content">
               <div>
                 <p className="card-label">Expenses (This Month)</p>
-                <p className="card-value currency">
-                  {formatCurrency(monthTotals.expenses || 0)}
-                </p>
+                <p className="card-value currency"><CountUp>{formatCurrency(monthTotals.expenses || 0)}</CountUp></p>
               </div>
               <div className="card-icon blue">
                 <ShoppingCart />
@@ -812,7 +830,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">Total Vehicles</p>
-              <p className="card-value">{extraStats.totalVehicles}</p>
+              <p className="card-value"><CountUp>{extraStats.totalVehicles}</CountUp></p>
             </div>
             <div className="card-icon blue">
               <Bike />
@@ -823,7 +841,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">Total Bought</p>
-              <p className="card-value">{dashboardData.totalBuyLetters || 0}</p>
+              <p className="card-value"><CountUp>{dashboardData.totalBuyLetters || 0}</CountUp></p>
             </div>
             <div className="card-icon orange">
               <ShoppingCart />
@@ -835,7 +853,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">Total Sold</p>
-              <p className="card-value">{extraStats.totalSold}</p>
+              <p className="card-value"><CountUp>{extraStats.totalSold}</CountUp></p>
             </div>
             <div className="card-icon blue">
               <TrendingUp />
@@ -846,7 +864,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">Total Services Done</p>
-              <p className="card-value">{dashboardData.totalServices}</p>
+              <p className="card-value"><CountUp>{dashboardData.totalServices}</CountUp></p>
             </div>
             <div className="card-icon orange">
               <Wrench />
@@ -857,7 +875,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">Total Insurance</p>
-              <p className="card-value">{extraStats.totalInsurance}</p>
+              <p className="card-value"><CountUp>{extraStats.totalInsurance}</CountUp></p>
             </div>
             <div className="card-icon blue">
               <Shield />
@@ -868,7 +886,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">Total PUC</p>
-              <p className="card-value">{extraStats.totalPuc}</p>
+              <p className="card-value"><CountUp>{extraStats.totalPuc}</CountUp></p>
             </div>
             <div className="card-icon orange">
               <FileText />
@@ -879,7 +897,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">Expired Insurance</p>
-              <p className="card-value">{extraStats.totalExpiredInsurance}</p>
+              <p className="card-value"><CountUp>{extraStats.totalExpiredInsurance}</CountUp></p>
             </div>
             <div className="card-icon orange">
               <Shield />
@@ -890,7 +908,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">Insurance Expiring (30 Days)</p>
-              <p className="card-value">{extraStats.insuranceUpcoming}</p>
+              <p className="card-value"><CountUp>{extraStats.insuranceUpcoming}</CountUp></p>
             </div>
             <div className="card-icon blue">
               <Shield />
@@ -901,7 +919,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">PUC Expiring (30 Days)</p>
-              <p className="card-value">{extraStats.pucUpcoming}</p>
+              <p className="card-value"><CountUp>{extraStats.pucUpcoming}</CountUp></p>
             </div>
             <div className="card-icon orange">
               <FileText />
@@ -912,7 +930,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">Expired PUC</p>
-              <p className="card-value">{extraStats.totalExpiredPuc}</p>
+              <p className="card-value"><CountUp>{extraStats.totalExpiredPuc}</CountUp></p>
             </div>
             <div className="card-icon blue">
               <FileText />
@@ -937,7 +955,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">1st Month Pending</p>
-              <p className="card-value">{pendingCounts[0]}</p>
+              <p className="card-value"><CountUp>{pendingCounts[0]}</CountUp></p>
             </div>
             <div className="card-icon orange">
               <Wrench />
@@ -948,7 +966,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">2nd Month Pending</p>
-              <p className="card-value">{pendingCounts[1]}</p>
+              <p className="card-value"><CountUp>{pendingCounts[1]}</CountUp></p>
             </div>
             <div className="card-icon blue">
               <Wrench />
@@ -959,7 +977,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">3rd Month Pending</p>
-              <p className="card-value">{pendingCounts[2]}</p>
+              <p className="card-value"><CountUp>{pendingCounts[2]}</CountUp></p>
             </div>
             <div className="card-icon orange">
               <Wrench />
@@ -970,7 +988,7 @@ const AdminPage = () => {
           <div className="card-content">
             <div>
               <p className="card-label">Upcoming Free Services (30 Days)</p>
-              <p className="card-value">{upcomingFreeCount}</p>
+              <p className="card-value"><CountUp>{upcomingFreeCount}</CountUp></p>
             </div>
             <div className="card-icon blue">
               <Wrench />
@@ -997,9 +1015,7 @@ const AdminPage = () => {
               <p className="card-label" style={{ color: "white" }}>
                 Insurance Expiring
               </p>
-              <p className="card-value" style={{ color: "white" }}>
-                {extraStats.insuranceExpiring}
-              </p>
+              <p className="card-value" style={{ color: "white" }}><CountUp>{extraStats.insuranceExpiring}</CountUp></p>
             </div>
             <div className="card-icon" style={{ color: "white" }}>
               <FileText />
@@ -1012,9 +1028,7 @@ const AdminPage = () => {
               <p className="card-label" style={{ color: "white" }}>
                 PUC Expiring
               </p>
-              <p className="card-value" style={{ color: "white" }}>
-                {extraStats.pucExpiring}
-              </p>
+              <p className="card-value" style={{ color: "white" }}><CountUp>{extraStats.pucExpiring}</CountUp></p>
             </div>
             <div className="card-icon" style={{ color: "white" }}>
               <FileText />
@@ -1354,7 +1368,7 @@ const AdminPage = () => {
     };
     const fsTitleStyle = {
       fontSize: "1.15rem",
-      fontWeight: 700,
+      fontWeight: 600,
       color: "#071952",
       margin: "0 0 18px 0",
       display: "flex",
@@ -1423,10 +1437,10 @@ const AdminPage = () => {
               background: "#fee2e2",
               color: "#ef4444",
               fontSize: "0.72rem",
-              fontWeight: 700,
+              fontWeight: 600,
             }}
           >
-            ❌ Expired
+            Expired
           </span>
         );
       }
@@ -1442,10 +1456,10 @@ const AdminPage = () => {
               background: "#dcfce7",
               color: "#166534",
               fontSize: "0.72rem",
-              fontWeight: 700,
+              fontWeight: 600,
             }}
           >
-            ✓ All done
+            All done
           </span>
         );
       if (!nextPending)
@@ -1477,10 +1491,10 @@ const AdminPage = () => {
               background: "#fee2e2",
               color: "#991b1b",
               fontSize: "0.72rem",
-              fontWeight: 700,
+              fontWeight: 600,
             }}
           >
-            ⚠ {ord} overdue {Math.abs(days)}d
+            {ord} overdue {Math.abs(days)}d
           </span>
         );
       if (days === 0)
@@ -1495,10 +1509,10 @@ const AdminPage = () => {
               background: "#fef9c3",
               color: "#854d0e",
               fontSize: "0.72rem",
-              fontWeight: 700,
+              fontWeight: 600,
             }}
           >
-            ⏰ {ord} due today
+            {ord} due today
           </span>
         );
       if (days <= 7)
@@ -1513,10 +1527,10 @@ const AdminPage = () => {
               background: "#fef9c3",
               color: "#854d0e",
               fontSize: "0.72rem",
-              fontWeight: 700,
+              fontWeight: 600,
             }}
           >
-            🔔 {ord} in {days}d
+            {ord} in {days}d
           </span>
         );
       return (
@@ -1530,10 +1544,10 @@ const AdminPage = () => {
             background: "#dcfce7",
             color: "#166534",
             fontSize: "0.72rem",
-            fontWeight: 700,
+            fontWeight: 600,
           }}
         >
-          ✓ {ord} in {days}d
+          {ord} in {days}d
         </span>
       );
     };
@@ -1549,7 +1563,7 @@ const AdminPage = () => {
               background: "#fee2e2",
               color: "#991b1b",
               fontSize: "0.78rem",
-              fontWeight: 700,
+              fontWeight: 600,
             }}
           >
             Expired
@@ -1568,7 +1582,7 @@ const AdminPage = () => {
             background: bg,
             color,
             fontSize: "0.78rem",
-            fontWeight: 700,
+            fontWeight: 600,
           }}
         >
           {used}/3
@@ -1599,7 +1613,7 @@ const AdminPage = () => {
                 fontSize: "1rem",
               }}
             >
-              🔧
+              <Wrench size={16} strokeWidth={1.5} />
             </span>
             Free Service Usage
             <span
@@ -1673,7 +1687,7 @@ const AdminPage = () => {
               fontSize: "0.9rem",
             }}
           >
-            <div style={{ fontSize: "1.5rem", marginBottom: 8 }}>⏳</div>
+            
             Loading free service data...
           </div>
         ) : filtered.length === 0 ? (
@@ -1685,7 +1699,7 @@ const AdminPage = () => {
               fontSize: "0.9rem",
             }}
           >
-            <div style={{ fontSize: "2rem", marginBottom: 8 }}>📋</div>
+            <ClipboardList size={28} strokeWidth={1.5} style={{ marginBottom: 8 }} />
             No free service records available
           </div>
         ) : (
@@ -2067,10 +2081,10 @@ const AdminPage = () => {
               background: "#fee2e2",
               color: "#991b1b",
               fontSize: "0.72rem",
-              fontWeight: 700,
+              fontWeight: 600,
             }}
           >
-            ⚠ {Math.abs(daysUntil)}d overdue
+            {Math.abs(daysUntil)}d overdue
           </span>
         );
       if (daysUntil === 0)
@@ -2085,7 +2099,7 @@ const AdminPage = () => {
               background: "#fef9c3",
               color: "#854d0e",
               fontSize: "0.72rem",
-              fontWeight: 700,
+              fontWeight: 600,
             }}
           >
             ⏰ Due today
@@ -2103,10 +2117,10 @@ const AdminPage = () => {
               background: "#fef9c3",
               color: "#854d0e",
               fontSize: "0.72rem",
-              fontWeight: 700,
+              fontWeight: 600,
             }}
           >
-            🔔 {daysUntil}d left
+            {daysUntil}d left
           </span>
         );
       return (
@@ -2120,10 +2134,10 @@ const AdminPage = () => {
             background: "#dcfce7",
             color: "#166534",
             fontSize: "0.72rem",
-            fontWeight: 700,
+            fontWeight: 600,
           }}
         >
-          ✓ {daysUntil}d left
+          {daysUntil}d left
         </span>
       );
     };
@@ -2164,7 +2178,7 @@ const AdminPage = () => {
       background: "#071952",
       color: "#fff",
       fontSize: "0.75rem",
-      fontWeight: 700,
+      fontWeight: 600,
       letterSpacing: "0.04em",
       whiteSpace: "nowrap",
     };
@@ -2200,7 +2214,7 @@ const AdminPage = () => {
           <h3
             style={{
               fontSize: "1.15rem",
-              fontWeight: 700,
+              fontWeight: 600,
               color: "#071952",
               margin: 0,
               display: "flex",
@@ -2217,7 +2231,7 @@ const AdminPage = () => {
                 fontSize: "1rem",
               }}
             >
-              📋
+              <ClipboardList size={16} strokeWidth={1.5} />
             </span>
             PUC Expiry Reminders
           </h3>
@@ -2262,7 +2276,7 @@ const AdminPage = () => {
               fontSize: "0.9rem",
             }}
           >
-            <div style={{ fontSize: "1.5rem", marginBottom: 8 }}>⏳</div>Loading
+            Loading
             PUC reminders...
           </div>
         ) : processed.length === 0 ? (
@@ -2274,7 +2288,7 @@ const AdminPage = () => {
               fontSize: "0.9rem",
             }}
           >
-            <div style={{ fontSize: "2rem", marginBottom: 8 }}>✅</div>No PUC
+            <CheckCircle2 size={28} strokeWidth={1.5} style={{ marginBottom: 8 }} />No PUC
             expiries to show
           </div>
         ) : (
@@ -2297,12 +2311,12 @@ const AdminPage = () => {
                       color: "#991b1b",
                       padding: "3px 14px",
                       borderRadius: 20,
-                      fontWeight: 700,
+                      fontWeight: 600,
                       fontSize: "0.82rem",
                       border: "1px solid #fca5a5",
                     }}
                   >
-                    ⚠ Already Expired ({expiredItems.length})
+                    Already expired ({expiredItems.length})
                   </span>
                 </div>
                 <div
@@ -2367,7 +2381,7 @@ const AdminPage = () => {
                                   color: "#088395",
                                   padding: "2px 8px",
                                   borderRadius: 6,
-                                  fontWeight: 700,
+                                  fontWeight: 600,
                                   fontSize: "0.75rem",
                                 }}
                               >
@@ -2408,7 +2422,7 @@ const AdminPage = () => {
                                     fontWeight: 600,
                                   }}
                                 >
-                                  🚗 Sold Vehicle
+                                  Sold vehicle
                                 </span>
                               ) : (
                                 <span
@@ -2476,12 +2490,12 @@ const AdminPage = () => {
                       color: "#854d0e",
                       padding: "3px 14px",
                       borderRadius: 20,
-                      fontWeight: 700,
+                      fontWeight: 600,
                       fontSize: "0.82rem",
                       border: "1px solid #fde68a",
                     }}
                   >
-                    🔔 Expiring Soon ({expiringSoonItems.length})
+                    Expiring soon ({expiringSoonItems.length})
                   </span>
                 </div>
                 <div
@@ -2555,7 +2569,7 @@ const AdminPage = () => {
                                   color: "#088395",
                                   padding: "2px 8px",
                                   borderRadius: 6,
-                                  fontWeight: 700,
+                                  fontWeight: 600,
                                   fontSize: "0.75rem",
                                 }}
                               >
@@ -2596,7 +2610,7 @@ const AdminPage = () => {
                                     fontWeight: 600,
                                   }}
                                 >
-                                  🚗 Sold Vehicle
+                                  Sold vehicle
                                 </span>
                               ) : (
                                 <span
@@ -2850,7 +2864,7 @@ const AdminPage = () => {
       background: "#071952",
       color: "#fff",
       fontSize: "0.75rem",
-      fontWeight: 700,
+      fontWeight: 600,
       letterSpacing: "0.04em",
       whiteSpace: "nowrap",
     };
@@ -2875,10 +2889,10 @@ const AdminPage = () => {
               background: "#fee2e2",
               color: "#991b1b",
               fontSize: "0.72rem",
-              fontWeight: 700,
+              fontWeight: 600,
             }}
           >
-            ⚠ {Math.abs(daysUntil)}d overdue
+            {Math.abs(daysUntil)}d overdue
           </span>
         );
       if (daysUntil === 0)
@@ -2893,7 +2907,7 @@ const AdminPage = () => {
               background: "#fef9c3",
               color: "#854d0e",
               fontSize: "0.72rem",
-              fontWeight: 700,
+              fontWeight: 600,
             }}
           >
             ⏰ Due today
@@ -2911,10 +2925,10 @@ const AdminPage = () => {
               background: "#fef9c3",
               color: "#854d0e",
               fontSize: "0.72rem",
-              fontWeight: 700,
+              fontWeight: 600,
             }}
           >
-            🔔 {daysUntil}d left
+            {daysUntil}d left
           </span>
         );
       return (
@@ -2928,10 +2942,10 @@ const AdminPage = () => {
             background: "#dcfce7",
             color: "#166534",
             fontSize: "0.72rem",
-            fontWeight: 700,
+            fontWeight: 600,
           }}
         >
-          ✓ {daysUntil}d left
+          {daysUntil}d left
         </span>
       );
     };
@@ -3004,7 +3018,7 @@ const AdminPage = () => {
           <h3
             style={{
               fontSize: "1.15rem",
-              fontWeight: 700,
+              fontWeight: 600,
               color: "#071952",
               margin: 0,
               display: "flex",
@@ -3021,7 +3035,7 @@ const AdminPage = () => {
                 fontSize: "1rem",
               }}
             >
-              🛡️
+              <Shield size={16} strokeWidth={1.5} />
             </span>
             Insurance Expiry Reminders
           </h3>
@@ -3066,7 +3080,7 @@ const AdminPage = () => {
               fontSize: "0.9rem",
             }}
           >
-            <div style={{ fontSize: "1.5rem", marginBottom: 8 }}>⏳</div>Loading
+            Loading
             insurance reminders...
           </div>
         ) : processed.length === 0 ? (
@@ -3078,7 +3092,7 @@ const AdminPage = () => {
               fontSize: "0.9rem",
             }}
           >
-            <div style={{ fontSize: "2rem", marginBottom: 8 }}>✅</div>No
+            <CheckCircle2 size={28} strokeWidth={1.5} style={{ marginBottom: 8 }} />No
             insurance expiries to show
           </div>
         ) : (
@@ -3103,12 +3117,12 @@ const AdminPage = () => {
                       color: "#991b1b",
                       padding: "3px 14px",
                       borderRadius: 20,
-                      fontWeight: 700,
+                      fontWeight: 600,
                       fontSize: "0.82rem",
                       border: "1px solid #fca5a5",
                     }}
                   >
-                    ⚠ Already Expired ({insExpiredItems.length})
+                    Already expired ({insExpiredItems.length})
                   </span>
                 </div>
                 <div
@@ -3174,7 +3188,7 @@ const AdminPage = () => {
                                   color: "#088395",
                                   padding: "2px 8px",
                                   borderRadius: 6,
-                                  fontWeight: 700,
+                                  fontWeight: 600,
                                   fontSize: "0.75rem",
                                 }}
                               >
@@ -3228,7 +3242,7 @@ const AdminPage = () => {
                                     fontWeight: 600,
                                   }}
                                 >
-                                  🚗 Sold Vehicle
+                                  Sold vehicle
                                 </span>
                               ) : (
                                 <span
@@ -3296,12 +3310,12 @@ const AdminPage = () => {
                       color: "#854d0e",
                       padding: "3px 14px",
                       borderRadius: 20,
-                      fontWeight: 700,
+                      fontWeight: 600,
                       fontSize: "0.82rem",
                       border: "1px solid #fde68a",
                     }}
                   >
-                    🔔 Expiring Soon ({insExpiringSoonItems.length})
+                    Expiring soon ({insExpiringSoonItems.length})
                   </span>
                 </div>
                 <div
@@ -3376,7 +3390,7 @@ const AdminPage = () => {
                                   color: "#088395",
                                   padding: "2px 8px",
                                   borderRadius: 6,
-                                  fontWeight: 700,
+                                  fontWeight: 600,
                                   fontSize: "0.75rem",
                                 }}
                               >
@@ -3430,7 +3444,7 @@ const AdminPage = () => {
                                     fontWeight: 600,
                                   }}
                                 >
-                                  🚗 Sold Vehicle
+                                  Sold vehicle
                                 </span>
                               ) : (
                                 <span
@@ -3498,7 +3512,7 @@ const AdminPage = () => {
       background: "#071952",
       color: "#fff",
       fontSize: "0.75rem",
-      fontWeight: 700,
+      fontWeight: 600,
       letterSpacing: "0.04em",
       whiteSpace: "nowrap",
     };
@@ -3545,7 +3559,7 @@ const AdminPage = () => {
           <h3
             style={{
               fontSize: "1.15rem",
-              fontWeight: 700,
+              fontWeight: 600,
               color: "#dc2626",
               margin: 0,
               display: "flex",
@@ -3562,7 +3576,7 @@ const AdminPage = () => {
                 fontSize: "1rem",
               }}
             >
-              📋
+              <ClipboardList size={16} strokeWidth={1.5} />
             </span>
             Incomplete Buy Letters
             <span
@@ -3572,7 +3586,7 @@ const AdminPage = () => {
                 borderRadius: 20,
                 padding: "2px 10px",
                 fontSize: "0.78rem",
-                fontWeight: 700,
+                fontWeight: 600,
               }}
             >
               {incompleteBuyLetters.length}
@@ -3619,7 +3633,7 @@ const AdminPage = () => {
               fontSize: "0.9rem",
             }}
           >
-            <div style={{ fontSize: "1.5rem", marginBottom: 8 }}>⏳</div>Loading
+            Loading
             incomplete buy letters...
           </div>
         ) : filteredLetters.length === 0 ? (
@@ -3631,11 +3645,9 @@ const AdminPage = () => {
               fontSize: "0.9rem",
             }}
           >
-            <div style={{ fontSize: "2rem", marginBottom: 8 }}>
-              {incompleteBuyLetters.length === 0 ? "✅" : "🔍"}
-            </div>
+            {incompleteBuyLetters.length === 0 ? <CheckCircle2 size={28} strokeWidth={1.5} style={{ marginBottom: 8 }} /> : <SearchIcon size={28} strokeWidth={1.5} style={{ marginBottom: 8 }} />}
             {incompleteBuyLetters.length === 0
-              ? "All buy letters are complete!"
+              ? "All buy letters are complete"
               : "No matching records found"}
           </div>
         ) : (
@@ -3696,7 +3708,7 @@ const AdminPage = () => {
                             color: "#088395",
                             padding: "2px 8px",
                             borderRadius: 6,
-                            fontWeight: 700,
+                            fontWeight: 600,
                             fontSize: "0.75rem",
                           }}
                         >
@@ -3797,7 +3809,7 @@ const AdminPage = () => {
       background: "#071952",
       color: "#fff",
       fontSize: "0.75rem",
-      fontWeight: 700,
+      fontWeight: 600,
       letterSpacing: "0.04em",
       whiteSpace: "nowrap",
     };
@@ -3843,7 +3855,7 @@ const AdminPage = () => {
           <h3
             style={{
               fontSize: "1.15rem",
-              fontWeight: 700,
+              fontWeight: 600,
               color: "#dc2626",
               margin: 0,
               display: "flex",
@@ -3860,7 +3872,7 @@ const AdminPage = () => {
                 fontSize: "1rem",
               }}
             >
-              📝
+              <PenLine size={16} strokeWidth={1.5} />
             </span>
             Incomplete Sell Letters
             <span
@@ -3870,7 +3882,7 @@ const AdminPage = () => {
                 borderRadius: 20,
                 padding: "2px 10px",
                 fontSize: "0.78rem",
-                fontWeight: 700,
+                fontWeight: 600,
               }}
             >
               {incompleteSellLetters.length}
@@ -3917,7 +3929,7 @@ const AdminPage = () => {
               fontSize: "0.9rem",
             }}
           >
-            <div style={{ fontSize: "1.5rem", marginBottom: 8 }}>⏳</div>Loading
+            Loading
             incomplete sell letters...
           </div>
         ) : filteredLetters.length === 0 ? (
@@ -3929,11 +3941,9 @@ const AdminPage = () => {
               fontSize: "0.9rem",
             }}
           >
-            <div style={{ fontSize: "2rem", marginBottom: 8 }}>
-              {incompleteSellLetters.length === 0 ? "✅" : "🔍"}
-            </div>
+            {incompleteSellLetters.length === 0 ? <CheckCircle2 size={28} strokeWidth={1.5} style={{ marginBottom: 8 }} /> : <SearchIcon size={28} strokeWidth={1.5} style={{ marginBottom: 8 }} />}
             {incompleteSellLetters.length === 0
-              ? "All sell letters are complete!"
+              ? "All sell letters are complete"
               : "No matching records found"}
           </div>
         ) : (
@@ -3994,7 +4004,7 @@ const AdminPage = () => {
                             color: "#088395",
                             padding: "2px 8px",
                             borderRadius: 6,
-                            fontWeight: 700,
+                            fontWeight: 600,
                             fontSize: "0.75rem",
                           }}
                         >
@@ -4016,7 +4026,7 @@ const AdminPage = () => {
                       </td>
                       <td style={sTdStyle}>
                         {letter.saleAmount ? (
-                          <span style={{ fontWeight: 700, color: "#166534" }}>
+                          <span style={{ fontWeight: 600, color: "#166534" }}>
                             ₹
                             {new Intl.NumberFormat("en-IN").format(
                               letter.saleAmount,
@@ -4121,7 +4131,7 @@ const AdminPage = () => {
           <h3
             style={{
               fontSize: "1.15rem",
-              fontWeight: 700,
+              fontWeight: 600,
               color: "#071952",
               margin: 0,
               display: "flex",
@@ -4138,7 +4148,7 @@ const AdminPage = () => {
                 fontSize: "1rem",
               }}
             >
-              🚗
+              <Car size={16} strokeWidth={1.5} />
             </span>
             Available Stock (Bought but Not Sold)
             <span
@@ -4182,7 +4192,7 @@ const AdminPage = () => {
                       background: "#0E0F3B",
                       color: "#ffffff",
                       fontSize: "0.75rem",
-                      fontWeight: 700,
+                      fontWeight: 600,
                       letterSpacing: "0.04em",
                       whiteSpace: "nowrap",
                     }}
@@ -4259,9 +4269,9 @@ const AdminPage = () => {
       <AppSidebar user={user} onLogout={handleLogout} />
       <div className="main-content">
         <div className="content-padding">
-          {/* <div className="banner">
+          <div className="banner">
             <img src={logo1} alt="Company Logo" className="banner-logo" />
-          </div> */}
+          </div>
 
           <div className="history-search-container">
             <div className="history-search-box">
@@ -4423,7 +4433,7 @@ const AdminPage = () => {
           padding: 0.6rem 1.2rem;
           cursor: pointer;
           color: #e2e8f066;
-          transition: all 0.3s ease;
+          transition: color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out;
           max-width: 75%;
           margin: 0.25rem auto;
           border-radius: 8px;
@@ -4483,7 +4493,7 @@ const AdminPage = () => {
           cursor: pointer;
           color: #e2e8f066;
           font-size: 0.875rem;
-          transition: all 0.2s ease;
+          transition: color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out;
           max-width:100%;
           text-align:center;
         }
@@ -4504,7 +4514,7 @@ const AdminPage = () => {
           color: #f87171;
           margin-top: 1rem;
           border-top: 1px solid rgba(255, 255, 255, 0.1);
-          transition: all 0.2s ease;
+          transition: color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out;
         }
 
         .logout-button:hover {
@@ -4545,6 +4555,17 @@ const AdminPage = () => {
           margin-bottom: 2rem;
         }
 
+        @keyframes cardSlideUp {
+          from { opacity: 0; transform: translateY(28px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .cards-grid > .card { animation: cardSlideUp 0.55s ease-out backwards; }
+        .cards-grid > .card:nth-child(2) { animation-delay: 0.06s; }
+        .cards-grid > .card:nth-child(3) { animation-delay: 0.12s; }
+        .cards-grid > .card:nth-child(4) { animation-delay: 0.18s; }
+        .cards-grid > .card:nth-child(5) { animation-delay: 0.24s; }
+        .cards-grid > .card:nth-child(n+6) { animation-delay: 0.3s; }
+
         .card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
@@ -4553,7 +4574,7 @@ const AdminPage = () => {
   position: relative;
   overflow: hidden;
 
-  /* ✨ layered shadow */
+  /* layered shadow */
   box-shadow: 
     0 2px 6px rgba(0, 0, 0, 0.05),
     0 8px 20px rgba(0, 0, 0, 0.06);
@@ -4597,7 +4618,7 @@ const AdminPage = () => {
 
         .card-value {
           font-size: 1.875rem;
-          font-weight: bold;
+          font-weight: 600;
           color: #1f2937;
           margin: 0.25rem 0 0 0;
         }
@@ -4676,7 +4697,7 @@ const AdminPage = () => {
 
         .revenue-value {
           font-size: 1.25rem;
-          font-weight: bold;
+          font-weight: 600;
           margin: 0.25rem 0 0 0;
         }
 
@@ -4885,7 +4906,7 @@ const AdminPage = () => {
           padding: 0.75rem;
           background: rgba(249, 250, 251, 0.7);
           border-radius: 0.5rem;
-          transition: all 0.2s;
+          transition: color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out;
         }
 
         .transaction-item:hover {
@@ -4965,7 +4986,7 @@ const AdminPage = () => {
           padding: 1rem;
           background: rgba(249, 250, 251, 0.7);
           border-radius: 0.5rem;
-          transition: all 0.2s;
+          transition: color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out;
         }
 
         .social-media-item:hover {

@@ -133,14 +133,17 @@ function App() {
       <div
         style={{
           position: "fixed",
-          top: 10,
+          bottom: 10,
           right: 10,
-          padding: "8px 16px",
+          padding: "3px 10px",
+          fontSize: 12,
+          opacity: 0.85,
+          pointerEvents: "none",
           background: isOnline ? "#4caf50" : "#f44336",
           color: "#fff",
           zIndex: 1000,
-          borderRadius: "8px 8px 8px 8px",
-          fontWeight: "bold",
+          borderRadius: 999,
+          fontWeight: "600",
         }}
       >
         {isOnline ? "Online" : "Offline"}

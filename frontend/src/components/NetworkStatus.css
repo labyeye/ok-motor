@@ -14,7 +14,7 @@
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out;
   user-select: none;
 }
 
@@ -32,7 +32,6 @@
 
 .status-dot.online {
   background: #4caf50;
-  animation: pulse 2s infinite;
 }
 
 .status-dot.offline {
@@ -62,7 +61,7 @@
   background: #ff9800;
   color: white;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   padding: 2px 6px;
   border-radius: 10px;
   margin-left: 4px;

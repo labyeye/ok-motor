@@ -29,9 +29,14 @@ const sync = (el) => {
     el.placeholder = text ? `Enter ${text.toLowerCase()}` : "";
     el._autoPh = Boolean(text);
   }
-  if (!(el.maxLength > 0) || el._autoMax) {
+  // Only replace a limit this script set itself. If React has since given the
+  // field its own (e.g. Hindi/English) limit, keep that one.
+  if (!(el.maxLength > 0) || (el._autoMax && el.maxLength === el._autoVal)) {
     el.maxLength = DEFAULT_MAX[kind];
     el._autoMax = true;
+    el._autoVal = el.maxLength;
+  } else if (el._autoMax) {
+    el._autoMax = false;
   }
   if (el.readOnly || el.disabled) return;
 

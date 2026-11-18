@@ -91,6 +91,19 @@ const AppSidebar = ({ user, onLogout }) => {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  useEffect(() => {
+    document.body.classList.add("has-app-header");
+    return () => document.body.classList.remove("has-app-header");
+  }, []);
+
+  const displayName = user?.name || user?.email?.split("@")[0] || "User";
+  const initials = displayName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+
   const menuItems = useMemo(() => getSidebarMenu(user?.role), [user?.role]);
 
   const handleNavigate = (path) => {
@@ -156,6 +169,22 @@ const AppSidebar = ({ user, onLogout }) => {
         <img src={mobileLogo} alt="OK Motor" style={sidebarStyles.mobileLogo} />
       </div>
 
+      {!isMobile && (
+        <header className="app-header">
+          <div className="app-header-user">
+            <div className="app-header-text">
+              <span className="app-header-name">{displayName}</span>
+              {user?.role && (
+                <span className="app-header-role">{user.role}</span>
+              )}
+            </div>
+            <div className="app-header-avatar" aria-hidden="true">
+              {initials}
+            </div>
+          </div>
+        </header>
+      )}
+
       {isMobile && isSidebarOpen && (
         <div
           style={sidebarStyles.overlay}
@@ -189,9 +218,6 @@ const AppSidebar = ({ user, onLogout }) => {
       >
         <div style={sidebarStyles.header}>
           <img src={sidebarLogo} alt="OK Motor" style={sidebarStyles.logo} />
-          <p style={sidebarStyles.welcomeText}>
-            Welcome, {user?.name || "User"}
-          </p>
         </div>
 
         <nav style={sidebarStyles.nav}>

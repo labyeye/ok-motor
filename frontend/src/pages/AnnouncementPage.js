@@ -371,7 +371,7 @@ const AnnouncementPage = () => {
                           rel="noreferrer"
                           style={styles.link}
                         >
-                          Learn more →
+                          Learn more
                         </a>
                       )}
                     </div>
@@ -518,7 +518,7 @@ const styles = {
     padding: "12px 24px",
     cursor: "pointer",
     color: "#e2e8f0",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
   },
   menuItemActive: {
     backgroundColor: "rgba(8, 131, 149, 0.2)",
@@ -545,7 +545,7 @@ const styles = {
     cursor: "pointer",
     color: "#cbd5e1",
     fontSize: "0.875rem",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
   },
   submenuItemActive: {
     backgroundColor: "#2d3748",
@@ -559,7 +559,7 @@ const styles = {
     color: "#f87171",
     marginTop: "16px",
     borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
   },
   mainContent: {
     flex: 1,
@@ -574,7 +574,7 @@ const styles = {
   },
   pageTitle: {
     fontSize: "1.875rem",
-    fontWeight: "700",
+    fontWeight: "600",
     color: "#1e293b",
     margin: 0,
   },
@@ -647,7 +647,7 @@ const styles = {
     padding: "24px",
     boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
     border: "1px solid #e5e7eb",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     cursor: "pointer",
   },
   cardHeader: {
@@ -668,7 +668,6 @@ const styles = {
     borderRadius: "12px",
     fontSize: "0.75rem",
     fontWeight: "600",
-    textTransform: "uppercase",
     letterSpacing: "0.025em",
   },
   badgeActive: {
@@ -727,7 +726,7 @@ const styles = {
     fontSize: "14px",
     fontWeight: "600",
     cursor: "pointer",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
   },
   managementPanel: {
     backgroundColor: "#f8fafc",

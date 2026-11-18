@@ -505,9 +505,9 @@ const BuyLetterForm = () => {
 
   const ProcessingModal = ({ step }) => {
     const steps = [
-      { label: "Uploading Documents", icon: "📤" },
-      { label: "Saving Data", icon: "💾" },
-      { label: "Generating PDF", icon: "📄" },
+      { label: "Uploading Documents", icon: "1" },
+      { label: "Saving Data", icon: "2" },
+      { label: "Generating PDF", icon: "3" },
     ];
     return (
       <div
@@ -653,7 +653,7 @@ const BuyLetterForm = () => {
                 fontSize: "1rem",
               }}
             >
-              ✓ All done! PDF downloaded.
+              All done, PDF downloaded
             </p>
           )}
         </div>
@@ -1141,8 +1141,8 @@ const BuyLetterForm = () => {
       setAlertInfo({
         isOpen: true,
         message: editLetter?._id
-          ? "Buy letter saved as new version! Original remains unchanged."
-          : "Buy letter saved successfully!",
+          ? "Buy letter saved as new version. Original remains unchanged."
+          : "Buy letter saved successfully",
         type: "success",
       });
 
@@ -5919,7 +5919,7 @@ const styles = {
     padding: "12px 24px",
     cursor: "pointer",
     color: "#e2e8f0",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#1e293b",
     },
@@ -5953,7 +5953,7 @@ const styles = {
     cursor: "pointer",
     color: "#cbd5e1",
     fontSize: "0.875rem",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#2d3748",
     },
@@ -5970,7 +5970,7 @@ const styles = {
     color: "#f87171",
     marginTop: "16px",
     borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#7f1d1d20",
     },
@@ -6224,7 +6224,7 @@ const styles = {
     fontSize: "0.875rem",
     fontWeight: "500",
     cursor: "pointer",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#059669",
     },
@@ -6244,7 +6244,7 @@ const styles = {
     border: "1px solid #cbd5e1",
     borderRadius: "8px",
     fontSize: "0.875rem",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     backgroundColor: "#ffffff",
     ":focus": {
       outline: "none",
@@ -6261,7 +6261,7 @@ const styles = {
     borderRadius: "8px",
     fontSize: "0.875rem",
     backgroundColor: "#ffffff",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     appearance: "none",
     backgroundRepeat: "no-repeat",
     backgroundPosition: "right 0.5rem center",
@@ -6282,7 +6282,7 @@ const styles = {
     fontSize: "0.875rem",
     minHeight: "80px",
     resize: "vertical",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     backgroundColor: "#ffffff",
     ":focus": {
       outline: "none",
@@ -6329,7 +6329,7 @@ const styles = {
     fontSize: "0.875rem",
     fontWeight: "500",
     cursor: "pointer",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#f1f5f9",
       borderColor: "#94a3b8",
@@ -6347,7 +6347,7 @@ const styles = {
     fontSize: "0.875rem",
     fontWeight: "500",
     cursor: "pointer",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#2563eb",
     },
@@ -6389,7 +6389,7 @@ const styles = {
     cursor: "pointer",
     fontSize: "14px",
     fontWeight: "500",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     width: "100%",
     justifyContent: "center",
   },

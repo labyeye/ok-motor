@@ -74,7 +74,7 @@ const GalleryManagement = () => {
         throw new Error(resp.data?.message || "Upload failed");
       }
 
-      alert("Images uploaded successfully!");
+      alert("Images uploaded successfully");
       fetchImages();
     } catch (error) {
       console.error("Error uploading images:", error);
@@ -95,7 +95,7 @@ const GalleryManagement = () => {
       await axios.delete(`${API_BASE}/api/gallery/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert("Image deleted successfully!");
+      alert("Image deleted successfully");
       fetchImages();
     } catch (error) {
       console.error("Error deleting image:", error);
@@ -249,7 +249,7 @@ const styles = {
   },
   sidebarTitle: {
     fontSize: "1.25rem",
-    fontWeight: "700",
+    fontWeight: "600",
     margin: 0,
   },
   closeSidebar: {
@@ -326,7 +326,7 @@ const styles = {
   },
   title: {
     fontSize: "28px",
-    fontWeight: "bold",
+    fontWeight: "600",
     color: "#1e293b",
     margin: 0,
   },

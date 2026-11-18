@@ -287,7 +287,7 @@ const InsuranceForm = () => {
             "Content-Type": "application/json",
           },
         });
-        alert("Insurance record updated successfully!");
+        alert("Insurance record updated successfully");
         navigate("/insurance/history");
       } else {
         await axios.post(`${API_BASE_URL}/insurance`, dataToSave, {
@@ -296,7 +296,7 @@ const InsuranceForm = () => {
             "Content-Type": "application/json",
           },
         });
-        alert("Insurance record saved successfully!");
+        alert("Insurance record saved successfully");
         setFormData({
           personName: "",
           personPhone: "",
@@ -401,7 +401,7 @@ const InsuranceForm = () => {
       padding: "12px 24px",
       cursor: "pointer",
       color: "#e2e8f0",
-      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     menuItemActive: {
       backgroundColor: "rgba(8, 131, 149, 0.2)",
@@ -429,7 +429,7 @@ const InsuranceForm = () => {
       cursor: "pointer",
       color: "#cbd5e1",
       fontSize: "0.875rem",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     submenuItemActive: {
       color: "#37B7C3",
@@ -443,7 +443,7 @@ const InsuranceForm = () => {
       color: "#f87171",
       marginTop: "16px",
       borderTop: "1px solid #1e293b",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     mainContent: {
       flex: 1,
@@ -471,7 +471,7 @@ const InsuranceForm = () => {
     },
     title: {
       fontSize: "24px",
-      fontWeight: "700",
+      fontWeight: "600",
       color: "#0f172a",
       margin: 0,
     },
@@ -580,7 +580,7 @@ const InsuranceForm = () => {
           <form onSubmit={handleSave} style={styles.formCard}>
             <div style={styles.grid}>
               <div style={styles.formGroup}>
-                <label style={{ fontWeight: "bold" }}>
+                <label style={{ fontWeight: "600" }}>
                   Registration Number
                 </label>
                 <input

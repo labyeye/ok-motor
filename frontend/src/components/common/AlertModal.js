@@ -18,7 +18,7 @@ const AlertModal = ({ isOpen, onClose, message, type = "success" }) => {
       alignItems: "center",
       justifyContent: "center",
       zIndex: 1000,
-      fontFamily: "Poppins, sans-serif",
+      fontFamily: "Inter, sans-serif",
     },
     modal: {
       backgroundColor: "#ffffff",

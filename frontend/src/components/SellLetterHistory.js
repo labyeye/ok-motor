@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
+import { docNames } from "../utils/docLabels";
 import axios from "axios";
 import {
   FileText,
@@ -63,6 +64,7 @@ const SellLetterHistory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ year: null, amount: null });
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadDocs, setDownloadDocs] = useState([]);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
@@ -1820,6 +1822,13 @@ const SellLetterHistory = () => {
               ></div>
             </div>
             <p style={progressStyles.progressText}>{progress}% Complete</p>
+            {downloadDocs.length > 0 && (
+              <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0", textAlign: "left", fontSize: "0.875rem" }}>
+                {downloadDocs.map((d, i) => (
+                  <li key={d}>{progress >= ((i + 1) / downloadDocs.length) * 100 ? "✓" : "…"} {d}</li>
+                ))}
+              </ul>
+            )}
             {progress === 100 && (
               <button
                 onClick={onClose}
@@ -1865,6 +1874,7 @@ const SellLetterHistory = () => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
+      setDownloadDocs(docNames(documentsToInclude));
 
       await simulateProgress();
 
@@ -2628,6 +2638,7 @@ const SellLetterHistory = () => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
+      setDownloadDocs(docNames(documentsToInclude));
       await simulateProgress();
 
       let pdfDoc;
@@ -3788,7 +3799,7 @@ const SellLetterHistory = () => {
       y: 345,
       size: 17,
       color: rgb(0, 0, 0),
-      fontWeight: "bold",
+      fontWeight: "600",
       font: boldFont,
     });
     page.drawText("UDAYAM-BR-26-0028550", {
@@ -3927,7 +3938,7 @@ const SellLetterHistory = () => {
             },
           );
           setSellLetters(sellLetters.filter((letter) => letter._id !== id));
-          alert("Sell letter deleted successfully!");
+          alert("Sell letter deleted successfully");
         } else {
           const offlineStorage = (await import("../services/offlineStorage"))
             .default;
@@ -4196,7 +4207,7 @@ const SellLetterHistory = () => {
                                         style={{
                                           fontSize: "0.68rem",
                                           color: "#16a34a",
-                                          fontWeight: "700",
+                                          fontWeight: "600",
                                           padding: "1px 5px",
                                           backgroundColor: "#dcfce7",
                                           borderRadius: "8px",
@@ -4575,7 +4586,7 @@ const SellLetterHistory = () => {
                                           display: "flex",
                                           alignItems: "center",
                                           gap: "6px",
-                                          fontWeight: "700",
+                                          fontWeight: "600",
                                           color: "#0369a1",
                                           fontSize: "0.85rem",
                                           marginBottom: "12px",
@@ -4629,7 +4640,7 @@ const SellLetterHistory = () => {
                                                         : "#6b7280",
                                                     color: "#fff",
                                                     fontSize: "0.7rem",
-                                                    fontWeight: "700",
+                                                    fontWeight: "600",
                                                     marginBottom: "4px",
                                                   }}
                                                 >
@@ -4826,7 +4837,7 @@ const SellLetterHistory = () => {
                             <div>
                               <div
                                 style={{
-                                  fontWeight: "700",
+                                  fontWeight: "600",
                                   fontSize: "1rem",
                                   color: "#1e293b",
                                 }}
@@ -4838,7 +4849,7 @@ const SellLetterHistory = () => {
                                       fontSize: "0.68rem",
                                       color: "#16a34a",
                                       marginLeft: "6px",
-                                      fontWeight: "700",
+                                      fontWeight: "600",
                                       padding: "1px 5px",
                                       backgroundColor: "#dcfce7",
                                       borderRadius: "8px",
@@ -4990,7 +5001,7 @@ const SellLetterHistory = () => {
                                 style={{
                                   fontSize: "0.85rem",
                                   color: "#071952",
-                                  fontWeight: "700",
+                                  fontWeight: "600",
                                 }}
                               >
                                 ₹
@@ -5474,7 +5485,7 @@ const SellLetterHistory = () => {
                                   display: "flex",
                                   alignItems: "center",
                                   gap: "5px",
-                                  fontWeight: "700",
+                                  fontWeight: "600",
                                   color: "#0369a1",
                                   fontSize: "0.8rem",
                                   marginBottom: "10px",
@@ -5523,7 +5534,7 @@ const SellLetterHistory = () => {
                                                 : "#6b7280",
                                             color: "#fff",
                                             fontSize: "0.68rem",
-                                            fontWeight: "700",
+                                            fontWeight: "600",
                                             marginBottom: "3px",
                                           }}
                                         >
@@ -5806,7 +5817,6 @@ const SellLetterHistory = () => {
                       fontWeight: "600",
                       color: "#475569",
                       marginBottom: "12px",
-                      textTransform: "uppercase",
                       letterSpacing: "0.5px",
                     }}
                   >
@@ -5824,7 +5834,7 @@ const SellLetterHistory = () => {
                       border: `2px solid ${docSelections.letter ? "#0284c7" : "#e2e8f0"}`,
                       borderRadius: "8px",
                       cursor: "pointer",
-                      transition: "all 0.2s ease",
+                      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                     }}
                   >
                     <input
@@ -5866,7 +5876,7 @@ const SellLetterHistory = () => {
                       border: `2px solid ${docSelections.invoice ? "#0284c7" : "#e2e8f0"}`,
                       borderRadius: "8px",
                       cursor: "pointer",
-                      transition: "all 0.2s ease",
+                      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                     }}
                   >
                     <input
@@ -5904,7 +5914,6 @@ const SellLetterHistory = () => {
                       fontWeight: "600",
                       color: "#475569",
                       marginBottom: "12px",
-                      textTransform: "uppercase",
                       letterSpacing: "0.5px",
                     }}
                   >
@@ -5928,7 +5937,7 @@ const SellLetterHistory = () => {
                         border: `2px solid ${docSelections.vehicleRC ? "#0284c7" : "#e2e8f0"}`,
                         borderRadius: "8px",
                         cursor: "pointer",
-                        transition: "all 0.2s ease",
+                        transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                       }}
                     >
                       <input
@@ -5969,7 +5978,7 @@ const SellLetterHistory = () => {
                         border: `2px solid ${docSelections.aadhaar ? "#0284c7" : "#e2e8f0"}`,
                         borderRadius: "8px",
                         cursor: "pointer",
-                        transition: "all 0.2s ease",
+                        transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                       }}
                     >
                       <input
@@ -6010,7 +6019,7 @@ const SellLetterHistory = () => {
                         border: `2px solid ${docSelections.pan ? "#0284c7" : "#e2e8f0"}`,
                         borderRadius: "8px",
                         cursor: "pointer",
-                        transition: "all 0.2s ease",
+                        transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                       }}
                     >
                       <input
@@ -6051,7 +6060,7 @@ const SellLetterHistory = () => {
                         border: `2px solid ${docSelections.vehicleKM ? "#0284c7" : "#e2e8f0"}`,
                         borderRadius: "8px",
                         cursor: "pointer",
-                        transition: "all 0.2s ease",
+                        transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                       }}
                     >
                       <input
@@ -6092,7 +6101,7 @@ const SellLetterHistory = () => {
                         border: `2px solid ${docSelections.vehiclePhotos ? "#0284c7" : "#e2e8f0"}`,
                         borderRadius: "8px",
                         cursor: "pointer",
-                        transition: "all 0.2s ease",
+                        transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                       }}
                     >
                       <input
@@ -6133,7 +6142,7 @@ const SellLetterHistory = () => {
                         border: `2px solid ${docSelections.signedDocSell ? "#0284c7" : "#e2e8f0"}`,
                         borderRadius: "8px",
                         cursor: "pointer",
-                        transition: "all 0.2s ease",
+                        transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                       }}
                     >
                       <input
@@ -6174,7 +6183,7 @@ const SellLetterHistory = () => {
                         border: `2px solid ${docSelections.insuranceCertificate ? "#0284c7" : "#e2e8f0"}`,
                         borderRadius: "8px",
                         cursor: "pointer",
-                        transition: "all 0.2s ease",
+                        transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                       }}
                     >
                       <input
@@ -6215,7 +6224,7 @@ const SellLetterHistory = () => {
                         border: `2px solid ${docSelections.vehicleNOC ? "#0284c7" : "#e2e8f0"}`,
                         borderRadius: "8px",
                         cursor: "pointer",
-                        transition: "all 0.2s ease",
+                        transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                       }}
                     >
                       <input
@@ -6256,7 +6265,7 @@ const SellLetterHistory = () => {
                         border: `2px solid ${docSelections.transferReceipt ? "#0284c7" : "#e2e8f0"}`,
                         borderRadius: "8px",
                         cursor: "pointer",
-                        transition: "all 0.2s ease",
+                        transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                       }}
                     >
                       <input
@@ -6309,7 +6318,7 @@ const SellLetterHistory = () => {
                     fontSize: "14px",
                     fontWeight: "600",
                     cursor: "pointer",
-                    transition: "all 0.2s ease",
+                    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                   }}
                   onClick={() => setShowDocumentModal(false)}
                 >
@@ -6326,7 +6335,7 @@ const SellLetterHistory = () => {
                     fontSize: "14px",
                     fontWeight: "600",
                     cursor: "pointer",
-                    transition: "all 0.2s ease",
+                    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                   }}
                   onClick={() => {
                     const buildFilteredDocs = (docs = {}, sel = {}) => {
@@ -6432,7 +6441,7 @@ const SellLetterHistory = () => {
                 <h2
                   style={{
                     fontSize: "20px",
-                    fontWeight: "700",
+                    fontWeight: "600",
                     color: "#0f172a",
                     margin: 0,
                     display: "flex",
@@ -6619,7 +6628,7 @@ const modalStyles = {
     border: "1px solid #cbd5e1",
     borderRadius: "4px",
     fontSize: "0.875rem",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     backgroundColor: "#f8fafc",
     ":focus": {
       outline: "none",
@@ -6749,7 +6758,7 @@ const styles = {
     padding: "12px 24px",
     cursor: "pointer",
     color: "#e2e8f0",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#1e293b",
     },
@@ -6783,7 +6792,7 @@ const styles = {
     cursor: "pointer",
     color: "#cbd5e1",
     fontSize: "0.875rem",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#2d3748",
     },
@@ -6800,7 +6809,7 @@ const styles = {
     color: "#f87171",
     marginTop: "16px",
     borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#7f1d1d20",
     },
@@ -6818,7 +6827,7 @@ const styles = {
   },
   pageTitle: {
     fontSize: "1.875rem",
-    fontWeight: "700",
+    fontWeight: "600",
     color: "#1e293b",
     margin: 0,
   },
@@ -6849,7 +6858,7 @@ const styles = {
     fontSize: "0.875rem",
     fontWeight: "500",
     cursor: "pointer",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#2563eb",
     },
@@ -7002,7 +7011,7 @@ const styles = {
     fontSize: "0.75rem",
     fontWeight: "500",
     cursor: "pointer",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#2563eb",
     },

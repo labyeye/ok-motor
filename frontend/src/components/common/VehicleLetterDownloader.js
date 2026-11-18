@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { docNames } from "../../utils/docLabels";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { loadPDFTemplate } from "../../utils/pdfTemplateLoader";
 import logo1 from "../../images/okmotorback.png";
@@ -22,6 +23,7 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
   const [docSelections, setDocSelections] = useState({});
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadDocs, setDownloadDocs] = useState([]);
 
   const isSell = letterType !== "buy";
 
@@ -2255,6 +2257,7 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
+      setDownloadDocs(docNames(documentsToInclude));
       await simulateProgress();
 
       let pdfDoc;
@@ -2359,6 +2362,7 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
+      setDownloadDocs(docNames(documentsToInclude));
       await simulateProgress();
 
       let pdfDoc;
@@ -2467,6 +2471,7 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
+      setDownloadDocs(docNames(documentsToInclude));
       await simulateProgress();
 
       let pdfDoc;
@@ -2555,6 +2560,7 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
+      setDownloadDocs(docNames(documentsToInclude));
       await simulateProgress();
 
       let pdfDoc;
@@ -2856,6 +2862,13 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
             />
           </div>
           <p style={progressStyles.progressText}>{progress}% Complete</p>
+          {downloadDocs.length > 0 && (
+            <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0", textAlign: "left", fontSize: "0.875rem" }}>
+              {downloadDocs.map((d, i) => (
+                <li key={d}>{progress >= ((i + 1) / downloadDocs.length) * 100 ? "✓" : "…"} {d}</li>
+              ))}
+            </ul>
+          )}
           {progress === 100 && (
             <button
               onClick={handleClose}
@@ -2956,7 +2969,7 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
           border: `2px solid ${checked ? "#0284c7" : "#e2e8f0"}`,
           borderRadius: "8px",
           cursor: "pointer",
-          transition: "all 0.2s ease",
+          transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
           ...extra,
         }}
       >
@@ -3057,7 +3070,6 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
                     fontWeight: "600",
                     color: "#475569",
                     marginBottom: "12px",
-                    textTransform: "uppercase",
                     letterSpacing: "0.5px",
                   }}
                 >
@@ -3073,7 +3085,6 @@ const VehicleLetterDownloader = ({ letter, letterType = "sell", onClose }) => {
                     fontWeight: "600",
                     color: "#475569",
                     marginBottom: "12px",
-                    textTransform: "uppercase",
                     letterSpacing: "0.5px",
                   }}
                 >

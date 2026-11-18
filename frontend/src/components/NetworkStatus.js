@@ -74,7 +74,7 @@ const NetworkStatus = () => {
         <div className="network-status-details">
           <div className="status-detail-row">
             <span>Status:</span>
-            <strong>{isOnline ? "🟢 Connected" : "🔴 Disconnected"}</strong>
+            <strong>{isOnline ? "Connected" : "Disconnected"}</strong>
           </div>
 
           {!isOnline && (

@@ -300,7 +300,7 @@ const styles = {
   header: { marginBottom: "24px" },
   pageTitle: {
     fontSize: "1.875rem",
-    fontWeight: "bold",
+    fontWeight: "600",
     color: "#1f2937",
     margin: 0,
   },

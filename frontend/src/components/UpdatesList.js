@@ -443,7 +443,7 @@ const UpdatesList = () => {
           padding: 0.75rem 1.5rem;
           cursor: pointer;
           color: #e2e8f0;
-          transition: all 0.3s ease;
+          transition: color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out;
         }
         .menu-item:hover { background: rgba(255,255,255,0.05); }
         .menu-item.active {
@@ -476,7 +476,7 @@ const UpdatesList = () => {
         .updates-main-content { flex: 1; overflow: auto; }
         .content-padding { padding: 2rem; }
         .updates-header { margin-bottom: 1.5rem; }
-        .updates-page-title { font-size: 1.875rem; font-weight: bold; color: #1f2937; margin: 0; }
+        .updates-page-title { font-size: 1.875rem; font-weight: 600; color: #1f2937; margin: 0; }
         .updates-page-subtitle { color: #6b7280; margin-top: 8px; }
         .updates-btn-secondary {
           background: #f3f4f6;
@@ -580,7 +580,7 @@ const UpdatesList = () => {
           align-items: flex-start;
           margin-bottom: 10px;
         }
-        .updates-card-title { font-weight: 700; font-size: 1rem; color: #1e293b; flex: 1; padding-right: 8px; }
+        .updates-card-title { font-weight: 600; font-size: 1rem; color: #1e293b; flex: 1; padding-right: 8px; }
         .updates-card-desc { font-size: 0.82rem; color: #475569; margin: 0 0 10px 0; line-height: 1.4; }
         .updates-card-date { font-size: 0.75rem; color: #94a3b8; margin-bottom: 12px; }
         .updates-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }

@@ -373,7 +373,7 @@ const LetterHeadForm = () => {
       padding: "12px 24px",
       cursor: "pointer",
       color: "#e2e8f0",
-      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     menuItemActive: {
       backgroundColor: "rgba(8, 131, 149, 0.2)",
@@ -401,7 +401,7 @@ const LetterHeadForm = () => {
       cursor: "pointer",
       color: "#cbd5e1",
       fontSize: "0.875rem",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     submenuItemActive: {
       color: "#37B7C3",
@@ -415,7 +415,7 @@ const LetterHeadForm = () => {
       color: "#f87171",
       marginTop: "16px",
       borderTop: "1px solid #1e293b",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
 
     mainContent: {
@@ -454,11 +454,11 @@ const LetterHeadForm = () => {
       border: "1px solid #e2e8f0",
       color: "#64748b",
       cursor: "pointer",
-      transition: "all 0.2s",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     title: {
       fontSize: "24px",
-      fontWeight: "700",
+      fontWeight: "600",
       color: "#0f172a",
       margin: 0,
     },
@@ -540,7 +540,7 @@ const LetterHeadForm = () => {
     },
     tableTitle: {
       fontSize: "1.25rem",
-      fontWeight: "700",
+      fontWeight: "600",
       color: "#1e293b",
       marginBottom: "16px",
     },
@@ -887,7 +887,7 @@ const LetterHeadForm = () => {
               <h2
                 style={{
                   fontSize: "20px",
-                  fontWeight: "700",
+                  fontWeight: "600",
                   color: "#0f172a",
                   margin: 0,
                   display: "flex",
@@ -974,7 +974,7 @@ const LetterHeadForm = () => {
                   fontSize: "14px",
                   fontWeight: "600",
                   cursor: "pointer",
-                  transition: "all 0.2s",
+                  transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.backgroundColor = "#f1f5f9";
@@ -1001,7 +1001,7 @@ const LetterHeadForm = () => {
                     fontSize: "14px",
                     fontWeight: "600",
                     cursor: isSaving ? "not-allowed" : "pointer",
-                    transition: "all 0.2s",
+                    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                   }}
                   onMouseEnter={(e) => {
                     if (!isSaving) e.target.style.backgroundColor = "#076d7d";

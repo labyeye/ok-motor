@@ -544,7 +544,7 @@ const styles = {
     padding: "12px 24px",
     cursor: "pointer",
     color: "#e2e8f0",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#1e293b",
     },
@@ -574,7 +574,7 @@ const styles = {
     cursor: "pointer",
     color: "#cbd5e1",
     fontSize: "0.875rem",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#2d3748",
     },
@@ -591,7 +591,7 @@ const styles = {
     color: "#f87171",
     marginTop: "16px",
     borderTop: "1px solid #1e293b",
-    transition: "all 0.2s ease",
+    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     ":hover": {
       backgroundColor: "#7f1d1d20",
     },
@@ -608,7 +608,7 @@ const styles = {
   },
   pageTitle: {
     fontSize: "1.875rem",
-    fontWeight: "bold",
+    fontWeight: "600",
     color: "#1f2937",
     margin: 0,
   },
@@ -647,7 +647,7 @@ const styles = {
   },
   cardValue: {
     fontSize: "1.875rem",
-    fontWeight: "bold",
+    fontWeight: "600",
     color: "#1f2937",
     margin: "4px 0 0 0",
   },
@@ -692,7 +692,7 @@ const styles = {
   },
   revenueValue: {
     fontSize: "1.25rem",
-    fontWeight: "bold",
+    fontWeight: "600",
     margin: "4px 0 0 0",
   },
   quickActionsCard: {

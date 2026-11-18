@@ -58,7 +58,7 @@ const SettingsPage = () => {
       } else if (event === "sync-complete") {
         setIsSyncing(false);
         loadSyncStats();
-        showMessage("success", "Sync completed successfully!");
+        showMessage("success", "Sync completed successfully");
         setLastSyncTime(new Date());
       } else if (event === "sync-error") {
         setIsSyncing(false);
@@ -121,7 +121,7 @@ const SettingsPage = () => {
       const result = await syncService.forceSyncNow();
       if (result.success) {
         loadSyncStats();
-        showMessage("success", "Manual sync completed!");
+        showMessage("success", "Manual sync completed");
         setLastSyncTime(new Date());
       } else {
         showMessage("error", result.message || "Sync failed");
@@ -254,7 +254,7 @@ const SettingsPage = () => {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        showMessage("success", "Data exported successfully!");
+        showMessage("success", "Data exported successfully");
       }
     } catch (error) {
       showMessage("error", "Export failed: " + error.message);
@@ -308,7 +308,7 @@ const SettingsPage = () => {
       padding: "12px 24px",
       cursor: "pointer",
       color: "#e2e8f0",
-      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     menuItemActive: {
       backgroundColor: "rgba(8, 131, 149, 0.2)",
@@ -339,7 +339,7 @@ const SettingsPage = () => {
       cursor: "pointer",
       color: "#cbd5e1",
       fontSize: "0.875rem",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     logoutButton: {
       display: "flex",
@@ -349,7 +349,7 @@ const SettingsPage = () => {
       color: "#f87171",
       marginTop: "16px",
       borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-      transition: "all 0.2s ease",
+      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
     },
     mainContent: {
       flex: 1,
@@ -423,7 +423,7 @@ const SettingsPage = () => {
               <h1
                 style={{
                   fontSize: "2rem",
-                  fontWeight: "700",
+                  fontWeight: "600",
                   color: "#1f2937",
                   marginBottom: "2rem",
                   paddingBottom: "1rem",
@@ -544,7 +544,7 @@ const SettingsPage = () => {
                         fontSize: "0.95rem",
                         fontWeight: "600",
                         cursor: "pointer",
-                        transition: "all 0.2s",
+                        transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                         width: isMobile ? "100%" : "auto",
                       }}
                     >
@@ -571,7 +571,7 @@ const SettingsPage = () => {
                       fontSize: "0.95rem",
                       fontWeight: "600",
                       cursor: "pointer",
-                      transition: "all 0.2s",
+                      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                       marginTop: "1rem",
                       width: isMobile ? "100%" : "auto",
                     }}
@@ -664,7 +664,7 @@ const SettingsPage = () => {
                       fontWeight: "600",
                       cursor:
                         !isOnline || isSyncing ? "not-allowed" : "pointer",
-                      transition: "all 0.2s",
+                      transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                       width: isMobile ? "100%" : "auto",
                     }}
                   >
@@ -841,7 +841,7 @@ const SettingsPage = () => {
                     fontSize: "0.95rem",
                     fontWeight: "600",
                     cursor: "pointer",
-                    transition: "all 0.2s",
+                    transition: "color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out, transform 0.15s ease-out",
                     width: isMobile ? "100%" : "auto",
                   }}
                 >
